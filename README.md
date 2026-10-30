@@ -56,7 +56,7 @@ Items and their order are tracked in [docs/roadmap.md](docs/roadmap.md).
 
 ## Requirements
 
-- Rust 1.82 or later. All dependencies come from crates.io.
+- Rust 1.85 or later. All dependencies come from crates.io.
 - Several cores for genesis and deep-time readings; see
   [docs/development.md](docs/development.md#run-times).
 

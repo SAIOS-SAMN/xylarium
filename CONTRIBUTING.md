@@ -6,7 +6,7 @@ are proposed.
 
 ## Development environment
 
-- Rust 1.82 or later (`rustup toolchain install stable`), with the `rustfmt`
+- Rust 1.85 or later (`rustup toolchain install stable`), with the `rustfmt`
   and `clippy` components.
 - Linux or macOS. The build uses no system libraries beyond the Rust toolchain.
 

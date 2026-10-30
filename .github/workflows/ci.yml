@@ -34,12 +34,12 @@ jobs:
         run: cargo doc --workspace --no-deps
 
   msrv:
-    name: Minimum supported Rust (1.82)
+    name: Minimum supported Rust (1.85)
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.82
+      - uses: dtolnay/rust-toolchain@1.85
       - uses: Swatinem/rust-cache@v2
       - name: Check
         run: cargo check --workspace --all-targets

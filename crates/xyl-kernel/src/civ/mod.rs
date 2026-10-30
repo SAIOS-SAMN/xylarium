@@ -567,7 +567,7 @@ impl Civilizations {
             e.memory = e.memory * fade;
             e.dead = e.dead || now_yr >= e.dies_yr;
         }
-        let turnings: Vec<Turning> = life.candidates.drain(..).collect();
+        let turnings: Vec<Turning> = std::mem::take(&mut life.candidates);
         for t in turnings {
             let name = match held {
                 Held::Colony => p.name.clone(),

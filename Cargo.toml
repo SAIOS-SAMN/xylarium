@@ -5,7 +5,7 @@ members = ["crates/xyl-core", "crates/xyl-kernel", "crates/xyl-cosmos", "crates/
 [workspace.package]
 version = "0.3.0"
 edition = "2021"
-rust-version = "1.82"
+rust-version = "1.85"
 license = "Apache-2.0"
 authors = ["xylarium contributors"]
 repository = "https://github.com/SAIOS-SAMN/xylarium"

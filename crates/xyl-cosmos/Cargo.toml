@@ -1,0 +1,25 @@
+[package]
+publish = false
+name = "xyl-cosmos"
+description = "The xylarium physical model: founding, substrate, galaxies, stars, worlds, chemistry and life"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+num-bigint.workspace = true
+num-rational.workspace = true
+num-traits.workspace = true
+num-integer.workspace = true
+blake3.workspace = true
+rayon.workspace = true
+xyl-core = { path = "../xyl-core" }
+
+[lints]
+workspace = true
+
+[build-dependencies]
+blake3.workspace = true

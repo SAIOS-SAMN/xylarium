@@ -1,0 +1,19 @@
+[package]
+publish = false
+name = "xyl-kernel"
+description = "The xylarium universe in play: event engine, civilizations, transit, seats and economy"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+xyl-core = { path = "../xyl-core" }
+xyl-cosmos = { path = "../xyl-cosmos" }
+rayon.workspace = true
+blake3.workspace = true
+
+[lints]
+workspace = true

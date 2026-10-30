@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Run a long job (a galaxy's forecast, a deep-time reading) under its own
+# machine-wide lock at low priority, so builds and tests under scripts/heavy
+# can interleave with it. At most 3 worker threads (XYL_THREADS and
+# XYL_WORKERS default to 3 here).
+# Usage: scripts/long target/release/xylarium observe --home var/universe-7 universe
+export XYL_THREADS="${XYL_THREADS:-3}" XYL_WORKERS="${XYL_WORKERS:-3}"
+if [ "$XYL_THREADS" -gt 3 ] || [ "$XYL_WORKERS" -gt 3 ]; then
+    echo "scripts/long: at most 3 threads" >&2; exit 2
+fi
+exec nice -n 15 flock -o -w 14400 "${XDG_RUNTIME_DIR:-/tmp}/xyl-long.lock" "$@"

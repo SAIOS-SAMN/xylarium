@@ -1,0 +1,28 @@
+# Build output
+/target
+*.bin
+
+# Local universes, runs and vendored checkouts
+/var
+/runs
+/vendor
+
+# Local configuration and secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Coverage output
+lcov.info
+coverage-summary.txt
+
+# Tooling
+.claude/
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store

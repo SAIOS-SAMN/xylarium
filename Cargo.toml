@@ -1,0 +1,57 @@
+[workspace]
+resolver = "2"
+members = ["crates/xyl-core", "crates/xyl-kernel", "crates/xyl-cosmos", "crates/xylarium"]
+
+[workspace.package]
+version = "0.3.0"
+edition = "2021"
+rust-version = "1.82"
+license = "Apache-2.0"
+authors = ["xylarium contributors"]
+repository = "https://github.com/SAIOS-SAMN/xylarium"
+
+[workspace.dependencies]
+num-bigint = "0.4"
+num-rational = "0.4"
+num-traits = "0.2"
+num-integer = "0.1"
+blake3 = "1.8"
+rayon = "1.12"
+smallvec = "1.15"
+proptest = "1.4"
+
+# Exact arithmetic, no unsafe, and a
+# kernel that refuses rather than aborts.
+[workspace.lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+float_arithmetic = "deny"
+cast_precision_loss = "deny"
+cast_possible_truncation = "deny"
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+# laws take their physical inputs explicitly rather than bundled
+too_many_arguments = "allow"
+type_complexity = "allow"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+debug = "line-tables-only"
+
+# A fast optimised build for development and readings: the release profile
+# without thin LTO or a single codegen unit, incremental. Not for release.
+[profile.fast]
+inherits = "release"
+lto = false
+codegen-units = 16
+incremental = true
+debug = false
+
+[profile.dev.package."*"]
+opt-level = 2

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Run a heavy command (a build, a test suite) under a machine-wide lock at low
+# priority: one heavy job at a time on a shared host. `-o` closes the lock's
+# descriptor before the command runs, so nothing the command starts can
+# inherit and keep holding the lock after the job ends.
+# Usage: scripts/heavy cargo build --release
+exec nice -n 10 flock -o -w 3600 "${XDG_RUNTIME_DIR:-/tmp}/xyl-heavy.lock" "$@"

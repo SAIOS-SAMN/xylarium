@@ -1,0 +1,181 @@
+# Xylarium's elements: 150 rows, measured (Z 1-99, the standard references)
+# and as the periodic law predicts them past that (Z 100-150).
+#
+# Columns (tab-separated; "-" where a value does not exist or is not measured):
+#   z      atomic number
+#   sym    symbol (IUPAC; systematic symbols past 118)
+#   name   name (a game name in the alias column where xylarium trades it)
+#   a      standard atomic weight, or the mass number of the longest-lived or
+#          island-of-stability nuclide; "-" = the valley of beta stability (derived)
+#   melt   melting point, K (at 1 bar; sublimation where it does not melt)
+#   boil   boiling point, K (sublimation point where it does not boil at 1 bar)
+#   rho    density of the condensed element, g/cm3 (liquid for gases)
+#   abund  solar-system abundance, atoms per 10^6 Si (Lodders 2003; 0 = none
+#          survives: short-lived)
+#   tc     50% condensation temperature in a solar-composition gas, K (Lodders 2003)
+#   class  Goldschmidt class: litho, sidero, chalco, atmo
+#   origin nucleosynthetic channels and their shares: bb (Big Bang), spall
+#          (cosmic-ray spallation), ccsn (core-collapse supernovae), ia (type Ia),
+#          agb (AGB stars, the s-process), merger (neutron-star mergers, the
+#          r-process); "-" = none survives from any
+#   status measured | predicted (predicted rows take melt, boil, rho, tc and
+#          class from their homologue by the periodic law)
+#   homol  homologue for predicted rows ("-" for measured)
+#   alias  xylarium's trade name ("-" for none)
+#
+# The measured rows are the standard references (CRC Handbook; Lodders
+# 2003). Island-of-stability
+# nuclides (114, 118, 120, 122, 126) are long-lived in this universe and made
+# by neutron-star mergers; every other element past uranium decays away.
+#
+#z	sym	name	a	melt	boil	rho	abund	tc	class	origin	status	homol	alias
+1	H	hydrogen	1.008	14.0	20.3	0.071	2.43e10	5	atmo	bb:1	measured	-	-
+2	He	helium	4.003	0.95	4.2	0.125	2.34e9	3	atmo	bb:0.93,ccsn:0.04,agb:0.03	measured	-	-
+3	Li	lithium	6.94	453.65	1603	0.534	55.47	1142	litho	bb:0.25,spall:0.15,agb:0.6	measured	-	-
+4	Be	beryllium	9.0122	1560	2742	1.85	0.7374	1452	litho	spall:1	measured	-	-
+5	B	boron	10.81	2349	4200	2.34	17.32	908	litho	spall:0.8,ccsn:0.2	measured	-	-
+6	C	carbon	12.011	3915.0	4098.0	2.26	7.08e6	40	atmo	ccsn:0.5,agb:0.5	measured	-	-
+7	N	nitrogen	14.007	63.2	77.4	0.81	1.95e6	123	atmo	ccsn:0.4,agb:0.6	measured	-	-
+8	O	oxygen	15.999	54.4	90.2	1.14	1.41e7	180	litho	ccsn:1	measured	-	-
+9	F	fluorine	18.998	53.53	85.03	1.51	841.1	734	litho	ccsn:0.5,agb:0.5	measured	-	-
+10	Ne	neon	20.180	24.6	27.1	1.21	2.36e6	9	atmo	ccsn:1	measured	-	-
+11	Na	sodium	22.990	371.0	1156.0	0.97	5.75e4	958	litho	ccsn:0.8,agb:0.2	measured	-	-
+12	Mg	magnesium	24.305	923.0	1363.0	1.74	1.02e6	1336	litho	ccsn:1	measured	-	-
+13	Al	aluminium	26.982	933.5	2792.0	2.70	8.41e4	1653	litho	ccsn:1	measured	-	-
+14	Si	silicon	28.085	1687.0	3538.0	2.33	1.00e6	1310	litho	ccsn:0.7,ia:0.3	measured	-	-
+15	P	phosphorus	30.974	317.3	553.7	1.82	8.37e3	1229	litho	ccsn:1	measured	-	-
+16	S	sulfur	32.06	388.4	717.8	2.07	4.45e5	664	chalco	ccsn:0.7,ia:0.3	measured	-	-
+17	Cl	chlorine	35.45	171.6	239.1	1.56	5.24e3	948	litho	ccsn:0.8,ia:0.2	measured	-	-
+18	Ar	argon	39.948	83.8	87.3	1.40	1.03e5	48	atmo	ccsn:0.6,ia:0.4	measured	-	-
+19	K	potassium	39.098	336.5	1032.0	0.86	3.69e3	1006	litho	ccsn:1	measured	-	-
+20	Ca	calcium	40.078	1115.0	1757.0	1.55	6.29e4	1517	litho	ccsn:0.7,ia:0.3	measured	-	-
+21	Sc	scandium	44.956	1814	3109	2.99	34.20	1659	litho	ccsn:1	measured	-	-
+22	Ti	titanium	47.867	1941.0	3560.0	4.51	2.42e3	1582	litho	ccsn:0.7,ia:0.3	measured	-	-
+23	V	vanadium	50.942	2183	3680	6.0	288.4	1429	litho	ccsn:0.5,ia:0.5	measured	-	-
+24	Cr	chromium	51.996	2180.0	2944.0	7.19	1.29e4	1296	litho	ccsn:0.4,ia:0.6	measured	-	-
+25	Mn	manganese	54.938	1519.0	2334.0	7.21	9.17e3	1158	litho	ccsn:0.25,ia:0.75	measured	-	-
+26	Fe	iron	55.845	1811.0	3134.0	7.87	8.38e5	1334	sidero	ccsn:0.4,ia:0.6	measured	-	-
+27	Co	cobalt	58.933	1768	3200	8.90	2323	1352	sidero	ccsn:0.5,ia:0.5	measured	-	-
+28	Ni	nickel	58.693	1728.0	3186.0	8.91	4.78e4	1353	sidero	ccsn:0.4,ia:0.6	measured	-	-
+29	Cu	copper	63.546	1358.0	2835.0	8.96	5.27e2	1037	chalco	ccsn:0.7,ia:0.3	measured	-	-
+30	Zn	zinc	65.38	692.7	1180.0	7.14	1.23e3	726	chalco	ccsn:0.9,agb:0.1	measured	-	-
+31	Ga	gallium	69.723	302.91	2477	5.91	35.97	968	chalco	ccsn:0.6,agb:0.4	measured	-	-
+32	Ge	germanium	72.630	1211.4	3106	5.32	120.6	883	sidero	ccsn:0.5,agb:0.5	measured	-	-
+33	As	arsenic	74.922	1090	887	5.73	6.089	1065	chalco	ccsn:0.6,agb:0.4	measured	-	-
+34	Se	selenium	78.971	494	958	4.81	65.79	697	chalco	ccsn:0.6,agb:0.2,merger:0.2	measured	-	-
+35	Br	bromine	79.904	265.8	332.0	3.10	11.32	546	litho	ccsn:0.6,merger:0.4	measured	-	-
+36	Kr	krypton	83.798	115.79	119.93	2.41	55.15	52	atmo	ccsn:0.5,agb:0.5	measured	-	-
+37	Rb	rubidium	85.468	312.46	961	1.53	6.572	800	litho	ccsn:0.3,agb:0.2,merger:0.5	measured	-	-
+38	Sr	strontium	87.62	1050	1655	2.64	23.64	1464	litho	ccsn:0.2,agb:0.7,merger:0.1	measured	-	-
+39	Y	yttrium	88.906	1799	3609	4.47	4.608	1659	litho	ccsn:0.1,agb:0.72,merger:0.18	measured	-	-
+40	Zr	zirconium	91.224	2128	4682	6.52	11.33	1741	litho	ccsn:0.1,agb:0.66,merger:0.24	measured	-	-
+41	Nb	niobium	92.906	2750	5017	8.57	0.7554	1559	litho	agb:0.68,merger:0.32	measured	-	-
+42	Mo	molybdenum	95.95	2896	4912	10.28	2.601	1590	sidero	ccsn:0.24,agb:0.39,merger:0.37	measured	-	-
+43	Tc	technetium	98	2430	4538	11.5	0	-	sidero	-	measured	-	-
+44	Ru	ruthenium	101.07	2607	4423	12.45	1.900	1551	sidero	agb:0.32,merger:0.68	measured	-	-
+45	Rh	rhodium	102.91	2237	3968	12.41	0.3708	1392	sidero	agb:0.14,merger:0.86	measured	-	-
+46	Pd	palladium	106.42	1828.05	3236	12.02	1.435	1324	sidero	agb:0.46,merger:0.54	measured	-	-
+47	Ag	silver	107.87	1234.93	2435	10.49	0.4913	996	chalco	agb:0.20,merger:0.80	measured	-	-
+48	Cd	cadmium	112.41	594.22	1040	8.65	1.584	652	chalco	agb:0.48,merger:0.52	measured	-	-
+49	In	indium	114.82	429.75	2345	7.31	0.1810	536	chalco	agb:0.32,merger:0.68	measured	-	-
+50	Sn	tin	118.71	505.08	2875	7.29	3.733	704	chalco	agb:0.65,merger:0.35	measured	-	-
+51	Sb	antimony	121.76	903.78	1860	6.68	0.3292	979	chalco	agb:0.25,merger:0.75	measured	-	-
+52	Te	tellurium	127.60	722.66	1261	6.24	4.815	709	chalco	agb:0.19,merger:0.81	measured	-	-
+53	I	iodine	126.90	386.85	457.4	4.93	0.9975	535	litho	agb:0.06,merger:0.94	measured	-	-
+54	Xe	xenon	131.29	161.4	165.1	3.06	5.39	68	atmo	merger:0.5,agb:0.5	measured	-	-
+55	Cs	caesium	132.91	301.59	944	1.93	0.3671	799	litho	agb:0.15,merger:0.85	measured	-	-
+56	Ba	barium	137.33	1000.0	2170.0	3.51	4.4	1455	litho	agb:0.85,merger:0.15	measured	-	-
+57	La	lanthanum	138.91	1193	3737	6.15	0.4405	1578	litho	agb:0.75,merger:0.25	measured	-	-
+58	Ce	cerium	140.12	1068	3716	6.77	1.169	1478	litho	agb:0.81,merger:0.19	measured	-	-
+59	Pr	praseodymium	140.91	1208	3793	6.77	0.1737	1582	litho	agb:0.49,merger:0.51	measured	-	-
+60	Nd	neodymium	144.24	1297	3347	7.01	0.8355	1602	litho	agb:0.57,merger:0.43	measured	-	-
+61	Pm	promethium	145	1315	3273	7.26	0	-	litho	-	measured	-	-
+62	Sm	samarium	150.36	1345	2067	7.52	0.2542	1590	litho	agb:0.29,merger:0.71	measured	-	-
+63	Eu	europium	151.96	1099	1802	5.24	0.09513	1356	litho	agb:0.06,merger:0.94	measured	-	-
+64	Gd	gadolinium	157.25	1585	3546	7.90	0.3321	1659	litho	agb:0.15,merger:0.85	measured	-	-
+65	Tb	terbium	158.93	1629	3503	8.23	0.05907	1659	litho	agb:0.07,merger:0.93	measured	-	-
+66	Dy	dysprosium	162.50	1680	2840	8.55	0.3862	1659	litho	agb:0.12,merger:0.88	measured	-	-
+67	Ho	holmium	164.93	1734	2993	8.80	0.08986	1659	litho	agb:0.08,merger:0.92	measured	-	-
+68	Er	erbium	167.26	1802	3141	9.07	0.2554	1659	litho	agb:0.17,merger:0.83	measured	-	-
+69	Tm	thulium	168.93	1818	2223	9.32	0.0370	1659	litho	agb:0.13,merger:0.87	measured	-	-
+70	Yb	ytterbium	173.05	1097	1469	6.90	0.2484	1487	litho	agb:0.31,merger:0.69	measured	-	-
+71	Lu	lutetium	174.97	1925	3675	9.84	0.03572	1659	litho	agb:0.20,merger:0.80	measured	-	-
+72	Hf	hafnium	178.49	2506	4876	13.31	0.1699	1684	litho	agb:0.55,merger:0.45	measured	-	-
+73	Ta	tantalum	180.95	3290	5731	16.69	0.02099	1573	litho	agb:0.42,merger:0.58	measured	-	-
+74	W	tungsten	183.84	3695	5828	19.25	0.1277	1789	sidero	agb:0.56,merger:0.44	measured	-	-
+75	Re	rhenium	186.21	3459	5869	21.02	0.05254	1821	sidero	agb:0.08,merger:0.92	measured	-	-
+76	Os	osmium	190.23	3306	5285	22.59	0.6738	1812	sidero	agb:0.09,merger:0.91	measured	-	-
+77	Ir	iridium	192.22	2719	4701	22.56	0.6424	1603	sidero	agb:0.02,merger:0.98	measured	-	-
+78	Pt	platinum	195.08	2041.0	4098.0	21.45	1.37	1408	sidero	merger:0.95,agb:0.05	measured	-	-
+79	Au	gold	196.97	1337.0	3129.0	19.3	0.195	1060	sidero	merger:1	measured	-	-
+80	Hg	mercury	200.59	234.32	629.88	13.53	0.4128	252	chalco	agb:0.62,merger:0.38	measured	-	-
+81	Tl	thallium	204.38	577	1746	11.85	0.1845	532	chalco	agb:0.75,merger:0.25	measured	-	-
+82	Pb	lead	207.2	600.6	2022.0	11.34	3.26	727	chalco	agb:0.9,merger:0.1	measured	-	-
+83	Bi	bismuth	208.98	544.7	1837	9.78	0.1388	746	chalco	agb:0.19,merger:0.81	measured	-	-
+84	Po	polonium	209	527	1235	9.20	0	-	chalco	-	measured	-	-
+85	At	astatine	210	575	610	6.4	0	-	litho	-	measured	-	-
+86	Rn	radon	222.0	202.0	211.5	4.4	0.0	30	atmo	-	measured	-	-
+87	Fr	francium	223	300	950	1.87	0	-	litho	-	measured	-	-
+88	Ra	radium	226.0	973.0	2010.0	5.5	0.0	1455	litho	-	measured	-	-
+89	Ac	actinium	227	1323	3471	10.07	0	-	litho	-	measured	-	-
+90	Th	thorium	232.04	2023.0	5061.0	11.7	0.0335	1659	litho	merger:1	measured	-	-
+91	Pa	protactinium	231.04	1841	4300	15.37	0	-	litho	-	measured	-	-
+92	U	uranium	238.03	1405.0	4404.0	19.1	0.009	1610	litho	merger:1	measured	-	-
+93	Np	neptunium	237	917	4273	20.45	0	-	litho	-	measured	-	-
+94	Pu	plutonium	244	912.5	3501	19.82	0	-	litho	-	measured	-	-
+95	Am	americium	243	1449	2880	13.67	0	-	litho	-	measured	-	-
+96	Cm	curium	247	1613	3383	13.51	0	-	litho	-	measured	-	-
+97	Bk	berkelium	247	1259	2900	14.78	0	-	litho	-	measured	-	-
+98	Cf	californium	251	1173	1743	15.1	0	-	litho	-	measured	-	-
+99	Es	einsteinium	252	1133	1269	8.84	0	-	litho	-	measured	-	-
+100	Fm	fermium	257	1800	-	-	0	-	litho	-	predicted	Er	-
+101	Md	mendelevium	258	1100	-	-	0	-	litho	-	predicted	Tm	-
+102	No	nobelium	259	1100	-	-	0	-	litho	-	predicted	Yb	-
+103	Lr	lawrencium	262	1900	-	-	0	-	litho	-	predicted	Lu	-
+104	Rf	rutherfordium	267	-	-	-	0	-	-	-	predicted	Hf	-
+105	Db	dubnium	268	-	-	-	0	-	-	-	predicted	Ta	-
+106	Sg	seaborgium	269	-	-	-	0	-	-	-	predicted	W	-
+107	Bh	bohrium	270	-	-	-	0	-	-	-	predicted	Re	-
+108	Hs	hassium	269	-	-	-	0	-	-	-	predicted	Os	-
+109	Mt	meitnerium	278	-	-	-	0	-	-	-	predicted	Ir	-
+110	Ds	darmstadtium	281	-	-	-	0	-	-	-	predicted	Pt	-
+111	Rg	roentgenium	282	-	-	-	0	-	-	-	predicted	Au	-
+112	Cn	copernicium	285	-	-	-	0	-	-	-	predicted	Hg	-
+113	Nh	nihonium	286	-	-	-	0	-	-	-	predicted	Tl	-
+114	Fl	flerovium	298	-	-	-	island	-	-	merger:1	predicted	Pb	pyrosite
+115	Mc	moscovium	290	-	-	-	0	-	-	-	predicted	Bi	-
+116	Lv	livermorium	293	-	-	-	0	-	-	-	predicted	Po	-
+117	Ts	tennessine	294	-	-	-	0	-	-	-	predicted	At	-
+118	Og	oganesson	294	325.0	450.0	7.2	island	-	-	merger:1	predicted	Rn	SpR
+119	Uue	ununennium	-	-	-	-	0	-	-	-	predicted	Fr	-
+120	Ubn	unbinilium	304	-	-	-	island	-	-	merger:1	predicted	Ra	umbrite
+121	Ubu	unbiunium	-	-	-	-	0	-	-	-	predicted	Ac	-
+122	Ubb	unbibium	306	-	-	-	island	-	-	merger:1	predicted	Th	aetherium
+123	Ubt	unbitrium	-	-	-	-	0	-	-	-	predicted	Pa	-
+124	Ubq	unbiquadium	-	-	-	-	0	-	-	-	predicted	U	-
+125	Ubp	unbipentium	-	-	-	-	0	-	-	-	predicted	U	-
+126	Ubh	unbihexium	310	-	-	-	island	-	-	merger:1	predicted	U	AdL
+127	Ubs	unbiseptium	-	-	-	-	0	-	-	-	predicted	U	-
+128	Ubo	unbioctium	-	-	-	-	0	-	-	-	predicted	U	-
+129	Ube	unbiennium	-	-	-	-	0	-	-	-	predicted	U	-
+130	Utn	untrinilium	-	-	-	-	0	-	-	-	predicted	U	-
+131	Utu	untriunium	-	-	-	-	0	-	-	-	predicted	U	-
+132	Utb	untribium	-	-	-	-	0	-	-	-	predicted	U	-
+133	Utt	untritrium	-	-	-	-	0	-	-	-	predicted	U	-
+134	Utq	untriquadium	-	-	-	-	0	-	-	-	predicted	U	-
+135	Utp	untripentium	-	-	-	-	0	-	-	-	predicted	U	-
+136	Uth	untrihexium	-	-	-	-	0	-	-	-	predicted	U	-
+137	Uts	untriseptium	-	-	-	-	0	-	-	-	predicted	U	-
+138	Uto	untrioctium	-	-	-	-	0	-	-	-	predicted	U	-
+139	Ute	untriennium	-	-	-	-	0	-	-	-	predicted	U	-
+140	Uqn	unquadnilium	-	-	-	-	0	-	-	-	predicted	U	-
+141	Uqu	unquadunium	-	-	-	-	0	-	-	-	predicted	U	-
+142	Uqb	unquadbium	-	-	-	-	0	-	-	-	predicted	U	-
+143	Uqt	unquadtrium	-	-	-	-	0	-	-	-	predicted	U	-
+144	Uqq	unquadquadium	-	-	-	-	0	-	-	-	predicted	U	-
+145	Uqp	unquadpentium	-	-	-	-	0	-	-	-	predicted	U	-
+146	Uqh	unquadhexium	-	-	-	-	0	-	-	-	predicted	U	-
+147	Uqs	unquadseptium	-	-	-	-	0	-	-	-	predicted	U	-
+148	Uqo	unquadoctium	-	-	-	-	0	-	-	-	predicted	U	-
+149	Uqe	unquadennium	-	-	-	-	0	-	-	-	predicted	U	-
+150	Upn	unpentnilium	-	-	-	-	0	-	-	-	predicted	U	-

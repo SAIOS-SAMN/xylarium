@@ -1,0 +1,171 @@
+//! The Big Bang: a universe's initial conditions, drawn from its seed, exact.
+//!
+//! A universe begins as the white hole of a parent's black hole
+//! ([`crate::bounce`]). The seed records what fell, and the parent's spin is
+//! the bounce's: one uniform draw on the 2^-40 grid, fixed as an exact
+//! rational. The drawn spin is floored at the least that holds the firmament
+//! whole (`admit`: the torsion share must reach the furthest held kind's
+//! reach over the rim, swung by the inbound echo at its peak). Nothing else
+//! is drawn: the founding cascade sets the rim, the bell is the pulse's
+//! round trip to it (circuit::anchor), and the matter's lumpiness, its held
+//! share, its assembly and its star efficiency are read off the cascade
+//! (`BigBang::of`).
+
+use crate::bounce::Bounce;
+use xyl_core::certified::Encl;
+use xyl_core::{Stream, Q};
+
+/// The grid drawn values are fixed on.
+pub const GRID_BITS: u32 = 40;
+
+/// A uniform rational on (-1, 1) with 2^-53 resolution.
+fn unit(rng: &mut Stream) -> Q {
+    let span: i64 = 1 << 53;
+    let x = i64::try_from(rng.next_u64() >> 11).unwrap_or(0);
+    Q::new(2 * x - span + 1, span).unwrap_or(Q::ZERO)
+}
+
+/// A drawn value fixed as one exact rational: the 2^-40 grid point at or
+/// below its enclosure's midpoint (within 2^-40 of the true draw).
+fn fix(e: &Encl) -> Q {
+    xyl_core::certified::down(&e.mid(), GRID_BITS)
+}
+
+/// One step of the 2^-40 grid.
+fn grid_step() -> Q {
+    (0..GRID_BITS).fold(Q::ONE, |a, _| a.checked_div(&Q::int(2)).unwrap_or(Q::ZERO))
+}
+
+/// A spin clamped strictly inside (0, 1) on the 2^-40 grid.
+pub fn clamp_spin(spin: &Q) -> Q {
+    let step = grid_step();
+    xyl_core::certified::down(spin, GRID_BITS)
+        .max(step.clone())
+        .min(&Q::ONE - &step)
+}
+
+/// A universe's initial conditions and what follows from them.
+#[derive(Clone, Debug)]
+pub struct BigBang {
+    /// The parent black hole whose white hole this universe is, at the
+    /// admitted spin.
+    pub parent: Bounce,
+    /// The matter's lumpiness: the beads' states above the mean over every
+    /// bead's state, the cascade's contrast, in [0, 1).
+    pub lumpiness: Q,
+    /// The held share of the founded matter: the firmament's mass over the
+    /// firmament's plus the beads', in [0, 1].
+    pub held_share: Q,
+    /// The assembly: the bells until the home galaxy's gas first lights
+    /// (None: it never does).
+    pub assembly_bells: Option<i64>,
+    /// The star efficiency: the lit share of the home galaxy's gas, what
+    /// collapses into clouds, by holding, in [0, 1].
+    pub efficiency: Q,
+}
+
+/// The share the outbound jet carries through the throat at each crossing,
+/// from the parent's spin by torsion. In the Einstein-Cartan bounce torsion
+/// is not a field of its own: it is the spin density of what fell, so the
+/// spin's share enters the hold directly. The throat `H = 2M` holds one
+/// face against the other, `delta(H, H) = 1/2`, and the jet carries the
+/// unlocked face `1 - delta`; the parent's spin `J = a_Kerr M^2` is a
+/// further share the throat cannot hold, so the held face is
+/// `delta(H, H + J) = H / (2H + J)` and the jet carries
+/// `a = (H + J) / (2H + J)`: one half for a spinless hole (which does not
+/// bounce), three fifths at the extremal spin. Linear in the shares, exact.
+pub fn torsion_share(spin: &Q) -> Q {
+    let h = crate::bounce::horizon_reach(&Q::ONE);
+    let j = spin.clone().max(Q::ZERO);
+    (&h + &j)
+        .checked_div(&(&(&Q::int(2) * &h) + &j))
+        .unwrap_or(Q::ZERO)
+}
+
+/// The spin whose torsion share is `a`: J = H (2a - 1) / (1 - a), the share
+/// law inverted; clamped to the open grid. A share at or above three fifths
+/// (the extremal spin's) gives the extremal spin.
+pub fn spin_of_share(a: &Q) -> Q {
+    let h = crate::bounce::horizon_reach(&Q::ONE);
+    let one_less = &Q::ONE - a;
+    if one_less.signum() <= 0 {
+        return clamp_spin(&Q::ONE);
+    }
+    let j = (&h * &(&(&Q::int(2) * a) - &Q::ONE))
+        .checked_div(&one_less)
+        .unwrap_or(Q::ZERO);
+    clamp_spin(&j)
+}
+
+/// A uniform rational strictly inside (0, 1) on the 2^-40 grid.
+fn open_unit(rng: &mut Stream) -> Q {
+    clamp_spin(&fix(&Encl::exact(
+        (&unit(rng) + &Q::ONE)
+            .checked_div(&Q::int(2))
+            .unwrap_or(Q::ZERO),
+    )))
+}
+
+impl BigBang {
+    /// The Big Bang of `seed`'s universe.
+    pub fn of(seed: u64) -> Option<BigBang> {
+        let mut rng = Stream::derive(seed, &["big bang".into()]);
+        // the parent: unit mass in its own units, its Kerr spin the seed's own
+        // draw (what fell is the universe's initial condition), floored at
+        // the least that holds the firmament whole; its horizon read in the
+        // universe's own S^360 enclosure (the founding's radius in r_g,
+        // circuit::anchor). The founding depends on the spin alone, through
+        // the torsion share, so it comes first.
+        crate::circuit::register_spin(&open_unit(&mut rng));
+        let anchor = crate::circuit::anchor();
+        let substrate = crate::cores::substrate_for(&anchor.spin)?;
+        // crossed at the pulse's phase zero: the founding's own
+        let parent = Bounce::of(&Q::ONE, &anchor.spin, &anchor.radius_rg, &Q::ZERO)?;
+        // the cascade's readings
+        let mean = substrate.mean_state();
+        let (above, all) = substrate
+            .beads
+            .iter()
+            .fold((Q::ZERO, Q::ZERO), |(a, t), b| {
+                let over = (&b.state - &mean).max(Q::ZERO);
+                (&a + &over, &t + &b.state)
+            });
+        let lumpiness = above.checked_div(&all).unwrap_or(Q::ZERO);
+        let held_share = substrate.held_share();
+        Some(BigBang {
+            parent,
+            lumpiness,
+            held_share,
+            assembly_bells: substrate.lighting.cools_in,
+            efficiency: substrate.lighting.lit.clone(),
+        })
+    }
+
+    /// When the first stars shone (Gyr after the Big Bang): where the home
+    /// galaxy's gas first cools to collapse, in rings of the bell
+    /// (circuit::anchor), exact.
+    pub fn first_stars_gyr(&self) -> Encl {
+        Encl::exact(crate::circuit::anchor().first_stars_gyr)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_share_law_inverts_on_the_grid() {
+        // a spinless hole carries one half and does not bounce; the extremal
+        // spin carries three fifths; the inversion lands within a grid step
+        assert_eq!(torsion_share(&Q::ZERO), Q::new(1, 2).unwrap());
+        assert_eq!(torsion_share(&Q::ONE), Q::new(3, 5).unwrap());
+        for n in [1i64, 7, 50, 99] {
+            let spin = Q::new(n, 100).unwrap();
+            let back = spin_of_share(&torsion_share(&spin));
+            assert!((&back - &spin).abs() <= grid_step(), "{spin} -> {back}");
+        }
+        // a share no spin reaches gives the extremal spin
+        assert_eq!(spin_of_share(&Q::ONE), clamp_spin(&Q::ONE));
+        assert!(spin_of_share(&Q::new(1, 3).unwrap()) >= grid_step());
+    }
+}

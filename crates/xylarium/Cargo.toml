@@ -1,0 +1,21 @@
+[package]
+publish = false
+name = "xylarium"
+description = "The xylarium kernel: found, run and observe universes"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+xyl-core = { path = "../xyl-core" }
+xyl-kernel = { path = "../xyl-kernel" }
+xyl-cosmos = { path = "../xyl-cosmos" }
+rayon.workspace = true
+# SIGINT/SIGTERM: the server checkpoints its exact state before it stops.
+ctrlc = { version = "3.4", features = ["termination"] }
+
+[lints]
+workspace = true

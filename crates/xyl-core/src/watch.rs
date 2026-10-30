@@ -1,0 +1,155 @@
+//! The watch: a process monitor for the running universe on a loaded host.
+//! Every stage the universe passes (chemistry, forecast, begin, each hundred
+//! events of the carry, readings) is noted as it happens, and a heartbeat
+//! thread notes, every half minute, the current stage, elapsed time, CPU
+//! share, resident memory and host load. Notes go to stderr and, once a home
+//! is given, to `<home>/observer.log`.
+//!
+//! It observes the program, never the physics: nothing it notes enters a
+//! law or a reading of the universe.
+
+use std::io::Write;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex, OnceLock};
+use std::time::{Duration, Instant};
+
+struct Watch {
+    began: Instant,
+    stage: Mutex<String>,
+    log: Mutex<Option<std::fs::File>>,
+    /// The work in flight, by label, and when each began.
+    busy: Mutex<Vec<(u64, String, Instant)>>,
+    next: std::sync::atomic::AtomicU64,
+}
+
+fn watch() -> &'static Watch {
+    static W: OnceLock<Watch> = OnceLock::new();
+    W.get_or_init(|| Watch {
+        began: Instant::now(),
+        stage: Mutex::new("starting".into()),
+        log: Mutex::new(None),
+        busy: Mutex::new(Vec::new()),
+        next: std::sync::atomic::AtomicU64::new(0),
+    })
+}
+
+/// Note into `<home>/observer.log` from now on (appended).
+pub fn into(home: &std::path::Path) {
+    let _ = std::fs::create_dir_all(home);
+    let file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(home.join("observer.log"))
+        .ok();
+    if let Ok(mut log) = watch().log.lock() {
+        *log = file;
+    }
+}
+
+/// A note: what happened, stamped with the time run.
+pub fn note(text: &str) {
+    let w = watch();
+    let line = format!("[{:>8.1}s] {text}", w.began.elapsed().as_secs_f64());
+    eprintln!("{line}");
+    if let Ok(mut log) = w.log.lock() {
+        if let Some(f) = log.as_mut() {
+            let _ = writeln!(f, "{line}");
+        }
+    }
+}
+
+/// Enter a stage: noted, and named in every heartbeat until the next.
+pub fn stage(name: &str) {
+    if let Ok(mut s) = watch().stage.lock() {
+        *s = name.to_string();
+    }
+    note(&format!("STAGE {name}"));
+}
+
+/// A piece of work in flight, named in every heartbeat once it has run 30
+/// seconds; it leaves the list when the guard drops.
+pub struct Busy(u64);
+
+/// Registers a piece of work named `label` with the watch and returns the
+/// guard that removes it when dropped.
+pub fn busy(label: String) -> Busy {
+    let w = watch();
+    let id = w.next.fetch_add(1, Ordering::Relaxed);
+    if let Ok(mut b) = w.busy.lock() {
+        b.push((id, label, Instant::now()));
+    }
+    Busy(id)
+}
+
+impl Drop for Busy {
+    fn drop(&mut self) {
+        if let Ok(mut b) = watch().busy.lock() {
+            b.retain(|(id, _, _)| *id != self.0);
+        }
+    }
+}
+
+/// The process's CPU time so far (user and system, in clock ticks of 1/100 s).
+fn cpu_ticks() -> Option<u64> {
+    let stat = std::fs::read_to_string("/proc/self/stat").ok()?;
+    // the fields after the command's closing parenthesis; utime and stime are the 12th and 13th
+    let rest = stat.rsplit_once(')')?.1;
+    let f: Vec<&str> = rest.split_whitespace().collect();
+    Some(f.get(11)?.parse::<u64>().ok()? + f.get(12)?.parse::<u64>().ok()?)
+}
+
+fn rss_mb() -> Option<u64> {
+    let status = std::fs::read_to_string("/proc/self/status").ok()?;
+    let kb: u64 = status
+        .lines()
+        .find(|l| l.starts_with("VmRSS:"))?
+        .split_whitespace()
+        .nth(1)?
+        .parse()
+        .ok()?;
+    Some(kb / 1024)
+}
+
+fn load() -> String {
+    std::fs::read_to_string("/proc/loadavg")
+        .ok()
+        .and_then(|l| l.split_whitespace().next().map(String::from))
+        .unwrap_or_else(|| "-".into())
+}
+
+/// The heartbeat: every `every`, the stage, the cores' share used since the
+/// last beat (100% is one core), memory and the host's load - until `stop`.
+pub fn heartbeat(every: Duration, stop: Arc<AtomicBool>) {
+    std::thread::spawn(move || {
+        let mut last = (Instant::now(), cpu_ticks().unwrap_or(0));
+        while !stop.load(Ordering::Relaxed) {
+            std::thread::sleep(every);
+            let (now, ticks) = (Instant::now(), cpu_ticks().unwrap_or(0));
+            // CPU ticks are hundredths of a second: percent of one core is
+            // ticks x 1000 over the wall's milliseconds, in whole numbers
+            let wall_ms = u64::try_from(now.duration_since(last.0).as_millis())
+                .unwrap_or(u64::MAX)
+                .max(1);
+            let cores = ticks.saturating_sub(last.1).saturating_mul(1000) / wall_ms;
+            let stage = watch().stage.lock().map(|s| s.clone()).unwrap_or_default();
+            let long: Vec<String> = watch()
+                .busy
+                .lock()
+                .map(|b| {
+                    b.iter()
+                        .filter(|(_, _, t)| t.elapsed() >= Duration::from_secs(30))
+                        .map(|(_, l, t)| format!("{l} {:.0}s", t.elapsed().as_secs_f64()))
+                        .collect()
+                })
+                .unwrap_or_default();
+            let in_flight = watch().busy.lock().map(|b| b.len()).unwrap_or(0);
+            note(&format!(
+                "HEARTBEAT {stage}: cpu {cores}% of one core, rss {} MB, host load {}; {in_flight} in flight{}",
+                rss_mb().unwrap_or(0),
+                load(),
+                if long.is_empty() { String::new() } else { format!(", long: {}", long.join(", ")) }
+            ));
+            last = (now, ticks);
+        }
+    });
+}

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Count the Earth anchors left in the engine's source: measured constants,
+# SI and astronomical units, and calibrations to the measured Sun, Milky Way or observed universe.
+# The count per crate is the reading the matter-from-the-tube milestone
+# drives to zero. Usage: scripts/calibration-anchors [-v]
+cd "$(dirname "$0")/.." || exit 1
+pattern='star_mass_kg|M_SUN|kpc|Mpc|\bAU\b|_au\b|earth|Earth|299_?792|6\.674e-11|ours\(\)|\bours\b|Planck|measured|elements\.tsv|sun_|_sun\b|solar|Milky|Sgr|kb_ev|kb_j|h_j|ev_j|1\.602|1\.380|6\.626|Lodders|Mumma|bar\b'
+total=0
+for c in crates/*/; do
+  n=$(grep -rEo "$pattern" --include=*.rs "$c" | wc -l)
+  printf '%-14s %6d\n' "$(basename "$c")" "$n"
+  total=$((total + n))
+done
+printf '%-14s %6d\n' total "$total"
+if [ "${1:-}" = -v ]; then
+  grep -rEn "$pattern" --include=*.rs crates | awk -F: '{print $1}' | sort | uniq -c | sort -rn
+fi

@@ -96,6 +96,138 @@ Next, in order:
    are to be derived from 3Z, 3Q and R rather than read from
    `data/elements.tsv` (milestone 3, chemistry from the census).
 
+## Open items
+
+The items identified so far, each to become a GitHub issue with the label
+shown (labels as in the shared standard: `defect`, `proposal`, `track`,
+`docs`, `law`; `needs-decision`, `cross-project`, `good first issue`).
+Work on an item goes through a branch and a pull request that cites it.
+Items are listed by area in dependency order; an item's milestone is given
+where it belongs to one.
+
+### Verification
+
+1. **Readings on `main` against `v0.3.0`** (`defect`, blocker). Since
+   `v0.3.0` the founding, the stars, time, the jetstream and the
+   chemistry changed with unit tests only and no reading of a running
+   universe. Found seed 7 with both and compare `observe universe`,
+   `observe worlds 200` and `observe galaxy`: stars placed on their
+   manifolds and worlds per star. Where `main` has regressed, find the
+   commit by the same readings and fix forward. Every law change from now on
+   shows these readings before and after.
+2. **The fresh-home default carries to 14 Gyr** (`defect`). A home without
+   a checkpoint is read at 14 Gyr (`xylarium observe`), an epoch of the
+   Earth's universe; it is to be a count of rings from the founding.
+
+### Founding (milestone 3)
+
+3. **Elements attached to the filament's released pressure** (`proposal`,
+   `law`). The cascade throws each kind to a reach and collides stacks on
+   the way out (`formation::cascade`, `formation::founding_shells`). In its
+   place: the bounce releases the torsion share's pressure along the
+   filament, falling with reach as the vacuum's share; each kind attaches to
+   it by its open frames and is held back by its held frames, and settles
+   where the two balance, as a distribution over reach. Shells and bands
+   become concentrations read from those distributions. Sealed kinds do not
+   attach and stay as the firmament.
+4. **Recycling through the cores** (`proposal`, `law`). Matter flows one
+   way: the firmament leaves the core, stars lock gas into remnants, and
+   nothing returns. The jetstream's vacuum leg is to carry matter back:
+   what galaxies and stars no longer hold (remnants, the passed share at
+   each throat crossing, released gas) returns to its galactic core by the
+   vacuum's share at its reach, and the galactic cores to the universal
+   core. The books become one cycle across the universe: held, in flight
+   outward, held downstream and in flight inward together equal founded.
+
+### Galaxy (milestone 3, layer B)
+
+5. **Fluid bands** (`proposal`). The galaxy's bands (today "rings", the
+   founding's beads read at the galaxy tier) have fixed edges, no flow
+   between them and hard cuts between neighbours. Matter is to circulate
+   along the shear of neighbouring orbits, bands to blend where the
+   founding's shells overlap, and edges to move with their holding. The
+   word "ring" is kept for the bell's unit of time.
+6. **Each galaxy's own structure** (`proposal`). Every other galaxy is the
+   home galaxy scaled by its hole mass (`cores::Shape::scale`); each is to
+   be read from the bead it formed from.
+7. **Chemistry from the founding and the stars** (`track`, branch
+   `chem-from-stars`). Replaces the Milky Way chemical-evolution model.
+   Before merge: systems born before their band's first throat crossing
+   come out empty, and each band's return uses one representative star
+   rather than every star born along it.
+
+### Stars (milestone 3, layer B)
+
+8. **No iron peak** (`needs-decision`). The atoms' held frames per nucleon
+   fall across the whole table, so every fusion step releases hold and the
+   sequence runs to superheavy kinds.
+9. **Many-body fusion steps** (`needs-decision`). Where the table holds no
+   kind at twice a kind's nucleon count, the least `k` can be eight or ten
+   nuclei in one step, while bonding on S^11 is pairwise.
+10. **The transduction's multi-axial path** (`proposal`). The pole point
+    moves by the jetstream's axial map; torsion in the five isoclinic
+    planes (`bounce::spin_bivector`) is specified, not built.
+11. **Remaining star types** (`proposal`). The remnant's own cut (compact,
+    denser and throat-compact remnants), the ignition condition of a held
+    body that does not ignite, the boundary of a supergiant, and the binary
+    companion's share (`0.1 + 0.9 u`, imposed).
+
+### Worlds (milestone 3, layer C)
+
+12. **The temperature law** (`needs-decision`). A world's heat is the held
+    share of its star's light; its temperature is to follow either as held
+    energy per particle, `k_B T = held / particles` (a first estimate gives
+    far too cold a world), or from a radiation balance with the universal
+    constants (a fourth root at a law's root).
+13. **Climate from the held light** (`track`). Replace 278 K
+    (`Spec::t_form`, `worlds::t_unit`), 340 W/m^2, 288 K and the fitted
+    `greenhouse_tau`; the greenhouse from nested held shares.
+14. **Condensates from the disc's mixture** (`track`). Replace the fixed
+    ice species and the rock and metal mineralogy (`systems::ICES`) by the
+    clusters the disc's atoms bond at the heat a world holds.
+15. **World units** (`track`). Orbits in the system tier, radii in the
+    planet tier, masses as shares of the star's manifold, the day and year
+    as turns; SI only through `package::Si` for universal constants.
+16. **Geochemistry from the atoms** (`track`). Replace the bulk-silicate
+    partition (`systems::MANTLE_KEPT`) and the measured heat-producing
+    isotopes; delete `worlds/unit.rs`.
+
+### Life and peoples (milestone 3, layers D and E)
+
+17. **Life rulers from worlds** (`track`). The mind-bearing body (10 kg),
+    its metabolism (19.1 W) and generation (14.2 years), and the viable
+    people (500).
+18. **Peoples and drives** (`track`). Peoples' times in rings; drives
+    from each people's chemistry in place of the 18 amu exhaust and the
+    mass ratio of 10.
+
+### Network
+
+19. **The pulse front** (`cross-project`, `needs-decision`). Netstratum's
+    wavefront derivation (its docs/111): the held medium's delay
+    `r + H(<r)`, containment until the first exit, escape by bonded
+    collections, and stars and remnants as surfaces.
+20. **Mycelium v0.3.0** (`cross-project`). Pin mycelium v0.3.0 by git tag
+    when it is cut: the `mycelium-sdk` crate (Voice, Session, tasks and
+    solves, the rule seam, seats, wallet and leases, readings) is the client
+    surface, the shared physics library `forms` carries law ids and versions
+    that EQUATIONS rows declare, the wire states its version and act table,
+    and a client conformance read checks that a client speaks the same
+    Anastome. The `xyl-hypha` crate of milestone 5 starts on it.
+
+### Project
+
+21. **Adopt the open-source standard** (`track`, `needs-decision`).
+    MAINTAINERS.md, ROADMAP.md and GLOSSARY.md at the root, `scripts/check`,
+    labels and templates, these items as issues, and a protected `main`
+    once confirmed (`/opt/handoff/OPEN-SOURCE-STANDARD.md`).
+22. **Conduct and security** (`needs-decision`). The content of
+    CODE_OF_CONDUCT.md and SECURITY.md.
+23. **Release v0.4.0** (`track`). Cut only from a commit whose readings
+    show stars placed and worlds forming.
+24. **Earth anchors** (`track`). `scripts/calibration-anchors` counts the
+    remaining Earth, Sun and Milky Way anchors in code (722 on `main`).
+
 ## 1. Founding in the core's units (done)
 
 Goal: A universe is founded from its package and its seed in the universal

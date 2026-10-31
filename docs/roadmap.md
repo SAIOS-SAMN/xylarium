@@ -515,8 +515,8 @@ restart, and a decision from anyone but the holder is refused.
 ## 5. The xyl-hypha crate
 
 Goal: A universe joins the hypha as a domain through a `xyl-hypha` crate
-pinned to Mycelium `v0.2.0`, implementing `run::Link` over an SDK client
-session ([network.md](network.md)). Mu, the Mycelium network's unit,
+pinned to Mycelium `v0.3.0` by git tag, implementing `run::Link` over a
+`mycelium-sdk` session ([network.md](network.md)). Mu, the Mycelium network's unit,
 enters a universe only through an uplink, which is not part of this
 repository.
 

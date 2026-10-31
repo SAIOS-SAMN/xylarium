@@ -11,6 +11,9 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The shared-laws ledger (docs/EQUATIONS.md section 8): the laws proposed
+  for the core shell of mycelium's `forms`, with proposed ids (#33).
+
 - The jetstream for every holder (`circuit::jet_map`,
   `circuit::throat_crossing`): out through the continuum, back through the
   vacuum; the firmament's onsets take the vacuum leg (the founding

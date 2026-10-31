@@ -1,6 +1,8 @@
 ## What and why
 
-<!-- Describe what this changes and why. Link the issue, if any. -->
+<!-- Describe what this changes and why. -->
+
+Closes #<!-- issue number -->
 
 ## Readings (model changes)
 
@@ -11,7 +13,7 @@ seed and the command used, and a short comparison. -->
 
 - [ ] `cargo fmt --all -- --check` passes.
 - [ ] `cargo clippy --workspace --all-targets -- -D warnings` passes.
-- [ ] `cargo test --workspace --profile fast` passes.
+- [ ] The tests of the changed modules pass (dev profile at least once).
 - [ ] `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps` passes.
 - [ ] `scripts/check-docs` passes.
 - [ ] `scripts/check-style` passes.

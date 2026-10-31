@@ -1,7 +1,7 @@
 ---
-name: Feature request
-about: A new law, reading, command or API
-labels: enhancement
+name: Proposal
+about: A new or changed law, reading, command or API
+labels: proposal
 ---
 
 ## What
@@ -10,8 +10,9 @@ labels: enhancement
 
 ## Why
 
-<!-- State the motivation and, where applicable, the place of the change in
-docs/roadmap.md. -->
+<!-- State the motivation and, where applicable, the item in
+docs/roadmap.md (Open items) or the milestone it belongs to. A law change
+writes its formula in docs/model.md and docs/EQUATIONS.md before code. -->
 
 ## Tier and derivation
 

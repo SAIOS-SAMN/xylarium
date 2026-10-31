@@ -11,6 +11,12 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The founding as flow, specified (docs/model.md): parcels released at
+  onset move by the reach rate `dr/dtau = [R_h(H) - R_h(m)] r / (r + R_h(m))`;
+  angular state in degrees; perturbation on frames; meetings by contrast
+  times coherence; concentrations as throats (#35). Roadmap items 28-37 and
+  issues #36-#44 for the misalignments found in the physics library.
+
 - The shared-laws ledger (docs/EQUATIONS.md section 8): the laws proposed
   for the core shell of mycelium's `forms`, with proposed ids (#33).
 

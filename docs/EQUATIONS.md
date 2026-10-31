@@ -4,12 +4,14 @@ This document lists Xylarium's physics equations, formula by formula, in the
 order of [model.md](model.md), which explains how each follows from the one
 before. Terms are defined in [glossary.md](glossary.md).
 Each entry gives the formula, its code location and its status. The status
-is one of three values:
+is one of four values:
 
 - Built: the formula is derived from the laws above it and read by the
   engine.
 - Partial: the formula is derived, but it rests on a declared input or is
   read only by the observer.
+- Planned: the formula is specified in [model.md](model.md) and scheduled
+  in [roadmap.md](roadmap.md); it replaces the entries marked "replaced".
 - Placeholder: the formula is a declared constant or calibration that stands
   until a law derives it; placeholders are listed in
   [roadmap.md](roadmap.md), Declared rulers.
@@ -117,26 +119,45 @@ another crate. Laws are composed from shares (ratios of the form
 - Cascade shares (`formation::founding_shells`):
   `s_Z = 1/2 held / (held + 1 + held)`, cumulative by Z on mass;
   `K = sum s_Z`; `H = 1 + held_final`; and
-  `s_final = 1/2 held_final / (held_final + H)`. Status: built.
+  `s_final = 1/2 held_final / (held_final + H)`. Status: built; replaced by the founding as flow (planned).
 - Shell reach (`formation::founding_shells`): `R_Z = (K + s_i) / w_Z / H`,
   with `s_i` the stack's shares and `w_Z = Z + Q`; the spread is
   `R (1 +/- s_final)`, and a shell is held where `R (1 + s_final) <= 1`.
-  Status: built.
+  Status: built; replaced by the founding as flow (planned).
 - Filter (`formation::founding_shells`): the contact is `1/2` for a whole
   passage and `1/2` of the share crossed for a partial one;
   `D = M / (M + 1 - contact)`, `T = |d_j - d_i| / (d_j + d_i)` and
   `g = min(s D, T) / T`. The filter takes `contact g m_i / (m_i + m_j)` of
   `m_j`, scaled by held over asked, and the new reach is the
-  holding-weighted mean of the release reaches. Status: built.
+  holding-weighted mean of the release reaches. Status: built; replaced by the founding as flow (planned).
 - Kind density in a run (`Substrate::found`): the density is `mass / t`,
   with `t = |delta(lo, 1) - delta(hi, 1)| / (delta(lo, 1) + delta(hi, 1))`;
   beads lie at the local maxima of the superposed hold and are parted at its
-  minima. Status: built.
+  minima. Status: built; replaced by the founding as flow (planned).
 - Bead (`Substrate::found`): the state is the recipe mass; the reach and
   phase are those of the most abundant kind, with phase `turn(a Z)`; and the
-  inside is `1 + 2 sum(inner states / pushed-out mass)`. Status: built.
+  inside is `1 + 2 sum(inner states / pushed-out mass)`. Status: built; replaced by the founding as flow (planned).
 - Rim (`Substrate::found`): the rim is `max R (1 + s_final)` over every
-  shell. Status: built.
+  shell. Status: built; replaced by the founding as flow (planned).
+
+- The founding as flow ([model.md](model.md#the-founding-as-flow)).
+  Status: planned.
+  - Release: kind `k` leaves at `circuit::onset`, at
+    `m0 (1 - exp(-rate (t - onset)))`, from `R_h(H_0) = 2 H_0`, with
+    `H_0(t) = 1 - sum_k outflow_k(t)`.
+  - Pushes: `p_c = H / (r + H)` (continuum, outward) and
+    `p_v = m / (r + m)` (vacuum, inward), composed by the flow law
+    `x (+) y = (x + y) / (1 + x y)`: `p_net = (H - m) / (r + H + m)`, and
+    `D(p_net) = (r + R_h(H)) / (r + R_h(m))`.
+  - Reach rate: `dr/dtau = [R_h(H) - R_h(m)] r / (r + R_h(m))`, in echoes;
+    with `H` and `m` fixed,
+    `tau - tau0 = [(r - r0) + R_h(m) ln(r / r0)] / (R_h(H) - R_h(m))`.
+  - Angular state: `dphi/dt = delta(r, H) bell / r` in degrees; swing as
+    torsion and twist on phase and plane.
+  - Interaction: coherence `c = 1 - 2d` in `[0, 1]`; a meeting exchanges by
+    the deficit contrast `T` times `c`, with `sum m l` conserved.
+  - Perturbation: the held share `m / (r + m)` of the echo on the parcel's
+    frames (`loop_flux` vacuum channel), never on its reach.
 
 ## 4. The firmament and the core
 
@@ -550,7 +571,7 @@ section 2.6 into a product, `D(x (+) y) = D(x) D(y)` with
 `x (+) y = (x + y) / (1 + x y)`, and the court's throat level is
 `c = D(t^2)`; the jet map with `b = 0` is therefore the flow law in the
 dilation coordinate, while the vacuum term `b > 0` keeps it a form of
-Xylarium's shell. Xylarium's Cl(12,1) blades stand as its own outer shell
+Xylarium's shell. Xylarium's Cl(12,1) blades stand as an outer shell of Xylarium
 over the Cl(4,1) centre of `forms`.
 
 Xylarium evaluates the dilation, jet map and crossing on `Dy` readings;

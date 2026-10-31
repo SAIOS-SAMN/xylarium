@@ -127,7 +127,40 @@ where it belongs to one.
     Earth units; they are to take rings, with Gyr shown only as a display
     conversion.
 
+### Foundations (milestone 3, layer 0)
+
+28. **One angle unit** ([#40](https://github.com/SAIOS-SAMN/xylarium/issues/40), `defect`). Degrees, minutes and seconds of
+    arc on every lane, the ring count kept on the T lane, one angle API in
+    degrees.
+29. **The flow law and the dilation in `xyl-core`** ([#42](https://github.com/SAIOS-SAMN/xylarium/issues/42), `defect`,
+    `law`). `D(p)`, the flow law and the deficit share in one place; the
+    rotors' tangent law and the squared share retired.
+30. **Duplicate laws** ([#43](https://github.com/SAIOS-SAMN/xylarium/issues/43), `defect`). One deficit function, one pull,
+    one moon model, one meeting law, one trig and exp stack.
+31. **Rule breaks** ([#44](https://github.com/SAIOS-SAMN/xylarium/issues/44), `defect`). Hole spin from `Stream::derive`,
+    refusal instead of zero, `survival`, coherence in meetings.
+
 ### Founding (milestone 3)
+
+32. **The founding as flow** ([#35](https://github.com/SAIOS-SAMN/xylarium/issues/35), `track`, `law`). Parcels leave their
+    throat at onset and move by the reach rate
+    ([model.md](model.md#the-founding-as-flow)); angular state in degrees with
+    the swing as torsion and twist; perturbation on frames; meetings by
+    contrast times coherence; concentrations contract into throats of their
+    own. Resolves items 3, 4 and 5 below.
+33. **Genesis structure** ([#36](https://github.com/SAIOS-SAMN/xylarium/issues/36), `defect`). The bead's triple use,
+    homologue galaxies, stars by index and the forecast of minds are replaced
+    by tiers formed from the flow.
+34. **The echo moves position** ([#37](https://github.com/SAIOS-SAMN/xylarium/issues/37), `defect`, `law`). The echo acts on
+    angular state and frames only.
+35. **Parcels carry counts** ([#38](https://github.com/SAIOS-SAMN/xylarium/issues/38), `defect`, `law`). Counts of nuclei
+    with pole state and heat; chemistry is what a parcel closes into.
+36. **Fixed tables and chains** ([#39](https://github.com/SAIOS-SAMN/xylarium/issues/39), `defect`). Each replaced by what
+    the parcel closes into, as its layer is rebuilt.
+37. **Closed forms, not steps** ([#41](https://github.com/SAIOS-SAMN/xylarium/issues/41), `defect`). Each loop over time or
+    sampled age replaced by a closed form or an event as its module is
+    rebuilt.
+
 
 3. **Elements attached to the filament's released pressure**
    ([#4](https://github.com/SAIOS-SAMN/xylarium/issues/4), `proposal`, `law`).
@@ -452,6 +485,25 @@ Landed:
   (`stars::timeline`, `stars::remnant`).
 Next:
 
+0. The founding as flow, in this order; each step is one pull request with
+   its readings (item 32, [model.md](model.md#the-founding-as-flow)):
+   1. Foundations in `xyl-core` (items 28-31): degrees with the ring count,
+      `D(p)` and the flow law, one deficit share.
+   2. The parcel and the reach rate: release at onset, the reach law in
+      closed form between events, the throat's books
+      `H_0(t) = 1 - sum outflow`; the throw (`formation::founding_shells`,
+      `s_final`, `runs_of`, `bead_run`, `place_beads`) deleted.
+   3. Angular state and meetings: phase and plane in degrees, swing as
+      torsion and twist, meetings by contrast times coherence.
+   4. Concentrations: galactic cores where flowing parcels contract; each
+      galaxy's own rings from its core's outflow; homologues and the bead's
+      triple use deleted.
+   5. Stars from clouds in a galaxy's flow; `galaxy::star`'s placement by
+      index and the mass draw deleted.
+   6. Systems at their formation event, worlds from the disc's parcel, life
+      read from a formed world; the forecast of minds (`minds::schedule`)
+      replaced by events, and `xyl-kernel`'s reads of it moved to them.
+   Layers B to F below are rebuilt on this flow rather than on the beads.
 1. Layer B, the galaxy tier (`galaxy`, `stars`, `chem`, `pulse`, `field`,
    `turning`, `centre`, `manifold`). The interim conversions of Gyr-valued
    rulers made in this layer are replaced:

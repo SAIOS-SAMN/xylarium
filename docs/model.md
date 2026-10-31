@@ -183,37 +183,100 @@ pole axis and the five isoclinic planes).
   Both edges are computed; on the current table the band is Z 568 to
   Z 1092.
 
-### The cascade, shells and beads (`formation::founding_shells`, `circuit::Substrate::found`)
+### The founding as flow
 
-- The founding's mix is the share of holding of every founded kind
-  (`formation::kinds`), converted to mass at `Z + Q` nucleons per nucleus
-  (`circuit::nucleus_weights`).
-- In the equitable cascade, each kind in Z order takes the share
-  `s_Z = 1/2 held / (held + 1 + held)` of the unlocked face, where `held` is
-  the mass share before it. `K = sum s_Z`, `H = 1 + held_final`, and the
-  final share is `s_final = 1/2 held / (held + H)`. Kinds are stacked by the
-  mass profile, heaviest first, and the stack is cut at the profile's local
-  minima. Each kind is thrown to `R_Z = (K + s_i) / w_Z / H`, where `s_i` is
-  the sum of its stack's shares and `w_Z` its nucleon mass, and spreads over
-  `R (1 +/- s_final)`.
-- In the filter, every lighter shell passes out through each heavier shell
-  whose spread lies between the throat and the lighter shell's reach. Each
-  passage grips `g = min(s D, T) / T`, where `s` is the two kinds' tightness
-  ratio, `D = M / (M + 1 - contact)` and `T` the contrast of their deficits.
-  The heavier shell gives `contact g m_i / (m_i + m_j)` of its matter, on
-  the nucleus grid. Takes are scaled down where more is asked of a shell
-  than it holds, and a shell's reach becomes the holding-weighted mean of
-  its parts' release reaches. A kind is held by the throat where
-  `R (1 + s_final) <= 1`.
-- The shells that are pushed out link into runs where their spreads
-  overlap. A run's superposed hold (each kind's mass over the deficit
-  contrast of its spread) peaks at beads and is divided at its local minima;
-  each kind's matter goes to the bead whose span contains the kind's reach.
-  A bead's state is the mass of its recipe; its reach and phase are those of
-  its most abundant kind (the phase is the torsion share turned Z times);
-  its hold inside is `1 + 2 sum(inner beads' shares)`.
-- The rim is the outer edge of the outermost shell, `max R (1 + s_final)`
-  over all shells.
+Matter is not placed. At the bounce every founded kind is held at the
+universal throat, the universal state 1, and each leaves it as a parcel
+carried by the jetstream. The laws below decide where each parcel goes, how
+it changes, and where parcels gather.
+
+**The parcel.** A parcel carries the counts of nuclei of each kind (atoms
+and clusters, `compound`), each kind's pole state (held frames `w`, open
+frames `u` and the electron phase `R`), its heat (the held share of the
+irradiation it has received), its hold `m` (a reading of its counts on the
+founding, in core masses), its reach `r` from its throat (in `r_g`) and its
+angular state (its phase and plane in degrees on the S^360). Counts and
+frames are conserved through every change; mass is read from the counts,
+never carried.
+
+**Release.** Kind `k` leaves the throat at its onset, the echo at which its
+pole state crosses the throat under the jet map (`circuit::onset`,
+`circuit::throat_crossing`), at the throat's outflow rate
+`m0 (1 - exp(-rate (t - onset)))`, from the throat's horizon reach
+`R_h(H_0) = 2 H_0`. What has left is no longer held:
+`H_0(t) = 1 - sum_k outflow_k(t)`. A kind released over an interval is a
+filament: the locus of the parcels released along it.
+
+**Reach.** Two pushes act on a parcel at reach `r` with the hold `H` inside
+it (the throat's remaining state plus every parcel nearer the throat):
+
+- the continuum, outward: the deficit of the inner hold at the parcel's
+  reach, `p_c = H / (r + H)`;
+- the vacuum, inward: the parcel's own deficit at its reach,
+  `p_v = m / (r + m)`.
+
+They oppose, so they compose by the flow law
+`x (+) y = (x + y) / (1 + x y)` as `p_net = p_c (-) p_v`:
+
+```text
+p_net = (H - m) / (r + H + m)
+D(p_net) = D(p_c) / D(p_v) = (r + R_h(H)) / (r + R_h(m))
+```
+
+with `D(p) = (1 + p) / (1 - p)` the dilation and `R_h(M) = 2M` the
+horizon reach. The reach changes at the rate of the dilation's excess, in
+echoes `tau`:
+
+```text
+dr/dtau = r (D(p_net) - 1) = [R_h(H) - R_h(m)] r / (r + R_h(m))
+```
+
+A parcel expands where `H > m`, rests where `H = m`, and returns toward its
+throat where `m > H`; the return is the recycling of matter through the
+cores. Far out (`r >> R_h(m)`) it coasts at `R_h(H) - R_h(m)` per echo; the
+rim is the reach of the outermost parcel at `t`, not a boundary. With `H`
+and `m` fixed the law is separable and exact:
+
+```text
+tau - tau0 = [ (r - r0) + R_h(m) ln(r / r0) ] / (R_h(H) - R_h(m))
+```
+
+and `r(tau)` is its monotone inverse, found by `xyl_core::event`. The law is
+a rate, as every motion in `xyl_core::motion` is; between events `H`
+changes only through the throat's closed-form outflow, because the matter
+inside a reach acts as one hold.
+
+**Angular state.** A parcel's phase about its throat advances by the turning
+law, `dphi/dt = delta(r, H) bell / r`, in degrees. The echo's swing is
+torsion and twist: it turns the parcel's phase and plane by the torsion
+share of the throat's spin, and never moves its reach. Parcels interact by
+the degrees between them, the coherence `c = 1 - 2d` (`circuit::coherence`,
+`d` the shorter way round as a share of a turn, so `c` is in `[0, 1]`): 1 in
+phase, 0 opposed. Opposed parcels do not exchange.
+
+**Perturbation.** The part of the echo a parcel's elements cannot pass, its
+held share `m / (r + m)`, reverberates in its frames: the vacuum channel of
+the parcel's loop (`circuit::Substrate::loop_flux`, swung by the inbound
+echo) moves frames between held and open, and so sets its heat. The same
+net push `p_net` dilates the parcel's pole state per echo. Chemistry is what
+a parcel's kinds close into at the parcel's heat (`compound::closing`,
+`atoms::closes`), and a parcel whose pole state reaches the throat
+(`t = 1`) begins to transduce (`stars::Sequence`).
+
+**Meetings.** Where two parcels reach the same `r`, they exchange matter by
+the contrast of their deficits `T` times their coherence, with `sum m l`
+conserved (the passage of `formation::cascade`). Meetings and onsets are the
+events of the founding; between them every parcel's path is the closed form
+above.
+
+**Concentrations and tiers.** A concentration is a reading: where parcels
+share reach and degrees and their gathered hold grips more than its
+agitation, the shear and the echo's heat (the collapse test of
+`formation::gas`), they contract (`m > H`). A contracting concentration is a
+new throat, with a hold, an outflow and parcels of that throat: a galactic core,
+then a cloud, then a star. Each tier is a body contained in its parent; it
+exists only from its formation event, and what it takes its parent no
+longer holds.
 
 ## 4. The firmament and the core
 

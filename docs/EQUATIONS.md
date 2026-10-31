@@ -280,12 +280,12 @@ another crate. Laws are composed from shares (ratios of the form
   pieces, and `lit` is the lit holding over all holding. Status: built.
 - Reach in galaxy rings (`stars::reach_rings`): `r_kpc / galaxy_kpc`.
   Status: built.
-- First light (`galaxy::birth_gyr`): the first light of the piece at the
-  star's reach falls at `max(cools_in, 1) bell`; there is none where the
+- First light (`galaxy::birth`): the first light of the piece at the
+  star's reach falls at `max(cools_in, 1)` rings; there is none where the
   piece never lights. Status: built.
 - Birth along the ring (`chem::Chemistry::birth_along`): the birth time is
-  the `t` with `F(t) = F(t0) + u (F(top) - F(t0))`, where `top` is the 30 Gyr
-  horizon, found by 48 halvings. `F` is the ring's `sfr` integrated term by
+  the `t` (rings) with `F(t) = F(t0) + u (F(top) - F(t0))`, where `top` is
+  the 30 Gyr horizon read in rings, found by 48 halvings. `F` is the ring's `sfr` integrated term by
   term, `c p! / k^(p+1) (1 - e^(-kt) sum_(j<=p) (kt)^j / j!)`, or
   `c t^(p+1) / (p + 1)` at `k = 0` (`chem::formed_by`). Status: built.
 - Star formation per ring (`chem::Model::of`): the rate is
@@ -294,7 +294,8 @@ another crate. Laws are composed from shares (ratios of the form
   timescale toward `galaxy::density x sigma_r0`. Status: partial (rulers
   `v_flat`, `sigma_r0`, `prompt`, `slow`, `loading` and the ring width).
 - Yields (`chem::Calibration`): per-channel scales are set from
-  `Rulers::ism_today_dex` at the reference ring at `Rulers::today_gyr`;
+  `Rulers::ism_today_dex` at the reference ring at `Rulers::today` (13.8 Gyr
+  in rings, the calibration epoch until phase 5);
   `relative` is 1 in the solar-birth reference gas; hydrogen and helium follow
   from the founding's counts with `Rulers::dy_dz` and
   `Rulers::reference_metallicity` (`chem::Light`). Status: placeholder; the next

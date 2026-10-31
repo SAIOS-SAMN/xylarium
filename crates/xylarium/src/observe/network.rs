@@ -155,7 +155,7 @@ fn passages(u: &Universe<'_>, k: usize) -> String {
 fn cells(u: &Universe<'_>, k: usize) -> String {
     let net = &u.network;
     let sphere = xyl_cosmos::chain::radius();
-    let now = u.gyr();
+    let now = xyl_cosmos::circuit::rings_of_gyr_dy(u.gyr());
     let places: BTreeMap<u64, xyl_cosmos::chain::Place> = net
         .sample
         .iter()

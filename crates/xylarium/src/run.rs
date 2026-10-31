@@ -502,7 +502,8 @@ fn play(
         }
         rings += 1;
         if let Some(l) = link.as_mut() {
-            let relays = xyl_cosmos::pulse::relays(&bells, u.gyr());
+            let at = xyl_cosmos::circuit::rings_of_gyr_dy(u.gyr());
+            let relays = xyl_cosmos::pulse::relays(&bells, at);
             l.ring(u, &bells, &relays);
         }
         if rings % 6 == 0 {

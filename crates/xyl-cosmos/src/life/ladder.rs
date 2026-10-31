@@ -261,10 +261,11 @@ pub fn climb(
 /// the orbit that the target's body covers, so the wait is the target's year
 /// over that share.
 pub fn transfer_gyr(target: &Body) -> Dy {
-    let year = Dy::from_q(&crate::turning::year_yr(
+    // The world's year in rings, converted at the boundary to years.
+    let year = crate::circuit::gyr_of_rings_dy(Dy::from_q(&crate::turning::year(
         &target.star_mass.max(Dy::sci(1, -9)).to_q(),
         &target.a_au.max(Dy::sci(1, -9)).to_q(),
-    ));
+    ))) * Dy::sci(1, 9);
     let reach = target.radius * Dy::from_q(&crate::package::Si::world_radius_m())
         / (Dy::int(2)
             * Dy::PI

@@ -30,11 +30,11 @@ pub struct Place {
 pub fn escape_speed(w: &World) -> Dy {
     let m = &w.mass * &Si::world_mass_kg();
     let r = &w.radius * &Si::world_radius_m();
-    Dy::from_q(&(&xyl_cosmos::turning::rad_s(&xyl_cosmos::turning::turning_si(&m, &r)) * &r))
+    Dy::from_q(&(&xyl_cosmos::turning::turning_rad_s(&m, &r) * &r))
 }
 
 /// Returns the gap (m) between worlds `wa` and `wb` of one system at the
-/// star's `age` (Gyr), read on the ocean (manifold.rs `gap`): the turn
+/// star's `age` (rings), read on the ocean (manifold.rs `gap`): the turn
 /// between the current positions of the two orbits (each given by phase,
 /// plane, shape and twist; a moon orbits its giant), swept at the inner
 /// world's reach, plus the climb between them. No squared length or root is
@@ -54,9 +54,9 @@ pub fn separation_m(cosmic: &Cosmic, a: Place, b: Place) -> Option<Dy> {
     if a.star == b.star {
         let wit = cosmic.systems.get(&a.star)?;
         let all = manifolds(cosmic.gal.seed, &[a.star], &wit.system, &wit.star, &units());
-        let age = (cosmic.now - Dy::from_q(&wit.star.born))
-            .max(Dy::ZERO)
-            .to_q();
+        // The manifolds count age in rings; `now` (Gyr) converts here.
+        let now = xyl_cosmos::circuit::rings_of_gyr_dy(cosmic.now);
+        let age = (now - Dy::from_q(&wit.star.born)).max(Dy::ZERO).to_q();
         return orbit_gap_m(&all, a.world, b.world, &age);
     }
     Some(cosmic.distance(a.star, b.star)? * kpc_m())
@@ -123,7 +123,9 @@ pub fn window_years(
     if a.anchor != b.anchor {
         return None;
     }
-    let (ra, rb) = (Dy::from_q(&a.rate), Dy::from_q(&b.rate));
+    // The manifolds' rates are per ring; read per Gyr at this boundary.
+    let per = |m: &Manifold| xyl_cosmos::circuit::rings_of_gyr_dy(Dy::from_q(&m.rate));
+    let (ra, rb) = (per(a), per(b));
     let rel = (rb - ra) / Dy::int(360);
     if rel.signum() == 0 {
         return None;

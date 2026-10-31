@@ -7,10 +7,12 @@
 //! and `twist_per_turn`, `package::Si`, and `xyl_core::{measure, motion,
 //! rotor, units}`. A planet's vectors are in the system tier (60 r_g), a
 //! moon's in the planet tier (r_g / 60^2); `dilation` moves between tiers
-//! by an exact power of sixty. Ages are Gyr since the star's birth.
+//! by an exact power of sixty. Ages are rings since the star's birth (one
+//! ring one bell), rates per ring; a world's year is one turn of its
+//! manifold, its phase read in turns.
 //!
 //! Outputs:
-//! - `manifolds` -> one `Manifold` per world: rate in degrees per Gyr from
+//! - `manifolds` -> one `Manifold` per world: rate in degrees per ring from
 //!   the turning law, eccentricity relaxing toward its forced value as a
 //!   boost (`Manifold::e`), plane as an exact half-angle frame, twist per
 //!   turn equal to the anchor's deficit. A giant's moons sit on a 2:1 chain:
@@ -81,14 +83,14 @@ pub struct Manifold {
     pub tier: Tier,
     /// The semi-major axis in its tier's unit, exact.
     pub a: Q,
-    /// Initial eccentricity, relaxing toward `e_forced` over `tau_e` Gyr (when
+    /// Initial eccentricity, relaxing toward `e_forced` over `tau_e` rings (when
     /// `tau_e` is 0 the eccentricity is `e_forced` at every age).
     pub e0: Q,
     /// Forced eccentricity the orbit relaxes toward.
     pub e_forced: Q,
-    /// Relaxation time of the eccentricity (Gyr); 0 for none.
+    /// Relaxation time of the eccentricity (rings); 0 for none.
     pub tau_e: Q,
-    /// Turning rate (degrees per Gyr), exact, from the turning law.
+    /// Turning rate (degrees per ring), exact, from the turning law.
     pub rate: Q,
     /// Mean anomaly at the star's birth (turns, an exact draw).
     pub m0: Q,
@@ -188,7 +190,7 @@ pub fn manifolds(
                     a: in_tier(&o.a_m, Tier::System),
                     e0: o.e0.clone(),
                     e_forced: o.e_forced.clone(),
-                    tau_e: o.tau_e.clone(),
+                    tau_e: crate::circuit::rings_of_gyr(&o.tau_e),
                     rate: crate::turning::turning_si(&star_kg, &o.a_m),
                     m0,
                     frame: frame_of(&o.inc, &o.node, &o.peri),
@@ -215,7 +217,7 @@ pub struct Stand {
 }
 
 impl Manifold {
-    /// Turn rate (turns per Gyr, exact): the turning over 360; on a captured
+    /// Turn rate (turns per ring, exact): the turning over 360; on a captured
     /// chain, the innermost moon's halved `k` times.
     pub fn rate(&self, all: &[Manifold]) -> Encl {
         let own = |m: &Manifold| Encl::exact(m.rate.checked_div(&Q::int(360)).unwrap_or(Q::ZERO));
@@ -233,7 +235,7 @@ impl Manifold {
         }
     }
 
-    /// Eccentricity at `age` Gyr: the relaxation as a boost.
+    /// Eccentricity at `age` rings: the relaxation as a boost.
     pub fn e(&self, age: &Q) -> Encl {
         if self.tau_e.is_zero() {
             return Encl::exact(self.e_forced.clone());
@@ -246,7 +248,7 @@ impl Manifold {
         .value(age)
     }
 
-    /// State at `age` Gyr (since the star's birth).
+    /// State at `age` rings (since the star's birth).
     pub fn stand(&self, age: &Q, all: &[Manifold]) -> Stand {
         let ecc = self.e(age);
         let mean = Encl::exact(self.m0.clone()).add(&self.rate(all).mul(&Encl::exact(age.clone())));
@@ -277,7 +279,7 @@ impl Manifold {
         }
     }
 
-    /// Periapsis twist (turns per Gyr): the anchor's deficit each turn,
+    /// Periapsis twist (turns per ring): the anchor's deficit each turn,
     /// independent of the ellipse's shape.
     fn twist(&self, _ecc: &Encl, all: &[Manifold]) -> Encl {
         self.rate(all).mul(&Encl::exact(
@@ -293,7 +295,7 @@ impl Manifold {
         reach(&Encl::exact(self.a.clone()), &self.mass_ratio)
     }
 
-    /// Bearing from the anchor at `age` Gyr: the unit direction the plane's
+    /// Bearing from the anchor at `age` rings: the unit direction the plane's
     /// frame turns its phase to (mean turn plus periapsis twist; exact
     /// half-angles, unit by construction), and the distance a (1 - e cos M),
     /// linear in the elements.
@@ -469,7 +471,7 @@ pub fn out_to_star(all: &[Manifold], world: usize, age: &Q) -> Option<Q> {
     }
 }
 
-/// A world's place at `t` Gyr on its galaxy's sphere, composed up the
+/// A world's place at `t` rings on its galaxy's sphere, composed up the
 /// chain: the star's bearing from its core, offset by the world's distance
 /// to the star dilated to the galaxy tier; the core lies on the universe's
 /// sphere of radius `r`. `None` for a world not in `all`.

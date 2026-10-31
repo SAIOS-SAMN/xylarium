@@ -159,7 +159,8 @@ impl Network {
             let (i, j, span) = self.pairs[k];
             for x in [i, j] {
                 if let std::collections::btree_map::Entry::Vacant(e) = placed.entry(x) {
-                    e.insert(self.sample[x].star.place(t, &sphere));
+                    let at = xyl_cosmos::circuit::rings_of_gyr_dy(t);
+                    e.insert(self.sample[x].star.place(at, &sphere));
                     speeds.insert(x, self.sample[x].speed_bound(t));
                 }
             }
@@ -201,6 +202,8 @@ impl Network {
             &self.sample.get(*self.index.get(&a)?)?.star,
             &self.sample.get(*self.index.get(&b)?)?.star,
         );
+        // The cosmos places stars in rings; `t` (Gyr) converts here.
+        let t = xyl_cosmos::circuit::rings_of_gyr_dy(t);
         Some(sa.place(t, &sphere).arc_kpc(&sb.place(t, &sphere), &sphere))
     }
 

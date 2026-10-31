@@ -206,11 +206,11 @@ fn star_life(
         if sys.worlds.is_empty() {
             return;
         }
-        let t0 = Dy::from_q(&star.born) + first_age(Dy::from_q(&star.r), ctx);
+        let born = crate::circuit::gyr_of_rings_dy(Dy::from_q(&star.born));
+        let t0 = born + first_age(Dy::from_q(&star.r), ctx);
         if t0 >= horizon_gyr() {
             return;
         }
-        let born = Dy::from_q(&star.born);
         let life_busy =
             xyl_core::watch::busy(format!("life of star {n} ({} worlds)", sys.worlds.len()));
         let (living, lins) = system_life(gal, star, sys, ctx);
@@ -365,7 +365,9 @@ fn star_key(gal: &Galaxy, n: u64, star: &crate::galaxy::Star) -> String {
         format!(
             "{}|{}",
             crate::galaxy::density(&star.r).mid(),
-            crate::galaxy::birth_gyr(&star.r).unwrap_or(xyl_core::Q::ZERO)
+            crate::galaxy::birth(&star.r)
+                .map(|b| crate::circuit::gyr_of_rings(&b))
+                .unwrap_or(xyl_core::Q::ZERO)
         )
         .as_bytes(),
     );

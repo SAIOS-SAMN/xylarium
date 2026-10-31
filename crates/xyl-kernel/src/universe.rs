@@ -3,8 +3,9 @@
 //! the seats, the ley network and the keepers' clocks.
 //!
 //! - Clock: `now` is an exact rational count of the core's rings. [`Bell`]
-//!   holds the ring's period in Gyr (`xyl_cosmos::pulse::core_period_yr`,
-//!   rounded down onto a 2^-60 grid); deep time in Gyr is count x period,
+//!   holds the ring's period in Gyr (`xyl_cosmos::pulse::core_period`, one
+//!   ring, converted at the boundary by `circuit::gyr_of_rings` and rounded
+//!   down onto a 2^-60 grid); deep time in Gyr is count x period,
 //!   converted to `Dy` at the seam with the older layers.
 //! - Events: [`Universe::next_event`] is the soonest of the forecast's next
 //!   waking, the next pending [`Input`] and the next ley line falling due.
@@ -47,8 +48,7 @@ impl Bell {
     /// The bell of the core: the core's period in Gyr, rounded down onto a
     /// 2^-60 grid.
     pub fn of() -> Bell {
-        let yr = xyl_cosmos::pulse::core_period_yr().to_q();
-        let gyr = yr.checked_div(&Q::int(1_000_000_000)).unwrap_or(Q::ONE);
+        let gyr = xyl_cosmos::circuit::gyr_of_rings(&xyl_cosmos::pulse::core_period().to_q());
         Bell {
             period_gyr: xyl_core::certified::down(&gyr, 60),
         }

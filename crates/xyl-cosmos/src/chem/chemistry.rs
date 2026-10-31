@@ -106,7 +106,7 @@ impl Chemistry {
         C.get()
     }
 
-    /// A star's birth (Gyr after the Big Bang) along its ring's star
+    /// A star's birth (rings after the Big Bang) along its ring's star
     /// formation: the time by which the share `u` of the stars the ring forms
     /// between `from` (its first light) and the horizon have formed, read from
     /// the ring's closed form (`Ring::sfr`, integrated term by term) and found
@@ -118,7 +118,7 @@ impl Chemistry {
         };
         let first = &self.model.params.first_stars;
         let t0 = Dy::from_q(&(from - first)).max(Dy::ZERO);
-        let top = crate::life::horizon_gyr() - Dy::from_q(first);
+        let top = crate::circuit::rings_of_gyr_dy(crate::life::horizon_gyr()) - Dy::from_q(first);
         if top <= t0 {
             return from.clone();
         }
@@ -208,8 +208,8 @@ impl Chemistry {
     /// for the star's draw `u` in [0, 1): the long-mixed part, plus the recent
     /// part (a tenth of the ring's merger making over its merger metals, at
     /// most 1) scaled by the Poisson count of mergers in the star's patch
-    /// (300 pc over 100 Myr) over the expected count. Zero before the first
-    /// mergers.
+    /// (300 pc over 100 Myr, the window declared in Gyr and read in rings)
+    /// over the expected count. Zero before the first mergers.
     pub fn lump(&self, r: &Q, t: &Q, u: &Q) -> Option<Q> {
         let ci = channel_index(Channel::Merger)?;
         let k = ring_of(r);
@@ -225,10 +225,12 @@ impl Chemistry {
             return Some(if out.signum() <= 0 { Q::ZERO } else { Q::ONE });
         }
         let recent = out.checked_div(&held)?.min(Q::ONE);
-        // Stars formed in the patch: sfr (suns/pc^2/Gyr) x pi (300 pc)^2 x
-        // 0.1 Gyr; the expected merger count is 2e-5 per sun formed.
+        // Stars formed in the patch: sfr (suns/pc^2 per ring) x pi (300 pc)^2
+        // x the window, 0.1 Gyr in rings; the expected merger count is 2e-5
+        // per sun formed.
         let sfr = ring.sfr.at(&dt).mid();
-        let formed = &(&sfr * &pi(BITS).mid()) * &decimal("9000").unwrap_or(Q::ZERO);
+        let window = crate::turning::span_in_rings(&decimal("0.1").unwrap_or(Q::ZERO));
+        let formed = &(&(&sfr * &pi(BITS).mid()) * &decimal("90000").unwrap_or(Q::ZERO)) * &window;
         let expect = &decimal("2.0e-5").unwrap_or(Q::ZERO) * &formed;
         if expect.signum() <= 0 {
             return Some(&Q::ONE - &recent);

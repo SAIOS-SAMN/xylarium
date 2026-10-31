@@ -3,14 +3,13 @@
 use super::*;
 
 /// The core's assembly time (Gyr): the star-formation time at the centre
-/// (`galaxy::birth_gyr` at radius zero), or the midpoint of the Big Bang's
-/// first-stars time where that is undefined. It is the window within which
+/// (`galaxy::birth` at radius zero, converted from rings), or the midpoint of
+/// the Big Bang's first-stars time where that is undefined. It is the window within which
 /// a galaxy's core-born minds count as ancients.
 pub fn ancient_window(gal: &Galaxy) -> Dy {
-    Dy::from_q(
-        &crate::galaxy::birth_gyr(&xyl_core::Q::ZERO)
-            .unwrap_or_else(|| crate::circuit::gyr_of_rings(&gal.bang.first_stars().mid())),
-    )
+    let rings =
+        crate::galaxy::birth(&xyl_core::Q::ZERO).unwrap_or_else(|| gal.bang.first_stars().mid());
+    Dy::from_q(&crate::circuit::gyr_of_rings(&rings))
 }
 
 /// A star's distance from the core at `t` Gyr, the sum of its reach and its
@@ -23,7 +22,7 @@ pub fn ancient_window(gal: &Galaxy) -> Dy {
 pub fn from_centre_kpc(star: &crate::galaxy::Star, t: Dy) -> Dy {
     // The distance from the core is the reach plus the height off the plane
     // (a path sum, not the hypotenuse).
-    let (reach, _, climb) = star.bearing(t);
+    let (reach, _, climb) = star.bearing(crate::circuit::rings_of_gyr_dy(t));
     let way = &reach + &climb.abs();
     Dy::from_q(
         &way.checked_div(&crate::chain::kpc())

@@ -52,9 +52,9 @@ impl Home {
     /// `sys`. `_gal` is not read.
     pub fn of(_gal: &Galaxy, star: &Star, sys: &System) -> Home {
         Home {
-            born: Dy::from_q(&star.born),
+            born: crate::circuit::gyr_of_rings_dy(Dy::from_q(&star.born)),
             r_kpc: Dy::from_q(&star.r),
-            exposure: star.exposure(settled_gyr()),
+            exposure: star.exposure(crate::circuit::rings_of_gyr_dy(settled_gyr())),
             star_mass: Dy::from_q(&sys.spec.mass),
             lum: Dy::from_q(&sys.spec.lum),
             debris: debris_share(sys),

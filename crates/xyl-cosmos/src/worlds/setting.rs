@@ -56,10 +56,10 @@ impl Path {
     /// spin brakes linearly from the birth spin toward the orbital rate until
     /// lock (bodies.rs `Orbit::at`). A path with no birth spin is locked.
     pub fn heartbeat(&self, t: Dy) -> Heartbeat {
-        let mean = Dy::from_q(&crate::turning::rad_s(&crate::turning::turning_si(
+        let mean = Dy::from_q(&crate::turning::turning_rad_s(
             &self.host_kg.to_q(),
             &self.a_m.to_q(),
-        )));
+        ));
         let locked = t >= self.lock_gyr || self.spin0.signum() <= 0;
         let w = if locked {
             mean

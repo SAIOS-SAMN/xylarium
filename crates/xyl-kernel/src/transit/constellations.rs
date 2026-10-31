@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use xyl_core::dyadic::Dy;
 use xyl_cosmos::galaxy::Star;
 
-/// Returns the turning (degrees per Gyr) that a body of `suns` gives a
+/// Returns the turning (degrees per ring) that a body of `suns` gives a
 /// neighbour `span_kpc` away: the master equation's pair term, the turning
 /// law evaluated at the span (at least 1e-9 kpc).
 fn pair_turning(suns: Dy, span_kpc: Dy) -> Dy {
@@ -107,7 +107,7 @@ pub struct InPlay {
     /// time.
     pub reach: Dy,
     /// The star's turning about the galaxy at its orbit radius, in degrees per
-    /// Gyr, read once.
+    /// ring, read once.
     pub rate0: Dy,
 }
 
@@ -129,11 +129,15 @@ impl InPlay {
     /// the vertical swing through the plane at its largest (the vertical
     /// speed read 10 Gyr later, where the share saturates, times the scale).
     pub fn speed_bound(&self, t: Dy) -> Dy {
-        let circ = self.star.orbit.rate.abs() * Dy::PI / Dy::int(180) * self.star.orbit.radius;
-        let age = (t - Dy::from_q(&self.star.born)).max(Dy::ZERO) + Dy::int(10);
+        // The cosmos counts in rings; the rate and the age convert at this
+        // boundary (a rate per ring read per Gyr is `rings_of_gyr_dy`).
+        let rate = xyl_cosmos::circuit::rings_of_gyr_dy(self.star.orbit.rate.abs());
+        let circ = rate * Dy::PI / Dy::int(180) * self.star.orbit.radius;
+        let born = xyl_cosmos::circuit::gyr_of_rings_dy(Dy::from_q(&self.star.born));
+        let age = (t - born).max(Dy::ZERO) + Dy::int(10);
         let swing = self
             .star
-            .vertical_at(age)
+            .vertical_at(xyl_cosmos::circuit::rings_of_gyr_dy(age))
             .map(|v| v.vz_kms.abs() * self.star.scale * kms_to_kpc_gyr())
             .unwrap_or(Dy::ZERO);
         circ + swing

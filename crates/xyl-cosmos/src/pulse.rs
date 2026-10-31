@@ -3,17 +3,18 @@
 //!
 //! Model: the core's bounce emits one wavefront (no oscillator, no
 //! harmonics) that runs out to the founding's rim and back once per bell.
-//! Its wavelength is light speed x the bell (`wavelength_kpc`), so no
+//! Its wavelength is light speed x the bell (`wavelength_kpc`, one ring of
+//! light, twice the home galaxy's rim), so no
 //! separate constant is set. Every hole (black face, throat, white face; see
 //! `centre`) passes the wavefront on continuous in phase, without a separate
 //! period.
 //!
 //! Reads `bang::BigBang`, `cores::shapes` and `cores::held`, `galaxy::star`,
 //! `chain::Place` and `chain::radius`, `stars::life` and
-//! `stars::remnant_share`, `circuit::bell` (in Gyr by
-//! `circuit::gyr_of_rings_dy`) and `package::Si` (light speed, year, kpc).
-//! Times are Gyr after the Big Bang, distances kpc, masses suns, all as
-//! `Dy`.
+//! `stars::remnant_share`, `circuit::bell` and `circuit::anchor` (the bell
+//! in core time), `chain::units` (r_g) and `package::Si` (kpc). Times are
+//! rings after the Big Bang (one ring one bell), distances kpc, masses suns,
+//! all as `Dy`.
 //!
 //! Outputs:
 //! - `nodes`, `nodes_among` -> `Vec<Node>`: every galactic core from its
@@ -35,10 +36,15 @@ use crate::galaxy::{star, Star};
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 
-/// Light speed in kpc per year, from the one SI seam (`package::Si`).
-pub fn c_kpc_yr() -> Dy {
-    use crate::package::Si;
-    Dy::from_q(&Si::c()) * Dy::from_q(&Si::yr_s()) / Dy::from_q(&Si::kpc())
+/// Light speed in kpc per ring: the bell in core time (`Anchor::bell`,
+/// units of r_g / c) times r_g in kpc, so no second enters. Zero before a
+/// founding.
+pub fn c_kpc_per_ring() -> Dy {
+    let rg_kpc = crate::chain::units()
+        .r_g_m
+        .checked_div(&crate::package::Si::kpc())
+        .unwrap_or(Q::ZERO);
+    Dy::from_q(&(&crate::circuit::anchor().bell * &rg_kpc))
 }
 
 /// The kind of node.
@@ -57,17 +63,17 @@ pub struct Node {
     pub kind: Kind,
     /// The hole mass the node represents (suns), which sets its intensity.
     pub mass: Dy,
-    /// When it formed (Gyr after the Big Bang).
+    /// When it formed (rings after the Big Bang).
     pub born: Dy,
 }
 
 impl Node {
-    /// The node's place at `t` Gyr on the universe's 3-sphere of radius `r`
+    /// The node's place at `t` rings on the universe's 3-sphere of radius `r`
     /// (galaxy units): a core at the chain's anchor, a stellar hole where its
     /// progenitor star's manifold puts it.
     pub fn place(&self, t: Dy, r: &Q) -> Place {
         match &self.kind {
-            Kind::Core(sh) => sh.place_at(crate::circuit::rings_of_gyr_dy(t), r),
+            Kind::Core(sh) => sh.place_at(t, r),
             Kind::Stellar(s) => s.place(t, r),
         }
     }
@@ -98,7 +104,7 @@ pub fn nodes_among(seed: u64, bang: &BigBang, candidates: &[u64]) -> Vec<Node> {
         .into_iter()
         .map(|sh| Node {
             mass: Dy::from_q(&sh.hole_suns),
-            born: Dy::from_q(&crate::circuit::gyr_of_rings(&sh.born)),
+            born: Dy::from_q(&sh.born),
             kind: Kind::Core(Box::new(sh)),
         })
         .collect();
@@ -122,18 +128,18 @@ pub fn nodes_among(seed: u64, bang: &BigBang, candidates: &[u64]) -> Vec<Node> {
     out
 }
 
-/// The core's period (yr): the bell, the pulse's round trip to the
-/// founding's rim and back (`circuit::anchor`).
-pub fn core_period_yr() -> Dy {
-    crate::circuit::gyr_of_rings_dy(crate::circuit::bell()) * Dy::sci(1, 9)
+/// The core's period (rings): the bell, the pulse's round trip to the
+/// founding's rim and back (`circuit::bell`), one ring.
+pub fn core_period() -> Dy {
+    crate::circuit::bell()
 }
 
 /// The wavefront's wavelength (kpc): light speed x the core's period.
 pub fn wavelength_kpc() -> Dy {
-    c_kpc_yr() * core_period_yr()
+    c_kpc_per_ring() * core_period()
 }
 
-/// What a place hears of the bells at `t` Gyr.
+/// What a place hears of the bells at `t` rings.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Hearing {
     /// The loudest bell's index in the nodes.
@@ -159,7 +165,7 @@ pub struct Relay {
     pub continuity: Dy,
 }
 
-/// The relay network at `t` Gyr over `nodes`, one [`Relay`] per node in the
+/// The relay network at `t` rings over `nodes`, one [`Relay`] per node in the
 /// same order. Nodes not yet born keep the default relay (no source, route 0,
 /// continuity 1). A node with no live source closer to the core takes the
 /// direct arc from the core as its route.
@@ -210,7 +216,7 @@ pub fn relays(nodes: &[Node], t: Dy) -> Vec<Relay> {
     out
 }
 
-/// What `place` hears of the live bells at `t` Gyr; `None` when no node is
+/// What `place` hears of the live bells at `t` rings; `None` when no node is
 /// live. Arcs are at least 1e-6 kpc.
 pub fn hear(place: &Place, nodes: &[Node], relays: &[Relay], t: Dy) -> Option<Hearing> {
     let r = crate::chain::radius();

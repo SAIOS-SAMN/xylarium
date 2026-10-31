@@ -157,5 +157,7 @@ pub fn foragers(ms: &[Medium], region: Region, body: &Body, ctx: &Ctx) -> Dy {
 /// `stars::life` at the star's reach in rings, times the universe's nuclear
 /// scale.
 pub fn lifetime(r_kpc: Dy, ctx: &Ctx) -> Dy {
-    Dy::from_q(&crate::stars::life(crate::stars::reach_rings(r_kpc))) * ctx.sc.nuclear
+    // The star's life is counted in rings; it converts here to Gyr.
+    let life = crate::stars::life(crate::stars::reach_rings(r_kpc));
+    Dy::from_q(&crate::circuit::gyr_of_rings(&life)) * ctx.sc.nuclear
 }

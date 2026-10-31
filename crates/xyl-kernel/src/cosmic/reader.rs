@@ -115,7 +115,7 @@ pub(super) fn world_key(
     epoch: Dy,
 ) -> Option<(u64, usize, i64)> {
     let wit = systems.get(&star_n)?;
-    let born = Dy::from_q(&wit.star.born);
+    let born = xyl_cosmos::circuit::gyr_of_rings_dy(Dy::from_q(&wit.star.born));
     let deg = star_degree_gyr(Dy::from_q(&wit.star.r), ctx);
     Some((star_n, w, degree_of(epoch - born, deg)))
 }
@@ -144,7 +144,7 @@ impl<'a> SystemReader<'a> {
         let deg = star_degree_gyr(Dy::from_q(&wit.star.r), ctx);
         Some(SystemReader {
             sets: settings(gal, &[star_n], &wit.system, &wit.star),
-            born: Dy::from_q(&wit.star.born),
+            born: xyl_cosmos::circuit::gyr_of_rings_dy(Dy::from_q(&wit.star.born)),
             deg,
             ctx,
         })

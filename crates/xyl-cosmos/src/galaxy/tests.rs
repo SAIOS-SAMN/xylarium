@@ -10,9 +10,9 @@ fn stars_circle_the_core_and_the_core_holds_its_share() {
     // A star exists only where its ring's gas lights; its birth is at or
     // after the ring's first light and at or before the horizon.
     assert!(!stars.is_empty() && stars.len() <= 1000);
-    let horizon = crate::life::horizon_gyr().to_q();
+    let horizon = crate::circuit::rings_of_gyr(&crate::life::horizon_gyr().to_q());
     for s in &stars {
-        let first = birth_gyr(&s.r).expect("a standing star's ring lights");
+        let first = birth(&s.r).expect("a standing star's ring lights");
         assert!(
             s.born >= down(&first, GRID_BITS),
             "born after its first light"
@@ -36,7 +36,7 @@ fn stars_circle_the_core_and_the_core_holds_its_share() {
     let r = crate::chain::radius();
     let s = &stars[0];
     let (p0, p1) = (s.place(Dy::int(5), &r), s.place(Dy::sci(51, -1), &r));
-    let from_core = crate::minds::from_centre_kpc(s, Dy::int(5));
+    let from_core = crate::minds::from_centre_kpc(s, crate::circuit::gyr_of_rings_dy(Dy::int(5)));
     assert!(
         (from_core - s.orbit.radius).abs() < Dy::ratio(1, 2),
         "{} vs {}",
@@ -62,7 +62,7 @@ fn stars_circle_the_core_and_the_core_holds_its_share() {
         .filter_map(|k| star(7, bang, NUCLEUS_BASE + k))
         .collect();
     if nuc.is_empty() {
-        assert!(birth_gyr(&Q::ZERO).is_none(), "the nucleus never lights");
+        assert!(birth(&Q::ZERO).is_none(), "the nucleus never lights");
     } else {
         assert!(nuc
             .iter()
@@ -111,6 +111,6 @@ fn imf_heavier_where_rings_crowd_births_after_first_stars() {
     assert!(mean(densest) >= mean(r0()));
     for s in (0..300).filter_map(|n| star(7, bang, n)) {
         assert!(s.mass.signum() > 0, "{}", s.mass);
-        assert!(s.born >= crate::circuit::gyr_of_rings(&bang.first_stars().lo));
+        assert!(s.born >= bang.first_stars().lo);
     }
 }

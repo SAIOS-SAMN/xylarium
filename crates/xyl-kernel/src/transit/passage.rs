@@ -42,9 +42,10 @@ impl Network {
             let years = voyage(spec, ratio, escape, separation_m(cosmic, a, b)?)?.years;
             let wit = cosmic.systems.get(&a.star)?;
             let all = manifolds(cosmic.gal.seed, &[a.star], &wit.system, &wit.star, &units());
-            let age = (cosmic.now - Dy::from_q(&wit.star.born))
-                .max(Dy::ZERO)
-                .to_q();
+            let age = (cosmic.now
+                - xyl_cosmos::circuit::gyr_of_rings_dy(Dy::from_q(&wit.star.born)))
+            .max(Dy::ZERO)
+            .to_q();
             let wait = window_years(&all, a.world, b.world, &age, years)
                 .map(|(w, v)| w * v / (v + cruise))
                 .unwrap_or(Dy::ZERO);

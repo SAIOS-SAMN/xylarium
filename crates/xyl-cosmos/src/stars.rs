@@ -2,11 +2,11 @@
 //! phase and remnant, read at any age without time stepping (docs/model.md).
 //!
 //! Reads `circuit::anchor` (galaxy ring in kpc), `circuit::vacuum_share`,
-//! `circuit::bell` and `echo` (rings; Gyr meet them at `circuit::rings_of_gyr_dy`
-//! and `gyr_of_rings_dy`), the substrate's firmament outflow rate
-//! (`cores::substrate_for`), `compound::hold`, `systems::luminosity` and the
-//! sun's radius from `package::Si`. Reach `r` is in galaxy rings
-//! (`reach_rings` converts from kpc); times are Gyr; mass and light in suns.
+//! `circuit::bell` and `echo` (one and two rings), the substrate's firmament
+//! outflow rate (`cores::substrate_for`, per ring), `compound::hold`,
+//! `systems::luminosity` and the sun's radius from `package::Si`. Reach `r`
+//! is in galaxy rings (`reach_rings` converts from kpc); times are rings of
+//! time after the Big Bang (one ring one bell); mass and light in suns.
 //!
 //! - Burn (`burn_per_bell`): the share of a star's hold the pulse transduces
 //!   per bell, `delta_star x ring_per_bell(r)`. The ring per bell is
@@ -18,8 +18,8 @@
 //!   one sun. `flicker` is the swing within a bell,
 //!   `(pi / 2) |cos(2 pi t / echo)|`, a reading of the light only.
 //! - Life (`life`, `ends`, `burned`): the hydrogen step's transduced share
-//!   `1 - hold(He) / (4 hold(H))` over the burn, counted in bells and
-//!   converted to Gyr; the giant ends
+//!   `1 - hold(He) / (4 hold(H))` over the burn, counted in rings; the
+//!   giant ends
 //!   when the helium step's further share `1 - hold(C) / (3 hold(He))` is
 //!   transduced. `remnant_share` is the hold neither step transduced.
 //! - Not yet modelled: ejecta returned to the galaxy's gas, and stellar mixes
@@ -68,7 +68,7 @@ pub fn ring_per_bell(reach: Dy) -> Dy {
     vacuum_share(reach, Dy::ONE) / Dy::PI
 }
 
-/// The vessel's drift at reach `r` over one bell at `t` Gyr: `bell q(t)`
+/// The vessel's drift at reach `r` over one bell at `t` rings: `bell q(t)`
 /// times the vacuum's share; zero before a founding or while nothing has
 /// left the firmament.
 pub fn drift_per_bell(reach: Dy, t: Dy) -> Dy {
@@ -76,8 +76,7 @@ pub fn drift_per_bell(reach: Dy, t: Dy) -> Dy {
     let Some(s) = crate::cores::substrate_for(&anchor.spin) else {
         return Dy::ZERO;
     };
-    let t = crate::circuit::rings_of_gyr_dy(t.max(Dy::ZERO));
-    crate::circuit::bell() * s.rate(t).0 * vacuum_share(reach, Dy::ONE)
+    crate::circuit::bell() * s.rate(t.max(Dy::ZERO)).0 * vacuum_share(reach, Dy::ONE)
 }
 
 /// The share of a star's hold the pulse transduces per bell at reach `r`,
@@ -113,19 +112,18 @@ pub fn remnant_share() -> Q {
     &Q::ONE - &transduced_helium()
 }
 
-/// A star's main-sequence life (Gyr) at reach `r`: the hydrogen step's
-/// share over the burn per bell gives the number of bells, times the bell's
-/// length in Gyr. Zero before a founding.
+/// A star's main-sequence life (rings) at reach `r`: the hydrogen step's
+/// share over the burn per bell, a count of bells, each one ring. Zero
+/// before a founding.
 pub fn life(reach: Dy) -> Q {
     let burn = burn_per_bell(reach);
-    if burn.signum() <= 0 {
+    if burn.signum() <= 0 || crate::circuit::anchor().rim.signum() <= 0 {
         return Q::ZERO;
     }
-    let bells = Dy::from_q(&transduced_hydrogen()) / burn * crate::circuit::bell();
-    crate::circuit::gyr_of_rings_dy(bells).to_q()
+    (Dy::from_q(&transduced_hydrogen()) / burn * crate::circuit::bell()).to_q()
 }
 
-/// A star's light (suns) at `age` Gyr after its birth at `born`, at reach
+/// A star's light (suns) at `age` rings after its birth at `born`, at reach
 /// `r`: the mean luminosity (`systems::luminosity`) times the vessel's drift
 /// factor `1 + pi bell q(t)`, with q read at `born + age`.
 pub fn light(mass: &Q, reach: Dy, born: Dy, age: Dy) -> Q {
@@ -134,27 +132,26 @@ pub fn light(mass: &Q, reach: Dy, born: Dy, age: Dy) -> Q {
     &mean * &(Dy::ONE + drift).to_q()
 }
 
-/// The radiation's swing within a bell at `t` Gyr: the ring's magnitude at
+/// The radiation's swing within a bell at `t` rings: the ring's magnitude at
 /// the instant over its mean across the bell, `(pi / 2) |cos(2 pi t / echo)|`.
 /// It is a reading of the light only; a world's temperature uses the bell's
 /// mean (`worlds`). Returns 1 before a founding.
 pub fn flicker(t: Dy) -> Dy {
     let echo = crate::circuit::echo();
-    if crate::circuit::gyr_of_rings_dy(echo).signum() <= 0 {
+    if echo.signum() <= 0 || crate::circuit::anchor().rim.signum() <= 0 {
         return Dy::ONE;
     }
-    let t = crate::circuit::rings_of_gyr_dy(t);
     Dy::PI / Dy::int(2) * (Dy::int(2) * Dy::PI * t / echo).cos().abs()
 }
 
-/// The share of a star's hydrogen step transduced by `age` Gyr at reach `r`,
+/// The share of a star's hydrogen step transduced by `age` rings at reach `r`,
 /// exact: `age / life`; zero when the life is zero.
 pub fn burned(reach: Dy, age: &Q) -> Q {
     age.checked_div(&life(reach)).unwrap_or(Q::ZERO)
 }
 
 /// When a star leaves the main sequence and when its giant's helium is spent
-/// (Gyr) at reach `r`: the main-sequence life, and that life times the ratio
+/// (rings) at reach `r`: the main-sequence life, and that life times the ratio
 /// of the helium step's cumulative share to the hydrogen step's.
 pub fn ends(reach: Dy) -> (Q, Q) {
     let main = life(reach);

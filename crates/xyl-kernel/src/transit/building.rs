@@ -367,12 +367,10 @@ impl<'a> Placer<'a> {
         if let Some(p) = self.placed.borrow().get(&n) {
             return Some(p.clone());
         }
-        let p = self
-            .net
-            .sample
-            .get(*self.net.index.get(&n)?)?
-            .star
-            .place(self.start, &self.sphere);
+        let p = self.net.sample.get(*self.net.index.get(&n)?)?.star.place(
+            xyl_cosmos::circuit::rings_of_gyr_dy(self.start),
+            &self.sphere,
+        );
         self.placed.borrow_mut().insert(n, p.clone());
         Some(p)
     }

@@ -3,7 +3,7 @@
 //!
 //! Inputs: `worlds` (a world's `Setting`, `State` and `Medium`s, bond
 //! energies, `Ctx` with `laws::Scales`), `galaxy::Star`, `systems::System`,
-//! `stars::life` for the star's lifetime, `turning::year_yr` for orbital
+//! `stars::life` for the star's lifetime, `turning::year` (rings) for orbital
 //! periods, and SI constants from `package::Si`. Times are Gyr after the Big
 //! Bang, all quantities `Dy`. No per-world parameter sets how common or fast
 //! life is; it follows from these formulas under each universe's scales.

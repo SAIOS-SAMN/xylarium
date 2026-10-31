@@ -2,11 +2,10 @@
 //! the matter that falls to it, passes its throat, and returns as jets.
 //!
 //! Reads `bounce::Bounce` (rebuilt on every change of mass) and
-//! `circuit::echo` (in Gyr by `circuit::gyr_of_rings_dy`) for the jet
-//! episode (`galaxy_episode_myr`, the echo in Myr; zero before a
-//! founding). Masses are suns and times Myr, all exact `Q`; exponentials
-//! are `xyl_core::certified` enclosures whose lower bound is fixed on a
-//! 2^-40 grid.
+//! `circuit::echo` for the jet episode (`galaxy_episode`, the echo, two
+//! rings). Masses are suns and times rings (one ring one bell), all exact
+//! `Q`; exponentials are `xyl_core::certified` enclosures whose lower bound
+//! is fixed on a 2^-40 grid.
 //!
 //! What falls (`Core::capture`) is split:
 //!
@@ -45,13 +44,12 @@ pub fn horizon_share() -> Q {
 pub fn efficiency() -> Q {
     Q::ratio(1, 10)
 }
-/// A galaxy's jet episode (Myr): the galaxy's echo, the pulse out to its rim
-/// and back twice (`circuit::anchor`), so the jet returns on the galaxy's
-/// clock and no span is declared. Zero until a universe is founded in the process;
-/// a centre carries the episode it was made with.
-pub fn galaxy_episode_myr() -> Q {
-    (crate::circuit::gyr_of_rings_dy(crate::circuit::echo()) * xyl_core::dyadic::Dy::int(1000))
-        .to_q()
+/// A galaxy's jet episode (rings): the galaxy's echo, the pulse out to its
+/// rim and back twice (`circuit::echo`, two rings), so the jet returns on
+/// the galaxy's clock and no span is declared. A centre carries the episode
+/// it was made with.
+pub fn galaxy_episode() -> Q {
+    crate::circuit::echo().to_q()
 }
 
 /// The throat's far face: the persistent central engine of the universe on
@@ -65,8 +63,8 @@ pub struct FarCore {
     pub released: Q,
     /// Sent back through the throat from the far side, cumulative (suns).
     pub sent: Q,
-    /// The far core's elapsed deep time (Myr).
-    pub clock_myr: Q,
+    /// The far core's elapsed deep time (rings).
+    pub clock: Q,
     /// An ordered digest of every record that crossed; seeds the far universe.
     pub records: [u8; 32],
     /// Number of capture records folded into `records`.
@@ -90,9 +88,9 @@ pub struct Core {
     /// The curvature radius of the galaxy's S^360 enclosure the horizon is
     /// read in (the hole's units).
     pub enclosure: Q,
-    /// The jet episode's e-folding time (Myr): the galaxy's echo
-    /// ([`galaxy_episode_myr`]).
-    pub episode_myr: Q,
+    /// The jet episode's e-folding time (rings): the galaxy's echo
+    /// ([`galaxy_episode`]).
+    pub episode: Q,
     /// Mass at formation (suns).
     pub mass0: Q,
     /// Held outside the horizon, to be returned as jets (suns).
@@ -114,14 +112,14 @@ impl Core {
     /// A centre of `mass` suns and Kerr parameter `spin`, its horizon read in
     /// its galaxy's S^360 enclosure of curvature radius `enclosure`, crossed
     /// at the galaxy's phase `phase` (its bead's capture phase, turns), its
-    /// jets returning over `episode_myr` (the galaxy's echo,
-    /// [`galaxy_episode_myr`]). `None` where `Bounce::of` refuses.
-    pub fn new(mass: Q, spin: &Q, enclosure: &Q, phase: &Q, episode_myr: &Q) -> Option<Core> {
+    /// jets returning over `episode` rings (the galaxy's echo,
+    /// [`galaxy_episode`]). `None` where `Bounce::of` refuses.
+    pub fn new(mass: Q, spin: &Q, enclosure: &Q, phase: &Q, episode: &Q) -> Option<Core> {
         let hole = Bounce::of(&mass, spin, enclosure, phase)?;
         Some(Core {
             hole,
             enclosure: enclosure.clone(),
-            episode_myr: episode_myr.clone(),
+            episode: episode.clone(),
             mass0: mass,
             reservoir: Q::ZERO,
             fallen: Q::ZERO,
@@ -168,14 +166,14 @@ impl Core {
         Some(grows)
     }
 
-    /// Advances `myr` of deep time: the reservoir returns
+    /// Advances `dt` rings of deep time: the reservoir returns
     /// `reservoir x (1 - exp(-dt / tau))` to the bulge as jets, the lower
     /// bound rounded down to the 2^-40 grid. Returns the amount returned.
-    pub fn run(&mut self, myr: &Q) -> Q {
-        if self.reservoir.signum() <= 0 || myr.signum() <= 0 {
+    pub fn run(&mut self, dt: &Q) -> Q {
+        if self.reservoir.signum() <= 0 || dt.signum() <= 0 {
             return Q::ZERO;
         }
-        let x = myr.checked_div(&self.episode_myr).unwrap_or(Q::ZERO);
+        let x = dt.checked_div(&self.episode).unwrap_or(Q::ZERO);
         let kept = exp(&(-x), BITS);
         let share = Encl::exact(Q::ONE).sub(&kept);
         let back = down(
@@ -188,20 +186,20 @@ impl Core {
         back
     }
 
-    /// Advances the far core's clock by `myr`: its engine releases
+    /// Advances the far core's clock by `dt` rings: its engine releases
     /// `held x (1 - exp(-dt / tau))` of the throat's matter into the far
     /// universe (the lower bound rounded down to the 2^-40 grid), and the
     /// hole's mass falls by that amount, never below its formation mass.
     /// Returns the amount released, or `None` where `Bounce::of` refuses.
-    pub fn far_run(&mut self, myr: &Q) -> Option<Q> {
-        if myr.signum() <= 0 {
+    pub fn far_run(&mut self, dt: &Q) -> Option<Q> {
+        if dt.signum() <= 0 {
             return Some(Q::ZERO);
         }
-        self.far.clock_myr = &self.far.clock_myr + myr;
+        self.far.clock = &self.far.clock + dt;
         if self.far.held.signum() <= 0 {
             return Some(Q::ZERO);
         }
-        let x = myr.checked_div(&self.episode_myr).unwrap_or(Q::ZERO);
+        let x = dt.checked_div(&self.episode).unwrap_or(Q::ZERO);
         let share = Encl::exact(Q::ONE).sub(&exp(&(-x), BITS));
         let out = down(
             &Encl::exact(self.far.held.clone()).mul(&share).lo,
@@ -287,7 +285,7 @@ mod tests {
             "the throat passes matter through: {}",
             c.far.held
         );
-        assert_eq!(c.far.clock_myr, Q::int(4300));
+        assert_eq!(c.far.clock, Q::int(4300));
         for _ in 0..20 {
             c.run(&Q::int(100));
         }

@@ -81,7 +81,7 @@ pub(super) fn stretch(host_kg: &Q, a_m: &Q, r_m: &Q) -> Q {
 
 /// A planet's mean motion about its star (rad/s), from the turning law.
 pub(super) fn mean_motion(host_kg: &Q, a_m: &Q) -> Q {
-    crate::turning::rad_s(&crate::turning::turning_si(host_kg, a_m))
+    crate::turning::turning_rad_s(host_kg, a_m)
 }
 
 /// Tidal damping time of eccentricity (Gyr):

@@ -271,12 +271,17 @@ fn ring_star(
     let Some(a_out) = w.system.worlds.iter().map(|x| x.a.clone()).max() else {
         return (star, Some(worlds), drift0, books0, 0);
     };
-    let step = burning(w.star.reach_rings(), to - Dy::from_q(&w.star.born));
+    // The cosmos counts in rings: the span converts at this boundary.
+    let (from_ring, to_ring) = (
+        xyl_cosmos::circuit::rings_of_gyr_dy(from),
+        xyl_cosmos::circuit::rings_of_gyr_dy(to),
+    );
+    let step = burning(w.star.reach_rings(), to_ring - Dy::from_q(&w.star.born));
     let mut drift = drift0.unwrap_or([Q::ZERO, Q::ZERO, Q::ZERO]);
     let mut books = books0;
     let mut delivered = 0;
     for (node, bell) in bells {
-        if node.born >= to {
+        if node.born >= to_ring {
             continue;
         }
         // The star's place: its manifold position at `to`, stood off by the
@@ -290,10 +295,10 @@ fn ring_star(
             .unwrap_or(Q::ZERO);
         let place = w
             .star
-            .place(to, &radius())
+            .place(to_ring, &radius())
             .standing_off(&(&off * &xyl_cosmos::chain::kpc()));
-        let (delay, d) = path(node, &place, to);
-        let k = bell.arrivals(delay, from, to);
+        let (delay, d) = path(node, &place, to_ring);
+        let k = bell.arrivals(delay, from_ring, to_ring);
         if k == 0 {
             continue;
         }

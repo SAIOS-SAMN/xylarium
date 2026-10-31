@@ -260,8 +260,7 @@ pub fn system(
     // time, weighted by the galaxy's composition at that time (the founding
     // recipe plus the matter drawn from the core). The home galaxy and the
     // other galaxies use the same law.
-    let born = crate::circuit::rings_of_gyr(&star.born);
-    let weights = crate::cores::weights_at(seed, bang, star.core, &born, elements)?;
+    let weights = crate::cores::weights_at(seed, bang, star.core, &star.born, elements)?;
     let (gas, z) = (
         Gas::at(chem, elements, &star.r, &star.born, &lump, &weights),
         chem.metals(&star.r, &star.born)?,

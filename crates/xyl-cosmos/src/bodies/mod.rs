@@ -63,7 +63,7 @@ fn ex(x: &Q) -> Q {
 /// The turning rate at a body's surface (rad/s): the turning law c delta / R
 /// evaluated at radius R, which is the body's break-up spin.
 fn surface_turning(m_kg: &Q, r_m: &Q) -> Q {
-    crate::turning::rad_s(&crate::turning::turning_si(m_kg, r_m))
+    crate::turning::turning_rad_s(m_kg, r_m)
 }
 
 fn pi_q() -> Q {

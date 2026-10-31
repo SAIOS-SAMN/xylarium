@@ -524,10 +524,7 @@ pub fn tidal_w(host_kg: Dy, a_m: Dy, e: Dy, mass: Dy, radius: Dy, icy: bool) -> 
     let l = Lab::get();
     let r = radius * l.world_radius_m;
     // The mean motion n (rad/s) comes from the turning law.
-    let n = Dy::from_q(&crate::turning::rad_s(&crate::turning::turning_si(
-        &host_kg.to_q(),
-        &a_m.to_q(),
-    )));
+    let n = Dy::from_q(&crate::turning::turning_rad_s(&host_kg.to_q(), &a_m.to_q()));
     let k2 = love_dy(mass, radius, icy);
     let st = Dy::from_q(&stretch(&host_kg.to_q(), &a_m.to_q(), &r.to_q()));
     Dy::ratio(21, 2) * k2 / Dy::int(100)

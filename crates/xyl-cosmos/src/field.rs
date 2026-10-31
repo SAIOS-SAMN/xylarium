@@ -2,14 +2,15 @@
 //! star, and the star's exact energy books when it absorbs one
 //! (docs/model.md).
 //!
-//! Reads `pulse` (`Node`, `wavelength_kpc`, `c_kpc_yr`), `centre`
+//! Reads `pulse` (`Node`, `wavelength_kpc`, `c_kpc_per_ring`), `centre`
 //! (`horizon_share`, `efficiency`), `chain` (places, arcs, units),
 //! `stars::ends`, `circuit::anchor` (the core's spin), `package::Si` and
 //! `xyl_core::cga` in `Cl(4, 1)` over `Q`. Distances are kpc between bells
-//! and places, AU inside a system; times yr and Gyr; masses suns and world
-//! masses. Energy is in world mass x AU^2 x (2 pi / yr)^2 (5.29829e33 J),
-//! where an orbit's turning is M / a; `star_year` is a sun's year of light
-//! in that unit.
+//! and places, AU inside a system; times and periods rings (one ring one
+//! bell); masses suns and world masses. Energy is in world mass x AU^2 x
+//! (2 pi / yr)^2 (5.29829e33 J), where an orbit's turning is M / a;
+//! `star_year` is a sun's year of light in that unit and `star_ring` a sun's
+//! ring of light, read through the SI seam (`package::Si::seconds_per_ring`).
 //!
 //! - Versors: `bend` (translator), `rotate` (rotor `1 + t B`, a rational
 //!   point of the circle), `twist` (screw: rotor then translation along the
@@ -40,7 +41,7 @@ use crate::centre::{efficiency, horizon_share};
 use crate::chain::Place;
 use crate::elements::decimal;
 use crate::package::hole_mass;
-use crate::pulse::{c_kpc_yr, wavelength_kpc, Kind, Node};
+use crate::pulse::{c_kpc_per_ring, wavelength_kpc, Kind, Node};
 use xyl_core::certified::down;
 use xyl_core::cga::{self, Mv, E1, E2, E3};
 use xyl_core::dyadic::Dy;
@@ -78,6 +79,17 @@ pub fn au_per_kpc() -> Q {
 /// kernel's `Books`) is in this unit.
 pub fn star_year() -> Q {
     decimal("2.28002").unwrap_or(Q::ZERO)
+}
+
+/// A sun's light for one ring in field energy units: [`star_year`] over the
+/// 3.15576e7 SI seconds it was read over, times the SI seconds of a ring
+/// (`package::Si::seconds_per_ring`), held to 62 bits. Zero before a
+/// founding.
+pub fn star_ring() -> Q {
+    let per_s = star_year()
+        .checked_div(&decimal("3.15576e7").unwrap_or(Q::ONE))
+        .unwrap_or(Q::ZERO);
+    dyadic(&(&per_s * &crate::package::Si::seconds_per_ring()))
 }
 
 /// A hole's light per sun of its mass (suns): the share of an Eddington-fed
@@ -141,13 +153,14 @@ pub struct Bell {
     /// Pitch (kpc): the core's wavelength scaled by the hole's mass
     /// (`pitch_kpc`).
     pub pitch_kpc: Q,
-    /// Period: the pitch at light speed (yr), one ring per period.
-    pub period_yr: Q,
+    /// Period: the pitch at light speed (rings of time), one pulse ring per
+    /// period.
+    pub period: Q,
     /// Mass (suns).
     pub mass: Q,
     /// Light output (suns).
     pub light: Q,
-    /// Formation time (Gyr after the Big Bang).
+    /// Formation time (rings after the Big Bang).
     pub born: Dy,
 }
 
@@ -194,38 +207,38 @@ impl Bell {
         };
         let pitch = pitch_kpc(node.mass);
         let pitch_kpc = grid(pitch);
-        let period_yr = grid(pitch / c_kpc_yr());
+        let period = grid(pitch / c_kpc_per_ring());
         let mass = grid(node.mass);
         let light = &mass * &hole_light_per_star_mass();
         Bell {
             axis,
             spin,
             pitch_kpc,
-            period_yr,
+            period,
             mass,
             light,
             born: node.born,
         }
     }
 
-    /// The number of rings reaching a place `delay_yr` of light away within
-    /// `(from_gyr, to_gyr]`: ring k sounds at born + k periods and arrives one
-    /// light time later. Closed form; zero for an empty span or a
-    /// non-positive period.
-    pub fn arrivals(&self, delay_yr: Dy, from_gyr: Dy, to_gyr: Dy) -> u64 {
-        let period = Dy::from_q(&self.period_yr);
-        if period.signum() <= 0 || to_gyr <= from_gyr {
+    /// The number of pulse rings reaching a place `delay` rings of light
+    /// away within `(from, to]` (rings after the Big Bang): pulse ring k sounds
+    /// at born + k periods and arrives one light time later. Closed form; zero
+    /// for an empty span or a non-positive period.
+    pub fn arrivals(&self, delay: Dy, from: Dy, to: Dy) -> u64 {
+        let period = Dy::from_q(&self.period);
+        if period.signum() <= 0 || to <= from {
             return 0;
         }
-        let ring = |gyr: Dy| -> i64 {
-            let since = gyr * Dy::sci(1, 9) - self.born * Dy::sci(1, 9) - delay_yr;
+        let ring = |t: Dy| -> i64 {
+            let since = t - self.born - delay;
             if since.signum() < 0 {
                 -1
             } else {
                 (since / period).trunc_i64()
             }
         };
-        u64::try_from(ring(to_gyr) - ring(from_gyr)).unwrap_or(0)
+        u64::try_from(ring(to) - ring(from)).unwrap_or(0)
     }
 
     /// The pulse at a place `d_kpc` away: the bell's screw scaled by the
@@ -265,7 +278,7 @@ impl Bell {
     pub fn energy_at(&self, d_kpc: Dy, a_out_au: &Q) -> Q {
         let d_au = grid(d_kpc * Dy::from_q(&au_per_kpc())).max(Q::ONE);
         let share = qd(&(a_out_au * a_out_au), &(&Q::int(4) * &(&d_au * &d_au)));
-        &(&(&self.light * &self.period_yr) * &star_year()) * &share
+        &(&(&self.light * &self.period) * &star_ring()) * &share
     }
 }
 
@@ -274,12 +287,16 @@ pub fn bells(nodes: &[Node], seed: u64) -> Vec<Bell> {
     nodes.iter().map(|n| Bell::of(n, seed)).collect()
 }
 
-/// The light delay (yr) and proper distance (kpc) from a bell to a place at
-/// `t` Gyr.
+/// The light delay (rings) and proper distance (kpc) from a bell to a place
+/// at `t` rings.
 pub fn path(node: &Node, place: &Place, t: Dy) -> (Dy, Dy) {
     let r = crate::chain::radius();
     let d = place.arc_kpc(&node.place(t, &r), &r);
-    (d / c_kpc_yr(), d)
+    let c = c_kpc_per_ring();
+    if c.signum() <= 0 {
+        return (Dy::ZERO, d);
+    }
+    (d / c, d)
 }
 
 // ------------------------------------------------------------ The star burns.
@@ -315,13 +332,13 @@ pub enum Burning {
     Remnant,
 }
 
-/// The step a star at reach `r` (galaxy rings) is on at `age_gyr`: hydrogen
+/// The step a star at reach `r` (galaxy rings) is on at `age` rings: hydrogen
 /// until it leaves the main sequence, helium until its giant core's helium
 /// is spent, then remnant; both ends from the pulse's burn of its hold
 /// (`stars::ends`).
-pub fn burning(reach: Dy, age_gyr: Dy) -> Burning {
+pub fn burning(reach: Dy, age: Dy) -> Burning {
     let (main, giant) = crate::stars::ends(reach);
-    let age = age_gyr.to_q();
+    let age = age.to_q();
     if age < main {
         Burning::Hydrogen
     } else if age < giant {
@@ -512,7 +529,7 @@ mod tests {
     }
     fn stellar(bang: &BigBang) -> Node {
         // A 50-sun stellar hole on the first sample star that exists (stars
-        // exist only where their ring's gas lights, `galaxy::birth_gyr`).
+        // exist only where their ring's gas lights, `galaxy::birth`).
         let s = (0..crate::galaxy::sample(bang))
             .chain(std::iter::once(NUCLEUS_BASE))
             .find_map(|n| star(7, bang, n))
@@ -562,16 +579,16 @@ mod tests {
         assert_eq!(bs[0].spin, crate::circuit::anchor().spin);
         // A stellar hole has a shorter pitch and period, and a spin in (0, 1).
         let s = bs.get(1).expect("a stellar bell");
-        assert!(s.pitch_kpc < bs[0].pitch_kpc && s.period_yr < bs[0].period_yr);
+        assert!(s.pitch_kpc < bs[0].pitch_kpc && s.period < bs[0].period);
         assert!(s.spin.signum() > 0 && s.spin < Q::ONE);
         // Arrivals are counted in closed form: a period's span holds one ring.
         let b = &bs[0];
-        let per_gyr = Dy::from_q(&b.period_yr) / Dy::sci(1, 9);
-        let t0 = Dy::int(10);
-        let delay = Dy::int(26_000);
-        let one = b.arrivals(delay, t0, t0 + per_gyr);
+        let period = Dy::from_q(&b.period);
+        let delay = Dy::ratio(1, 4);
+        let t0 = Dy::int(10) * period + delay + period / Dy::int(2);
+        let one = b.arrivals(delay, t0, t0 + period);
         assert_eq!(one, 1, "one period, one ring");
-        assert_eq!(b.arrivals(delay, t0, t0 + per_gyr * Dy::int(10)), 10);
+        assert_eq!(b.arrivals(delay, t0, t0 + period * Dy::int(10)), 10);
         assert_eq!(b.arrivals(delay, t0, t0), 0);
         // Nothing arrives before a bell has formed and its light has crossed.
         let late = Bell {
@@ -583,6 +600,9 @@ mod tests {
 
     #[test]
     fn absorption_books_balance_exactly() {
+        // The bell's period and a ring of light are counted in rings, which
+        // the founding sets.
+        let _ = crate::genesis::bang();
         let core = Bell::of(&core(), 7);
         let d = Dy::int(8);
         let v = core.received(d);

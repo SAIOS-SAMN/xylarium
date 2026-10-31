@@ -27,10 +27,14 @@ pub(super) fn galaxy(u: &Universe<'_>) -> String {
         show(&r)
     ));
     out.push_str(&format!("Bells: {}\n", u.field.bells()));
-    let t = u.cosmic.now;
+    let t = xyl_cosmos::circuit::rings_of_gyr_dy(u.cosmic.now);
     // The main-sequence and giant end times of a star at reach 0, the core's
-    // reach.
+    // reach, counted in rings and printed in Gyr.
     let (main, giant) = xyl_cosmos::stars::ends(Dy::ZERO);
+    let (main, giant) = (
+        xyl_cosmos::circuit::gyr_of_rings(&main),
+        xyl_cosmos::circuit::gyr_of_rings(&giant),
+    );
     out.push_str(&format!(
         concat!(
             "Stars fuelled by the pulse: a star's rim share {} of the ring per bell {} ",
@@ -66,7 +70,8 @@ fn star_on_manifold(
     name: &str,
     w: &xyl_kernel::cosmic::Witnessed,
 ) -> String {
-    let t = u.cosmic.now;
+    // The star counts time in rings; ages and the life print in Gyr.
+    let t = xyl_cosmos::circuit::rings_of_gyr_dy(u.cosmic.now);
     let s = &w.star;
     // The star's bearing from its galactic core, in galaxy-tier units:
     // `way = reach + |climb|` and `height = dir_z reach + climb`.
@@ -91,9 +96,11 @@ fn star_on_manifold(
         show(&(&frac * &Q::int(360))),
         s.orbit.radius,
         reach,
-        show(&xyl_cosmos::stars::life(reach)),
+        show(&xyl_cosmos::circuit::gyr_of_rings(
+            &xyl_cosmos::stars::life(reach)
+        )),
         xyl_cosmos::field::burning(reach, age),
-        age,
+        xyl_cosmos::circuit::gyr_of_rings_dy(age),
         show(&xyl_cosmos::stars::light(
             &w.system.spec.mass,
             reach,
@@ -123,14 +130,16 @@ pub(super) fn chemistry(u: &Universe<'_>) -> String {
     for (label, t) in [("today", "13.8"), ("at 9.2 Gyr", "9.2"), ("at 3 Gyr", "3")] {
         out.push_str(&format!("  {label}:\n"));
         for r in ["2", "4", "8", "13"] {
-            let at = |s: &str| show_or_dash(chem.relative(s, &rational(r), &rational(t), &Q::ONE));
+            // The chemistry counts time in rings; the epoch converts here.
+            let t = xyl_cosmos::circuit::rings_of_gyr(&rational(t));
+            let at = |s: &str| show_or_dash(chem.relative(s, &rational(r), &t, &Q::ONE));
             out.push_str(&format!(
                 "    {r:>2} kpc  O {}  Fe {}  N {}  Eu {}  metals {}\n",
                 at("O"),
                 at("Fe"),
                 at("N"),
                 at("Eu"),
-                show_or_dash(chem.metals(&rational(r), &rational(t)))
+                show_or_dash(chem.metals(&rational(r), &t))
             ));
         }
     }
@@ -140,15 +149,19 @@ pub(super) fn chemistry(u: &Universe<'_>) -> String {
         "in suns per pc^2 and per pc^2 Gyr)\n"
     ));
     let model = &chem.model;
-    let dt = &rational("13.8") - &model.params.first_stars;
+    let today = xyl_cosmos::circuit::rings_of_gyr(&rational("13.8"));
+    let dt = &today - &model.params.first_stars;
     for r in ["2", "4", "8", "13"] {
         let k = xyl_cosmos::chem::ring_of(&rational(r));
         if let Some(ring) = model.rings.get(k) {
             out.push_str(&format!(
                 "  {r:>2} kpc  gas {}  star formation {}  metals {}\n",
                 show_or_dash(Some(ring.gas.at(&dt).mid())),
-                show_or_dash(Some(ring.sfr.at(&dt).mid())),
-                show_or_dash(chem.metals(&rational(r), &rational("13.8")))
+                // Star formation is per ring; read per Gyr for display.
+                show_or_dash(Some(xyl_cosmos::circuit::rings_of_gyr(
+                    &ring.sfr.at(&dt).mid()
+                ))),
+                show_or_dash(chem.metals(&rational(r), &today))
             ));
         }
     }
@@ -165,7 +178,7 @@ pub(super) fn chemistry(u: &Universe<'_>) -> String {
             .iter()
             .map(|sym| {
                 let rel = chem
-                    .relative(sym, &rational("8"), &rational("13.8"), &Q::ONE)
+                    .relative(sym, &rational("8"), &today, &Q::ONE)
                     .unwrap_or(Q::ZERO);
                 format!(
                     "{sym} {}",

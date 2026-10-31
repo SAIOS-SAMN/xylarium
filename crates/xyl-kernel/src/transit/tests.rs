@@ -144,7 +144,7 @@ fn orbit_gaps_and_voyages_follow_drives_and_wells() {
     ];
     assert!(near(gap(&opposite, 0, 1, &Q::ZERO), pi_plus_4));
     // The gap changes as the orbits turn: with the outer world held still,
-    // half a Gyr later the inner world has turned half a turn to the far
+    // half a ring later the inner world has turned half a turn to the far
     // side.
     let mut paced = inline.clone();
     paced[1].rate = Q::ZERO;

@@ -28,7 +28,7 @@ pub(super) fn world(u: &Universe<'_>, star: Option<u64>, w: Option<usize>) -> St
     let Some(wit) = u.cosmic.systems.get(&star) else {
         return format!("observe: star {star} is not in play");
     };
-    let born = Dy::from_q(&wit.star.born);
+    let born = xyl_cosmos::circuit::gyr_of_rings_dy(Dy::from_q(&wit.star.born));
     let people = u
         .cosmic
         .peoples
@@ -228,13 +228,14 @@ pub(super) fn system(u: &Universe<'_>, n: Option<u64>) -> String {
     let (star, sys) = (&wit.star, &wit.system);
     let units = xyl_cosmos::chain::units();
     let all = manifolds(u.cosmic.gal.seed, &[n], sys, star, &units);
-    let t = u.cosmic.now;
+    // The manifolds count age in rings; born and age print in Gyr.
+    let t = xyl_cosmos::circuit::rings_of_gyr_dy(u.cosmic.now);
     let age = (t - Dy::from_q(&star.born)).to_q();
     let mut out = format!(
         "Star {n}: {} suns, born {} Gyr, age {} Gyr\n",
         show(&sys.spec.mass),
-        show(&star.born),
-        show(&age)
+        show(&xyl_cosmos::circuit::gyr_of_rings(&star.born)),
+        show(&xyl_cosmos::circuit::gyr_of_rings(&age))
     );
     out.push_str(&format!(
         "  its cap on the core's sphere: {} deg of volume (width {})\n",
@@ -381,7 +382,7 @@ fn relations(
             width(&d)
         ));
     }
-    let t = u.cosmic.now;
+    let t = xyl_cosmos::circuit::rings_of_gyr_dy(u.cosmic.now);
     let r = xyl_cosmos::chain::radius();
     let other = u.cosmic.peoples.iter().find(|p| p.star != n);
     if let (Some(&a), Some(o)) = (planets.first(), other) {

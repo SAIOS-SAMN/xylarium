@@ -1,11 +1,11 @@
 //! Sample stars: their orbits about their galactic cores, placement by
 //! irrational rotations of the index, birth, mass ([`imf`]) and place at any
-//! `t`.
+//! `t`. Times are rings after the Big Bang, rates per ring.
 
 use super::{
-    birth_gyr, core_kpc, core_of, density, inside_mass, nucleus_kpc, nucleus_mass, reach_at,
-    sample, stellar_mass, vertical, vertical_frequency, Pop, Vertical, CORE_SHIFT, GRID_BITS,
-    NUCLEUS_BASE, NUCLEUS_SAMPLE,
+    birth, core_kpc, core_of, density, inside_mass, nucleus_kpc, nucleus_mass, reach_at, sample,
+    stellar_mass, vertical, vertical_frequency, Pop, Vertical, CORE_SHIFT, GRID_BITS, NUCLEUS_BASE,
+    NUCLEUS_SAMPLE,
 };
 use crate::bang::BigBang;
 use crate::chain::Place;
@@ -14,7 +14,7 @@ use xyl_core::dyadic::Dy;
 use xyl_core::measure;
 use xyl_core::{Stream, Q};
 
-/// 1 / (2 pi), enclosed once: converts the vertical swing's radians per Gyr
+/// 1 / (2 pi), enclosed once: converts the vertical swing's radians per ring
 /// to turns (the plane's restoring pull is not yet expressed in angles).
 fn inv_two_pi() -> &'static Encl {
     static K: std::sync::OnceLock<Encl> = std::sync::OnceLock::new();
@@ -36,7 +36,7 @@ fn inv_two_pi() -> &'static Encl {
 pub struct Orbit {
     /// Orbit radius (kpc), scaled by the galaxy's length scale.
     pub radius: Dy,
-    /// Turning rate (degrees per Gyr, exact), from the turning law.
+    /// Turning rate (degrees per ring, exact), from the turning law.
     pub rate: Dy,
     /// Orbital phase at the Big Bang (turns, exact).
     pub turns0: Dy,
@@ -63,7 +63,7 @@ impl Orbit {
         Rotor::about(2, &h(self.node)).then_after(&Rotor::about(0, &h(self.tilt)))
     }
 
-    /// Orbital phase at `t` Gyr (turns): initial phase plus turning, exact.
+    /// Orbital phase at `t` rings (turns): initial phase plus turning, exact.
     pub fn turns_at(&self, t: Dy) -> Dy {
         self.turns0 + self.rate * t / Dy::int(360)
     }
@@ -77,7 +77,7 @@ pub struct Star {
     /// Home-equivalent distance from the core (kpc), exact; sets the gas
     /// conditions the star formed in.
     pub r: Q,
-    /// Birth time (Gyr after the Big Bang), rounded to the grid.
+    /// Birth time (rings after the Big Bang), rounded to the grid.
     pub born: Q,
     /// Mass (suns), rounded to the grid.
     pub mass: Q,
@@ -113,7 +113,7 @@ impl Star {
         crate::stars::reach_rings(self.orbit.radius)
     }
 
-    /// The galaxy's turning rate (degrees per Gyr) at radius `own_kpc` in the
+    /// The galaxy's turning rate (degrees per ring) at radius `own_kpc` in the
     /// star's galaxy: the turning law over the home-equivalent mass inside
     /// times the hole ratio, as for the star's orbital rate (used for
     /// constellation shear).
@@ -128,7 +128,7 @@ impl Star {
         self.r <= core_kpc()
     }
 
-    /// Bearing from the star's galactic core at `t` Gyr (galaxy units,
+    /// Bearing from the star's galactic core at `t` rings (galaxy units,
     /// relative to the core's place): reach (orbit radius), unit direction
     /// (the plane's frame applied to the phase; exact half-angles), and climb
     /// off the plane (a disc star's vertical swing, zero otherwise).
@@ -158,11 +158,11 @@ impl Star {
         (&o.radius.to_q() * &k, dir, &climb * &k)
     }
 
-    /// The star's place at `t` Gyr on its galaxy's sphere, with its core on
+    /// The star's place at `t` rings on its galaxy's sphere, with its core on
     /// the universe's sphere of radius `r`.
     pub fn place(&self, t: Dy, r: &Q) -> Place {
         let (reach, dir, climb) = self.bearing(t);
-        let core = self.galaxy.place_at(crate::circuit::rings_of_gyr_dy(t), r);
+        let core = self.galaxy.place_at(t, r);
         Place::in_galaxy(
             reach,
             dir,
@@ -173,7 +173,7 @@ impl Star {
         )
     }
 
-    /// The vertical orbit at `age` Gyr, evaluated at the orbit radius (`None`
+    /// The vertical orbit at `age` rings, evaluated at the orbit radius (`None`
     /// for a bulge or nucleus star, which does not orbit in the disc's
     /// plane).
     pub fn vertical_at(&self, age: Dy) -> Option<Vertical> {
@@ -183,7 +183,7 @@ impl Star {
     }
 
     /// The share of the vertical oscillation spent inside the crowded layer
-    /// at `age` Gyr (1 for a star without a vertical orbit).
+    /// at `age` rings (1 for a star without a vertical orbit).
     pub fn exposure(&self, age: Dy) -> Dy {
         self.vertical_at(age).map(|v| v.exposure).unwrap_or(Dy::ONE)
     }
@@ -244,7 +244,7 @@ fn placement(local: u64, nucleus: bool) -> Placement {
     }
 }
 
-/// A star's turning rate (degrees per Gyr): the turning law over the
+/// A star's turning rate (degrees per ring): the turning law over the
 /// home-equivalent mass inside `radius` times the hole ratio, at the scaled
 /// radius `radius x scale`; both radii are at least 1e-6 kpc and rounded
 /// down to the 2^-60 grid.
@@ -311,7 +311,7 @@ pub fn star(seed: u64, bang: &BigBang, n: u64) -> Option<Star> {
     let u_mass = u();
     let u_bin = u();
     let u_comp = u();
-    let first = birth_gyr(&r)?;
+    let first = birth(&r)?;
     let born = crate::chem::Chemistry::cached(bang)
         .map(|c| c.birth_along(&r, &first, u_born))
         .unwrap_or(first);

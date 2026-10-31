@@ -34,6 +34,8 @@ fn rocky_world() -> World {
 
 #[test]
 fn closer_world_locks_sooner_with_shorter_year() {
+    // The turning law counts per ring, which the founding sets.
+    let _ = crate::genesis::bang();
     let w = rocky_world();
     let sun = Si::star_mass_kg();
     let mut rng = Stream::derive(1, &["orbits".into()]);
@@ -59,7 +61,7 @@ fn closer_world_locks_sooner_with_shorter_year() {
     assert!(now.day > Q::ZERO, "a world that turns has a day");
     // The year is one turn at the turning law's rate and is longer for the
     // farther world.
-    let law = (&Q::int(360) * &Si::gyr_s())
+    let law = (&Q::int(360) * &Si::seconds_per_ring())
         .checked_div(&crate::turning::turning_si(&sun, &os[1].a_m))
         .unwrap();
     assert!(

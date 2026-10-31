@@ -9,10 +9,11 @@ use super::*;
 /// per Gyr, times the share `R / (2 pi a)` of the orbit that the world's
 /// body covers.
 pub fn strikes_per_gyr(debris: Dy, body: &Body) -> Dy {
-    let year = Dy::from_q(&crate::turning::year_yr(
+    // The world's year in rings, converted at the boundary to years.
+    let year = crate::circuit::gyr_of_rings_dy(Dy::from_q(&crate::turning::year(
         &body.star_mass.max(Dy::sci(1, -9)).to_q(),
         &body.a_au.max(Dy::sci(1, -9)).to_q(),
-    ));
+    ))) * Dy::sci(1, 9);
     let orbits = Dy::sci(1, 9) / year.max(Dy::sci(1, -12));
     // The share R / (2 pi a), with the radius (world radii) and the orbit
     // (AU) both converted to metres.

@@ -330,8 +330,8 @@ pole axis and the five isoclinic planes).
   and the scales of the vertical orbit (`galaxy::vertical`) are declared
   rulers. Next: these are to be derived from the piece's infall (roadmap,
   Declared rulers).
-- Births (`galaxy::birth_gyr`, `chem::Chemistry::birth_along`): a star's
-  ring first lights at `max(cools_in, 1)` bells, and no star stands in a
+- Births (`galaxy::birth`, `chem::Chemistry::birth_along`): a star's
+  ring first lights at `max(cools_in, 1)` rings, and no star stands in a
   ring that never lights. The star's birth is then placed on the ring's star
   formation history: it is the time by which the share `u` (the star's draw)
   of the stars that the ring forms between first light and the horizon
@@ -340,14 +340,15 @@ pole axis and the five isoclinic planes).
   (`c t^(p+1) / (p + 1)` where `k = 0`), and the time is found by 48
   halvings.
 - Chemistry (`chem::Model`): each disc ring (30 rings of 0.5 kpc) is a sum of
-  closed forms `c t^m e^(-lambda t)`. Gas falls in on the timescale of the
+  closed forms `c t^m e^(-lambda t)`, with `t` in rings; the timescales
+  measured in Gyr are converted to rings where they are declared. Gas falls in on the timescale of the
   ring's first light toward the structure's crowding profile, and stars form at
   `efficiency x Omega / 2 pi`. Prompt and slow returns, the fountain's landing
   map and the core's jets each feed every ring once, and each nucleosynthetic
   channel makes its elements after its delay. Yields are scaled per channel by
   `chem::Calibration` against the gas at the reference ring and the solar-birth
   reference (`Rulers::ism_today_dex`, `Rulers::reference_metallicity`,
-  `Rulers::today_gyr`, `Rulers::v_flat`, `Rulers::sigma_r0`); hydrogen and
+  `Rulers::today`, `Rulers::v_flat`, `Rulers::sigma_r0`); hydrogen and
   helium come from the founding's counts (`chem::Light`). Status: partial. Next:
   the yields and ring scales are to be derived from the founding (roadmap, Rules
   from the founding and the galactic cores, chemistry from the census).

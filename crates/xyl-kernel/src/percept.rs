@@ -26,7 +26,7 @@ use crate::growth::Power;
 use crate::seats::{On, Role};
 use crate::universe::Universe;
 use xyl_core::dyadic::Dy;
-use xyl_cosmos::pulse::{c_kpc_yr, hear, Hearing, Node, Relay};
+use xyl_cosmos::pulse::{c_kpc_per_ring, hear, Hearing, Node, Relay};
 use xyl_cosmos::worlds::Heartbeat;
 
 /// A neighbouring people: its name, the separation in kpc and the light delay
@@ -119,8 +119,11 @@ pub fn perceive(
     let (state, media, _) = u.cosmic.world_at(p.star, p.world, gyr)?;
     let power = u.cosmic.power(p);
     let here = u.cosmic.place(p.star);
-    let hearing = here.and_then(|x| hear(&x, nodes, relays, gyr));
-    let c = c_kpc_yr();
+    // The pulse counts in rings: the time and light speed convert here (a
+    // speed per ring read per Gyr is `rings_of_gyr_dy`, then per year).
+    let at = xyl_cosmos::circuit::rings_of_gyr_dy(gyr);
+    let hearing = here.and_then(|x| hear(&x, nodes, relays, at));
+    let c = xyl_cosmos::circuit::rings_of_gyr_dy(c_kpc_per_ring()) / Dy::sci(1, 9);
     let neighbours = u
         .cosmic
         .peoples

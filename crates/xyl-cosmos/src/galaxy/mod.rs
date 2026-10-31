@@ -5,8 +5,9 @@
 //! founding's beads and lighting (`cores::substrate_for`), `cores::shape`
 //! for each galactic core, `chem::Chemistry::birth_along`, the turning law
 //! (`turning`), `manifold::reach`, `disc::star_cut`, and
-//! `xyl_core::measure`. Lengths are kpc, times Gyr after the Big Bang,
-//! masses suns via the one bridge `package::hole_mass`.
+//! `xyl_core::measure`. Lengths are kpc, times rings after the Big Bang (one
+//! ring one bell, `circuit::anchor`), rates per ring, masses suns via the
+//! one bridge `package::hole_mass`.
 //!
 //! - [`Structure`]: each bead is a ring of the galaxy, its span scaled so
 //!   the founding's rim is the home galaxy's rim, its state the ring's share
@@ -33,8 +34,10 @@
 //!   star's disc; [`vertical`] its swing through the plane and exposure.
 //!
 //! Declared rulers: the IMF's bounds (0.08 to 60 suns) and break scale, the
-//! vertical pull at the reference ring (75.2 rad/Gyr), the 20 km/s spread at
-//! 10 Gyr and the crowded layer's half-thickness ([`layer_kpc`], 0.3 kpc).
+//! vertical pull at the reference ring (75.2 rad/Gyr) and the 20 km/s spread
+//! at 10 Gyr (both converted to the ring where declared,
+//! `turning::rate_per_ring` and `turning::span_in_rings`), and the crowded
+//! layer's half-thickness ([`layer_kpc`], 0.3 kpc).
 //!
 //! Terms: galaxy ring, manifold (docs/glossary.md).
 
@@ -269,13 +272,14 @@ pub fn density(r: &Q) -> Encl {
     )
 }
 
-/// The birth time (Gyr after the Big Bang) of the stars at reach `r` (kpc)
-/// of the home galaxy. The ring's gas is one piece of the founding, cooling
-/// from the bounce, and collapses once when the piece lights
-/// (`formation::Lighting::cools_in_at`, in galaxy rings), so every star of a
-/// ring is born at the piece's first light, counted in bells (at least one).
-/// `None` where the piece never lights, so no star is placed there.
-pub fn birth_gyr(r: &Q) -> Option<Q> {
+/// The birth time (rings after the Big Bang, a whole number) of the stars at
+/// reach `r` (kpc) of the home galaxy. The galaxy ring's gas is one piece of
+/// the founding, cooling from the bounce, and collapses once when the piece
+/// lights (`formation::Lighting::cools_in_at`, in galaxy rings), so every
+/// star of a galaxy ring is born at the piece's first light, counted in
+/// rings of time (at least one). `None` where the piece never lights, so no
+/// star is placed there.
+pub fn birth(r: &Q) -> Option<Q> {
     let anchor = crate::circuit::anchor();
     let sub = crate::cores::substrate_for(&anchor.spin)?;
     let kpc_per_ring = anchor
@@ -285,7 +289,7 @@ pub fn birth_gyr(r: &Q) -> Option<Q> {
         .max(Q::ratio(1, 1_000_000_000));
     let rings = r.checked_div(&kpc_per_ring).unwrap_or(Q::ZERO);
     let bells = sub.lighting.cools_in_at(&rings)?;
-    Some(crate::circuit::gyr_of_rings_dy(Dy::int(bells.max(1))).to_q())
+    Some(Q::int(bells.max(1)))
 }
 
 /// The home galaxy's mass inside `r` kpc (suns): the hole plus the rings'

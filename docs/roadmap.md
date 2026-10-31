@@ -213,9 +213,13 @@ Next:
    (`package::Si`), which converts universal constants given in SI and
    displays Gyr. The conversion runs bottom-up: founding and substrate,
    galaxy and stars, systems and worlds, the kernel, then the display. The
-   calibration epochs 13.8 Gyr (`chem::Rulers::today_gyr`) and 4.57 Gyr
+   calibration epochs 13.8 Gyr (`chem::Rulers::today`) and 4.57 Gyr
    (`bodies/isotopes`) leave with the calibrations they belong to, in
-   phases 5 and 6.
+   phases 5 and 6. Converted so far: the founding and substrate, then the
+   galaxy tier (`galaxy`, `stars`, `chem`, `centre`, `pulse`, `field`,
+   `turning`, `manifold`), whose rulers declared in Gyr are converted once
+   where they are declared (`turning::span_in_rings`,
+   `turning::rate_per_ring`).
 2. Phase 2, length from the tiers. Orbits in astronomical units (`a_au`,
    `Si::au`) and radii in Earth radii (`Si::world_radius_m`) are replaced
    by the system tier's unit (`60 r_g`) and the planet tier's unit

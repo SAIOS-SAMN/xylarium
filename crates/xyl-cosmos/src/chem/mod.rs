@@ -3,10 +3,15 @@
 //!
 //! Inputs: `bang::BigBang` (first stars, star efficiency, the founding's
 //! light nuclei via `elements::founded`, read as [`Light`]), `galaxy`
-//! (`birth_gyr` for each ring's first light, `density` for the disc profile,
-//! `core_kpc`), `centre::galaxy_episode_myr` for the core's echo, and the
+//! (`birth` for each ring's first light, `density` for the disc profile,
+//! `core_kpc`), `centre::galaxy_episode` for the core's echo, and the
 //! element table's channel shares (`elements::Channel`). Radii are kpc,
-//! times Gyr after the Big Bang, surface densities suns per pc^2.
+//! times rings after the Big Bang (one ring one bell), rates per ring,
+//! surface densities suns per pc^2. The rulers measured in Gyr (the slow
+//! return, the delay windows, the patch's window, the calibration epochs)
+//! are converted to rings once, where they are declared
+//! (`turning::span_in_rings`); the disc's speed reaches the ring through the
+//! SI seam (`package::Si::seconds_per_ring`).
 //!
 //! The disc is [`RINGS`] rings of 0.5 kpc (a spatial grid). On each ring:
 //! - gas falls in as a boost on the ring's first-light timescale, scaled to
@@ -17,7 +22,8 @@
 //!   star formation without it;
 //! - core collapse and spallation make their elements at once; type Ia, AGB
 //!   and mergers follow `t^-1` delay laws held as four log-spaced boosts
-//!   after their minimum delay (e-folds rounded to 1/1024 Gyr);
+//!   after their minimum delay (e-folds rounded to 1/1024 Gyr, then read in
+//!   rings);
 //! - the fountain throws `loading` of what forms, gas with its metals, and
 //!   lands it by a landing map (Archimedes' hat-box over one epicycle, not a
 //!   diffusion); what lands inside the centre goes to the core and returns
@@ -107,9 +113,10 @@ impl Rulers {
     pub fn reference_metallicity() -> Q {
         decimal("0.0142").unwrap_or(Q::ZERO)
     }
-    /// The reference galaxy's age today, 13.8 Gyr after the Big Bang.
-    pub fn today_gyr() -> Q {
-        decimal("13.8").unwrap_or(Q::ZERO)
+    /// The reference galaxy's age today (rings): 13.8 Gyr in rings, the
+    /// calibration epoch, removed in phase 5 (docs/roadmap.md, milestone 3).
+    pub fn today() -> Q {
+        crate::turning::span_in_rings(&decimal("13.8").unwrap_or(Q::ZERO))
     }
     /// The reference ring (kpc): the galaxy's half-holding reach
     /// (`galaxy::r0`), read from the founding's structure.
@@ -136,9 +143,9 @@ impl Rulers {
     }
 }
 
-/// A channel's delay window (Gyr): its first delay and its last; zero for
-/// the prompt channels.
-fn delay(c: Channel) -> (Q, Q) {
+/// A channel's delay window as declared (Gyr, measured rulers): its first
+/// delay and its last; zero for the prompt channels.
+fn delay_declared(c: Channel) -> (Q, Q) {
     match c {
         Channel::CoreCollapse | Channel::Spallation | Channel::BigBang => (Q::ZERO, Q::ZERO),
         Channel::TypeIa => (
@@ -165,14 +172,26 @@ pub const CHANNELS: [Channel; 5] = [
     Channel::Spallation,
 ];
 
+/// A channel's delay window (rings): its first delay and its last, the
+/// declared window (`delay_declared`) read in rings; zero for the prompt
+/// channels.
+fn delay(c: Channel) -> (Q, Q) {
+    let (lo, hi) = delay_declared(c);
+    (
+        crate::turning::span_in_rings(&lo),
+        crate::turning::span_in_rings(&hi),
+    )
+}
+
 fn channel_index(c: Channel) -> Option<usize> {
     CHANNELS.iter().position(|&x| x == c)
 }
 
-/// A delay law t^-1 over [lo, hi], held as four boosts after `lo`: e-fold
-/// times log-spaced across the window, each carrying a quarter of the mass
-/// (a log-even mixture, as t^-1 is), the e-fold times rounded down to
-/// 1/1024 Gyr and at least 1/1024 Gyr (declared).
+/// A delay law t^-1 over the declared window [lo, hi] (Gyr), held as four
+/// boosts after `lo`: e-fold times log-spaced across the window, each
+/// carrying a quarter of the mass (a log-even mixture, as t^-1 is), the
+/// e-fold times rounded down to 1/1024 Gyr and at least 1/1024 Gyr
+/// (declared), returned in rings.
 fn delay_modes(lo: &Q, hi: &Q) -> Vec<(Q, Q)> {
     let ratio = Dy::from_q(&hi.checked_div(lo).unwrap_or(Q::ONE));
     (0..4)
@@ -182,7 +201,7 @@ fn delay_modes(lo: &Q, hi: &Q) -> Vec<(Q, Q)> {
             let tau =
                 Dy::from_q(lo) * (ratio.max(Dy::sci(1, -30)).log() * Dy::ratio(2 * j + 1, 8)).exp();
             let tau = Q::new((tau * Dy::int(1024)).trunc_i64().max(1), 1024).unwrap_or(Q::ONE);
-            (Q::ratio(1, 4), tau)
+            (Q::ratio(1, 4), crate::turning::span_in_rings(&tau))
         })
         .collect()
 }
@@ -191,10 +210,10 @@ fn delay_modes(lo: &Q, hi: &Q) -> Vec<(Q, Q)> {
 /// infall and the star efficiency.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Params {
-    /// When the first stars shone, in Gyr after the Big Bang.
+    /// When the first stars shone, in rings after the Big Bang.
     pub first_stars: Q,
-    /// Each ring's first light (Gyr after the Big Bang), by ring index
-    /// (`galaxy::birth_gyr`); `None` where the ring's gas never lights and no
+    /// Each ring's first light (rings after the Big Bang), by ring index
+    /// (`galaxy::birth`); `None` where the ring's gas never lights and no
     /// stars form.
     pub infall: Vec<Option<Q>>,
     /// The star efficiency: the lit share of the gas, turned into stars each
@@ -206,21 +225,23 @@ impl Params {
     /// The parameters read off the Big Bang `bang`'s founding.
     pub fn of(bang: &BigBang) -> Params {
         Params {
-            first_stars: crate::circuit::gyr_of_rings(&bang.first_stars().mid()),
+            first_stars: bang.first_stars().mid(),
             infall: (0..RINGS)
-                .map(|j| crate::galaxy::birth_gyr(&ring_mid(j)))
+                .map(|j| crate::galaxy::birth(&ring_mid(j)))
                 .collect(),
             efficiency: bang.efficiency.clone(),
         }
     }
 }
 
-/// The factor converting km/s per kpc to 1/Gyr: 1000 m per km times the
-/// seconds in a Gyr, over the metres in a kpc (`package::Si`).
-fn km_s_per_kpc_to_per_gyr() -> Q {
+/// The factor converting km/s per kpc to a rate per ring: 1000 m per km
+/// times the SI seconds of a ring, over the metres in a kpc (the SI seam,
+/// `package::Si`), held to 62 bits. Zero before a founding.
+fn km_s_per_kpc_per_ring() -> Q {
     use crate::package::Si;
-    (&Q::int(1000) * &Si::gyr_s())
+    (&Q::int(1000) * &Si::seconds_per_ring())
         .checked_div(&Si::kpc())
+        .map(|f| Dy::from_q(&f).to_q())
         .unwrap_or(Q::ZERO)
 }
 
@@ -228,14 +249,15 @@ fn ring_mid(j: usize) -> Q {
     &Q::int(i64::try_from(2 * j + 1).unwrap_or(0)) * &decimal("0.25").unwrap_or(Q::ZERO)
 }
 
-/// Ring `j`'s star-formation timescale (Gyr): its first light, at least
-/// 0.001 Gyr; `None` where the ring's gas never lights.
-fn infall_gyr(p: &Params, j: usize) -> Option<Q> {
+/// Ring `j`'s star-formation timescale (rings): its first light, at least
+/// 0.001 Gyr in rings; `None` where the ring's gas never lights.
+fn infall_time(p: &Params, j: usize) -> Option<Q> {
+    let floor = crate::turning::span_in_rings(&decimal("0.001").unwrap_or(Q::ZERO));
     p.infall
         .get(j)
         .cloned()
         .flatten()
-        .map(|t| t.max(decimal("0.001").unwrap_or(Q::ZERO)))
+        .map(|t| t.max(floor.clone()))
 }
 
 fn sigma_total(r: &Q) -> Encl {
@@ -264,7 +286,7 @@ mod tests {
     fn abundances_nonnegative_and_none_before_first_stars() {
         let bang = crate::genesis::bang();
         let chem = crate::genesis::chem();
-        let today = Rulers::today_gyr();
+        let today = Rulers::today();
         // Oxygen's abundance at r0 today is non-negative.
         let o = chem.relative("O", &Rulers::r0(), &today, &Q::ONE).unwrap();
         assert!(o.signum() >= 0, "O at R0 today: {o}");
@@ -272,9 +294,7 @@ mod tests {
         let made = chem.metals(&Rulers::r0(), &today).unwrap();
         assert!(made.signum() >= 0, "metals {made}");
         // At half the first stars' epoch no channel has made uranium yet.
-        let before = crate::circuit::gyr_of_rings(&bang.first_stars().lo)
-            .checked_div(&Q::int(2))
-            .unwrap();
+        let before = bang.first_stars().lo.checked_div(&Q::int(2)).unwrap();
         assert_eq!(
             chem.relative("U", &Rulers::r0(), &before, &Q::ONE).unwrap(),
             Q::ZERO

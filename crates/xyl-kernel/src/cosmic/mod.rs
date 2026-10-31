@@ -306,9 +306,11 @@ impl<'g> Cosmic<'g> {
     /// Where star `n` is now (kpc about the core). None for a star not yet
     /// witnessed.
     pub fn place(&self, n: u64) -> Option<Place> {
-        self.systems
-            .get(&n)
-            .map(|w| w.star.place(self.now, &radius()))
+        self.systems.get(&n).map(|w| {
+            // The cosmos places stars in rings; `now` converts here.
+            let t = xyl_cosmos::circuit::rings_of_gyr_dy(self.now);
+            w.star.place(t, &radius())
+        })
     }
 
     /// The arc between two witnessed stars now (kpc), on the closed space.
@@ -338,7 +340,7 @@ impl<'g> Cosmic<'g> {
         epoch: Dy,
     ) -> Option<xyl_cosmos::worlds::Heartbeat> {
         let wit = self.systems.get(&star_n)?;
-        let born = Dy::from_q(&wit.star.born);
+        let born = xyl_cosmos::circuit::gyr_of_rings_dy(Dy::from_q(&wit.star.born));
         // The heartbeat changes over Gyr; it is cached per degree of the
         // star's life, as world states are.
         let deg = star_degree_gyr(Dy::from_q(&wit.star.r), &self.ctx);

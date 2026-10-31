@@ -83,7 +83,7 @@ pub fn unit() -> &'static State {
 /// so it is treated as unchanged within a degree. The lifetime is that of a
 /// star at `r_kpc` from the core (`life::lifetime`).
 pub fn star_degree_gyr(r_kpc: Dy, ctx: &Ctx) -> Dy {
-    let ring = crate::pulse::core_period_yr() / Dy::sci(1, 9);
+    let ring = crate::circuit::gyr_of_rings_dy(crate::pulse::core_period());
     (crate::life::lifetime(r_kpc, ctx) / Dy::int(360))
         .max(ring)
         .max(Dy::sci(1, -12))

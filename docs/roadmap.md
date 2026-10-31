@@ -178,98 +178,100 @@ property of the Earth, the Sun or the Milky Way. SI units appear only at
 display, through `package::Si`, and the universal physical constants (c,
 G, k_B, h) are the only measured values the laws read.
 
-Why this order: The planet layer, the chemistry and the civilization
-rulers were ported from a prototype that ran in Earth masses, astronomical
-units, solar masses and Earth years, with the core's mass set to the
-measured 4.3e6 solar masses. Each phase below removes one of those units
-or calibrations and states the founding quantity that replaces it. Phases
-are ordered by dependency: time and length first, because every later
-phase is written in them; then mass; then light, which needs mass and
-length; then the chemistry, geochemistry and life rulers that read light.
+Why this order: The layers above the founding were ported from a
+prototype that ran in kiloparsecs, solar masses, Earth masses, astronomical
+units and Earth years. Every one of those units passes through the same
+Earth root: the kiloparsec through `r_g` in metres, which comes from the
+core's mass set to the measured 4.3e6 solar masses (`package::hole_mass`),
+and the year through the Earth's orbit (`Si::yr_s`). Changing a unit
+without deriving the law behind it keeps the Earth value under a new name,
+so each layer is converted whole, bottom-up: its lengths to its tier's unit
+(`xyl_core::units::Tier`), its masses to shares of the founding's chain in
+core masses, its times to rings of the bell, and every law that read a
+measured value is derived from the founding and the galactic cores in the
+same change. A law with no derivation yet is not carried over in a new
+unit; it is listed under the layer as open.
+
+Rules for every layer:
+
+- Units: tier lengths, core masses (the universal core is 1), rings. A
+  time is a position on the temporal coordinate (`xyl_core::coordinate`,
+  the T lane): whole rings plus a phase in degrees, minutes and seconds of
+  arc; local time between orbital bodies is their relative phase.
+- No conversion of an Earth-valued constant: no `turning::rate_per_ring`
+  or `span_in_rings` of a value declared per Gyr, no `Si::` in a law. SI
+  appears only in `package::Si` for display and for the universal
+  constants (c, G, k_B, h).
+- Verification by the founding's own invariants (conservation balances,
+  shares summing to one, ordering), not by agreement with earlier readings.
 
 Measure: `scripts/calibration-anchors` counts the remaining anchors in
-code by category (441 at the start of the milestone). Each phase drives
-its categories to zero and is checked with one targeted reading on the
-cached test genesis.
+code by category.
 
 Landed:
 
-- Phase 0, builds: the founding and forecast digests hash code only
+- Builds: the founding and forecast digests hash code only
   (`crates/xyl-cosmos/build.rs`), so documentation edits reuse the cached
-  founding, and the anchor counter reads code only by category.
+  founding; the anchor counter reads code only, by category.
+- Layer A, founding and substrate: the bell is exact in core time
+  (`Anchor::bell = 2 rim 60^5`, units of `r_g / c`); first stars, onsets,
+  rates, outflow, intake, landing, waveform and push are in rings. SI
+  seconds enter only through `Si::seconds_per_ring`, used by the display
+  and the temporary boundary helpers `circuit::rings_of_gyr` and
+  `gyr_of_rings`, which are removed when the last layer is converted.
 
 Next:
 
-1. Phase 1, time from the bell. The engine's unit of time is the ring (one
-   bell), not the Gyr, which is 10^9 Earth years (`Si::yr_s`). The bell in
-   core time is exact from the founding, `bell = 2 rim 60^5` in units of
-   `r_g / c` (`circuit::anchor::Anchor`). A time is a position on the
-   temporal coordinate (`xyl_core::coordinate`, the T lane): whole rings
-   plus the phase within the ring, written in degrees, minutes and seconds
-   of arc. A second is therefore a second of arc of phase, and local time
-   between orbital bodies is their relative phase: a world's year is one
-   turn of its orbit and its day one turn of its spin, each read against
-   the ring of its anchor. SI seconds exist only in the SI seam
-   (`package::Si`), which converts universal constants given in SI and
-   displays Gyr. The conversion runs bottom-up: founding and substrate,
-   galaxy and stars, systems and worlds, the kernel, then the display. The
-   calibration epochs 13.8 Gyr (`chem::Rulers::today`) and 4.57 Gyr
-   (`bodies/isotopes`) leave with the calibrations they belong to, in
-   phases 5 and 6. Converted so far: the founding and substrate, then the
-   galaxy tier (`galaxy`, `stars`, `chem`, `centre`, `pulse`, `field`,
-   `turning`, `manifold`), whose rulers declared in Gyr are converted once
-   where they are declared (`turning::span_in_rings`,
-   `turning::rate_per_ring`).
-2. Phase 2, length from the tiers. Orbits in astronomical units (`a_au`,
-   `Si::au`) and radii in Earth radii (`Si::world_radius_m`) are replaced
-   by the system tier's unit (`60 r_g`) and the planet tier's unit
-   (`r_g / 60^2`) from `xyl_core::units::Tier`, with conversions between
-   tiers by `manifold::dilation`.
-3. Phase 3, mass down the founding's chain. The solar and Earth mass units
-   (`Si::star_mass_kg`, `Si::world_mass_kg`) and the core's mass in suns
-   (`package::hole_mass`) are replaced by shares of the chain: the
-   universal core is 1; a galactic core is its bead's state
-   (`circuit::Bead`); a star is the share of its piece's infall it holds
-   (`disc::star_cut`), which replaces the initial mass function's bounds of
-   0.08 and 60 suns (`galaxy::imf`); a world is its share of the star's
-   manifold (`disc::manifold_worlds`); a moon is its share of the world's.
-   A bead is a galaxy where its lit holding is at least one star's mass on
-   that chain, in place of "at least one sun" (`Substrate::holds_a_star`),
-   and only where its core is no heavier than the universal core
-   (`M >= m`).
-4. Phase 4, light and temperature from the burn. A star's luminosity is the
-   hold its burn transduces per bell (`stars::burn_per_bell`), in core
-   units. The flux at a world is that light times the world's received
-   share at its reach (`circuit::vacuum_share`, the deficit law), and its
-   temperature follows from the flux through the radiation law with the
-   universal constants. This replaces the Earth calibrations 278 K
-   (`Spec::t_form`, `worlds::t_unit`), 340 W/m^2 (`life`, `growth`,
-   `hydro`, `worlds`) and 288 K (`lexicon`, `percept`), and the greenhouse
-   fit `greenhouse_tau` is replaced by the atmosphere's clustering and
-   containment.
-5. Phase 5, chemistry from the census. The solar reference metallicity
-   (`chem::Rulers::reference_metallicity`, 0.0142), the Milky Way gas
-   pattern (`ism_today_dex`) and the flat rotation speed (`v_flat`,
-   220 km/s) are replaced by the founding's census
-   (`circuit::Substrate::census`), the home galaxy's enrichment along each
-   ring (`chem::Chemistry::birth_along`) and the turning law
-   `v = c delta(<r)` (`turning`). The light kinds are read from the same
-   founding as the firmament.
-6. Phase 6, geochemistry from the atoms. The bulk-silicate partition
-   (`systems::MANTLE_KEPT`, McDonough 2003), the measured heat-producing
-   isotopes (`bodies/isotopes`) and the unit world (`worlds/unit.rs`) are
-   replaced by each element's hold and open frames (`compound::hold`,
-   `compound::open`) against iron's, and by the isotopes of each star's
-   birth mixture. `worlds/unit.rs` is deleted.
-7. Phase 7, life and peoples from their worlds. The mind-bearing body of
-   10 kg, its 19.1 W metabolism and 14.2-year generation, the viable people
-   of 500, the 18 amu exhaust and the mass ratio of 10 (`life`,
-   `xyl-kernel growth`, `propulsion`) are derived from each world's
-   gravity, temperature and chemistry.
-8. Phase 8, the package at the seam. `package::hole_mass` is supplied by
-   the package and read only for display; the founding is read from a
-   manifest of nuclei per `Z` ([network.md](network.md)); `package::Si`
-   keeps only the universal constants and the display conversions.
+1. Layer B, the galaxy tier (`galaxy`, `stars`, `chem`, `pulse`, `field`,
+   `turning`, `centre`, `manifold`). The interim conversions of Gyr-valued
+   rulers made in this layer are replaced:
+   - The turning law in core units, exact: `omega = delta(<r) bell / r`
+     radians per ring, `r` in tier units and `M` in core masses, in place
+     of the SI path through kpc, kg and seconds.
+   - Galaxy structure and star orbits in galaxy-tier units and core masses,
+     in place of kpc and suns.
+   - The vertical orbit from the turning law and the ring structure: the
+     plane's frequency is the turning rate times the crowding share, the
+     layer's half-thickness over the reach is the ring's deficit share
+     against the mass inside it, and the heating share is the star's age
+     over the ring's age since first light. This replaces 75.2 rad/Gyr,
+     20 km/s, 10 Gyr and 0.3 kpc.
+   - Star masses as the share of a piece's infall the star holds
+     (`disc::star_cut`), in place of the initial mass function's 0.08 and
+     60 suns; a bead is a galaxy where its lit holding is at least one
+     star's mass on that chain (`Substrate::holds_a_star`) and its core is
+     no heavier than the universal core (`M >= m`).
+   - Star light as the hold the burn transduces per ring
+     (`stars::burn_per_bell`), in core units, in place of light in suns.
+   - Chemistry from the founding: enrichment is the hold each star's burn
+     returns to its ring, from the census (`circuit::Substrate::census`)
+     and the births along each ring (`chem::Chemistry::birth_along`), in
+     place of the Milky Way model's rulers, the solar reference
+     metallicity, the gas pattern `ism_today_dex`, the flat speed `v_flat`
+     and the calibration epoch `Rulers::today`.
+   - The pulse, the field's energy unit and the galactic-core episodes in
+     core units.
+2. Layer C, systems and worlds (`disc`, `systems`, `bodies`, `worlds`,
+   `hydro`): orbits in the system tier's unit and radii in the planet
+   tier's; world masses as shares of the star's manifold; a world's day and
+   year as turns of its spin and orbit per ring of its star; flux as the
+   star's light times the world's deficit share at its reach, and
+   temperature from the flux through the radiation law with the universal
+   constants, in place of 278 K, 340 W/m^2, 288 K and `greenhouse_tau`;
+   the mantle and the heat-producing isotopes from each element's hold and
+   open frames and the star's birth mixture, in place of the bulk-silicate
+   Earth tables and the 4.57 Gyr epoch; `worlds/unit.rs` deleted.
+3. Layer D, life and minds (`life`, `minds`): rung waits and strike rates
+   in rings; the mind-bearing body, its metabolism and generation, and the
+   viable people derived from the world's gravity, temperature and
+   chemistry, in place of 10 kg, 19.1 W, 14.2 years and 500.
+4. Layer E, the kernel (`xyl-kernel`): peoples' times in rings, drives from
+   each people's chemistry in place of the 18 amu exhaust and the mass
+   ratio of 10, and the remaining boundary helpers removed.
+5. Layer F, the package at the seam: `package::hole_mass` supplied by the
+   package and read only for display; the founding read from a manifest of
+   nuclei per `Z` ([network.md](network.md)); `package::Si` keeps only the
+   universal constants and the display conversions.
 
 Done when: `scripts/calibration-anchors` reports zero in every category,
 and `xylarium observe worlds` and `observe chemistry` print quantities in

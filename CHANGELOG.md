@@ -48,6 +48,20 @@ may change public APIs and the model's laws.
 - The vertical orbit is derived from the turning law, the crowding and the
   ring structure (`galaxy::layer`, `galaxy::vertical_frequency`), in place
   of the declared 75.2 rad/Gyr, 20 km/s, 10 Gyr and 0.3 kpc.
+- Star masses are in core masses: a piece's star mass is the share of its
+  infall the star tier's cut holds (`galaxy::piece_star_mass`), and the
+  initial mass function (`galaxy::imf`) draws shares of it by the deficit
+  form with the ring's crowding as break, in place of the bounds 0.08 and 60
+  suns and the break scale. `Star::mass`, `Star::companion`,
+  `Star::stands_for` and the mass argument of `galaxy::disc_frame` are in
+  core masses.
+- A bead is a galaxy where its lit holding is at least one star's mass on
+  the chain (`galaxy::first_star_mass`) and its core is no heavier than the
+  universal core (`Substrate::holds_a_star`, `Substrate::galaxies`), in
+  place of one sun. This refounds the test genesis once.
+- Star light is the power the burn transduces, in core masses per ring
+  (`stars::power`, `stars::light`); `systems::luminosity` is removed, and
+  the system layer reads suns through the boundary `stars::suns_of_power`.
 
 ### Removed
 

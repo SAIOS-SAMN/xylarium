@@ -6,6 +6,7 @@ use super::{Constellation, Handling, InPlay};
 use crate::cosmic::Cosmic;
 use std::collections::BTreeMap;
 use xyl_core::dyadic::Dy;
+use xyl_core::Q;
 
 /// A ley line: a circulation held open between two constellations, built by
 /// an ancient house or its progenitors, with its mouths at two stars.
@@ -111,9 +112,10 @@ impl Network {
     }
 
     /// Adds every witnessed star not yet in play. Each new star stands for
-    /// `stands_for` times the ratio `suns / stands_for` of a sampled star of
-    /// the same core (1 when there is none). The pairs are read again only
-    /// when a star joins.
+    /// `stands_for` (core masses) times the ratio `suns / stands_for` of a
+    /// sampled star of the same core; when there is none, the suns per core
+    /// mass (boundary `galaxy::suns_of_core_masses`). The pairs are read
+    /// again only when a star joins.
     fn admit(&mut self, cosmic: &Cosmic) {
         let mut grew = false;
         for (k, w) in &cosmic.systems {
@@ -125,7 +127,7 @@ impl Network {
                 .iter()
                 .find(|s| s.star.core == w.star.core)
                 .map(|p| p.suns / p.star.stands_for.max(Dy::sci(1, -30)))
-                .unwrap_or(Dy::ONE);
+                .unwrap_or_else(|| Dy::from_q(&xyl_cosmos::galaxy::suns_of_core_masses(&Q::ONE)));
             self.sample
                 .push(InPlay::of(w.star.clone(), w.star.stands_for * ratio));
             self.index.insert(*k, self.sample.len() - 1);

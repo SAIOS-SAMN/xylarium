@@ -93,29 +93,84 @@ fn stars_circle_the_core_and_the_core_holds_its_share() {
 }
 
 #[test]
-fn imf_heavier_where_rings_crowd_births_after_first_stars() {
+fn imf_spreads_shares_of_the_piece_star_mass() {
     let bang = crate::genesis::bang();
-    let mean = |r: Q| {
-        let n = 60;
-        let s = (0..n).fold(Q::ZERO, |a, k| {
-            &a + &imf(&Q::ratio(k * 2 + 1, n * 2), &r).unwrap().mid()
-        });
-        s.checked_div(&Q::int(n)).unwrap()
+    // The draw's share of the piece's star mass, x = m / m_p.
+    let share = |u: &Q, r: &Q| {
+        let top = piece_star_mass(r).unwrap();
+        imf(u, r).unwrap().mid().checked_div(&top).unwrap()
     };
-    // The IMF's break is heavier where the rings crowd: the mean mass at the
-    // ring of greatest holding per kpc is at least that at r0. Every star has
-    // positive mass and is born no earlier than the first stars.
-    let densest = structure()
+    let lit: Vec<Q> = structure()
         .rings
         .iter()
-        .max_by(|a, b| a.3.cmp(&b.3))
-        .map(|r| r.0.clone())
-        .unwrap_or(r0());
-    assert!(mean(densest) >= mean(r0()));
+        .map(|k| k.0.clone())
+        .filter(|r| birth(r).is_some() && density(r).mid().signum() > 0)
+        .collect();
+    assert!(!lit.is_empty());
+    for r in &lit {
+        // Shares lie in (0, 1], rise with the draw and reach the whole
+        // piece's star mass at u = 1.
+        let mut last = Q::ZERO;
+        for k in 1..=20 {
+            let x = share(&Q::ratio(k, 20), r);
+            assert!(x > last && x <= Q::ONE, "{x} at {r}");
+            last = x;
+        }
+        assert_eq!(last, Q::ONE);
+        assert!(imf(&Q::ZERO, r).is_none(), "no mass at u = 0");
+    }
+    // The break is heavier where the rings crowd: at every draw the share at
+    // the most crowded lit ring is at least that at the least crowded.
+    let by_crowding = |a: &&Q, b: &&Q| density(a).mid().cmp(&density(b).mid());
+    let (least, most) = (
+        lit.iter().min_by(by_crowding).unwrap(),
+        lit.iter().max_by(by_crowding).unwrap(),
+    );
+    for k in 1..20 {
+        let u = Q::ratio(k, 20);
+        assert!(share(&u, most) >= share(&u, least));
+    }
+    // Every star has a positive mass no greater than its piece's star mass,
+    // and is born no earlier than the first stars; the sample stands for the
+    // stellar mass.
     for s in (0..300).filter_map(|n| star(7, bang, n)) {
         assert!(s.mass.signum() > 0, "{}", s.mass);
+        assert!(s.mass <= piece_star_mass(&s.r).unwrap());
+        assert!(s.companion <= s.mass);
         assert!(s.born >= bang.first_stars().lo);
+        if s.core == 0 && s.pop != Pop::Nucleus {
+            let n = Dy::int(i64::try_from(sample(bang)).unwrap());
+            let whole = Dy::from_q(&stellar_mass());
+            assert!((s.stands_for * n - whole).abs() <= Dy::sci(1, -30));
+        }
     }
+}
+
+#[test]
+fn galaxies_hold_a_star_under_the_universal_core() {
+    let _ = crate::genesis::bang();
+    let anchor = crate::circuit::anchor();
+    let sub = crate::cores::substrate_for(&anchor.spin).unwrap();
+    let star = first_star_mass(&sub).expect("a piece lights");
+    // One star's mass is a share of one core mass.
+    assert!(star.signum() > 0 && star < Q::ONE, "{star}");
+    let galaxies = sub.galaxies();
+    assert_eq!(galaxies[0], (0, None));
+    for (i, b) in galaxies.iter().skip(1) {
+        let b = b.unwrap();
+        // A galaxy's core is no heavier than the universal core and its lit
+        // holding is at least one star's mass.
+        assert!(b.state <= Q::ONE, "galaxy {i}");
+        assert!(&sub.lighting.lit * &b.state >= star, "galaxy {i}");
+    }
+    // Every bead left out fails one of the two.
+    let kept = galaxies.len() - 1;
+    let failing = sub
+        .beads
+        .iter()
+        .filter(|b| b.state > Q::ONE || &sub.lighting.lit * &b.state < star)
+        .count();
+    assert_eq!(kept + failing, sub.beads.len());
 }
 
 #[test]

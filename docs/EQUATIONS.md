@@ -203,8 +203,10 @@ another crate. Laws are composed from shares (ratios of the form
   ((R + 1) H)` and `reach = l / inside`; the recession is `dl/dt / inside`,
   and the shift is `z = recession / c_ocean`. Status: built.
 - Tide (`Substrate::tide`): `A(R - x, t) - A(R + x, t)`. Status: built.
-- Galaxy selection (`Substrate::holds_a_star`): a bead is a galaxy where
-  `lit x hole_mass x state >= 1` (solar masses). Status: built.
+- Galaxy selection (`Substrate::holds_a_star`, `Substrate::galaxies`): a
+  bead is a galaxy where `lit x state >= m_p` and `state <= 1` (core
+  masses), with `m_p = s c` the star mass of the piece that lights first
+  (`galaxy::first_star_mass`). Status: built.
 - Galactic core mass (`cores::founding_of`): `hole_suns = hole_mass x state`.
   Status: built.
 - Circulation (`cores::founding_of`): the circulation is `4 delta / echo`
@@ -307,10 +309,13 @@ another crate. Laws are composed from shares (ratios of the form
   holding reaches the silver-turn pivot; the disc phase follows the golden
   turn, the ball planes follow the plastic and golden turns, and the rate
   follows the turning law. Status: built.
-- Initial mass function (`galaxy::imf`):
-  `m = lo + mb x / (1 - x)` with `x = u (hi - lo) / (hi - lo + mb)`,
-  `mb = 1/2 x 2d / (1 + d)` clamped to `[1.01 lo, 0.99 hi]`, `lo = 0.08` and
-  `hi = 60`. Status: placeholder.
+- Piece star mass (`galaxy::piece_star_mass`): `m_p = s c` core masses,
+  with `s` the share of the piece's infall the star tier's cut holds
+  (`disc::StarCut::star`) and `c` the infall's holding
+  (`disc::StarCut::cloud`). Status: built.
+- Initial mass function (`galaxy::imf`): `m = x m_p` with
+  `x = b u / (1 + b - u)`, the inverse of `F(x) = x / (x + b)` on `[0, 1]`,
+  and `b = d / (1 + d)` from the crowding `d`. Status: built.
 - Vertical orbit (`galaxy::vertical`, `galaxy::layer`,
   `galaxy::vertical_frequency`): `nu = omega 2d / (1 + d)` radians per ring
   (turning law about `M(<r)`, crowding `d`);
@@ -335,8 +340,11 @@ another crate. Laws are composed from shares (ratios of the form
   (`stars::ends`) falls at `life x transduced_He / transduced_H`, and the
   remnant share (`stars::remnant_share`) is `1 - transduced_He`. Status:
   built.
-- Light (`systems::luminosity`, `stars::light`):
-  `L = M / (r + 1) (1 + pi bell q(t))`. Status: built.
+- Power (`stars::power`): `P = m burn_per_bell(r) / bell` core masses per
+  ring (`c = 1`). Status: built.
+- Light (`stars::light`): `P (1 + pi bell q(t))`. Status: built. Boundary
+  (`stars::suns_of_power`): `P / P(1 sun, r = 0)`, the luminosity in suns
+  read by the system and world layers.
 - Flicker (`stars::flicker`): `(pi / 2) |cos(2 pi t / echo)|`. Status:
   built.
 - Star's cut (`disc::star_cut`, `formation::hold_at_heat`): the spin is

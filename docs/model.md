@@ -275,8 +275,11 @@ pole axis and the five isoclinic planes).
 - Galactic cores (`cores::founding_of`, `Substrate::holds_a_star`): a bead's
   state is its mass in the universal core's units, so the mass of its core
   reads `hole_suns = hole_mass x state`. A bead is a galaxy where the lit
-  share of that mass is at least one solar mass,
-  `lit x hole_mass x state >= 1`. Each galaxy circulates about the throat at
+  share of that mass is at least the mass of one star on the chain,
+  `lit x state >= m_p` in core masses, with `m_p` the star mass of the piece
+  that lights first (`galaxy::first_star_mass`), and where its core is no
+  heavier than the universal core, `state <= 1` (`Substrate::galaxies`): a
+  heavier core would hold the universal core rather than circle it. Each galaxy circulates about the throat at
   `4 delta` turns per echo, with `delta = inside / (reach + inside)`. Its
   plane is set by the repulsion pivots one tier up (the node by the golden
   turn, the tilt by the plastic turn's share of the S^360 measure), and its
@@ -330,9 +333,18 @@ pole axis and the five isoclinic planes).
   irrational pivots (golden, silver, plastic and `sqrt 3 - 1` turns), which
   is the repulsion law. Disc stars orbit in the plane; core and nucleus
   stars orbit on tilted planes. The orbit's rate is the turning law at the
-  star's reach, in radians per ring. The initial mass function
-  (`galaxy::imf`) and the binary share are declared rulers. Next: these are
-  to be derived from the piece's infall (roadmap, Declared rulers).
+  star's reach, in radians per ring. The binary share is a declared ruler.
+- Star masses (`galaxy::piece_star_mass`, `galaxy::imf`): a piece's star
+  mass is the share of its infall the star tier's cut holds, `m_p = s c`
+  core masses, with `s` the cut's held share (`disc::star_cut`) and `c` the
+  infall's holding, a share of the galaxy's rings, which hold one core mass.
+  It is the most one star of the piece holds. The star's draw `u` spreads the
+  piece's stars over shares `x` of it by the deficit form
+  `F(x) = x / (x + b)`, with the break `b = d / (1 + d)` the deficit share of
+  the ring's crowding: `x = b u / (1 + b - u)`, `m = x m_p`. A crowded ring's
+  stars are heavier. A homologue's stars are cut from the same pieces; the
+  stellar mass a sample star stands for is the population's mass in core
+  masses over the sample, scaled by the hole ratio.
 - Vertical orbit (`galaxy::vertical`): a disc star swings through the plane at
   the frequency `nu = omega 2d / (1 + d)`, the turning rate held by the crowding
   share (`galaxy::vertical_frequency`). The crowded layer's half-thickness is
@@ -372,9 +384,12 @@ pole axis and the five isoclinic planes).
   brings there, `1 / (pi (r + 1))` per bell, plus the vessel's drift
   `bell q(t) / (r + 1)`, and takes its deficit share of that absorption,
   `delta_star`, read on the solar rim (`stars::delta_star`,
-  `package::Si::star_radius_m`). Its light is that burn transduced,
-  `L = M / (r + 1) (1 + pi bell q(t))` in solar units
-  (`systems::luminosity`, `stars::light`). Its main-sequence life is
+  `package::Si::star_radius_m`; open). Its power is the hold that burn
+  transduces per ring, `P = m burn_per_bell(r) / bell` in core masses per
+  ring (`c = 1`; `stars::power`), and its light that power times the drift
+  factor `1 + pi bell q(t)` (`stars::light`). The system and world layers
+  still read the luminosity in suns through the boundary
+  `stars::suns_of_power`, the power over a one-sun star's at reach 0. Its main-sequence life is
   `(1 - hold(He) / (4 hold(H))) / burn` bells, one quarter over the burn
   (`stars::life`); its giant phase ends at that life times
   `transduced_He / transduced_H` (`stars::ends`); its remnant keeps

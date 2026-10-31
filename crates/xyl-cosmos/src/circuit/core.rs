@@ -4,8 +4,9 @@
 //
 // Inputs: a founded `Substrate` (found.rs), the anchor's bell (anchor.rs),
 // `bounce::horizon_reach`, `compound::open` / `compound::hold` for a kind's
-// frames, `formation::emission`, `package::hole_mass`, and `pole_flux`
-// (poles.rs) with `electron_phase` (weights.rs). Reaches are core rings,
+// frames, `formation::emission`, `galaxy::first_star_mass` (the star mass
+// on the chain), and `pole_flux` (poles.rs) with `electron_phase`
+// (weights.rs). Reaches are core rings,
 // amounts held frames, times in rings (one ring one bell), rates per ring.
 //
 // - Deficit: `vacuum_share(r, h) = h / (r + h)`; `throat_push` is its value
@@ -19,8 +20,10 @@
 //   `margin`; `loop_flux` composes filament, vacuum and electron channels.
 // - Ocean: `ocean_shares` and `landing` (pull times `coherence`, over the
 //   sum, so each kind's shares sum to 1); `amplitude`, `tide`, `c_ocean`.
-// - Galaxies: `galaxies`, `intake`, `composition` (recipe plus intake),
-//   `push` (reach, recession, shift, drift, swing).
+// - Galaxies: `galaxies` (beads whose lit holding `lit x state` is at least
+//   one star's mass `m_p` and whose state is at most 1), `intake`,
+//   `composition` (recipe plus intake), `push` (reach, recession, shift,
+//   drift, swing).
 //
 // Every reading is deterministic and closed-form in t; no state is stepped.
 // Terms: bell, echo, coherence, jet, jetstream, landing, inbound echo,
@@ -359,23 +362,30 @@ impl Substrate {
             .collect()
     }
 
-    /// Whether bead `b` is a galaxy: its stellar share (the lit share of its
-    /// state, read in the universal core's units) is at least one sun.
+    /// Whether bead `b` holds a star: its lit holding, `lit x state` (core
+    /// masses: the bead's state is its core's mass in units of the universal
+    /// core's, 1, and `lit` the share of a galaxy's rings that lights, as in
+    /// `galaxy::stellar_mass`), is at least the mass of one star on the
+    /// chain, `m_p = s c` of the piece that lights first
+    /// (`galaxy::first_star_mass`: the share `s` of that piece's infall the
+    /// star tier's cut holds, times the infall's holding `c`). Both sides are
+    /// read on this substrate, so the founding does not read the cached
+    /// anchor. False where no piece lights.
     pub fn holds_a_star(&self, b: &Bead) -> bool {
-        // The bead's state is its mass in units of the universal core's
-        // state (1).
-        let ratio = b.state.clone();
-        // Stellar mass = lit share x core mass (suns) x state, as in
-        // galaxy::stellar_mass but read on this substrate, so the founding
-        // does not read the founding's result.
-        &(&self.lighting.lit * &crate::package::hole_mass()) * &ratio >= Q::ONE
+        crate::galaxy::first_star_mass(self)
+            .is_some_and(|star| &self.lighting.lit * &b.state >= star)
     }
 
     /// The galaxies on the substrate, in engine order: the home galaxy (index
-    /// 0, about the core) and every bead that holds a sun (indices 1..).
+    /// 0, about the core) and every bead that holds a star
+    /// ([`Self::holds_a_star`]) and whose core is no heavier than the
+    /// universal core, `M >= m` with `M = 1` and `m` the bead's state (core
+    /// masses): a heavier core would hold the universal core rather than
+    /// circle it (indices 1..).
     pub fn galaxies(&self) -> Vec<(u32, Option<&Bead>)> {
         let mut out = vec![(0u32, None)];
-        for b in self.beads.iter().filter(|b| self.holds_a_star(b)) {
+        let held = |b: &&Bead| b.state <= Q::ONE && self.holds_a_star(b);
+        for b in self.beads.iter().filter(held) {
             out.push((u32::try_from(out.len()).unwrap_or(u32::MAX), Some(b)));
         }
         out

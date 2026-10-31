@@ -8,9 +8,10 @@
 //! constants from `package::Si`. Reaches are in AU, masses in world masses,
 //! temperatures in K; the settling runs in core units (lengths in `r_g`).
 //!
-//! - Star (`Spec`, `luminosity`): `L = M delta` in solar luminosities, where
-//!   `delta = 1 / (r + 1)` is the vacuum share at the star's reach r about
-//!   the universal core.
+//! - Star (`Spec`): the star's mass (core masses) and power (core masses
+//!   per ring, `stars::power`), read in suns and solar luminosities at the
+//!   boundary (`galaxy::suns_of_core_masses`, `stars::suns_of_power`) until
+//!   this layer is converted.
 //! - Orbits: each region at its share of the manifold's reach becomes an
 //!   embryo whose solids are the star's mass over its gathering share times
 //!   the gas's metal mass fraction, enriched past each ice line. Embryos
@@ -103,32 +104,29 @@ pub(crate) fn star_length_m() -> Q {
         .unwrap_or(Q::ZERO)
 }
 
-/// A star's mean luminosity in solar luminosities, `L = M / (r + 1)`: the
-/// mass M times the vacuum share at the star's reach r about the universal
-/// core (`circuit::vacuum_share`; the burn itself is modelled in stars.rs). A
-/// one-solar-mass star at the core's reach has L = 1; a star in a galaxy
-/// further out is dimmer by the vacuum share there. Consequently every main
-/// sequence at a given reach lasts the same span and every disc has the same
-/// ratio of rock line to outer reach.
-pub fn luminosity(mass: &Q, reach: Dy) -> Q {
-    mass * &crate::circuit::vacuum_share(reach, Dy::ONE).to_q()
-}
-
 /// A star's specification: its mass and luminosity, in solar units.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Spec {
     /// Stellar mass, in solar masses (floored at 1/10000).
     pub mass: Q,
-    /// Mean luminosity, in solar luminosities (see [`luminosity`]).
+    /// Mean luminosity, in solar luminosities (the star's power,
+    /// `stars::power`, through the boundary `stars::suns_of_power`).
     pub lum: Q,
 }
 
 impl Spec {
-    /// The spec of the galaxy star `star`: its mass, floored at 1/10000 solar
-    /// masses, and the luminosity that mass gives at its reach.
+    /// The spec of the galaxy star `star`: its mass in suns, floored at
+    /// 1/10000 solar masses, and the luminosity that mass gives at its reach.
+    /// Boundary: the star's mass (core masses) and power (core masses per
+    /// ring) are read in suns (`galaxy::suns_of_core_masses`,
+    /// `stars::suns_of_power`) until this layer is converted.
     pub fn of(star: &Star) -> Spec {
-        let mass = star.mass.clone().max(Q::ratio(1, 10_000));
-        let lum = luminosity(&mass, star.reach_rings());
+        let mass = crate::galaxy::suns_of_core_masses(&star.mass).max(Q::ratio(1, 10_000));
+        let power = crate::stars::power(
+            &crate::galaxy::core_masses_of_suns(&mass),
+            star.reach_rings(),
+        );
+        let lum = crate::stars::suns_of_power(&power);
         Spec { mass, lum }
     }
 
@@ -272,7 +270,7 @@ pub fn system(
     // The star's manifold about the core; each world's region is cut against
     // the core's tide at the star (disc::manifold_worlds), so the
     // core-star-planet chain follows one law.
-    let Some(frame) = crate::galaxy::disc_frame(&star.r, &spec.mass) else {
+    let Some(frame) = crate::galaxy::disc_frame(&star.r, &star.mass) else {
         return Some(empty(spec));
     };
     let (regions, belt_share) =

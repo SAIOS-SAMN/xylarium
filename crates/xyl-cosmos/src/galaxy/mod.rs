@@ -25,8 +25,10 @@
 //!   cumulative holding, phase, and for bulge and nucleus a tilt holding
 //!   that share of S^360's measure. Birth (first light, then along the
 //!   ring's star formation; `None` where the ring never lights), mass
-//!   ([`imf`], its break heavier where rings crowd), companion and vertical
-//!   swing come from the star's `Stream`. The turning rate is the
+//!   ([`imf`]: the share `x` of the piece's star mass `m_p = s c`, the
+//!   share of the piece's infall the star tier's cut holds, drawn by the
+//!   deficit form `x / (x + b)`, `b = d / (1 + d)` from the ring's
+//!   crowding), companion and vertical swing come from the star's `Stream`. The turning rate is the
 //!   turning law over the mass inside; a homologue's lengths scale by its
 //!   shape's scale and its masses by its hole ratio.
 //! - [`Star::bearing`] and [`Star::place`]: position at `t` from the
@@ -38,11 +40,9 @@
 //! Boundary (removed as the layers above are converted): [`kpc_of_rings`],
 //! [`rings_of_kpc`] and their dyadic forms convert galaxy rings for the
 //! layers still in kpc; [`suns_of_core_masses`] and [`core_masses_of_suns`]
-//! convert masses for the star masses still in suns (the IMF) and the layers
-//! that read them; [`rim_kpc`] and [`radius_kpc`] read the anchor in kpc for
+//! convert masses for the layers that read star masses in suns (systems,
+//! worlds, life, the kernel); [`rim_kpc`] and [`radius_kpc`] read the anchor in kpc for
 //! `chain` and the display.
-//!
-//! Declared rulers: the IMF's bounds (0.08 to 60 suns) and break scale.
 //!
 //! Terms: galaxy ring, manifold (docs/glossary.md).
 
@@ -52,7 +52,7 @@ mod star;
 mod tests;
 mod vertical;
 
-pub use frame::{disc_frame, DiscFrame};
+pub use frame::{disc_frame, first_star_mass, piece_star_mass, DiscFrame};
 pub(crate) use star::{golden_turns, node_of, plastic_turns, tilt_of};
 pub use star::{imf, star, Orbit, Star};
 pub use vertical::{layer, vertical, vertical_frequency, Vertical};
@@ -224,7 +224,8 @@ pub fn rings_of_kpc_dy(kpc: Dy) -> Dy {
     kpc / k
 }
 /// A mass in core masses, in suns, through the declared core mass
-/// (`package::hole_mass`). Boundary for the star masses still in suns.
+/// (`package::hole_mass`). Boundary for the layers that read star masses in
+/// suns.
 pub fn suns_of_core_masses(m: &Q) -> Q {
     m * &crate::package::hole_mass()
 }

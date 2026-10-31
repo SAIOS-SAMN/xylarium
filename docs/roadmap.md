@@ -231,19 +231,29 @@ Landed:
   `galaxy::rings_of_kpc` and `galaxy::suns_of_core_masses` /
   `core_masses_of_suns`; the SI forms of the turning law (`turning_si`,
   `turning_rad_s`) remain as boundaries for the system and body layers.
+- Layer B, part 2, star masses and star light: a piece's star mass is the
+  share of its infall the star tier's cut holds, `m_p = s c` core masses
+  (`galaxy::piece_star_mass`); the initial mass function draws a share
+  `x = b u / (1 + b - u)` of it, the inverse of the deficit form
+  `x / (x + b)` with `b = d / (1 + d)` from the ring's crowding
+  (`galaxy::imf`), in place of 0.08 and 60 suns. A bead is a galaxy where
+  `lit x state >= m_p` of the first piece to light and `state <= 1`
+  (`Substrate::holds_a_star`, `Substrate::galaxies`). Star light is the
+  power the burn transduces, `P = m burn_per_bell(r) / bell` core masses
+  per ring (`stars::power`, `stars::light`); the life stays the hydrogen
+  step over the burn, in rings. The system layer reads suns through the
+  boundaries `galaxy::suns_of_core_masses` and `stars::suns_of_power`.
+  Open: the star's rim share (`stars::delta_star`) reads the sun's mass and
+  radius; deriving it needs the star's rim from its cut, whose over-pressure
+  reads the burn.
 
 Next:
 
 1. Layer B, the galaxy tier (`galaxy`, `stars`, `chem`, `pulse`, `field`,
    `turning`, `centre`, `manifold`). The interim conversions of Gyr-valued
    rulers made in this layer are replaced:
-   - Star masses as the share of a piece's infall the star holds
-     (`disc::star_cut`), in place of the initial mass function's 0.08 and
-     60 suns; a bead is a galaxy where its lit holding is at least one
-     star's mass on that chain (`Substrate::holds_a_star`) and its core is
-     no heavier than the universal core (`M >= m`).
-   - Star light as the hold the burn transduces per ring
-     (`stars::burn_per_bell`), in core units, in place of light in suns.
+   - The star's rim share (`stars::delta_star`) from the star's rim on
+     its cut, in place of the sun's mass and radius.
    - Chemistry from the founding: enrichment is the hold each star's burn
      returns to its ring, from the census (`circuit::Substrate::census`)
      and the births along each ring (`chem::Chemistry::birth_along`), in

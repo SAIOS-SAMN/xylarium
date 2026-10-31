@@ -417,7 +417,6 @@ struct Siting<'a> {
     rulers: crate::growth::Rulers,
     c: Dy,
     rg_per_kpc: Dy,
-    hole_suns: Dy,
 }
 
 impl<'a> Siting<'a> {
@@ -437,21 +436,17 @@ impl<'a> Siting<'a> {
             rulers: crate::growth::Rulers::default(),
             c: crate::propulsion::c_m_s(),
             rg_per_kpc: kpc_m() / Dy::from_q(&units().r_g_m),
-            hole_suns: Dy::from_q(&xyl_cosmos::package::hole_mass()),
         }
     }
 
     /// Returns star `n`'s well remainder at the mouth, delta = m / (r + m),
-    /// with the star's mass m (in hole masses) and the star's binding reach r
+    /// with the star's mass m (core masses) and the star's binding reach r
     /// (in the core's r_g); zero when the star is not in play.
     fn well(&self, n: u64) -> Dy {
         let Some(st) = self.net.index.get(&n).and_then(|&x| self.net.sample.get(x)) else {
             return Dy::ZERO;
         };
-        let (m, r) = (
-            Dy::from_q(&st.star.mass) / self.hole_suns,
-            st.reach * self.rg_per_kpc,
-        );
+        let (m, r) = (Dy::from_q(&st.star.mass), st.reach * self.rg_per_kpc);
         if r + m > Dy::ZERO {
             m / (r + m)
         } else {

@@ -26,7 +26,9 @@
 //! - poles.rs, axes.rs: the pole axis and the pulse's planes as versors.
 //! - weights.rs: proton and neutron counts and the electron phase state.
 //!
-//! A bead counts as a galaxy only where its lit mass is at least one sun.
+//! A bead counts as a galaxy only where its lit holding is at least one
+//! star's mass on the chain (`Substrate::holds_a_star`) and its core is no
+//! heavier than the universal core (`Substrate::galaxies`).
 //! Terms: substrate (docs/glossary.md).
 
 use std::collections::BTreeMap;

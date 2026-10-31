@@ -171,8 +171,9 @@ impl InPlay {
 /// Returns the stars in play: of each galaxy's first `limit` sample stars,
 /// those the sight opens (as `minds::schedule` reads them), regenerated from
 /// the seed (orbit and place only, no system). Each carries
-/// m = stands_for x sample / n suns, where n is the number of stars in play
-/// in that galaxy.
+/// m = stands_for x sample / n, read in suns (stands_for is in core masses,
+/// converted at the boundary `galaxy::suns_of_core_masses`), where n is the
+/// number of stars in play in that galaxy.
 pub fn in_play(seed: u64, bang: &xyl_cosmos::bang::BigBang, limit: u64) -> Vec<InPlay> {
     use xyl_cosmos::minds::Sight;
     // The stars are seated with the cores' sight only; each witnessed system
@@ -192,7 +193,10 @@ pub fn in_play(seed: u64, bang: &xyl_cosmos::bang::BigBang, limit: u64) -> Vec<I
         let w = Dy::int(i64::try_from(sample).unwrap_or(i64::MAX))
             / Dy::int(i64::try_from(stars.len().max(1)).unwrap_or(1));
         out.extend(stars.into_iter().map(|st| {
-            let suns = st.stands_for * w;
+            // The stellar mass stood for is in core masses; this layer reads
+            // it in suns (boundary `galaxy::suns_of_core_masses`).
+            let stands_for = xyl_cosmos::galaxy::suns_of_core_masses(&st.stands_for.to_q());
+            let suns = Dy::from_q(&stands_for) * w;
             InPlay::of(st, suns)
         }));
     }

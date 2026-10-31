@@ -86,7 +86,7 @@ fn star_on_manifold(
         concat!(
             "  star {:>4} of core {} ({} {}): from its core {}, height {}, phase {} deg, ",
             "radius {} kpc; reach {} rings, life {} Gyr, burning {:?} at age {} Gyr, ",
-            "light {} suns\n"
+            "light {} core masses per ring\n"
         ),
         s.n & ((1u64 << xyl_cosmos::galaxy::CORE_SHIFT) - 1),
         s.core,
@@ -103,7 +103,7 @@ fn star_on_manifold(
         xyl_cosmos::field::burning(reach, age),
         xyl_cosmos::circuit::gyr_of_rings_dy(age),
         show(&xyl_cosmos::stars::light(
-            &w.system.spec.mass,
+            &s.mass,
             reach,
             Dy::from_q(&s.born),
             age

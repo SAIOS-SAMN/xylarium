@@ -117,8 +117,11 @@ pub fn nodes_among(seed: u64, bang: &BigBang, candidates: &[u64]) -> Vec<Node> {
         let life = Dy::from_q(&crate::stars::life(s.reach_rings()));
         let born = Dy::from_q(&s.born) + life;
         // Remnant mass: the stellar mass the sample star stands for times
-        // the share of the hold not transduced (`stars::remnant_share`).
-        let mass = s.stands_for * Dy::from_q(&crate::stars::remnant_share());
+        // the share of the hold not transduced (`stars::remnant_share`),
+        // read in suns as the cores' masses are (boundary
+        // `galaxy::suns_of_core_masses`).
+        let stands_for = crate::galaxy::suns_of_core_masses(&s.stands_for.to_q());
+        let mass = Dy::from_q(&stands_for) * Dy::from_q(&crate::stars::remnant_share());
         out.push(Node {
             kind: Kind::Stellar(Box::new(s)),
             mass,

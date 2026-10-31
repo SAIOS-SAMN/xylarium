@@ -1,11 +1,11 @@
 //! Sample stars: their orbits about their galactic cores, placement by
-//! irrational rotations of the index, birth, mass ([`imf`]) and place at any
-//! `t`. Times are rings after the Big Bang, rates per ring.
+//! irrational rotations of the index, birth, mass ([`imf`], core masses)
+//! and place at any `t`. Times are rings after the Big Bang, rates per ring.
 
 use super::{
     birth, core_of, core_reach, density, inside_mass, nucleus_mass, nucleus_reach, reach_at,
-    sample, stellar_mass, suns_of_core_masses, vertical, vertical_frequency, Pop, Vertical,
-    CORE_SHIFT, GRID_BITS, NUCLEUS_BASE, NUCLEUS_SAMPLE,
+    sample, stellar_mass, vertical, vertical_frequency, Pop, Vertical, CORE_SHIFT, GRID_BITS,
+    NUCLEUS_BASE, NUCLEUS_SAMPLE,
 };
 use crate::bang::BigBang;
 use crate::chain::Place;
@@ -81,17 +81,16 @@ pub struct Star {
     pub r: Q,
     /// Birth time (rings after the Big Bang), rounded to the grid.
     pub born: Q,
-    /// Mass (suns), rounded to the grid.
+    /// Mass (core masses), rounded down to the 2^-64 grid ([`imf`]).
     pub mass: Q,
-    /// A binary's companion mass (suns); zero for a single star.
+    /// A binary's companion mass (core masses); zero for a single star.
     pub companion: Q,
     /// The star's galactic manifold: radius, turning, phase and plane.
     pub orbit: Orbit,
     /// Population.
     pub pop: Pop,
-    /// Stellar mass this sample star represents (suns, as `mass`; boundary
-    /// until star masses are in core masses), scaled by the hole ratio for a
-    /// homologue.
+    /// Stellar mass this sample star represents (core masses), scaled by
+    /// the hole ratio for a homologue.
     pub stands_for: Dy,
     /// The star's galactic core index (0 for the home galaxy). `r` above is
     /// the home-equivalent radius used for gas and chemistry; `orbit.radius`
@@ -194,6 +193,9 @@ impl Star {
     }
 }
 
+/// The grid star masses are rounded down to (core masses): 2^-64.
+const MASS_BITS: u32 = 64;
+
 /// A sample star's place in its galaxy before scaling: home-equivalent
 /// radius (galaxy rings), population, tilt and node half-angles and initial phase.
 struct Placement {
@@ -264,17 +266,14 @@ fn turning_rate(radius: Dy, scale: Dy, mass_ratio: Dy) -> Dy {
     ))
 }
 
-/// The home-galaxy stellar mass one sample star stands for (suns, as the
-/// star masses, through the boundary `suns_of_core_masses`): the
-/// population's mass (nucleus, or the whole galaxy) over the population's
-/// sample size.
+/// The home-galaxy stellar mass one sample star stands for (core masses):
+/// the population's mass (nucleus, or the whole galaxy) over the
+/// population's sample size.
 fn stands_for(bang: &BigBang, nucleus: bool) -> Dy {
     if nucleus {
-        Dy::from_q(&suns_of_core_masses(&nucleus_mass()))
-            / Dy::int(i64::try_from(NUCLEUS_SAMPLE).unwrap_or(1))
+        Dy::from_q(&nucleus_mass()) / Dy::int(i64::try_from(NUCLEUS_SAMPLE).unwrap_or(1))
     } else {
-        Dy::from_q(&suns_of_core_masses(&stellar_mass()))
-            / Dy::int(i64::try_from(sample(bang)).unwrap_or(1))
+        Dy::from_q(&stellar_mass()) / Dy::int(i64::try_from(sample(bang)).unwrap_or(1))
     }
 }
 
@@ -326,7 +325,12 @@ pub fn star(seed: u64, bang: &BigBang, n: u64) -> Option<Star> {
         .map(|c| c.birth_along(&r, &first, u_born))
         .unwrap_or(first);
     let born = down(&born, GRID_BITS);
-    let mass = down(&imf(&u_mass.to_q(), &r)?.mid(), GRID_BITS);
+    // The mass is read at the home-equivalent radius: a homologue's star is
+    // cut from the same piece of the chain as the home galaxy's.
+    let mass = down(&imf(&u_mass.to_q(), &r)?.mid(), MASS_BITS);
+    if mass.signum() <= 0 {
+        return None;
+    }
     // For u_bin < 1/3 the star is a binary, with companion mass
     // (0.1 + 0.9 u_comp) times the star's mass.
     let companion = if u_bin < Dy::ratio(1, 3) {
@@ -398,24 +402,26 @@ pub(crate) fn node_of(u: Dy) -> (Dy, Dy) {
     (fix(c), fix(s))
 }
 
-/// The initial mass function, inverse-transformed at the uniform `u`:
-/// a star's mass (suns) in [0.08, 60]. Its break mb is half the cloud's
-/// warmth 2 d / (1 + d), with d the local crowding (`density` at `r`). Provisional
-/// catalogue: the bounds and break scale are measured, not derived from
-/// the turning law. Computed in dyadics; the caller rounds to the grid.
+/// The initial mass function, inverse-transformed at the uniform `u`: a
+/// star's mass (core masses) at reach `r` (galaxy rings) of the home galaxy.
+///
+/// The piece at `r` gives one star mass, `m_p = s c` ([`super::piece_star_mass`]:
+/// the share `s` of the piece's infall the star tier's cut holds,
+/// `disc::star_cut`, times the infall's holding `c`), the most one star of
+/// the piece holds. The draw spreads the piece's stars over shares `x` of
+/// `m_p` by the deficit form `F(x) = x / (x + b)` on `[0, 1]`, the share of
+/// stars holding at most `x m_p`, with the break `b = d / (1 + d)` the
+/// deficit share of the ring's crowding `d` (`density` at `r`), so the break
+/// is heavier where rings crowd. The draw inverts in first degree: with
+/// `y = u F(1) = u / (1 + b)`, `x = b y / (1 - y) = b u / (1 + b - u)`, and
+/// `m = x m_p`. Exact. `None` where no lit piece lies at `r`, the ring has
+/// no crowding or the draw gives no mass (`u = 0`).
 pub fn imf(u: &Q, r: &Q) -> Option<Encl> {
-    // The IMF as a deficit share (no power laws): the share of stars between
-    // the least mass and m is F(m) = (m - lo) / (m - lo + mb), mb = warmth / 2
-    // (kept within (lo, hi)), so the draw inverts in first degree:
-    // m = lo + mb x / (1 - x), x = u F(hi).
-    let (lo, hi) = (Dy::ratio(8, 100), Dy::int(60));
-    let d = Dy::from_q(&density(r).mid()).max(Dy::ZERO);
-    let warmth = Dy::int(2) * d / (Dy::ONE + d);
-    let mb = (Dy::ratio(1, 2) * warmth)
-        .max(lo * Dy::ratio(101, 100))
-        .min(hi * Dy::ratio(99, 100));
-    let f_hi = (hi - lo) / (hi - lo + mb);
-    let x = Dy::from_q(u) * f_hi;
-    let m = lo + mb * x / (Dy::ONE - x).max(Dy::sci(1, -12));
-    Some(Encl::exact(m.clamp(lo, hi).to_q()))
+    let top = super::piece_star_mass(r)?;
+    let d = density(r).mid().max(Q::ZERO);
+    let b = d.checked_div(&(&Q::ONE + &d))?;
+    let u = u.clone().max(Q::ZERO).min(Q::ONE);
+    let x = (&b * &u).checked_div(&(&(&Q::ONE + &b) - &u))?;
+    let m = &top * &x;
+    (m.signum() > 0).then(|| Encl::exact(m))
 }

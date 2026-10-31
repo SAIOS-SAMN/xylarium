@@ -76,8 +76,8 @@ pub struct Bead {
 pub struct Substrate {
     /// The vessel's kinds held by the throat, as founded.
     pub firmament: Vec<Kind>,
-    /// The beads where the cascade's shells pinch; those holding a sun are
-    /// galaxies.
+    /// The beads where the cascade's shells pinch; those holding a star
+    /// (`Substrate::galaxies`) are galaxies.
     pub beads: Vec<Bead>,
     /// Reach of the outermost shell (core rings): the rim the pulse crosses.
     pub rim: Q,

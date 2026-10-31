@@ -99,23 +99,61 @@ steps in [Extending a tier](docs/development.md#extending-a-tier).
   relevant.
 - Each commit holds one logical change.
 
-## Issues and pull requests
+## Development workflow
 
-Bug reports and feature requests use the issue templates in
-`.github/ISSUE_TEMPLATE/`, and pull requests use
-`.github/pull_request_template.md`. Report security vulnerabilities
-privately as described in [SECURITY.md](SECURITY.md), not in a public
-issue. Everyone taking part follows the
-[Code of Conduct](CODE_OF_CONDUCT.md).
+Every change, by a maintainer or anyone else, reaches `main` through a
+pull request. `main` is protected: the maintainer merges
+([MAINTAINERS.md](MAINTAINERS.md)).
 
-1. Open an issue first for any change to the model's laws or to a public
-   API, describing the motivation and the expected effect on readings.
-2. Create a branch from `main`, make the change with tests and documentation
-   in the same pull request, and run the verification commands above.
-3. Update [CHANGELOG.md](CHANGELOG.md) under "Unreleased", and
-   [docs/roadmap.md](docs/roadmap.md) when an item opens or closes.
-4. Open the pull request with a summary, the verification results and, for
-   model changes, the before-and-after readings.
+1. **Pick or open an issue.** The open work is listed in the
+   [issues](https://github.com/SAIOS-SAMN/xylarium/issues) and in
+   [docs/roadmap.md, Open items](docs/roadmap.md#open-items). Newcomers start
+   with [good first
+   issue](https://github.com/SAIOS-SAMN/xylarium/labels/good%20first%20issue).
+   Comment on the issue to say you are taking it. A change to a law of the model
+   or a public API starts as an issue with the proposal template, describing the
+   derivation and the expected effect on readings.
+2. **Specify before coding.** A law's formula goes into
+   [docs/model.md](docs/model.md) and [docs/EQUATIONS.md](docs/EQUATIONS.md)
+   first, derived from the founding and the laws already built
+   ([Extending a tier](docs/development.md#extending-a-tier)); no Earth,
+   Sun or Milky Way value and no fitted constant.
+3. **Branch from `main`**, named for the issue (`3-fresh-home-epoch`).
+   Make the change with its tests and documentation in the same branch.
+4. **Verify.** Run the checks above and the tests of the modules you
+   changed. For a model change, take the same `xylarium observe` reading on
+   the same seed before and after the change.
+5. **Open the pull request** with the template: what and why,
+   `Closes #<issue>`, the checks run and, for model changes, the readings
+   before and after. Update [CHANGELOG.md](CHANGELOG.md) under "Unreleased"
+   and the roadmap when an item opens or closes.
+6. **Review and merge.** The maintainer reviews the pull request against
+   the rules in [AGENTS.md](AGENTS.md) and
+   [docs/development.md](docs/development.md) and merges it. An issue
+   labelled `needs-decision` waits for the operator's decision before work
+   is merged.
+7. **Release.** Releases are tagged from `main` only where the readings
+   show the universe working (stars placed, worlds forming); each release's
+   notes are its CHANGELOG section. The next release is the
+   [v0.4.0 milestone](https://github.com/SAIOS-SAMN/xylarium/milestone/1).
+
+Labels:
+
+| Label | Meaning |
+|---|---|
+| `defect` | something does not work as specified |
+| `proposal` | a proposed change to a law, interface or design |
+| `track` | a body of work across several pull requests |
+| `law` | changes a law of the model |
+| `docs` | documentation |
+| `needs-decision` | waits on a decision by the operator |
+| `cross-project` | affects mycelium or netstratum as well |
+| `good first issue`, `help wanted` | a place to start; help is welcome |
+| `area/<crate>` | the crate the work is in |
+
+Report security vulnerabilities privately as described in
+[SECURITY.md](SECURITY.md), not in a public issue. Everyone taking part
+follows the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Licence
 

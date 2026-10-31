@@ -1,7 +1,7 @@
 ---
-name: Bug report
+name: Defect
 about: An error, a crash, or a reading whose conservation balances do not close
-labels: bug
+labels: defect
 ---
 
 ## What happened

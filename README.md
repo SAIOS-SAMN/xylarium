@@ -1,6 +1,6 @@
 # Xylarium
 
-**Version 0.3.0** | [Quick start](#quick-start) | [Architecture](docs/architecture.md) | [Physical model](docs/model.md) | [Equations](docs/EQUATIONS.md) | [Roadmap](docs/roadmap.md) | [Changelog](CHANGELOG.md) | [Contributing](CONTRIBUTING.md) | [License: Apache-2.0](LICENSE)
+**Version 0.3.0** | [Quick start](#quick-start) | [Architecture](docs/architecture.md) | [Physical model](docs/model.md) | [Equations](docs/EQUATIONS.md) | [Roadmap](docs/roadmap.md) | [Changelog](CHANGELOG.md) | [Developing](#developing-xylarium) | [Contributing](CONTRIBUTING.md) | [License: Apache-2.0](LICENSE)
 
 **Xylarium** is a deterministic universe simulator and the kernel of a
 grand-strategy space game in which sovereign AI minds run civilizations.
@@ -18,6 +18,23 @@ external AI agent.
 Readers new to the project start with [docs/concepts.md](docs/concepts.md),
 which describes the model in plain language. AI coding agents start with
 [AGENTS.md](AGENTS.md).
+
+## Developing Xylarium
+
+Xylarium is an open-source project; development is open to anyone.
+
+| Step | Where |
+|---|---|
+| 1. Understand the model | [docs/concepts.md](docs/concepts.md), then [docs/glossary.md](docs/glossary.md) |
+| 2. Set up and run the checks | [CONTRIBUTING.md, Getting started](CONTRIBUTING.md#getting-started) |
+| 3. Pick the work | [open issues](https://github.com/SAIOS-SAMN/xylarium/issues), [good first issues](https://github.com/SAIOS-SAMN/xylarium/labels/good%20first%20issue), the [v0.4.0 milestone](https://github.com/SAIOS-SAMN/xylarium/milestone/1), and [docs/roadmap.md, Open items](docs/roadmap.md#open-items) |
+| 4. Make the change | [CONTRIBUTING.md, Development workflow](CONTRIBUTING.md#development-workflow): issue, branch, specification first, tests, readings before and after, pull request |
+| 5. Review and merge | the maintainer reviews and merges into `main` ([MAINTAINERS.md](MAINTAINERS.md)) |
+
+AI coding agents start at [AGENTS.md](AGENTS.md). Xylarium runs on the
+[mycelium](https://github.com/SAIOS-SAMN/mycelium) network and is developed
+alongside [netstratum](https://github.com/SAIOS-SAMN/netstratum); changes that
+affect them carry the `cross-project` label.
 
 ## Features
 
@@ -187,11 +204,11 @@ running universes with `xylarium observe`.
 | [network.md](docs/network.md) | The Mycelium integration contract |
 | [development.md](docs/development.md) | Conventions, lints, testing, run times |
 | [glossary.md](docs/glossary.md) | Terms used across the code and documentation |
-| [roadmap.md](docs/roadmap.md) | Mathematics, milestones and open work |
+| [roadmap.md](docs/roadmap.md) | Mathematics, milestones and the open items (each an issue) |
 
 ## Contributing
 
-Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers the
+Contributions are welcome; see [Developing Xylarium](#developing-xylarium). [CONTRIBUTING.md](CONTRIBUTING.md) covers the
 development setup, the verification commands and the pull-request workflow.
 Participation is governed by the [code of conduct](CODE_OF_CONDUCT.md).
 Security issues are handled as described in [SECURITY.md](SECURITY.md).

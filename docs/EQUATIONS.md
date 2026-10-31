@@ -525,26 +525,32 @@ another crate. Laws are composed from shares (ratios of the form
 The Concordance (sections 1.14 and 2.10) places the laws that every
 universe on the network uses in mycelium's `forms` crate, the core shell,
 stated over each universe's own constants. A kernel calls those forms and
-states only its founding; a law that one kernel varies is a named outer
-shell (`forms::<law>`). The laws below hold no constant of Xylarium's
-founding and are proposed for the core shell. Each id is a proposal until
-the coordinator assigns it; until a form lands, the Xylarium function is the
-implementation.
+states only its founding. A law enters the core shell only when a
+Concordance amendment rules it universal; until then it is a named form of
+Xylarium's shell (Concordance A7). The coordinator writes `forms`, one law
+per pull request, reproducing the fixtures Xylarium supplies in
+[#33](https://github.com/SAIOS-SAMN/xylarium/issues/33); until a form lands,
+the Xylarium function is the implementation. The ids are proposals.
 
-| Proposed id | Form | Xylarium implementation |
-|---|---|---|
-| LAW-DEFICIT-SHARE | `delta = M / (r + M)` | `turning::deficit_share` |
-| LAW-DILATION | `(1 + p) / (1 - p)` for a share `p < 1` | `circuit::dilation` |
-| LAW-JET-MAP | `t -> a t + b`, `a = rho / (1 - p_v)`, `b = p_v / (1 - p_v)` | `circuit::jet_map` |
-| LAW-THROAT-CROSSING | `t_n = t* + (t0 - t*) a^n`, crossing at `n = ln((1 - t*) / (t0 - t*)) / ln a`; refused for `t0 <= 0` | `circuit::throat_crossing` |
-| LAW-TORSION-SHARE | `(H + J) / (2H + J)`, `H = 2M`, `J = a M^2` | `bounce::torsion_share` |
-| LAW-RIM-SHARE | `m / (R k + m)`, `k` the tier ratio | `disc::rim_share` |
-| LAW-POLARITY-SEQUENCE | pole point `sum(n u) / sum(n w)`; fusion below the throat, fission above, ordered by release | `stars::sequence::pole_point`, `Sequence::of` |
+| Proposed id | Form | Shell proposed | Xylarium implementation |
+|---|---|---|---|
+| LAW-DEFICIT-SHARE | `delta = M / (r + M)` | core | `turning::deficit_share` |
+| LAW-DILATION | `D(p) = (1 + p) / (1 - p)`, `p` in `[0, 1)` | core | `circuit::dilation` |
+| LAW-TORSION-SHARE | `(H + J) / (2H + J)`, `H = 2M`, `J = a M^2` | core | `bounce::torsion_share` |
+| LAW-JET-MAP | `t -> a t + b`, `a = D(p_c) / (1 - p_v)`, `b = p_v / (1 - p_v)` | Xylarium | `circuit::jet_map` |
+| LAW-THROAT-CROSSING | `t_n = t* + (t0 - t*) a^n`, crossing at `n = ln((1 - t*) / (t0 - t*)) / ln a`; refused for `t0 <= 0` | Xylarium | `circuit::throat_crossing` |
+| LAW-POLARITY-SEQUENCE | pole point `sum(n u) / sum(n w)`; fusion below the throat, fission above, ordered by release | Xylarium | `stars::sequence::pole_point`, `Sequence::of` |
 
-Questions owed to the coordinator before a form lands: whether Xylarium's
-Cl(12,1) algebra stands as an outer shell over the Cl(4,1) centre of
-`forms`; how section 2.6's throat size `c = cosh(2m / R)` relates to
-LAW-THROAT-CROSSING; and the Concordance section 8.5 unit, which Xylarium
-proposes to state in each universe's core units rather than in solar
-masses. Tracked in roadmap item 27
+The rim share (`disc::rim_share`) is LAW-DEFICIT-SHARE with the reach
+`R k`, `k` the tier ratio. The dilation turns the flow law of Concordance
+section 2.6 into a product, `D(x (+) y) = D(x) D(y)` with
+`x (+) y = (x + y) / (1 + x y)`, and the court's throat level is
+`c = D(t^2)`; the jet map with `b = 0` is therefore the flow law in the
+dilation coordinate, while the vacuum term `b > 0` keeps it a form of
+Xylarium's shell. Xylarium's Cl(12,1) blades stand as its own outer shell
+over the Cl(4,1) centre of `forms`.
+
+Xylarium evaluates the dilation, jet map and crossing on `Dy` readings;
+it holds them in `Q` (the crossing count as an enclosure) when it calls the
+forms. Tracked in roadmap item 27
 ([#33](https://github.com/SAIOS-SAMN/xylarium/issues/33)).

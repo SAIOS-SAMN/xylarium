@@ -240,14 +240,15 @@ where it belongs to one.
     speaks the same Anastome. The `xyl-hypha` crate of milestone 5 starts on it.
 27. **Shared laws in the core shell**
     ([#33](https://github.com/SAIOS-SAMN/xylarium/issues/33), `cross-project`,
-    `needs-decision`).
-    Concordance sections 1.14 and 2.10: the laws listed in
-    [EQUATIONS.md, Shared laws](EQUATIONS.md#8-shared-laws) move to mycelium's
-    `forms` core shell one law per landing, each with a joint read; Xylarium
-    then calls the forms and deletes its copies, keeping its founding and any
-    named variation. Also owed: signing the Concordance (section 0) at the
-    pinned tag, the section 8.5 unit stated in core units, and the section
-    2.6 throat size reconciled with the throat crossing.
+    `needs-decision`). Concordance sections 1.14 and 2.10: the laws listed in
+    [EQUATIONS.md, Shared laws](EQUATIONS.md#8-shared-laws) land in mycelium's
+    `forms` one law per pull request, written by the coordinator from
+    Xylarium's forms, refusals and fixtures; a law is universal only by a
+    Concordance amendment, otherwise a named form of Xylarium's shell.
+    Xylarium then calls the forms in `Q` and deletes its copies. Also owed:
+    signing the Concordance (section 0) at the v0.3.0 pin, and the amendment
+    of sections 1.8 and 8.5 stating each universe's unit at founding
+    (proposed on #33).
 
 ### Project
 

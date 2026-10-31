@@ -116,9 +116,16 @@ where it belongs to one.
    has regressed, find the commit by the same readings and fix forward. Every
    law change from now on shows these readings before and after.
 2. **The fresh-home default carries to 14 Gyr**
-   ([#3](https://github.com/SAIOS-SAMN/xylarium/issues/3), `defect`). A home
-   without a checkpoint is read at 14 Gyr (`xylarium observe`), an epoch of the
-   Earth's universe; it is to be a count of rings from the founding.
+   ([#3](https://github.com/SAIOS-SAMN/xylarium/issues/3), `defect`). Done in
+   [#28](https://github.com/SAIOS-SAMN/xylarium/pull/28): a home without a
+   checkpoint is read at the first mind's dawn, where genesis writes its first
+   checkpoint.
+
+26. **Readings take their time argument in Gyr**
+    ([#29](https://github.com/SAIOS-SAMN/xylarium/issues/29), `defect`).
+    `observe core T` and the years of `people N [Y]` and `sync [K] [Y]` are
+    Earth units; they are to take rings, with Gyr shown only as a display
+    conversion.
 
 ### Founding (milestone 3)
 

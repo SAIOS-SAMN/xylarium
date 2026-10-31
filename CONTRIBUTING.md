@@ -129,9 +129,13 @@ pull request. `main` is protected: the maintainer merges
    and the roadmap when an item opens or closes.
 6. **Review and merge.** The maintainer reviews the pull request against
    the rules in [AGENTS.md](AGENTS.md) and
-   [docs/development.md](docs/development.md) and merges it. An issue
-   labelled `needs-decision` waits for the operator's decision before work
-   is merged.
+   [docs/development.md](docs/development.md) and merges it once its checks
+   pass. An issue labelled `needs-decision` waits for the operator's
+   decision before work is merged. A change that touches a shared contract
+   carries the `cross-project` label and waits for the coordinator's review
+   ([MAINTAINERS.md](MAINTAINERS.md)) before merge: a mycelium pin, a shared
+   law's id or version (for example `LAW-WAVEFRONT`), the use of the wire,
+   the conformance read, or the shared standard.
 7. **Release.** Releases are tagged from `main` only where the readings
    show the universe working (stars placed, worlds forming); each release's
    notes are its CHANGELOG section. The next release is the

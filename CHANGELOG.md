@@ -43,6 +43,9 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Roles: MAINTAINERS.md names the coordinator (mycelium's maintainer
+  session) for contract review; CONTRIBUTING's workflow sends
+  `cross-project` changes to it before merge.
 - A home without a checkpoint is read at the first mind's dawn, where
   genesis writes its first checkpoint, in place of 14 Gyr (#3).
 - The minimum supported Rust version is 1.85, the version the locked

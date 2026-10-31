@@ -16,12 +16,6 @@ Until 1.0.0, minor versions may change public APIs and the model's laws.
   systems, algebra and geometry, and the nucleon model: the 3Z span, the
   3Q capacity and the polarity R).
 
-### Fixed
-
-- `Dy::trunc_i64` rounds negative values toward zero, as documented; it
-  previously rounded them down, which overflowed `Dy::sin_cos` for angles
-  just below a negative half quarter turn.
-
 ## 0.3.0 - 2026-10-30
 
 First public release.

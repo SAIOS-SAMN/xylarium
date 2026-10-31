@@ -257,6 +257,15 @@ Next:
 1. Layer B, the galaxy tier (`galaxy`, `stars`, `chem`, `pulse`, `field`,
    `turning`, `centre`, `manifold`). The interim conversions of Gyr-valued
    rulers made in this layer are replaced:
+   - Stellar burning by polarity (model.md, Polarity, fusion and fission): the
+     held collective's pole point `t = sum n u / sum n w`, dilated by the star's
+     irradiation `(1 + delta) / (1 - delta)` per echo, selects fusion (`t < 1`),
+     the throat (`t = 1`, in closed form) and fission (`t > 1`); fusion combines
+     `k` nuclei into the kind of `k` times the nucleon count, fission splits
+     into two kinds of equal total, and the sequence of steps sets the main
+     sequence, the giant phases, the remnant and the bodies that never ignite.
+     Replaces the fixed hydrogen-helium-carbon chain
+     (`stars::transduced_hydrogen`, `stars::transduced_helium`).
    - Chemistry from the founding: enrichment is the hold each star's burn
      returns to its ring, from the census (`circuit::Substrate::census`)
      and the births along each ring (`chem::Chemistry::birth_along`), in

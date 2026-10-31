@@ -562,6 +562,61 @@ law, the same at a nucleus, a star and a world:
   Worlds in play are read in degrees of their star's life, the star's
   lifetime over 360, floored at one bell (`worlds::star_degree_gyr`).
 
+### Polarity, fusion and fission
+
+A star burns by the polarity of the collective it holds: the inverse of
+magnetism between its bonding nucleons over the quantum states its
+irradiation opens. Every quantity is read from the atoms:
+
+- **Held and open frames under irradiation.** A kind `z` irradiated at heat
+  `q` (the turning the star receives per echo, in hydrogen units) keeps
+  `u_z(q)` open frames (`atoms::unpaired_hot`), its magnetism, the Q pole;
+  its held frames are `w_z(q) = 3Z - u_z(q)`, its bonding, the Z pole
+  (`compound::hold`).
+- **The collective's pole point.** Over the held mixture, with `n_z` the
+  count of nuclei of each kind (its share of the hold over `w_z`),
+  `t = sum n_z u_z(q) / sum n_z w_z(q)` (`circuit::pole_point`). The star's
+  polarity is the inversion `1 / t`: bonding over irradiated states.
+- **Irradiation dilates the pole point.** A held kind's open share is at
+  most `Z` of its `3Z` frames, so `t <= 1/2` at ignition: every collective
+  starts on the Z side. Irradiation carries the pole point outward echo by
+  echo, as it carries a firmament kind's to the throat
+  (`circuit::onset_echoes`): the star receives the push it holds, its
+  compactness `delta`, so each echo dilates `t` by
+  `rho_s = (1 + delta) / (1 - delta)`, and after `n` echoes since ignition
+  `t(n) = t0 rho_s^n`.
+- **Direction.** While `t < 1` the collective lies on the Z side of the
+  throat and bonding combines nuclei: fusion. The pole point reaches the
+  throat, `t = 1`, after `n* = ln(1 / t0) / ln rho_s` echoes, in closed
+  form; there the collective holds as much as it passes and takes no step.
+  Past it, `t > 1`, the collective lies on the Q side and irradiation
+  splits nuclei: fission. Both `n*` and the burn's duration scale as
+  `1 / delta`, so a star's fusion era and its fuel end on one timescale.
+- **A fusion step.** `k` nuclei of kind `z` become one nucleus of the kind
+  `z'` whose nucleon count is `A_z' = k A_z` (`A` the element table's mass
+  number), for the smallest `k >= 2` for which such a kind exists and the
+  step releases hold. The share transduced is the hold released,
+  `1 - w_z'(q) / (k w_z(q))`. This gives the steps the model already holds:
+  four hydrogens to helium, `1 - hold(He) / (4 hold(H))`, and three heliums
+  to carbon, `1 - hold(C) / (3 hold(He))`.
+- **A fission step.** One nucleus of kind `z` becomes two nuclei of kinds
+  `z1` and `z2` with `A_z1 + A_z2 = A_z`, the split nearest to equal halves
+  that releases hold. The share transduced is `1 - (w_z1(q) + w_z2(q)) /
+  w_z(q)`.
+- **The sequence.** Before the throat the fusion steps follow the held kinds in
+  order, lightest first, each transducing its release times the kind's share of
+  the hold, and each step's products step in turn; after the throat the fission
+  steps follow, heaviest first. Each step's duration is its transduced share
+  over the star's burn per bell (`stars::burn_per_bell`); the first step is the
+  main sequence, later steps the giant phases, and the hold no step transduced
+  is the remnant.
+- **A held body that does not ignite.** Where no step of the held mixture
+  releases hold under its polarity, the body holds its matter and burns
+  nothing.
+
+Grain: the steps move whole nuclei and conserve the nucleon count, so the
+founding's grain is kept (`circuit::grain::nuclei_of`).
+
 ### Star types
 
 Star types are not set. A star's class is the state its formulas give at a
@@ -585,11 +640,12 @@ reads the reference values and none is tuned to them.
 | Type | Condition in the model | Status |
 |---|---|---|
 | Collapsing cloud (protostar) | A lit piece's infall held by the dark cut, before ignition: held share `s0`, rim `R0`, compactness `delta0` (`disc::star_cut`). | Partial: computed as the collapse state of each cut; not yet a stage of a star's timeline. |
-| Main-sequence star | Burning step hydrogen: age below its life, `(1/4) / burn` bells (`stars::life`). | Built. |
+| Main-sequence star | The first step of the star's sequence (Polarity, fusion and fission): age below that step's transduced share over the burn. | Built for the fixed hydrogen step; next: the first step its polarity selects. |
 | Mass ordering of the main sequence (the classes O to M) | Within a cloud every star shares the rim, so a heavier star is more compact, burns a larger share and lives fewer rings. | Built for mass, compactness and life. The surface temperature that the classes are named by needs a world-independent temperature of a star from its held share (layer C, radiation). |
 | Long-lived low-mass star (red dwarf) | A star whose life in rings exceeds the universe's current count, so it has not left the main sequence since any star was born. | Built as a reading of `stars::life` against the universe's count. |
-| Held body that does not ignite (brown dwarf) | A held core whose burn cannot strip the hydrogen's windings at the cut's heat (`atoms::unpaired_hot`), so its hydrogen step transduces nothing. | Next: every held core burns today; the ignition condition is to be derived from the atoms. |
-| Giant | Burning step helium: age between the main-sequence life and the giant's end, `life x transduced_He / transduced_H` (`stars::ends`). | Built. |
+| Held body that does not ignite (brown dwarf) | No step of the held mixture releases hold under its polarity (Polarity, fusion and fission). | Next: implemented with the polarity sequence. |
+| Giant | The later steps of the star's sequence: age past the first step's end and before the last step's. | Built for the fixed helium step; next: the later steps its polarity selects. |
+| Fission star | A star whose held collective lies on the Q side of the throat (`t > 1`), so its steps split nuclei. No observed type is known to match; the model allows it. | Next: implemented with the polarity sequence. |
 | Supergiant | A giant of a star in the upper share of its cloud's masses. | Next: needs a derived boundary in the cloud's mass shares. |
 | Remnant | Burning step remnant: the star keeps `1 - transduced_He` of its hold (`stars::remnant_share`) and becomes a hole in the pulse network (`pulse::nodes`). | Built. |
 | Compact remnant (white dwarf), denser remnant (neutron star) | A remnant whose held core's rim, from the remnant's cut of its remaining mixture, gives compactness below one half; the two separated by where the remnant's held kinds lose their open frames. | Next: needs that cut of the remnant's mixture. |

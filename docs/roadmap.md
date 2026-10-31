@@ -238,6 +238,16 @@ where it belongs to one.
     law ids and versions that EQUATIONS rows declare, the wire states its
     version and act table, and a client conformance read checks that a client
     speaks the same Anastome. The `xyl-hypha` crate of milestone 5 starts on it.
+27. **Shared laws in the core shell**
+    ([#33](https://github.com/SAIOS-SAMN/xylarium/issues/33), `cross-project`,
+    `needs-decision`).
+    Concordance sections 1.14 and 2.10: the laws listed in
+    [EQUATIONS.md, Shared laws](EQUATIONS.md#8-shared-laws) move to mycelium's
+    `forms` core shell one law per landing, each with a joint read; Xylarium
+    then calls the forms and deletes its copies, keeping its founding and any
+    named variation. Also owed: signing the Concordance (section 0) at the
+    pinned tag, the section 8.5 unit stated in core units, and the section
+    2.6 throat size reconciled with the throat crossing.
 
 ### Project
 

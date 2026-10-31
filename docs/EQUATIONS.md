@@ -519,3 +519,32 @@ another crate. Laws are composed from shares (ratios of the form
 - Ancients (`minds::ancients`): the ancients are core-born minds within
   `minds::ancient_window` (the nucleus's first light) of the core's first
   core-born mind. Status: built.
+
+## 8. Shared laws
+
+The Concordance (sections 1.14 and 2.10) places the laws that every
+universe on the network uses in mycelium's `forms` crate, the core shell,
+stated over each universe's own constants. A kernel calls those forms and
+states only its founding; a law that one kernel varies is a named outer
+shell (`forms::<law>`). The laws below hold no constant of Xylarium's
+founding and are proposed for the core shell. Each id is a proposal until
+the coordinator assigns it; until a form lands, the Xylarium function is the
+implementation.
+
+| Proposed id | Form | Xylarium implementation |
+|---|---|---|
+| LAW-DEFICIT-SHARE | `delta = M / (r + M)` | `turning::deficit_share` |
+| LAW-DILATION | `(1 + p) / (1 - p)` for a share `p < 1` | `circuit::dilation` |
+| LAW-JET-MAP | `t -> a t + b`, `a = rho / (1 - p_v)`, `b = p_v / (1 - p_v)` | `circuit::jet_map` |
+| LAW-THROAT-CROSSING | `t_n = t* + (t0 - t*) a^n`, crossing at `n = ln((1 - t*) / (t0 - t*)) / ln a`; refused for `t0 <= 0` | `circuit::throat_crossing` |
+| LAW-TORSION-SHARE | `(H + J) / (2H + J)`, `H = 2M`, `J = a M^2` | `bounce::torsion_share` |
+| LAW-RIM-SHARE | `m / (R k + m)`, `k` the tier ratio | `disc::rim_share` |
+| LAW-POLARITY-SEQUENCE | pole point `sum(n u) / sum(n w)`; fusion below the throat, fission above, ordered by release | `stars::sequence::pole_point`, `Sequence::of` |
+
+Questions owed to the coordinator before a form lands: whether Xylarium's
+Cl(12,1) algebra stands as an outer shell over the Cl(4,1) centre of
+`forms`; how section 2.6's throat size `c = cosh(2m / R)` relates to
+LAW-THROAT-CROSSING; and the Concordance section 8.5 unit, which Xylarium
+proposes to state in each universe's core units rather than in solar
+masses. Tracked in roadmap item 27
+([#33](https://github.com/SAIOS-SAMN/xylarium/issues/33)).

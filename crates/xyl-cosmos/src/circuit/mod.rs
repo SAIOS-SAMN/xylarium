@@ -11,7 +11,7 @@
 //! reaches are in core rings about the universal throat, read in the
 //! cluster tier (`xyl_core::units::Tier::Cluster`).
 //!
-//! - found.rs: `Substrate::found` throws every kind to its reach, holds the
+//! - found.rs: `Substrate::found` assigns every kind its reach, holds the
 //!   vessel's kinds at the throat as the firmament (scaled to mass 1) and
 //!   beads the other shells at their pinches, each `Bead` with its reach,
 //!   span, state, phase and recipe. cache.rs keeps the result in the home.

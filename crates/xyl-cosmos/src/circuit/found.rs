@@ -6,7 +6,7 @@
 // for the cascade, `atoms::vessel`, and `formation::lighting`. Reaches are
 // core rings; amounts are held frames, universe units.
 //
-// Steps: every kind is thrown to its reach, spread r (1 +/- s_final). Held
+// Steps: every kind is assigned its reach, spread r (1 +/- s_final). Held
 // kinds inside the vessel band form the firmament (`Kind`), scaled so their
 // mass is 1, the universal state; each kind's capture phase is the share
 // turned Z times. The other shells link into runs where spreads overlap;
@@ -99,7 +99,7 @@ pub struct Substrate {
 }
 
 impl Substrate {
-    /// The founding cascade. Every kind is thrown by the equitable push to its
+    /// The founding cascade. Every kind is carried by the equitable push to its
     /// reach about the throat, spread R (1 +/- s_final). The vessel's kinds
     /// within the throat (atoms::vessel, the band up to the last seal) are held
     /// as the firmament; held kinds outside the vessel leave with the expelled matter.

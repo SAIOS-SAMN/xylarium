@@ -165,7 +165,7 @@ where it belongs to one.
 
 3. **Elements attached to the filament's released pressure**
    ([#4](https://github.com/SAIOS-SAMN/xylarium/issues/4), `proposal`, `law`).
-   The cascade throws each kind to a reach and collides stacks on the way out
+   The cascade assigns each kind one reach and exchanges between stacks on the way out
    (`formation::cascade`, `formation::founding_shells`). In its place: the
    bounce releases the torsion share's pressure along the filament, falling with
    reach as the vacuum's share; each kind attaches to it by its open frames and
@@ -492,7 +492,7 @@ Next:
       `D(p)` and the flow law, one deficit share.
    2. The parcel and the reach rate: release at onset, the reach law in
       closed form between events, the throat's books
-      `H_0(t) = 1 - sum outflow`; the throw (`formation::founding_shells`,
+      `H_0(t) = 1 - sum outflow`; the fixed reaches (`formation::founding_shells`,
       `s_final`, `runs_of`, `bead_run`, `place_beads`) deleted.
    3. Angular state and meetings: phase and plane in degrees, swing as
       torsion and twist, meetings by contrast times coherence.

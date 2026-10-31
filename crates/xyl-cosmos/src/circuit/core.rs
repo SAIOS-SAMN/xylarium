@@ -141,7 +141,7 @@ pub fn onset_echoes(k: u32, p_v: Dy) -> Option<Dy> {
     throat_crossing(t, a, b)
 }
 
-/// The coherence of a galaxy at phase `psi` with a kind thrown at phase
+/// The coherence of a galaxy at phase `psi` with a kind carried at phase
 /// `phi` (turns): one less twice the shorter way round between them, a share
 /// of the turn in the deficit grammar (1 in phase, 0 opposed).
 pub fn coherence(psi: &Q, phi: &Q) -> Dy {
@@ -480,7 +480,7 @@ impl Substrate {
             .collect()
     }
 
-    /// The phase a kind is thrown at (turns): its capture phase about the
+    /// The phase a kind is carried at (turns): its capture phase about the
     /// throat, the bounce's share turned Z times (found.rs).
     pub fn kind_phase(&self, k: u32) -> Q {
         turn(&(&self.share * &Q::int(i64::from(k))))
@@ -510,7 +510,7 @@ impl Substrate {
     }
 
     /// The landing of kind `k` over the galaxies' `pulls`: each galaxy's
-    /// share of what the jet throws of it, its pull times its coherence with
+    /// share of what the jet carries of it, its pull times its coherence with
     /// the kind's phase, over the sum (the books close kind by kind); where
     /// nothing is in phase, the pull alone shares it. By engine index.
     fn landing_over(&self, pulls: &[(u32, Dy, Q, Dy)], k: u32) -> Vec<(u32, Dy)> {

@@ -153,11 +153,11 @@ pub fn foragers(ms: &[Medium], region: Region, body: &Body, ctx: &Ctx) -> Dy {
     Dy::int(50_000) * area * season * med.energy * Dy::ratio(1, 10) / factor.max(Dy::sci(1, -300))
 }
 
-/// A star's main-sequence lifetime (Gyr) at `r_kpc` from the core:
-/// `stars::life` at the star's reach in rings, times the universe's nuclear
-/// scale.
-pub fn lifetime(r_kpc: Dy, ctx: &Ctx) -> Dy {
+/// A star's main-sequence lifetime (Gyr) at `r_kpc` from the core for a
+/// star of compactness `delta`: `stars::life` at the star's reach in rings,
+/// times the universe's nuclear scale.
+pub fn lifetime(delta: Dy, r_kpc: Dy, ctx: &Ctx) -> Dy {
     // The star's life is counted in rings; it converts here to Gyr.
-    let life = crate::stars::life(crate::stars::reach_rings(r_kpc));
+    let life = crate::stars::life(delta, crate::stars::reach_rings(r_kpc));
     Dy::from_q(&crate::circuit::gyr_of_rings(&life)) * ctx.sc.nuclear
 }

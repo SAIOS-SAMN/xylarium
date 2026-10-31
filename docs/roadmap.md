@@ -174,23 +174,23 @@ holding both ends.
 
 Goal: Every rule above the founding is a quantity derived from the
 universal core's founding and the galactic cores. No law reads a measured
-property of the Earth, the Sun or the Milky Way. SI units appear only at
+property of the Earth, its star or its galaxy. SI units appear only at
 display, through `package::Si`, and the universal physical constants (c,
 G, k_B, h) are the only measured values the laws read.
 
-Why this order: The layers above the founding were ported from a
-prototype that ran in kiloparsecs, solar masses, Earth masses, astronomical
-units and Earth years. Every one of those units passes through the same
-Earth root: the kiloparsec through `r_g` in metres, which comes from the
-core's mass set to the measured 4.3e6 solar masses (`package::hole_mass`),
-and the year through the Earth's orbit (`Si::yr_s`). Changing a unit
-without deriving the law behind it keeps the Earth value under a new name,
-so each layer is converted whole, bottom-up: its lengths to its tier's unit
-(`xyl_core::units::Tier`), its masses to shares of the founding's chain in
-core masses, its times to rings of the bell, and every law that read a
-measured value is derived from the founding and the galactic cores in the
-same change. A law with no derivation yet is not carried over in a new
-unit; it is listed under the layer as open.
+Why this order: The layers above the founding were ported from a prototype that
+ran in units calibrated to the Earth, its star and its galaxy: kiloparsecs,
+stellar masses, Earth masses, astronomical units and Earth years. Every one of
+those units passes through the same Earth root: the kiloparsec through `r_g` in
+metres, which comes from the core's mass set to a measured value of a real
+galaxy's central black hole (`package::hole_mass`), and the year through the
+Earth's orbit (`Si::yr_s`). Changing a unit without deriving the law behind it
+keeps the Earth value under a new name, so each layer is converted whole,
+bottom-up: its lengths to its tier's unit (`xyl_core::units::Tier`), its masses
+to shares of the founding's chain in core masses, its times to rings of the
+bell, and every law that read a measured value is derived from the founding and
+the galactic cores in the same change. A law with no derivation yet is not
+carried over in a new unit; it is listed under the layer as open.
 
 Rules for every layer:
 
@@ -219,45 +219,48 @@ Landed:
   seconds enter only through `Si::seconds_per_ring`, used by the display
   and the temporary boundary helpers `circuit::rings_of_gyr` and
   `gyr_of_rings`, which are removed when the last layer is converted.
-- Layer B, part 1, the turning law, the galaxy's structure and star orbits,
-  and the vertical orbit: the turning law is `omega = delta(<r) bell / r`
-  radians per ring in core units (`turning::turning`, `turning_dy`); the
-  structure, `inside_mass`, `stellar_mass`, star reaches and orbit radii
-  are in galaxy rings and core masses; the vertical orbit is derived
-  (`nu = omega 2d / (1 + d)`, `h = r m / (M(<r) + m)`,
-  `s = t / (1 + t)`, `t` the age over the ring's cooling time,
-  `sigma = h nu s 2d / (1 + d)`). The layers above read kpc and suns
-  through the marked boundaries `galaxy::kpc_of_rings`,
-  `galaxy::rings_of_kpc` and `galaxy::suns_of_core_masses` /
-  `core_masses_of_suns`; the SI forms of the turning law (`turning_si`,
-  `turning_rad_s`) remain as boundaries for the system and body layers.
-- Layer B, part 2, star masses and star light: a piece's star mass is the
-  share of its infall the star tier's cut holds, `m_p = s c` core masses
-  (`galaxy::piece_star_mass`); the initial mass function draws a share
-  `x = b u / (1 + b - u)` of it, the inverse of the deficit form
-  `x / (x + b)` with `b = d / (1 + d)` from the ring's crowding
-  (`galaxy::imf`), in place of 0.08 and 60 suns. A bead is a galaxy where
-  `lit x state >= m_p` of the first piece to light and `state <= 1`
-  (`Substrate::holds_a_star`, `Substrate::galaxies`). Star light is the
-  power the burn transduces, `P = m burn_per_bell(r) / bell` core masses
-  per ring (`stars::power`, `stars::light`); the life stays the hydrogen
-  step over the burn, in rings. The system layer reads suns through the
-  boundaries `galaxy::suns_of_core_masses` and `stars::suns_of_power`.
-  Open: the star's rim share (`stars::delta_star`) reads the sun's mass and
-  radius; deriving it needs the star's rim from its cut, whose over-pressure
-  reads the burn.
+- Layer B, part 1, the turning law, the galaxy's structure and star orbits, and
+  the vertical orbit: the turning law is `omega = delta(<r) bell / r` radians
+  per ring in core units (`turning::turning`, `turning_dy`); the structure,
+  `inside_mass`, `stellar_mass`, star reaches and orbit radii are in galaxy
+  rings and core masses; the vertical orbit is derived (`nu = omega 2d / (1 +
+  d)`, `h = r m / (M(<r) + m)`, `s = t / (1 + t)`, `t` the age over the ring's
+  cooling time, `sigma = h nu s 2d / (1 + d)`). The layers above read kpc and
+  the prototype's stellar-mass unit through the marked boundaries
+  `galaxy::kpc_of_rings`, `galaxy::rings_of_kpc` and
+  `galaxy::suns_of_core_masses` / `core_masses_of_suns`; the SI forms of the
+  turning law (`turning_si`, `turning_rad_s`) remain as boundaries for the
+  system and body layers.
+- Layer B, part 2, star masses and star light: a piece's star mass is the share
+  of its infall the star tier's cut holds, `m_p = s c` core masses
+  (`galaxy::piece_star_mass`); the initial mass function draws a share `x = b u
+  / (1 + b - u)` of it, the inverse of the deficit form `x / (x + b)` with `b =
+  d / (1 + d)` from the ring's crowding (`galaxy::imf`), in place of the
+  measured initial mass function's bounds. A bead is a galaxy where `lit x state
+  >= m_p` of the first piece to light and `state <= 1`
+  (`Substrate::holds_a_star`, `Substrate::galaxies`). Star light is the power
+  the burn transduces, `P = m burn_per_bell(r) / bell` core masses per ring
+  (`stars::power`, `stars::light`); the life stays the hydrogen step over the
+  burn, in rings. The system layer reads the prototype's stellar-mass unit
+  through the boundaries `galaxy::suns_of_core_masses` and
+  `stars::suns_of_power`.
+- Layer B part 3, star compactness from the atoms: each star's deficit at its
+  rim, `delta = m / (R 60 + m)`, with `R` the rim of its cloud's cut
+  (`disc::rim_share`, `galaxy::Star::compactness`). The cut is read at collapse
+  (dark), ignition (burn = `delta0` of the received turning) and settled
+  (burning). Burn, power, light, life and the giant's end take the star's
+  compactness; the measured stellar radius and the rim share built on it are
+  deleted.
 
 Next:
 
 1. Layer B, the galaxy tier (`galaxy`, `stars`, `chem`, `pulse`, `field`,
    `turning`, `centre`, `manifold`). The interim conversions of Gyr-valued
    rulers made in this layer are replaced:
-   - The star's rim share (`stars::delta_star`) from the star's rim on
-     its cut, in place of the sun's mass and radius.
    - Chemistry from the founding: enrichment is the hold each star's burn
      returns to its ring, from the census (`circuit::Substrate::census`)
      and the births along each ring (`chem::Chemistry::birth_along`), in
-     place of the Milky Way model's rulers, the solar reference
+     place of the Milky Way model's rulers, the reference
      metallicity, the gas pattern `ism_today_dex`, the flat speed `v_flat`
      and the calibration epoch `Rulers::today`.
    - The pulse, the field's energy unit and the galactic-core episodes in
@@ -391,10 +394,11 @@ settled beyond their home systems.
 The constants below are declared rather than derived. They are listed by
 layer, each with the quantity that is to derive it.
 
-- **Package** (`package.rs`): The universal core's mass, 4.3e6 suns
-  (`hole_mass`), is declared until the package supplies it. The SI seam
-  (`Si`: the unit world, the sun, the AU, the kpc, c, G, the year and the
-  physical constants) is kept for display once each layer reads core units.
+- **Package** (`package.rs`): The universal core's mass, (declared, a measured
+  value of a real galaxy's central black hole) (`hole_mass`), is declared until
+  the package supplies it. The SI seam (`Si`: the unit world, the reference
+  star, the AU, the kpc, c, G, the year and the physical constants) is kept for
+  display once each layer reads core units.
 - **Home galaxy and chemistry** (`galaxy`, `chem`): The chemistry's rulers
   (`chem::Rulers`: ring width, surface density, returns, loading, yields) are to
   be derived from the enrichment that the founding produces.

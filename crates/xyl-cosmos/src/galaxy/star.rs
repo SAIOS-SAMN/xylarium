@@ -106,6 +106,16 @@ pub struct Star {
 }
 
 impl Star {
+    /// The star's compactness, its deficit at its rim `m / (R 60 + m)`
+    /// (`disc::rim_share`): its mass in core masses over the rim of the held
+    /// core its cloud's cut gives (`galaxy::piece_rim`, system-tier units)
+    /// plus that mass. Zero where its cloud's piece does not light.
+    pub fn compactness(&self) -> Dy {
+        super::piece_rim(&self.r)
+            .map(|rim| Dy::from_q(&crate::disc::rim_share(&self.mass, &rim)))
+            .unwrap_or(Dy::ZERO)
+    }
+
     /// The star's reach about its galactic core (galaxy rings). A star relates
     /// to the core it is anchored on, in the lowest common tier (the
     /// containment chain), so its reach is the orbit radius in its galaxy
@@ -190,6 +200,71 @@ impl Star {
     /// at `age` rings (1 for a star without a vertical orbit).
     pub fn exposure(&self, age: Dy) -> Dy {
         self.vertical_at(age).map(|v| v.exposure).unwrap_or(Dy::ONE)
+    }
+
+    /// The star's class at `t` rings after the Big Bang (see [`Class`]): its
+    /// burning step at its age, its compactness, its mass as a share of its
+    /// cloud's star mass, its life in rings, and whether that life outlasts
+    /// the universe's age `t`.
+    pub fn class(&self, t: Dy) -> Class {
+        let delta = self.compactness();
+        let reach = self.reach_rings();
+        let age = (t - Dy::from_q(&self.born)).max(Dy::ZERO);
+        let life = crate::stars::life(delta, reach);
+        let top = super::piece_star_mass(&self.r).unwrap_or(Q::ZERO);
+        Class {
+            step: crate::field::burning(delta, reach, age),
+            compactness: delta,
+            mass_share: Dy::from_q(&self.mass.checked_div(&top).unwrap_or(Q::ZERO)),
+            outlives: Dy::from_q(&life) > t,
+            life,
+        }
+    }
+}
+
+/// A star's class: not a type assigned to it but the state its formulas give
+/// at a time. Two stars are of one class where these quantities agree; a
+/// known type's name is attached where its condition holds ([`Class::name`]),
+/// and every other combination is reported by its quantities.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Class {
+    /// The burning step at the star's age (`field::burning`).
+    pub step: crate::field::Burning,
+    /// The star's deficit at its rim (`Star::compactness`).
+    pub compactness: Dy,
+    /// The star's mass over its cloud's star mass (`galaxy::piece_star_mass`),
+    /// in \[0, 1\].
+    pub mass_share: Dy,
+    /// The star's main-sequence life (rings, `stars::life`).
+    pub life: Q,
+    /// Whether that life is longer than the universe's age at the reading.
+    pub outlives: bool,
+}
+
+impl Class {
+    /// The known type whose condition holds (docs/model.md, Star types), or
+    /// `None`: a long-lived main-sequence star (its life outlasts the
+    /// universe's age), a main-sequence star, a giant or a remnant.
+    pub fn name(&self) -> Option<&'static str> {
+        use crate::field::Burning;
+        match self.step {
+            Burning::Hydrogen if self.outlives => Some("long-lived main sequence (red dwarf)"),
+            Burning::Hydrogen => Some("main sequence"),
+            Burning::Helium => Some("giant"),
+            Burning::Remnant => Some("remnant"),
+        }
+    }
+
+    /// The decade of the compactness, `floor(log10 delta)`: the band two
+    /// stars must share to be of one class; `None` for a star that holds
+    /// nothing.
+    pub fn compactness_decade(&self) -> Option<i64> {
+        if self.compactness.signum() <= 0 {
+            return None;
+        }
+        let x = self.compactness.log() / Dy::int(10).log();
+        let t = x.trunc_i64();
+        Some(if Dy::int(t) > x { t - 1 } else { t })
     }
 }
 

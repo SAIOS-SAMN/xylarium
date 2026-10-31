@@ -207,7 +207,12 @@ fn star_life(
             return;
         }
         let born = crate::circuit::gyr_of_rings_dy(Dy::from_q(&star.born));
-        let t0 = born + first_age(crate::galaxy::kpc_of_rings_dy(Dy::from_q(&star.r)), ctx);
+        let t0 = born
+            + first_age(
+                star.compactness(),
+                crate::galaxy::kpc_of_rings_dy(Dy::from_q(&star.r)),
+                ctx,
+            );
         if t0 >= horizon_gyr() {
             return;
         }

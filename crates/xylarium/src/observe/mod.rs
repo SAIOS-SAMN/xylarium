@@ -33,6 +33,12 @@
 //!   galaxy            the units from the white hole, the bells, and sample
 //!                     stars on their galactic manifolds: arc from the core,
 //!                     height over the plane, phase in degrees
+//!   star-types \[N\] \[R\]
+//!                     the classes the stars' formulas give, counted over
+//!                     each galaxy's first N sample stars (default 200),
+//!                     then the home galaxy's main-sequence stars at R of
+//!                     its rim (default 8/15) beside the Earth's star's
+//!                     values for comparison
 //!   chemistry         the galaxy's elements across the disc, then and now,
 //!                     and its books (where every element made is held)
 //!   ley \[K\]           the ley network: constellations, lines, passages,
@@ -94,7 +100,8 @@ use xyl_kernel::universe::Universe;
 /// The list of readings printed for an unknown word.
 const READINGS: &str = concat!(
     "universe, peoples, people N, star N, house, world S W, system S, galaxy, ",
-    "chemistry, core [T], ley [K], annals [K], events [K], clock, tiers S, sync [K]; ",
+    "chemistry, star-types [N] [R], core [T], ley [K], annals [K], events [K], clock, ",
+    "tiers S, sync [K]; ",
     "law readings: formation, cores, seals [Z], founding, founding-reach, worlds [N], ",
     "push [N], bonding [N]"
 );
@@ -228,6 +235,9 @@ fn carried_reading(u: &Universe<'_>, what: &[String], systems: &[u64]) -> String
         Some("house") => universe::house(u),
         Some("chemistry") => galaxy::chemistry(u),
         Some("galaxy") => galaxy::galaxy(u),
+        Some("star-types") => {
+            galaxy::star_types(u, count(what, 200), galaxy::probe_share(what.get(2)))
+        }
         Some("system") if systems.len() > 1 => systems_lines(u, systems),
         Some("system") => worlds::system(u, what.get(1).and_then(|s| s.parse().ok())),
         Some("world") => worlds::world(

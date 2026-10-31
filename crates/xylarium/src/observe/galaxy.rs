@@ -28,21 +28,23 @@ pub(super) fn galaxy(u: &Universe<'_>) -> String {
     ));
     out.push_str(&format!("Bells: {}\n", u.field.bells()));
     let t = xyl_cosmos::circuit::rings_of_gyr_dy(u.cosmic.now);
-    // The main-sequence and giant end times of a star at reach 0, the core's
-    // reach, counted in rings and printed in Gyr.
-    let (main, giant) = xyl_cosmos::stars::ends(Dy::ZERO);
+    // The main-sequence and giant end times of the founding's first lit star
+    // at reach 0, the core's reach, counted in rings and printed in Gyr.
+    let delta = xyl_cosmos::galaxy::first_star_compactness();
+    let (main, giant) = xyl_cosmos::stars::ends(delta, Dy::ZERO);
     let (main, giant) = (
         xyl_cosmos::circuit::gyr_of_rings(&main),
         xyl_cosmos::circuit::gyr_of_rings(&giant),
     );
     out.push_str(&format!(
         concat!(
-            "Stars fuelled by the pulse: a star's rim share {} of the ring per bell {} ",
+            "Stars fuelled by the pulse: the first lit star's compactness {} ",
+            "of the ring per bell {} ",
             "at the core's reach; main sequence {} Gyr, giant's end {} Gyr there; ",
             "remnant keeps {} of its hold; ",
             "the radiation's swing within a bell now {} of its mean\n"
         ),
-        show(&xyl_cosmos::stars::delta_star()),
+        delta,
         xyl_cosmos::stars::ring_per_bell(Dy::ZERO),
         show(&main),
         show(&giant),
@@ -98,12 +100,13 @@ fn star_on_manifold(
         radius_kpc,
         reach,
         show(&xyl_cosmos::circuit::gyr_of_rings(
-            &xyl_cosmos::stars::life(reach)
+            &xyl_cosmos::stars::life(s.compactness(), reach)
         )),
-        xyl_cosmos::field::burning(reach, age),
+        xyl_cosmos::field::burning(s.compactness(), reach, age),
         xyl_cosmos::circuit::gyr_of_rings_dy(age),
         show(&xyl_cosmos::stars::light(
             &s.mass,
+            s.compactness(),
             reach,
             Dy::from_q(&s.born),
             age
@@ -294,4 +297,121 @@ pub(super) fn tiers(o: &Options, n: u64) -> Result<String, String> {
         }
     }
     Ok(out)
+}
+
+/// The relative reach of the Earth's star in its galaxy, about 8 kpc of a
+/// 15 kpc disc: the probe's default input, used by no law.
+const REFERENCE_REACH: (i64, i64) = (8, 15);
+
+/// The `star-types` reading at the universe's age: an open census of the
+/// classes the stars' formulas give (`galaxy::Star::class`), then one probe
+/// of the home galaxy at relative reach `share` of its rim.
+///
+/// The census reads the first `n` sample stars of every galaxy and counts
+/// them by class: a known type's name where its condition holds, with the
+/// compactness decade, so classes no observation has named are listed by
+/// their quantities. The probe lists the main-sequence stars whose reach
+/// over the rim lies within 0.05 of `share` and prints, beside them, the
+/// Earth's star's age, life and compactness as reference values for
+/// comparison only; no law reads them.
+pub(super) fn star_types(u: &Universe<'_>, n: usize, share: Q) -> String {
+    let t = xyl_cosmos::circuit::rings_of_gyr_dy(u.cosmic.now);
+    let (seed, bang) = (u.cosmic.gal.seed, u.cosmic.gal.bang);
+    let mut cores: Vec<u32> = vec![0];
+    cores.extend(
+        xyl_cosmos::cores::shapes(seed, bang)
+            .iter()
+            .map(|s| s.index),
+    );
+    cores.sort_unstable();
+    cores.dedup();
+    let mut census: std::collections::BTreeMap<(String, Option<i64>), usize> = Default::default();
+    let mut read = 0;
+    for &core in &cores {
+        for k in xyl_cosmos::galaxy::indices_of(bang, core).take(n) {
+            let Some(st) = xyl_cosmos::galaxy::star(seed, bang, k) else {
+                continue;
+            };
+            let class = st.class(t);
+            let name = class
+                .name()
+                .map_or_else(|| format!("{:?}", class.step), str::to_string);
+            *census
+                .entry((name, class.compactness_decade()))
+                .or_default() += 1;
+            read += 1;
+        }
+    }
+    let mut out = format!(
+        "Star classes at {} Gyr: {read} sample stars of {} galaxies\n",
+        show(&u.cosmic.now.to_q()),
+        cores.len()
+    );
+    for ((name, decade), count) in &census {
+        let band = decade.map_or_else(|| "holds nothing".to_string(), |d| format!("1e{d}"));
+        out.push_str(&format!(
+            "  {count:>6}  {name}, compactness of order {band}\n"
+        ));
+    }
+    out.push_str(&reference_probe(u, n, &share, t));
+    out
+}
+
+/// The probe of the `star-types` reading: the home galaxy's main-sequence
+/// stars near relative reach `share`, with the Earth's star's values for
+/// comparison.
+fn reference_probe(u: &Universe<'_>, n: usize, share: &Q, t: Dy) -> String {
+    let (seed, bang) = (u.cosmic.gal.seed, u.cosmic.gal.bang);
+    let rim = xyl_cosmos::circuit::anchor().rim.clone();
+    let mut out = format!(
+        concat!(
+            "Probe: the home galaxy's main-sequence stars at {} of its rim (within 0.05); ",
+            "every other galaxy is a scaled copy of the home galaxy (`cores::Shape::scale`), ",
+            "so its stars repeat these classes\n"
+        ),
+        show(share)
+    );
+    let mut found = 0;
+    for k in xyl_cosmos::galaxy::indices_of(bang, 0).take(n) {
+        let Some(st) = xyl_cosmos::galaxy::star(seed, bang, k) else {
+            continue;
+        };
+        let at = st.r.checked_div(&rim).unwrap_or(Q::ZERO);
+        let class = st.class(t);
+        if (&at - share).abs() > Q::ratio(1, 20)
+            || class.step != xyl_cosmos::field::Burning::Hydrogen
+        {
+            continue;
+        }
+        let age = (t - Dy::from_q(&st.born)).max(Dy::ZERO);
+        out.push_str(&format!(
+            concat!(
+                "  star {}: reach {} of the rim, mass share {} of its cloud's star, ",
+                "compactness {}, age {} Gyr, life {} Gyr\n"
+            ),
+            k,
+            show(&at),
+            class.mass_share,
+            class.compactness,
+            show(&xyl_cosmos::circuit::gyr_of_rings_dy(age).to_q()),
+            show(&xyl_cosmos::circuit::gyr_of_rings(&class.life)),
+        ));
+        found += 1;
+    }
+    if found == 0 {
+        out.push_str("  no main-sequence star at that reach among the sample read\n");
+    }
+    out.push_str(concat!(
+        "  reference, the Earth's star (comparison only, read by no law): ",
+        "reach about 0.53 of its galaxy's disc, compactness 4.2e-6, age 4.6 Gyr, ",
+        "life about 10 Gyr\n"
+    ));
+    out
+}
+
+/// The probe's relative reach from the reading's argument (a share of the
+/// rim), or the reference default.
+pub(super) fn probe_share(arg: Option<&String>) -> Q {
+    arg.and_then(|a| xyl_cosmos::elements::decimal(a))
+        .unwrap_or_else(|| Q::ratio(REFERENCE_REACH.0, REFERENCE_REACH.1))
 }

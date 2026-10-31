@@ -42,11 +42,6 @@ impl Si {
     pub fn star_mass_kg() -> Q {
         decimal("1.989e30").unwrap_or(Q::ZERO)
     }
-    /// The solar radius, 6.957e8 m: the one-sun star's rim, where its deficit
-    /// share is read (stars::delta_star).
-    pub fn star_radius_m() -> Q {
-        decimal("6.957e8").unwrap_or(Q::ZERO)
-    }
     /// The astronomical unit, 1.496e11 m.
     pub fn au() -> Q {
         decimal("1.496e11").unwrap_or(Q::ZERO)

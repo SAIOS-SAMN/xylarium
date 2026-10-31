@@ -114,7 +114,7 @@ pub fn nodes_among(seed: u64, bang: &BigBang, candidates: &[u64]) -> Vec<Node> {
         };
         // A stellar node forms when the star's main-sequence life ends
         // (`stars::life`).
-        let life = Dy::from_q(&crate::stars::life(s.reach_rings()));
+        let life = Dy::from_q(&crate::stars::life(s.compactness(), s.reach_rings()));
         let born = Dy::from_q(&s.born) + life;
         // Remnant mass: the stellar mass the sample star stands for times
         // the share of the hold not transduced (`stars::remnant_share`),

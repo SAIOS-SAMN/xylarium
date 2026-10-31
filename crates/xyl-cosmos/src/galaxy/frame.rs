@@ -81,6 +81,16 @@ pub fn piece_star_mass(r: &Q) -> Option<Q> {
     Some(&cut.star * &cut.cloud)
 }
 
+/// The held core's rim of the piece at reach `r` (galaxy rings): the reach,
+/// in system-tier units (`60 r_g`), of the loosest kind the piece's burning
+/// star still holds (`disc::StarCut::rim`). Every star of the piece shares
+/// it, so a heavier star of the piece is more compact. `None` where no piece
+/// lights at `r`.
+pub fn piece_rim(r: &Q) -> Option<Q> {
+    let (_, _, cut) = held_cut(r)?;
+    Some(cut.rim)
+}
+
 /// The star mass of the first piece of `sub`'s lighting (core masses): the
 /// share `m_p = s c` of the infall held by a star of the piece that lights
 /// first (the least rings to light; on a tie the innermost), read on `sub`
@@ -110,6 +120,28 @@ pub fn first_star_mass(sub: &crate::circuit::Substrate) -> Option<Q> {
         m.insert(key, mass.clone());
     }
     mass
+}
+
+/// The compactness of the first lit piece's star (`disc::rim_share` of the
+/// piece's star mass `s c` and its rim), read on the founded universe: the
+/// founding's own reference star, for readings that name no particular
+/// star. Zero before a founding or where no piece lights.
+pub fn first_star_compactness() -> Dy {
+    let anchor = crate::circuit::anchor();
+    let Some(sub) = crate::cores::substrate_for(&anchor.spin) else {
+        return Dy::ZERO;
+    };
+    let first = sub
+        .lighting
+        .pieces
+        .iter()
+        .filter_map(|p| p.2.map(|rings| (rings, p)))
+        .min_by(|x, y| x.0.cmp(&y.0).then_with(|| x.1 .0.cmp(&y.1 .0)))
+        .map(|(_, p)| p);
+    first
+        .and_then(|p| piece_cut(&sub, p))
+        .map(|cut| Dy::from_q(&crate::disc::rim_share(&(&cut.star * &cut.cloud), &cut.rim)))
+        .unwrap_or(Dy::ZERO)
 }
 
 /// The disc's frame at reach `r` (galaxy rings) of the home galaxy for a
@@ -164,18 +196,10 @@ fn piece_cut(
         .iter()
         .find(|b| b.span.0 == record.0 && b.span.1 == record.1)?;
     let swing = &Q::ONE + &sub.inbound_mean(crate::circuit::echo()).to_q();
-    // The pulse's turning and the star's burn (its over-pressure), per echo
-    // (two bells) in hydrogen units, at the piece's reach about the universal
-    // core.
+    // The pulse's turning per echo (two bells) in hydrogen units at the
+    // piece's reach about the universal core; the cut derives the star's
+    // burn from it and the collapsed star's compactness.
     let reach = Dy::from_q(&bead.reach).max(Dy::ZERO);
     let turning = (crate::stars::ring_per_bell(reach) * Dy::int(2)).to_q();
-    let burn = (crate::stars::burn_per_bell(reach) * Dy::int(2)).to_q();
-    crate::disc::star_cut(
-        bead,
-        &sub.unit(),
-        &sub.held_share(),
-        &swing,
-        &turning,
-        &burn,
-    )
+    crate::disc::star_cut(bead, &sub.unit(), &sub.held_share(), &swing, &turning)
 }

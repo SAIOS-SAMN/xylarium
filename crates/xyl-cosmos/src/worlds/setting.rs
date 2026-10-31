@@ -131,6 +131,9 @@ pub struct Setting<'a> {
     pub z: Dy,
     /// Its star's distance from the galaxy's centre (kpc).
     pub r_kpc: Dy,
+    /// Its star's compactness, the star's deficit at its rim
+    /// (`galaxy::Star::compactness`).
+    pub compactness: Dy,
     /// Its isotopes (kg in the mantle at the star's birth, from
     /// `bodies::heat_sources`).
     pub sources: [Q; 4],

@@ -276,7 +276,11 @@ fn ring_star(
         xyl_cosmos::circuit::rings_of_gyr_dy(from),
         xyl_cosmos::circuit::rings_of_gyr_dy(to),
     );
-    let step = burning(w.star.reach_rings(), to_ring - Dy::from_q(&w.star.born));
+    let step = burning(
+        w.star.compactness(),
+        w.star.reach_rings(),
+        to_ring - Dy::from_q(&w.star.born),
+    );
     let mut drift = drift0.unwrap_or([Q::ZERO, Q::ZERO, Q::ZERO]);
     let mut books = books0;
     let mut delivered = 0;

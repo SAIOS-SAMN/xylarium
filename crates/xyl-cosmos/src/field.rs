@@ -335,9 +335,10 @@ pub enum Burning {
 /// The step a star at reach `r` (galaxy rings) is on at `age` rings: hydrogen
 /// until it leaves the main sequence, helium until its giant core's helium
 /// is spent, then remnant; both ends from the pulse's burn of its hold
-/// (`stars::ends`).
-pub fn burning(reach: Dy, age: Dy) -> Burning {
-    let (main, giant) = crate::stars::ends(reach);
+/// (`stars::ends`), for a star of compactness `delta`
+/// (`galaxy::Star::compactness`).
+pub fn burning(delta: Dy, reach: Dy, age: Dy) -> Burning {
+    let (main, giant) = crate::stars::ends(delta, reach);
     let age = age.to_q();
     if age < main {
         Burning::Hydrogen
@@ -670,14 +671,15 @@ mod tests {
         // The step by age at r = 0: hydrogen, helium, then remnant (the
         // universe is founded first because the bell sets the life).
         let _ = crate::genesis::bang();
-        let (main, giant) = crate::stars::ends(Dy::ZERO);
+        let delta = crate::galaxy::first_star_compactness();
+        let (main, giant) = crate::stars::ends(delta, Dy::ZERO);
         assert!(main.signum() > 0 && giant > main, "{main} {giant}");
         let half = Dy::from_q(&main) / Dy::int(2);
-        assert_eq!(burning(Dy::ZERO, half), Burning::Hydrogen);
+        assert_eq!(burning(delta, Dy::ZERO, half), Burning::Hydrogen);
         let mid = Dy::from_q(&(&main + &giant)) / Dy::int(2);
-        assert_eq!(burning(Dy::ZERO, mid), Burning::Helium);
+        assert_eq!(burning(delta, Dy::ZERO, mid), Burning::Helium);
         assert_eq!(
-            burning(Dy::ZERO, Dy::from_q(&giant) * Dy::int(2)),
+            burning(delta, Dy::ZERO, Dy::from_q(&giant) * Dy::int(2)),
             Burning::Remnant
         );
     }

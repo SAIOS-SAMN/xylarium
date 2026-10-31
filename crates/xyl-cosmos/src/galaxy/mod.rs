@@ -52,9 +52,11 @@ mod star;
 mod tests;
 mod vertical;
 
-pub use frame::{disc_frame, first_star_mass, piece_star_mass, DiscFrame};
+pub use frame::{
+    disc_frame, first_star_compactness, first_star_mass, piece_rim, piece_star_mass, DiscFrame,
+};
 pub(crate) use star::{golden_turns, node_of, plastic_turns, tilt_of};
-pub use star::{imf, star, Orbit, Star};
+pub use star::{imf, star, Class, Orbit, Star};
 pub use vertical::{layer, vertical, vertical_frequency, Vertical};
 
 use crate::bang::BigBang;

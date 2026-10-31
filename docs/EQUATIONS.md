@@ -50,11 +50,11 @@ another crate. Laws are composed from shares (ratios of the form
   in kpc and in `r_g`. Status: built.
 - First stars (`circuit::anchor::of`): the first stars form at
   `max(cools_in, 1) bell`. Status: built.
-- SI bridge (`package::hole_mass`): `M_core = 4.3e6` solar masses, which fixes
-  `r_g` in metres for display in kpc, Gyr, AU and solar or world masses; the SI
-  constants are in `package::Si`. Status: placeholder; the next step is the
-  core's mass from the package (roadmap, Rules from the founding and the
-  galactic cores).
+- SI bridge (`package::hole_mass`): the core's mass in SI units, declared by the
+  package, which fixes `r_g` in metres for display in kpc, Gyr, AU and
+  kilograms; the SI constants are in `package::Si`. Status: placeholder; the
+  next step is the core's mass from the package (roadmap, Rules from the
+  founding and the galactic cores).
 
 ## 3. The bounce and the founding
 
@@ -328,13 +328,12 @@ another crate. Laws are composed from shares (ratios of the form
   timescale toward `galaxy::density x sigma_r0`. Status: partial (rulers
   `v_flat`, `sigma_r0`, `prompt`, `slow`, `loading` and the ring width).
 - Yields (`chem::Calibration`): per-channel scales are set from
-  `Rulers::ism_today_dex` at the reference ring at `Rulers::today` (13.8 Gyr
-  in rings, the calibration epoch until phase 5);
-  `relative` is 1 in the solar-birth reference gas; hydrogen and helium follow
-  from the founding's counts with `Rulers::dy_dz` and
-  `Rulers::reference_metallicity` (`chem::Light`). Status: placeholder; the next
-  step is yields from the founding (roadmap, Rules from the founding and the
-  galactic cores).
+  `Rulers::ism_today_dex` at the reference ring at `Rulers::today` (13.8 Gyr in
+  rings, the calibration epoch until phase 5); `relative` is 1 in the
+  calibration's reference birth gas; hydrogen and helium follow from the
+  founding's counts with `Rulers::dy_dz` and `Rulers::reference_metallicity`
+  (`chem::Light`). Status: placeholder; the next step is yields from the
+  founding (roadmap, Rules from the founding and the galactic cores).
 - Placement (`galaxy::star`): the reach is where the rings' cumulative
   holding reaches the silver-turn pivot; the disc phase follows the golden
   turn, the ball planes follow the plastic and golden turns, and the rate
@@ -357,10 +356,14 @@ another crate. Laws are composed from shares (ratios of the form
 
 ## 6. Stars and systems
 
-- Star's rim deficit (`stars::delta_star`): `r_g,sun / (R_sun + r_g,sun)`.
-  Status: placeholder (solar rim).
+- Star's compactness (`disc::rim_share`, `galaxy::Star::compactness`):
+  `delta = m / (R 60 + m)`, `m` in core masses, `R` the rim of the cloud's
+  burning cut in system-tier units (`galaxy::piece_rim`). Status: built.
+- Collapse and ignition (`disc::star_cut`): dark cut `s0`, `R0`;
+  `delta0 = s0 c / (R0 60 + s0 c)`; burn per echo `delta0 x turning`;
+  burning cut at `p0 = 1 + burn`. Status: built.
 - Ring per bell (`stars::ring_per_bell`): `1 / (pi (r + 1))`. Status: built.
-- Burn per bell (`stars::burn_per_bell`): `delta_star / (pi (r + 1))`.
+- Burn per bell (`stars::burn_per_bell`): `delta / (pi (r + 1))`.
   Status: built.
 - Hydrogen step (`stars::transduced_hydrogen`):
   `1 - hold(He) / (4 hold(H)) = 1/4`. Status: built.
@@ -373,8 +376,8 @@ another crate. Laws are composed from shares (ratios of the form
 - Power (`stars::power`): `P = m burn_per_bell(r) / bell` core masses per
   ring (`c = 1`). Status: built.
 - Light (`stars::light`): `P (1 + pi bell q(t))`. Status: built. Boundary
-  (`stars::suns_of_power`): `P / P(1 sun, r = 0)`, the luminosity in suns
-  read by the system and world layers.
+  (`stars::suns_of_power`): `P` read in the prototype's display unit of
+  luminosity read by the system and world layers.
 - Flicker (`stars::flicker`): `(pi / 2) |cos(2 pi t / echo)|`. Status:
   built.
 - Star's cut (`disc::star_cut`, `formation::hold_at_heat`): the spin is

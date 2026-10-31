@@ -3,18 +3,20 @@
 //!
 //! Reads `circuit::anchor` (galaxy ring in kpc), `circuit::vacuum_share`,
 //! `circuit::bell` and `echo` (one and two rings), the substrate's firmament
-//! outflow rate (`cores::substrate_for`, per ring), `compound::hold` and,
-//! for the star's rim share, the sun's mass and radius from `package::Si`
-//! (open: see `delta_star`). Reach `r` is in galaxy rings (`reach_rings`
-//! converts from kpc); times are rings of time after the Big Bang (one ring
-//! one bell); masses are core masses and light is power in core units, core
-//! masses (times `c^2`, `c = 1`) per ring.
+//! outflow rate (`cores::substrate_for`, per ring) and `compound::hold`.
+//! Reach `r` is in galaxy rings (`reach_rings` converts from kpc); times are
+//! rings of time after the Big Bang (one ring one bell); masses are core
+//! masses and light is power in core units, core masses (times `c^2`,
+//! `c = 1`) per ring. No constant of the Sun enters.
 //!
-//! - Burn (`burn_per_bell`): the share of a star's hold the pulse transduces
-//!   per bell, `delta_star x ring_per_bell(r)`. The ring per bell is
-//!   `1 / (pi (r + 1))`; `delta_star = M r_g / (R + M r_g)` is the turning
-//!   law's deficit at the star's rim, the same for every star because the
-//!   radius is taken linear in the mass.
+//! - Compactness `delta`: a star's deficit at its rim, `m / (R 60 + m)`
+//!   (`disc::rim_share`), with `R` the rim of the held core its cloud's cut
+//!   gives (`galaxy::piece_rim`, from the atoms' open frames and masses in
+//!   `formation::hold_at_heat`). Every star of a cloud shares the rim, so a
+//!   heavier star is more compact (`galaxy::Star::compactness`).
+//! - Burn (`burn_per_bell`): the share of the ring it receives that a star
+//!   holds and transduces per bell, `delta x ring_per_bell(r)`, with the
+//!   ring per bell `1 / (pi (r + 1))`.
 //! - Power (`power`): the hold the burn transduces per ring,
 //!   `P = m burn_per_bell(r) / bell`, the mass `m` (core masses) times `c^2`
 //!   (`c = 1`) times the share transduced per bell, one ring.
@@ -48,18 +50,6 @@ fn hold_q(k: u32) -> Q {
     Q::int(i64::from(hold(k)))
 }
 
-/// A star's deficit at its rim, `M r_g / (R + M r_g)`: the star's
-/// gravitational length over its radius plus that length, evaluated for the
-/// sun. The radius is taken linear in the mass, so both scale together and
-/// the share is the same for every star. Open: it reads the sun's mass and
-/// radius (`package::Si`); a derivation from the founding needs the star's
-/// rim from its cut (`disc::star_cut`), whose over-pressure reads this burn.
-pub fn delta_star() -> Q {
-    let r_g = crate::systems::star_length_m();
-    r_g.checked_div(&(&crate::package::Si::star_radius_m() + &r_g))
-        .unwrap_or(Q::ZERO)
-}
-
 /// A home-galaxy star's reach about the universal core (galaxy rings) from
 /// its distance from the core (kpc), in the galaxy tier's ring, the unit in
 /// which the star's piece is lit, so the vacuum's share `1 / (r + 1)` gives
@@ -91,10 +81,11 @@ pub fn drift_per_bell(reach: Dy, t: Dy) -> Dy {
     crate::circuit::bell() * s.rate(t.max(Dy::ZERO)).0 * vacuum_share(reach, Dy::ONE)
 }
 
-/// The share of a star's hold the pulse transduces per bell at reach `r`,
-/// at the echo's mean: `delta_star` times the ring per bell.
-pub fn burn_per_bell(reach: Dy) -> Dy {
-    Dy::from_q(&delta_star()) * ring_per_bell(reach)
+/// The share of a star's hold the pulse transduces per bell at reach `r`:
+/// the star holds its compactness `delta` (its deficit at its rim,
+/// `disc::rim_share`) of the ring it receives, `delta / (pi (r + 1))`.
+pub fn burn_per_bell(delta: Dy, reach: Dy) -> Dy {
+    delta.max(Dy::ZERO) * ring_per_bell(reach)
 }
 
 /// The share of the hold the hydrogen step transduces: four hydrogens'
@@ -124,11 +115,12 @@ pub fn remnant_share() -> Q {
     &Q::ONE - &transduced_helium()
 }
 
-/// A star's main-sequence life (rings) at reach `r`: the hydrogen step's
-/// share over the burn per bell, a count of bells, each one ring. Zero
-/// before a founding.
-pub fn life(reach: Dy) -> Q {
-    let burn = burn_per_bell(reach);
+/// A star's main-sequence life (rings) at reach `r` for compactness `delta`:
+/// the hydrogen step's share over the burn per bell, a count of bells, each
+/// one ring. A more compact star burns a larger share and lives fewer rings.
+/// Zero before a founding or for a star that holds nothing.
+pub fn life(delta: Dy, reach: Dy) -> Q {
+    let burn = burn_per_bell(delta, reach);
     if burn.signum() <= 0 || crate::circuit::anchor().rim.signum() <= 0 {
         return Q::ZERO;
     }
@@ -136,28 +128,34 @@ pub fn life(reach: Dy) -> Q {
 }
 
 /// A star's mean power at reach `r` (core masses per ring, `c = 1`): the
-/// hold the burn transduces per ring, `P = m burn_per_bell(r) / bell`, with
-/// `m` the star's mass (core masses). Zero for a non-positive mass.
-pub fn power(mass: &Q, reach: Dy) -> Q {
-    let share = burn_per_bell(reach) / crate::circuit::bell();
+/// hold the burn transduces per ring, `P = m burn_per_bell(delta, r) / bell`,
+/// with `m` the star's mass (core masses) and `delta` its compactness. Zero
+/// for a non-positive mass.
+pub fn power(mass: &Q, delta: Dy, reach: Dy) -> Q {
+    let share = burn_per_bell(delta, reach) / crate::circuit::bell();
     (&mass.clone().max(Q::ZERO) * &share.to_q()).max(Q::ZERO)
 }
 
 /// A power (core masses per ring) as a luminosity in suns: the power over
-/// that of a one-sun star (`galaxy::core_masses_of_suns`) at reach 0, so a
+/// that of a one-sun mass of the same compactness `delta` at reach 0, so a
 /// star of `M` suns at reach `r` reads `M / (r + 1)`. Boundary for the
-/// system and world layers still in suns; zero before a founding.
-pub fn suns_of_power(p: &Q) -> Q {
-    let sun = power(&crate::galaxy::core_masses_of_suns(&Q::ONE), Dy::ZERO);
+/// system and world layers still in suns, removed when layer C is
+/// converted; zero before a founding.
+pub fn suns_of_power(p: &Q, delta: Dy) -> Q {
+    let sun = power(
+        &crate::galaxy::core_masses_of_suns(&Q::ONE),
+        delta,
+        Dy::ZERO,
+    );
     p.checked_div(&sun).unwrap_or(Q::ZERO)
 }
 
 /// A star's light (core masses per ring, `c = 1`) at `age` rings after its
 /// birth at `born`, at reach `r`: the mean power ([`power`]) of a star of
-/// `mass` core masses times the vessel's drift factor `1 + pi bell q(t)`,
-/// with q read at `born + age`.
-pub fn light(mass: &Q, reach: Dy, born: Dy, age: Dy) -> Q {
-    let mean = power(mass, reach);
+/// `mass` core masses and compactness `delta` times the vessel's drift factor
+/// `1 + pi bell q(t)`, with q read at `born + age`.
+pub fn light(mass: &Q, delta: Dy, reach: Dy, born: Dy, age: Dy) -> Q {
+    let mean = power(mass, delta, reach);
     let drift = drift_per_bell(reach, born + age) / ring_per_bell(reach).max(Dy::sci(1, -300));
     &mean * &(Dy::ONE + drift).to_q()
 }
@@ -174,17 +172,18 @@ pub fn flicker(t: Dy) -> Dy {
     Dy::PI / Dy::int(2) * (Dy::int(2) * Dy::PI * t / echo).cos().abs()
 }
 
-/// The share of a star's hydrogen step transduced by `age` rings at reach `r`,
-/// exact: `age / life`; zero when the life is zero.
-pub fn burned(reach: Dy, age: &Q) -> Q {
-    age.checked_div(&life(reach)).unwrap_or(Q::ZERO)
+/// The share of a star's hydrogen step transduced by `age` rings at reach `r`
+/// for compactness `delta`, exact: `age / life`; zero when the life is zero.
+pub fn burned(delta: Dy, reach: Dy, age: &Q) -> Q {
+    age.checked_div(&life(delta, reach)).unwrap_or(Q::ZERO)
 }
 
-/// When a star leaves the main sequence and when its giant's helium is spent
-/// (rings) at reach `r`: the main-sequence life, and that life times the ratio
-/// of the helium step's cumulative share to the hydrogen step's.
-pub fn ends(reach: Dy) -> (Q, Q) {
-    let main = life(reach);
+/// When a star of compactness `delta` leaves the main sequence and when its
+/// giant's helium is spent (rings) at reach `r`: the main-sequence life, and
+/// that life times the ratio of the helium step's cumulative share to the
+/// hydrogen step's.
+pub fn ends(delta: Dy, reach: Dy) -> (Q, Q) {
+    let main = life(delta, reach);
     let giant = &main
         * &transduced_helium()
             .checked_div(&transduced_hydrogen())
@@ -204,9 +203,6 @@ mod tests {
         let he = transduced_helium();
         assert!(he > transduced_hydrogen() && he < Q::ONE, "{he}");
         assert_eq!(&remnant_share() + &he, Q::ONE);
-        // The star's rim share lies in (0, 1).
-        let d = delta_star();
-        assert!(d.signum() > 0 && d < Q::ONE, "{d}");
         // The ring per bell falls with the vacuum's share and is 1 / pi at
         // r = 0.
         assert!(ring_per_bell(Dy::ZERO) > ring_per_bell(Dy::int(10)));
@@ -219,25 +215,34 @@ mod tests {
     fn power_is_the_burn_of_the_hold_and_life_counts_rings() {
         let _ = crate::genesis::bang();
         let (m, r) = (Q::ratio(1, 1_000_000), Dy::int(3));
-        // The power is linear in the mass and is the share the burn
-        // transduces per ring; it falls outward with the vacuum's share.
-        let p = power(&m, r);
+        let rim = Q::ONE;
+        let delta = Dy::from_q(&crate::disc::rim_share(&m, &rim));
+        // The rim share lies in (0, 1); a heavier star on the same rim is
+        // more compact.
+        assert!(delta.signum() > 0 && delta < Dy::ONE);
+        let heavier = Dy::from_q(&crate::disc::rim_share(&(&m * &Q::int(2)), &rim));
+        assert!(heavier > delta);
+        // The power is linear in the mass at a given compactness and falls
+        // outward with the vacuum's share.
+        let p = power(&m, delta, r);
         assert!(p.signum() > 0);
-        assert_eq!(power(&(&m * &Q::int(2)), r), &p * &Q::int(2));
-        assert!(power(&m, Dy::ZERO) > p);
-        assert_eq!(power(&Q::ZERO, r), Q::ZERO);
+        assert_eq!(power(&(&m * &Q::int(2)), delta, r), &p * &Q::int(2));
+        assert!(power(&m, delta, Dy::ZERO) > p);
+        assert_eq!(power(&Q::ZERO, delta, r), Q::ZERO);
         // The light starts from the power and only adds the drift.
-        assert!(light(&m, r, Dy::int(10), Dy::ZERO) >= p);
-        // The life is the hydrogen step's share over the burn, in rings, and
-        // the giant ends after the main sequence.
-        let (main, giant) = ends(r);
+        assert!(light(&m, delta, r, Dy::int(10), Dy::ZERO) >= p);
+        // The life is the hydrogen step's share over the burn, in rings; the
+        // giant ends after the main sequence; a more compact star lives
+        // fewer rings.
+        let (main, giant) = ends(delta, r);
         assert!(main.signum() > 0 && giant >= main);
-        let burned_by = &main * &burn_per_bell(r).to_q();
+        assert!(life(heavier, r) < main);
+        let burned_by = &main * &burn_per_bell(delta, r).to_q();
         let gap = (&burned_by - &transduced_hydrogen()).abs();
         assert!(gap < Q::ratio(1, 1_000_000), "{burned_by}");
-        // The boundary reads a one-sun star at reach 0 as one sun.
+        // The boundary reads a one-sun mass at reach 0 as one sun.
         let sun = crate::galaxy::core_masses_of_suns(&Q::ONE);
-        let one = suns_of_power(&power(&sun, Dy::ZERO));
+        let one = suns_of_power(&power(&sun, delta, Dy::ZERO), delta);
         assert!((&one - &Q::ONE).abs() < Q::ratio(1, 1_000_000), "{one}");
     }
 }

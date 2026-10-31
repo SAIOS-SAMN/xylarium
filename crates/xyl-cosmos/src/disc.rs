@@ -8,10 +8,16 @@
 //! manifold, extents are in galaxy rings, heat in hydrogen units.
 //!
 //! Outputs:
-//! - `star_cut` -> `Option<StarCut>`: the star's held share, the tide
-//!   `H / (R + H)`, the disc's agitation `a_disc`, the infall's shear
-//!   `H w / (R (R + w))` and the over-pressure `1 + burn`; `None` where the
-//!   bead does not light.
+//! - `star_cut` -> `Option<StarCut>`, read in three states of the infall.
+//!   Collapse: the dark cut holds `s0` within the rim `R0` (system-tier
+//!   units), and the star's compactness is `delta0 = s0 c / (R0 60 + s0 c)`
+//!   (`rim_share`). Ignition: the star holds `delta0` of the turning it
+//!   receives per echo, its burn, which adds the over-pressure
+//!   `p0 = 1 + burn`. Settled: the burning cut gives the star's held share
+//!   and rim. Also the tide `H / (R + H)`, the disc's agitation `a_disc` and
+//!   the infall's shear `H w / (R (R + w))`; `None` where the bead does not
+//!   light.
+//! - `rim_share`: a held body's deficit at its rim, `m / (R 60 + m)`.
 //! - `manifold_worlds`: reads the manifold outside the star's share in 360
 //!   equal degrees, each adding `1 - a` of its line; a world closes where
 //!   the gathered matter's deficit `m / (star + m)` reaches the twist
@@ -27,6 +33,19 @@
 use crate::circuit::Bead;
 use crate::formation::*;
 use xyl_core::Q;
+
+/// A held body's deficit at its rim, `m / (R + m)`, with `m` its mass in
+/// core masses (equal to its gravitational length in `r_g`) and `R` its rim
+/// in system-tier units (`60 r_g`, `xyl_core::units::Tier::System`): the
+/// share of what reaches the body that it holds. Zero for a non-positive
+/// mass; one for a body with no extent.
+pub fn rim_share(mass: &Q, rim: &Q) -> Q {
+    if mass.signum() <= 0 {
+        return Q::ZERO;
+    }
+    let rim_rg = &rim.clone().max(Q::ZERO) * &xyl_core::units::Tier::System.in_rg();
+    mass.checked_div(&(&rim_rg + mass)).unwrap_or(Q::ONE)
+}
 
 /// A world of a star's disc: its reach and holding (shares of the star's
 /// manifold), the heat at its place, and its planetary core's cut: the share
@@ -74,6 +93,16 @@ pub struct StarCut {
     pub heat: Q,
     /// The over-pressure the star's burn adds, `1 + burn per echo`.
     pub p0: Q,
+    /// The held core's rim (system-tier units, `60 r_g`): the reach of the
+    /// loosest kind the burning star still holds (`formation::Hold::reach`).
+    /// The cut reads reaches one tier below the piece's, as the founding
+    /// reads the cluster tier and the pieces the galaxy tier.
+    pub rim: Q,
+    /// The collapsed star's compactness before it burns: its deficit at the
+    /// dark cut's rim, `m0 / (R0 + m0)` with `m0 = s0 c` (core masses, equal
+    /// to `r_g`) and `R0` the dark rim in `r_g`. Its burn per echo is this
+    /// share of the received turning.
+    pub compactness: Q,
 }
 
 /// The star tier's cut of a lit bead's infall (`hold_at_heat` on the bead's
@@ -84,14 +113,7 @@ pub struct StarCut {
 /// what remains held. `turning` is the pulse's turning per echo at the star's
 /// reach about the universal core and `burn` the star's burn per echo
 /// (`stars`). `None` where the bead does not light.
-pub fn star_cut(
-    bead: &Bead,
-    unit: &Q,
-    held: &Q,
-    swing: &Q,
-    turning: &Q,
-    burn: &Q,
-) -> Option<StarCut> {
+pub fn star_cut(bead: &Bead, unit: &Q, held: &Q, swing: &Q, turning: &Q) -> Option<StarCut> {
     let h = &Q::ONE + held;
     let c = cooling(bead, unit, &h, swing)?;
     if !lights(&c) {
@@ -104,9 +126,19 @@ pub fn star_cut(
     let spin = (&h * &c.infall)
         .checked_div(&(&reach * &(&reach + &c.infall)))
         .unwrap_or(Q::ZERO);
-    let p0 = &Q::ONE + burn;
+    // Collapse: the dark cut (no over-pressure) holds the share `s0` of the
+    // infall within the rim `R0` (system-tier units). The collapsed star's
+    // mass is `m0 = s0 c` core masses, which is `m0` in `r_g`, so its
+    // compactness is `delta0 = m0 / (R0 60 + m0)`.
+    let dark = hold_at_heat(&c.mix, &throat_push(), &spin, turning, &Q::ONE);
+    let compactness = rim_share(&(&dark.held * &c.cloud), &dark.reach);
+    // Ignition: the star holds `delta0` of the turning it receives per echo;
+    // that held share is its burn, which adds the over-pressure
+    // `p0 = 1 + burn` and releases the loosest kinds.
+    let p0 = &Q::ONE + &(&compactness * turning);
     let cut = hold_at_heat(&c.mix, &throat_push(), &spin, turning, &p0);
     let star = cut.held;
+    let rim = cut.reach.clone();
     // `a_disc = turning x swing x grip / shed`, at most 1, in the same form in
     // which the cooling reads a piece's heat: grip = D / (1 + D) with D the
     // disc's holding, shed = the released kinds' open frames plus ln 2 / k
@@ -137,6 +169,8 @@ pub fn star_cut(
         spin,
         heat: turning.clone(),
         p0,
+        rim,
+        compactness,
     })
 }
 

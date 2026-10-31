@@ -119,6 +119,7 @@ fn surface_temperature_falls_with_distance() {
             a_au: a,
             z: Dy::ONE,
             r_kpc: Dy::int(8),
+            compactness: Dy::sci(1, -6),
             sources: sources.clone(),
             path: None,
         };
@@ -148,6 +149,7 @@ fn surface_temperature_falls_with_distance() {
         a_au: Dy::int(5),
         z: Dy::ONE,
         r_kpc: Dy::int(8),
+        compactness: Dy::sci(1, -6),
         sources,
         path: None,
     };

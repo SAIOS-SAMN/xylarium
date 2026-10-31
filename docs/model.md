@@ -87,14 +87,14 @@ grid.
   firmament's margin. The anchor is stored once per process
   (`circuit::anchor::set`, a `OnceLock`), so the first founding in a
   process sets it.
-- The SI bridge is `package.rs`. `package::hole_mass` (4.3e6 solar masses) is
-  the only conversion from core units to SI: it fixes `r_g` in metres and
-  thereby every reading displayed in kpc, Gyr, AU, solar masses or world masses.
-  The SI constants used at seams are in `package::Si`. Laws stated in core units
-  do not depend on the bridge; the chemistry and the world states, which read
-  SI-calibrated constants, do depend on it. Next: the core's mass is to be
-  supplied by the package (roadmap, Rules from the founding and the galactic
-  cores).
+- The SI bridge is `package.rs`. `package::hole_mass` (the core's mass in SI
+  units, declared by the package) is the only conversion from core units to SI:
+  it fixes `r_g` in metres and thereby every reading displayed in kpc, Gyr, AU
+  or kilograms. The SI constants used at seams are in `package::Si`. Laws stated
+  in core units do not depend on the bridge; the chemistry and the world states,
+  which read SI-calibrated constants, do depend on it. Next: the core's mass is
+  to be supplied by the package (roadmap, Rules from the founding and the
+  galactic cores).
 
 ## 3. The bounce and the founding
 
@@ -350,7 +350,7 @@ law, the same at a nucleus, a star and a world:
   that does not transduce keeps it as warmth.
 - **Light.** A transducing body converts its held share and returns it
   outward. For a star the held share per bell is its burn,
-  `delta_star / (pi (r + 1))`; its power is the hold the burn converts per
+  `delta / (pi (r + 1))`; its power is the hold the burn converts per
   ring, `P = m burn_per_bell(r) / bell` in core masses per ring (`c = 1`,
   `stars::power`), and its light is that power with the vessel's drift,
   `P (1 + pi bell q(t))` (`stars::light`). For a nucleus the radiated part
@@ -455,7 +455,7 @@ law, the same at a nucleus, a star and a world:
   fountain's landing map and the core's jets each feed every ring once, and each
   nucleosynthetic channel makes its elements after its delay. Yields are scaled
   per channel by `chem::Calibration` against the gas at the reference ring and
-  the solar-birth reference (`Rulers::ism_today_dex`,
+  the calibration's reference birth gas (`Rulers::ism_today_dex`,
   `Rulers::reference_metallicity`, `Rulers::today`, `Rulers::v_flat`,
   `Rulers::sigma_r0`); hydrogen and helium come from the founding's counts
   (`chem::Light`). Status: partial. Next: the yields and ring scales are to be
@@ -466,18 +466,30 @@ law, the same at a nucleus, a star and a world:
 
 - The burn (`stars.rs`): a star at reach `r` absorbs the ring that the bell
   brings there, `1 / (pi (r + 1))` per bell, plus the vessel's drift `bell q(t)
-  / (r + 1)`, and takes its deficit share of that absorption, `delta_star`, read
-  on the solar rim (`stars::delta_star`, `package::Si::star_radius_m`; open).
-  Its power is the hold that burn transduces per ring, `P = m burn_per_bell(r) /
-  bell` in core masses per ring (`c = 1`; `stars::power`), and its light that
-  power times the drift factor `1 + pi bell q(t)` (`stars::light`). The system
-  and world layers still read the luminosity in suns through the boundary
-  `stars::suns_of_power`, the power over a one-sun star's at reach 0. Its
-  main-sequence life is `(1 - hold(He) / (4 hold(H))) / burn` bells, one quarter
-  over the burn (`stars::life`); its giant phase ends at that life times
-  `transduced_He / transduced_H` (`stars::ends`); its remnant keeps `1 -
-  transduced_He` of its hold (`stars::remnant_share`). The radiation's swing
-  within a bell is `(pi / 2) |cos(2 pi t / echo)|` (`stars::flicker`).
+  / (r + 1)`, and holds its compactness `delta` of that absorption: its deficit
+  at its rim, `delta = m / (R 60 + m)` (`disc::rim_share`), with `m` the star's
+  mass in core masses and `R` the rim of the held core its cloud's cut gives, in
+  system-tier units (`galaxy::piece_rim`, `galaxy::Star::compactness`). The rim
+  comes from the atoms: the cut carries each kind to a spin from its open frames
+  and its mass per nucleus and holds it where its deficit meets the push
+  (`formation::hold_at_heat`). The cut is read in three states. At collapse the
+  dark cut (no over-pressure) gives the held share `s0` and rim `R0`, so the
+  collapsed star's compactness is `delta0 = s0 c / (R0 60 + s0 c)`. At ignition
+  the star holds `delta0` of the turning it receives per echo; that is its burn,
+  which adds the over-pressure `p0 = 1 + burn`. Settled, the burning cut gives
+  the star's held share and rim (`disc::star_cut`). Every star of a cloud shares
+  the rim, so a heavier star is more compact, burns a larger share and lives
+  fewer rings. Its power is the hold that burn transduces per ring, `P = m
+  burn_per_bell(r) / bell` in core masses per ring (`c = 1`; `stars::power`),
+  and its light that power times the drift factor `1 + pi bell q(t)`
+  (`stars::light`). The system and world layers still read the luminosity in the
+  prototype's display unit through the boundary `stars::suns_of_power`, removed
+  when layer C is converted. Its main-sequence life is `(1 - hold(He) / (4
+  hold(H))) / burn` bells, one quarter over the burn (`stars::life`); its giant
+  phase ends at that life times `transduced_He / transduced_H` (`stars::ends`);
+  its remnant keeps `1 - transduced_He` of its hold (`stars::remnant_share`).
+  The radiation's swing within a bell is `(pi / 2) |cos(2 pi t / echo)|`
+  (`stars::flicker`).
 - The star's cut (`disc::star_cut`): the infall of the star's lit piece
   collapses carrying the galaxy's shear across its extent,
   `h w / (R (R + w))`, as its turning. It is heated by the pulse's turning
@@ -549,6 +561,41 @@ law, the same at a nucleus, a star and a world:
   The disc's formation temperature is `278 L / a` (`systems::Spec::t_form`).
   Worlds in play are read in degrees of their star's life, the star's
   lifetime over 360, floored at one bell (`worlds::star_degree_gyr`).
+
+### Star types
+
+Star types are not set. A star's class is the state its formulas give at a
+time (`galaxy::Star::class`): its burning step at its age
+(`field::burning`: hydrogen, helium or remnant), its compactness
+`delta = m / (R 60 + m)` (`galaxy::Star::compactness`), its mass as a share
+of its cloud's star mass, and its life in rings against the universe's age
+(`stars::life`). Two stars are of one class where these agree. The known
+types below are expectations, not limits: a known name is attached where
+its condition holds (`galaxy::Class::name`), and every other combination
+is reported by its quantities, so the universe can produce classes no
+observation has named.
+
+`xylarium observe star-types [N] [R]` counts the classes over each
+galaxy's first `N` sample stars at the universe's age, then probes the home
+galaxy's main-sequence stars at `R` of its rim (default 8/15) and prints,
+beside them, the Earth's star's age, life and compactness as reference
+values for comparison only. The probe is one reading among others; no law
+reads the reference values and none is tuned to them.
+
+| Type | Condition in the model | Status |
+|---|---|---|
+| Collapsing cloud (protostar) | A lit piece's infall held by the dark cut, before ignition: held share `s0`, rim `R0`, compactness `delta0` (`disc::star_cut`). | Partial: computed as the collapse state of each cut; not yet a stage of a star's timeline. |
+| Main-sequence star | Burning step hydrogen: age below its life, `(1/4) / burn` bells (`stars::life`). | Built. |
+| Mass ordering of the main sequence (the classes O to M) | Within a cloud every star shares the rim, so a heavier star is more compact, burns a larger share and lives fewer rings. | Built for mass, compactness and life. The surface temperature that the classes are named by needs a world-independent temperature of a star from its held share (layer C, radiation). |
+| Long-lived low-mass star (red dwarf) | A star whose life in rings exceeds the universe's current count, so it has not left the main sequence since any star was born. | Built as a reading of `stars::life` against the universe's count. |
+| Held body that does not ignite (brown dwarf) | A held core whose burn cannot strip the hydrogen's windings at the cut's heat (`atoms::unpaired_hot`), so its hydrogen step transduces nothing. | Next: every held core burns today; the ignition condition is to be derived from the atoms. |
+| Giant | Burning step helium: age between the main-sequence life and the giant's end, `life x transduced_He / transduced_H` (`stars::ends`). | Built. |
+| Supergiant | A giant of a star in the upper share of its cloud's masses. | Next: needs a derived boundary in the cloud's mass shares. |
+| Remnant | Burning step remnant: the star keeps `1 - transduced_He` of its hold (`stars::remnant_share`) and becomes a hole in the pulse network (`pulse::nodes`). | Built. |
+| Compact remnant (white dwarf), denser remnant (neutron star) | A remnant whose held core's rim, from the remnant's cut of its remaining mixture, gives compactness below one half; the two separated by where the remnant's held kinds lose their open frames. | Next: needs that cut of the remnant's mixture. |
+| Remnant at the throat (black hole) | A remnant whose compactness reaches `delta = 1/2`, the throat's equator: it holds as much as it passes and becomes a core with a throat. | Next: follows from the remnant's rim; whether such a remnant is an echo surface is under review with Netstratum. |
+| Binary companion | A second star drawn with a share of the primary's mass. | Placeholder: the share `0.1 + 0.9 u` is imposed; it is to come from the cloud's split. |
+| Variable star | The light's swing within a bell, `(pi / 2) |cos(2 pi t / echo)|` (`stars::flicker`). | Partial: a reading of the light only. |
 
 ## 7. Life and minds
 

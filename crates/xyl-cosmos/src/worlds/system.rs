@@ -92,6 +92,7 @@ pub fn settings<'a>(gal: &Galaxy, path: &[u64], sys: &'a System, star: &Star) ->
             a_au: Dy::from_q(&w.a),
             z,
             r_kpc,
+            compactness: star.compactness(),
             sources: bodies::heat_sources(w, elements, &kept),
             path,
         })
@@ -110,7 +111,7 @@ pub fn events(set: &Setting, age: Dy, ctx: &Ctx) -> Vec<(&'static str, Encl)> {
             out.push(("its host locks its spin", Encl::exact(p.lock_gyr.to_q())));
         }
     }
-    let start = crate::life::first_age(set.r_kpc, ctx);
+    let start = crate::life::first_age(set.compactness, set.r_kpc, ctx);
     if !set.world.giant && age > start {
         let margin = |a: &Q| {
             let st = build(set, Dy::from_q(a), ctx);

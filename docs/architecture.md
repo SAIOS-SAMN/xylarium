@@ -30,13 +30,12 @@ through `xylarium::run::Link` (see [network.md](network.md)).
 
 ## The founding and the package
 
-`xyl_cosmos::package` holds what a universe is founded from that its laws do
-not derive: the universal core's mass (`hole_mass`, in solar masses, the
-one quantity that converts the core's units to SI for display), the SI
-constants (`Si`, where measured values enter, converted once), and the
-founding's digest (`founding_digest`). The founding reads only the package
-and the parent's spin drawn from the seed; it does not read the layers built
-on it.
+`xyl_cosmos::package` holds what a universe is founded from that its laws do not
+derive: the universal core's mass in SI units (`hole_mass`, declared by the
+package, the one quantity that converts the core's units to SI for display), the
+SI constants (`Si`, where measured values enter, converted once), and the
+founding's digest (`founding_digest`). The founding reads only the package and
+the parent's spin drawn from the seed; it does not read the layers built on it.
 
 Units are `G = c = M_core = 1`. The universal core's holding, the
 universal state, is 1 in these units. The [firmament](glossary.md) (the
@@ -187,6 +186,7 @@ and may run beside `run`. Bracketed arguments are optional, with their defaults.
 | `house` | | Carried | The seats held by minds, and the ancient seats |
 | `chemistry` | | Carried | The galaxy's elements across the disc, then and now, and its books |
 | `galaxy` | | Carried | The units, the bells, and sample stars on their galactic manifolds |
+| `star-types` | `[N] [R]` | Carried | The classes the stars' formulas give over each galaxy's first N sample stars, then the home galaxy's main-sequence stars at R of its rim beside the Earth's star's values for comparison |
 | `system` | `S [S...]` | Carried | Star S's planets and moons on their manifolds, their caps and relations; several stars in one reading |
 | `world` | `S W` | Carried | World W of star S across its star's life: air, seas, surface, field and what it houses |
 | `annals` | `[K=20]` | Carried | The last K annals |

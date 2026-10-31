@@ -122,11 +122,13 @@ impl Spec {
     /// `stars::suns_of_power`) until this layer is converted.
     pub fn of(star: &Star) -> Spec {
         let mass = crate::galaxy::suns_of_core_masses(&star.mass).max(Q::ratio(1, 10_000));
+        let delta = star.compactness();
         let power = crate::stars::power(
             &crate::galaxy::core_masses_of_suns(&mass),
+            delta,
             star.reach_rings(),
         );
-        let lum = crate::stars::suns_of_power(&power);
+        let lum = crate::stars::suns_of_power(&power, delta);
         Spec { mass, lum }
     }
 

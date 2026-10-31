@@ -1,7 +1,9 @@
 //! The checkpoint: the path-dependent state the laws do not regenerate,
 //! taken at a count of the bell and applied to a universe regenerated from
-//! its seed. Restoring reconstructs that state; it is not a byte-exact
-//! replay.
+//! its seed. A restore regenerates the universe by its laws, carries it to
+//! the count with the recorded exoduses and settlements applied in place of
+//! the carry's decisions, and lays the held records over the result without
+//! checking them; it is to reconstruct that state instead (#46).
 //!
 //! Held ([`Checkpoint`]): the count it was taken at; each seat's holder
 //! other than the default rule; each people's numbers, housing, knowledge

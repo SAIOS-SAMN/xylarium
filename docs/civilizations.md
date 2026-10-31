@@ -163,9 +163,11 @@ following order.
    and knowledge (`SETTLE`).
 
 Exoduses and settlements are returned as `civ::Act` and recorded as
-`Input::Move` and `Input::Settle` at their counts, so a checkpoint replays
-them on restart; while a checkpoint is replayed the carry makes neither
-decision itself. Live play carries in pieces no longer than a tenth of the
+`Input::Move` and `Input::Settle` at their counts. A restore at present
+regenerates the universe from its seed and carries it to the checkpoint's
+count with these recorded acts applied in place of the carry's decisions,
+then lays the held records over the result; it is to reconstruct them
+instead ([#46](https://github.com/SAIOS-SAMN/xylarium/issues/46)). Live play carries in pieces no longer than a tenth of the
 shortest turning time of any living people (`Universe::civilizations`); a
 reading carries each people once to the reading's time
 (`Universe::read_at_now`).

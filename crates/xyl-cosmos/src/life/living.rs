@@ -15,13 +15,13 @@ pub struct Chemistry {
     /// The sterilising hazard (per Gyr); the expected time to a sterilising
     /// pulse is its reciprocal.
     pub hazard: Dy,
-    /// When the chemistry's window closes (Gyr after the Big Bang): at 0.9 of
+    /// When the chemistry's window closes (Gyr after the origin): at 0.9 of
     /// the star's lifetime for a lit medium, or at the world's merger if
     /// earlier; `None` for a dark medium on a world that does not merge.
     pub end: Option<Dy>,
     /// Impacts per Gyr from the system's debris (see [`strikes_per_gyr`]).
     pub mu: Dy,
-    /// When the medium first exists on the world (Gyr after the Big Bang):
+    /// When the medium first exists on the world (Gyr after the origin):
     /// the start of the chemistry's climb.
     pub start: Dy,
 }
@@ -30,7 +30,7 @@ pub struct Chemistry {
 /// crowded plane, mass and luminosity, and the system's debris share.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Home {
-    /// The star's birth (Gyr after the Big Bang).
+    /// The star's birth (Gyr after the origin).
     pub born: Dy,
     /// The star's distance from its galaxy's core (kpc).
     pub r_kpc: Dy,
@@ -161,7 +161,7 @@ pub fn chemistries(ms: &[Medium], body: &Body, home: &Home, ctx: &Ctx) -> Vec<Ch
 pub struct Lineage {
     /// The region of the chemistry this lineage belongs to.
     pub region: Region,
-    /// When each rung was reached (Gyr after the Big Bang).
+    /// When each rung was reached (Gyr after the origin).
     pub steps: Vec<Dy>,
     /// The number of rungs in the chemistry's ladder.
     pub n: usize,
@@ -176,7 +176,7 @@ pub struct Lineage {
     /// The chance that the lineage is never sterilised before its window
     /// closes, in \[0, 1\].
     pub live: Dy,
-    /// When the window closes (Gyr after the Big Bang); `None` for a dark
+    /// When the window closes (Gyr after the origin); `None` for a dark
     /// medium on a world that does not merge.
     pub end: Option<Dy>,
     /// The per-monomer miscopy probability of the bare chemistry, `eps0`.
@@ -395,7 +395,7 @@ fn arrivals(living: &[Living], first: &[Option<Lineage>]) -> Vec<Vec<(Region, Dy
     arrivals
 }
 
-/// A world's media at an epoch (Gyr after the Big Bang), read at the star's
+/// A world's media at an epoch (Gyr after the origin), read at the star's
 /// age then, rounded to the nearest quarter Gyr (the resolution at which a
 /// world in play is read) and at least `first_age`. It is used to judge
 /// what a mind arising at that epoch can live on.

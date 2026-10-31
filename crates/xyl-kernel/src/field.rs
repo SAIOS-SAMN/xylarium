@@ -118,8 +118,8 @@ impl Field {
     /// of every candidate.
     pub fn of(cosmic: &Cosmic<'_>, heavy: Option<&[u64]>) -> Field {
         let ns = match heavy {
-            Some(ks) => nodes_among(cosmic.gal.seed, cosmic.gal.bang, ks),
-            None => nodes(cosmic.gal.seed, cosmic.gal.bang, Some(SAMPLE)),
+            Some(ks) => nodes_among(cosmic.gal.seed, cosmic.gal.origin, ks),
+            None => nodes(cosmic.gal.seed, cosmic.gal.origin, Some(SAMPLE)),
         };
         let bs = bells(&ns, cosmic.gal.seed);
         Field {

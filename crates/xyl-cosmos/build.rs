@@ -4,7 +4,7 @@
 //! - `XYL_SOURCE_DIGEST`: every `.rs` and `.tsv` file under `src/`, `data/`
 //!   and `../xyl-core/src/`, so a cached forecast is read only under the
 //!   laws that produced it.
-//! - `XYL_FOUNDING_DIGEST`: the subset the founding is derived from (bang,
+//! - `XYL_FOUNDING_DIGEST`: the subset the founding is derived from (origin,
 //!   bounce, elements, atoms, compound, fibres, cores, chain, package,
 //!   `src/formation/`, `src/circuit/`, `data/` and xyl-core), which keys the founding
 //!   cache; a change to a layer above the founding leaves it unchanged.
@@ -44,13 +44,13 @@ fn main() {
         files(d, &mut all);
     }
     all.sort();
-    // The founding is derived from these files: the Big Bang, the bounce, the
+    // The founding is derived from these files: the origin, the bounce, the
     // elements, atoms, compounds and fibres, the galactic cores and the chain,
     // the package, the formation cascade, the circuit, the data tables and
     // xyl-core. A change to any other file leaves the founding digest unchanged.
     let founding = |name: &str| {
         const FILES: [&str; 9] = [
-            "src/bang.rs",
+            "src/origin.rs",
             "src/bounce.rs",
             "src/elements.rs",
             "src/atoms.rs",

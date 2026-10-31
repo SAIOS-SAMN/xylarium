@@ -41,9 +41,9 @@ fn schedule_encoding_round_trips_and_refuses_damage() {
 
 #[test]
 fn core_distance_counts_height_above_the_plane() {
-    let bang = crate::genesis::bang();
+    let origin = crate::genesis::origin();
     let stars: Vec<crate::galaxy::Star> = (0..300)
-        .filter_map(|n| crate::galaxy::star(7, bang, n))
+        .filter_map(|n| crate::galaxy::star(7, origin, n))
         .collect();
     let t = Dy::int(5);
     let mut lifted = 0;

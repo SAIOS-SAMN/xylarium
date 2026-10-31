@@ -253,7 +253,7 @@ mod tests {
 
     #[test]
     fn turning_stays_below_light_and_falls_outward() {
-        let _ = crate::genesis::bang();
+        let _ = crate::genesis::origin();
         let bell = crate::circuit::anchor().bell;
         assert!(bell.signum() > 0, "the founding sets the bell");
         let m = Q::ratio(3, 2);
@@ -277,7 +277,7 @@ mod tests {
 
     #[test]
     fn dyadic_and_si_forms_hold_the_core_law() {
-        let _ = crate::genesis::bang();
+        let _ = crate::genesis::origin();
         let (m, r) = (Q::ratio(5, 4), Q::ratio(7, 3));
         let exact = turning(&m, &r, Tier::Galaxy);
         let dy = turning_dy(Dy::from_q(&m), Dy::from_q(&r), Tier::Galaxy);

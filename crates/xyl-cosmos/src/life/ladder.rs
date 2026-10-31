@@ -186,7 +186,7 @@ pub(super) fn backbone_amu(s: Solvent) -> Dy {
 /// the lineage progress.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Climb {
-    /// When each rung was reached (Gyr after the Big Bang); empty where life
+    /// When each rung was reached (Gyr after the origin); empty where life
     /// never began.
     pub times: Vec<Dy>,
     /// The number of impacts that cost the lineage progress (the expectation,

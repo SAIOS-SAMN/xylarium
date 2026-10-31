@@ -4,11 +4,11 @@ use super::*;
 
 /// The core's assembly time (Gyr): the star-formation time at the centre
 /// (`galaxy::birth` at radius zero, converted from rings), or the midpoint of
-/// the Big Bang's first-stars time where that is undefined. It is the window within which
+/// the origin's first-stars time where that is undefined. It is the window within which
 /// a galaxy's core-born minds count as ancients.
 pub fn ancient_window(gal: &Galaxy) -> Dy {
     let rings =
-        crate::galaxy::birth(&xyl_core::Q::ZERO).unwrap_or_else(|| gal.bang.first_stars().mid());
+        crate::galaxy::birth(&xyl_core::Q::ZERO).unwrap_or_else(|| gal.origin.first_stars().mid());
     Dy::from_q(&crate::circuit::gyr_of_rings(&rings))
 }
 

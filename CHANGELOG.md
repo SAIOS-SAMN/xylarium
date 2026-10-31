@@ -73,7 +73,7 @@ may change public APIs and the model's laws.
   (`stars::power`, `stars::light`); `systems::luminosity` is removed, and
   the system layer reads suns through the boundary `stars::suns_of_power`.
 - Stars burn by polarity (`stars::Sequence`, `stars/sequence.rs`): each
-  cloud's dark cut records its held mixture (`disc::StarCut::held`), and the
+  cloud's dark cut records its held mixture (`disc::StarHold::held`), and the
   star's sequence of fusion and fission steps emerges from that mixture at
   the cut's heat, each stage the held kind of greatest release, with the
   throat after `n* = ln(1 / t0) / ln rho_s` echoes (`stars::throat_echoes`).

@@ -54,7 +54,7 @@ impl Bell {
         }
     }
 
-    /// Deep time (Gyr since the Big Bang) at a count: count x period.
+    /// Deep time (Gyr since the origin) at a count: count x period.
     pub fn gyr(&self, count: &Q) -> Q {
         count * &self.period_gyr
     }
@@ -216,7 +216,7 @@ impl<'g> Universe<'g> {
             annals_seen: 0,
             rung_to: Dy::ZERO,
         };
-        u.clocks = crate::chronometry::Chronometry::of(u.cosmic.gal.seed, u.cosmic.gal.bang);
+        u.clocks = crate::chronometry::Chronometry::of(u.cosmic.gal.seed, u.cosmic.gal.origin);
         u.civ.knowledge.sync(u.cosmic.peoples.len());
         u.log_annals();
         u

@@ -7,12 +7,12 @@ use xyl_core::certified::Encl;
 use xyl_core::dyadic::Dy;
 use xyl_core::units::{Tier, Units};
 use xyl_core::Q;
-use xyl_cosmos::bang::BigBang;
 use xyl_cosmos::galaxy::Star;
 use xyl_cosmos::life::Body;
 use xyl_cosmos::manifold::{
     cap_degrees, galaxy_place, manifolds, share, star_cap_degrees, Anchor, Manifold,
 };
+use xyl_cosmos::origin::Origin;
 use xyl_cosmos::systems::System;
 use xyl_cosmos::worlds::{Medium, State};
 use xyl_kernel::cosmic::People;
@@ -569,18 +569,18 @@ fn star_rows(k: u64, st: &Star, sys: &System, planets: &[(Q, Q, bool)]) -> Strin
 /// distribution of neighbouring orbits' ratios, and for the first 12 stars
 /// the chain frame and the planets (orbit in AU, mass in world units).
 pub(super) fn worlds_read(o: &Options, n: usize) -> Result<String, String> {
-    let bang = BigBang::of(o.seed).ok_or("no Big Bang")?;
-    let elements = xyl_cosmos::elements::founded(&bang.parent.share())?;
-    let chem = xyl_cosmos::chem::Chemistry::of(&bang).ok_or("no chemistry")?;
+    let origin = Origin::of(o.seed).ok_or("no origin")?;
+    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
+    let chem = xyl_cosmos::chem::Chemistry::of(&origin).ok_or("no chemistry")?;
     let (mut counts, mut ratios, mut rows) = (Vec::new(), Vec::new(), String::new());
     let (mut belts, mut moons, mut giants, mut comets) = (0usize, 0usize, 0usize, 0usize);
     let mut bare = Bare::default();
     for k in 0..u64::try_from(n).unwrap_or(0) {
-        let Some(st) = xyl_cosmos::galaxy::star(o.seed, &bang, k) else {
+        let Some(st) = xyl_cosmos::galaxy::star(o.seed, &origin, k) else {
             bare.unlit += 1;
             continue;
         };
-        let Some(sys) = xyl_cosmos::systems::system(o.seed, &bang, &[k], &st, &chem, &elements)
+        let Some(sys) = xyl_cosmos::systems::system(o.seed, &origin, &[k], &st, &chem, &elements)
         else {
             continue;
         };

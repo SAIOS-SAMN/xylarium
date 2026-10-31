@@ -161,7 +161,7 @@ pub struct Bell {
     pub mass: Q,
     /// Light output (suns).
     pub light: Q,
-    /// Formation time (rings after the Big Bang).
+    /// Formation time (rings after the origin).
     pub born: Dy,
 }
 
@@ -223,7 +223,7 @@ impl Bell {
     }
 
     /// The number of pulse rings reaching a place `delay` rings of light
-    /// away within `(from, to]` (rings after the Big Bang): pulse ring k sounds
+    /// away within `(from, to]` (rings after the origin): pulse ring k sounds
     /// at born + k periods and arrives one light time later. Closed form; zero
     /// for an empty span or a non-positive period.
     pub fn arrivals(&self, delay: Dy, from: Dy, to: Dy) -> u64 {
@@ -489,8 +489,8 @@ pub fn absorb(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::bang::BigBang;
     use crate::galaxy::{star, NUCLEUS_BASE};
+    use crate::origin::Origin;
 
     /// The core's node, built directly rather than by sampling the galaxy.
     fn core() -> Node {
@@ -510,12 +510,12 @@ mod tests {
             born: Dy::ZERO,
         }
     }
-    fn stellar(bang: &BigBang) -> Node {
+    fn stellar(origin: &Origin) -> Node {
         // A 50-sun stellar hole on the first sample star that exists (stars
         // exist only where their ring's gas lights, `galaxy::birth`).
-        let s = (0..crate::galaxy::sample(bang))
+        let s = (0..crate::galaxy::sample(origin))
             .chain(std::iter::once(NUCLEUS_BASE))
-            .find_map(|n| star(7, bang, n))
+            .find_map(|n| star(7, origin, n))
             .expect("a standing star");
         Node {
             kind: Kind::Stellar(Box::new(s)),
@@ -553,8 +553,8 @@ mod tests {
 
     #[test]
     fn bell_pitch_period_and_arrivals_in_closed_form() {
-        let bang = crate::genesis::bang();
-        let bs = bells(&[core(), stellar(bang)], 7);
+        let origin = crate::genesis::origin();
+        let bs = bells(&[core(), stellar(origin)], 7);
         // The core bell's pitch is the wavefront's wavelength, its axis z and
         // its spin the anchor's.
         assert!((Dy::from_q(&bs[0].pitch_kpc) - wavelength_kpc()).abs() < Dy::sci(1, -9));
@@ -585,7 +585,7 @@ mod tests {
     fn absorption_books_balance_exactly() {
         // The bell's period and a ring of light are counted in rings, which
         // the founding sets.
-        let _ = crate::genesis::bang();
+        let _ = crate::genesis::origin();
         let core = Bell::of(&core(), 7);
         let d = Dy::int(8);
         let v = core.received(d);
@@ -666,7 +666,7 @@ mod tests {
         // The step by age at r = 0 follows the ends in order, then the
         // remnant (the universe is founded first because the bell sets the
         // life).
-        let _ = crate::genesis::bang();
+        let _ = crate::genesis::origin();
         let delta = crate::galaxy::first_star_compactness();
         let ends = crate::stars::ends(&seq, delta, Dy::ZERO);
         assert!(ends[0].signum() > 0);

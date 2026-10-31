@@ -1,7 +1,7 @@
 // The founding: `Substrate::found` builds the substrate from the parent's
 // spin and the founded elements.
 //
-// Inputs: the spin, its torsion share (`bang::torsion_share`), the elements
+// Inputs: the spin, its torsion share (`origin::torsion_share`), the elements
 // (`elements::Element`), `formation::kinds` and `formation::founding_shells`
 // for the cascade, `atoms::vessel`, and `formation::lighting`. Reaches are
 // core rings; amounts are held frames, universe units.
@@ -111,7 +111,7 @@ impl Substrate {
         let mut prof = Prof::new(usize::MAX);
         // The founding depends only on the laws and the torsion share, so the
         // cache key is the founding digest and the share.
-        let share = crate::bang::torsion_share(spin);
+        let share = crate::origin::torsion_share(spin);
         super::grain::set_founding_bits(crate::elements::founding_bits(&share));
         let key = format!("{}-{}", &env!("XYL_FOUNDING_DIGEST")[..12], share).replace('/', "-");
         let anchor_of = |s: &Substrate| {
@@ -181,7 +181,7 @@ impl Substrate {
 
     /// The held share of the founded matter, by mass so the books close by
     /// mass: the firmament's mass over everything founded ([`Self::holding`]).
-    /// The one definition; the Big Bang reads it too.
+    /// The one definition; the origin reads it too.
     pub fn held_share(&self) -> Q {
         let firm = self
             .firmament
@@ -228,7 +228,7 @@ impl Substrate {
     }
 
     /// The mean bead state: the founding unit over the bead count (at least
-    /// one bead). Lumpiness (bang.rs), the ocean's pulls and the home galaxy's
+    /// one bead). Lumpiness (origin.rs), the ocean's pulls and the home galaxy's
     /// calibration recipe are read against it.
     pub fn mean_state(&self) -> Q {
         self.unit()

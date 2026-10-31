@@ -74,16 +74,16 @@ another crate. Laws are composed from shares (ratios of the form
   `N = P ^ (P . K)` is null, fixes `P` and keeps `sigma`; the far face is the
   antipode of `P` under the planes' half turn (`circuit::plane_antipole`).
   Status: built.
-- Spin draw (`bang::BigBang::of`): the spin is drawn uniformly on the 2^-40
-  grid, strictly inside `(0, 1)` (`bang::clamp_spin`). Status: built.
-- Torsion share (`bang::torsion_share`): `a = (H + J) / (2H + J)` with
+- Spin draw (`origin::Origin::of`): the spin is drawn uniformly on the 2^-40
+  grid, strictly inside `(0, 1)` (`origin::clamp_spin`). Status: built.
+- Torsion share (`origin::torsion_share`): `a = (H + J) / (2H + J)` with
   `H = 2`, so `a = 1/2` at `J = 0` and `a = 3/5` at `J = 1`. The inverse
-  (`bang::spin_of_share`) is `J = H (2a - 1) / (1 - a)`. Status: built.
+  (`origin::spin_of_share`) is `J = H (2a - 1) / (1 - a)`. Status: built.
 - Admission (`Substrate::least_share`, `cores::substrate_for`): the founding
   requires `a >= (r_far / rim) (1 + A_in_peak)`; otherwise the universe is
   refounded at `spin_of_share(least_share)`, with at most three foundings.
   The margin is `a - least_share` (`Substrate::margin`). Status: built.
-- Cascade readings (`bang::BigBang::of`): the lumpiness is
+- Cascade readings (`origin::Origin::of`): the lumpiness is
   `sum max(state - mean, 0) / sum state`, the held share is
   `firmament mass / holding`, the assembly time is `Lighting::cools_in` and
   the efficiency is `Lighting::lit`. Status: built.
@@ -340,8 +340,8 @@ another crate. Laws are composed from shares (ratios of the form
   follows the turning law. Status: built.
 - Piece star mass (`galaxy::piece_star_mass`): `m_p = s c` core masses,
   with `s` the share of the piece's infall the star tier's cut holds
-  (`disc::StarCut::star`) and `c` the infall's holding
-  (`disc::StarCut::cloud`). Status: built.
+  (`disc::StarHold::star`) and `c` the infall's holding
+  (`disc::StarHold::cloud`). Status: built.
 - Initial mass function (`galaxy::imf`): `m = x m_p` with
   `x = b u / (1 + b - u)`, the inverse of `F(x) = x / (x + b)` on `[0, 1]`,
   and `b = d / (1 + d)` from the crowding `d`. Status: built.
@@ -359,7 +359,7 @@ another crate. Laws are composed from shares (ratios of the form
 - Star's compactness (`disc::rim_share`, `galaxy::Star::compactness`):
   `delta = m / (R 60 + m)`, `m` in core masses, `R` the rim of the cloud's
   settled cut in system-tier units (`galaxy::piece_rim`). Status: built.
-- Collapse and ignition (`disc::star_cut`): dark cut `s0`, `R0`;
+- Collapse and ignition (`disc::star_hold`): dark cut `s0`, `R0`;
   `delta0 = s0 c / (R0 60 + s0 c)`; transduction per echo `delta0 x turning`;
   settled cut at `p0 = 1 + transduced`. Status: built.
 - Ring per bell (`stars::ring_per_bell`): `1 / (pi (r + 1))`. Status: built.
@@ -370,7 +370,7 @@ another crate. Laws are composed from shares (ratios of the form
   table's `a` rounded to the nearest whole (`stars::nucleon_count`). Status:
   built.
 - Pole point of a star (`stars::pole_point`): `t0 = sum n_z u_z / sum n_z
-  w_z` over the held mixture (`disc::StarCut::held`), `n_z = share_z / w_z`;
+  w_z` over the held mixture (`disc::StarHold::held`), `n_z = share_z / w_z`;
   `t0 <= 1/2`. Status: built.
 - Throat (`stars::throat_echoes`): `n* = ln(1 / t0) / ln rho_s`, `rho_s =
   (1 + delta) / (1 - delta)`, echoes from ignition; none where `t0 = 0`.
@@ -399,13 +399,13 @@ another crate. Laws are composed from shares (ratios of the form
   luminosity read by the system and world layers.
 - Flicker (`stars::flicker`): `(pi / 2) |cos(2 pi t / echo)|`. Status:
   built.
-- Star's cut (`disc::star_cut`, `formation::hold_at_heat`): the spin is
+- Star's cut (`disc::star_hold`, `formation::hold_at_heat`): the spin is
   `h w / (R (R + w))`, the heat is `2 ring_per_bell(r)` and
   `p0 = 1 + 2 transduced_per_bell(r)`; each kind is carried to
   `l = p p0 (e / e_mean)(w_mean / w) + spin` and is held where
   `h* / (l / h* + h*) >= p`, at the largest fixed point `h*` of the held
   hold. Status: built.
-- Disc agitation (`disc::star_cut`):
+- Disc agitation (`disc::star_hold`):
   `a_disc = min(1, turning x swing x grip / shed)`, with
   `grip = (1 - star) / (2 - star)` and `shed = e_rest + ln 2 / k_v`. Status:
   built.

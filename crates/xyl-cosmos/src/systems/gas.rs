@@ -308,7 +308,7 @@ impl<'a> Gas<'a> {
                 out[i] = &out[i] + &m;
             }
         }
-        // The envelope is primordial hydrogen and helium, in the Big Bang's
+        // The envelope is primordial hydrogen and helium, in the origin's
         // mass fractions x and y.
         if let (Some(h), Some(he)) = (self.idx("H"), self.idx("He")) {
             out[h] = &out[h] + &(envelope * &self.x);

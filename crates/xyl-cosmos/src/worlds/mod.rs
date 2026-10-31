@@ -60,13 +60,13 @@
 //!
 //! Terms: degree (of a star's life) (docs/glossary.md).
 
-use crate::bang::BigBang;
 use crate::bodies::{self, Orbit};
 use crate::chem::Chemistry;
 use crate::elements::Element;
 use crate::galaxy::Star;
 use crate::hydro;
 use crate::laws::Scales;
+use crate::origin::Origin;
 use crate::systems::{System, World};
 use std::sync::OnceLock;
 use xyl_core::certified::Encl;

@@ -16,7 +16,7 @@ pub struct Calibration {
     scale: Vec<Q>,
     reference: Vec<Q>,
     /// Each element's abundance in the Sun's birth gas (R0, 9.2 Gyr in rings, the
-    /// reference Big Bang) under this calibration; rulers measured on the
+    /// reference origin) under this calibration; rulers measured on the
     /// Sun's matter (an isotope inventory) are read against it.
     sun: Vec<Q>,
 }
@@ -69,7 +69,7 @@ impl Calibration {
             reference,
             sun: Vec::new(),
         };
-        // The Sun was born 9.2 Gyr after the Big Bang (13.8 - 4.6), read in
+        // The Sun was born 9.2 Gyr after the origin (13.8 - 4.6), read in
         // rings: a calibration epoch, removed with `Rulers::today` in phase 5.
         let born = crate::turning::span_in_rings(&decimal("9.2").unwrap_or(Q::ZERO));
         let at_birth = cal.model.concs(k0, &born);
@@ -102,13 +102,13 @@ impl Calibration {
     /// concentrations `concs` (`None`: nothing made yet at that place and
     /// time). Each channel contributes its origin share of the element times
     /// its yield scale times its concentration over the reference
-    /// concentration; the Big Bang share enters the smooth part unchanged.
+    /// concentration; the origin share enters the smooth part unchanged.
     /// `None` for an index out of range.
     pub(super) fn parts(&self, concs: Option<&[Q]>, ei: usize) -> Option<(Q, Q)> {
         let e = self.elements.get(ei)?;
         let (mut smooth, mut merger) = (Q::ZERO, Q::ZERO);
         for (c, f) in &e.origin {
-            if *c == Channel::BigBang {
+            if *c == Channel::Origin {
                 smooth = &smooth + f;
                 continue;
             }
@@ -134,7 +134,7 @@ impl Calibration {
 }
 
 /// An element's abundance in the gas the Sun formed from, as the calibration
-/// reads it (R0, 9.2 Gyr in rings): 1 for an element the Big Bang alone made. `None`
+/// reads it (R0, 9.2 Gyr in rings): 1 for an element the origin alone made. `None`
 /// before a chemistry has been built in the process or for an unknown
 /// symbol.
 pub fn reference_birth_gas(sym: &str) -> Option<Q> {

@@ -273,8 +273,8 @@ mod tests {
 
     #[test]
     fn piece_holdings_sum_to_the_galaxy_gas() {
-        let bang = crate::genesis::bang();
-        let s = crate::cores::substrate(7, bang).unwrap();
+        let origin = crate::genesis::origin();
+        let s = crate::cores::substrate(7, origin).unwrap();
         let f = of(&s.beads, &s.unit(), &s.held_share(), &Q::ONE);
         // Each piece holds its bead's state over the unit, so the holdings
         // sum to 1; the held share lies in [0, 1] and the push below 1.

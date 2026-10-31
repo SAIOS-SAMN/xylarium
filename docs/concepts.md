@@ -23,7 +23,7 @@ result of a rule applied to the layer below.
    |
    v
   Founding        universal core, elements, firmament, galactic cores
-   |              (xyl-cosmos: bang, bounce, elements, atoms, circuit)
+   |              (xyl-cosmos: origin, bounce, elements, atoms, circuit)
    v
   Galaxies        rings of gas, star formation, stars on orbits
    |              (galaxy, chem, stars)

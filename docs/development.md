@@ -117,7 +117,7 @@ implementation per quantity.
 
 | Digest | Covers | Keys |
 |---|---|---|
-| `XYL_FOUNDING_DIGEST` | `bang`, `bounce`, `elements`, `atoms`, `compound`, `fibres`, `formation`, `cores`, `chain`, `package`, `circuit/`, `data/` and all of `xyl-core/src` | The founding cache (`founding-*` in a home, `target/genesis` for tests) |
+| `XYL_FOUNDING_DIGEST` | `origin`, `bounce`, `elements`, `atoms`, `compound`, `fibres`, `formation`, `cores`, `chain`, `package`, `circuit/`, `data/` and all of `xyl-core/src` | The founding cache (`founding-*` in a home, `target/genesis` for tests) |
 | `XYL_SOURCE_DIGEST` | Every `.rs` and `.tsv` file of `xyl-cosmos` and `xyl-core` | The forecast caches (`forecast-*`, `forecast-stars/`, `bells-*`) |
 
 Both digests hash code only: comments and blank lines are excluded, so a
@@ -135,7 +135,7 @@ that need a founded universe read the shared test genesis
 ```rust
 #[test]
 fn a_galaxy_ring_conserves_its_metals() {
-    let bang = crate::genesis::bang();
+    let origin = crate::genesis::origin();
     let chem = crate::genesis::chem();
     let made = chem.metals(&Rulers::r0(), &Rulers::today()).unwrap();
     assert!(made.signum() >= 0, "metals {made}");

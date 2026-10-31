@@ -4,18 +4,18 @@
 use super::Options;
 use crate::run::show;
 use xyl_core::Q;
-use xyl_cosmos::bang::BigBang;
 use xyl_cosmos::circuit::Substrate;
 use xyl_cosmos::cores::Shape;
 use xyl_cosmos::elements::Element;
 use xyl_cosmos::formation::{Formation, Piece};
+use xyl_cosmos::origin::Origin;
 
 /// The `founding` reading: the founding's equitable cascade form by form
 /// with its stacks, then the founding cascade and its stacks; every line
 /// ends with a newline.
 pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
-    let bang = BigBang::of(o.seed).ok_or("no Big Bang")?;
-    let elements = xyl_cosmos::elements::founded(&bang.parent.share())?;
+    let origin = Origin::of(o.seed).ok_or("no origin")?;
+    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
     let kinds = xyl_cosmos::formation::kinds(&elements);
     let mix: Vec<(u32, Q)> = kinds.iter().map(|k| (k.z, k.share.clone())).collect();
     let mut out = String::new();
@@ -86,8 +86,8 @@ pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
 /// founding cascade and the open share Q / 3Z, then the ratio of reaches
 /// Z 115 / Z top (under the linear law).
 pub(super) fn founding_read(o: &Options) -> Result<String, String> {
-    let bang = BigBang::of(o.seed).ok_or("no Big Bang")?;
-    let elements = xyl_cosmos::elements::founded(&bang.parent.share())?;
+    let origin = Origin::of(o.seed).ok_or("no origin")?;
+    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
     let mix: Vec<(u32, Q)> = elements
         .iter()
         .filter(|e| e.abundance.signum() > 0)
@@ -129,16 +129,16 @@ pub(super) fn founding_read(o: &Options) -> Result<String, String> {
 /// in rings of the galaxy's echo (a turning counts in its anchor's echo),
 /// with years only at the seam, then the scratch infalls.
 pub(super) fn formation(o: &Options) -> Result<String, String> {
-    let bang = BigBang::of(o.seed).ok_or("no Big Bang")?;
-    let elements = xyl_cosmos::elements::founded(&bang.parent.share())?;
-    let shapes = xyl_cosmos::cores::shapes(o.seed, &bang);
-    let mut out = founding_matter(&bang, &elements);
+    let origin = Origin::of(o.seed).ok_or("no origin")?;
+    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
+    let shapes = xyl_cosmos::cores::shapes(o.seed, &origin);
+    let mut out = founding_matter(&origin, &elements);
     // Units are the universe's: time in rings, reach as a deficit share
     // of its enclosure, mass as a holding share (never years, kpc or suns).
     // The pieces are the founding's beads one tier down, heated by the pulse
     // at swing = 1 + the inbound echo's mean over the first echo, as at the
     // founding; every galaxy is read as the home galaxy's homologue.
-    let sub = xyl_cosmos::cores::substrate(o.seed, &bang).ok_or("no founding")?;
+    let sub = xyl_cosmos::cores::substrate(o.seed, &origin).ok_or("no founding")?;
     let swing = &Q::ONE + &sub.inbound_mean(xyl_cosmos::circuit::echo()).to_q();
     let f = xyl_cosmos::formation::of(&sub.beads, &sub.unit(), &sub.held_share(), &swing);
     out.push_str(&galaxies(&shapes, &f, &sub));
@@ -148,7 +148,7 @@ pub(super) fn formation(o: &Options) -> Result<String, String> {
 
 /// The founding's matter: each element's count per hydrogen and the mean
 /// mass number by count.
-fn founding_matter(bang: &BigBang, elements: &[Element]) -> String {
+fn founding_matter(origin: &Origin, elements: &[Element]) -> String {
     // The mean mass number by count is `sum(n_i A_i) / sum(n_i)`.
     let (count, mass) = elements
         .iter()
@@ -175,7 +175,7 @@ fn founding_matter(bang: &BigBang, elements: &[Element]) -> String {
             "whole nuclei per 2^224 hydrogen): He {}  C {}  N {}  O {}  Si {}  Fe {}  U {}; ",
             "mean mass number {}\n"
         ),
-        show(&bang.parent.spin),
+        show(&origin.parent.spin),
         by("He"),
         by("C"),
         by("N"),

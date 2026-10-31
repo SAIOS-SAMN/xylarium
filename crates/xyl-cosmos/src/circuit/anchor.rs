@@ -77,14 +77,14 @@ pub struct Anchor {
     /// The universe's curvature radius in r_g of the core: the S^360
     /// enclosure every horizon is read in.
     pub radius_rg: Q,
-    /// When the first stars shone (rings after the Big Bang): the rings until
+    /// When the first stars shone (rings after the origin): the rings until
     /// the home galaxy's gas first collapses, at least one.
     pub first_stars: Q,
     /// The parent's Kerr spin as admitted (drawn from the seed, floored by
     /// cores::substrate_for).
     pub spin: Q,
     /// The share the jet carries through the throat at each crossing, from
-    /// the spin by torsion (bang::torsion_share).
+    /// the spin by torsion (origin::torsion_share).
     pub share: Q,
     /// The firmament's margin: the torsion share less the least share that
     /// holds the firmament whole, `r_far / rim (1 + A_in)` at the inbound
@@ -97,7 +97,7 @@ static ANCHOR: std::sync::OnceLock<Anchor> = std::sync::OnceLock::new();
 static SPIN: std::sync::OnceLock<Q> = std::sync::OnceLock::new();
 
 /// Records the parent's drawn spin of the universe this process founds, so a
-/// reading taken before the founding can found it. The first Big Bang made
+/// reading taken before the founding can found it. The first origin made
 /// in the process is the process's universe; the anchor holds the admitted
 /// spin (cores::substrate_for), the drawn one floored at the least that
 /// holds the firmament whole.
@@ -112,7 +112,7 @@ pub fn set(anchor: Anchor) {
 
 /// The anchor of the process's universe. Where no founding has happened yet
 /// the substrate is founded first (once per process, cores.rs): the founding
-/// depends on the parent's spin alone, so it needs no Big Bang. Where no spin
+/// depends on the parent's spin alone, so it needs no origin. Where no spin
 /// is registered or the founding fails, every value is zero: a reading then
 /// shows zeros, not a hidden default.
 pub fn anchor() -> Anchor {

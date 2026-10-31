@@ -94,7 +94,7 @@ mod worlds;
 
 use crate::run::{roster, with, Options, Source};
 use xyl_core::Q;
-use xyl_cosmos::bang::BigBang;
+use xyl_cosmos::origin::Origin;
 use xyl_kernel::universe::Universe;
 
 /// The list of readings printed for an unknown word.
@@ -167,8 +167,8 @@ fn law_reading(o: &Options, what: &[String]) -> Result<Option<String>, String> {
         // The cascade report already ends each line with a newline.
         Some("founding") => return founding::founding_cascade(o).map(Some),
         Some("cores") => {
-            let bang = BigBang::of(o.seed).ok_or("no Big Bang")?;
-            universe::cores(o.seed, &bang)
+            let origin = Origin::of(o.seed).ok_or("no origin")?;
+            universe::cores(o.seed, &origin)
         }
         Some("tiers") => {
             let n = what

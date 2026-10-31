@@ -21,7 +21,7 @@ use xyl_core::Q;
 /// mass whose gravitational radius is the unit of length (xyl-core
 /// units.rs). The home galaxy surrounds the core, so its hole is the core.
 /// Declared by the package until the founding manifest supplies it; its spin
-/// is the parent's spin, drawn from the universe's seed (bang.rs).
+/// is the parent's spin, drawn from the universe's seed (origin.rs).
 pub fn hole_mass() -> Q {
     Q::int(4_300_000)
 }
@@ -115,8 +115,8 @@ impl Si {
     }
 }
 
-/// The founding's digest: the files the founding is derived from (the Big
-/// Bang, the bounce, the elements, atoms, compounds and fibres, the galactic
+/// The founding's digest: the files the founding is derived from (the origin,
+/// the bounce, the elements, atoms, compounds and fibres, the galactic
 /// cores and the chain, this package, the formation cascade, the circuit, the
 /// data tables and xyl-core), hashed at build time. A
 /// genesis records it; a founding cached under it is the same founding, and

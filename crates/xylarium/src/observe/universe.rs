@@ -4,7 +4,7 @@
 use super::hex;
 use crate::run::{show, summary};
 use xyl_core::dyadic::Dy;
-use xyl_cosmos::bang::BigBang;
+use xyl_cosmos::origin::Origin;
 use xyl_kernel::seats::{Holder, On, Role};
 use xyl_kernel::universe::Universe;
 
@@ -78,15 +78,15 @@ pub(super) fn universe(u: &Universe<'_>) -> String {
         l.unfed,
         l.minds
     ));
-    out.push_str(&cores(u.cosmic.gal.seed, u.cosmic.gal.bang));
+    out.push_str(&cores(u.cosmic.gal.seed, u.cosmic.gal.origin));
     out
 }
 
 /// The founding's galaxies: the home at the universe core, then every bead
 /// of the cascade, each with its hole's mass in suns, the ratio of that mass
 /// to the home hole's, and its place.
-pub(super) fn cores(seed: u64, bang: &BigBang) -> String {
-    let all = xyl_cosmos::cores::shapes(seed, bang);
+pub(super) fn cores(seed: u64, origin: &Origin) -> String {
+    let all = xyl_cosmos::cores::shapes(seed, origin);
     let mut out = format!(
         "The founding's galaxies: {} (the home and {} beads of the cascade)\n",
         all.len(),

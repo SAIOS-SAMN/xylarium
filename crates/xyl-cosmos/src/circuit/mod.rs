@@ -3,7 +3,7 @@
 //! (one ring one bell, the engine's unit of time; anchor.rs), evaluated on
 //! demand rather than stored as frames. Rates are per ring.
 //!
-//! Inputs: the parent's spin (through `bang::torsion_share`), the founded
+//! Inputs: the parent's spin (through `origin::torsion_share`), the founded
 //! elements (`elements::Element`), `formation` for the cascade and the
 //! lighting, `atoms::vessel`, `compound` for each kind's frames, and
 //! `package` for the core's mass and the SI seam. Amounts are in held

@@ -114,12 +114,12 @@ fn find(parent: &mut [usize], mut i: usize) -> usize {
     i
 }
 
-/// A star in play: the star as the Big Bang made it and the suns it stands
+/// A star in play: the star as the origin made it and the suns it stands
 /// for at the sample's resolution (the star's `stands_for` times the sample
 /// size over the number of stars in play in its galaxy).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct InPlay {
-    /// The star as the Big Bang made it.
+    /// The star as the origin made it.
     pub star: Star,
     /// How many suns it carries at the sample's resolution (count of stars).
     pub suns: Dy,
@@ -174,19 +174,19 @@ impl InPlay {
 /// m = stands_for x sample / n, read in suns (stands_for is in core masses,
 /// converted at the boundary `galaxy::suns_of_core_masses`), where n is the
 /// number of stars in play in that galaxy.
-pub fn in_play(seed: u64, bang: &xyl_cosmos::bang::BigBang, limit: u64) -> Vec<InPlay> {
+pub fn in_play(seed: u64, origin: &xyl_cosmos::origin::Origin, limit: u64) -> Vec<InPlay> {
     use xyl_cosmos::minds::Sight;
     // The stars are seated with the cores' sight only; each witnessed system
     // is added later by `Network::admit`, so the whole sample is never placed
     // at once.
     let sight = Sight::Cores;
-    let sample = xyl_cosmos::galaxy::sample(bang);
+    let sample = xyl_cosmos::galaxy::sample(origin);
     let total = limit.min(sample);
     let mut out = Vec::new();
-    for c in xyl_cosmos::cores::held(seed, bang) {
+    for c in xyl_cosmos::cores::held(seed, origin) {
         let stars: Vec<Star> = (0..total)
             .filter_map(|l| {
-                xyl_cosmos::galaxy::star(seed, bang, xyl_cosmos::galaxy::in_galaxy(c, l))
+                xyl_cosmos::galaxy::star(seed, origin, xyl_cosmos::galaxy::in_galaxy(c, l))
             })
             .filter(|st| sight.opens(st))
             .collect();

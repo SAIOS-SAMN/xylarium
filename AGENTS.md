@@ -34,7 +34,7 @@ A module `foo` is `src/foo.rs` or, when split, the directory `src/foo/`
 | Concern | Crate / module | Doc |
 |---|---|---|
 | Exact numbers: `Q`, `Encl`, `Dy`, CGA, rotors, units, streams | `crates/xyl-core/src` | [roadmap.md#mathematics](docs/roadmap.md#mathematics) |
-| Founding: Big Bang, bounce, elements, atoms, firmament, beads, galactic cores | `xyl-cosmos` modules `bang`, `bounce`, `elements`, `atoms`, `compound`, `fibres`, `formation`, `cores`, `chain`, `package`, `circuit` | [model.md](docs/model.md) sections 2-4 |
+| Founding: origin, bounce, elements, atoms, firmament, beads, galactic cores | `xyl-cosmos` modules `origin`, `bounce`, `elements`, `atoms`, `compound`, `fibres`, `formation`, `cores`, `chain`, `package`, `circuit` | [model.md](docs/model.md) sections 2-4 |
 | Galaxy, stars, chemistry | `xyl-cosmos` modules `galaxy`, `stars`, `chem`, `turning`, `pulse`, `field` | [model.md](docs/model.md) section 5 |
 | Discs, worlds, moons, world state | `xyl-cosmos` modules `disc`, `systems`, `manifold`, `bodies`, `worlds`, `hydro` | [model.md](docs/model.md) section 6 |
 | Life and the forecast of minds | `xyl-cosmos` modules `life`, `minds` | [model.md](docs/model.md) section 7 |
@@ -58,7 +58,7 @@ A module `foo` is `src/foo.rs` or, when split, the directory `src/foo/`
   listed in [roadmap.md#declared-rulers](docs/roadmap.md#declared-rulers).
 - Tests assert invariants (conservation, identities, bounds, monotonicity,
   refusal), never a number the model produced.
-- Never found a universe inside a test; read `crate::genesis::bang()` and
+- Never found a universe inside a test; read `crate::genesis::origin()` and
   `crate::genesis::chem()` (xyl-cosmos, test only).
 
 ## Commands and costs

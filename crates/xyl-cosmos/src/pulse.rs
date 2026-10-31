@@ -9,11 +9,11 @@
 //! `centre`) passes the wavefront on continuous in phase, without a separate
 //! period.
 //!
-//! Reads `bang::BigBang`, `cores::shapes` and `cores::held`, `galaxy::star`,
+//! Reads `origin::Origin`, `cores::shapes` and `cores::held`, `galaxy::star`,
 //! `chain::Place` and `chain::radius`, `galaxy::Star::sequence`,
 //! `stars::life` and `stars::remnant_share`, `circuit::bell` and `circuit::anchor` (the bell
 //! in core time), `chain::units` (r_g) and `package::Si` (kpc). Times are
-//! rings after the Big Bang (one ring one bell), distances kpc, masses suns,
+//! rings after the origin (one ring one bell), distances kpc, masses suns,
 //! all as `Dy`.
 //!
 //! Outputs:
@@ -31,9 +31,9 @@
 //!   `|sum I_k e^(i psi_k)| / sum I_k`, the phasor sum's length read by
 //!   projecting it on its angle so no square root is taken.
 
-use crate::bang::BigBang;
 use crate::chain::Place;
 use crate::galaxy::{star, Star};
+use crate::origin::Origin;
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 
@@ -64,7 +64,7 @@ pub struct Node {
     pub kind: Kind,
     /// The hole mass the node represents (suns), which sets its intensity.
     pub mass: Dy,
-    /// When it formed (rings after the Big Bang).
+    /// When it formed (rings after the origin).
     pub born: Dy,
 }
 
@@ -83,25 +83,25 @@ impl Node {
 /// The network's bells with their formation times: the cores, and every
 /// sample star once its life ends (the first `limit` of the disc and bulge
 /// sample if given, and all of the nucleus's).
-pub fn nodes(seed: u64, bang: &BigBang, limit: Option<u64>) -> Vec<Node> {
+pub fn nodes(seed: u64, origin: &Origin, limit: Option<u64>) -> Vec<Node> {
     let cap = limit.unwrap_or(u64::MAX);
-    let candidates: Vec<u64> = crate::cores::held(seed, bang)
+    let candidates: Vec<u64> = crate::cores::held(seed, origin)
         .into_iter()
-        .flat_map(|c| crate::galaxy::indices_of(bang, c))
+        .flat_map(|c| crate::galaxy::indices_of(origin, c))
         .filter(|&k| {
             let local = k & ((1u64 << crate::galaxy::CORE_SHIFT) - 1);
             local >= crate::galaxy::NUCLEUS_BASE || local < cap
         })
         .collect();
-    nodes_among(seed, bang, &candidates)
+    nodes_among(seed, origin, &candidates)
 }
 
 /// The bells among the sample stars `candidates`: the cores, and each
 /// candidate's remnant from the end of its life. Callers may pass a subset
 /// of the sample; an incomplete list omits bells but never adds one.
-pub fn nodes_among(seed: u64, bang: &BigBang, candidates: &[u64]) -> Vec<Node> {
+pub fn nodes_among(seed: u64, origin: &Origin, candidates: &[u64]) -> Vec<Node> {
     // Each galactic core is a node from its formation time.
-    let mut out: Vec<Node> = crate::cores::shapes(seed, bang)
+    let mut out: Vec<Node> = crate::cores::shapes(seed, origin)
         .into_iter()
         .map(|sh| Node {
             mass: Dy::from_q(&sh.hole_suns),
@@ -110,7 +110,7 @@ pub fn nodes_among(seed: u64, bang: &BigBang, candidates: &[u64]) -> Vec<Node> {
         })
         .collect();
     for &k in candidates {
-        let Some(s) = star(seed, bang, k) else {
+        let Some(s) = star(seed, origin, k) else {
             continue;
         };
         // A stellar node forms when the star's main-sequence life ends

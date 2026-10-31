@@ -5,7 +5,7 @@ use crate::galaxy::star;
 
 #[test]
 fn disc_and_world_element_masses_sum_exactly() {
-    let bang = crate::genesis::bang();
+    let origin = crate::genesis::origin();
     let chem = crate::genesis::chem();
     let elements = crate::elements::table().unwrap();
     let mut framed = 0;
@@ -13,7 +13,7 @@ fn disc_and_world_element_masses_sum_exactly() {
         for jj in 0..4u64 {
             for k in 0..40u64 {
                 let n = chunk + jj * 40 + k;
-                let Some(star) = star(7, bang, n) else {
+                let Some(star) = star(7, origin, n) else {
                     continue;
                 };
                 // A standing star has a disc frame, and the disc law's mass
@@ -33,7 +33,7 @@ fn disc_and_world_element_masses_sum_exactly() {
                     assert!(w[1].0 > w[0].0, "regions chain outward");
                 }
                 framed += 1;
-                let sys = system(7, bang, &[n], &star, chem, &elements).unwrap();
+                let sys = system(7, origin, &[n], &star, chem, &elements).unwrap();
                 for w in &sys.worlds {
                     let sum = w.elements.iter().fold(Q::ZERO, |a, x| &a + x);
                     assert_eq!(sum, w.mass, "a world's elements sum to its mass exactly");

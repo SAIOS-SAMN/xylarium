@@ -5,8 +5,8 @@ use xyl_core::certified::down;
 
 #[test]
 fn stars_circle_the_core_and_the_core_holds_its_share() {
-    let bang = crate::genesis::bang();
-    let stars: Vec<Star> = (0..1000).filter_map(|n| star(7, bang, n)).collect();
+    let origin = crate::genesis::origin();
+    let stars: Vec<Star> = (0..1000).filter_map(|n| star(7, origin, n)).collect();
     // A star exists only where its ring's gas lights; its birth is at or
     // after the ring's first light and at or before the horizon.
     assert!(!stars.is_empty() && stars.len() <= 1000);
@@ -62,7 +62,7 @@ fn stars_circle_the_core_and_the_core_holds_its_share() {
     // than a tenth of their radius, all within the nucleus; if the nucleus
     // never lights, no nucleus star exists.
     let nuc: Vec<Star> = (0..64)
-        .filter_map(|k| star(7, bang, NUCLEUS_BASE + k))
+        .filter_map(|k| star(7, origin, NUCLEUS_BASE + k))
         .collect();
     if nuc.is_empty() {
         assert!(birth(&Q::ZERO).is_none(), "the nucleus never lights");
@@ -94,7 +94,7 @@ fn stars_circle_the_core_and_the_core_holds_its_share() {
 
 #[test]
 fn imf_spreads_shares_of_the_piece_star_mass() {
-    let bang = crate::genesis::bang();
+    let origin = crate::genesis::origin();
     // The draw's share of the piece's star mass, x = m / m_p.
     let share = |u: &Q, r: &Q| {
         let top = piece_star_mass(r).unwrap();
@@ -133,13 +133,13 @@ fn imf_spreads_shares_of_the_piece_star_mass() {
     // Every star has a positive mass no greater than its piece's star mass,
     // and is born no earlier than the first stars; the sample stands for the
     // stellar mass.
-    for s in (0..300).filter_map(|n| star(7, bang, n)) {
+    for s in (0..300).filter_map(|n| star(7, origin, n)) {
         assert!(s.mass.signum() > 0, "{}", s.mass);
         assert!(s.mass <= piece_star_mass(&s.r).unwrap());
         assert!(s.companion <= s.mass);
-        assert!(s.born >= bang.first_stars().lo);
+        assert!(s.born >= origin.first_stars().lo);
         if s.core == 0 && s.pop != Pop::Nucleus {
-            let n = Dy::int(i64::try_from(sample(bang)).unwrap());
+            let n = Dy::int(i64::try_from(sample(origin)).unwrap());
             let whole = Dy::from_q(&stellar_mass());
             assert!((s.stands_for * n - whole).abs() <= Dy::sci(1, -30));
         }
@@ -148,7 +148,7 @@ fn imf_spreads_shares_of_the_piece_star_mass() {
 
 #[test]
 fn galaxies_hold_a_star_under_the_universal_core() {
-    let _ = crate::genesis::bang();
+    let _ = crate::genesis::origin();
     let anchor = crate::circuit::anchor();
     let sub = crate::cores::substrate_for(&anchor.spin).unwrap();
     let star = first_star_mass(&sub).expect("a piece lights");
@@ -175,7 +175,7 @@ fn galaxies_hold_a_star_under_the_universal_core() {
 
 #[test]
 fn masses_close_on_the_founding_holding() {
-    let _ = crate::genesis::bang();
+    let _ = crate::genesis::origin();
     let st = structure();
     // The rings' states sum to the holding; inside the rim the mass is the
     // universal core plus the whole holding, 2 core masses, and it never
@@ -204,9 +204,9 @@ fn masses_close_on_the_founding_holding() {
 
 #[test]
 fn vertical_swing_stays_in_shares_and_layer() {
-    let bang = crate::genesis::bang();
+    let origin = crate::genesis::origin();
     let stars: Vec<Star> = (0..400)
-        .filter_map(|n| star(7, bang, n))
+        .filter_map(|n| star(7, origin, n))
         .filter(|s| s.pop == Pop::Disc)
         .collect();
     assert!(!stars.is_empty());

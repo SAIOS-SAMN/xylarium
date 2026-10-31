@@ -65,7 +65,7 @@ pub struct Percept {
     pub ancient: bool,
     /// Deep time at the present, in Gyr.
     pub gyr: Dy,
-    /// When the people woke, in Gyr after the Big Bang.
+    /// When the people woke, in Gyr after the origin.
     pub dawn: Dy,
     /// The people's traits, as their human-readable description.
     pub traits: String,

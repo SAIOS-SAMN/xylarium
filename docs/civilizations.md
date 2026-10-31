@@ -180,7 +180,7 @@ recomputed.
 
 | Kind | Written when | Code |
 |---|---|---|
-| `BIG_BANG` | At genesis | `cosmic/mod.rs` |
+| `ORIGIN` | At genesis | `cosmic/mod.rs` |
 | `DEEP_HISTORY` | A people emerges (the rungs of its life) | `cosmic/emergence.rs` |
 | `EMERGENCE` | A people emerges | `cosmic/emergence.rs` |
 | `FALL` | A world no longer feeds its people | `cosmic/emergence.rs`, `civ/mod.rs` |

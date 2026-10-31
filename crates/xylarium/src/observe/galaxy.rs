@@ -5,9 +5,9 @@ use super::Options;
 use crate::run::show;
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
-use xyl_cosmos::bang::BigBang;
 use xyl_cosmos::chain::{kpc, radius, units};
 use xyl_cosmos::chem::Chemistry;
+use xyl_cosmos::origin::Origin;
 use xyl_cosmos::package::Si;
 use xyl_kernel::universe::Universe;
 
@@ -189,9 +189,11 @@ pub(super) fn chemistry(u: &Universe<'_>) -> String {
     out.push_str(
         "Weight dials by galactic core, at 8 kpc today (relative to the Sun's birth gas)\n",
     );
-    for c in
-        xyl_cosmos::cores::founding(u.cosmic.gal.seed, u.cosmic.gal.bang, u.cosmic.gal.elements)
-    {
+    for c in xyl_cosmos::cores::founding(
+        u.cosmic.gal.seed,
+        u.cosmic.gal.origin,
+        u.cosmic.gal.elements,
+    ) {
         let line: Vec<String> = ["C", "N", "O", "Si", "Mg", "Fe", "Ni", "Eu"]
             .iter()
             .map(|sym| {
@@ -224,11 +226,11 @@ pub(super) fn chemistry(u: &Universe<'_>) -> String {
 /// (twice its rim, at the speed of light). A star's echo needs the star's
 /// radius from formation, which is not yet modelled.
 ///
-/// Returns `Err` when the Big Bang, the star, the chemistry or the founded
+/// Returns `Err` when the origin, the star, the chemistry or the founded
 /// elements cannot be derived.
 pub(super) fn tiers(o: &Options, n: u64) -> Result<String, String> {
-    let bang = BigBang::of(o.seed).ok_or("no Big Bang")?;
-    let star = xyl_cosmos::galaxy::star(o.seed, &bang, n).ok_or("no such star")?;
+    let origin = Origin::of(o.seed).ok_or("no origin")?;
+    let star = xyl_cosmos::galaxy::star(o.seed, &origin, n).ok_or("no such star")?;
     let (c, kpc_m, yr_s, star_mass_kg) = (Si::c(), Si::kpc(), Si::yr_s(), Si::star_mass_kg());
     // `r_g = G M / c^2` (m); years = metres / (c yr_s).
     let rg = |kg: &Q| (&Si::g() * kg).checked_div(&(&c * &c)).unwrap_or(Q::ZERO);
@@ -281,9 +283,9 @@ pub(super) fn tiers(o: &Options, n: u64) -> Result<String, String> {
     ));
     // Each world about the star: the count is 1 + a / r_g(star). No time is
     // given, since the length of the star's echo needs the star's radius.
-    let chem = Chemistry::of(&bang).ok_or("no chemistry")?;
-    let elements = xyl_cosmos::elements::founded(&bang.parent.share())?;
-    if let Some(sys) = xyl_cosmos::systems::system(o.seed, &bang, &[n], &star, &chem, &elements) {
+    let chem = Chemistry::of(&origin).ok_or("no chemistry")?;
+    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
+    if let Some(sys) = xyl_cosmos::systems::system(o.seed, &origin, &[n], &star, &chem, &elements) {
         let all = xyl_cosmos::manifold::manifolds(o.seed, &[n], &sys, &star, &units());
         let units = units();
         let star_kg = &sys.spec.mass * &star_mass_kg;
@@ -324,10 +326,10 @@ const REFERENCE_REACH: (i64, i64) = (8, 15);
 /// comparison only; no law reads them.
 pub(super) fn star_types(u: &Universe<'_>, n: usize, share: Q) -> String {
     let t = xyl_cosmos::circuit::rings_of_gyr_dy(u.cosmic.now);
-    let (seed, bang) = (u.cosmic.gal.seed, u.cosmic.gal.bang);
+    let (seed, origin) = (u.cosmic.gal.seed, u.cosmic.gal.origin);
     let mut cores: Vec<u32> = vec![0];
     cores.extend(
-        xyl_cosmos::cores::shapes(seed, bang)
+        xyl_cosmos::cores::shapes(seed, origin)
             .iter()
             .map(|s| s.index),
     );
@@ -336,8 +338,8 @@ pub(super) fn star_types(u: &Universe<'_>, n: usize, share: Q) -> String {
     let mut census: std::collections::BTreeMap<(String, Option<i64>), usize> = Default::default();
     let mut read = 0;
     for &core in &cores {
-        for k in xyl_cosmos::galaxy::indices_of(bang, core).take(n) {
-            let Some(st) = xyl_cosmos::galaxy::star(seed, bang, k) else {
+        for k in xyl_cosmos::galaxy::indices_of(origin, core).take(n) {
+            let Some(st) = xyl_cosmos::galaxy::star(seed, origin, k) else {
                 continue;
             };
             let class = st.class(t);
@@ -369,7 +371,7 @@ pub(super) fn star_types(u: &Universe<'_>, n: usize, share: Q) -> String {
 /// stars near relative reach `share`, with the Earth's star's values for
 /// comparison.
 fn reference_probe(u: &Universe<'_>, n: usize, share: &Q, t: Dy) -> String {
-    let (seed, bang) = (u.cosmic.gal.seed, u.cosmic.gal.bang);
+    let (seed, origin) = (u.cosmic.gal.seed, u.cosmic.gal.origin);
     let rim = xyl_cosmos::circuit::anchor().rim.clone();
     let mut out = format!(
         concat!(
@@ -380,8 +382,8 @@ fn reference_probe(u: &Universe<'_>, n: usize, share: &Q, t: Dy) -> String {
         show(share)
     );
     let mut found = 0;
-    for k in xyl_cosmos::galaxy::indices_of(bang, 0).take(n) {
-        let Some(st) = xyl_cosmos::galaxy::star(seed, bang, k) else {
+    for k in xyl_cosmos::galaxy::indices_of(origin, 0).take(n) {
+        let Some(st) = xyl_cosmos::galaxy::star(seed, origin, k) else {
             continue;
         };
         let at = st.r.checked_div(&rim).unwrap_or(Q::ZERO);

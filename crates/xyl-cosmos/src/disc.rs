@@ -8,14 +8,14 @@
 //! manifold, extents are in galaxy rings, heat in hydrogen units.
 //!
 //! Outputs:
-//! - `star_cut` -> `Option<StarCut>`, read in three states of the infall.
+//! - `star_hold` -> `Option<StarHold>`, read in three states of the infall.
 //!   Collapse: the dark cut holds `s0` within the rim `R0` (system-tier
 //!   units), and the star's compactness is `delta0 = s0 c / (R0 60 + s0 c)`
 //!   (`rim_share`). Ignition: the star holds `delta0` of the turning it
 //!   receives per echo, its transduction, which adds the over-pressure
 //!   `p0 = 1 + transduced`. Settled: the transduction cut gives the star's held share
 //!   and rim. The dark cut's held kinds, renormalised, are the star's held
-//!   mixture (`StarCut::held`), read with the cut's heat for the star's
+//!   mixture (`StarHold::held`), read with the cut's heat for the star's
 //!   transduction sequence (`stars::Sequence`). Also the tide `H / (R + H)`, the
 //!   disc's agitation `a_disc` and the infall's shear `H w / (R (R + w))`;
 //!   `None` where the bead does not light.
@@ -73,7 +73,7 @@ pub struct World {
 
 /// A lit bead's infall and the star's cut of it, read on the chain.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct StarCut {
+pub struct StarHold {
     /// The share of the infall the star holds.
     pub star: Q,
     /// The galaxy's tide at the pinch, `H / (R + H)`: the core-star tie.
@@ -121,7 +121,7 @@ pub struct StarCut {
 /// what remains held. `turning` is the pulse's turning per echo at the star's
 /// reach about the universal core and `transduced` the star's transduction per echo
 /// (`stars`). `None` where the bead does not light.
-pub fn star_cut(bead: &Bead, unit: &Q, held: &Q, swing: &Q, turning: &Q) -> Option<StarCut> {
+pub fn star_hold(bead: &Bead, unit: &Q, held: &Q, swing: &Q, turning: &Q) -> Option<StarHold> {
     let h = &Q::ONE + held;
     let c = cooling(bead, unit, &h, swing)?;
     if !lights(&c) {
@@ -169,7 +169,7 @@ pub fn star_cut(bead: &Bead, unit: &Q, held: &Q, swing: &Q, turning: &Q) -> Opti
     } else {
         Q::ONE
     };
-    Some(StarCut {
+    Some(StarHold {
         star,
         tide: c.tide,
         a_disc,

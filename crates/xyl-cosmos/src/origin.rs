@@ -1,7 +1,7 @@
-//! The Big Bang: a universe's initial conditions, drawn from its seed and
+//! The origin: a universe's initial conditions, drawn from its seed and
 //! held as exact rationals.
 //!
-//! Inputs: the seed, through a `xyl_core::Stream` on the path "big bang";
+//! Inputs: the seed, through a `xyl_core::Stream` on the path "big origin";
 //! `bounce::horizon_reach` and `Bounce::of` for the parent
 //! ([`crate::bounce`]); `cores::substrate_for` and `circuit::anchor` for the
 //! founding. Units are the parent's (unit mass).
@@ -11,13 +11,13 @@
 //! floors it at the least spin whose torsion share holds the firmament
 //! whole (the furthest held kind's reach over the rim, swung by the inbound
 //! echo's peak). Everything else is read off the founding: the rim, the bell
-//! (`circuit::anchor`), and the [`BigBang`]'s lumpiness, held share,
+//! (`circuit::anchor`), and the [`Origin`]'s lumpiness, held share,
 //! assembly (bells until first light) and star efficiency (lit share).
 //!
 //! [`torsion_share`] is a = (H + J) / (2H + J) with H = 2M, J = a_Kerr M^2:
 //! 1/2 at zero spin, 3/5 at the extremal spin; [`spin_of_share`] inverts it
-//! onto the grid. [`BigBang::of`] returns None where the founding or the
-//! bounce cannot be built; the same seed gives the same Big Bang.
+//! onto the grid. [`Origin::of`] returns None where the founding or the
+//! bounce cannot be built; the same seed gives the same origin.
 //! Terms: torsion share, lumpiness (docs/glossary.md).
 
 use crate::bounce::Bounce;
@@ -55,7 +55,7 @@ pub fn clamp_spin(spin: &Q) -> Q {
 
 /// A universe's initial conditions and what follows from them.
 #[derive(Clone, Debug)]
-pub struct BigBang {
+pub struct Origin {
     /// The parent black hole whose white hole this universe is, at the
     /// admitted spin.
     pub parent: Bounce,
@@ -115,10 +115,10 @@ fn open_unit(rng: &mut Stream) -> Q {
     )))
 }
 
-impl BigBang {
-    /// The Big Bang of `seed`'s universe.
-    pub fn of(seed: u64) -> Option<BigBang> {
-        let mut rng = Stream::derive(seed, &["big bang".into()]);
+impl Origin {
+    /// The origin of `seed`'s universe.
+    pub fn of(seed: u64) -> Option<Origin> {
+        let mut rng = Stream::derive(seed, &["big origin".into()]);
         // The parent has unit mass in the parent's units and a Kerr spin drawn
         // from the seed, floored at the least spin that keeps the firmament
         // whole; its horizon is read in the S^360 enclosure (the founding's
@@ -141,7 +141,7 @@ impl BigBang {
             });
         let lumpiness = above.checked_div(&all).unwrap_or(Q::ZERO);
         let held_share = substrate.held_share();
-        Some(BigBang {
+        Some(Origin {
             parent,
             lumpiness,
             held_share,
@@ -150,7 +150,7 @@ impl BigBang {
         })
     }
 
-    /// When the first stars shone (rings after the Big Bang): where the home
+    /// When the first stars shone (rings after the origin): where the home
     /// galaxy's gas first cools to collapse, in rings of the bell
     /// (circuit::anchor), exact.
     pub fn first_stars(&self) -> Encl {

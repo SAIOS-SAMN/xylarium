@@ -1,14 +1,14 @@
 //! The home galaxy's chemical evolution: each element's abundance in the
 //! disc's gas at any radius and time, relative to the Sun's birth gas.
 //!
-//! Inputs: `bang::BigBang` (first stars, star efficiency, the founding's
+//! Inputs: `origin::Origin` (first stars, star efficiency, the founding's
 //! light nuclei via `elements::founded`, read as [`Light`]), `galaxy`
 //! (`birth` for each ring's first light, `density` for the disc profile,
 //! `core_reach`), `centre::galaxy_episode` for the core's echo, and the
 //! element table's channel shares (`elements::Channel`). Reaches at the
 //! public interface are galaxy rings, read in kpc inside through the
 //! boundary `galaxy::kpc_of_rings` (`ring_of`); the model's radii are kpc,
-//! times rings after the Big Bang (one ring one bell), rates per ring,
+//! times rings after the origin (one ring one bell), rates per ring,
 //! surface densities suns per pc^2. The rulers measured in Gyr (the slow
 //! return, the delay windows, the patch's window, the calibration epochs)
 //! are converted to rings once, where they are declared
@@ -62,8 +62,8 @@ pub use calibration::{reference_birth_gas, Calibration};
 pub use chemistry::{Chemistry, Light};
 pub use model::{Model, Ring};
 
-use crate::bang::BigBang;
 use crate::elements::{decimal, Channel};
+use crate::origin::Origin;
 use xyl_core::certified::{ln, Encl};
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
@@ -149,7 +149,7 @@ impl Rulers {
 /// delay and its last; zero for the prompt channels.
 fn delay_declared(c: Channel) -> (Q, Q) {
     match c {
-        Channel::CoreCollapse | Channel::Spallation | Channel::BigBang => (Q::ZERO, Q::ZERO),
+        Channel::CoreCollapse | Channel::Spallation | Channel::Origin => (Q::ZERO, Q::ZERO),
         Channel::TypeIa => (
             decimal("0.04").unwrap_or(Q::ZERO),
             decimal("14.0").unwrap_or(Q::ZERO),
@@ -208,30 +208,30 @@ fn delay_modes(lo: &Q, hi: &Q) -> Vec<(Q, Q)> {
         .collect()
 }
 
-/// The galaxy's parameters from its Big Bang: the first stars, each ring's
+/// The galaxy's parameters from its origin: the first stars, each ring's
 /// infall and the star efficiency.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Params {
-    /// When the first stars shone, in rings after the Big Bang.
+    /// When the first stars shone, in rings after the origin.
     pub first_stars: Q,
-    /// Each ring's first light (rings after the Big Bang), by ring index
+    /// Each ring's first light (rings after the origin), by ring index
     /// (`galaxy::birth`); `None` where the ring's gas never lights and no
     /// stars form.
     pub infall: Vec<Option<Q>>,
     /// The star efficiency: the lit share of the gas, turned into stars each
-    /// orbit (`BigBang::efficiency`).
+    /// orbit (`Origin::efficiency`).
     pub efficiency: Q,
 }
 
 impl Params {
-    /// The parameters read off the Big Bang `bang`'s founding.
-    pub fn of(bang: &BigBang) -> Params {
+    /// The parameters read off the origin `origin`'s founding.
+    pub fn of(origin: &Origin) -> Params {
         Params {
-            first_stars: bang.first_stars().mid(),
+            first_stars: origin.first_stars().mid(),
             infall: (0..RINGS)
                 .map(|j| crate::galaxy::birth(&crate::galaxy::rings_of_kpc(&ring_mid(j))))
                 .collect(),
-            efficiency: bang.efficiency.clone(),
+            efficiency: origin.efficiency.clone(),
         }
     }
 }
@@ -290,7 +290,7 @@ mod tests {
 
     #[test]
     fn abundances_nonnegative_and_none_before_first_stars() {
-        let bang = crate::genesis::bang();
+        let origin = crate::genesis::origin();
         let chem = crate::genesis::chem();
         let today = Rulers::today();
         // Oxygen's abundance at r0 today is non-negative.
@@ -300,7 +300,7 @@ mod tests {
         let made = chem.metals(&Rulers::r0(), &today).unwrap();
         assert!(made.signum() >= 0, "metals {made}");
         // At half the first stars' epoch no channel has made uranium yet.
-        let before = bang.first_stars().lo.checked_div(&Q::int(2)).unwrap();
+        let before = origin.first_stars().lo.checked_div(&Q::int(2)).unwrap();
         assert_eq!(
             chem.relative("U", &Rulers::r0(), &before, &Q::ONE).unwrap(),
             Q::ZERO

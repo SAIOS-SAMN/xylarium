@@ -42,8 +42,8 @@ impl Cosmic<'_> {
             .filter_map(|&k| {
                 let t = std::time::Instant::now();
                 let _busy = xyl_core::watch::busy(format!("system of star {k}"));
-                let st = star(gal.seed, gal.bang, k)?;
-                let sys = system(gal.seed, gal.bang, &[k], &st, gal.chem, gal.elements)?;
+                let st = star(gal.seed, gal.origin, k)?;
+                let sys = system(gal.seed, gal.origin, &[k], &st, gal.chem, gal.elements)?;
                 Some((
                     k,
                     Witnessed {

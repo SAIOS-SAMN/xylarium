@@ -252,7 +252,7 @@ Landed:
   power, light, life and the giant's end take the star's compactness; the
   measured stellar radius and the rim share built on it are deleted.
 - Layer B, stellar transduction by polarity: each cloud's dark cut records its
-  held mixture (`disc::StarCut::held`); the star's sequence emerges from it at
+  held mixture (`disc::StarHold::held`); the star's sequence emerges from it at
   the cut's heat (`stars::Sequence`): the pole point `t0 = sum n u / sum n w`,
   the throat after `ln(1 / t0) / ln rho_s` echoes, fusion steps to the kind at
   `k A` and fission steps to two kinds of equal total, each stage the held kind

@@ -2,8 +2,8 @@
 //! abundance at a radius and time, read against the calibration.
 
 use super::{channel_index, delay, ring_of, Calibration, Model, Params, Rulers, BITS};
-use crate::bang::BigBang;
 use crate::elements::{decimal, Channel};
+use crate::origin::Origin;
 use std::sync::OnceLock;
 use xyl_core::certified::{exp, pi};
 use xyl_core::dyadic::Dy;
@@ -58,10 +58,10 @@ pub struct Light {
 }
 
 impl Light {
-    /// The light nuclei of the gas the founding of `bang` seeds. `None` when
+    /// The light nuclei of the gas the founding of `origin` seeds. `None` when
     /// the table cannot be built or hydrogen and helium carry no mass.
-    pub fn of(bang: &BigBang) -> Option<Light> {
-        let table = crate::elements::founded(&bang.parent.share()).ok()?;
+    pub fn of(origin: &Origin) -> Option<Light> {
+        let table = crate::elements::founded(&origin.parent.share()).ok()?;
         let by = |sym: &str| table.iter().find(|e| e.sym == sym);
         let (h, he) = (by("H")?, by("He")?);
         let (m_h, m_he) = (&h.abundance * &h.a, &he.abundance * &he.a);
@@ -83,7 +83,7 @@ impl Light {
 /// A universe's chemistry: its galaxy's closed forms, read against the
 /// reference calibration.
 pub struct Chemistry {
-    /// The universe's galaxy model, built from its Big Bang's parameters.
+    /// The universe's galaxy model, built from its origin's parameters.
     pub model: Model,
     /// The universe's light nuclei from its founding.
     pub light: Light,
@@ -94,19 +94,19 @@ impl Chemistry {
     /// the anchor, the first founding in the process is kept), built once.
     /// Before the universe is founded it is built, not kept, and `None` is
     /// returned; `None` also when `Chemistry::of` fails.
-    pub fn cached(bang: &BigBang) -> Option<&'static Chemistry> {
+    pub fn cached(origin: &Origin) -> Option<&'static Chemistry> {
         static C: OnceLock<Chemistry> = OnceLock::new();
         if let Some(c) = C.get() {
             return Some(c);
         }
-        let c = Chemistry::of(bang)?;
+        let c = Chemistry::of(origin)?;
         if crate::circuit::anchor().rim.signum() > 0 {
             let _ = C.set(c);
         }
         C.get()
     }
 
-    /// A star's birth (rings after the Big Bang) along its ring's star
+    /// A star's birth (rings after the origin) along its ring's star
     /// formation: the time by which the share `u` of the stars the ring forms
     /// between `from` (its first light) and the horizon have formed, read from
     /// the ring's closed form (`Ring::sfr`, integrated term by term) and found
@@ -139,16 +139,16 @@ impl Chemistry {
         first + &hi.to_q()
     }
 
-    /// The chemistry of the universe whose Big Bang is `bang`. Returns `None`
+    /// The chemistry of the universe whose origin is `origin`. Returns `None`
     /// when the calibration cannot be built or the founding's light nuclei
     /// cannot be read (see [`Light::of`]).
-    pub fn of(bang: &BigBang) -> Option<Chemistry> {
-        let p = Params::of(bang);
+    pub fn of(origin: &Origin) -> Option<Chemistry> {
+        let p = Params::of(origin);
         // The first history built in the process fixes the calibration.
         Calibration::of(&p)?;
         Some(Chemistry {
             model: Model::of(&p),
-            light: Light::of(bang)?,
+            light: Light::of(origin)?,
         })
     }
 

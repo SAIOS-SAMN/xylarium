@@ -4,9 +4,9 @@
 //! Inputs: `circuit::anchor` (rim, bell) and the founding's beads and
 //! lighting (`cores::substrate_for`), `cores::shape` for each galactic core,
 //! `chem::Chemistry::birth_along`, the turning law (`turning`),
-//! `manifold::reach`, `disc::star_cut`, and `xyl_core::measure`. Lengths are
+//! `manifold::reach`, `disc::star_hold`, and `xyl_core::measure`. Lengths are
 //! galaxy rings (the galaxy tier's unit, 60^5 r_g, `Tier::Galaxy`), masses
-//! core masses (the universal core is 1), times rings after the Big Bang
+//! core masses (the universal core is 1), times rings after the origin
 //! (one ring one bell, `circuit::anchor`), rates radians per ring.
 //!
 //! - [`Structure`]: each bead is a ring of the galaxy, its span in galaxy
@@ -60,12 +60,12 @@ pub(crate) use star::{golden_turns, node_of, plastic_turns, tilt_of};
 pub use star::{imf, star, Class, Orbit, Star};
 pub use vertical::{layer, vertical, vertical_frequency, Vertical};
 
-use crate::bang::BigBang;
+use crate::origin::Origin;
 use xyl_core::certified::Encl;
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 
-/// The grid a drawn value is rounded to (as in the Big Bang).
+/// The grid a drawn value is rounded to (as in the origin).
 const GRID_BITS: u32 = 40;
 
 /// The home galaxy's structure, read from the founding. The home galaxy is
@@ -289,7 +289,7 @@ pub enum Pop {
 
 /// The number of sample stars in a universe's galaxy: the sample's
 /// resolution, [`SAMPLE_CAP`]; each stands for the stellar mass over it.
-pub fn sample(_bang: &BigBang) -> u64 {
+pub fn sample(_origin: &Origin) -> u64 {
     SAMPLE_CAP
 }
 
@@ -307,7 +307,7 @@ pub fn density(r: &Q) -> Encl {
     )
 }
 
-/// The birth time (rings after the Big Bang, a whole number) of the stars at
+/// The birth time (rings after the origin, a whole number) of the stars at
 /// reach `r` (galaxy rings) of the home galaxy. The galaxy ring's gas is one
 /// piece of the founding, cooling from the bounce, and collapses once when
 /// the piece lights (`formation::Lighting::cools_in_at`, in galaxy rings), so
@@ -397,8 +397,8 @@ fn reach_at(u: Dy, up_to: Option<&Q>) -> Dy {
 
 /// The sample star indices of a home galaxy: disc and bulge first, then the
 /// nucleus (from `NUCLEUS_BASE`).
-pub fn indices(bang: &BigBang) -> impl Iterator<Item = u64> {
-    (0..sample(bang)).chain(NUCLEUS_BASE..NUCLEUS_BASE + NUCLEUS_SAMPLE)
+pub fn indices(origin: &Origin) -> impl Iterator<Item = u64> {
+    (0..sample(origin)).chain(NUCLEUS_BASE..NUCLEUS_BASE + NUCLEUS_SAMPLE)
 }
 
 /// A star's index carries its galactic core in its high bits (zero for the
@@ -417,6 +417,6 @@ pub fn in_galaxy(core: u32, n: u64) -> u64 {
 }
 
 /// The sample stars of galactic core `core`.
-pub fn indices_of(bang: &BigBang, core: u32) -> impl Iterator<Item = u64> {
-    indices(bang).map(move |k| in_galaxy(core, k))
+pub fn indices_of(origin: &Origin, core: u32) -> impl Iterator<Item = u64> {
+    indices(origin).map(move |k| in_galaxy(core, k))
 }

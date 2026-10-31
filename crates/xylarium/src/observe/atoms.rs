@@ -4,7 +4,7 @@ use super::Options;
 use crate::run::show;
 use std::collections::BTreeMap;
 use xyl_core::Q;
-use xyl_cosmos::bang::BigBang;
+use xyl_cosmos::origin::Origin;
 
 /// The hold of the nucleus on band `n` of atom `a`:
 /// `tau_b = (Z - the electrons of every shallower turning) / n`.
@@ -197,7 +197,7 @@ pub(super) fn push_reading(top: usize) -> String {
 /// reading also lists the seams and the vessel, and prints rows for selected
 /// kinds.
 pub(super) fn seals_read(o: &Options, top: usize) -> String {
-    let share = BigBang::of(o.seed).map(|b| b.parent.share());
+    let share = Origin::of(o.seed).map(|b| b.parent.share());
     let mut out = String::from(
         "The seals (rho_Q = +1, the quantum substrate filled) and rho_Q along the table\n",
     );

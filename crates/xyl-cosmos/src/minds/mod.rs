@@ -63,7 +63,7 @@ pub struct Mind {
     pub star: u64,
     /// The index of the mind's world within the star's system.
     pub w: usize,
-    /// When the mind wakes (Gyr after the Big Bang): the last rung's time.
+    /// When the mind wakes (Gyr after the origin): the last rung's time.
     pub epoch: Dy,
     /// The region of the chemistry the mind arose in.
     pub region: Region,
@@ -72,7 +72,7 @@ pub struct Mind {
     /// The star's distance from the galaxy's core when the mind woke (kpc,
     /// in three dimensions).
     pub r_kpc: Dy,
-    /// When each rung was reached (Gyr after the Big Bang).
+    /// When each rung was reached (Gyr after the origin).
     pub steps: Vec<Dy>,
     /// The number of impacts that set the lineage back.
     pub setbacks: u32,
@@ -433,8 +433,8 @@ pub fn schedule(
     keep: Option<&std::path::Path>,
 ) -> (Schedule, Kept) {
     let total = limit
-        .unwrap_or_else(|| sample(gal.bang))
-        .min(sample(gal.bang));
+        .unwrap_or_else(|| sample(gal.origin))
+        .min(sample(gal.origin));
     let folder = keep.map(|dir| dir.join(key(gal)).join(life_digest()));
     if let Some(f) = &folder {
         let _ = std::fs::create_dir_all(f);
@@ -445,7 +445,7 @@ pub fn schedule(
     // nucleus sample is placed within it.
     let nucleus = crate::galaxy::NUCLEUS_BASE
         ..crate::galaxy::NUCLEUS_BASE + total.min(crate::galaxy::NUCLEUS_SAMPLE);
-    let stars: Vec<u64> = crate::cores::held(gal.seed, gal.bang)
+    let stars: Vec<u64> = crate::cores::held(gal.seed, gal.origin)
         .into_iter()
         .flat_map(|c| {
             (0..total)
@@ -516,7 +516,7 @@ fn forecast_star(
         curve: vec![Dy::ZERO; curve_points()],
         ..BatchLife::default()
     };
-    let Some(st) = star(gal.seed, gal.bang, n).filter(|st| {
+    let Some(st) = star(gal.seed, gal.origin, n).filter(|st| {
         let open = sight.opens(st);
         if !open {
             tally.compact.fetch_add(1, Ordering::Relaxed);
@@ -541,7 +541,7 @@ fn forecast_star(
         }
         None => {
             let t0 = std::time::Instant::now();
-            if let Some(sys) = system(gal.seed, gal.bang, &[n], &st, gal.chem, gal.elements) {
+            if let Some(sys) = system(gal.seed, gal.origin, &[n], &st, gal.chem, gal.elements) {
                 let built = t0.elapsed();
                 star_life(gal, n, &st, &sys, ctx, &mut share);
                 if t0.elapsed() >= std::time::Duration::from_secs(30) {

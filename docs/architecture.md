@@ -13,7 +13,7 @@ it and is evaluated lazily, when a reading or an event requires it.
 | Tier | Modules | Produces |
 |---|---|---|
 | Numbers | `xyl-core` `q`, `certified`, `dyadic`, `cga`, `rotor`, `units`, `measure`, `event`, `rng`, `coordinate` | Exact rationals, certified enclosures, conformal geometric algebra `Cl(n+1,1)`, rational rotors, the tier unit ladder, the certified crossing solver, deterministic streams |
-| Founding | `xyl-cosmos` `bang`, `bounce`, `elements`, `atoms`, `compound`, `fibres`, `formation`, `chain`, `cores`, `package`, `circuit::found` | The element table, the founding cascade, the firmament, beads and galaxies |
+| Founding | `xyl-cosmos` `origin`, `bounce`, `elements`, `atoms`, `compound`, `fibres`, `formation`, `chain`, `cores`, `package`, `circuit::found` | The element table, the founding cascade, the firmament, beads and galaxies |
 | Substrate | `xyl-cosmos` `circuit` (`core`, `weights`, `anchor`, ...) | The core's reverberation, outflow, the medium, intake, force and tide as functions of `t`; the anchor (bell, rims, radius) |
 | Galaxies | `xyl-cosmos` `galaxy`, `stars`, `chem`, `centre`, `pulse`, `field`, `turning` | The home galaxy's stars on orbits, star lives, chemical evolution, the bells and their pulses |
 | Systems and worlds | `xyl-cosmos` `disc`, `systems`, `manifold`, `bodies`, `worlds`, `hydro` | The star's disc and cut, worlds on the star's manifold, moons on each world's manifold, world state by degree of the star's life |
@@ -44,7 +44,7 @@ universal state, is 1 in these units. The [firmament](glossary.md) (the
 core's mass is its [bead](glossary.md)'s state in the universal core's
 units.
 
-Above the founding, `disc::star_cut` computes the share of a lit bead's
+Above the founding, `disc::star_hold` computes the share of a lit bead's
 infall the star holds, and `disc::manifold_worlds` places worlds on the
 star's manifold by reading it degree by degree outward (360 degrees), with
 no seed draw or partition. Moons form on each world's manifold by the same
@@ -52,7 +52,7 @@ function (`systems`).
 
 ## Data flow
 
-1. `genesis` derives the Big Bang from the seed, founds the substrate, forms
+1. `genesis` derives the origin from the seed, founds the substrate, forms
    the galaxies' star samples and runs the forecast of minds: for each
    candidate world, the time (if any) at which its lineage reaches the rung
    of its ladder that holds a mind (`minds::schedule`). It writes the
@@ -105,7 +105,7 @@ Two build-time digests key the caches (`crates/xyl-cosmos/build.rs`):
 
 | Digest | Covers | Keys |
 |---|---|---|
-| `XYL_FOUNDING_DIGEST` | The founding's files only: `bang`, `bounce`, `elements`, `atoms`, `compound`, `fibres`, `formation`, `cores`, `chain`, `package`, `circuit/`, `data/`, and `xyl-core` | The founding cache, with the torsion share |
+| `XYL_FOUNDING_DIGEST` | The founding's files only: `origin`, `bounce`, `elements`, `atoms`, `compound`, `fibres`, `formation`, `cores`, `chain`, `package`, `circuit/`, `data/`, and `xyl-core` | The founding cache, with the torsion share |
 | `XYL_SOURCE_DIGEST` | Every source file of `xyl-cosmos` and `xyl-core`, and `data/` | The forecast and the heavy-star caches |
 
 A change to a layer above the founding (a disc, a world or a life law)

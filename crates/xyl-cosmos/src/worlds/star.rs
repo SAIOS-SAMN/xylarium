@@ -74,7 +74,7 @@ pub fn crowd_r0() -> Dy {
 /// reference ring's ([`crowd_r0`]). Supernovae produce them, so the flux
 /// follows the crowding of the ring the system sits in: its holding per kpc
 /// over the reference ring's (`galaxy::density`, from the structure read off
-/// the founding; no bulge or nucleus profile is declared). The Big Bang's
+/// the founding; no bulge or nucleus profile is declared). The origin's
 /// star-formation share and the orbit's exposure scale it where it is read
 /// (`life`).
 pub fn cosmic_rays(r_kpc: Dy) -> Dy {

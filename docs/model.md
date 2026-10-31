@@ -124,10 +124,10 @@ pole axis and the five isoclinic planes).
   and for a non-positive mass or enclosure, so a spinless hole yields no
   bounce.
 
-### The Big Bang (`bang.rs`)
+### The origin (`origin.rs`)
 
 - The parent's Kerr spin is the only value drawn from the seed: a uniform
-  rational strictly inside `(0, 1)` on the 2^-40 grid (`BigBang::of`,
+  rational strictly inside `(0, 1)` on the 2^-40 grid (`Origin::of`,
   `clamp_spin`). The founding depends on the spin alone, so the substrate is
   founded first and the parent bounce is read in the substrate's enclosure:
   `Bounce::of(1, spin, radius_rg, 0)`.
@@ -420,7 +420,7 @@ law, the same at a nucleus, a star and a world:
   star's reach, in radians per ring. The binary share is a declared ruler.
 - Star masses (`galaxy::piece_star_mass`, `galaxy::imf`): a piece's star
   mass is the share of its infall the star tier's cut holds, `m_p = s c`
-  core masses, with `s` the cut's held share (`disc::star_cut`) and `c` the
+  core masses, with `s` the cut's held share (`disc::star_hold`) and `c` the
   infall's holding, a share of the galaxy's rings, which hold one core mass.
   It is the most one star of the piece holds. The star's draw `u` spreads the
   piece's stars over shares `x` of it by the deficit form
@@ -477,7 +477,7 @@ law, the same at a nucleus, a star and a world:
   collapsed star's compactness is `delta0 = s0 c / (R0 60 + s0 c)`. At ignition
   the star holds `delta0` of the turning it receives per echo; that is its
   transduction, which adds the over-pressure `p0 = 1 + transduced`. Settled, the
-  settled cut gives the star's held share and rim (`disc::star_cut`). Every
+  settled cut gives the star's held share and rim (`disc::star_hold`). Every
   star of a cloud shares the rim, so a heavier star is more compact, transduces
   a larger share and lives fewer rings. Its power is the hold that transduction
   transduces per ring, `P = m transduced_per_bell(r) / bell` in core masses per
@@ -491,7 +491,7 @@ law, the same at a nucleus, a star and a world:
   (`stars::ends`), and its remnant keeps the hold no step transduced
   (`stars::remnant_share`). The radiation's swing within a bell is `(pi / 2)
   |cos(2 pi t / echo)|` (`stars::flicker`).
-- The star's cut (`disc::star_cut`): the infall of the star's lit piece
+- The star's cut (`disc::star_hold`): the infall of the star's lit piece
   collapses carrying the galaxy's shear across its extent,
   `h w / (R (R + w))`, as its turning. It is heated by the pulse's turning
   per echo at the star and pushed by the star's transduction per echo as an
@@ -605,7 +605,7 @@ irradiation opens. Every quantity is read from the atoms:
   that releases hold. The share transduced is `1 - (w_z1(q) + w_z2(q)) /
   w_z(q)`.
 - **The sequence.** No kind, product or order is set: the sequence emerges from
-  the star's held mixture (`disc::StarCut::held`, the dark cut's held kinds). At
+  the star's held mixture (`disc::StarHold::held`, the dark cut's held kinds). At
   each stage the held kind whose step has the greatest release steps (ties by
   the lesser nucleon count), transducing its release times its share of the
   hold; its products join the held mixture, and the next stage is read again
@@ -659,7 +659,7 @@ reads the reference values and none is tuned to them.
 
 | Type | Condition in the model | Status |
 |---|---|---|
-| Collapsing cloud (protostar) | A lit piece's infall held by the dark cut, before ignition: held share `s0`, rim `R0`, compactness `delta0` (`disc::star_cut`). | Partial: computed as the collapse state of each cut; not yet a stage of a star's timeline. |
+| Collapsing cloud (protostar) | A lit piece's infall held by the dark cut, before ignition: held share `s0`, rim `R0`, compactness `delta0` (`disc::star_hold`). | Partial: computed as the collapse state of each cut; not yet a stage of a star's timeline. |
 | Main-sequence star | The first step of the star's sequence (Polarity, fusion and fission): age below that step's transduced share over the transduction. | Built: the first step of the sequence its held mixture gives. |
 | Mass ordering of the main sequence (the classes O to M) | Within a cloud every star shares the rim, so a heavier star is more compact, transduces a larger share and lives fewer rings. | Built for mass, compactness and life. The surface temperature that the classes are named by needs a world-independent temperature of a star from its held share (layer C, radiation). |
 | Long-lived low-mass star (red dwarf) | A star whose life in rings exceeds the universe's current count, so it has not left the main sequence since any star was born. | Built as a reading of `stars::life` against the universe's count. |

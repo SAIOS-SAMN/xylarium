@@ -53,8 +53,8 @@ pub enum Class {
 /// Where an element's atoms were made.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Channel {
-    /// Made in the Big Bang.
-    BigBang,
+    /// Made in the origin.
+    Origin,
     /// Made by cosmic-ray spallation of heavier nuclei.
     Spallation,
     /// Made in core-collapse supernovae.
@@ -149,7 +149,7 @@ fn class(s: &str) -> Option<Class> {
 
 fn channel(s: &str) -> Option<Channel> {
     match s {
-        "bb" => Some(Channel::BigBang),
+        "bb" => Some(Channel::Origin),
         "spall" => Some(Channel::Spallation),
         "ccsn" => Some(Channel::CoreCollapse),
         "ia" => Some(Channel::TypeIa),

@@ -6,7 +6,7 @@
 //! outflow rate (`cores::substrate_for`, per ring), the element table and
 //! `compound` (frames at heat, in `sequence.rs`).
 //! Reach `r` is in galaxy rings (`reach_rings` converts from kpc); times are
-//! rings of time after the Big Bang (one ring one bell); masses are core
+//! rings of time after the origin (one ring one bell); masses are core
 //! masses and light is power in core units, core masses (times `c^2`,
 //! `c = 1`) per ring. No constant of the Sun enters.
 //!
@@ -201,7 +201,7 @@ mod tests {
 
     #[test]
     fn power_is_the_transduced_hold_and_life_counts_rings() {
-        let _ = crate::genesis::bang();
+        let _ = crate::genesis::origin();
         let (m, r) = (Q::ratio(1, 1_000_000), Dy::int(3));
         let rim = Q::ONE;
         let delta = Dy::from_q(&crate::disc::rim_share(&m, &rim));

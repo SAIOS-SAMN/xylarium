@@ -2,7 +2,7 @@
 //! and the home galaxy's stars, worlds, life and minds, derived from a seed.
 //!
 //! The founding: a universe begins as the white hole of a parent black hole
-//! ([`bounce`]); its Big Bang ([`bang`]) draws the parent's spin from the
+//! ([`bounce`]); its origin ([`origin`]) draws the parent's spin from the
 //! seed. The elements ([`elements`], [`atoms`], [`compound`], [`fibres`])
 //! are thrown by the founding cascade ([`formation`], [`circuit`]): the
 //! throat holds the firmament, which carries the universal state, and the
@@ -22,11 +22,10 @@
 //! through `package::Si`. Geometry uses the conformal algebra
 //! ([`xyl_core::cga`]) and certified enclosures ([`xyl_core::certified`])
 //! wherever a law is transcendental. [`Universe::create`] returns None
-//! where the Big Bang cannot be founded; the same seed gives the same
+//! where the origin cannot be founded; the same seed gives the same
 //! universe on every machine.
 
 pub mod atoms;
-pub mod bang;
 pub mod bodies;
 pub mod bounce;
 pub mod centre;
@@ -48,6 +47,7 @@ pub mod laws;
 pub mod life;
 pub mod manifold;
 pub mod minds;
+pub mod origin;
 pub mod package;
 pub mod pulse;
 pub mod stars;
@@ -55,11 +55,11 @@ pub mod systems;
 pub mod turning;
 pub mod worlds;
 
-pub use bang::BigBang;
 pub use bounce::Bounce;
 pub use laws::Laws;
+pub use origin::Origin;
 
-/// A universe: one origin (its seed, its laws, its Big Bang). Everything
+/// A universe: one origin (its seed, its laws, its origin). Everything
 /// else in it is derived.
 #[derive(Clone, Debug)]
 pub struct Universe {
@@ -67,19 +67,19 @@ pub struct Universe {
     pub seed: u64,
     /// The physical laws (constants and their bounds) this universe runs under.
     pub laws: Laws,
-    /// The Big Bang drawn from `seed`.
-    pub bang: BigBang,
+    /// The origin drawn from `seed`.
+    pub origin: Origin,
 }
 
 impl Universe {
     /// The universe of `seed` under `laws`. The same seed under other laws
-    /// starts from the same initial conditions (its Big Bang is drawn from
+    /// starts from the same initial conditions (its origin is drawn from
     /// the seed alone).
     pub fn create(seed: u64, laws: Laws) -> Option<Universe> {
         Some(Universe {
             seed,
             laws,
-            bang: BigBang::of(seed)?,
+            origin: Origin::of(seed)?,
         })
     }
 }

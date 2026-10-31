@@ -1,14 +1,14 @@
 //! Sample stars: their orbits about their galactic cores, placement by
 //! irrational rotations of the index, birth, mass ([`imf`], core masses)
-//! and place at any `t`. Times are rings after the Big Bang, rates per ring.
+//! and place at any `t`. Times are rings after the origin, rates per ring.
 
 use super::{
     birth, core_of, core_reach, density, inside_mass, nucleus_mass, nucleus_reach, reach_at,
     sample, stellar_mass, vertical, vertical_frequency, Pop, Vertical, CORE_SHIFT, GRID_BITS,
     NUCLEUS_BASE, NUCLEUS_SAMPLE,
 };
-use crate::bang::BigBang;
 use crate::chain::Place;
+use crate::origin::Origin;
 use xyl_core::certified::{cos_sin_turns, down, pi, Encl};
 use xyl_core::dyadic::Dy;
 use xyl_core::measure;
@@ -39,7 +39,7 @@ pub struct Orbit {
     pub radius: Dy,
     /// Turning rate (radians per ring), from the turning law.
     pub rate: Dy,
-    /// Orbital phase at the Big Bang (turns, exact).
+    /// Orbital phase at the origin (turns, exact).
     pub turns0: Dy,
     /// Tilt of the plane about the line of nodes, as an exact half-angle
     /// (c, s); (1, 0) for a disc star, whose plane is the disc's.
@@ -71,7 +71,7 @@ impl Orbit {
     }
 }
 
-/// A sample star, as drawn at the Big Bang.
+/// A sample star, as drawn at the origin.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Star {
     /// Index in the galaxy's sample.
@@ -79,7 +79,7 @@ pub struct Star {
     /// Home-equivalent distance from the core (galaxy rings), exact; sets the
     /// gas conditions the star formed in.
     pub r: Q,
-    /// Birth time (rings after the Big Bang), rounded to the grid.
+    /// Birth time (rings after the origin), rounded to the grid.
     pub born: Q,
     /// Mass (core masses), rounded down to the 2^-64 grid ([`imf`]).
     pub mass: Q,
@@ -213,7 +213,7 @@ impl Star {
         self.vertical_at(age).map(|v| v.exposure).unwrap_or(Dy::ONE)
     }
 
-    /// The star's class at `t` rings after the Big Bang (see [`Class`]): its
+    /// The star's class at `t` rings after the origin (see [`Class`]): its
     /// transduction step at its age, its compactness, its mass as a share of its
     /// cloud's star mass, its life in rings, and whether that life outlasts
     /// the universe's age `t`.
@@ -370,23 +370,23 @@ fn turning_rate(radius: Dy, scale: Dy, mass_ratio: Dy) -> Dy {
 /// The home-galaxy stellar mass one sample star stands for (core masses):
 /// the population's mass (nucleus, or the whole galaxy) over the
 /// population's sample size.
-fn stands_for(bang: &BigBang, nucleus: bool) -> Dy {
+fn stands_for(origin: &Origin, nucleus: bool) -> Dy {
     if nucleus {
         Dy::from_q(&nucleus_mass()) / Dy::int(i64::try_from(NUCLEUS_SAMPLE).unwrap_or(1))
     } else {
-        Dy::from_q(&stellar_mass()) / Dy::int(i64::try_from(sample(bang)).unwrap_or(1))
+        Dy::from_q(&stellar_mass()) / Dy::int(i64::try_from(sample(origin)).unwrap_or(1))
     }
 }
 
-/// Sample star `n` of `seed`'s universe, as drawn at the Big Bang. `None`
+/// Sample star `n` of `seed`'s universe, as drawn at the origin. `None`
 /// where the galactic core has no shape, the star's ring never lights or the
 /// IMF refuses the draw.
-pub fn star(seed: u64, bang: &BigBang, n: u64) -> Option<Star> {
+pub fn star(seed: u64, origin: &Origin, n: u64) -> Option<Star> {
     // Core 0 is the home galaxy; another core's galaxy is the home galaxy's
     // homologue, its lengths scaled by `scale` and its masses by the hole
     // ratio (`cores`).
     let core = core_of(n);
-    let shape = crate::cores::shape(seed, bang, core)?;
+    let shape = crate::cores::shape(seed, origin, core)?;
     let (scale, mass_ratio) = (shape.scale(), Dy::from_q(&shape.mass_ratio()));
     let nucleus = (n & ((1u64 << CORE_SHIFT) - 1)) >= NUCLEUS_BASE;
     let mut rng = Stream::derive(
@@ -412,7 +412,7 @@ pub fn star(seed: u64, bang: &BigBang, n: u64) -> Option<Star> {
         None
     };
     let rate = turning_rate(radius, scale, mass_ratio);
-    let stands_for = stands_for(bang, nucleus);
+    let stands_for = stands_for(origin, nucleus);
     let r = down(&radius.to_q(), if nucleus { 60 } else { GRID_BITS });
     // Birth: the ring's first light, then a draw along the ring's
     // star-formation history (`chem::Chemistry::birth_along`), so a ring
@@ -422,7 +422,7 @@ pub fn star(seed: u64, bang: &BigBang, n: u64) -> Option<Star> {
     let u_bin = u();
     let u_comp = u();
     let first = birth(&r)?;
-    let born = crate::chem::Chemistry::cached(bang)
+    let born = crate::chem::Chemistry::cached(origin)
         .map(|c| c.birth_along(&r, &first, u_born))
         .unwrap_or(first);
     let born = down(&born, GRID_BITS);
@@ -508,7 +508,7 @@ pub(crate) fn node_of(u: Dy) -> (Dy, Dy) {
 ///
 /// The piece at `r` gives one star mass, `m_p = s c` ([`super::piece_star_mass`]:
 /// the share `s` of the piece's infall the star tier's cut holds,
-/// `disc::star_cut`, times the infall's holding `c`), the most one star of
+/// `disc::star_hold`, times the infall's holding `c`), the most one star of
 /// the piece holds. The draw spreads the piece's stars over shares `x` of
 /// `m_p` by the deficit form `F(x) = x / (x + b)` on `[0, 1]`, the share of
 /// stars holding at most `x m_p`, with the break `b = d / (1 + d)` the

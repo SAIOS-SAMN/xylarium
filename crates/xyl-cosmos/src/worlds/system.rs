@@ -2,14 +2,14 @@
 
 use super::*;
 
-/// What a galaxy's worlds are read against: its seed, Big Bang, chemistry,
+/// What a galaxy's worlds are read against: its seed, origin, chemistry,
 /// element table and laws.
 #[derive(Clone, Copy)]
 pub struct Galaxy<'c> {
     /// The galaxy's seed, from which every world's draws derive.
     pub seed: u64,
-    /// The Big Bang the galaxy grew from.
-    pub bang: &'c BigBang,
+    /// The origin the galaxy grew from.
+    pub origin: &'c Origin,
     /// The galaxy's chemical evolution (metals by place and time).
     pub chem: &'c Chemistry,
     /// The element table.
@@ -24,7 +24,7 @@ pub struct Galaxy<'c> {
 /// world's isotopes from the elements it was built with, kept as its ring's
 /// history and the universe's half-lives allow.
 pub fn settings<'a>(gal: &Galaxy, path: &[u64], sys: &'a System, star: &Star) -> Vec<Setting<'a>> {
-    let (seed, bang, elements, sc) = (gal.seed, gal.bang, gal.elements, &gal.sc);
+    let (seed, origin, elements, sc) = (gal.seed, gal.origin, gal.elements, &gal.sc);
     let z = gal.chem.metals(&star.r, &star.born).unwrap_or(Q::ZERO);
     let star_kg = &sys.spec.mass * &crate::package::Si::star_mass_kg();
     let planets: Vec<&World> = sys.worlds.iter().filter(|w| w.host.is_none()).collect();
@@ -34,7 +34,7 @@ pub fn settings<'a>(gal: &Galaxy, path: &[u64], sys: &'a System, star: &Star) ->
     let orbits = bodies::orbits(&star_kg, &planets, &mut rng);
     // The ring's star-formation time scale is its first-light time.
     // The galaxy counts in rings; the isotope clocks read Gyr, converted here.
-    let first = crate::circuit::gyr_of_rings(&bang.first_stars().mid());
+    let first = crate::circuit::gyr_of_rings(&origin.first_stars().mid());
     let tau_f = crate::galaxy::birth(&star.r)
         .map(|b| crate::circuit::gyr_of_rings(&b))
         .unwrap_or_else(|| first.clone());

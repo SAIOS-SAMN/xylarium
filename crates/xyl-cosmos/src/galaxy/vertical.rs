@@ -82,7 +82,7 @@ pub fn vertical_frequency(r: Dy) -> Dy {
 
 /// The heating share `s = t / (1 + t)` of a star born at `born` (rings) at
 /// reach `r` after `age` rings: `t` is the star's age over the ring's
-/// cooling time, the rings from the Big Bang until the ring's gas first
+/// cooling time, the rings from the origin until the ring's gas first
 /// lights (`birth`, at least one ring; the star's birth where the ring never
 /// lights). The share is zero at age zero, one half when the star has lived
 /// one cooling time, and approaches one for older stars: the deficit share of

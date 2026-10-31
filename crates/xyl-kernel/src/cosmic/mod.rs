@@ -1,7 +1,7 @@
-//! The cosmic world in play: the galaxy from the Big Bang, deep time from
+//! The cosmic world in play: the galaxy from the origin, deep time from
 //! the first mind's dawn, the peoples the forecast wakes, and the annals.
 //!
-//! Inputs: a `xyl_cosmos::worlds::Galaxy` (seed, Big Bang, chemistry,
+//! Inputs: a `xyl_cosmos::worlds::Galaxy` (seed, origin, chemistry,
 //! elements) and the forecast of minds (`xyl_cosmos::minds::Schedule`).
 //! Stars come from `xyl_cosmos::galaxy`, systems from
 //! `xyl_cosmos::systems`, worlds and media from `xyl_cosmos::worlds`.
@@ -173,7 +173,7 @@ pub struct People {
     pub region: Region,
     /// What its world selected in its lineage.
     pub traits: Traits,
-    /// When it woke (Gyr after the Big Bang).
+    /// When it woke (Gyr after the origin).
     pub dawn: Dy,
     /// Its numbers (bodies).
     pub population: Dy,
@@ -182,12 +182,12 @@ pub struct People {
     pub capacity: Dy,
     /// Its growth rate (per year).
     pub rate: Dy,
-    /// When its numbers were last carried forward (Gyr after the Big Bang).
+    /// When its numbers were last carried forward (Gyr after the origin).
     pub updated: Dy,
     /// Whether it was born in a galactic core within one core assembly time
     /// of that core's first core-born mind.
     pub ancient: bool,
-    /// When its lineage climbed each rung (Gyr after the Big Bang).
+    /// When its lineage climbed each rung (Gyr after the origin).
     pub steps: Vec<Dy>,
     /// Number of impacts that threw its lineage back a rung.
     pub setbacks: u32,
@@ -198,7 +198,7 @@ pub struct People {
 /// An entry of the annals: what happened, when.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Annal {
-    /// When it happened (Gyr after the Big Bang).
+    /// When it happened (Gyr after the origin).
     pub epoch: Dy,
     /// Category tag, such as "EMERGENCE", "DEEP_HISTORY", "FALL", "RUINS" or "FOCUS".
     pub kind: &'static str,
@@ -216,14 +216,14 @@ pub struct Witnessed {
 
 /// A cosmic universe in play.
 pub struct Cosmic<'g> {
-    /// The galaxy: its seed, Big Bang, chemistry and element table.
+    /// The galaxy: its seed, origin, chemistry and element table.
     pub gal: Galaxy<'g>,
     /// The physical scales worlds are built under.
     pub ctx: Ctx,
     /// When and where each mind would wake in the undisturbed galaxy, in
     /// order of waking.
     pub forecast: Schedule,
-    /// Deep time now (Gyr after the Big Bang).
+    /// Deep time now (Gyr after the origin).
     pub now: Dy,
     /// The next forecast mind not yet woken (minds are in order of waking).
     next: usize,
@@ -247,7 +247,7 @@ pub struct Cosmic<'g> {
 
 impl<'g> Cosmic<'g> {
     /// Starts deep time at the epoch of the forecast's first mind (0 when
-    /// the forecast is empty), records the Big Bang annal and wakes the
+    /// the forecast is empty), records the origin annal and wakes the
     /// minds due by then.
     pub fn genesis(gal: Galaxy<'g>, forecast: Schedule) -> Cosmic<'g> {
         let ctx = Ctx::new(gal.sc);
@@ -268,7 +268,7 @@ impl<'g> Cosmic<'g> {
         };
         c.annals.push(Annal {
             epoch: Dy::ZERO,
-            kind: "BIG_BANG",
+            kind: "ORIGIN",
             text: format!(
                 concat!(
                     "The universe begins: the white hole of a black hole in a parent universe - ",
@@ -286,10 +286,10 @@ impl<'g> Cosmic<'g> {
     /// when the star or its system cannot be built.
     pub fn witness(&mut self, n: u64) -> Option<&Witnessed> {
         if let std::collections::btree_map::Entry::Vacant(e) = self.systems.entry(n) {
-            let s = star(self.gal.seed, self.gal.bang, n)?;
+            let s = star(self.gal.seed, self.gal.origin, n)?;
             let sys = system(
                 self.gal.seed,
-                self.gal.bang,
+                self.gal.origin,
                 &[n],
                 &s,
                 self.gal.chem,

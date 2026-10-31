@@ -1,5 +1,5 @@
 //! A star's disc frame: the founding piece at its reach, the infall's cut
-//! there (`disc::star_cut`, held per piece) and the star's manifold reach;
+//! there (`disc::star_hold`, held per piece) and the star's manifold reach;
 //! the star mass a piece's cut gives ([`piece_star_mass`],
 //! [`first_star_mass`]); and the transduction sequence of the piece's held
 //! mixture at the cut's heat ([`piece_sequence`], `stars::Sequence`, cached
@@ -14,7 +14,7 @@ use xyl_core::Q;
 /// The chain's frame for a star's disc at reach `r` (galaxy rings) of the
 /// home galaxy: its piece of the founding, the infall's extent there, the
 /// share of the infall the star holds, the galaxy's tide at the pinch (the
-/// core-star tie) and the disc's agitation (`disc::star_cut`). The cut is
+/// core-star tie) and the disc's agitation (`disc::star_hold`). The cut is
 /// read once per piece and cached.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DiscFrame {
@@ -31,21 +31,21 @@ pub struct DiscFrame {
     /// of the star's circle about the core held by the star's mass
     /// (`manifold::reach`, the deficit share `m / (M(<r) + m)` of `2 pi r`).
     pub reach: Q,
-    /// The star's cut of the infall (`disc::star_cut`).
-    pub cut: crate::disc::StarCut,
+    /// The star's cut of the infall (`disc::star_hold`).
+    pub cut: crate::disc::StarHold,
     /// The share of the manifold the star holds: the gathering extent over
     /// the manifold reach, at most 1 (a star whose gathering fills the
     /// manifold leaves no matter for worlds).
     pub star_share: Q,
     /// The galaxy's tide at the pinch, `H / (R + H)`.
     pub tide: Q,
-    /// The disc's agitation (`disc::StarCut::a_disc`).
+    /// The disc's agitation (`disc::StarHold::a_disc`).
     pub a_disc: Q,
 }
 
 /// A lit piece's cut and the transduction sequence of its held mixture at the
 /// cut's heat.
-type Lit = std::sync::Arc<(crate::disc::StarCut, crate::stars::Sequence)>;
+type Lit = std::sync::Arc<(crate::disc::StarHold, crate::stars::Sequence)>;
 
 /// The cuts read so far, by piece index (`None`: the piece does not light).
 type HeldCuts = std::sync::Mutex<std::collections::BTreeMap<usize, Option<Lit>>>;
@@ -80,8 +80,8 @@ fn held_cut(r: &Q) -> Option<(usize, Q, Lit)> {
 
 /// The star mass of the home galaxy's piece at reach `r` (core masses): the
 /// share of the piece's infall the star holds, `m_p = s c`, with `s` the
-/// cut's held share (`disc::StarCut::star`) and `c` the infall's holding
-/// (`disc::StarCut::cloud`, a share of the galaxy's rings, which hold one
+/// cut's held share (`disc::StarHold::star`) and `c` the infall's holding
+/// (`disc::StarHold::cloud`, a share of the galaxy's rings, which hold one
 /// core mass together). It is the most one star of the piece holds: the
 /// initial mass function ([`super::imf`]) spreads the piece's stars below
 /// it. `None` where the founding is absent, no piece lies at `r` or the
@@ -92,7 +92,7 @@ pub fn piece_star_mass(r: &Q) -> Option<Q> {
 }
 
 /// The transduction sequence of the home galaxy's piece at reach `r` (galaxy
-/// rings): the steps its held mixture (`disc::StarCut::held`) takes at the
+/// rings): the steps its held mixture (`disc::StarHold::held`) takes at the
 /// cut's heat (`stars::Sequence::of`), shared by every star of the piece;
 /// `throat_echoes` is unset, since it depends on each star's compactness
 /// (`Star::sequence`). Cached with the cut. `None` where no piece lights at
@@ -104,7 +104,7 @@ pub fn piece_sequence(r: &Q) -> Option<crate::stars::Sequence> {
 
 /// The held core's rim of the piece at reach `r` (galaxy rings): the reach,
 /// in system-tier units (`60 r_g`), of the loosest kind the piece's transduction
-/// star still holds (`disc::StarCut::rim`). Every star of the piece shares
+/// star still holds (`disc::StarHold::rim`). Every star of the piece shares
 /// it, so a heavier star of the piece is more compact. `None` where no piece
 /// lights at `r`.
 pub fn piece_rim(r: &Q) -> Option<Q> {
@@ -167,7 +167,7 @@ pub fn first_star_sequence() -> crate::stars::Sequence {
 /// The cut of the founded universe's first lit piece (the least rings to
 /// light; on a tie the innermost). `None` before a founding or where no
 /// piece lights.
-fn first_cut() -> Option<crate::disc::StarCut> {
+fn first_cut() -> Option<crate::disc::StarHold> {
     let anchor = crate::circuit::anchor();
     let sub = crate::cores::substrate_for(&anchor.spin)?;
     let first = sub
@@ -227,7 +227,7 @@ pub fn disc_frame(r: &Q, mass: &Q) -> Option<DiscFrame> {
 fn piece_cut(
     sub: &crate::circuit::Substrate,
     record: &(Q, Q, Option<i64>, Q),
-) -> Option<crate::disc::StarCut> {
+) -> Option<crate::disc::StarHold> {
     let bead = sub
         .beads
         .iter()
@@ -238,5 +238,5 @@ fn piece_cut(
     // transduction from it and the collapsed star's compactness.
     let reach = Dy::from_q(&bead.reach).max(Dy::ZERO);
     let turning = (crate::stars::ring_per_bell(reach) * Dy::int(2)).to_q();
-    crate::disc::star_cut(bead, &sub.unit(), &sub.held_share(), &swing, &turning)
+    crate::disc::star_hold(bead, &sub.unit(), &sub.held_share(), &swing, &turning)
 }

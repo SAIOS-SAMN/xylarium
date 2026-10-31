@@ -23,7 +23,7 @@ pub struct Ley {
     pub tag: String,
     /// Whether the house's progenitors built it rather than the house itself.
     pub progenitor: bool,
-    /// When the line opens or opened, in Gyr after the Big Bang.
+    /// When the line opens or opened, in Gyr after the origin.
     pub built: Dy,
     /// The energy that holding the line open cost, in J.
     pub cost_j: Dy,
@@ -92,8 +92,8 @@ pub fn crossing_years(reach_kpc: Dy) -> Dy {
 impl Network {
     /// Seats the stars in play for a universe's forecast (`limit` per galaxy,
     /// the galaxy's sight) and resets the pairs and constellations.
-    pub fn seat(&mut self, seed: u64, bang: &xyl_cosmos::bang::BigBang, limit: u64) {
-        self.sample = in_play(seed, bang, limit);
+    pub fn seat(&mut self, seed: u64, origin: &xyl_cosmos::origin::Origin, limit: u64) {
+        self.sample = in_play(seed, origin, limit);
         self.reindex();
     }
 

@@ -4,7 +4,7 @@
 //!
 //!   xylarium genesis --home DIR [--seed 7] [--stars 400]
 //!                    [--threads 2] [--sight census]
-//!       Founds a new home: the Big Bang, its galaxies and systems and the
+//!       Founds a new home: the origin, its galaxies and systems and the
 //!       forecast of minds, written as `DIR/genesis`, with the first
 //!       checkpoint at the first mind's dawn. Returns `Err` for a home that
 //!       already holds a genesis. Local files only; nothing is posted.
@@ -17,8 +17,8 @@
 //!       An uplink runs the same loop with a [`Link`] beside it
 //!       ([`run_with`]).
 //!
-//! [`with`] builds the universe for every command: it regenerates the Big
-//! Bang, chemistry, elements and galaxy from the seed, reads or computes
+//! [`with`] builds the universe for every command: it regenerates the origin,
+//! chemistry, elements and galaxy from the seed, reads or computes
 //! the forecast and the heavy-star list (caches in the home, keyed by the
 //! laws' digest), then either restores the checkpoint
 //! (`Checkpoint::restore`, [`Source::Checkpoint`]) or, with none, carries a
@@ -33,8 +33,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
-use xyl_cosmos::bang::BigBang;
 use xyl_cosmos::chem::Chemistry;
+use xyl_cosmos::origin::Origin;
 use xyl_cosmos::worlds::{Ctx, Galaxy};
 use xyl_cosmos::Laws;
 use xyl_kernel::checkpoint::Checkpoint;
@@ -104,13 +104,13 @@ fn keep(u: &mut Universe<'_>, home: &Path, height: Option<u64>) -> Result<(), St
 /// Builds the universe from its seed (everything the laws derive is
 /// regenerated), carries it from event to event to its held state (the
 /// checkpoint, or 14 Gyr when there is none), and passes it to `f` with its
-/// [`Source`] and Big Bang.
+/// [`Source`] and origin.
 ///
-/// Returns `Err` with a message when the Big Bang, the chemistry or the
+/// Returns `Err` with a message when the origin, the chemistry or the
 /// founded elements cannot be derived, or when `f` returns one.
 pub fn with<T>(
     o: &Options,
-    f: impl FnOnce(&mut Universe<'_>, Source, &BigBang) -> Result<T, String>,
+    f: impl FnOnce(&mut Universe<'_>, Source, &Origin) -> Result<T, String>,
 ) -> Result<T, String> {
     let t0 = std::time::Instant::now();
     xyl_core::watch::into(&o.home);
@@ -128,18 +128,18 @@ pub fn with<T>(
         o.home.display()
     ));
     xyl_core::watch::stage("chemistry");
-    let bang = BigBang::of(o.seed).ok_or("no Big Bang")?;
-    let chem = Chemistry::of(&bang).ok_or("no chemistry")?;
+    let origin = Origin::of(o.seed).ok_or("no origin")?;
+    let chem = Chemistry::of(&origin).ok_or("no chemistry")?;
     eprintln!("universe: chemistry in {:.1?}", t0.elapsed());
     xyl_core::watch::stage("forecast");
-    let elements = xyl_cosmos::elements::founded(&bang.parent.share())?;
+    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
     // A universe's laws come from its package; until a package supplies
     // them, the reference laws are used.
     let sc = Laws::default().scales();
     let ctx = Ctx::new(sc);
     let gal = Galaxy {
         seed: o.seed,
-        bang: &bang,
+        origin: &origin,
         chem: &chem,
         elements: &elements,
         sc,
@@ -161,7 +161,7 @@ pub fn with<T>(
             .collect()
     });
     let mut u = Universe::begin(cosmic, heavy.as_deref());
-    u.network.seat(o.seed, &bang, o.stars);
+    u.network.seat(o.seed, &origin, o.stars);
     if heavy.is_none() {
         let list: Vec<String> = u.field.heavy().iter().map(u64::to_string).collect();
         let _ = std::fs::create_dir_all(&o.home)
@@ -197,7 +197,7 @@ pub fn with<T>(
         t0.elapsed()
     );
     xyl_core::watch::stage("read");
-    f(&mut u, source, &bang)
+    f(&mut u, source, &origin)
 }
 
 /// The roster: each people with its role, star, world, region, population and
@@ -457,7 +457,7 @@ pub fn run_with(
     let s2 = stop.clone();
     ctrlc::set_handler(move || s2.store(true, Ordering::SeqCst)).map_err(|e| e.to_string())?;
     let mut link = link(&o, stop.clone())?;
-    with(&o, |u, _, _bang| play(&o, u, &stop, &mut link))
+    with(&o, |u, _, _origin| play(&o, u, &stop, &mut link))
 }
 
 /// Writes the checkpoint and tells the link, if any, that it was written.
@@ -525,7 +525,7 @@ fn play(
     Ok(true)
 }
 
-/// Founds a universe in a new home: the Big Bang from `o.seed`, the founding,
+/// Founds a universe in a new home: the origin from `o.seed`, the founding,
 /// the galaxies and their systems, the forecast of minds, the genesis record
 /// and the first checkpoint at the first mind's epoch.
 ///
@@ -554,42 +554,42 @@ pub fn genesis(o: Options) -> Result<bool, String> {
             o.home.display()
         ));
     }
-    let bang = BigBang::of(o.seed).ok_or("no Big Bang")?;
-    let chem = Chemistry::of(&bang).ok_or("no chemistry")?;
-    let elements = xyl_cosmos::elements::founded(&bang.parent.share())?;
+    let origin = Origin::of(o.seed).ok_or("no origin")?;
+    let chem = Chemistry::of(&origin).ok_or("no chemistry")?;
+    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
     // A universe's laws come from its package; until a package supplies
     // them, the reference laws are used.
     let sc = Laws::default().scales();
     let ctx = Ctx::new(sc);
     let gal = Galaxy {
         seed: o.seed,
-        bang: &bang,
+        origin: &origin,
         chem: &chem,
         elements: &elements,
         sc,
     };
     std::fs::create_dir_all(&o.home).map_err(|e| e.to_string())?;
     let schedule = forecast(&gal, &ctx, &o.home, o.stars, o.threads, o.census);
-    let founding = xyl_cosmos::cores::founding(o.seed, &bang, &elements);
+    let founding = xyl_cosmos::cores::founding(o.seed, &origin, &elements);
     let anchor = xyl_cosmos::circuit::anchor();
     let mut out = format!(
         concat!(
             "xylarium genesis v2\nseed {}\nfounding {}\nlaws {}\nlife {}\n",
-            "big-bang first-stars {} bell-gyr {} rim-cluster {} home-rim-kpc {} ",
+            "big-origin first-stars {} bell-gyr {} rim-cluster {} home-rim-kpc {} ",
             "radius-kpc {} margin {}\n"
         ),
         o.seed,
         xyl_cosmos::package::founding_digest(),
         xyl_cosmos::minds::laws_digest(),
         xyl_cosmos::minds::life_digest(),
-        xyl_cosmos::circuit::gyr_of_rings(&bang.first_stars().mid()),
+        xyl_cosmos::circuit::gyr_of_rings(&origin.first_stars().mid()),
         xyl_cosmos::circuit::gyr_of_rings_dy(xyl_cosmos::circuit::bell()),
         anchor.rim,
         anchor.home_rim_kpc,
         anchor.radius_kpc,
         anchor.margin
     );
-    out.push_str(&template_census(&anchor, &bang));
+    out.push_str(&template_census(&anchor, &origin));
     for c in &founding {
         let s = &c.shape;
         out.push_str(&format!(
@@ -613,7 +613,7 @@ pub fn genesis(o: Options) -> Result<bool, String> {
     ));
     let cosmic = Cosmic::genesis(gal, schedule);
     let mut u = Universe::begin(cosmic, None);
-    u.network.seat(o.seed, &bang, o.stars);
+    u.network.seat(o.seed, &origin, o.stars);
     out.push_str(&format!(
         "bell period-gyr {}\nfirst-dawn count {}\n",
         u.bell.period_gyr, u.now
@@ -636,7 +636,7 @@ pub fn genesis(o: Options) -> Result<bool, String> {
 /// was seeded from, how much of each kind the founding made, and each kind's
 /// share of the founded holding. Empty when no substrate is founded for the
 /// anchor's spin.
-fn template_census(anchor: &xyl_cosmos::circuit::Anchor, bang: &BigBang) -> String {
+fn template_census(anchor: &xyl_cosmos::circuit::Anchor, origin: &Origin) -> String {
     let mut out = String::new();
     if let Some(sub) = xyl_cosmos::cores::substrate_for(&anchor.spin) {
         out.push_str(&format!(
@@ -654,7 +654,7 @@ fn template_census(anchor: &xyl_cosmos::circuit::Anchor, bang: &BigBang) -> Stri
             sub.galaxies().len(),
             sub.lighting.lit,
             xyl_cosmos::galaxy::suns_of_core_masses(&xyl_cosmos::galaxy::stellar_mass()),
-            xyl_cosmos::galaxy::sample(bang),
+            xyl_cosmos::galaxy::sample(origin),
         ));
         let all = sub.holding();
         for (z, m) in sub.census() {

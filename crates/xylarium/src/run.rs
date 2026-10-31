@@ -22,7 +22,7 @@
 //! the forecast and the heavy-star list (caches in the home, keyed by the
 //! laws' digest), then either restores the checkpoint
 //! (`Checkpoint::restore`, [`Source::Checkpoint`]) or, with none, carries a
-//! fresh universe to 14 Gyr ([`Source::Fresh`]). The checkpoint is written
+//! fresh universe at the first mind's dawn ([`Source::Fresh`]). The checkpoint is written
 //! whole or not at all (temporary file, then rename), after committing the
 //! keepers' chain with the link's last final clock height.
 //!
@@ -76,7 +76,8 @@ pub enum Source {
     /// Restored from the checkpoint in the home, with the peoples' records
     /// and held inputs restored.
     Checkpoint,
-    /// No checkpoint in the home: a fresh genesis carried to 14 Gyr.
+    /// No checkpoint in the home: a fresh genesis read at the first mind's
+    /// dawn, where genesis writes its first checkpoint.
     Fresh,
 }
 
@@ -103,7 +104,7 @@ fn keep(u: &mut Universe<'_>, home: &Path, height: Option<u64>) -> Result<(), St
 
 /// Builds the universe from its seed (everything the laws derive is
 /// regenerated), carries it from event to event to its held state (the
-/// checkpoint, or 14 Gyr when there is none), and passes it to `f` with its
+/// checkpoint, or at the first mind's dawn when there is none), and passes it to `f` with its
 /// [`Source`] and origin.
 ///
 /// Returns `Err` with a message when the origin, the chemistry or the
@@ -185,8 +186,9 @@ pub fn with<T>(
         );
         Source::Checkpoint
     } else {
-        let to = u.bell.count(&Q::int(14));
-        u.advance_to(&to, false);
+        // No checkpoint: the universe stays where `Universe::begin` puts it,
+        // the first mind's dawn, the epoch genesis writes its first
+        // checkpoint at.
         Source::Fresh
     };
     eprintln!(

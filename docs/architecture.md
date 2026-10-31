@@ -59,7 +59,8 @@ function (`systems`).
    genesis record and a first checkpoint at the time of the first mind.
 2. On every start the universe is regenerated from the seed. State that the
    laws do not determine is restored from the checkpoint. A home with no
-   checkpoint is carried to 14 Gyr.
+   checkpoint is read at the first mind's dawn, where genesis writes its
+   first checkpoint.
 3. The event engine (`Universe::advance_to`) advances from event to event:
    forecast wakings (a mind arising on its world), queued inputs and ley
    lines falling due. Between events nothing is computed.
@@ -161,7 +162,7 @@ never leaves a partial checkpoint.
 (`crates/xylarium/src/observe/mod.rs`). A law reading is evaluated from the seed
 and the laws alone, without carrying the universe. A carried reading first
 builds the universe from its seed and restores its checkpoint (or carries a
-fresh genesis to 14 Gyr when the home has none), as a `run` start does. "The
+fresh genesis at the first mind's dawn when the home has none), as a `run` start does. "The
 books" in a reading are its conservation balances. Every reading is read-only
 and may run beside `run`. Bracketed arguments are optional, with their defaults.
 

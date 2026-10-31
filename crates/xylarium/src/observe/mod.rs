@@ -118,7 +118,7 @@ fn count(what: &[String], default: usize) -> usize {
 /// following words) for the universe described by `o`, to standard output.
 /// Law readings (`formation`, `seals`, `founding-reach`, ...) are taken
 /// without carrying the universe; the others carry it from its seed to its
-/// checkpoint in `o.home` (or to 14 Gyr when there is none) first. An unknown
+/// checkpoint in `o.home` (or read at the first mind's dawn when there is none) first. An unknown
 /// word prints the list of readings. Returns `Ok(true)` once a reading is
 /// printed.
 ///
@@ -215,7 +215,7 @@ fn carried(
     let u: &Universe<'_> = u;
     if source == Source::Fresh {
         println!(
-            "observe: no checkpoint in {}; this is a fresh genesis carried to 14 Gyr",
+            "observe: no checkpoint in {}; this is a fresh genesis read at the first mind's dawn",
             o.home.display()
         );
     }

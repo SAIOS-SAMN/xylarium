@@ -43,6 +43,8 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- A home without a checkpoint is read at the first mind's dawn, where
+  genesis writes its first checkpoint, in place of 14 Gyr (#3).
 - The minimum supported Rust version is 1.85, the version the locked
   dependencies require.
 - Code style: Modules over about 800 lines are split into directory modules

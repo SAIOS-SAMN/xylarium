@@ -536,12 +536,15 @@ the Xylarium function is the implementation. The ids are proposals.
 |---|---|---|---|
 | LAW-DEFICIT-SHARE | `delta = M / (r + M)` | core | `turning::deficit_share` |
 | LAW-DILATION | `D(p) = (1 + p) / (1 - p)`, `p` in `[0, 1)` | core | `circuit::dilation` |
-| LAW-TORSION-SHARE | `(H + J) / (2H + J)`, `H = 2M`, `J = a M^2` | core | `bounce::torsion_share` |
+| LAW-TORSION-SHARE | `s(H, J) = (H + J) / (2H + J)`, `H` the horizon reach and `J` the spin's share, both stated by the universe | core | `bounce::torsion_share` |
 | LAW-JET-MAP | `t -> a t + b`, `a = D(p_c) / (1 - p_v)`, `b = p_v / (1 - p_v)` | Xylarium | `circuit::jet_map` |
 | LAW-THROAT-CROSSING | `t_n = t* + (t0 - t*) a^n`, crossing at `n = ln((1 - t*) / (t0 - t*)) / ln a`; refused for `t0 <= 0` | Xylarium | `circuit::throat_crossing` |
 | LAW-POLARITY-SEQUENCE | pole point `sum(n u) / sum(n w)`; fusion below the throat, fission above, ordered by release | Xylarium | `stars::sequence::pole_point`, `Sequence::of` |
 
-The rim share (`disc::rim_share`) is LAW-DEFICIT-SHARE with the reach
+LAW-TORSION-SHARE takes the horizon reach as an argument: Xylarium states
+`H = M (1 - delta_h) / delta_h = 2M` (`bounce::horizon_reach`) with the
+horizon's held share `delta_h = 1/3` a declared ruler of its founding, and
+`J = a M^2`. The rim share (`disc::rim_share`) is LAW-DEFICIT-SHARE with the reach
 `R k`, `k` the tier ratio. The dilation turns the flow law of Concordance
 section 2.6 into a product, `D(x (+) y) = D(x) D(y)` with
 `x (+) y = (x + y) / (1 + x y)`, and the court's throat level is

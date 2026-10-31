@@ -600,6 +600,10 @@ layer, each with the quantity that is to derive it.
   the package supplies it. The SI seam (`Si`: the unit world, the reference
   star, the AU, the kpc, c, G, the year and the physical constants) is kept for
   display once each layer reads core units.
+- **Founding** (`bounce`): The horizon's held share `delta_h = 1/3`
+  (`horizon_reach`, so `H = 2M`), the reach where the received share is twice
+  the held share, is to be derived from the bounce's geometry; until then the
+  shared torsion law takes `H` as an argument.
 - **Home galaxy and chemistry** (`galaxy`, `chem`): The chemistry's rulers
   (`chem::Rulers`: ring width, surface density, returns, loading, yields) are to
   be derived from the enrichment that the founding produces.

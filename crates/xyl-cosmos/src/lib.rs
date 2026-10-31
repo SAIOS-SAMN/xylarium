@@ -4,7 +4,7 @@
 //! The founding: a universe begins as the white hole of a parent black hole
 //! ([`bounce`]); its origin ([`origin`]) draws the parent's spin from the
 //! seed. The elements ([`elements`], [`atoms`], [`compound`], [`fibres`])
-//! are thrown by the founding cascade ([`formation`], [`circuit`]): the
+//! are assigned their reaches by the founding cascade ([`formation`], [`circuit`]): the
 //! throat holds the firmament, which carries the universal state, and the
 //! rest beads into galaxies ([`cores`]). [`package`] holds what the
 //! founding takes that the laws do not derive. [`laws`] holds the four

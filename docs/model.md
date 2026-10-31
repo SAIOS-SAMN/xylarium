@@ -329,7 +329,7 @@ longer holds.
 - The ocean is described by the waveform at reach `r`,
   `A(r, t) = [cos(2 pi (t - tau) / echo) / echo + q(t - tau)] / (r + 1)`,
   with `tau = (r / rim) bell / 2` (`Substrate::amplitude`). A galaxy's share
-  of a kind that the jet throws is its pull `h / (r + h)` (`h` its state
+  of a kind that the jet carries is its pull `h / (r + h)` (`h` its state
   over the mean) times its coherence with the kind's phase,
   `1 - 2 min(d, 1 - d)`, divided by the sum over all galaxies
   (`Substrate::landing`). A galaxy's composition at `t` is its recipe plus

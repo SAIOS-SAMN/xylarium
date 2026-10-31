@@ -343,7 +343,10 @@ impl<'g> Cosmic<'g> {
         let born = xyl_cosmos::circuit::gyr_of_rings_dy(Dy::from_q(&wit.star.born));
         // The heartbeat changes over Gyr; it is cached per degree of the
         // star's life, as world states are.
-        let deg = star_degree_gyr(Dy::from_q(&wit.star.r), &self.ctx);
+        let deg = star_degree_gyr(
+            xyl_cosmos::galaxy::kpc_of_rings_dy(Dy::from_q(&wit.star.r)),
+            &self.ctx,
+        );
         let quarters = degree_of(epoch - born, deg);
         if let Some(hit) = self.heartbeat_cache.borrow().get(&(star_n, w, quarters)) {
             return *hit;

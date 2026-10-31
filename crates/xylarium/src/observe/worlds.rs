@@ -498,9 +498,11 @@ fn chain_frame(st: &Star) -> String {
         .map(|f| {
             let (regions, belt) =
                 xyl_cosmos::disc::manifold_worlds(&f.star_share, &f.a_disc, &f.tide);
-            let au = |kpc: &Q| {
+            // Galaxy rings print in AU and kpc, converted for display.
+            let kpc_of = xyl_cosmos::galaxy::kpc_of_rings;
+            let au = |rings: &Q| {
                 Dy::from_q(
-                    &(kpc * &xyl_cosmos::package::Si::kpc())
+                    &(&kpc_of(rings) * &xyl_cosmos::package::Si::kpc())
                         .checked_div(&xyl_cosmos::package::Si::au())
                         .unwrap_or(Q::ZERO),
                 )
@@ -513,11 +515,11 @@ fn chain_frame(st: &Star) -> String {
                     "{} worlds on the manifold (first at {} of the reach), belt {}"
                 ),
                 f.piece,
-                Dy::from_q(&st.r),
-                au(&f.infall_kpc),
+                Dy::from_q(&kpc_of(&st.r)),
+                au(&f.infall),
                 Dy::from_q(&f.cut.cloud),
-                au(&f.extent_kpc),
-                au(&f.reach_kpc),
+                au(&f.extent),
+                au(&f.reach),
                 Dy::from_q(&f.cut.spin),
                 Dy::from_q(&f.cut.heat),
                 Dy::from_q(&f.cut.p0),
@@ -532,7 +534,10 @@ fn chain_frame(st: &Star) -> String {
                 Dy::from_q(&belt)
             )
         })
-        .unwrap_or_else(|| format!("no frame at {} kpc", Dy::from_q(&st.r)))
+        .unwrap_or_else(|| {
+            let r = xyl_cosmos::galaxy::kpc_of_rings(&st.r);
+            format!("no frame at {} kpc", Dy::from_q(&r))
+        })
 }
 
 /// One star's row of the `worlds` reading: its chain frame, then its

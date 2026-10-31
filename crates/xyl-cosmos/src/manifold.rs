@@ -446,11 +446,14 @@ pub fn share(n: u32, d: &Encl, reach: &Encl) -> Encl {
 /// A star's cap on its core's sphere of directions (degrees of S^360's
 /// volume): the star's reach, the deficit share m / (M(<R) + m) of the circle
 /// at R, over R, with M(<R) the home-equivalent mass inside its orbit scaled
-/// to the star's galaxy.
+/// to the star's galaxy (core masses; the star's suns are read in core
+/// masses through the boundary `galaxy::core_masses_of_suns`).
 pub fn star_cap_degrees(star: &Star, star_suns: &Q) -> Encl {
     let inside =
         &crate::galaxy::inside_mass(&star.r) * &crate::cores::ratio_of_scale(&star.scale.to_q());
-    let ratio = star_suns.checked_div(&inside).unwrap_or(Q::ZERO);
+    let ratio = crate::galaxy::core_masses_of_suns(star_suns)
+        .checked_div(&inside)
+        .unwrap_or(Q::ZERO);
     cap_degrees(
         measure::UNIVERSE_N,
         &reach(&Encl::exact(Q::ONE), &ratio),

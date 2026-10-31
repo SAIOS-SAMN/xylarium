@@ -290,15 +290,18 @@ pole axis and the five isoclinic planes).
 - Structure (`galaxy::Structure`): the home galaxy is made of the universal
   core's founded matter, so its structure is the founding's beads re-read in
   the galaxy tier's unit. Its rings are the beads, with their reaches and
-  spans in galaxy units and their states as their holding. The core's reach
-  is one galaxy unit, where `1 / (r + 1)` is one half (`galaxy::core_kpc`).
+  spans in galaxy rings (60^5 r_g) and their states as their holding. The
+  core's reach is one galaxy ring, where `1 / (r + 1)` is one half
+  (`galaxy::core_reach`).
   The nucleus is the innermost ring; the reference ring is the ring within
   which half the holding lies (`galaxy::r0`); crowding is a ring's state per
   span over the reference ring's state per span (`galaxy::density`).
-- Mass: `stellar_mass = Lighting::lit x hole_mass` (`galaxy::stellar_mass`).
-  The mass inside `r` is `hole_mass (1 + rings within r / all rings)`
-  (`galaxy::inside_mass`), which the turning law reads (`turning.rs`,
-  `omega = c delta(<r) / r`).
+- Mass, in core masses (the universal core is 1): the stellar mass is the
+  lit share, `stellar_mass = Lighting::lit` (`galaxy::stellar_mass`). The
+  mass inside `r` is `1 + rings within r / all rings`
+  (`galaxy::inside_mass`), which the turning law reads (`turning::turning`,
+  `omega = delta(<r) bell / r` radians per ring, `r` in r_g, `bell` in
+  r_g / c).
 - Lighting (`formation::cooling`, `formation::collapse`,
   `formation::lighting`): each bead is a piece of gas. Its holding per
   galaxy ring is `lambda = (state / unit) / W`; its agitation is
@@ -318,18 +321,27 @@ pole axis and the five isoclinic planes).
   largest extent that holds. The piece lights where its agitation at
   ignition is under the throat's push. The first stars are the ring count of
   the first lit piece; the lit share is the star efficiency.
-- Reach unit: a star's reach about the core is measured in galaxy rings,
-  `r_kpc / galaxy_kpc` (`stars::reach_rings`, `Anchor::galaxy_kpc`), the
-  same unit in which its piece was lit.
+- Reach unit: a star's reach about the core (`Star::r`, `Orbit::radius`) is
+  measured in galaxy rings, the same unit in which its piece was lit; kpc
+  appear only at display and at the marked boundaries of the layers not yet
+  converted (`galaxy::kpc_of_rings`).
 - Placement (`galaxy::star`): sample stars stand for equal shares of the
   stellar mass and are placed along the rings' cumulative holding by
   irrational pivots (golden, silver, plastic and `sqrt 3 - 1` turns), which
   is the repulsion law. Disc stars orbit in the plane; core and nucleus
   stars orbit on tilted planes. The orbit's rate is the turning law at the
-  star's reach. The initial mass function (`galaxy::imf`), the binary share
-  and the scales of the vertical orbit (`galaxy::vertical`) are declared
-  rulers. Next: these are to be derived from the piece's infall (roadmap,
-  Declared rulers).
+  star's reach, in radians per ring. The initial mass function
+  (`galaxy::imf`) and the binary share are declared rulers. Next: these are
+  to be derived from the piece's infall (roadmap, Declared rulers).
+- Vertical orbit (`galaxy::vertical`): a disc star swings through the plane at
+  the frequency `nu = omega 2d / (1 + d)`, the turning rate held by the crowding
+  share (`galaxy::vertical_frequency`). The crowded layer's half-thickness is
+  the deficit share of the ring's mass against the mass inside it, taken of the
+  reach, `h = r m / (M(<r) + m)` (`galaxy::layer`). The heating share is `s = t
+  / (1 + t)`, with `t` the star's age over its ring's cooling time (the rings
+  until the ring's gas first lights). The speed scale is `sigma = h nu s 2d / (1
+  + d)`, the speed an exponential draw `vz = -sigma ln(1 - u)`, the amplitude
+  `vz / nu`, and the exposure the share of the swing inside `|z| < h`.
 - Births (`galaxy::birth`, `chem::Chemistry::birth_along`): a star's
   ring first lights at `max(cools_in, 1)` rings, and no star stands in a
   ring that never lights. The star's birth is then placed on the ring's star
@@ -340,18 +352,19 @@ pole axis and the five isoclinic planes).
   (`c t^(p+1) / (p + 1)` where `k = 0`), and the time is found by 48
   halvings.
 - Chemistry (`chem::Model`): each disc ring (30 rings of 0.5 kpc) is a sum of
-  closed forms `c t^m e^(-lambda t)`, with `t` in rings; the timescales
-  measured in Gyr are converted to rings where they are declared. Gas falls in on the timescale of the
-  ring's first light toward the structure's crowding profile, and stars form at
-  `efficiency x Omega / 2 pi`. Prompt and slow returns, the fountain's landing
-  map and the core's jets each feed every ring once, and each nucleosynthetic
-  channel makes its elements after its delay. Yields are scaled per channel by
-  `chem::Calibration` against the gas at the reference ring and the solar-birth
-  reference (`Rulers::ism_today_dex`, `Rulers::reference_metallicity`,
-  `Rulers::today`, `Rulers::v_flat`, `Rulers::sigma_r0`); hydrogen and
-  helium come from the founding's counts (`chem::Light`). Status: partial. Next:
-  the yields and ring scales are to be derived from the founding (roadmap, Rules
-  from the founding and the galactic cores, chemistry from the census).
+  closed forms `c t^m e^(-lambda t)`, with `t` in rings; the timescales measured
+  in Gyr are converted to rings where they are declared. Gas falls in on the
+  timescale of the ring's first light toward the structure's crowding profile,
+  and stars form at `efficiency x Omega / 2 pi`. Prompt and slow returns, the
+  fountain's landing map and the core's jets each feed every ring once, and each
+  nucleosynthetic channel makes its elements after its delay. Yields are scaled
+  per channel by `chem::Calibration` against the gas at the reference ring and
+  the solar-birth reference (`Rulers::ism_today_dex`,
+  `Rulers::reference_metallicity`, `Rulers::today`, `Rulers::v_flat`,
+  `Rulers::sigma_r0`); hydrogen and helium come from the founding's counts
+  (`chem::Light`). Status: partial. Next: the yields and ring scales are to be
+  derived from the founding (roadmap, Rules from the founding and the galactic
+  cores, chemistry from the census).
 
 ## 6. Stars and systems
 

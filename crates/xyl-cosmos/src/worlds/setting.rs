@@ -378,7 +378,8 @@ fn radiated(set: &Setting, age: Dy, ctx: &Ctx) -> State {
     // does not enter the climate.
     let flux = set.lum / a_au;
     let t_form = c.t_unit * set.lum / a_au;
-    let env = Dy::from_q(&crate::galaxy::density(&set.r_kpc.to_q()).mid());
+    let env =
+        Dy::from_q(&crate::galaxy::density(&crate::galaxy::rings_of_kpc(&set.r_kpc.to_q())).mid());
     let cr = cosmic_rays(set.r_kpc);
     let sw = activity(star_rel, age) / activity(Dy::ONE, Dy::sci(457, -2)) / a_au;
     let mut ices = Mix::default();

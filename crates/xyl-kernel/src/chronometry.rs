@@ -213,10 +213,6 @@ impl Chronometry {
         let cluster_kpc = (&Tier::Cluster.in_rg() * &units.r_g_m)
             .checked_div(&kpc_m)
             .unwrap_or(Q::ONE);
-        let suns_rg = |suns: &Q| {
-            suns.checked_div(&xyl_cosmos::package::hole_mass())
-                .unwrap_or(Q::ZERO)
-        };
         let lambda = xyl_cosmos::pulse::wavelength_kpc().to_q();
         let bells = |kpc: &Q| kpc.checked_div(&lambda).unwrap_or(Q::ZERO);
         let shapes = xyl_cosmos::cores::shapes(seed, bang);
@@ -252,7 +248,8 @@ impl Chronometry {
                 .iter()
                 .filter(|o| o.index != s.index && dist(o) < d)
                 .fold(Q::ZERO, |a, o| &a + &mass(o));
-            let galaxy_rate = well(&(&d * &kpc_rg), &suns_rg(&nearer));
+            // Masses are core masses (r_g of the core, G = c = 1).
+            let galaxy_rate = well(&(&d * &kpc_rg), &nearer);
             let scale = s.scale().to_q();
             // The hub is the galactic core, counting in the galaxy's echo.
             c.keepers.push(Keeper {
@@ -265,14 +262,19 @@ impl Chronometry {
             });
             c.inside.push(Some(0));
             let mut inner = c.keepers.len() - 1;
+            // The shells' reaches are galaxy rings (60^5 r_g); the
+            // distances from the epicenter stay in kpc, converted at the
+            // boundary `galaxy::kpc_of_rings`.
+            let ring_rg = Tier::Galaxy.in_rg();
             for (shell, r_home) in [
-                (Shell::Core, xyl_cosmos::galaxy::nucleus_kpc()),
-                (Shell::Mantle, xyl_cosmos::galaxy::core_kpc()),
-                (Shell::Rim, xyl_cosmos::galaxy::rim_kpc()),
+                (Shell::Core, xyl_cosmos::galaxy::nucleus_reach()),
+                (Shell::Mantle, xyl_cosmos::galaxy::core_reach()),
+                (Shell::Rim, xyl_cosmos::circuit::anchor().rim),
             ] {
-                let r = &r_home * &scale;
+                let r_rings = &r_home * &scale;
+                let r = xyl_cosmos::galaxy::kpc_of_rings(&r_rings);
                 let inside = &xyl_cosmos::galaxy::inside_mass(&r_home) * &s.mass_ratio();
-                let rate = &galaxy_rate * &well(&(&r * &kpc_rg), &suns_rg(&inside));
+                let rate = &galaxy_rate * &well(&(&r_rings * &ring_rg), &inside);
                 c.keepers.push(Keeper {
                     galaxy: Some(s.index),
                     shell,

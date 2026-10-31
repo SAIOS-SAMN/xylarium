@@ -247,13 +247,15 @@ another crate. Laws are composed from shares (ratios of the form
   Status: built.
 - Crowding (`galaxy::density`): `lambda_ring / lambda_reference`. Status:
   built.
-- Stellar mass (`galaxy::stellar_mass`): `Lighting::lit x hole_mass`.
+- Stellar mass (`galaxy::stellar_mass`): `Lighting::lit` core masses.
   Status: built.
 - Mass inside (`galaxy::inside_mass`):
-  `hole_mass (1 + rings within r / all rings)`, with a ring counted by the
-  share of its span inside `r`. Status: built.
-- Turning law (`turning.rs`): `omega = c delta(<r) / r`, with
-  `delta(<r) = M(<r) / (r + M(<r))` in `r_g`. Status: built.
+  `1 + rings within r / all rings` core masses, with a ring counted by the
+  share of its span inside `r` (galaxy rings). Status: built.
+- Turning law (`turning::turning`, `turning::turning_dy`):
+  `omega = delta(<r) bell / r` radians per ring, with `r` in `r_g`
+  (`r Tier::in_rg`), `delta(<r) = M(<r) / (r + M(<r))`, `M` in core masses
+  and `bell` in `r_g / c` (`Anchor::bell`). Status: built.
 - Piece of gas (`formation::cooling`): `lambda = (state / unit) / W`; the
   agitation is `a0 = (p - delta) / p` with `delta = h / (R + h)` and
   `h = 1 + held share`; `e = sum s_z e_z` and `mu = lambda e`; `n = 1`
@@ -283,11 +285,11 @@ another crate. Laws are composed from shares (ratios of the form
 - First light (`galaxy::birth`): the first light of the piece at the
   star's reach falls at `max(cools_in, 1)` rings; there is none where the
   piece never lights. Status: built.
-- Birth along the ring (`chem::Chemistry::birth_along`): the birth time is
-  the `t` (rings) with `F(t) = F(t0) + u (F(top) - F(t0))`, where `top` is
-  the 30 Gyr horizon read in rings, found by 48 halvings. `F` is the ring's `sfr` integrated term by
-  term, `c p! / k^(p+1) (1 - e^(-kt) sum_(j<=p) (kt)^j / j!)`, or
-  `c t^(p+1) / (p + 1)` at `k = 0` (`chem::formed_by`). Status: built.
+- Birth along the ring (`chem::Chemistry::birth_along`): the birth time is the
+  `t` (rings) with `F(t) = F(t0) + u (F(top) - F(t0))`, where `top` is the 30
+  Gyr horizon read in rings, found by 48 halvings. `F` is the ring's `sfr`
+  integrated term by term, `c p! / k^(p+1) (1 - e^(-kt) sum_(j<=p) (kt)^j /
+  j!)`, or `c t^(p+1) / (p + 1)` at `k = 0` (`chem::formed_by`). Status: built.
 - Star formation per ring (`chem::Model::of`): the rate is
   `efficiency x Omega / 2 pi` with `Omega = v_flat / r`; the gas is a sum of
   `c t^m e^(-lambda t)` terms, with infall on the ring's first-light
@@ -309,9 +311,14 @@ another crate. Laws are composed from shares (ratios of the form
   `m = lo + mb x / (1 - x)` with `x = u (hi - lo) / (hi - lo + mb)`,
   `mb = 1/2 x 2d / (1 + d)` clamped to `[1.01 lo, 0.99 hi]`, `lo = 0.08` and
   `hi = 60`. Status: placeholder.
-- Vertical orbit (`galaxy::vertical`, `galaxy::layer_kpc`,
-  `galaxy::vertical_frequency`): the vertical orbit uses declared scales.
-  Status: placeholder.
+- Vertical orbit (`galaxy::vertical`, `galaxy::layer`,
+  `galaxy::vertical_frequency`): `nu = omega 2d / (1 + d)` radians per ring
+  (turning law about `M(<r)`, crowding `d`);
+  `h = r m / (M(<r) + m)` galaxy rings (`m` the ring's mass,
+  `galaxy::ring_mass`); `s = t / (1 + t)` with
+  `t = age / cooling time` (`galaxy::birth`); `sigma = h nu s 2d / (1 + d)`;
+  `vz = -sigma ln(1 - u)`, `A = vz / nu`, period `2 pi / nu`, exposure
+  `atan(h / A) / (pi / 2)` where `A > h`, else 1. Status: built.
 
 ## 6. Stars and systems
 

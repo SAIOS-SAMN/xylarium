@@ -226,7 +226,7 @@ pub fn is_world(mass: &Q, radius: &Q, icy: bool) -> bool {
 }
 
 /// The share of worlds at reach `a` (AU) that keep their star for `gyr`, the
-/// star circling at `r` kpc. Provisional: stellar encounters are not yet
+/// star circling at `r` galaxy rings. Provisional: stellar encounters are not yet
 /// modelled (a column-density reading stripped every world), so every world
 /// keeps its star.
 pub fn survival(_a: &Q, _r: &Q, _gyr: &Q) -> Q {
@@ -277,10 +277,11 @@ pub fn system(
     };
     let (regions, belt_share) =
         crate::disc::manifold_worlds(&frame.star_share, &frame.a_disc, &frame.tide);
-    // The worlds' outer edge is the star's manifold reach (AU); a world's
-    // reach is its region's share of it.
+    // The worlds' outer edge is the star's manifold reach (AU, from galaxy
+    // rings through the boundary `galaxy::kpc_of_rings`); a world's reach is
+    // its region's share of it.
     let a_out = held(
-        &(&frame.reach_kpc * &crate::package::Si::kpc())
+        &(&crate::galaxy::kpc_of_rings(&frame.reach) * &crate::package::Si::kpc())
             .checked_div(&crate::package::Si::au())
             .unwrap_or(Q::ZERO),
     );
@@ -473,7 +474,7 @@ fn planet(
     z: &Q,
     env: &Q,
     sigma1: &Q,
-    r_kpc: &Q,
+    reach: &Q,
 ) -> Option<Option<(World, Q, Q)>> {
     let oq = e.a.clone();
     let t_form = spec.t_form(&oq);
@@ -536,7 +537,7 @@ fn planet(
         .collect();
     let icy = ice_share > Q::ratio(1, 5);
     // A world is lost when its survival share is below one half.
-    let lost = survival(&oq, r_kpc, &settled_gyr()) < Q::ratio(1, 2);
+    let lost = survival(&oq, reach, &settled_gyr()) < Q::ratio(1, 2);
     if !is_world(&total, &radius, icy) || lost {
         return Some(None);
     }

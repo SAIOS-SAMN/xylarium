@@ -22,7 +22,7 @@
 //!   With a cache folder, each star's share is stored under a key of the
 //!   star's inputs and the source digest ([`life_digest`]) and reused while
 //!   both are unchanged.
-//! - [`ancients`]: the core-born minds (within `galaxy::core_kpc` of their
+//! - [`ancients`]: the core-born minds (within `galaxy::core_reach` of their
 //!   galactic core, [`in_core`]) that wake within [`ancient_window`] of that
 //!   core's first core-born mind ([`first_core_dawn`]).
 //! - [`Schedule::encode`] and [`Schedule::decode`]: exact bytes via
@@ -207,7 +207,7 @@ fn star_life(
             return;
         }
         let born = crate::circuit::gyr_of_rings_dy(Dy::from_q(&star.born));
-        let t0 = born + first_age(Dy::from_q(&star.r), ctx);
+        let t0 = born + first_age(crate::galaxy::kpc_of_rings_dy(Dy::from_q(&star.r)), ctx);
         if t0 >= horizon_gyr() {
             return;
         }
@@ -383,7 +383,7 @@ fn star_key(gal: &Galaxy, n: u64, star: &crate::galaxy::Star) -> String {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Sight {
     /// The cores' sight: the ancients hold each galaxy's reference clock, so
-    /// every star within the galaxy's core (within `galaxy::core_kpc`) is
+    /// every star within the galaxy's core (within `galaxy::core_reach`) is
     /// observed.
     Cores,
     /// Every sample star unrolled: a census, requested explicitly.

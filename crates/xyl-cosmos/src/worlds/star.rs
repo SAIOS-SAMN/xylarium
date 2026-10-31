@@ -78,5 +78,8 @@ pub fn crowd_r0() -> Dy {
 /// star-formation share and the orbit's exposure scale it where it is read
 /// (`life`).
 pub fn cosmic_rays(r_kpc: Dy) -> Dy {
-    Dy::from_q(&crate::galaxy::density(&r_kpc.to_q()).mid()).max(Dy::ZERO)
+    // The reach is read in galaxy rings through the boundary
+    // `galaxy::rings_of_kpc`.
+    let r = crate::galaxy::rings_of_kpc(&r_kpc.to_q());
+    Dy::from_q(&crate::galaxy::density(&r).mid()).max(Dy::ZERO)
 }

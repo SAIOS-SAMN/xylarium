@@ -37,6 +37,17 @@ may change public APIs and the model's laws.
   the 3Q capacity and the polarity R).
 - The Markdown documentation is edited to complete sentences in technical
   prose.
+- The turning law is evaluated in core units, `omega = delta bell / r`
+  radians per ring (`turning::turning`, `turning::turning_dy`), in place of
+  `turning_kpc` and `turning_kpc_dy`; the SI forms remain as boundaries for
+  the system and body layers.
+- The galaxy's structure, star reaches and orbits are in galaxy rings and
+  core masses (`galaxy::core_reach`, `galaxy::nucleus_reach`,
+  `DiscFrame::reach`); kpc and suns appear at display and at the marked
+  boundaries `galaxy::kpc_of_rings` and `galaxy::suns_of_core_masses`.
+- The vertical orbit is derived from the turning law, the crowding and the
+  ring structure (`galaxy::layer`, `galaxy::vertical_frequency`), in place
+  of the declared 75.2 rad/Gyr, 20 km/s, 10 Gyr and 0.3 kpc.
 
 ### Removed
 

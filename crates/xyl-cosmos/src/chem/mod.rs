@@ -4,8 +4,10 @@
 //! Inputs: `bang::BigBang` (first stars, star efficiency, the founding's
 //! light nuclei via `elements::founded`, read as [`Light`]), `galaxy`
 //! (`birth` for each ring's first light, `density` for the disc profile,
-//! `core_kpc`), `centre::galaxy_episode` for the core's echo, and the
-//! element table's channel shares (`elements::Channel`). Radii are kpc,
+//! `core_reach`), `centre::galaxy_episode` for the core's echo, and the
+//! element table's channel shares (`elements::Channel`). Reaches at the
+//! public interface are galaxy rings, read in kpc inside through the
+//! boundary `galaxy::kpc_of_rings` (`ring_of`); the model's radii are kpc,
 //! times rings after the Big Bang (one ring one bell), rates per ring,
 //! surface densities suns per pc^2. The rulers measured in Gyr (the slow
 //! return, the delay windows, the patch's window, the calibration epochs)
@@ -118,7 +120,7 @@ impl Rulers {
     pub fn today() -> Q {
         crate::turning::span_in_rings(&decimal("13.8").unwrap_or(Q::ZERO))
     }
-    /// The reference ring (kpc): the galaxy's half-holding reach
+    /// The reference ring (galaxy rings): the galaxy's half-holding reach
     /// (`galaxy::r0`), read from the founding's structure.
     pub fn r0() -> Q {
         crate::galaxy::r0()
@@ -227,7 +229,7 @@ impl Params {
         Params {
             first_stars: bang.first_stars().mid(),
             infall: (0..RINGS)
-                .map(|j| crate::galaxy::birth(&ring_mid(j)))
+                .map(|j| crate::galaxy::birth(&crate::galaxy::rings_of_kpc(&ring_mid(j))))
                 .collect(),
             efficiency: bang.efficiency.clone(),
         }
@@ -261,9 +263,10 @@ fn infall_time(p: &Params, j: usize) -> Option<Q> {
 }
 
 fn sigma_total(r: &Q) -> Encl {
-    // The disc's profile is the galaxy's crowding (`galaxy::density`), scaled
-    // to the reference ring's surface density.
-    crate::galaxy::density(r).mul(&Encl::exact(Rulers::sigma_r0()))
+    // The disc's profile is the galaxy's crowding (`galaxy::density`, read in
+    // galaxy rings through the boundary `galaxy::rings_of_kpc`), scaled to
+    // the reference ring's surface density.
+    crate::galaxy::density(&crate::galaxy::rings_of_kpc(r)).mul(&Encl::exact(Rulers::sigma_r0()))
 }
 
 /// The value of ln 10: the midpoint of its 72-bit enclosure (1 if the enclosure fails).
@@ -271,10 +274,13 @@ pub fn ln10() -> Q {
     ln(&Q::int(10), BITS).map(|e| e.mid()).unwrap_or(Q::ONE)
 }
 
-/// The index of the ring holding radius `r` (kpc): floor(2r), clamped to
-/// [0, RINGS - 1].
+/// The index of the ring holding reach `r` (galaxy rings): floor(2 r_kpc),
+/// clamped to [0, RINGS - 1], with the reach read in kpc through the
+/// boundary `galaxy::kpc_of_rings` until the chemistry's rings are galaxy
+/// rings.
 pub fn ring_of(r: &Q) -> usize {
-    let j = (r * &Q::int(2)).floor_i128().unwrap_or(0).max(0);
+    let r_kpc = crate::galaxy::kpc_of_rings(r);
+    let j = (&r_kpc * &Q::int(2)).floor_i128().unwrap_or(0).max(0);
     usize::try_from(j).unwrap_or(0).min(RINGS - 1)
 }
 

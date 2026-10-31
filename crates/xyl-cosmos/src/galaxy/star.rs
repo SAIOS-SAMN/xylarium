@@ -3,19 +3,20 @@
 //! `t`. Times are rings after the Big Bang, rates per ring.
 
 use super::{
-    birth, core_kpc, core_of, density, inside_mass, nucleus_kpc, nucleus_mass, reach_at, sample,
-    stellar_mass, vertical, vertical_frequency, Pop, Vertical, CORE_SHIFT, GRID_BITS, NUCLEUS_BASE,
-    NUCLEUS_SAMPLE,
+    birth, core_of, core_reach, density, inside_mass, nucleus_mass, nucleus_reach, reach_at,
+    sample, stellar_mass, suns_of_core_masses, vertical, vertical_frequency, Pop, Vertical,
+    CORE_SHIFT, GRID_BITS, NUCLEUS_BASE, NUCLEUS_SAMPLE,
 };
 use crate::bang::BigBang;
 use crate::chain::Place;
 use xyl_core::certified::{cos_sin_turns, down, pi, Encl};
 use xyl_core::dyadic::Dy;
 use xyl_core::measure;
+use xyl_core::units::Tier;
 use xyl_core::{Stream, Q};
 
-/// 1 / (2 pi), enclosed once: converts the vertical swing's radians per ring
-/// to turns (the plane's restoring pull is not yet expressed in angles).
+/// 1 / (2 pi), enclosed once: converts the turning law's and the vertical
+/// swing's radians per ring to turns.
 fn inv_two_pi() -> &'static Encl {
     static K: std::sync::OnceLock<Encl> = std::sync::OnceLock::new();
     K.get_or_init(|| {
@@ -30,13 +31,13 @@ fn inv_two_pi() -> &'static Encl {
 }
 
 /// A star's galactic manifold from the core (`chain`): its radius, turning
-/// rate and plane. Every angle is held as an exact fraction of a turn, and the rate
-/// comes from the turning law, so the phase is exact at every t.
+/// rate and plane. The plane's angles are held as exact half-angles, and the
+/// rate comes from the turning law, exact in radians per ring.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Orbit {
-    /// Orbit radius (kpc), scaled by the galaxy's length scale.
+    /// Orbit radius (galaxy rings), scaled by the galaxy's length scale.
     pub radius: Dy,
-    /// Turning rate (degrees per ring, exact), from the turning law.
+    /// Turning rate (radians per ring), from the turning law.
     pub rate: Dy,
     /// Orbital phase at the Big Bang (turns, exact).
     pub turns0: Dy,
@@ -63,9 +64,10 @@ impl Orbit {
         Rotor::about(2, &h(self.node)).then_after(&Rotor::about(0, &h(self.tilt)))
     }
 
-    /// Orbital phase at `t` rings (turns): initial phase plus turning, exact.
+    /// Orbital phase at `t` rings (turns): the initial phase plus the
+    /// turning, `turns0 + omega t / (2 pi)`.
     pub fn turns_at(&self, t: Dy) -> Dy {
-        self.turns0 + self.rate * t / Dy::int(360)
+        self.turns0 + self.rate * t * Dy::from_q(&inv_two_pi().mid())
     }
 }
 
@@ -74,8 +76,8 @@ impl Orbit {
 pub struct Star {
     /// Index in the galaxy's sample.
     pub n: u64,
-    /// Home-equivalent distance from the core (kpc), exact; sets the gas
-    /// conditions the star formed in.
+    /// Home-equivalent distance from the core (galaxy rings), exact; sets the
+    /// gas conditions the star formed in.
     pub r: Q,
     /// Birth time (rings after the Big Bang), rounded to the grid.
     pub born: Q,
@@ -87,8 +89,9 @@ pub struct Star {
     pub orbit: Orbit,
     /// Population.
     pub pop: Pop,
-    /// Stellar mass this sample star represents (suns), scaled by the hole
-    /// ratio for a homologue.
+    /// Stellar mass this sample star represents (suns, as `mass`; boundary
+    /// until star masses are in core masses), scaled by the hole ratio for a
+    /// homologue.
     pub stands_for: Dy,
     /// The star's galactic core index (0 for the home galaxy). `r` above is
     /// the home-equivalent radius used for gas and chemistry; `orbit.radius`
@@ -110,25 +113,25 @@ impl Star {
     /// (`stars::reach_rings`); the galaxy's reach about the universal core is
     /// one tier up and is not added to it.
     pub fn reach_rings(&self) -> Dy {
-        crate::stars::reach_rings(self.orbit.radius)
+        self.orbit.radius.max(Dy::ZERO)
     }
 
-    /// The galaxy's turning rate (degrees per ring) at radius `own_kpc` in the
-    /// star's galaxy: the turning law over the home-equivalent mass inside
-    /// times the hole ratio, as for the star's orbital rate (used for
-    /// constellation shear).
-    pub fn rate_at_dy(&self, own_kpc: Dy) -> Dy {
+    /// The galaxy's turning rate (radians per ring) at radius `own` (galaxy
+    /// rings) in the star's galaxy: the turning law over the home-equivalent
+    /// mass inside times the hole ratio (core masses), as for the star's
+    /// orbital rate (used for constellation shear).
+    pub fn rate_at_dy(&self, own: Dy) -> Dy {
         let scale = self.scale.max(Dy::sci(1, -12));
-        let inside = super::inside_mass_dy(own_kpc / scale) * self.mass_ratio;
-        crate::turning::turning_kpc_dy(inside, own_kpc)
+        let inside = super::inside_mass_dy(own / scale) * self.mass_ratio;
+        crate::turning::turning_dy(inside, own, Tier::Galaxy)
     }
 
     /// Whether the star's home-equivalent radius is within the core's reach.
     pub fn in_core(&self) -> bool {
-        self.r <= core_kpc()
+        self.r <= core_reach()
     }
 
-    /// Bearing from the star's galactic core at `t` rings (galaxy units,
+    /// Bearing from the star's galactic core at `t` rings (galaxy rings,
     /// relative to the core's place): reach (orbit radius), unit direction
     /// (the plane's frame applied to the phase; exact half-angles), and climb
     /// off the plane (a disc star's vertical swing, zero otherwise).
@@ -143,19 +146,19 @@ impl Star {
             Some((u, phase)) => {
                 // `z = A sin(phase + nu t / (2 pi) turns)`, evaluated at the
                 // home-equivalent radius, A scaled by the galaxy's length scale.
-                let age = (t - Dy::from_q(&self.born)).max(Dy::ZERO);
+                let born = Dy::from_q(&self.born);
+                let age = (t - born).max(Dy::ZERO);
                 let r_home = Dy::from_q(&self.r);
-                let v = vertical(r_home, age, u, phase);
+                let v = vertical(r_home, born, age, u, phase);
                 let turned = Encl::exact((vertical_frequency(r_home) * t).to_q()).mul(inv_two_pi());
                 let swing = Encl::exact(phase.to_q()).add(&turned);
-                Encl::exact((v.amp_kpc * self.scale).to_q())
+                Encl::exact((v.amp * self.scale).to_q())
                     .mul(&cos_sin_turns(&swing).1)
                     .mid()
             }
             None => Q::ZERO,
         };
-        let k = crate::chain::kpc();
-        (&o.radius.to_q() * &k, dir, &climb * &k)
+        (o.radius.to_q(), dir, climb)
     }
 
     /// The star's place at `t` rings on its galaxy's sphere, with its core on
@@ -173,13 +176,15 @@ impl Star {
         )
     }
 
-    /// The vertical orbit at `age` rings, evaluated at the orbit radius (`None`
-    /// for a bulge or nucleus star, which does not orbit in the disc's
-    /// plane).
+    /// The vertical orbit at `age` rings, evaluated at the home-equivalent
+    /// radius as in [`Star::bearing`] (`None` for a bulge or nucleus star,
+    /// which does not orbit in the disc's plane). Lengths are home-equivalent
+    /// galaxy rings; the star's galaxy scales them by `scale`.
     pub fn vertical_at(&self, age: Dy) -> Option<Vertical> {
+        let (r, born) = (Dy::from_q(&self.r), Dy::from_q(&self.born));
         self.orbit
             .swing
-            .map(|(u, phase)| vertical(self.orbit.radius, age, u, phase))
+            .map(|(u, phase)| vertical(r, born, age, u, phase))
     }
 
     /// The share of the vertical oscillation spent inside the crowded layer
@@ -190,7 +195,7 @@ impl Star {
 }
 
 /// A sample star's place in its galaxy before scaling: home-equivalent
-/// radius (kpc), population, tilt and node half-angles and initial phase.
+/// radius (galaxy rings), population, tilt and node half-angles and initial phase.
 struct Placement {
     radius: Dy,
     pop: Pop,
@@ -211,13 +216,13 @@ fn placement(local: u64, nucleus: bool) -> Placement {
     // Radius: the share as a fraction of the rings' cumulative holding (of
     // the nucleus's rings only, for a nucleus star).
     let radius = if nucleus {
-        reach_at(pivot(&silver_turns()), Some(&nucleus_kpc()))
+        reach_at(pivot(&silver_turns()), Some(&nucleus_reach()))
     } else {
         reach_at(pivot(&silver_turns()), None)
     };
     let pop = if nucleus {
         Pop::Nucleus
-    } else if radius.to_q() <= core_kpc() {
+    } else if radius.to_q() <= core_reach() {
         Pop::Bulge
     } else {
         Pop::Disc
@@ -244,27 +249,32 @@ fn placement(local: u64, nucleus: bool) -> Placement {
     }
 }
 
-/// A star's turning rate (degrees per ring): the turning law over the
-/// home-equivalent mass inside `radius` times the hole ratio, at the scaled
-/// radius `radius x scale`; both radii are at least 1e-6 kpc and rounded
-/// down to the 2^-60 grid.
+/// A star's turning rate (radians per ring): the turning law
+/// `omega = delta bell / r` over the home-equivalent mass inside `radius`
+/// (core masses) times the hole ratio, at the scaled radius
+/// `radius x scale` (galaxy rings); both radii are at least 1e-6 galaxy
+/// rings and rounded down to the 2^-60 grid.
 fn turning_rate(radius: Dy, scale: Dy, mass_ratio: Dy) -> Dy {
     let r_q = down(&radius.max(Dy::sci(1, -6)).to_q(), 60);
     let own_r = down(&(radius * scale).max(Dy::sci(1, -6)).to_q(), 60);
-    Dy::from_q(&crate::turning::turning_kpc(
+    Dy::from_q(&crate::turning::turning(
         &(&inside_mass(&r_q) * &mass_ratio.to_q()),
         &own_r,
+        Tier::Galaxy,
     ))
 }
 
-/// The home-galaxy stellar mass one sample star stands for (suns): the
+/// The home-galaxy stellar mass one sample star stands for (suns, as the
+/// star masses, through the boundary `suns_of_core_masses`): the
 /// population's mass (nucleus, or the whole galaxy) over the population's
 /// sample size.
 fn stands_for(bang: &BigBang, nucleus: bool) -> Dy {
     if nucleus {
-        Dy::from_q(&nucleus_mass()) / Dy::int(i64::try_from(NUCLEUS_SAMPLE).unwrap_or(1))
+        Dy::from_q(&suns_of_core_masses(&nucleus_mass()))
+            / Dy::int(i64::try_from(NUCLEUS_SAMPLE).unwrap_or(1))
     } else {
-        Dy::from_q(&stellar_mass()) / Dy::int(i64::try_from(sample(bang)).unwrap_or(1))
+        Dy::from_q(&suns_of_core_masses(&stellar_mass()))
+            / Dy::int(i64::try_from(sample(bang)).unwrap_or(1))
     }
 }
 

@@ -81,6 +81,7 @@ fn star_on_manifold(
     let frac = s.orbit.turns_at(t).to_q().frac();
     let reach = s.reach_rings();
     let age = t - Dy::from_q(&s.born);
+    let radius_kpc = xyl_cosmos::galaxy::kpc_of_rings_dy(s.orbit.radius);
     format!(
         concat!(
             "  star {:>4} of core {} ({} {}): from its core {}, height {}, phase {} deg, ",
@@ -94,7 +95,7 @@ fn star_on_manifold(
         show(&way),
         show(&height),
         show(&(&frac * &Q::int(360))),
-        s.orbit.radius,
+        radius_kpc,
         reach,
         show(&xyl_cosmos::circuit::gyr_of_rings(
             &xyl_cosmos::stars::life(reach)
@@ -115,6 +116,12 @@ fn rational(s: &str) -> Q {
     xyl_cosmos::elements::decimal(s).unwrap_or(Q::ZERO)
 }
 
+/// A reach given in kpc for display, in galaxy rings (the chemistry's unit
+/// of reach), converted through `galaxy::rings_of_kpc`.
+fn rings(kpc: &str) -> Q {
+    xyl_cosmos::galaxy::rings_of_kpc(&rational(kpc))
+}
+
 /// An optional rational, printed, or "-".
 fn show_or_dash(v: Option<Q>) -> String {
     v.map(|x| Dy::from_q(&x).to_string())
@@ -132,14 +139,14 @@ pub(super) fn chemistry(u: &Universe<'_>) -> String {
         for r in ["2", "4", "8", "13"] {
             // The chemistry counts time in rings; the epoch converts here.
             let t = xyl_cosmos::circuit::rings_of_gyr(&rational(t));
-            let at = |s: &str| show_or_dash(chem.relative(s, &rational(r), &t, &Q::ONE));
+            let at = |s: &str| show_or_dash(chem.relative(s, &rings(r), &t, &Q::ONE));
             out.push_str(&format!(
                 "    {r:>2} kpc  O {}  Fe {}  N {}  Eu {}  metals {}\n",
                 at("O"),
                 at("Fe"),
                 at("N"),
                 at("Eu"),
-                show_or_dash(chem.metals(&rational(r), &t))
+                show_or_dash(chem.metals(&rings(r), &t))
             ));
         }
     }
@@ -152,7 +159,7 @@ pub(super) fn chemistry(u: &Universe<'_>) -> String {
     let today = xyl_cosmos::circuit::rings_of_gyr(&rational("13.8"));
     let dt = &today - &model.params.first_stars;
     for r in ["2", "4", "8", "13"] {
-        let k = xyl_cosmos::chem::ring_of(&rational(r));
+        let k = xyl_cosmos::chem::ring_of(&rings(r));
         if let Some(ring) = model.rings.get(k) {
             out.push_str(&format!(
                 "  {r:>2} kpc  gas {}  star formation {}  metals {}\n",
@@ -161,7 +168,7 @@ pub(super) fn chemistry(u: &Universe<'_>) -> String {
                 show_or_dash(Some(xyl_cosmos::circuit::rings_of_gyr(
                     &ring.sfr.at(&dt).mid()
                 ))),
-                show_or_dash(chem.metals(&rational(r), &today))
+                show_or_dash(chem.metals(&rings(r), &today))
             ));
         }
     }
@@ -178,7 +185,7 @@ pub(super) fn chemistry(u: &Universe<'_>) -> String {
             .iter()
             .map(|sym| {
                 let rel = chem
-                    .relative(sym, &rational("8"), &today, &Q::ONE)
+                    .relative(sym, &rings("8"), &today, &Q::ONE)
                     .unwrap_or(Q::ZERO);
                 format!(
                     "{sym} {}",
@@ -238,10 +245,13 @@ pub(super) fn tiers(o: &Options, n: u64) -> Result<String, String> {
     ));
     // The star about its galaxy's core: reach R and holding H (the r_g of the
     // enclosed mass), both in galaxy echo rings; the count is 1 + R / H.
-    let r_m = &star.orbit.radius.to_q() * &kpc_m;
-    let inside = &(&xyl_cosmos::galaxy::inside_mass(&star.r)
-        * &xyl_cosmos::cores::ratio_of_scale(&scale))
-        * &star_mass_kg;
+    let radius_kpc = xyl_cosmos::galaxy::kpc_of_rings(&star.orbit.radius.to_q());
+    let r_m = &radius_kpc * &kpc_m;
+    // The mass inside is in core masses; the display reads it in kg.
+    let inside_suns = xyl_cosmos::galaxy::suns_of_core_masses(
+        &(&xyl_cosmos::galaxy::inside_mass(&star.r) * &xyl_cosmos::cores::ratio_of_scale(&scale)),
+    );
+    let inside = &inside_suns * &star_mass_kg;
     let (reach, hold) = (
         r_m.checked_div(&ring_g).unwrap_or(Q::ZERO),
         rg(&inside).checked_div(&ring_g).unwrap_or(Q::ZERO),
@@ -253,7 +263,7 @@ pub(super) fn tiers(o: &Options, n: u64) -> Result<String, String> {
             "its turn {} rings of its galaxy's echo = {} yr\n"
         ),
         n,
-        star.orbit.radius,
+        Dy::from_q(&radius_kpc),
         show(&hold.checked_div(&(&reach + &hold)).unwrap_or(Q::ZERO)),
         show(&count),
         show(&years(&(&count * &ring_g)))

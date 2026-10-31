@@ -259,7 +259,7 @@ impl Flows {
         // the ring at the core's reach with e-fold time the galaxy's echo
         // (`centre::galaxy_episode`, rings); the share of the jets that falls
         // back inside stays in the core.
-        let edge = ring_of(&crate::galaxy::core_kpc());
+        let edge = ring_of(&crate::galaxy::core_reach());
         let back_in = maps[edge].1.clone();
         let echo = crate::centre::galaxy_episode();
         let release = &rate_of(&echo) * &(&Q::ONE - &back_in);

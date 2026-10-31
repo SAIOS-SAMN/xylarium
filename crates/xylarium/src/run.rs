@@ -653,7 +653,7 @@ fn template_census(anchor: &xyl_cosmos::circuit::Anchor, bang: &BigBang) -> Stri
             sub.beads.len(),
             sub.galaxies().len(),
             sub.lighting.lit,
-            xyl_cosmos::galaxy::stellar_mass(),
+            xyl_cosmos::galaxy::suns_of_core_masses(&xyl_cosmos::galaxy::stellar_mass()),
             xyl_cosmos::galaxy::sample(bang),
         ));
         let all = sub.holding();

@@ -51,7 +51,9 @@ pub fn settings<'a>(gal: &Galaxy, path: &[u64], sys: &'a System, star: &Star) ->
         Dy::from_q(&sys.spec.mass),
         Dy::from_q(&sys.spec.lum),
         Dy::from_q(&z),
-        Dy::from_q(&star.r),
+        // The worlds read the reach in kpc through the boundary
+        // `galaxy::kpc_of_rings`.
+        crate::galaxy::kpc_of_rings_dy(Dy::from_q(&star.r)),
     );
     let mut planet = 0usize;
     let mut paths: Vec<Option<Path>> = Vec::with_capacity(sys.worlds.len());

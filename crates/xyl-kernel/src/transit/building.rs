@@ -160,7 +160,12 @@ impl Network {
         let by_n: CoreAndRadius = self
             .sample
             .iter()
-            .map(|s| (s.star.n, (s.star.core, s.star.orbit.radius)))
+            // Orbit radii in kpc, through the boundary
+            // `galaxy::kpc_of_rings_dy`.
+            .map(|s| {
+                let r = xyl_cosmos::galaxy::kpc_of_rings_dy(s.star.orbit.radius);
+                (s.star.n, (s.star.core, r))
+            })
             .collect();
         let mine = self.joined_by_core(&joined, &by_n);
         let placer = Placer::new(self, start);

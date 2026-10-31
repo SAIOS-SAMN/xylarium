@@ -219,23 +219,24 @@ Landed:
   seconds enter only through `Si::seconds_per_ring`, used by the display
   and the temporary boundary helpers `circuit::rings_of_gyr` and
   `gyr_of_rings`, which are removed when the last layer is converted.
+- Layer B, part 1, the turning law, the galaxy's structure and star orbits,
+  and the vertical orbit: the turning law is `omega = delta(<r) bell / r`
+  radians per ring in core units (`turning::turning`, `turning_dy`); the
+  structure, `inside_mass`, `stellar_mass`, star reaches and orbit radii
+  are in galaxy rings and core masses; the vertical orbit is derived
+  (`nu = omega 2d / (1 + d)`, `h = r m / (M(<r) + m)`,
+  `s = t / (1 + t)`, `t` the age over the ring's cooling time,
+  `sigma = h nu s 2d / (1 + d)`). The layers above read kpc and suns
+  through the marked boundaries `galaxy::kpc_of_rings`,
+  `galaxy::rings_of_kpc` and `galaxy::suns_of_core_masses` /
+  `core_masses_of_suns`; the SI forms of the turning law (`turning_si`,
+  `turning_rad_s`) remain as boundaries for the system and body layers.
 
 Next:
 
 1. Layer B, the galaxy tier (`galaxy`, `stars`, `chem`, `pulse`, `field`,
    `turning`, `centre`, `manifold`). The interim conversions of Gyr-valued
    rulers made in this layer are replaced:
-   - The turning law in core units, exact: `omega = delta(<r) bell / r`
-     radians per ring, `r` in tier units and `M` in core masses, in place
-     of the SI path through kpc, kg and seconds.
-   - Galaxy structure and star orbits in galaxy-tier units and core masses,
-     in place of kpc and suns.
-   - The vertical orbit from the turning law and the ring structure: the
-     plane's frequency is the turning rate times the crowding share, the
-     layer's half-thickness over the reach is the ring's deficit share
-     against the mass inside it, and the heating share is the star's age
-     over the ring's age since first light. This replaces 75.2 rad/Gyr,
-     20 km/s, 10 Gyr and 0.3 kpc.
    - Star masses as the share of a piece's infall the star holds
      (`disc::star_cut`), in place of the initial mass function's 0.08 and
      60 suns; a bead is a galaxy where its lit holding is at least one
@@ -383,10 +384,9 @@ layer, each with the quantity that is to derive it.
   (`hole_mass`), is declared until the package supplies it. The SI seam
   (`Si`: the unit world, the sun, the AU, the kpc, c, G, the year and the
   physical constants) is kept for display once each layer reads core units.
-- **Home galaxy and chemistry** (`galaxy`, `chem`): The vertical orbit's
-  scales and the chemistry's rulers (`chem::Rulers`: ring width, surface
-  density, returns, loading, yields) are to be derived from the enrichment
-  that the founding produces.
+- **Home galaxy and chemistry** (`galaxy`, `chem`): The chemistry's rulers
+  (`chem::Rulers`: ring width, surface density, returns, loading, yields) are to
+  be derived from the enrichment that the founding produces.
 - **Systems and worlds** (`systems`, `worlds`, `bodies`, `turning`): The
   light's warmth `278 L / a` (`Spec::t_form`), the world scales and
   cosmic-ray reference (`worlds::crowd_r0`), the laboratory rock and iron

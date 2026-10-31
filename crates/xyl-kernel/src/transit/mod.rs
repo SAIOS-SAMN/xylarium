@@ -71,24 +71,12 @@ pub use voyage::{
 };
 
 use xyl_core::dyadic::Dy;
-use xyl_core::Q;
 use xyl_cosmos::package::Si;
 
 /// Returns one astronomical unit in metres.
 #[cfg(test)]
 fn au_m() -> Dy {
     Dy::from_q(&Si::au())
-}
-
-/// Returns the speed of one km/s in kpc per Gyr: 1000 m/s times one Gyr in
-/// seconds, divided by one kiloparsec in metres (the SI seam
-/// `xyl_cosmos::package::Si`). Returns zero if the division is undefined.
-pub fn kms_to_kpc_gyr() -> Dy {
-    Dy::from_q(
-        &(&Q::int(1000) * &Si::gyr_s())
-            .checked_div(&Si::kpc())
-            .unwrap_or(Q::ZERO),
-    )
 }
 
 /// Returns one kiloparsec in metres, read from the SI seam (`package::Si`).

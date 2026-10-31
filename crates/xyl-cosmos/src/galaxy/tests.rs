@@ -29,32 +29,35 @@ fn stars_circle_the_core_and_the_core_holds_its_share() {
         .rings
         .last()
         .map(|r| r.1.clone())
-        .unwrap_or(rim_kpc());
+        .unwrap_or(crate::circuit::anchor().rim);
     assert!(stars.iter().all(|s| s.orbit.radius.to_q() <= edge));
-    // A star's distance from its core is its orbit radius to within 0.5 kpc,
-    // and its place changes with t.
+    // A star's distance from its core is its orbit radius plus its climb,
+    // never beyond the swing's amplitude, and its place changes with t.
     let r = crate::chain::radius();
     let s = &stars[0];
     let (p0, p1) = (s.place(Dy::int(5), &r), s.place(Dy::sci(51, -1), &r));
-    let from_core = crate::minds::from_centre_kpc(s, crate::circuit::gyr_of_rings_dy(Dy::int(5)));
+    let (reach, _, climb) = s.bearing(Dy::int(5));
+    let swing = s
+        .vertical_at(Dy::int(5) - Dy::from_q(&s.born))
+        .map(|v| v.amp * s.scale)
+        .unwrap_or(Dy::ZERO);
+    assert_eq!(Dy::from_q(&reach), s.orbit.radius);
     assert!(
-        (from_core - s.orbit.radius).abs() < Dy::ratio(1, 2),
-        "{} vs {}",
-        from_core,
-        s.orbit.radius
+        Dy::from_q(&climb.abs()) <= swing + Dy::sci(1, -9),
+        "{climb}"
     );
     assert!(p0 != p1, "it moves");
-    // A disc star stays within 2 kpc of the plane.
+    // A disc star stays within its swing's amplitude of the plane.
     let height = |s: &Star, t: Dy| {
         let (reach, dir, climb) = s.bearing(t);
-        Dy::from_q(
-            &(&(&dir[2] * &reach).abs() + &climb.abs())
-                .checked_div(&crate::chain::kpc())
-                .unwrap(),
-        )
+        Dy::from_q(&(&(&dir[2] * &reach).abs() + &climb.abs()))
     };
     let disc = stars.iter().find(|s| s.pop == Pop::Disc).unwrap();
-    assert!(height(disc, Dy::int(8)) < Dy::int(2));
+    let amp = disc
+        .vertical_at((Dy::int(8) - Dy::from_q(&disc.born)).max(Dy::ZERO))
+        .unwrap()
+        .amp;
+    assert!(height(disc, Dy::int(8)) <= amp * disc.scale + Dy::sci(1, -9));
     // Nucleus orbits are tilted, so some stars lie off the plane by more
     // than a tenth of their radius, all within the nucleus; if the nucleus
     // never lights, no nucleus star exists.
@@ -69,13 +72,13 @@ fn stars_circle_the_core_and_the_core_holds_its_share() {
             .any(|s| height(s, Dy::int(3)) > s.orbit.radius / Dy::int(10)));
         assert!(
             nuc.iter()
-                .all(|s| s.pop == Pop::Nucleus && s.orbit.radius.to_q() <= nucleus_kpc()),
+                .all(|s| s.pop == Pop::Nucleus && s.orbit.radius.to_q() <= nucleus_reach()),
             "within the nucleus"
         );
     }
-    // The mass inside r includes the hole and grows outward.
-    assert!(inside_mass(&Q::ratio(1, 1000)) >= hole_mass());
-    assert!(inside_mass(&rim_kpc()) >= inside_mass(&r0()));
+    // The mass inside r includes the universal core and grows outward.
+    assert!(inside_mass(&Q::ratio(1, 1000)) >= Q::ONE);
+    assert!(inside_mass(&crate::circuit::anchor().rim) >= inside_mass(&r0()));
     assert!(inside_mass(&r0()) > inside_mass(&Q::ratio(1, 1000)));
     // The arc from a place to itself is zero; the arc is symmetric and never
     // shorter than the difference between the two reaches.
@@ -112,5 +115,70 @@ fn imf_heavier_where_rings_crowd_births_after_first_stars() {
     for s in (0..300).filter_map(|n| star(7, bang, n)) {
         assert!(s.mass.signum() > 0, "{}", s.mass);
         assert!(s.born >= bang.first_stars().lo);
+    }
+}
+
+#[test]
+fn masses_close_on_the_founding_holding() {
+    let _ = crate::genesis::bang();
+    let st = structure();
+    // The rings' states sum to the holding; inside the rim the mass is the
+    // universal core plus the whole holding, 2 core masses, and it never
+    // falls outward.
+    let sum = st.rings.iter().fold(Q::ZERO, |a, k| &a + &k.2);
+    assert_eq!(sum, st.holding);
+    let rim = st.rings.last().map(|k| k.1.clone()).unwrap();
+    assert_eq!(inside_mass(&rim), Q::int(2));
+    let mut last = inside_mass(&Q::ZERO);
+    assert_eq!(last, Q::ONE);
+    for k in &st.rings {
+        let m = inside_mass(&k.1);
+        assert!(m >= last);
+        // A ring's mass is its share of the holding, at most what lies
+        // inside its outer edge less the core.
+        assert!(ring_mass(&k.0) <= &m - &Q::ONE);
+        last = m;
+    }
+    // The stellar mass is the lit share of one core mass; the nucleus holds
+    // part of the galaxy.
+    let lit = stellar_mass();
+    assert!(lit > Q::ZERO && lit <= Q::ONE, "{lit}");
+    assert!(nucleus_mass() >= Q::ZERO && nucleus_mass() <= Q::ONE);
+    assert_eq!(core_reach(), Q::ONE);
+}
+
+#[test]
+fn vertical_swing_stays_in_shares_and_layer() {
+    let bang = crate::genesis::bang();
+    let stars: Vec<Star> = (0..400)
+        .filter_map(|n| star(7, bang, n))
+        .filter(|s| s.pop == Pop::Disc)
+        .collect();
+    assert!(!stars.is_empty());
+    for s in &stars {
+        let r = Dy::from_q(&s.r);
+        // The layer's half-thickness is a deficit share of the reach.
+        let h = layer(r);
+        assert!(h > Dy::ZERO && h < r, "h {h} at r {r}");
+        // The plane's pull is the turning rate held by the crowding share,
+        // below twice the turning rate.
+        let nu = vertical_frequency(r);
+        let omega = s.rate_at_dy(s.orbit.radius);
+        assert!(nu > Dy::ZERO);
+        if s.scale == Dy::ONE {
+            assert!(nu < omega * Dy::int(2) + Dy::sci(1, -30));
+        }
+        // The speed grows with age while the share saturates; the exposure is
+        // a share; the amplitude is the speed over the frequency.
+        let (young, old) = (s.vertical_at(Dy::int(1)), s.vertical_at(Dy::int(1000)));
+        let (young, old) = (young.unwrap(), old.unwrap());
+        assert!(young.vz <= old.vz && young.vz >= Dy::ZERO);
+        for v in [young, old] {
+            assert!(v.exposure >= Dy::ZERO && v.exposure <= Dy::ONE);
+            assert!(v.amp >= Dy::ZERO && v.period > Dy::ZERO);
+            assert_eq!(v.exposure == Dy::ONE, v.amp <= h);
+        }
+        // No swing at birth.
+        assert_eq!(s.vertical_at(Dy::ZERO).unwrap().vz, Dy::ZERO);
     }
 }

@@ -19,9 +19,9 @@
 //!   the [`Limits`] counting the first gate each world fails) and the
 //!   [`Kept`] cost. Stars outside the [`Sight`] stay compact. Work is spread
 //!   over threads; the merged result does not depend on the thread count.
-//!   With a cache folder, each star's share is stored under a key of its own
-//!   inputs and the source digest ([`life_digest`]) and reused while both
-//!   are unchanged.
+//!   With a cache folder, each star's share is stored under a key of the
+//!   star's inputs and the source digest ([`life_digest`]) and reused while
+//!   both are unchanged.
 //! - [`ancients`]: the core-born minds (within `galaxy::core_kpc` of their
 //!   galactic core, [`in_core`]) that wake within [`ancient_window`] of that
 //!   core's first core-born mind ([`first_core_dawn`]).
@@ -46,84 +46,89 @@ mod kept;
 pub use ancients::*;
 pub use kept::*;
 
-/// Gyr between points of the expectation curve.
+/// The interval between points of the expectation curve (Gyr).
 pub fn curve_step() -> Dy {
     Dy::ratio(1, 4)
 }
 
-/// The curve's points: 0 to the horizon in curve steps.
+/// The number of curve points: 0 Gyr to the 30 Gyr horizon in curve steps.
 pub fn curve_points() -> usize {
     121
 }
 
-/// A mind the galaxy raises.
+/// A mind the galaxy raises, with the record of its lineage.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Mind {
-    /// Its star (its index in the galaxy's sample) and its world.
+    /// The star's index, as `galaxy::star` takes it.
     pub star: u64,
-    /// Index of its world within the star's system.
+    /// The index of the mind's world within the star's system.
     pub w: usize,
-    /// When it wakes (Gyr after the Big Bang).
+    /// When the mind wakes (Gyr after the Big Bang): the last rung's time.
     pub epoch: Dy,
     /// The region of the chemistry the mind arose in.
     pub region: Region,
-    /// Its star's mass (suns), and its distance from the core when it woke
-    /// (kpc, in three dimensions).
+    /// The star's mass (suns).
     pub star_mass: Dy,
-    /// Its star's distance from the galaxy's core when it woke (kpc, three-dimensional).
+    /// The star's distance from the galaxy's core when the mind woke (kpc,
+    /// in three dimensions).
     pub r_kpc: Dy,
-    /// When each rung was reached, and the impacts that set it back.
+    /// When each rung was reached (Gyr after the Big Bang).
     pub steps: Vec<Dy>,
-    /// Number of impacts that set its lineage back.
+    /// The number of impacts that set the lineage back.
     pub setbacks: u32,
-    /// Whether its first rung came on a neighbour's ejecta, and whether its
-    /// world could feed a people at the settled age (the forecast's test).
+    /// Whether the first rung arrived on a neighbour's ejecta.
     pub seeded: bool,
-    /// Whether its world could feed a viable people at the settled age.
+    /// Whether the world feeds a viable people on the media it offers at any
+    /// probe age (`life::Living::media`), as opposed to the media at the
+    /// mind's epoch.
     pub fed_settled: bool,
 }
 
 /// What stops life, world by world: the first gate each world fails.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Limits {
-    /// Worlds examined.
+    /// The worlds examined.
     pub worlds: u64,
-    /// Worlds that offer no solvent medium at all.
+    /// Worlds that offer no solvent medium.
     pub no_solvent: u64,
-    /// Worlds with media but no chemistry that copies faithfully enough to begin.
+    /// Worlds with media but no lineage: no chemistry copies faithfully
+    /// enough to begin within the horizon.
     pub cannot_copy: u64,
-    /// Lineages that fell short because their star's life ended before their
-    /// ladder's mean climb.
+    /// Lineages that fell short because their window closed at the star's
+    /// end, before the horizon and before the sum of their ladder's mean
+    /// waits.
     pub star_died: u64,
     /// Lineages that fell short because their world merged into its
-    /// neighbour before their ladder's mean climb.
+    /// neighbour before the sum of their ladder's mean waits.
     pub merged: u64,
     /// Lineages that fell short because their surface was sterilised.
     pub sterilised: u64,
-    /// Lineages that fell short by chance within an open window.
+    /// The other lineages that fell short: an incomplete ladder, or a climb
+    /// delayed by impacts past a window longer than the summed mean waits.
     pub too_slow: u64,
-    /// Lineages that raised a mind but whose world could not then feed a viable
-    /// people.
+    /// Lineages that raised a mind but whose world could not feed a viable
+    /// people at the mind's epoch.
     pub unfed: u64,
     /// Minds forecast (raised and fed).
     pub minds: u64,
     /// Lineages that reached at least the first rung (life began).
     pub alive: u64,
-    /// Lineages by region, and by their ladders' length.
+    /// Lineage counts by region.
     pub by_region: Vec<(Region, u64)>,
     /// Lineage counts indexed by the number of rungs their ladder has
     /// (0 to [`life::MAX_RUNGS`]).
     pub rungs: Vec<u64>,
 }
 
-/// One batch of stars' share: its minds, its expectation, and its limits.
+/// The share of the forecast from one star or batch of stars: its minds, its
+/// expectation curve and its limits.
 #[derive(Clone, Debug, Default)]
 pub struct BatchLife {
     /// The minds this batch's worlds raise.
     pub minds: Vec<Mind>,
     /// The expected minds by each curve point, from this batch's worlds.
     pub curve: Vec<Dy>,
-    /// First gates this batch's worlds fail.
+    /// The first gates this batch's worlds fail.
     pub limits: Limits,
 }
 
@@ -134,12 +139,14 @@ fn bump<K: PartialEq>(v: &mut Vec<(K, u64)>, key: K, by: u64) {
     }
 }
 
-/// The expectation of a world's mind: the earliest of its complete
-/// chemistries' climbs (the run's law: the sterilising pulse at its expected
-/// time, impacts' expected delay, the window's close), counted where the
-/// world at that waking can feed a people - the same test the run applies,
-/// not the settled age. In closed form, no replays: the curve steps to one
-/// at the epoch, or stays at zero.
+/// Adds the expectation of a world's mind to `curve`. The epoch is the
+/// earliest completion among the world's complete chemistries, each climbed
+/// from `t0` with the sterilising pulse at its expected time, the expected
+/// delay from impacts and the close of its window, without arrivals from
+/// neighbours. It counts where the world at that epoch feeds at least
+/// `life::viable` foragers, the same test `star_life` applies. The curve
+/// steps to one from the first point at or after the epoch, or stays at
+/// zero.
 fn expect(l: &life::Living, born: Dy, t0: Dy, curve: &mut [Dy], ctx: &Ctx) {
     let able: Vec<&life::Chemistry> = l.chems.iter().filter(|ch| ch.ladder.complete).collect();
     if able.is_empty() {
@@ -184,8 +191,9 @@ fn ceil_points(t: Dy) -> usize {
     usize::try_from(c.max(0)).unwrap_or(0)
 }
 
-/// One star's share of the forecast (its minds, its expectation, its
-/// limits), added to `out`.
+/// Adds one star's share of the forecast (its minds, its expectation and its
+/// limits) to `out`. A star with no worlds, or whose first reading age falls
+/// past the horizon, adds nothing.
 fn star_life(
     gal: &Galaxy,
     n: u64,
@@ -257,15 +265,16 @@ fn star_life(
             } else {
                 lim.too_slow += 1;
             }
-            // the expectation: the chance this world raises a mind by each epoch
+            // The expectation: the chance that this world raises a mind by each
+            // epoch.
             let _expect_busy = xyl_core::watch::busy(format!("expectation of star {n} world {w}"));
             expect(l, born, t0, &mut out.curve, ctx);
         }
     }
 }
 
-/// Whether a lineage that fell short ran out of its star's life rather than
-/// out of luck: its ladder's mean is longer than its window.
+/// Whether a lineage that fell short had a window closing before the
+/// horizon and shorter than the sum of its ladder's mean waits.
 fn gate_star(lin: &Lineage, born: Dy) -> bool {
     match lin.end {
         Some(end) if end < horizon_gyr() => lin.means.iter().copied().sum::<Dy>() > end - born,
@@ -273,21 +282,21 @@ fn gate_star(lin: &Lineage, born: Dy) -> bool {
     }
 }
 
-/// The galaxy worked out: every mind in order of waking, the expectation
-/// curve, and what stopped life.
+/// The forecast for a galaxy: every mind in order of waking, the expectation
+/// curve, and the gates that stopped life.
 #[derive(Clone, Debug, Default)]
 pub struct Schedule {
     /// Every forecast mind, ordered by waking epoch, then star, then world.
     pub minds: Vec<Mind>,
-    /// Expected number of minds by each curve point (one per [`curve_step`] from
-    /// 0 Gyr; [`curve_points`] entries).
+    /// The expected number of minds by each curve point (one per
+    /// [`curve_step`] from 0 Gyr; [`curve_points`] entries).
     pub curve: Vec<Dy>,
     /// Counts of the first gate each world fails, summed over all stars.
     pub limits: Limits,
 }
 
-/// Shares merged into one schedule: minds in order of waking, the curves
-/// and limits summed.
+/// Merges shares into one schedule: minds sorted by epoch, star and world,
+/// and the curves and limits summed.
 fn merge(shares: impl Iterator<Item = BatchLife>) -> Schedule {
     let mut out = Schedule {
         limits: Limits {
@@ -332,20 +341,21 @@ fn merge(shares: impl Iterator<Item = BatchLife>) -> Schedule {
     out
 }
 
-/// Digest of the life-side laws: the source a star's share is worked out by
-/// once its star is given (its system's formation and every law of its worlds
-/// and life). A star's own inputs (its star as drawn, what the galaxy's code
-/// reads of its place) are keyed separately per star, so a change to the
-/// galaxy's code re-reads only the stars it moved; reading a key costs a
-/// star's draw, never its system.
+/// The digest of the life-side laws: the source from which a star's share
+/// is computed once the star is given (its system's formation and every law
+/// of its worlds and life). A star's inputs (the star as drawn and what the
+/// galaxy's code reads of its place) are keyed separately per star, so a
+/// change to the galaxy's code recomputes only the stars it changed;
+/// computing a key costs a star's draw, never its system.
 pub fn life_digest() -> String {
-    // every source file of the laws, hashed at build time (build.rs)
+    // Every source file of the laws, hashed at build time (build.rs).
     env!("XYL_SOURCE_DIGEST").to_string()
 }
 
-/// A star's own inputs to its share: its star as drawn, and what the
-/// galaxy's code reads of its place (its crowding, its infall, its distance
-/// from its core across its life).
+/// The key of a star's inputs to its share (24 hex characters): the galaxy's
+/// key, the star's index, the star as drawn, and what the galaxy's code reads
+/// of its place (the density, the birth time and the distance from the core
+/// at 2, 5, 9 and 14 Gyr).
 fn star_key(gal: &Galaxy, n: u64, star: &crate::galaxy::Star) -> String {
     let mut h = blake3::Hasher::new_derive_key("xylarium 2026-10-14 star share v1");
     h.update(key(gal).as_bytes());
@@ -365,17 +375,16 @@ fn star_key(gal: &Galaxy, n: u64, star: &crate::galaxy::Star) -> String {
     h.finalize().to_hex().as_str()[..24].to_string()
 }
 
-/// Which stars are unrolled (compact until observed): a star's worlds and
-/// minds are worked out only when something with sight of it observes it.
-/// Unobserved stars stay compact (laws, origin and seed) and are unrolled
-/// deterministically when observed.
+/// Which stars are unrolled. A star's worlds and minds are computed only
+/// when an observer with sight of it reads it; unobserved stars stay compact
+/// (laws, origin and seed) and are unrolled deterministically when observed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Sight {
     /// The cores' sight: the ancients hold each galaxy's reference clock, so
-    /// every star within its core (within the core's reach, galaxy::core_kpc)
-    /// is observed.
+    /// every star within the galaxy's core (within `galaxy::core_kpc`) is
+    /// observed.
     Cores,
-    /// Every sample star unrolled: a census, asked for by name.
+    /// Every sample star unrolled: a census, requested explicitly.
     Census,
 }
 
@@ -389,23 +398,24 @@ impl Sight {
     }
 }
 
-/// What a forecast read cost: stars worked out, stars kept.
+/// The cost of a forecast read: stars computed, read back and left compact.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Kept {
-    /// Stars worked out fresh in this read.
+    /// Stars computed in this read.
     pub worked: u64,
     /// Stars read back from the share cache.
     pub kept: u64,
-    /// Stars left compact (no one with sight of them).
+    /// Stars left compact (no observer with sight of them).
     pub compact: u64,
 }
 
-/// The forecast, star by star: every galaxy's first `limit` sample stars that
-/// `sight` opens, worked out on `threads` threads and merged in order of
-/// waking. With `keep`, each star's share is cached under
-/// `keep/<galaxy key>/<life digest>/` by its own inputs' key and read back
-/// while they are unchanged, so only stars a change moved are recomputed.
-/// The cache is derived data, not the universe's state.
+/// The forecast, star by star: for every galaxy, the first `limit` sample
+/// stars and as many nucleus stars (up to the nucleus sample) that `sight`
+/// opens, computed on `threads` threads and merged in order of waking. With
+/// `keep`, each star's share is cached under `keep/<galaxy key>/<life
+/// digest>/` by the key of the star's inputs and read back while they are
+/// unchanged, so only the stars a change affected are recomputed. The cache
+/// is derived data, not the universe's state.
 pub fn schedule(
     gal: &Galaxy,
     ctx: &Ctx,
@@ -421,9 +431,10 @@ pub fn schedule(
     if let Some(f) = &folder {
         let _ = std::fs::create_dir_all(f);
     }
-    // every galaxy's first `total` sample stars and as many of its nucleus
-    // sample (the core's own stars, galaxy.rs NUCLEUS_BASE): the core is
-    // where the ancients are born, and its sample is placed within it
+    // Every galaxy's first `total` sample stars and as many of its nucleus
+    // sample (the core's stars, from galaxy.rs NUCLEUS_BASE, at most
+    // NUCLEUS_SAMPLE): the core is where the ancients are born, and the
+    // nucleus sample is placed within it.
     let nucleus = crate::galaxy::NUCLEUS_BASE
         ..crate::galaxy::NUCLEUS_BASE + total.min(crate::galaxy::NUCLEUS_SAMPLE);
     let stars: Vec<u64> = crate::cores::held(gal.seed, gal.bang)
@@ -468,7 +479,8 @@ pub fn schedule(
     )
 }
 
-/// A forecast's star counts, shared across its threads (see [`Kept`]).
+/// A forecast's star counts, shared across the forecast's threads (see
+/// [`Kept`]).
 #[derive(Default)]
 struct Tally {
     worked: AtomicU64,
@@ -476,9 +488,10 @@ struct Tally {
     compact: AtomicU64,
 }
 
-/// One star's share of the forecast: read back from `folder` while its
-/// inputs' key is unchanged, otherwise worked out from its system and kept
-/// there; empty (and counted compact) where `sight` does not open it.
+/// One star's share of the forecast: read back from `folder` while the key
+/// of the star's inputs is unchanged, otherwise computed from its system and
+/// stored there; empty (and counted compact) where `sight` does not open the
+/// star. A computation taking 30 s or more is noted on the watch.
 fn forecast_star(
     gal: &Galaxy,
     ctx: &Ctx,
@@ -547,8 +560,9 @@ fn forecast_star(
     share
 }
 
-/// Keep one star's share, dropping the star's shares kept under inputs it no
-/// longer has.
+/// Stores one star's share at `path`, removing the star's other cached shares
+/// (stored under outdated keys). The bytes are written to a temporary file
+/// and renamed; on failure the temporary file is removed.
 fn keep_share(folder: &std::path::Path, n: u64, path: &std::path::Path, share: &BatchLife) {
     let prefix = format!("{n}-");
     if let Ok(dir) = std::fs::read_dir(folder) {

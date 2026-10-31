@@ -38,7 +38,7 @@ pub fn is_cluster(k: u32) -> bool {
     k >= CLUSTER
 }
 
-/// A plain atom's Z (None for a cluster): the kinds that may burn, ionize or
+/// A plain atom's Z (None for a cluster or for 0): the kinds that may burn, ionize or
 /// be cut by their windings.
 pub fn atom_z(k: u32) -> Option<u32> {
     (!is_cluster(k) && k > 0).then_some(k)
@@ -60,7 +60,8 @@ pub fn cluster(za: u32, na: u32, zb: u32, nb: u32) -> Option<u32> {
     Some(CLUSTER + ((za * Z_LIM + zb) * N_LIM + na) * N_LIM + nb)
 }
 
-/// A kind's parts: (Z, count), the heavier first; an atom is its own one part.
+/// A kind's parts: (Z, count), the heavier first; an atom is the single part
+/// (Z, 1), followed by (0, 0).
 pub fn parts(k: u32) -> [(u32, u32); 2] {
     if !is_cluster(k) {
         return [(k, 1), (0, 0)];
@@ -100,7 +101,8 @@ pub fn open(k: u32) -> u32 {
 }
 
 /// Open frames at a place's heat: an atom's after ionization; a standing
-/// cluster keeps its own (a cluster that would not stand has already parted).
+/// cluster keeps the open frames it has at rest, `open` (a cluster that would
+/// not stand has already parted).
 pub fn open_hot(k: u32, heat: &Q) -> u32 {
     if is_cluster(k) {
         open(k)
@@ -200,18 +202,19 @@ mod tests {
 
     #[test]
     fn water_closes_from_its_parts_and_parts_by_heat() {
-        // oxygen opens four frames on S^11, hydrogen one: the smallest
-        // closing cluster is O . 4H
+        // Oxygen opens four frames on S^11 and hydrogen one, so the smallest
+        // closing cluster is O . 4H.
         let (w, no, nh, grip) = closing(8, 1, &Q::ZERO).unwrap();
         assert_eq!((no, nh, key(w)), (1, 4, "Z008\u{b7}4Z001".to_string()));
         assert_eq!((charge(w), open(w), bonds(w)), (12, 0, 4));
-        // hold + open = 3 charge holds for the cluster as for its parts
+        // The identity hold + open = 3 charge holds for the cluster as for its
+        // parts.
         assert_eq!(hold(w) + open(w), 3 * 12);
         assert_eq!(grip, Q::ONE);
-        // it stands at heat 0; at heat 1 hydrogen's winding is stripped and
-        // the cluster parts
+        // The cluster stands at heat 0; at heat 1 hydrogen's winding is
+        // stripped and the cluster parts.
         assert!(stands(w, &Q::ZERO) && !stands(w, &Q::ONE));
-        // sealed kinds pair nothing; any pair closes by the gcd
+        // Sealed kinds pair nothing; any other pair closes by the gcd.
         assert!(closing(28, 1, &Q::ZERO).is_none());
         let (c, ..) = closing(8, 8, &Q::ZERO).unwrap();
         assert_eq!((key(c), open(c)), ("2Z008".to_string(), 0));

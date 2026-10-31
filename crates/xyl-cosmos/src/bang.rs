@@ -4,7 +4,7 @@
 //! Inputs: the seed, through a `xyl_core::Stream` on the path "big bang";
 //! `bounce::horizon_reach` and `Bounce::of` for the parent
 //! ([`crate::bounce`]); `cores::substrate_for` and `circuit::anchor` for the
-//! founding. Units are the parent's own (unit mass).
+//! founding. Units are the parent's (unit mass).
 //!
 //! One value is drawn: the parent's Kerr spin, uniform on (0, 1) and fixed
 //! on the 2^-40 grid ([`GRID_BITS`], [`clamp_spin`]). `cores::substrate_for`
@@ -27,7 +27,7 @@ use xyl_core::{Stream, Q};
 /// The grid drawn values are fixed on.
 pub const GRID_BITS: u32 = 40;
 
-/// A uniform rational on (-1, 1) with 2^-53 resolution.
+/// A uniform rational on (-1, 1) in steps of 2^-52, from the top 53 bits of a draw.
 fn unit(rng: &mut Stream) -> Q {
     let span: i64 = 1 << 53;
     let x = i64::try_from(rng.next_u64() >> 11).unwrap_or(0);
@@ -75,7 +75,7 @@ pub struct BigBang {
 
 /// The share the outbound jet carries through the throat at each crossing,
 /// from the parent's spin by torsion. In the Einstein-Cartan bounce torsion
-/// is not a field of its own: it is the spin density of what fell, so the
+/// is not an independent field: it is the spin density of what fell, so the
 /// spin's share enters the hold directly. The throat `H = 2M` holds one
 /// face against the other, `delta(H, H) = 1/2`, and the jet carries the
 /// unlocked face `1 - delta`; the parent's spin `J = a_Kerr M^2` is a
@@ -119,7 +119,7 @@ impl BigBang {
     /// The Big Bang of `seed`'s universe.
     pub fn of(seed: u64) -> Option<BigBang> {
         let mut rng = Stream::derive(seed, &["big bang".into()]);
-        // The parent has unit mass in its own units and a Kerr spin drawn
+        // The parent has unit mass in the parent's units and a Kerr spin drawn
         // from the seed, floored at the least spin that keeps the firmament
         // whole; its horizon is read in the S^360 enclosure (the founding's
         // radius in r_g, circuit::anchor). The founding depends only on the
@@ -127,9 +127,10 @@ impl BigBang {
         crate::circuit::register_spin(&open_unit(&mut rng));
         let anchor = crate::circuit::anchor();
         let substrate = crate::cores::substrate_for(&anchor.spin)?;
-        // the founding bounce is read at pulse phase zero
+        // The founding bounce is read at pulse phase zero.
         let parent = Bounce::of(&Q::ONE, &anchor.spin, &anchor.radius_rg, &Q::ZERO)?;
-        // lumpiness: the beads' state above the mean over their whole state
+        // Lumpiness is the beads' state above the mean, summed over beads,
+        // divided by the beads' total state.
         let mean = substrate.mean_state();
         let (above, all) = substrate
             .beads
@@ -163,8 +164,8 @@ mod tests {
 
     #[test]
     fn the_share_law_inverts_on_the_grid() {
-        // a spinless hole carries one half and does not bounce; the extremal
-        // spin carries three fifths; the inversion lands within a grid step
+        // A spinless hole carries one half and does not bounce; the extremal
+        // spin carries three fifths; the inversion lands within a grid step.
         assert_eq!(torsion_share(&Q::ZERO), Q::new(1, 2).unwrap());
         assert_eq!(torsion_share(&Q::ONE), Q::new(3, 5).unwrap());
         for n in [1i64, 7, 50, 99] {
@@ -172,7 +173,7 @@ mod tests {
             let back = spin_of_share(&torsion_share(&spin));
             assert!((&back - &spin).abs() <= grid_step(), "{spin} -> {back}");
         }
-        // a share no spin reaches gives the extremal spin
+        // A share no spin reaches gives the extremal spin.
         assert_eq!(spin_of_share(&Q::ONE), clamp_spin(&Q::ONE));
         assert!(spin_of_share(&Q::new(1, 3).unwrap()) >= grid_step());
     }

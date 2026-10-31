@@ -9,30 +9,30 @@ use xyl_core::Q;
 /// The chain's frame for a star's disc at reach `r` (kpc) of the home
 /// galaxy: its piece of the founding, the infall's extent there (kpc), the
 /// share of the infall the star holds, the galaxy's tide at the pinch (the
-/// core-star tie) and the disc's agitation (`disc::star_cut`). None
-/// where the piece never lights. Read once per piece and held.
+/// core-star tie) and the disc's agitation (`disc::star_cut`). The cut is
+/// read once per piece and cached.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DiscFrame {
     /// The piece's index among the founding's beads.
     pub piece: usize,
-    /// The infall's extent (kpc): the star-forming cloud's.
+    /// The infall's extent (kpc), the extent of the star-forming cloud.
     pub infall_kpc: Q,
-    /// The star's own gathering extent (kpc): its mass over the infall's line
-    /// density, never more than the infall itself.
+    /// The star's gathering extent (kpc): the star's mass over the infall's
+    /// line density, at most the infall's extent.
     pub extent_kpc: Q,
-    /// The star's manifold reach (kpc), its worlds' outer edge: the arc of
-    /// its circle about the core its own pull holds (`manifold::reach`, the
-    /// deficit share `m / (M(<r) + m)` of `2 pi r`).
+    /// The star's manifold reach (kpc), the outer edge of its worlds: the arc
+    /// of the star's circle about the core held by the star's mass
+    /// (`manifold::reach`, the deficit share `m / (M(<r) + m)` of `2 pi r`).
     pub reach_kpc: Q,
     /// The star's cut of the infall (`disc::star_cut`).
     pub cut: crate::disc::StarCut,
-    /// The share of its manifold the star holds: its gathering over its
-    /// reach, at most 1 (a star whose gathering fills its manifold has no
-    /// matter left for worlds).
+    /// The share of the manifold the star holds: the gathering extent over
+    /// the manifold reach, at most 1 (a star whose gathering fills the
+    /// manifold leaves no matter for worlds).
     pub star_share: Q,
     /// The galaxy's tide at the pinch, `H / (R + H)`.
     pub tide: Q,
-    /// The disc's agitation, the face the galaxy leaves unlocked at the star.
+    /// The disc's agitation (`disc::StarCut::a_disc`).
     pub a_disc: Q,
 }
 
@@ -40,8 +40,10 @@ pub struct DiscFrame {
 type HeldCuts = std::sync::Mutex<std::collections::BTreeMap<usize, Option<crate::disc::StarCut>>>;
 
 /// The disc's frame at reach `r` (kpc) of the home galaxy for a star of
-/// `mass` suns (see [`DiscFrame`]). The cut is read once per piece and held;
-/// the star's gathering extent is its own.
+/// `mass` suns (see [`DiscFrame`]). The cut is read once per piece and
+/// cached; the gathering extent and manifold reach depend on the star's mass.
+/// `None` where the founding is absent, no piece lies at `r` or the piece
+/// does not light.
 pub fn disc_frame(r: &Q, mass: &Q) -> Option<DiscFrame> {
     static HELD: std::sync::OnceLock<HeldCuts> = std::sync::OnceLock::new();
     let anchor = crate::circuit::anchor();
@@ -66,9 +68,9 @@ pub fn disc_frame(r: &Q, mass: &Q) -> Option<DiscFrame> {
         }
     };
     let cut = cut?;
-    // extent = (m / M_stars) / (cloud / infall), at most the infall: the
+    // `extent = (m / M_stars) / (cloud / infall)`, at most the infall: the
     // star's mass in holding units (the galaxy's stars hold one unit) over
-    // the infall's holding per ring
+    // the infall's holding per ring.
     let m_s = mass.checked_div(&stellar_mass())?;
     let lambda = cut
         .cloud
@@ -77,8 +79,8 @@ pub fn disc_frame(r: &Q, mass: &Q) -> Option<DiscFrame> {
         .checked_div(&lambda.max(Q::ratio(1, 1_000_000_000_000)))?
         .min(cut.infall.clone());
     let extent_kpc = &extent * &kpc_per_ring;
-    // manifold reach (galaxy rings): the deficit share m / (M(<r) + m) of
-    // the circle 2 pi r about the core (manifold::reach)
+    // Manifold reach (galaxy rings): the deficit share m / (M(<r) + m) of
+    // the circle 2 pi r about the core (`manifold::reach`).
     let inside = inside_mass(r);
     let ratio = mass.checked_div(&inside.max(Q::ratio(1, 1_000_000)))?;
     let reach = crate::manifold::reach(&Encl::exact(rings.clone()), &ratio).mid();
@@ -107,8 +109,9 @@ fn piece_cut(
 ) -> Option<Option<crate::disc::StarCut>> {
     let bead = sub.beads.get(piece)?;
     let swing = &Q::ONE + &sub.inbound_mean(sub.echo()).to_q();
-    // the pulse's turning and the star's burn (its over-pressure), per echo
-    // in hydrogen units, at the star's reach about the universal core
+    // The pulse's turning and the star's burn (its over-pressure), per echo
+    // (two bells) in hydrogen units, at the star's reach about the universal
+    // core.
     let reach = crate::stars::reach_rings(Dy::from_q(r));
     let turning = (crate::stars::ring_per_bell(reach) * Dy::int(2)).to_q();
     let burn = (crate::stars::burn_per_bell(reach) * Dy::int(2)).to_q();

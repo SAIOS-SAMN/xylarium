@@ -6,6 +6,6 @@ requests, discussions and reviews.
 
 The repository's maintainers enforce it. Report unacceptable behaviour to
 them through GitHub: privately, by the contact options on the repository,
-or by GitHub's own reporting tools for abusive content. Reports are
-reviewed promptly and handled with discretion, following the Covenant's
-enforcement guidelines.
+or by GitHub's reporting tools for abusive content. Reports are reviewed
+and handled with discretion, following the Covenant's enforcement
+guidelines.

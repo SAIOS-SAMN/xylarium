@@ -1,4 +1,4 @@
-//! Passage times between places: within a system, a constellation, or
+//! Passage times between places within a system, within a constellation, or
 //! across constellations over the ley lines ([`Network::passage_years`]).
 
 use super::{crossing_years, cruise_speed, kpc_m, separation_m, voyage, window_years, year_s};
@@ -12,15 +12,18 @@ use xyl_cosmos::chain::units;
 use xyl_cosmos::manifold::manifolds;
 
 impl Network {
-    /// The passage between two places (years), constellation by
-    /// constellation: within a system, the drive's leg along the orbits plus
-    /// the window wait weighted by w v_orb / (v_orb + cruise); within a
-    /// constellation, the drive's leg along the arc; between constellations,
-    /// only over the ley lines (each crossing a mouth's light time, scaled by
-    /// its open share) with the drive's legs to and from the mouths. A line
-    /// carries the passer `who` (a people's index) as its handling allows:
-    /// a closed line no one, a guarded line its builder's house and the
-    /// peoples of its realm. None where no passage joins them.
+    /// Returns the passage time between places `a` and `b` (years). Within a
+    /// system it is the drive's leg across the gap between the orbits plus
+    /// the window wait `w`, weighted by `w v_orb / (v_orb + cruise)`. Within a
+    /// constellation it is the drive's leg along the arc between the stars.
+    /// Between constellations the passage runs only over the ley lines (each
+    /// crossing takes the light time across the reach of the constellation
+    /// at the line's second mouth, divided by the line's open share), with
+    /// drive legs to and from the mouths. A line
+    /// carries the passer `who` (a people's index) as its handling allows: a
+    /// closed line carries no one, a guarded line only its builder and the
+    /// peoples of its realm. Returns None when the cruise speed is not
+    /// positive or no passage joins the two places.
     pub fn passage_years(
         &self,
         cosmic: &Cosmic,
@@ -55,10 +58,10 @@ impl Network {
         if ca == cb {
             return star_leg(a.star, b.star);
         }
-        // Graph nodes: every line mouth plus the two ends a and b. Edges: each
-        // line that carries the passer, weighted by its crossing time over its
-        // open share, and a drive leg between every two nodes of one
-        // constellation.
+        // The graph's nodes are every line mouth plus the two ends a and b. Its
+        // edges are each line that carries the passer, weighted by the
+        // crossing time divided by the open share, and a drive leg between
+        // every two nodes of one constellation.
         let mut nodes: Vec<u64> = vec![a.star, b.star];
         for l in &self.lines {
             nodes.push(l.from);
@@ -97,8 +100,8 @@ impl Network {
     }
 }
 
-/// The least total weight from `from` to `to` over the undirected weighted
-/// `edges` (Dijkstra's search); None where they are not joined.
+/// Returns the least total weight from `from` to `to` over the undirected
+/// weighted `edges` (Dijkstra's search), or None when they are not joined.
 fn shortest(edges: &[(u64, u64, Dy)], from: u64, to: u64) -> Option<Dy> {
     let mut adj: BTreeMap<u64, Vec<(u64, Dy)>> = BTreeMap::new();
     for &(x, y, c) in edges {

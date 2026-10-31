@@ -17,7 +17,8 @@
 //!   one sun. `flicker` is the swing within a bell,
 //!   `(pi / 2) |cos(2 pi t / echo)|`, a reading of the light only.
 //! - Life (`life`, `ends`, `burned`): the hydrogen step's transduced share
-//!   `1 - hold(He) / (4 hold(H))` over the burn, in bells; the giant ends
+//!   `1 - hold(He) / (4 hold(H))` over the burn, counted in bells and
+//!   converted to Gyr; the giant ends
 //!   when the helium step's further share `1 - hold(C) / (3 hold(He))` is
 //!   transduced. `remnant_share` is the hold neither step transduced.
 //! - Not yet modelled: ejecta returned to the galaxy's gas, and stellar mixes
@@ -36,9 +37,10 @@ fn hold_q(k: u32) -> Q {
     Q::int(i64::from(hold(k)))
 }
 
-/// A star's deficit at its own rim, `M r_g / (R + M r_g)`: its gravitational
-/// length over its radius plus that length, read on the sun's (the radius
-/// linear in the mass, both scale together: one share for every star).
+/// A star's deficit at its rim, `M r_g / (R + M r_g)`: the star's
+/// gravitational length over its radius plus that length, evaluated for the
+/// sun. The radius is taken linear in the mass, so both scale together and
+/// the share is the same for every star.
 pub fn delta_star() -> Q {
     let r_g = crate::systems::star_length_m();
     r_g.checked_div(&(&crate::package::Si::star_radius_m() + &r_g))
@@ -46,9 +48,10 @@ pub fn delta_star() -> Q {
 }
 
 /// A home-galaxy star's reach about the universal core (galaxy rings) from
-/// its distance from the core (kpc): the galaxy tier's ring, the unit its
-/// piece is lit in, so the vacuum's share `1 / (r + 1)` reads the same hold
-/// at the star as the cooling read at its piece.
+/// its distance from the core (kpc), in the galaxy tier's ring, the unit in
+/// which the star's piece is lit, so the vacuum's share `1 / (r + 1)` gives
+/// the same hold at the star as the cooling gave at its piece. Zero before a
+/// founding; never negative.
 pub fn reach_rings(r_kpc: Dy) -> Dy {
     let kpc = Dy::from_q(&crate::circuit::anchor().galaxy_kpc);
     if kpc.signum() <= 0 {
@@ -57,16 +60,16 @@ pub fn reach_rings(r_kpc: Dy) -> Dy {
     (r_kpc / kpc).max(Dy::ZERO)
 }
 
-/// The ring the bell brings to reach `r` over one bell: the waveform's
-/// magnitude integrated over half an echo, `1 / pi`, falling as the vacuum's
-/// share `1 / (r + 1)`.
+/// The pulse's ring delivered at reach `r` over one bell: the waveform's
+/// magnitude integrated over half an echo, `1 / pi`, times the vacuum's share
+/// `1 / (r + 1)`.
 pub fn ring_per_bell(reach: Dy) -> Dy {
     vacuum_share(reach, Dy::ONE) / Dy::PI
 }
 
 /// The vessel's drift at reach `r` over one bell at `t` Gyr: `bell q(t)`
-/// falling as the vacuum's share; zero before a founding or while nothing
-/// has left the firmament.
+/// times the vacuum's share; zero before a founding or while nothing has
+/// left the firmament.
 pub fn drift_per_bell(reach: Dy, t: Dy) -> Dy {
     let anchor = crate::circuit::anchor();
     let Some(s) = crate::cores::substrate_for(&anchor.spin) else {
@@ -91,8 +94,8 @@ pub fn transduced_hydrogen() -> Q {
 }
 
 /// The share of the hold transduced by the end of the helium step: the
-/// hydrogen's, plus the helium's own share of what it keeps,
-/// `1 - hold(C) / (3 hold(He))`.
+/// hydrogen step's share h plus the helium step's share of the remainder,
+/// `h + (1 - h) (1 - hold(C) / (3 hold(He)))`.
 pub fn transduced_helium() -> Q {
     let h = transduced_hydrogen();
     let he = &Q::ONE
@@ -102,14 +105,15 @@ pub fn transduced_helium() -> Q {
     &h + &(&(&Q::ONE - &h) * &he)
 }
 
-/// The share of its hold an ended star keeps as its remnant: what the pulse
-/// did not transduce through both steps.
+/// The share of the hold an ended star keeps as its remnant: what the pulse
+/// did not transduce in either step.
 pub fn remnant_share() -> Q {
     &Q::ONE - &transduced_helium()
 }
 
 /// A star's main-sequence life (Gyr) at reach `r`: the hydrogen step's
-/// share over the burn per bell, in bells. Zero before a founding.
+/// share over the burn per bell gives the number of bells, times the bell's
+/// length in Gyr. Zero before a founding.
 pub fn life(reach: Dy) -> Q {
     let burn = burn_per_bell(reach);
     if burn.signum() <= 0 {
@@ -119,8 +123,8 @@ pub fn life(reach: Dy) -> Q {
 }
 
 /// A star's light (suns) at `age` Gyr after its birth at `born`, at reach
-/// `r`: its mean luminosity (systems::luminosity) brightened by the vessel's
-/// drift, `1 + pi bell q(t)`.
+/// `r`: the mean luminosity (`systems::luminosity`) times the vessel's drift
+/// factor `1 + pi bell q(t)`, with q read at `born + age`.
 pub fn light(mass: &Q, reach: Dy, born: Dy, age: Dy) -> Q {
     let mean = crate::systems::luminosity(mass, reach);
     let drift = drift_per_bell(reach, born + age) / ring_per_bell(reach).max(Dy::sci(1, -300));
@@ -129,8 +133,8 @@ pub fn light(mass: &Q, reach: Dy, born: Dy, age: Dy) -> Q {
 
 /// The radiation's swing within a bell at `t` Gyr: the ring's magnitude at
 /// the instant over its mean across the bell, `(pi / 2) |cos(2 pi t / echo)|`.
-/// A reading of the light, never of a climate: a world's temperature reads
-/// the bell's mean (worlds.rs).
+/// It is a reading of the light only; a world's temperature uses the bell's
+/// mean (`worlds`). Returns 1 before a founding.
 pub fn flicker(t: Dy) -> Dy {
     let echo = crate::circuit::echo_gyr();
     if echo.signum() <= 0 {
@@ -140,14 +144,14 @@ pub fn flicker(t: Dy) -> Dy {
 }
 
 /// The share of a star's hydrogen step transduced by `age` Gyr at reach `r`,
-/// exact: `age / life`.
+/// exact: `age / life`; zero when the life is zero.
 pub fn burned(reach: Dy, age: &Q) -> Q {
     age.checked_div(&life(reach)).unwrap_or(Q::ZERO)
 }
 
 /// When a star leaves the main sequence and when its giant's helium is spent
-/// (Gyr) at reach `r`: its life, and its life stretched by the helium step's
-/// share over the hydrogen's.
+/// (Gyr) at reach `r`: the main-sequence life, and that life times the ratio
+/// of the helium step's cumulative share to the hydrogen step's.
 pub fn ends(reach: Dy) -> (Q, Q) {
     let main = life(reach);
     let giant = &main
@@ -163,19 +167,20 @@ mod tests {
 
     #[test]
     fn transduced_shares_and_rim_deficit_in_bounds() {
-        // hydrogen holds 2 (3 less its one open frame), helium 6: four
-        // hydrogens' 8 to one helium's 6 transduces a quarter
+        // Hydrogen holds 2 (3 less its one open frame), helium 6: four
+        // hydrogens' 8 to one helium's 6 transduces a quarter.
         assert_eq!(transduced_hydrogen(), Q::new(1, 4).unwrap());
         let he = transduced_helium();
         assert!(he > transduced_hydrogen() && he < Q::ONE, "{he}");
         assert_eq!(&remnant_share() + &he, Q::ONE);
-        // the star's rim share is small and positive
+        // The star's rim share lies in (0, 1).
         let d = delta_star();
         assert!(d.signum() > 0 && d < Q::ONE, "{d}");
-        // the ring per bell falls as the vacuum's share
+        // The ring per bell falls with the vacuum's share and is 1 / pi at
+        // r = 0.
         assert!(ring_per_bell(Dy::ZERO) > ring_per_bell(Dy::int(10)));
         assert_eq!(ring_per_bell(Dy::ZERO), Dy::ONE / Dy::PI);
-        // the flicker peaks at pi / 2 times the mean and vanishes at the node
+        // The flicker is at most pi / 2 times the mean.
         assert!(flicker(Dy::ZERO) <= Dy::PI / Dy::int(2) + Dy::sci(1, -12));
     }
 }

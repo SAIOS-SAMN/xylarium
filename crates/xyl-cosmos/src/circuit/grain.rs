@@ -28,7 +28,7 @@ pub(crate) fn grid(x: &Q) -> Q {
 pub(crate) fn nuclei_of(x: &Q, z: u32) -> (Q, Q) {
     let unit = nucleon_unit();
     let one = &formation::weight(z) * &unit;
-    // the whole count, exact (counts exceed machine integers: q - frac q)
+    // The whole count is exact (counts exceed machine integers: q - frac q).
     let n = x
         .checked_div(&one)
         .map(|q| &q - &q.frac())
@@ -47,10 +47,11 @@ pub(crate) fn set_founding_bits(bits: u32) {
 
 pub(crate) fn nucleon_unit() -> Q {
     static U: std::sync::OnceLock<Q> = std::sync::OnceLock::new();
-    // the grain scales with the founding's count (8 bits finer than one hydrogen
-    // of the founding), so the rarest founded kind still moves in whole nuclei;
-    // before the count is named the grain is not kept, so a reading taken
-    // ahead of the founding never freezes the coarse grain for the process
+    // The grain scales with the founding's count (8 bits finer than one
+    // hydrogen of the founding), so the rarest founded kind still moves in
+    // whole nuclei. Before the count is named the grain is not kept, so a
+    // reading taken ahead of the founding does not fix the coarse grain for
+    // the process.
     if let Some(u) = U.get() {
         return u.clone();
     }
@@ -74,8 +75,8 @@ pub(crate) fn turn(x: &Q) -> Q {
         .unwrap_or(Q::ZERO)
 }
 
-/// A mix's mass by formation::mass_weight: held plus open frames (total +
-/// magnetism), every amount at its whole 3 charge.
+/// A mix's mass: the sum of `mass_of` over its kinds (Z + Q nucleons per
+/// nucleus, formation::mass_weight).
 pub(crate) fn weigh(m: &Mix) -> Q {
     m.iter().fold(Q::ZERO, |acc, (z, a)| &acc + &mass_of(*z, a))
 }

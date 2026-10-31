@@ -93,7 +93,7 @@ impl Stream {
             *w = u64::from_le_bytes(a);
         }
         if s == [0; 4] {
-            s[0] = 1; // xoshiro's one forbidden state
+            s[0] = 1; // The all-zero state is a fixed point of xoshiro256**.
         }
         Stream { s }
     }

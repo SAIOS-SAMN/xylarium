@@ -44,7 +44,7 @@ const HALF_TOP: i128 = 1 << (MANT - 1);
 /// use xyl_core::dyadic::Dy;
 ///
 /// let quarter = Dy::ratio(1, 4);
-/// assert_eq!(quarter.to_q(), Q::new(1, 4).unwrap_or_default()); // exact
+/// assert_eq!(quarter.to_q(), Q::new(1, 4).unwrap_or_default()); // Exact.
 /// assert!(Dy::ratio(1, 3) < Dy::ratio(1, 2));
 /// // 1/3 is rounded toward zero, so three of them stay below one.
 /// assert!(Dy::ratio(1, 3) * Dy::int(3) < Dy::ONE);
@@ -104,14 +104,14 @@ impl Dy {
         }
     }
 
-    /// The nearest dyadic toward zero to a rational.
+    /// The rational `q` rounded toward zero to 62 bits.
     pub fn from_q(q: &Q) -> Dy {
         let r = q.to_big();
         if r.is_zero() {
             return Dy::ZERO;
         }
         let (n, d) = (r.numer().clone(), r.denom().clone());
-        // choose a shift so n * 2^s / d has about 62 bits
+        // The shift `s` is chosen so that `n * 2^s / d` has about 62 bits.
         let bits = |x: &BigInt| i64::try_from(x.abs().bits()).unwrap_or(0);
         let s = i64::from(MANT) + 1 - (bits(&n) - bits(&d));
         let scaled = if s >= 0 {
@@ -152,8 +152,9 @@ impl Dy {
         }
     }
 
-    /// The sum, rounded toward zero to 62 bits; an addend more than 126
-    /// binary orders below the other is dropped.
+    /// The sum, rounded to 62 bits: toward zero, except that an addend more
+    /// than 62 binary orders below the other is first floored, and one more
+    /// than 126 orders below is dropped.
     pub fn add(&self, o: &Dy) -> Dy {
         if self.m == 0 {
             return *o;
@@ -166,7 +167,8 @@ impl Dy {
         if shift > 126 {
             return *hi;
         }
-        // align at the lower exponent, with the higher scaled up as far as is safe
+        // The mantissas are aligned at the lower exponent; the larger is
+        // shifted up by at most 62 bits so that the sum fits an i128.
         let up = shift.min(62);
         let a = i128::from(hi.m) << up;
         let b = i128::from(lo.m) >> (shift - up);
@@ -218,7 +220,8 @@ impl Dy {
         }
     }
 
-    /// `(mantissa, exponent)` with the value `m / 2^62 x 2^(e + 62)`: m in [2^61, 2^62).
+    /// The mantissa and exponent as wide integers: the value is `m x 2^e`,
+    /// with |m| in [2^61, 2^62) unless the value is zero.
     fn parts(&self) -> (i128, i64) {
         (i128::from(self.m), i64::from(self.e))
     }
@@ -232,7 +235,8 @@ impl Dy {
             return Some(Dy::ZERO);
         }
         let (m, e) = self.parts();
-        // make the exponent even, then sqrt(m * 2^62) * 2^((e - 62)/2)
+        // The exponent is made even; the root is then
+        // sqrt(m * 2^62) * 2^((e - 62) / 2).
         let (m, e) = if e.rem_euclid(2) != 0 {
             (m << 1, e - 1)
         } else {
@@ -247,7 +251,8 @@ impl Dy {
         if self.m <= 0 {
             return None;
         }
-        // x = f * 2^k with f = m / 2^62 in [1/2, 1): ln x = ln f + k ln 2
+        // `x = f * 2^k` with `f = m / 2^62` in [1/2, 1), so
+        // `ln x = ln f + k ln 2`.
         let (m, e) = self.parts();
         let k = e + i64::from(MANT);
         let lnf = ln_fixed(m);
@@ -255,12 +260,14 @@ impl Dy {
         Some(norm(total, -i64::from(MANT)))
     }
 
-    /// `e^x`.
+    /// `e^x`, by range reduction to `x = k ln 2 + r` and the Taylor series of
+    /// `e^r` in fixed point.
     pub fn exp(&self) -> Dy {
         if self.m == 0 {
             return Dy::int(1);
         }
-        // x in 2^-62 fixed point (saturating far outside the useful range)
+        // The argument in 2^-62 fixed point; for |x| >= 2^64 the result
+        // saturates to a very large value or to zero.
         let fx = to_fixed(self);
         let Some(fx) = fx else {
             return if self.m > 0 {
@@ -273,7 +280,7 @@ impl Dy {
             };
         };
         let l2 = ln2_fixed();
-        // x = k ln2 + r, |r| <= ln2/2
+        // `x = k ln2 + r` with `k` the nearest integer, so |r| <= ln2/2.
         let k = (fx + (if fx >= 0 { l2 / 2 } else { -l2 / 2 })) / l2;
         let r = fx - k * l2;
         norm(
@@ -292,7 +299,7 @@ impl Dy {
 }
 
 impl Dy {
-    /// pi, to 62 bits.
+    /// The constant pi to 62 bits.
     pub const PI: Dy = Dy {
         m: 3_622_009_729_038_561_421,
         e: -60,
@@ -300,12 +307,13 @@ impl Dy {
     /// One, exact.
     pub const ONE: Dy = Dy { m: 1 << 61, e: -61 };
 
-    /// `n / d` (zero when `d` is zero).
+    /// `n / d`, rounded toward zero to 62 bits (zero when `d` is zero).
     pub fn ratio(n: i64, d: i64) -> Dy {
         Dy::int(n) / Dy::int(d)
     }
 
     /// `mant x 10^exp10`: a measured constant written as a scientific literal.
+    /// Each multiplication or division by ten is rounded toward zero.
     pub fn sci(mant: i64, exp10: i32) -> Dy {
         let mut x = Dy::int(mant);
         let ten = Dy::int(10);
@@ -315,7 +323,8 @@ impl Dy {
         x
     }
 
-    /// `x^n` for an integer power (by squaring).
+    /// `x^n` for an integer power, by repeated squaring; a negative power
+    /// uses `1 / x` (zero when `x` is zero).
     pub fn powi(&self, n: i32) -> Dy {
         let mut base = if n < 0 { Dy::ONE / *self } else { *self };
         let mut k = n.unsigned_abs();
@@ -360,8 +369,8 @@ impl Dy {
     pub fn trunc_i64(&self) -> i64 {
         to_fixed(self)
             .map(|f| {
-                // an arithmetic shift floors; a negative value is shifted by
-                // its magnitude so the result rounds toward zero
+                // An arithmetic shift floors; a negative value is shifted by
+                // its magnitude so that the result rounds toward zero.
                 let whole = if f < 0 { -((-f) >> MANT) } else { f >> MANT };
                 i64::try_from(whole).unwrap_or(if self.m > 0 { i64::MAX } else { i64::MIN })
             })
@@ -388,8 +397,8 @@ impl Dy {
 }
 
 impl Dy {
-    /// `(sin x, cos x)`: reduced by quarter turns to |r| <= pi/4, then the
-    /// Taylor series in 62-bit fixed point.
+    /// `(sin x, cos x)`: reduced by the nearest whole number of quarter turns
+    /// to |r| <= pi/4, then the Taylor series in 62-bit fixed point.
     pub fn sin_cos(&self) -> (Dy, Dy) {
         let half_pi = Dy::PI * Dy::ratio(1, 2);
         let q = (*self / half_pi
@@ -404,7 +413,7 @@ impl Dy {
             return (Dy::ZERO, Dy::ONE);
         };
         let f2 = (f * f) >> MANT;
-        // sin r = r - r^3/3! + ...; cos r = 1 - r^2/2! + ...
+        // `sin r = r - r^3/3! + ...` and `cos r = 1 - r^2/2! + ...`.
         let (mut ts, mut s, mut tc, mut c, mut i) = (f, f, TOP, TOP, 1i128);
         while (ts != 0 || tc != 0) && i < 40 {
             ts = -((ts * f2) >> MANT) / ((2 * i) * (2 * i + 1));
@@ -432,8 +441,9 @@ impl Dy {
         self.sin_cos().1
     }
 
-    /// `atan x`: for |x| > 1 by pi/2 - atan(1/x); halved twice by
-    /// atan x = 2 atan(x / (1 + sqrt(1 + x^2))) to |x| < 0.2; then the series.
+    /// `atan x`: for |x| > 1 by `+-pi/2 - atan(1/x)`; otherwise halved (at
+    /// most twice) by `atan x = 2 atan(x / (1 + sqrt(1 + x^2)))` until
+    /// |x| <= 1/5, then the alternating series.
     pub fn atan(&self) -> Dy {
         if self.m == 0 {
             return Dy::ZERO;
@@ -478,21 +488,21 @@ impl Dy {
         }
     }
 
-    /// `cosh x`.
+    /// `cosh x = (e^x + e^-x) / 2`.
     pub fn cosh(&self) -> Dy {
         let e = self.exp();
         (e + Dy::ONE / e) * Dy::ratio(1, 2)
     }
 
-    /// A uniform draw in [0, 1) from 64 random bits (53 of them, as a
-    /// double's mantissa would hold: the same draws on every machine).
+    /// A uniform draw in [0, 1) from 64 random bits: the top 53 bits, scaled
+    /// by 2^-53.
     pub fn unit(bits: u64) -> Dy {
         norm(i128::from(bits >> 11), -53)
     }
 }
 
 impl Dy {
-    /// The exact bits: (mantissa, exponent), for codecs.
+    /// The exact representation `(mantissa, exponent)`, for codecs.
     pub fn to_bits(&self) -> (i64, i32) {
         (self.m, self.e)
     }
@@ -531,7 +541,8 @@ impl std::ops::Mul for Dy {
     }
 }
 
-/// Division; `x / 0` is 0 (the models guard every denominator they mean).
+/// Division rounded toward zero; `x / 0` is 0. Callers that must detect a
+/// zero denominator use `Dy::div`.
 impl std::ops::Div for Dy {
     type Output = Dy;
     fn div(self, o: Dy) -> Dy {
@@ -606,12 +617,13 @@ fn to_fixed(x: &Dy) -> Option<i128> {
     }
 }
 
-/// `ln 2` in 2^-62 fixed point (floor of ln 2 x 2^62, computed to 80 digits).
+/// `ln 2` in 2^-62 fixed point: the floor of `ln 2 x 2^62`, computed to 80
+/// digits.
 fn ln2_fixed() -> i128 {
     3_196_577_161_300_663_914
 }
 
-/// atanh(z) for |z| <= 1/3 in 2^-62 fixed point: sum z^(2k+1)/(2k+1).
+/// `atanh(z)` for |z| <= 1/3 in 2^-62 fixed point: `sum z^(2k+1) / (2k+1)`.
 fn atanh_fixed(z: i128) -> i128 {
     let z2 = (z * z) >> MANT;
     let (mut p, mut s, mut k) = (z, 0i128, 0i128);
@@ -623,14 +635,14 @@ fn atanh_fixed(z: i128) -> i128 {
     s
 }
 
-/// ln(m / 2^62) for m in [2^61, 2^62), in 2^-62 fixed point:
-/// 2 atanh((f - 1)/(f + 1)), |z| <= 1/3.
+/// `ln(f)` with `f = m / 2^62` for m in [2^61, 2^62), in 2^-62 fixed point:
+/// `2 atanh(z)` with `z = (f - 1) / (f + 1)` in [-1/3, 0].
 fn ln_fixed(m: i128) -> i128 {
     let z = ((m - TOP) << MANT) / (m + TOP);
     2 * atanh_fixed(z)
 }
 
-/// e^r for |r| <= ln2/2 in 2^-62 fixed point: the Taylor series.
+/// `e^r` for |r| <= ln2/2 in 2^-62 fixed point: the Taylor series.
 fn exp_fixed(r: i128) -> i128 {
     let (mut term, mut s, mut i) = (TOP, TOP, 1i128);
     while term != 0 && i < 60 {
@@ -688,7 +700,7 @@ mod tests {
             Dy::int(1_000_000).mul(&Dy::int(1_000_000)).to_q(),
             Q::int(1_000_000_000_000)
         );
-        // huge and tiny keep their 62 bits
+        // A product beyond `i64::MAX` is held: the exponent carries the scale.
         let big =
             Dy::from_q(&Q::from_i128(5972, 1).unwrap()).mul(&Dy::int(1_000_000_000_000_000_000));
         assert!(big > Dy::int(i64::MAX));
@@ -721,7 +733,8 @@ mod tests {
         assert_eq!(Dy::int(1) / Dy::ZERO, Dy::ZERO);
         assert_eq!(Dy::ratio(7, 2).trunc_i64(), 3);
         assert_eq!(Dy::ratio(-7, 2).trunc_i64(), -3);
-        // sin and cos of an angle just past a negative half quarter turn
+        // An angle just past -pi/4, where the quarter-turn reduction changes:
+        // the sine is negative and the cosine positive.
         let (s, c) = Dy::ratio(-63, 80).sin_cos();
         assert!(s < Dy::ZERO && c > Dy::ZERO);
         assert_eq!(format!("{}", Dy::int(-1234)), "-1.23400000000e3");

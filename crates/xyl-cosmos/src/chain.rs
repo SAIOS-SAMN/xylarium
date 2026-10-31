@@ -48,11 +48,11 @@ pub fn radius() -> Q {
     &crate::galaxy::radius_kpc() * &kpc()
 }
 
-/// A galaxy's own sphere (each galaxy an enclosed S^360): the core's pulse
-/// spreads around it and refocuses on the far side at the rim, so the rim is
-/// half a great circle and the radius is rim / pi (galaxy units). The home
-/// galaxy's rim is the founding's (circuit::anchor); another galaxy's scales
-/// with its core.
+/// The radius of a galaxy's sphere (each galaxy an enclosed S^360): the
+/// core's pulse spreads around it and refocuses on the far side at the rim,
+/// so the rim is half a great circle and the radius is rim / pi (galaxy
+/// units). The home galaxy's rim is the founding's (circuit::anchor); another
+/// galaxy's rim is that rim times the galaxy's `scale`.
 pub fn galaxy_radius(scale: &Q) -> Q {
     let rim = &(&crate::galaxy::rim_kpc() * scale) * &kpc();
     rim.checked_div(&pi(80).mid()).unwrap_or(Q::ONE)
@@ -82,11 +82,11 @@ pub struct Place {
     pub sphere: Q,
     /// The place's galaxy (None: on the universe's sphere, i.e. a core).
     pub galaxy: Option<u32>,
-    /// The galaxy's core on the universe's sphere.
+    /// The galaxy's core on the universe's sphere (None for a core).
     pub core: Option<Box<Place>>,
 }
 
-/// A place's degree cell on its own sphere.
+/// A place's degree cell on the sphere it lies on.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Cell {
     /// The sphere's galaxy; `None` for the universe's sphere.
@@ -113,7 +113,7 @@ impl Place {
         }
     }
 
-    /// A place on galaxy `galaxy`'s own sphere of radius `rg`, its core at
+    /// A place on the sphere of galaxy `galaxy`, of radius `rg`, its core at
     /// `core` on the universe's sphere.
     pub fn in_galaxy(reach: Q, dir: [Q; 3], climb: Q, galaxy: u32, rg: &Q, core: Place) -> Place {
         Place {
@@ -127,7 +127,7 @@ impl Place {
         }
     }
 
-    /// The same place, offset a further `out`.
+    /// The same place, offset a further `|out|`.
     pub fn standing_off(mut self, out: &Q) -> Place {
         self.out = &self.out + &out.abs();
         self

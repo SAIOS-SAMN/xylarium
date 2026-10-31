@@ -3,8 +3,8 @@
 
 use super::*;
 
-/// The isotopes: (name, element, half-life Gyr, heat W/kg of the isotope,
-/// its share of the element today).
+/// The radiogenic isotopes: (name, element, half-life in Gyr, heat in W per
+/// kg of the isotope, the isotope's share of the element today).
 pub fn isotopes() -> [(&'static str, &'static str, Q, Q, Q); 4] {
     [
         (
@@ -72,8 +72,8 @@ pub fn heat_sources(world: &World, elements: &[Element], kept: &[Q; 4]) -> [Q; 4
         let Some(ei) = elements.iter().position(|e| &e.sym == el) else {
             continue;
         };
-        // the element's whole mass: U, Th and K are lithophile, so it sits in
-        // the mantle
+        // The element's whole mass is used: U, Th and K are lithophile, so
+        // the element resides in the mantle.
         let mass_kg = &world.elements.get(ei).cloned().unwrap_or(Q::ZERO) * &Si::world_mass_kg();
         let tau = half
             .checked_div(&xyl_core::certified::ln2(BITS).mid())
@@ -84,8 +84,9 @@ pub fn heat_sources(world: &World, elements: &[Element], kept: &[Q; 4]) -> [Q; 4
     out
 }
 
-/// Of an isotope made at a rate falling as exp(-t / tau_f) over `span` Gyr,
-/// the share still present (decay time `tau`).
+/// For an isotope made at a rate proportional to exp(-t / tau_f) over `span`
+/// Gyr and decaying with e-folding time `tau`, the share of the amount made
+/// that is still present at the end of `span`; 1 when `span <= 0`.
 pub fn made_and_kept(tau: &Q, tau_f: &Q, span: &Q) -> Q {
     if span.signum() <= 0 {
         return Q::ONE;
@@ -110,11 +111,13 @@ pub fn made_and_kept(tau: &Q, tau_f: &Q, span: &Q) -> Q {
     )
 }
 
-/// Per isotope, what a star born at `born` Gyr where its ring formed stars
-/// on `tau_f` Gyr (since the first stars at `t1`) kept of what its ring made,
-/// over what the Sun's did (its ring's 6.997 Gyr infall, born at 9.2 Gyr after
-/// first stars at 0.3 Gyr: the reference the isotope abundances are read against).
-/// Decay runs at the universe's own half-lives.
+/// Per isotope, the share kept at the birth of a star born at `born` Gyr,
+/// whose ring formed stars with e-folding time `tau_f` Gyr since the first
+/// stars at `t1`, divided by the same share for the Sun. The Sun's reference
+/// is a 6.997 Gyr infall and birth 8.9 Gyr after the first stars (9.2 Gyr
+/// against first stars at 0.3 Gyr); the isotope abundances are measured
+/// against it with present-day half-lives. The star's decay uses the
+/// half-lives under the universe's laws (`half_life`).
 pub fn kept(tau_f: &Q, t1: &Q, born: &Q, sc: &Scales) -> [Q; 4] {
     let ln2 = xyl_core::certified::ln2(BITS).mid();
     let mut out: [Q; 4] = Default::default();

@@ -1,9 +1,10 @@
-//! The birth gas a system forms from, and the apportioning of a body's
+//! The birth gas from which a system forms, and the apportioning of a body's
 //! matter among the elements.
 
 use super::*;
 
-/// An ice: its species, condensation temperature (K), and (element, atoms).
+/// An ice: the species, its condensation temperature (K), and its formula as
+/// (element, atoms) pairs.
 pub(super) type Ice = (&'static str, i64, &'static [(&'static str, i64)]);
 
 /// The share of each siderophile and chalcophile element left in the
@@ -12,7 +13,7 @@ pub(super) type Ice = (&'static str, i64, &'static [(&'static str, i64)]);
 /// Geochemistry 2.15: BSE ppm x 0.675 / bulk ppm). Declared ruler, measured
 /// on the reference world and applied to all worlds; values as transcribed,
 /// to be checked against the source table. An element not listed keeps none
-/// in its mantle.
+/// in the mantle.
 pub(super) const MANTLE_KEPT: [(&str, &str); 30] = [
     ("Fe", "0.1325"),
     ("Ni", "0.0726"),
@@ -46,7 +47,8 @@ pub(super) const MANTLE_KEPT: [(&str, &str); 30] = [
     ("Bi", "0.169"),
 ];
 
-/// The share of a siderophile or chalcophile element its mantle keeps.
+/// The share of a siderophile or chalcophile element that the mantle keeps
+/// (`MANTLE_KEPT`; 0 for an element not listed).
 pub fn mantle_kept(sym: &str) -> Q {
     MANTLE_KEPT
         .iter()
@@ -83,7 +85,7 @@ pub(super) fn nitrogen_as(sp: &str) -> Q {
     }
 }
 
-/// The local gas: each element's atoms per 10^6 Si, here and then.
+/// The local gas: each element's atoms per 10^6 Si at a given place and time.
 pub struct Gas<'a> {
     /// The element table the counts are indexed by.
     pub elements: &'a [Element],
@@ -97,10 +99,11 @@ pub struct Gas<'a> {
 }
 
 impl<'a> Gas<'a> {
-    /// The gas a star at `r`, born at `born`, formed from (its merger lump `lump`).
+    /// The gas from which a star at radius `r`, born at time `born`, formed,
+    /// with `lump` the star's merger lump.
     ///
-    /// `weights` is its galactic core's recipe (cores.rs): each metal's share
-    /// tilted by its dial, the metals' mass kept.
+    /// `weights` is the galactic core's recipe (cores.rs): a factor per metal
+    /// that tilts the metals' relative shares while keeping their total mass.
     pub fn at(
         chem: &Chemistry,
         elements: &'a [Element],
@@ -109,11 +112,11 @@ impl<'a> Gas<'a> {
         lump: &Q,
         weights: &crate::cores::Weights,
     ) -> Gas<'a> {
-        // the composition is fixed on a grid (2^-32 of an atom per 10^6 Si) so
-        // every world's shares divide by small numbers
+        // The composition is floored to a grid of 2^-32 atoms per 10^6 Si so
+        // that the denominators of every world's shares stay small.
         let grid = Q::int(1 << 32);
-        // counts as atoms per 10^6 Si, whatever unit the founding uses (only
-        // ratios matter), floored exactly
+        // Counts are rescaled to atoms per 10^6 Si whatever unit the founding
+        // uses, since only ratios matter.
         let si = elements
             .iter()
             .find(|e| e.sym == "Si")
@@ -154,11 +157,13 @@ impl<'a> Gas<'a> {
             .unwrap_or(Q::ZERO)
     }
 
-    /// Per unit of rock: the core's share, and each ice (by mass) the disc holds
-    /// below `t_form`, from this gas's own abundances (worlds._solids).
+    /// Per unit of rock mass: the core's share, and the mass of each ice whose
+    /// condensation temperature exceeds `t_form`, from this gas's abundances
+    /// (worlds._solids).
     pub fn solids(&self, t_form: &Q) -> (Q, Vec<(&'static str, Q)>) {
-        // the metals: what core formation sank, and what the mantle kept (iron
-        // as FeO, carrying its oxygen)
+        // The metals split into the part core formation sank and the part the
+        // mantle kept; kept iron is FeO and carries one oxygen per iron. The
+        // mantle also holds Mg and SiO3 (24 and 76 mass units per atom).
         let metal = |sym: &str, a: i64| &Q::int(a) * &self.atoms_of(sym);
         let (fe, ni, s) = (metal("Fe", 56), metal("Ni", 59), metal("S", 32));
         let (kfe, kni, ks) = (mantle_kept("Fe"), mantle_kept("Ni"), mantle_kept("S"));
@@ -199,9 +204,9 @@ impl<'a> Gas<'a> {
         (core.checked_div(&rock).unwrap_or(Q::ZERO), ices)
     }
 
-    /// A body's element masses (world masses), exact, from its layers:
-    /// `core`, `mantle` and `envelope` masses, and each ice's mass, condensed
-    /// where the disc was at `t_form`.
+    /// A body's exact element masses (world masses) from its layer masses
+    /// `core`, `mantle` and `envelope` and each ice's mass, for a body that
+    /// condensed where the disc temperature was `t_form`.
     pub fn apportion(
         &self,
         t_form: &Q,
@@ -214,8 +219,8 @@ impl<'a> Gas<'a> {
             .0
     }
 
-    /// As `apportion`, with the mantle's own share of each element beside the
-    /// whole (what the crust is made from).
+    /// As `apportion`, returning beside the whole body each element's mass in
+    /// the mantle (the matter the crust is made from).
     pub fn apportion_layers(
         &self,
         t_form: &Q,
@@ -228,7 +233,8 @@ impl<'a> Gas<'a> {
         let mut out = vec![Q::ZERO; n];
         let mut in_mantle = vec![Q::ZERO; n];
         let condensed = |e: &Element| e.tc.as_ref().is_some_and(|tc| tc > t_form);
-        // a layer's mass shared among its elements by weight, exactly
+        // A layer's mass is shared among its elements in proportion to their
+        // weights, exactly.
         let shares = |mass: &Q, weights: Vec<(usize, Q)>| -> Vec<(usize, Q)> {
             let total = weights.iter().fold(Q::ZERO, |a, (_, w)| &a + w);
             if total.is_zero() || mass.is_zero() {
@@ -242,8 +248,8 @@ impl<'a> Gas<'a> {
         let w = |e: &Element, i: usize| &e.a * &self.atoms[i];
         let metal =
             |e: &Element| matches!(e.class, Some(Class::Sidero | Class::Chalco)) && condensed(e);
-        // the metal core: what core formation sank of the siderophile and
-        // chalcophile elements that condensed
+        // The metal core holds the sunk part of the siderophile and
+        // chalcophile elements that condensed.
         for (i, m) in shares(
             core,
             self.elements
@@ -255,8 +261,8 @@ impl<'a> Gas<'a> {
         ) {
             out[i] = &out[i] + &m;
         }
-        // the silicate mantle: lithophiles that condensed, the metals it kept,
-        // oxygen as three per silicon and one per iron it kept (FeO)
+        // The silicate mantle holds the condensed lithophiles, the kept metals,
+        // and oxygen at three per silicon and one per kept iron (FeO).
         let oi = self.idx("O");
         let o_weight = |e: &Element| {
             &(&(&e.a * &Q::int(3)) * &self.atoms_of("Si"))
@@ -284,7 +290,7 @@ impl<'a> Gas<'a> {
             out[i] = &out[i] + &m;
             in_mantle[i] = &in_mantle[i] + &m;
         }
-        // the ices, by their own formulas
+        // Each ice's mass is shared among its elements by the ice's formula.
         for (sp, mass) in ices {
             let Some((_, _, parts)) = ICES.iter().find(|(s, _, _)| s == sp) else {
                 continue;
@@ -302,7 +308,8 @@ impl<'a> Gas<'a> {
                 out[i] = &out[i] + &m;
             }
         }
-        // an envelope: the Big Bang's hydrogen and helium
+        // The envelope is primordial hydrogen and helium, in the Big Bang's
+        // mass fractions x and y.
         if let (Some(h), Some(he)) = (self.idx("H"), self.idx("He")) {
             out[h] = &out[h] + &(envelope * &self.x);
             out[he] = &out[he] + &(envelope * &self.y);

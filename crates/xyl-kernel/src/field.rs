@@ -1,6 +1,7 @@
-//! The field in play: delivers the bells' pulses to the stars peoples live
-//! by, keeps each star's absorbed-energy books, moves its worlds and the
-//! star itself, and reads the radiation and environment of each people.
+//! The field in play: delivers the bells' pulses to the stars that peoples
+//! inhabit, keeps each star's absorbed-energy books, moves the star's worlds
+//! and the star itself, and reads the radiation and environment of each
+//! people.
 //!
 //! Inputs: the [`Cosmic`] world (peoples' stars, witnessed systems, star
 //! places) and the bells from `xyl_cosmos::pulse` (the core and the holes
@@ -17,7 +18,7 @@
 //!   `Q` ([`Books::balances`]).
 //! - Anchors and drift: each star's worlds as anchors from its G point
 //!   (AU), and the star's offset from its galactic orbit (AU, summed per
-//!   axis), which times its next arrivals.
+//!   axis), which shifts the arrival times of later pulses.
 //! - Radiation ([`Field::radiation`]): the star's absorbed energy per year
 //!   over the world's orbital radius.
 //! - Environment ([`Field::environment`]): 1 at or below the people's tuned
@@ -37,26 +38,28 @@ use xyl_cosmos::chain::radius;
 use xyl_cosmos::field::{absorb, au_per_kpc, bells, burning, path, Absorbed, Anchor, Bell};
 use xyl_cosmos::pulse::{nodes, nodes_among, Node};
 
-/// Number of sample stars searched for bells: the core plus the holes among
-/// the first `SAMPLE` stars (and all of the nucleus's).
+/// Number of sample stars searched for bells: the bells are the core plus the
+/// holes among the first `SAMPLE` stars and all holes of the nucleus.
 const SAMPLE: u64 = 64;
 
-/// What a star has absorbed, all told.
+/// The cumulative energy books of one star: every pulse absorbed and how its
+/// energy was divided.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Books {
-    /// Energy absorbed from all pulses since the first, in the field's energy units (xyl-cosmos
-    /// field.rs).
+    /// Energy absorbed from all pulses since the first, in the field's energy
+    /// units (xyl-cosmos field.rs).
     pub energy_in: Q,
     /// Part of `energy_in` spent re-locking the star's worlds on their orbits.
     pub gravity: Q,
-    /// Part of `energy_in` given out as light: the remainder after gravity and burn-out.
+    /// Part of `energy_in` given out as light: the remainder after gravity and
+    /// burn-out.
     pub light: Q,
-    /// Part of `energy_in` converted by the star's burning step (its mass defect share of what
-    /// gravity left).
+    /// Part of `energy_in` converted by the star's burning step: the star's
+    /// mass-defect share of what gravity left.
     pub burned_out: Q,
     /// Number of pulses absorbed.
     pub pulses: u64,
-    /// When it first absorbed a pulse (Gyr).
+    /// Time of the first absorbed pulse, in Gyr; `None` before any.
     pub since: Option<Dy>,
 }
 
@@ -71,12 +74,14 @@ impl Books {
         self.since.get_or_insert(at);
     }
 
-    /// In = gravity + light + burned out, exactly.
+    /// Returns whether `energy_in = gravity + light + burned_out` holds exactly.
     pub fn balances(&self) -> bool {
         &(&self.gravity + &self.light) + &self.burned_out == self.energy_in
     }
 
-    /// Its absorbed energy a year since its first pulse, at `now` Gyr.
+    /// Returns the absorbed energy per year since the first pulse, at `now`
+    /// Gyr (the factor 10^9 converts Gyr to years); zero before the first
+    /// pulse or when `now` is not later than it.
     pub fn per_year(&self, now: Dy) -> Dy {
         match self.since {
             Some(t) if now > t => Dy::from_q(&self.energy_in) / ((now - t) * Dy::sci(1, 9)),
@@ -85,26 +90,29 @@ impl Books {
     }
 }
 
-/// The field as the universe plays it.
+/// The field state of the universe in play: the bells and each reached
+/// star's books, anchors and drift.
 #[derive(Clone, Debug, Default)]
 pub struct Field {
     bells: Vec<(Node, Bell)>,
     /// Each reached star's books, by star.
     pub books: BTreeMap<u64, Books>,
-    /// Each people's home radiation, its repair tuned to it (indexed like
-    /// `cosmic.peoples`; None until it first lives in any).
+    /// Each people's tuned home radiation, the level the people's repair is
+    /// adapted to (indexed like `cosmic.peoples`; `None` until the people
+    /// first receives nonzero radiation).
     pub home: Vec<Option<Dy>>,
-    /// Each reached star's worlds where they stand (AU from its G point).
+    /// Each reached star's world anchors, in AU from the star's G point.
     pub anchors: BTreeMap<u64, Vec<Anchor>>,
-    /// How far the pulses have carried each reached star from its galactic
-    /// orbit (AU).
+    /// Each reached star's offset from its galactic orbit caused by the
+    /// pulses, in AU per axis.
     pub drift: BTreeMap<u64, [Q; 3]>,
 }
 
 impl Field {
-    /// The field of `cosmic`'s bells. `heavy`, when given, lists the sample
-    /// stars already known to leave holes (`Field::heavy` of an earlier
-    /// build), skipping the exact mass check of every candidate.
+    /// Returns the field of `cosmic`'s bells with empty books. `heavy`, when
+    /// given, lists the sample stars already known to leave holes
+    /// (`Field::heavy` of an earlier build), which skips the exact mass check
+    /// of every candidate.
     pub fn of(cosmic: &Cosmic<'_>, heavy: Option<&[u64]>) -> Field {
         let ns = match heavy {
             Some(ks) => nodes_among(cosmic.gal.seed, cosmic.gal.bang, ks),
@@ -120,7 +128,8 @@ impl Field {
         }
     }
 
-    /// The sample stars whose holes ring as bells (the core aside).
+    /// Returns the indices of the sample stars whose holes are bells, excluding
+    /// the core.
     pub fn heavy(&self) -> Vec<u64> {
         self.bells
             .iter()
@@ -131,12 +140,12 @@ impl Field {
             .collect()
     }
 
-    /// Number of bells (ringing nodes: the core and the sampled heavy stars) in the field.
+    /// Number of bells in the field: the core and the sampled heavy stars.
     pub fn bells(&self) -> usize {
         self.bells.len()
     }
 
-    /// The bells' nodes, for other consumers (e.g. percepts). Sampled once
+    /// Returns the bells' nodes, for other consumers such as percepts. Sampled once
     /// here, since finding the heavy stars checks every candidate's mass
     /// exactly.
     pub fn nodes(&self) -> Vec<Node> {
@@ -144,12 +153,12 @@ impl Field {
     }
 
     /// Delivers every pulse arriving in `(from, to]` Gyr at the stars peoples
-    /// live by; each star absorbs each ring by its own law. Returns the number
-    /// of pulses delivered.
+    /// inhabit; each star absorbs each ring by `xyl_cosmos::field::absorb`.
+    /// Returns the number of pulses delivered.
     pub fn step(&mut self, cosmic: &Cosmic<'_>, from: Dy, to: Dy) -> u64 {
         use rayon::prelude::*;
         // Stars' books, worlds and drift do not depend on each other, so each
-        // star's state is taken out, carried in parallel and stored back.
+        // star's state is taken out, updated in parallel and stored back.
         let stars: std::collections::BTreeSet<u64> =
             cosmic.peoples.iter().map(|p| p.star).collect();
         let held: Vec<(u64, Option<Vec<Anchor>>, Option<[Q; 3]>, Option<Books>)> = stars
@@ -186,9 +195,11 @@ impl Field {
         delivered
     }
 
-    /// The quantum radiation a people's world receives at `now` (energy per
-    /// year per AU): its star's absorbed energy per year over the world's
-    /// orbital radius (linear in distance).
+    /// Returns the quantum radiation a people's world receives at `now`
+    /// (energy per year per AU): the star's absorbed energy per year divided
+    /// by the world's orbital radius in AU (floored at 10^-6), so the reading
+    /// falls as 1 / a. Returns zero when the people, the star's books or the
+    /// world are missing.
     pub fn radiation(&self, cosmic: &Cosmic<'_>, people: usize, now: Dy) -> Dy {
         let Some(p) = cosmic.peoples.get(people) else {
             return Dy::ZERO;
@@ -203,10 +214,11 @@ impl Field {
         b.per_year(now) / a
     }
 
-    /// A people's `environment` from its radiation over `years`, with
-    /// generation `gen_yr`: 1 within its tuned home radiation, else
-    /// home / radiation. The tuning then moves toward the current radiation
-    /// at 1 - e^(-years / generation).
+    /// Returns a people's environment factor from `radiation` over `years`,
+    /// with generation time `gen_yr`: 1 at or below the tuned home radiation,
+    /// else home / radiation. The first nonzero radiation becomes the home
+    /// radiation and returns 1. The home radiation then moves toward the
+    /// current radiation with weight 1 - e^(-years / gen_yr).
     pub fn environment(&mut self, people: usize, radiation: Dy, years: Dy, gen_yr: Dy) -> Dy {
         if self.home.len() <= people {
             self.home.resize(people + 1, None);
@@ -231,7 +243,7 @@ impl Field {
 }
 
 /// One star's state between deliveries: its worlds' anchors, its drift (AU
-/// per axis) and its books, each None until first reached.
+/// per axis) and its books, each `None` until first reached.
 type StarState = (Option<Vec<Anchor>>, Option<[Q; 3]>, Option<Books>);
 
 /// Delivers every bell's pulses arriving in `(from, to]` Gyr to `star` from
@@ -267,8 +279,9 @@ fn ring_star(
         if node.born >= to {
             continue;
         }
-        // The star's place: its manifold position offset by its drift
-        // (AU), summed per axis (L1), not as a Euclidean length.
+        // The star's place: its manifold position at `to`, stood off by the
+        // drift's L1 length (the sum of the absolute per-axis offsets in AU,
+        // converted to kpc), not by a Euclidean length.
         let kpc = au_per_kpc();
         let off = drift
             .iter()
@@ -318,18 +331,18 @@ mod tests {
     #[test]
     fn environment_tunes_to_home_and_falls_above_it() {
         let mut f = Field::default();
-        // nothing to tune to yet: a people is at home
+        // With no radiation there is nothing to tune to; the factor is 1.
         assert_eq!(f.environment(0, Dy::ZERO, Dy::ONE, Dy::int(25)), Dy::ONE);
-        // its first radiation is its home
+        // The first nonzero radiation becomes the home radiation.
         assert_eq!(f.environment(0, Dy::int(4), Dy::ONE, Dy::int(25)), Dy::ONE);
-        // less than home costs nothing; twice home halves it
+        // Radiation below home gives 1; twice home gives one half.
         assert_eq!(
             f.environment(0, Dy::int(2), Dy::sci(1, -9), Dy::int(25)),
             Dy::ONE
         );
         let e = f.environment(0, Dy::int(8), Dy::sci(1, -9), Dy::int(25));
         assert!((e - Dy::ratio(1, 2)).abs() < Dy::sci(1, -6), "{e}");
-        // over many generations its repair comes to its new radiation
+        // Over many generations the home radiation moves to the new radiation.
         f.environment(0, Dy::int(8), Dy::int(10_000), Dy::int(25));
         let e = f.environment(0, Dy::int(8), Dy::sci(1, -9), Dy::int(25));
         assert!(e > Dy::ratio(99, 100), "adapted: {e}");

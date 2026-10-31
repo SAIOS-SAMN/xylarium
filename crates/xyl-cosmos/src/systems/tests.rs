@@ -1,4 +1,4 @@
-//! Tests of systems: the disc's and each body's mass books.
+//! Tests of systems: the mass balance of the disc and of each body.
 
 use super::*;
 use crate::galaxy::star;
@@ -16,9 +16,9 @@ fn disc_and_world_element_masses_sum_exactly() {
                 let Some(star) = star(7, bang, n) else {
                     continue;
                 };
-                // a standing star has a disc frame, and the disc law's
-                // books close: regions' holdings plus the belt equal the
-                // infall less the star's share
+                // A standing star has a disc frame, and the disc law's mass
+                // balance closes: the regions' holdings plus the belt equal
+                // the infall less the star's share.
                 let frame = crate::galaxy::disc_frame(&star.r, &star.mass)
                     .expect("a standing star's frame");
                 let (regions, belt) =
@@ -39,8 +39,9 @@ fn disc_and_world_element_masses_sum_exactly() {
                     assert_eq!(sum, w.mass, "a world's elements sum to its mass exactly");
                     let layer_sum = w.layers.iter().fold(Q::ZERO, |a, x| &a + x);
                     assert_eq!(layer_sum, Q::ONE);
-                    // the mantle's elements sum to its layer, and no
-                    // element's mantle mass exceeds the world's
+                    // The mantle's elements sum to the mantle layer's mass,
+                    // and no element's mantle mass exceeds its mass in the
+                    // whole world.
                     let mantle_mass = &w.mass * &w.layers[1];
                     let mantle_sum = w.mantle.iter().fold(Q::ZERO, |a, x| &a + x);
                     assert_eq!(

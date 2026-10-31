@@ -3,16 +3,18 @@
 
 use super::*;
 
-/// A star's ultraviolet activity relative to a quiet one: saturated while
-/// young, longer for small stars (`star_mass` in the universe's stellar unit).
+/// A star's ultraviolet activity relative to a quiet one,
+/// `1 + 9 exp(-age x k)`: 10 at birth, decaying toward 1, more slowly for
+/// small stars (`star_mass` in the universe's stellar unit).
 pub fn activity(star_mass: Dy, age: Dy) -> Dy {
-    // spin-down rate linear in stellar mass
+    // The spin-down rate k is linear in stellar mass, at least 1/20.
     let spin_down = star_mass.max(Dy::ratio(1, 20));
     Dy::ONE + Dy::int(9) * (-(age.max(Dy::ZERO) * spin_down)).exp()
 }
 
 /// The integrated stellar activity a world receives from its star's birth to
-/// `age` (Gyr x activity), including the young star's saturated phase.
+/// `age` (Gyr x activity), the integral of `activity`:
+/// `t + 9 (1 - exp(-t k)) / k`.
 pub fn wind_dose(star_mass: Dy, age: Dy) -> Dy {
     let kk = star_mass.max(Dy::ratio(1, 20));
     let t = age.max(Dy::ZERO);

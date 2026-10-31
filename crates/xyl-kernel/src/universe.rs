@@ -8,10 +8,11 @@
 //!   converted to `Dy` at the seam with the older layers.
 //! - Events: [`Universe::next_event`] is the soonest of the forecast's next
 //!   waking, the next pending [`Input`] and the next ley line falling due.
-//!   [`Universe::advance_to`] lands each at its own count, then takes every
+//!   [`Universe::advance_to`] applies each at its count, then takes every
 //!   reading at the target: the bells' rings delivered in closed form
-//!   (field.rs), each people carried once over its own span (civ/mod.rs), the
-//!   ley network and quarantine carried, and fallen peoples' seats released.
+//!   (field.rs), each people carried once over the span since it was last
+//!   carried (civ/mod.rs), the ley network and quarantine carried, and
+//!   fallen peoples' seats released.
 //! - Live play (`live`): the civilizations' layer is carried across each
 //!   span in pieces no longer than a tenth of the shortest turning (1 / rate
 //!   or one generation) of any living people.
@@ -37,12 +38,14 @@ use xyl_core::Q;
 /// The bell: the core's exact period, used to convert counts to deep time.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Bell {
-    /// One ring of the core (Gyr), fixed on a 2^-60 grid once.
+    /// The period of one ring of the core (Gyr), rounded down once onto a
+    /// 2^-60 grid.
     pub period_gyr: Q,
 }
 
 impl Bell {
-    /// The bell of the core: its period in Gyr, rounded down onto a 2^-60 grid.
+    /// The bell of the core: the core's period in Gyr, rounded down onto a
+    /// 2^-60 grid.
     pub fn of() -> Bell {
         let yr = xyl_cosmos::pulse::core_period_yr().to_q();
         let gyr = yr.checked_div(&Q::int(1_000_000_000)).unwrap_or(Q::ONE);
@@ -51,42 +54,46 @@ impl Bell {
         }
     }
 
-    /// Deep time (Gyr since the Big Bang) at a count.
+    /// Deep time (Gyr since the Big Bang) at a count: count x period.
     pub fn gyr(&self, count: &Q) -> Q {
         count * &self.period_gyr
     }
 
-    /// The count at a deep time.
+    /// The count at a deep time `gyr`: gyr / period; zero when the period is
+    /// zero.
     pub fn count(&self, gyr: &Q) -> Q {
         gyr.checked_div(&self.period_gyr).unwrap_or(Q::ZERO)
     }
 
-    /// The same, from the older layers' Gyr (the seam).
+    /// The count at a deep time given as the older layers' `Dy` Gyr (the
+    /// seam).
     pub fn count_dy(&self, gyr: Dy) -> Q {
         self.count(&gyr.to_q())
     }
 
-    /// The older layers' Gyr at a count (the seam).
+    /// Deep time at a count as the older layers' `Dy` Gyr (the seam).
     pub fn gyr_dy(&self, count: &Q) -> Dy {
         Dy::from_q(&self.gyr(count))
     }
 }
 
-/// An input: what no law determines, landed at its count.
+/// An input: an action no law determines, applied at its count.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Input {
-    /// A seat taken by a mind (its key).
+    /// A seat taken by a mind, identified by the mind's key.
     Take {
         /// Index of the seat in [`Seats::list`].
         seat: usize,
         /// The taking mind's 32-byte key.
         mind: [u8; 32],
     },
-    /// A ruler turning its people's inquiry (None lifts it).
+    /// A ruler directing its people's inquiry to a domain (`None` lifts the
+    /// direction).
     Focus {
         /// Index of the ruler's seat in [`Seats::list`].
         seat: usize,
-        /// The domain the inquiry turns to; `None` lets it follow the people's needs.
+        /// The domain the inquiry is directed to; `None` lets it follow the
+        /// people's needs.
         domain: Option<Domain>,
     },
     /// A people moved whole to another world of its star (an exodus decided
@@ -94,10 +101,10 @@ pub enum Input {
     Move {
         /// The people's index.
         people: usize,
-        /// The world it moved to.
+        /// The world the people moved to.
         world: usize,
     },
-    /// A realm's steward set a ley line's handling.
+    /// A realm's steward sets a ley line's handling.
     Handle {
         /// Index of the steward's seat in [`Seats::list`].
         seat: usize,
@@ -108,8 +115,9 @@ pub enum Input {
         /// The handling set.
         handling: crate::transit::Handling,
     },
-    /// A people founded a daughter people on another world of its star
-    /// (decided by the carry, recorded so a restart lays it back).
+    /// A people founds a daughter people on another world of its star
+    /// (decided by the carry, recorded so a restart lays it back at its
+    /// count).
     Settle {
         /// The parent's index.
         parent: usize,
@@ -124,7 +132,8 @@ pub enum Input {
 /// inquiry; a realm's steward sets a ley line's handling.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Decision {
-    /// Direct the people's inquiry to a domain, or lift the direction with `None`.
+    /// Direct the people's inquiry to a domain, or lift the direction with
+    /// `None`.
     Focus(Option<Domain>),
     /// Set the handling of the ley line between stars `a` and `b` (either
     /// way) in the steward's realm.
@@ -138,10 +147,10 @@ pub enum Decision {
     },
 }
 
-/// What happened, at its exact count.
+/// A log entry: an event and its exact count.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Logged {
-    /// The bell's count (rings) at which it happened.
+    /// The bell's count (rings) at which the event happened.
     pub at: Q,
     /// Category tag, such as `"INPUT"` or an annal's or ley network's kind.
     pub kind: &'static str,
@@ -149,7 +158,8 @@ pub struct Logged {
     pub text: String,
 }
 
-/// The universe.
+/// The universe in play: the cosmic world, the civilizations, the field, the
+/// seats, the clocks, the ley network and the event log.
 pub struct Universe<'g> {
     /// The galaxy, its systems, peoples, annals and forecast.
     pub cosmic: Cosmic<'g>,
@@ -167,25 +177,26 @@ pub struct Universe<'g> {
     pub pending: Vec<(Q, Input)>,
     /// Every input applied, at its count (held in the checkpoint).
     pub inputs: Vec<(Q, Input)>,
-    /// What happened, in order.
+    /// The event log, in order.
     pub log: Vec<Logged>,
     /// The keepers, epicenter to rims, and their chain.
     pub clocks: crate::chronometry::Chronometry,
-    /// The ley lines built by ancient peoples, and the quarantine.
+    /// The ley lines built by ancient peoples and the quarantine.
     pub network: crate::transit::Network,
     /// Whether the carry decides exoduses and settlements; false while a
     /// checkpoint is laid back, when the recorded inputs carry them.
     pub decide: bool,
-    /// The annals already logged.
+    /// The number of cosmic annals already copied into the log.
     annals_seen: usize,
     /// Deep time the bells' rings have been delivered to (Gyr).
     rung_to: Dy,
 }
 
 impl<'g> Universe<'g> {
-    /// The universe at its cosmic world's present (its first mind's dawn after
-    /// genesis): its seats and its bells. The bells' rings and the ruins are
-    /// read when it is carried (`advance_to`).
+    /// The universe at the cosmic world's present (the first mind's dawn
+    /// after genesis), with its field, seats and keepers; `heavy` is passed to
+    /// `Field::of`. The bells' rings are delivered when the universe is
+    /// carried (`advance_to`).
     pub fn begin(cosmic: Cosmic<'g>, heavy: Option<&[u64]>) -> Universe<'g> {
         let bell = Bell::of();
         let now = bell.count_dy(cosmic.now);
@@ -218,21 +229,24 @@ impl<'g> Universe<'g> {
         self.clocks.commit(&now, point);
     }
 
-    /// Deep time now (Gyr), at the seam.
+    /// Deep time now (Gyr), as the older layers' `Dy`.
     pub fn gyr(&self) -> Dy {
         self.bell.gyr_dy(&self.now)
     }
 
-    /// Whole rings the bell has rung: the time coordinate that percepts and
-    /// ledger entries cite. The phase within the ring stays in `now`.
+    /// Whole rings the bell has rung, floor(now) clamped at zero: the time
+    /// coordinate that percepts and ledger entries cite. The phase within the
+    /// ring stays in `now`.
     pub fn ring(&self) -> u64 {
         u64::try_from(self.now.floor_i128().unwrap_or(0).max(0)).unwrap_or(u64::MAX)
     }
 
-    /// Lands a seat's decision now as an input, applied by the kernel (never
+    /// Applies a seat's decision now as an input, applied by the kernel (not
     /// by the mind) and held in the checkpoint like every input. Returns the
-    /// annal written, or the refusal reason (no such seat, seat on no people).
-    /// Repeating the current direction changes nothing and records no input.
+    /// annal written, or `Err` with the refusal reason: no such seat, a
+    /// handling decision from a seat that is not a steward's, or a focus
+    /// decision from a seat on no people. Repeating the current focus changes
+    /// nothing and records no input.
     pub fn decide(
         &mut self,
         seat: usize,
@@ -304,8 +318,9 @@ impl<'g> Universe<'g> {
         })
     }
 
-    /// The next event's count after now: the forecast's next waking, the
-    /// next input or the next ley line falling due, whichever is soonest.
+    /// The count of the soonest event among the forecast's next waking, the
+    /// first pending input and the next ley line falling due; `None` when
+    /// there is none. A pending input may lie at or before now.
     pub fn next_event(&self) -> Option<Q> {
         let wake = self.cosmic.next_wake().map(|g| self.bell.count_dy(g));
         let input = self.pending.first().map(|(at, _)| at.clone());
@@ -331,13 +346,16 @@ impl<'g> Universe<'g> {
             .collect()
     }
 
-    /// The ley network carried to now: the lines fallen due opened at
-    /// their moments, the quarantine read from the peoples' discord.
+    /// Carries the ley network to now: folds of space are read, the lines
+    /// that have fallen due open at their moments, the quarantine is read from
+    /// the peoples' discord, realm seats are raised, and the peoples' network
+    /// turnings are recorded.
     fn carry_network(&mut self) {
         let at = self.gyr();
         let before = self.standing();
-        // folding space: each living people that is no ancient house reads
-        // its folds since last read (transit/discord.rs `Network::fold`)
+        // Folding space: each living non-ancient people with a cruise speed
+        // above zero has its folds since the last read evaluated
+        // (transit/discord.rs `Network::fold`).
         let rulers = crate::growth::Rulers::default();
         for (i, parts) in &self.discord_parts() {
             let Some(p) = self.cosmic.peoples.get(*i) else {
@@ -378,7 +396,7 @@ impl<'g> Universe<'g> {
                 text,
             });
         }
-        // realms formed by the lines raise their stewards' seats
+        // Each realm formed by the lines raises a steward's seat.
         for key in self.network.note_realms() {
             self.log.push(Logged {
                 at: self.now.clone(),
@@ -389,8 +407,9 @@ impl<'g> Universe<'g> {
             });
         }
         self.seats = self.seats.extend_realms(self.network.realm_keys.len());
-        // the turnings of its history the network gave: joining it (network)
-        // and its constellation closing or reopening (quarantine)
+        // The network's turnings in each people's history: joining the
+        // network ("network") and its constellation closing or reopening
+        // ("quarantine").
         for (i, now) in self.standing().into_iter().enumerate() {
             let (Some(Some(was)), Some(now)) = (before.get(i).cloned(), now) else {
                 continue;
@@ -410,8 +429,8 @@ impl<'g> Universe<'g> {
         }
     }
 
-    /// Queue an input at its count (kept in order; one at or before now
-    /// lands at the next advance).
+    /// Queues an input at its count, after any input already queued at the
+    /// same count; an input at or before now is applied at the next advance.
     pub fn queue(&mut self, at: Q, input: Input) {
         let i = self
             .pending
@@ -421,15 +440,17 @@ impl<'g> Universe<'g> {
         self.pending.insert(i, (at, input));
     }
 
-    /// Advances the universe to `to`, event by event: each waking and input at
-    /// its own count, then every reading at `to` (peoples' numbers by their
-    /// logistic from the last carry, a fall solved as a crossing inside the
-    /// span; bells' rings since last delivered, in closed form; ruins buried).
-    /// With `live`, the civilizations' layer is carried across each span
+    /// Advances the universe to `to`, event by event: each waking, input and
+    /// ley line falling due at its count, then every reading at `to` (the
+    /// bells' rings since last delivered, in closed form; peoples' numbers by
+    /// their logistic from the last carry, a fall solved as a crossing inside
+    /// the span; the ley network; seat releases). With `live`, the
+    /// civilizations' layer is carried across each span between events
     /// instead. Returns the entries logged.
     pub fn advance_to(&mut self, to: &Q, live: bool) -> Vec<Logged> {
         let from_log = self.log.len();
-        // precompute systems and worlds for every waking in the span, in parallel
+        // Systems and worlds for every waking in the span are computed first,
+        // in parallel.
         let clock = std::time::Instant::now();
         xyl_core::watch::stage("carry: prepare");
         self.cosmic.prepare(self.bell.gyr_dy(to));
@@ -449,8 +470,9 @@ impl<'g> Universe<'g> {
                     let before = self.gyr();
                     self.civilizations(before, at);
                 } else {
-                    // a waking: the mind arises at its own moment; peoples'
-                    // numbers and knowledge are carried at the reading at `to`
+                    // A waking: the mind arises at the waking's moment;
+                    // peoples' numbers and knowledge are carried at the
+                    // reading at `to`.
                     self.cosmic.wake(at);
                 }
                 self.now = target.clone();
@@ -483,8 +505,8 @@ impl<'g> Universe<'g> {
         let woke = clock.elapsed();
         xyl_core::watch::stage("carry: readings");
         self.read_at_now(live);
-        // timing diagnostics: preparation, events (including seat and annal
-        // bookkeeping), readings
+        // Timing diagnostics: preparation, events (including seat and annal
+        // bookkeeping) and readings.
         if events > 0 {
             xyl_core::watch::note(&format!(
                 concat!(
@@ -501,12 +523,14 @@ impl<'g> Universe<'g> {
         self.log[from_log..].to_vec()
     }
 
-    /// Every reading at now: the peoples carried, the bells' rings delivered,
-    /// the ruins buried, the fallen's seats released.
+    /// Takes every reading at now: the bells' rings delivered, the peoples
+    /// carried (unless `live`, where the carry ran per span), the ley network
+    /// carried and the seats of fallen peoples released.
     fn read_at_now(&mut self, live: bool) {
         let at = self.gyr();
         let t = std::time::Instant::now();
-        // the bells' rings delivered first: a people's environment reads them
+        // The bells' rings are delivered first because a people's environment
+        // reads them.
         if at > self.rung_to {
             self.field.step(&self.cosmic, self.rung_to, at);
             self.rung_to = at;
@@ -517,8 +541,9 @@ impl<'g> Universe<'g> {
         ));
         let t = std::time::Instant::now();
         if !live {
-            // wake every mind due by now, then carry each people once over its
-            // own span (civ/mod.rs `carry`), the same carry the live path uses
+            // Every mind due by now wakes; each people is then carried once
+            // over the span since it was last carried (civ/mod.rs `carry`),
+            // the same carry the live path uses.
             self.cosmic.wake(at);
             let environment = self.environment(at, None);
             let acts = self
@@ -535,7 +560,8 @@ impl<'g> Universe<'g> {
             self.network.lines.len(),
             t.elapsed()
         ));
-        // release a fallen people's seat; network minds hold ancient seats only
+        // A fallen people's seat returns to the universe, and so does every
+        // non-ancient seat a mind holds: network minds hold ancient seats only.
         let fallen: Vec<usize> = self
             .cosmic
             .peoples
@@ -554,9 +580,10 @@ impl<'g> Universe<'g> {
         self.log_annals();
     }
 
-    /// Carries the civilizations' layer (civ/mod.rs) across a span in live play,
-    /// in pieces no longer than a tenth of the shortest turning of any living
-    /// people.
+    /// Carries the civilizations' layer (civ/mod.rs) across the span from
+    /// `from` to `to` (Gyr) in live play, in pieces no longer than a tenth of
+    /// the shortest turning, min(1 / rate, generation), of any living people
+    /// and no shorter than 1e-12 Gyr.
     fn civilizations(&mut self, from: Dy, to: Dy) {
         let rulers = crate::growth::Rulers::default();
         let mut at = from;
@@ -591,9 +618,10 @@ impl<'g> Universe<'g> {
         }
     }
 
-    /// Each people's environment at `at` (field.rs): its radiation there
-    /// against its home's, its repair following over its span - `span`
-    /// years, or each people's own span since it was last carried.
+    /// Each people's environment at `at` (field.rs): the radiation at the
+    /// people's place against the radiation of its home, with repair following
+    /// over `span` years or, when `span` is `None`, over the years since the
+    /// people was last carried (or since its dawn).
     fn environment(&mut self, at: Dy, span: Option<Dy>) -> Vec<Dy> {
         let rulers = crate::growth::Rulers::default();
         (0..self.cosmic.peoples.len())
@@ -617,11 +645,13 @@ impl<'g> Universe<'g> {
             .collect()
     }
 
-    /// Each living non-ancient people's discord and its parts: drive by energy
-    /// mastery, v_e = v_chem + mu (v_best - v_chem); reach per generation,
+    /// Each living non-ancient people's discord and its parts, for peoples
+    /// whose star lies in a constellation: drive by energy mastery,
+    /// v_e = v_chem + mu (v_best - v_chem); reach per generation,
     /// rho = cruise x generation; share off its constellation,
     /// o = rho / (rho + reach_C); forgetting share f = 1 - z; whether its
-    /// constellation holds a ley mouth, J; discord d = o f (1 - J).
+    /// constellation holds a ley mouth, J; d = o f (1 - J); breach b from
+    /// folded space; discord = 1 - (1 - d)(1 - b).
     pub fn discord_parts(&self) -> std::collections::BTreeMap<usize, crate::transit::Discord> {
         use crate::transit::{
             best_spec, blended, cruise_speed, home_escape, kpc_m, year_s, Discord,
@@ -664,9 +694,9 @@ impl<'g> Universe<'g> {
             let forget = Dy::ONE - step.z.unwrap_or(Dy::ONE);
             let joined = net.holds_mouth(p.star);
             let d = if joined { Dy::ZERO } else { off * forget };
-            // a people that folds space breaches the network: its folded
-            // energy against its constellation's lawful lines and one passage
-            // of its own
+            // A people that folds space breaches the network: the breach
+            // weighs its folded energy against its constellation's lawful
+            // lines and the energy of one passage of the people's drive.
             let body = crate::growth::body_kg(&p.traits, &rulers);
             let breach = net.breach(&self.cosmic, i, crate::transit::passage_j(body, spec.v_e));
             out.insert(
@@ -687,8 +717,8 @@ impl<'g> Universe<'g> {
         out
     }
 
-    /// Each people's discord alone (the share its constellation is held
-    /// closed by).
+    /// Each people's discord alone: the share by which its constellation is
+    /// held closed.
     pub fn discord(&self) -> std::collections::BTreeMap<usize, Dy> {
         self.discord_parts()
             .into_iter()
@@ -696,7 +726,8 @@ impl<'g> Universe<'g> {
             .collect()
     }
 
-    /// Apply every pending input whose count has come.
+    /// Applies every pending input whose count is at or before now, logs it
+    /// and records it.
     fn land_inputs(&mut self) {
         while self.pending.first().is_some_and(|(at, _)| at <= &self.now) {
             let (at, input) = self.pending.remove(0);
@@ -710,7 +741,8 @@ impl<'g> Universe<'g> {
         }
     }
 
-    /// An input applied by the kernel (never by the mind): what it did.
+    /// Applies an input in the kernel (not in the mind) and returns a
+    /// description of what it did or why it did nothing.
     pub fn apply(&mut self, input: &Input) -> String {
         match input {
             Input::Take { seat, mind } => match self.seats.take(*seat, Holder::Mind(*mind)) {
@@ -799,7 +831,8 @@ impl<'g> Universe<'g> {
         }
     }
 
-    /// The cosmic annals written since last logged, each at its own count.
+    /// Copies the cosmic annals written since the last call into the log, each
+    /// at the count of its epoch.
     fn log_annals(&mut self) {
         for a in &self.cosmic.annals[self.annals_seen..] {
             self.log.push(Logged {

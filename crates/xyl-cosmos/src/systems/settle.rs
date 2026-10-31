@@ -3,23 +3,24 @@
 
 use super::*;
 
-/// A small body of a disc on its circle: its reach (AU, or a
-/// giant's radii for a moon), its matter (world masses) and its phase (turns).
+/// A small body of a disc on a circular orbit: the reach `a` (AU, or host
+/// radii for a moon), the mass `m` (world masses) and the phase (turns).
 #[derive(Clone, Debug)]
 pub(super) struct Embryo {
     pub(super) a: Q,
     pub(super) m: Q,
     pub(super) phase: Q,
-    /// The greatest swing its neighbours give it at the settled age, as a
-    /// share of its reach (settle_about): its starting eccentricity and tilt.
+    /// The largest swing the neighbours impart by the settled age, as a share
+    /// of the body's reach (settle_about); it sets the starting eccentricity
+    /// and tilt.
     pub(super) swing: Q,
-    /// The age (Gyr) at which it merges into its heavier neighbour; None for
-    /// a body that stands to the horizon.
+    /// The age (Gyr) at which the body merges into its heavier neighbour;
+    /// `None` for a body that persists to the horizon.
     pub(super) merged_at: Option<Q>,
 }
 
-/// The white hole's units for the settling: r_g in metres and the core's mass
-/// in kilograms.
+/// The core units used by the settling: r_g in metres and the core's mass in
+/// kilograms.
 pub(super) fn rg_units() -> (Dy, Dy) {
     let r_g = Dy::from_q(&crate::chain::units().r_g_m);
     let core_kg = Dy::from_q(&(&crate::package::hole_mass() * &crate::package::Si::star_mass_kg()));
@@ -31,8 +32,8 @@ pub(super) fn planet_reach(a: &Q) -> Dy {
     Dy::from_q(a) * Dy::from_q(&crate::package::Si::au()) / rg_units().0
 }
 
-/// Settles a star's disc (see [`settle_about`]): the swings at the settled
-/// age, the merges out to life's horizon.
+/// Settles a star's disc (see [`settle_about`]) with the star as anchor:
+/// swings at the settled age, merge ages out to life's horizon.
 pub(super) fn settle(b: Vec<Embryo>, star_suns: &Q, settled: &Q) -> Vec<Embryo> {
     let (_, core_kg) = rg_units();
     let anchor = Dy::from_q(star_suns) * Dy::from_q(&crate::package::Si::star_mass_kg()) / core_kg;
@@ -74,7 +75,7 @@ struct Pairs<'r> {
     reach: &'r dyn Fn(&Q) -> Dy,
     /// One world mass.
     unit_world: Dy,
-    /// Light-time per Gyr: an age in Gyr as a span in r_g.
+    /// The light-travel length of one Gyr in r_g, converting ages to spans.
     per_gyr: Dy,
     /// The horizon (Gyr) merge ages are searched out to.
     top: Dy,
@@ -86,8 +87,9 @@ impl Pairs<'_> {
         (self.anchor / (a + self.anchor)) / a
     }
 
-    /// A pair's kick over `gyr`: eps (floor(N / q) c + N mod q), its greatest
-    /// swing as a share of the inner reach; unbounded for a pair at one reach.
+    /// A pair's kick over `gyr`: `eps (floor(N / q) c + N mod q)`, the
+    /// largest swing as a share of the inner reach; 1e30 for a pair at the
+    /// same reach and 0 for a pair at the same turning rate.
     fn kick(&self, x: &Embryo, y: &Embryo, gyr: Dy) -> Dy {
         let (a1, a2) = ((self.reach)(&x.a), (self.reach)(&y.a));
         let r = (a2 - a1).abs();
@@ -116,7 +118,8 @@ impl Pairs<'_> {
         eps * (whole * c + rest)
     }
 
-    /// The pair's swing over its gap; the pair merges once this reaches 1.
+    /// The pair's swing (kick times inner reach) over the gap; the pair
+    /// merges once this reaches 1.
     fn score(&self, x: &Embryo, y: &Embryo, gyr: Dy) -> Dy {
         let (a1, a2) = ((self.reach)(&x.a), (self.reach)(&y.a));
         let r = (a2 - a1).abs();
@@ -126,8 +129,8 @@ impl Pairs<'_> {
         self.kick(x, y, gyr) * a1.min(a2) / r
     }
 
-    /// The first age the pair merges at, by bisection out to the horizon;
-    /// `None` where it does not merge by then.
+    /// The first age at which the pair merges, by 48 bisection steps out to
+    /// the horizon; `None` where it does not merge by then.
     fn merge_age(&self, x: &Embryo, y: &Embryo) -> Option<Dy> {
         if self.score(x, y, self.top) < Dy::ONE {
             return None;
@@ -145,8 +148,8 @@ impl Pairs<'_> {
     }
 }
 
-/// The settling about an anchor (a star, or a giant for its moons), its mass
-/// and each body's reach as lengths in r_g (G = c = M_core = 1).
+/// The settling about an anchor (a star, or a world for its moons), with the
+/// anchor's mass and each body's reach as lengths in r_g (G = c = M_core = 1).
 ///
 /// Each body turns at omega(A) = [M / (A + M)] / A. Neighbours meet once per
 /// synodic period; each meeting turns them by
@@ -166,12 +169,11 @@ impl Pairs<'_> {
 /// `merged_at`) and the heavier carries on with the summed mass, reach and
 /// phase mass-weighted; the merged body's pairs are read again with the
 /// merged mass, so a merger that now spans a further gap merges again.
-/// Resonances (small q) merge, near-incommensurate pairs remain. The bodies
-/// standing at `settled` are returned, and those that merge after it with
-/// their merge age (a merge before the settled age is the disc's own
-/// settling); each standing body's `swing` is the greatest kick its
-/// neighbours give it at `settled`, as a share of its own reach, and a
-/// merging body's is the gap it closes.
+/// Resonances (small q) merge, near-incommensurate pairs remain. Merges
+/// before `settled` are applied; the bodies standing at `settled` are
+/// returned, and those that merge after it carry their merge age. Each
+/// body's `swing` is the largest kick its neighbours impart by `settled`, as
+/// a share of the body's reach, capped at 1.
 pub(super) fn settle_about(
     mut b: Vec<Embryo>,
     anchor: Dy,
@@ -190,8 +192,9 @@ pub(super) fn settle_about(
     };
     let ages = merge_until(&mut b, &pairs, Dy::from_q(settled));
     set_swings(&mut b, &pairs, Dy::from_q(settled));
-    // pairs that merge after the settled age stay two bodies (no mass moves);
-    // the lighter records the age, the earliest if it has two neighbours
+    // Pairs that merge after the settled age remain two bodies (no mass
+    // moves); the lighter body records the age, the earlier of two when it
+    // has two neighbours.
     for (i, age) in ages.iter().enumerate() {
         let Some(t) = *age else { continue };
         let lighter = if b[i].m >= b[i + 1].m { i + 1 } else { i };
@@ -248,8 +251,8 @@ fn merge_until(b: &mut Vec<Embryo>, pairs: &Pairs, by_settled: Dy) -> Vec<Option
     ages
 }
 
-/// Sets each body's swing at age `at`: the greatest kick its neighbours give
-/// it, as a share of its own reach, capped at 1.
+/// Sets each body's swing at age `at`: the largest kick its neighbours
+/// impart, as a share of the body's reach, capped at 1.
 fn set_swings(b: &mut [Embryo], pairs: &Pairs, at: Dy) {
     let swings: Vec<Q> = (0..b.len())
         .map(|i| {

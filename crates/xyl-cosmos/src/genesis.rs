@@ -4,8 +4,8 @@
 //! The founding is cached with `circuit::cache_in` in `target/genesis`
 //! (under `CARGO_TARGET_DIR` when set), so another test binary, or a later
 //! run under the same founding digest, loads it instead of founding again.
-//! Outputs: `SEED`, `universe`, `bang` and `chem`. No test founds its own
-//! universe.
+//! Outputs: `SEED`, `universe`, `bang` and `chem`. No test founds a
+//! universe of the test's making.
 
 use crate::chem::Chemistry;
 use crate::BigBang;
@@ -19,8 +19,8 @@ pub const SEED: u64 = 7;
 pub fn universe() -> &'static (BigBang, Chemistry) {
     static G: OnceLock<(BigBang, Chemistry)> = OnceLock::new();
     G.get_or_init(|| {
-        // kept in the build's target directory (CARGO_TARGET_DIR when set)
-        // so a later run finds the cached genesis
+        // The cache is kept in the build's target directory (CARGO_TARGET_DIR
+        // when set), so a later run finds the cached genesis.
         let target = std::env::var_os("CARGO_TARGET_DIR")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {

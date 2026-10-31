@@ -8,11 +8,11 @@
 //!
 //! [`Civilizations::carry`] runs, per living people, regardless of whether
 //! it is observed:
-//! - Knowledge ([`Knowledge::step_one`]) over the people's own span.
+//! - Knowledge ([`Knowledge::step_one`]) over the people's span.
 //! - World: what it houses at the span's end ([`housing`]); where it fails,
 //!   the first failing degree by bisection.
 //! - Drive and reach: the chemical drive blended toward `transit::best_spec`
-//!   by energy mastery; the open worlds within four orbital places that
+//!   by energy mastery; the unheld worlds within four orbital places that
 //!   house a viable people.
 //! - Numbers: the logistic (`growth::grow`) toward housing x environment, at
 //!   one e-fold per generation; a fall (annal `FALL`) when housing is below
@@ -57,20 +57,23 @@ pub struct Numbers {
 
 /// A people's four gauges and their combination, each a share in [0, 1]:
 /// - instinct: how far its world houses it, housing / (housing + numbers);
-/// - intelligence: mean mastery of energy, materials and biology (knowledge.rs);
-/// - sentience: mastery of information (the science of signals);
-/// - consciousness: the share of its world's housing its numbers leave free,
-///   1 - numbers / housing;
-/// - gamma = [(1 + g_I)(1 + g_N)(1 + g_S)(1 + g_C) - 1] / 15.
+/// - intelligence: the mean mastery of energy, materials and biology
+///   (knowledge.rs);
+/// - sentience: the mastery of information (the science of signals);
+/// - consciousness: the share of the world's housing the numbers leave free,
+///   1 - numbers / housing, clamped to [0, 1];
+/// - gamma = [(1 + instinct)(1 + intelligence)(1 + sentience)
+///   (1 + consciousness) - 1] / 15.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Gauges {
-    /// How far its world houses it, a share in [0, 1]: housing / (housing + numbers).
+    /// How far the world houses the people, a share in [0, 1]:
+    /// housing / (housing + numbers).
     pub instinct: Dy,
     /// Mean mastery of energy, materials and biology, a share in [0, 1].
     pub intelligence: Dy,
     /// Mastery of information, a share in [0, 1].
     pub sentience: Dy,
-    /// The share of its world's housing its numbers leave free, in [0, 1].
+    /// The share of the world's housing the numbers leave free, in [0, 1].
     pub consciousness: Dy,
     /// Combined gauge in [0, 1]:
     /// \[(1 + instinct)(1 + intelligence)(1 + sentience)(1 + consciousness) - 1\] / 15.
@@ -131,9 +134,10 @@ pub struct Civilizations {
 
 impl Civilizations {
     /// One carry for every people: each living people is carried once over
-    /// its own span, from where it was last carried to `to` (Gyr; the cosmic
-    /// clock is already there), with `environment` by people index (its
-    /// radiation against its home's, field.rs; 1 where absent).
+    /// its span, from where it was last carried to `to` (Gyr; the cosmic
+    /// clock is already there), with `environment` by people index (the
+    /// people's radiation against that of its home, field.rs; 1 where
+    /// absent; clamped to [0, 1]).
     ///
     /// Order per people: knowledge first; then its world at `to`, its reach
     /// (the unoccupied worlds of its system within four orbital places that
@@ -143,8 +147,8 @@ impl Civilizations {
     ///
     /// With `decide`, a people whose world fails and whose drive leaves its
     /// well moves to the nearest world of its reach (an exodus), and a people
-    /// whose fork chooses expansion settles the nearest world of its reach
-    /// (a daughter people). Both are applied here and returned, so the
+    /// grown past the logistic's inflection settles the nearest world of its
+    /// reach (a daughter people). Both are applied here and returned, so the
     /// caller can record them as inputs; without `decide` (laying a
     /// checkpoint back) neither is decided, as the recorded inputs carry them.
     pub fn carry(
@@ -363,11 +367,12 @@ impl Civilizations {
         false
     }
 
-    /// Settlers: a people grown past its logistic's inflection (half of what
+    /// Settlers: a people grown past the logistic's inflection (half of what
     /// its world houses, beyond which each newcomer adds less than the last)
-    /// founds a daughter on the nearest open world of its reach, with half
-    /// of what that world feeds, at least a viable people and at most half
-    /// its own numbers, leaving itself viable.
+    /// founds a daughter on the nearest open world of its reach. The
+    /// emigrants number half of what that world houses, at least a viable
+    /// people and at most half of the parent's numbers; no daughter is
+    /// founded unless both parent and daughter remain viable.
     fn expand(
         &mut self,
         cosmic: &mut Cosmic<'_>,
@@ -496,16 +501,17 @@ impl Civilizations {
     }
 
     /// The history of people `i` over a span of `years` ending at `to` Gyr.
-    /// Each figure's memory fades at the people's forgetting share a year,
-    /// `memory (1 - f)^years`, and a figure dies at its expected end. Each
-    /// reported turning names a figure whose role is read from the people at
-    /// that moment: the domain its effort led in and that domain's share of
-    /// its effort, held as a person, the colony or a locus of its medium by
-    /// the shape of its mind; a figure's span is one of its people's
-    /// generations from the turning. Each naming writes an `EMINENT` annal. Figures below
-    /// [`forgotten`] are forgotten; the rest are kept best remembered first.
-    ///
-    /// [`forgotten`]: history::forgotten
+    /// Each figure's memory fades at the people's forgetting share `f` a
+    /// year, `memory (1 - f)^years` with `f` clamped to [0, 0.999], and a
+    /// figure is marked dead once `to` passes its `dies_yr`. Each turning
+    /// reported since the last carry names a figure whose role is read from
+    /// the people at this carry: the domain its effort weights lead in and
+    /// that domain's share of the total weight, held as a person, the colony
+    /// or a locus of its medium by the shape of its mind. A figure's span is
+    /// one generation of its people from the turning. Each naming writes an
+    /// `EMINENT` annal dated at the turning. Figures below
+    /// [`forgotten`](history::forgotten) are dropped; the rest are kept best
+    /// remembered first.
     pub fn remember(&mut self, cosmic: &mut Cosmic<'_>, i: usize, years: Dy, to: Dy) {
         let Some(p) = cosmic.peoples.get(i).cloned() else {
             return;
@@ -519,7 +525,8 @@ impl Civilizations {
         let fade = ((Dy::ONE - forget.clamp(Dy::ZERO, Dy::ratio(999, 1000))).log() * years).exp();
         let now_yr = to * Dy::sci(1, 9);
         let gen = crate::growth::generation_yr(&p.traits, &Rulers::default());
-        // the domain its effort leads in, and that domain's share of it
+        // The domain with the largest effort weight, and its share of the
+        // total weight (zero when the weights sum to zero).
         let total = weights.iter().fold(Dy::ZERO, |a, w| a + *w);
         let (domain, lead) = Domain::ALL
             .iter()
@@ -590,9 +597,10 @@ impl Civilizations {
     }
 }
 
-/// A placeholder name for a figure, drawn from the seed, the people's star
-/// and world, the moment (standard years) and the act, in the peoples'
-/// syllables, until a mind of the people names it.
+/// A placeholder name for a figure: two or three syllables of
+/// `cosmic::SYLLABLES`, drawn from the seed, the people's star and world, the
+/// moment (standard years) and the act, held until a mind of the people names
+/// it.
 fn coin(seed: u64, star: u64, world: usize, at_yr: Dy, act: &str) -> String {
     let mut rng = Stream::derive(
         seed,
@@ -671,7 +679,8 @@ struct Carried {
 
 /// Each carried people's drive and home escape speed (m/s): the chemical
 /// drive blended toward the best its chemistry allows by energy mastery
-/// (`transit::blended`); None where it does not climb out of its home well.
+/// (`transit::blended`); None where the cruise speed out of the home well
+/// (`transit::cruise_speed`) is not positive.
 fn drives(
     cosmic: &Cosmic<'_>,
     spans: &[Option<(Dy, Dy)>],
@@ -744,7 +753,7 @@ fn stands(
         .collect()
 }
 
-/// People `i`'s stand over its span from `from` to `to` (Gyr). Its reach,
+/// A people's stand over its span from `from` to `to` (Gyr). Its reach,
 /// the unheld worlds within four orbital places that house a viable people,
 /// is read only for a people that sails and whose world fails or has grown
 /// past the logistic's inflection. Where its world fails by `to`, the fall

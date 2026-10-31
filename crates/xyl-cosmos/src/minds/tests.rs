@@ -51,13 +51,15 @@ fn core_distance_counts_height_above_the_plane() {
         let d = from_centre_kpc(s, t);
         let r = Dy::from_q(&s.r);
         if s.pop == crate::galaxy::Pop::Disc {
-            // never nearer than its cylinder's radius; above the plane, farther
+            // A disc star is never nearer than its cylinder's radius, and is
+            // farther when above the plane.
             assert!(d >= r - Dy::sci(1, -9), "disc star {}: {d} < {r}", s.n);
             if d > r + Dy::sci(1, -6) {
                 lifted += 1;
             }
         } else {
-            // a bulge or nucleus orbit is a tilted circle: its radius is its distance
+            // A bulge or nucleus orbit is a tilted circle, so its radius is the
+            // star's distance.
             assert!(
                 (d - s.orbit.radius).abs() < Dy::sci(1, -6),
                 "star {}: {d}",

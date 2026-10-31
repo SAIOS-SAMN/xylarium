@@ -1,46 +1,54 @@
-//! The ladder of rungs to a mind, and the climb up it in closed form.
+//! The ladder of rungs from a chemistry to a mind, and the climb up it in
+//! closed form.
 
 use super::*;
 
 /// One rung of a ladder.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Step {
-    /// Information this rung holds (bits): b / eps^(s+1), capped at I_MIND.
+    /// The information this rung holds (bits): `b / eps^(s+1)`, capped at
+    /// `I_MIND`.
     pub bits: Dy,
-    /// Mean wait to climb this rung from the one below (Gyr).
+    /// The mean wait to climb this rung from the one below (Gyr).
     pub mean_gyr: Dy,
-    /// Per-monomer copying error left after this rung's proofreading, in \[0, 1).
+    /// The per-monomer copying error left after this rung's proofreading,
+    /// `eps^(s+1)`, in \[0, 1).
     pub eps: Dy,
-    /// Bodies the medium's power feeds at this rung (count, not rounded).
+    /// The number of bodies the medium's power feeds at this rung (not
+    /// rounded).
     pub population: Dy,
-    /// Length of one generation at this rung (s).
+    /// The length of one generation at this rung (s).
     pub generation_s: Dy,
-    /// Mass of the body this rung builds (kg).
+    /// The mass of the body this rung builds (kg).
     pub body_kg: Dy,
 }
 
 /// The rungs a medium's chemistry must climb to a mind.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Ladder {
-    /// Per-monomer miscopy probability of the bare chemistry, eps0, in \[0, 1/2).
+    /// The per-monomer miscopy probability of the bare chemistry, `eps0`, in
+    /// \[0, 1/2).
     pub eps0: Dy,
     /// The rungs in order of climbing, at most [`MAX_RUNGS`].
     pub steps: Vec<Step>,
     /// Whether the last rung holds a mind's blueprint.
     pub complete: bool,
-    /// Monomers a copier adds per second at the medium's temperature and richness.
+    /// The monomers a copier adds per second at the medium's temperature and
+    /// richness.
     pub k_copy: Dy,
-    /// Per-monomer breakage of stored information per second (see [`decay_rate`]).
+    /// The per-monomer breakage of stored information per second (see
+    /// [`decay_rate`]; for a plasma, reconnection at `k_copy exp(-E_B / kT)`).
     pub decay: Dy,
-    /// Per-monomer breakage per second while dormant, copying stopped:
-    /// thermal bond-breaking alone; a plasma's pattern, which needs its live
-    /// field, does not keep (1 a second).
+    /// The per-monomer breakage per second while dormant, with copying
+    /// stopped: thermal bond-breaking alone. A plasma's pattern needs the
+    /// field to persist and is lost at a rate of 1 per second.
     pub dormant: Dy,
 }
 
-/// A medium's ladder to a mind, on a world of `area_m2`: each rung's
-/// information and mean time (Gyr). `None` where nothing copies faithfully
-/// enough to begin.
+/// A medium's ladder to a mind on a world of area `area_m2` (m^2): each
+/// rung's information and mean wait (Gyr). Returns `None` where `eps0 >= 1/2`
+/// or the copy rate is not positive. The ladder ends early, incomplete, where
+/// the error reaches 1/2, the capacity stops growing or no gain remains.
 pub fn ladder(m: &Medium, area_m2: Dy, ctx: &Ctx) -> Option<Ladder> {
     let c = constants();
     let plasma = m.solvent == Solvent::Plasma;
@@ -50,7 +58,7 @@ pub fn ladder(m: &Medium, area_m2: Dy, ctx: &Ctx) -> Option<Ladder> {
         fidelity(m.solvent, m.t, ctx)
     };
     if eps0 >= Dy::ratio(1, 2) {
-        // eps0 >= 1/2: a copy carries no information
+        // At eps0 >= 1/2 a copy carries no information.
         return None;
     }
     let kc = copy_rate(m.t, m.richness);
@@ -60,7 +68,7 @@ pub fn ladder(m: &Medium, area_m2: Dy, ctx: &Ctx) -> Option<Ladder> {
     let b = c.bits_per_monomer;
     let strong = worlds::covalent_ev(&ctx.sc) * c.ev_j;
     let power = m.energy.max(Dy::ZERO) * c.flux_w * area_m2;
-    // plasma decay: reconnection at k_copy exp(-E_B / kT)
+    // A plasma's pattern decays by reconnection at k_copy exp(-E_B / kT).
     let r_decay = if plasma {
         kc * (-(m.field_ev.max(Dy::ZERO) / (worlds::kb_ev() * m.t.max(Dy::ONE)))).exp()
     } else {
@@ -68,7 +76,7 @@ pub fn ladder(m: &Medium, area_m2: Dy, ctx: &Ctx) -> Option<Ladder> {
     };
     let bits_cell = b / eps0;
     let t_cell = bits_cell / (b * kc);
-    // monomers are built from the solvent's own molecules (backbone_amu)
+    // Monomers are built from the solvent's molecules (backbone_amu).
     let bond_kg = backbone_amu(m.solvent) * c.amu_kg * ctx.sc.proton;
     let kg_cell = bits_cell / b * c.body_per_monomer * bond_kg;
     let g = Gen {
@@ -96,15 +104,15 @@ pub fn ladder(m: &Medium, area_m2: Dy, ctx: &Ctx) -> Option<Ladder> {
         let power_s = i32::try_from(s + 1).unwrap_or(1);
         let mut err = eps0;
         let mut gen_s = Dy::ZERO;
-        // eps and the generation time depend on each other through the body
-        // built: three fixed-point passes
+        // The error eps and the generation time depend on each other through
+        // the body built; three fixed-point passes resolve them.
         for _ in 0..3 {
             let cap = b / err.powi(power_s);
             gen_s = gen_of(cap.min(c.i_mind));
             err = eps0 + r_decay * gen_s;
         }
         if err >= Dy::ratio(1, 2) {
-            // eps >= 1/2: no further rung holds information
+            // At eps >= 1/2 no further rung holds information.
             return Some(lad);
         }
         let cap = b / err.powi(power_s);
@@ -114,8 +122,8 @@ pub fn ladder(m: &Medium, area_m2: Dy, ctx: &Ctx) -> Option<Ladder> {
         let target = cap.min(c.i_mind);
         let monomers = target / b;
         let body = body_kg(target, bits_cell, kg_cell);
-        // population: the power reaching the medium over the bond energy of
-        // one body built per generation
+        // The population is the power reaching the medium over the bond
+        // energy of one body built per generation.
         let pop = power * gen_s / (body / bond_kg * strong).max(Dy::sci(1, -300));
         let gain = (pop * err.powi(power_s) * monomers).min(Dy::ONE);
         if gain.signum() <= 0 {
@@ -139,9 +147,9 @@ pub fn ladder(m: &Medium, area_m2: Dy, ctx: &Ctx) -> Option<Ladder> {
     Some(lad)
 }
 
-/// Per-monomer breakage per second while dormant: thermal homolysis
-/// (kT/h) e^(-bond/kT) alone; 1 for a plasma, whose pattern needs its live
-/// field.
+/// The per-monomer breakage per second while dormant: thermal homolysis
+/// `(kT / h) e^(-E_strong / kT)` alone; 1 for a plasma, whose pattern needs
+/// the field to persist.
 fn dormant_rate(m: &Medium, ctx: &Ctx) -> Dy {
     if m.solvent == Solvent::Plasma {
         return Dy::ONE;
@@ -152,9 +160,9 @@ fn dormant_rate(m: &Medium, ctx: &Ctx) -> Dy {
         * (-(worlds::strong_bond_ev(m.solvent, &ctx.sc) / (worlds::kb_ev() * t))).exp()
 }
 
-/// The mass of a monomer's building block in a solvent (amu): its own
-/// molecule (a silicate unit, Si and two O, for a melt); a plasma copies
-/// nothing.
+/// The mass of a monomer's building block in a solvent (amu): the solvent's
+/// molecule for a volatile, a silicate unit (Si and two O) for a melt, and
+/// one proton for a plasma's carriers.
 pub(super) fn backbone_amu(s: Solvent) -> Dy {
     match s {
         Solvent::Volatile(sp) => sp.mu(),
@@ -169,31 +177,32 @@ pub(super) fn backbone_amu(s: Solvent) -> Dy {
             };
             a(14) + Dy::int(2) * a(8)
         }
-        // carriers: protons
+        // A plasma's carriers are protons.
         Solvent::Plasma => Dy::ONE,
     }
 }
 
 /// A lineage's climb: when each rung was reached, and the impacts that cost
-/// it progress.
+/// the lineage progress.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Climb {
     /// When each rung was reached (Gyr after the Big Bang); empty where life
     /// never began.
     pub times: Vec<Dy>,
-    /// Number of impacts that cost the lineage progress (the expectation,
-    /// whole).
+    /// The number of impacts that cost the lineage progress (the expectation,
+    /// truncated to a whole number and capped at 4 x 10^9).
     pub setbacks: u32,
 }
 
-/// A world's climb up its chemistry's rungs, in closed form: each rung
-/// takes its mean wait; impacts at rate `mu` erase the rung's progress, so
-/// a rung of mean `m` under them completes in the expected
-/// `(e^(mu m) - 1) / mu` with `e^(mu m) - 1` setbacks (the memoryless
-/// restart's expectation), the mean itself where there are no impacts.
-/// Life itself (step 0) is never undone and may arrive from a neighbour
-/// first (`arrives`). `steril`: when the surface is sterilised, if ever. No
-/// draw enters: the climb is the chemistry's own expectation.
+/// A world's climb up its chemistry's rungs, in closed form, from `t0`
+/// (Gyr). Each rung takes its mean wait; impacts at rate `mu` erase the
+/// rung's progress, so a rung of mean `m` completes in the expected
+/// `(e^(mu m) - 1) / mu` with `e^(mu m) - 1` setbacks (the expectation under
+/// memoryless restarts), and in `m` where there are no impacts. Life itself
+/// (rung 0) is never undone and may arrive earlier from a neighbour
+/// (`arrives`). `steril` is the time the surface is sterilised, if ever; the
+/// climb stops at the first rung past it or past `horizon`, and is empty if
+/// rung 0 is. No random draw enters: the climb is the expectation.
 pub fn climb(
     means: &[Dy],
     t0: Dy,
@@ -212,7 +221,7 @@ pub fn climb(
         if s == 0 {
             let mut need = mean;
             if let Some(a) = arrives {
-                // life may arrive earlier by transfer from a neighbour
+                // Life may arrive earlier by transfer from a neighbour.
                 need = need.min((a - t0).max(Dy::ZERO));
             }
             t += need;
@@ -228,8 +237,9 @@ pub fn climb(
         if mu.signum() <= 0 {
             t += mean;
         } else {
-            // expected completion under memoryless restarts; mu m is capped at
-            // 60 so an unreachable rung lands past the horizon without overflow
+            // The expected completion under memoryless restarts; mu m is capped
+            // at 60 so an unreachable rung lands past the horizon without
+            // overflow.
             let x = (mu * mean).min(Dy::int(60));
             let grown = x.exp() - Dy::ONE;
             t += grown / mu;
@@ -246,9 +256,10 @@ pub fn climb(
     }
 }
 
-/// How long rock thrown off one world takes to reach `target` (Gyr): the
-/// target sweeps the ejecta once an orbit over the share of its orbit its
-/// body covers, R / (2 pi a), so the wait is its year over that share.
+/// The time rock ejected from one world takes to reach `target` (Gyr). The
+/// target sweeps the ejecta once an orbit over the share `R / (2 pi a)` of
+/// the orbit that the target's body covers, so the wait is the target's year
+/// over that share.
 pub fn transfer_gyr(target: &Body) -> Dy {
     let year = Dy::from_q(&crate::turning::year_yr(
         &target.star_mass.max(Dy::sci(1, -9)).to_q(),

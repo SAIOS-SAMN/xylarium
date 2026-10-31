@@ -10,8 +10,9 @@ use xyl_core::Q;
 /// The star tier's cut: the core has no bounce, only torsion; its push is
 /// the electromagnetic repulsion on open frames. Each kind of the infall
 /// (`mix`: element and share of the infall's holding) is carried to spin
-/// l_z = p (e_z / e_mean)(w_mean / w_z) + `add` - p the core's push (1/2),
-/// e_z its open share, means by count, `add` a turning the matter brings (a
+/// l_z = p P_0 (e_z / e_mean)(w_mean / m_z) + `add` - p the core's push
+/// (1/2), P_0 the core's over-pressure, e_z the kind's open share, m_z its
+/// mass per nucleus, means by count, `add` a turning the matter brings (a
 /// world's heat) - and stands at R_z = l_z / H about the core's hold. It is
 /// held (the star) where H / (R_z + H) >= p, else carried into the disc.
 /// Noble kinds (e = 0) carry no spin and fall in; an infall with no open
@@ -20,7 +21,7 @@ use xyl_core::Q;
 pub struct Hold {
     /// The share held.
     pub held: Q,
-    /// The matter's mean open share, and the released part's.
+    /// The matter's mean open share, by count.
     pub open: Q,
     /// Mean open share of the released part.
     pub rest_open: Q,
@@ -31,7 +32,7 @@ pub struct Hold {
     /// Each released kind's carried spin (aligned with `rest`).
     pub rest_l: Vec<Q>,
     /// The held core's extent: the reach of the loosest kind still held,
-    /// R = l / H* on the held hold, in the core's own units. A core holding
+    /// R = l / H* on the held hold, in the core's units. A core holding
     /// everything is large; one that has released its light kinds is compact.
     pub reach: Q,
 }
@@ -41,13 +42,13 @@ pub struct Hold {
 /// passes heat 0), so the push grips only what stays open. The core's light
 /// adds over-pressure `p0` = P_0 = 1 + PHI / H (1 for a dark core), carrying
 /// every kind out by P_0 times its push while the held threshold stays p: a
-/// dark core holds its whole infall and a burning one releases a tube, the
+/// dark core holds its whole infall and a burning one releases kinds, the
 /// lightest first.
 pub fn hold_at_heat(mix: &[(u32, Q)], p: &Q, add: &Q, heat: &Q, p0: &Q) -> Hold {
     hold_about(mix, p, add, &Q::ZERO, heat, p0)
 }
 
-/// [`hold_at_heat`] about a core that already holds `state` of its own.
+/// [`hold_at_heat`] about a core that already holds `state`.
 fn hold_about(mix: &[(u32, Q)], p: &Q, add: &Q, state: &Q, heat: &Q, p0: &Q) -> Hold {
     let open_of = |z: u32| {
         Q::int(i64::from(crate::compound::open_hot(z, heat)))
@@ -74,8 +75,8 @@ fn hold_about(mix: &[(u32, Q)], p: &Q, add: &Q, state: &Q, heat: &Q, p0: &Q) -> 
     if count.signum() <= 0 {
         return all(Q::ZERO);
     }
-    // w_mean, the mean mass per nucleus (the carriage's inertia): nuclei
-    // counted as share / hold, each weighed by its mass
+    // The mean mass per nucleus w_mean (the carriage's inertia) counts nuclei
+    // as share / hold, each weighed by its mass.
     let w_mean = kinds
         .iter()
         .fold(Q::ZERO, |a, (z, sh, w, _)| {
@@ -93,7 +94,7 @@ fn hold_about(mix: &[(u32, Q)], p: &Q, add: &Q, state: &Q, heat: &Q, p0: &Q) -> 
     if e_mean.signum() <= 0 && add.signum() <= 0 {
         return all(Q::ZERO);
     }
-    // l_z = p P_0 (e_z / e_mean)(w_mean / m_z) + add
+    // Each kind's carried spin is l_z = p P_0 (e_z / e_mean)(w_mean / m_z) + add.
     let mut carried: Vec<(Q, Q, Q, u32, Q)> = kinds
         .iter()
         .map(|(z, s, w, e)| {
@@ -156,7 +157,7 @@ fn hold_about(mix: &[(u32, Q)], p: &Q, add: &Q, state: &Q, heat: &Q, p0: &Q) -> 
 /// fixed point `h = state + the shares of every kind so held`, iterated from
 /// all held downward; each step can only drop kinds, so it ends within as
 /// many steps as kinds. A core holds only by what it has gathered (only a
-/// throat has a `state` of its own). Returns the count held (a prefix of
+/// throat has a nonzero `state`). Returns the count held (a prefix of
 /// `carried`; 0 where the hold is not positive) and the hold.
 fn held_set(carried: &[(Q, Q, Q, u32, Q)], state: &Q, p: &Q) -> (usize, Q) {
     let holds = |l: &Q, h: &Q| {

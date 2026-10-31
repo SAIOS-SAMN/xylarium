@@ -10,15 +10,16 @@
 //!   bond over the exhaust molecule's mass; fission, [`FISSION_SHARE`] of
 //!   rest mass; fusion, [`fusion_share`]; annihilation, c^2.
 //! - Exhaust ([`exhaust_speed`], m/s): the turning law's speed for the
-//!   energy's share of light's, v_e = e / c, capped at c (no square root of
-//!   2e). Chemical bonds give centimetres per second, nuclear fuels under a
-//!   percent of light, annihilation light itself.
+//!   energy's share of c^2, v_e = e / c, capped at c (no square root of
+//!   2e). Chemical bonds give centimetres per second, nuclear fuels less
+//!   than one percent of c, and annihilation c.
 //! - Voyage: [`delta_v`] = c tanh((v_e / c) ln R), the relativistic rocket
-//!   (Tsiolkovsky's v_e ln R while slow, below c always);
-//!   [`propellant_per_kg`] = R - 1. transit/voyage.rs spends the speed change.
+//!   (Tsiolkovsky's v_e ln R at low speed, always below c);
+//!   [`propellant_per_kg`] = R - 1. transit/voyage.rs spends the speed
+//!   change.
 //!
-//! Outputs are bundled as a [`Spec`] (`Spec::of`). civ/mod.rs and transit/voyage.rs
-//! build each people's chemical drive and blend it toward
+//! Outputs are bundled as a [`Spec`] (`Spec::of`). civ/mod.rs and
+//! transit/voyage.rs build each people's chemical drive and blend it toward
 //! `transit::best_spec` by energy mastery. Declared rulers:
 //! [`FISSION_SHARE`], [`CHEM_EXHAUST_AMU`], [`MASS_RATIO`]. Fuel choice,
 //! bunkers, ports, refits and their prices are not modelled here.
@@ -43,29 +44,31 @@ pub fn amu_kg() -> Dy {
     Dy::sci(166_054, -32)
 }
 
-/// The share of its rest mass a fissioning heavy nucleus releases (measured:
-/// about 200 MeV per 235 u). Declared ruler: the binding curve is not yet
-/// derived in xyl-cosmos; scaled by the universe's nuclear scale.
+/// The share of rest mass a fissioning heavy nucleus releases, 9.14e-4
+/// (measured: about 200 MeV per 235 u), as (mantissa, decimal exponent). It
+/// is a declared ruler because the binding curve is not yet derived in
+/// xyl-cosmos; `energy_per_kg` scales it by the universe's nuclear scale.
 pub const FISSION_SHARE: (i64, i32) = (914, -6);
 
-/// The exhaust molecule's mass (amu) of a chemistry with no volatile of its
-/// own (a melt's or a plasma's). Declared ruler: a light oxide's.
+/// The exhaust molecule's mass (amu) for a chemistry whose solvent is not a
+/// volatile (a melt or a plasma). Declared ruler: the mass of a light oxide.
 pub const CHEM_EXHAUST_AMU: i64 = 18;
 
-/// A single stage's mass ratio, fuelled over dry. Declared ruler: a stage
-/// whose tanks are nine tenths of its mass.
+/// A single stage's mass ratio, fuelled mass over dry mass. Declared ruler:
+/// a stage whose propellant is nine tenths of its fuelled mass.
 pub const MASS_RATIO: i64 = 10;
 
-/// What a fuel releases.
+/// The kind of fuel a drive burns, which sets the energy released per kg.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Drive {
-    /// Its own chemistry's bonds.
+    /// The covalent bonds of the people's chemistry.
     Chemical,
     /// Heavy nuclei split (uranium, thorium).
     Fission,
     /// Hydrogen fused to helium.
     Fusion,
-    /// Matter annihilated (it must be made: nature holds none).
+    /// Matter annihilated with antimatter, which has to be manufactured
+    /// because no natural reservoir is modelled.
     Annihilation,
 }
 
@@ -89,9 +92,9 @@ impl Drive {
     }
 }
 
-/// The share of a nucleus's rest mass hydrogen fusing to helium releases:
-/// four hydrogen atoms' mass less helium's, over four hydrogens' (from the
-/// element table's measured masses).
+/// The share of rest mass that hydrogen fusing to helium releases,
+/// (4 m_H - m_He) / (4 m_H), from the element table's measured masses.
+/// Returns zero when either element is missing or the share is negative.
 pub fn fusion_share(elements: &[xyl_cosmos::elements::Element]) -> Dy {
     let a = |s: &str| {
         elements
@@ -107,8 +110,8 @@ pub fn fusion_share(elements: &[xyl_cosmos::elements::Element]) -> Dy {
     }
 }
 
-/// The energy a drive's fuel releases per kg (J/kg), under a universe's laws,
-/// for a people of this chemistry.
+/// The energy a drive's fuel releases per kg (J/kg) under the universe's
+/// scales `sc`, for a people whose solvent is `solvent`.
 pub fn energy_per_kg(
     drive: Drive,
     solvent: Solvent,
@@ -130,45 +133,48 @@ pub fn energy_per_kg(
     }
 }
 
-/// Exhaust speed (m/s): the turning law's speed for the energy's share of
-/// light's, e / c, never past light.
+/// Exhaust speed (m/s): the turning law's speed v_e = e / c for the energy
+/// `e_per_kg`, capped at c.
 pub fn exhaust_speed(e_per_kg: Dy) -> Dy {
     (e_per_kg.max(Dy::ZERO) / c_m_s()).min(c_m_s())
 }
 
-/// tanh x, exactly from exp.
+/// The hyperbolic tangent, tanh x = (1 - e^(-2x)) / (1 + e^(-2x)), computed
+/// from exp; a negative x is clamped to zero.
 fn tanh(x: Dy) -> Dy {
     let e = (Dy::int(-2) * x.max(Dy::ZERO)).exp();
     (Dy::ONE - e) / (Dy::ONE + e)
 }
 
-/// The speed change a mass ratio buys (m/s): the relativistic rocket,
-/// c tanh((v_e / c) ln R) - Tsiolkovsky's v_e ln R while it is slow.
+/// The speed change a mass ratio gives (m/s): the relativistic rocket,
+/// c tanh((v_e / c) ln R), which reduces to Tsiolkovsky's v_e ln R at low
+/// speed. A ratio below one is taken as one.
 pub fn delta_v(v_e: Dy, ratio: Dy) -> Dy {
     let c = c_m_s();
     c * tanh(v_e / c * ratio.max(Dy::ONE).log())
 }
 
-/// The fuel a payload burns over a voyage at this mass ratio (kg per kg):
-/// R - 1 (mass moved over exhaust speed).
+/// The propellant burned per kg of dry mass at this mass ratio (kg per kg):
+/// R - 1, never below zero.
 pub fn propellant_per_kg(ratio: Dy) -> Dy {
     (ratio - Dy::ONE).max(Dy::ZERO)
 }
 
-/// What a drive does: its fuel's energy per kg and its exhaust speed.
+/// A drive's performance: the fuel's energy per kg and the exhaust speed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Spec {
     /// The drive this spec describes.
     pub drive: Drive,
-    /// Energy its fuel releases, in J/kg.
+    /// The energy the fuel releases, in J/kg.
     pub energy_per_kg: Dy,
-    /// Exhaust speed, in m/s, never past light.
+    /// Exhaust speed, in m/s, at most c.
     pub v_e: Dy,
 }
 
 impl Spec {
-    /// The spec of `drive` for a people of `traits` (its chemistry sets the
-    /// chemical fuel) under the universe's scales `sc` and its `elements`.
+    /// The spec of `drive` for a people of `traits` (the people's solvent
+    /// sets the chemical fuel) under the universe's scales `sc` and element
+    /// table `elements`.
     pub fn of(
         drive: Drive,
         traits: &Traits,
@@ -198,13 +204,14 @@ mod tests {
         let fis = exhaust_speed(energy_per_kg(Drive::Fission, water, &sc, &el));
         let fus = exhaust_speed(energy_per_kg(Drive::Fusion, water, &sc, &el));
         let anni = exhaust_speed(energy_per_kg(Drive::Annihilation, water, &sc, &el));
-        // each fuel's exhaust is the energy's share of light's times c, in
-        // the order of what the fuels release, annihilation at light itself
+        // Each fuel's exhaust speed is e / c, ordered as the fuels' energies
+        // are ordered; annihilation reaches c.
         let c = c_m_s();
         assert!(chem > Dy::ZERO && chem < fis, "chemical {chem}");
         assert!(fis < fus && fus < c, "fission {fis} fusion {fus}");
         assert_eq!(anni, c);
-        // a lighter exhaust molecule runs faster on the same bond
+        // A lighter exhaust molecule gives a higher exhaust speed for the
+        // same bond energy.
         let methane = exhaust_speed(energy_per_kg(
             Drive::Chemical,
             Solvent::Volatile(Species::CH4),
@@ -212,7 +219,8 @@ mod tests {
             &el,
         ));
         assert!(methane > chem);
-        // Tsiolkovsky while slow, never past light when fast
+        // The speed change matches Tsiolkovsky at low speed and stays below
+        // c at high speed.
         let dv = delta_v(chem, Dy::int(MASS_RATIO));
         let tsiolkovsky = chem * Dy::int(MASS_RATIO).log();
         assert!(

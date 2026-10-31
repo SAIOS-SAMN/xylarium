@@ -44,8 +44,10 @@ impl Climate {
             && ctx.phase(Species::H2O, t, p.max(Dy::sci(1, -9))) == Phase::Liquid
             && !self.giant;
         if let (true, Some(co2)) = (wet, air.get(Species::CO2)) {
-            // the carbonate-silicate cycle: weathering turns CO2 to carbonate
-            // until it balances what the interior outgasses, faster the warmer
+            // Carbonate-silicate cycle: weathering converts CO2 to carbonate
+            // until it balances outgassing. The CO2 left in the air is
+            // scale x hpm^2 x exp(-2 (t - t_triple) / E_w), lower the warmer
+            // the world.
             let tt = ctx.diagram(Species::H2O).tt;
             let balance = constants().weather_scale
                 * self.hpm
@@ -60,8 +62,10 @@ impl Climate {
         (air, seas)
     }
 
-    /// A world's poles are colder by as much as its sky fails to carry heat to
-    /// them; a gas whose frost point the pole is below freezes there.
+    /// The pole's temperature is t (polar + c) / (1 + c), with c the air's
+    /// pressure over the transport pressure (0.1 bar), so a thicker
+    /// atmosphere carries more heat poleward. Any CO2, N2, CH4 or NH3 above
+    /// saturation at the pole's temperature condenses into the seas.
     fn cold_trap(&self, air: &mut Mix, seas: &mut Mix, t: Dy, ctx: &Ctx) {
         let carry = air.total() / constants().transport_bar;
         let t_pole = t * ((self.polar + carry) / (Dy::ONE + carry));
@@ -76,7 +80,8 @@ impl Climate {
         }
     }
 
-    /// The temperature the atmosphere makes at an assumed `t`, and its state.
+    /// The surface temperature the atmosphere produces at an assumed surface
+    /// temperature `t`, with the air, seas and albedo at `t`.
     fn model(&self, gas: &Mix, t: Dy, ctx: &Ctx) -> (Dy, Mix, Mix, Dy) {
         self.model_mixed(gas, t, None, ctx)
     }
@@ -107,10 +112,10 @@ impl Climate {
             albedo + f * (a_iced - albedo).max(Dy::ZERO)
         });
         let gh: Dy = air.iter().map(|(s, v)| s.hold() * v).sum();
-        // equilibrium temperature linear in absorbed flux; optical depth tau
-        // from the absorbing gases, the atomic scale and the column's share of
-        // a bar; held share h = tau / (1 + tau) (bounded by 1); the surface is
-        // warmer by 1 + 3/4 h
+        // The equilibrium temperature is linear in absorbed flux. The optical
+        // depth tau is the weighted sum of the absorbing gases times the atomic
+        // scale and the column's share p / (p + 1 bar); the held share is
+        // h = tau / (1 + tau) < 1, and the surface is warmer by 1 + 3/4 h.
         let t_eq = constants().t_unit * self.flux * (Dy::ONE - albedo);
         let air_total = air.total().max(Dy::sci(1, -9));
         let tau =
@@ -119,9 +124,10 @@ impl Climate {
         (t_eq * (Dy::ONE + Dy::ratio(3, 4) * held), air, seas, albedo)
     }
 
-    /// Surface temperature, pressure, air, seas and albedo: the warmest stable
-    /// state at which the temperature the atmosphere makes is the one it was
-    /// assumed at.
+    /// Surface temperature, pressure, air, seas, albedo and frozen shares: the
+    /// warmest stable state at which the temperature the atmosphere produces
+    /// equals the assumed one. The search runs on a ladder of 40 temperatures
+    /// in steps of 8 percent and refines the crossing by bisection.
     pub(super) fn solve(&self, gas: &Mix, ctx: &Ctx) -> (Dy, Dy, Mix, Mix, Dy, Mix) {
         let runaway = constants().runaway_flux * ctx.sc.chem;
         let base = constants().t_unit * self.flux * Dy::ratio(3, 10);
@@ -140,14 +146,14 @@ impl Climate {
         let mut frozen = Mix::default();
         let mut pinned: Option<(Dy, Dy)> = None;
         for i in (1..grid.len()).rev() {
-            // the warmest crossing from warming to cooling
+            // The warmest crossing from warming to cooling is taken.
             if vals[i - 1].signum() >= 0 && vals[i].signum() < 0 {
                 let (_, _, seas_i, alb_i) = self.model(gas, grid[i], ctx);
                 if gas.amount(Species::H2O).signum() > 0
                     && !seas_i.has(Species::H2O)
                     && self.flux * (Dy::ONE - alb_i) < runaway
                 {
-                    // below the runaway limit a steam sky rains out
+                    // Below the runaway limit a steam atmosphere rains out.
                     continue;
                 }
                 let (mut lo, mut hi) = (grid[i - 1], grid[i]);
@@ -159,7 +165,8 @@ impl Climate {
                         hi = mid;
                     }
                 }
-                // take the cooling side: at a melting-point pin the world is liquid
+                // The cooling side of the bracket is taken, so that at a
+                // melting point the world is liquid.
                 root = Some(hi);
                 // Pinned at a melting point: frozen, the world warms; open, it
                 // cools, so ice and water coexist. The ice share f changes the
@@ -189,9 +196,10 @@ impl Climate {
                 break;
             }
         }
-        // no crossing kept: if cooling everywhere, take the coldest state;
-        // otherwise the state nearest balance (a steam atmosphere that rains
-        // out leaves the world where it warms least, not at the grid's top)
+        // With no crossing kept, the coldest rung is taken if the model cools
+        // everywhere; otherwise the rung nearest balance (a steam atmosphere
+        // that rains out leaves the world where it warms least, not at the
+        // top of the ladder).
         let root = root.unwrap_or_else(|| {
             if vals[0].signum() < 0 {
                 return grid[0];

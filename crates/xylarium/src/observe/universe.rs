@@ -9,8 +9,8 @@ use xyl_kernel::seats::{Holder, On, Role};
 use xyl_kernel::universe::Universe;
 
 /// The `universe` reading: the bell's count, the log, the peoples, the
-/// seats, the bells, the civilizations' summary, the forecast's limits and
-/// the founding's galaxies.
+/// seats, the bells, the count of annals, the civilizations' summary, the
+/// forecast's limits and the founding's galaxies.
 pub(super) fn universe(u: &Universe<'_>) -> String {
     let living = u
         .cosmic
@@ -82,9 +82,9 @@ pub(super) fn universe(u: &Universe<'_>) -> String {
     out
 }
 
-/// The founding's galaxies: the home at the universe
-/// core, then every bead of the cascade - its reach and phase about the
-/// throat, its hole by its share of the founding's matter, its place.
+/// The founding's galaxies: the home at the universe core, then every bead
+/// of the cascade, each with its hole's mass in suns, the ratio of that mass
+/// to the home hole's, and its place.
 pub(super) fn cores(seed: u64, bang: &BigBang) -> String {
     let all = xyl_cosmos::cores::shapes(seed, bang);
     let mut out = format!(

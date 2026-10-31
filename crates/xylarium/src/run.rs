@@ -12,8 +12,8 @@
 //!   xylarium run [--home DIR] [--for N] [--save-every K] [--velocity V]
 //!                \[same options\]
 //!       Live play, one ring of the bell per advance with every event inside
-//!       it at its own count, the checkpoint written every K rings (default
-//!       1) and on stop. `--velocity` caps rings per second (0: no cap).
+//!       the ring resolved at the event's count, the checkpoint written every
+//!       K rings (default 1) and on stop. `--velocity` caps rings per second (0: no cap).
 //!       An uplink runs the same loop with a [`Link`] beside it
 //!       ([`run_with`]).
 //!
@@ -45,15 +45,19 @@ use xyl_kernel::universe::Universe;
 /// parsed by [`crate::options`].
 #[derive(Clone, Debug)]
 pub struct Options {
-    /// The universe's seed: every stream is derived from it (`--seed`, default 7).
+    /// The universe's seed: every stream is derived from it (`--seed`,
+    /// default 7).
     pub seed: u64,
-    /// The number of sample stars whose forecast of minds is worked out (`--stars`, default 400).
+    /// The number of sample stars whose forecast of minds is computed
+    /// (`--stars`, default 400).
     pub stars: u64,
     /// Worker threads for the forecast (`--threads`, default 2).
     pub threads: usize,
-    /// The universe's home directory holding genesis, checkpoint and forecasts (`--home`).
+    /// The universe's home directory, holding the genesis record, the
+    /// checkpoint and the forecasts (`--home`, default `var/universe-7`).
     pub home: PathBuf,
-    /// Rings of the bell between checkpoints in live play (`--save-every`).
+    /// Rings of the bell between checkpoints in live play (`--save-every`,
+    /// default 1).
     pub save_every: u64,
     /// Rings of the bell to play before stopping (`--for`); `None` plays
     /// until interrupted.
@@ -61,14 +65,16 @@ pub struct Options {
     /// Rings per wall-clock second (`--velocity`): a throttle on the runner,
     /// never on the physics; 0 runs as fast as the machine allows.
     pub velocity: u64,
-    /// Unroll every sample star (a census), not only what the cores see.
+    /// Whether every sample star is unrolled (a census, the default), or only
+    /// the stars within the cores' reach (`--sight cores`).
     pub census: bool,
 }
 
 /// Where the universe's held state came from.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Source {
-    /// Carried to a checkpoint read from the home, with its records laid back.
+    /// Restored from the checkpoint in the home, with the peoples' records
+    /// and held inputs restored.
     Checkpoint,
     /// No checkpoint in the home: a fresh genesis carried to 14 Gyr.
     Fresh,
@@ -82,9 +88,9 @@ fn checkpoint_path(home: &Path) -> PathBuf {
     home.join("checkpoint")
 }
 
-/// Write the checkpoint, whole or not at all, committing the keepers' chain
-/// at this moment with the last final clock height a link heard (none when
-/// running locally).
+/// Writes the checkpoint whole or not at all (a temporary file, then a
+/// rename), after committing the keepers' chain with the last final clock
+/// height a link heard (`None` when running locally).
 fn keep(u: &mut Universe<'_>, home: &Path, height: Option<u64>) -> Result<(), String> {
     u.commit_clocks(height);
     let path = checkpoint_path(home);
@@ -95,8 +101,13 @@ fn keep(u: &mut Universe<'_>, home: &Path, height: Option<u64>) -> Result<(), St
         .map_err(|e| format!("{}: {e}", path.display()))
 }
 
-/// Build the universe from its seed (the laws regenerate what they give),
-/// carry it event to event to its held state, and hand it to `f`.
+/// Builds the universe from its seed (everything the laws derive is
+/// regenerated), carries it from event to event to its held state (the
+/// checkpoint, or 14 Gyr when there is none), and passes it to `f` with its
+/// [`Source`] and Big Bang.
+///
+/// Returns `Err` with a message when the Big Bang, the chemistry or the
+/// founded elements cannot be derived, or when `f` returns one.
 pub fn with<T>(
     o: &Options,
     f: impl FnOnce(&mut Universe<'_>, Source, &BigBang) -> Result<T, String>,
@@ -122,7 +133,8 @@ pub fn with<T>(
     eprintln!("universe: chemistry in {:.1?}", t0.elapsed());
     xyl_core::watch::stage("forecast");
     let elements = xyl_cosmos::elements::founded(&bang.parent.share())?;
-    // the package supplies the universe's laws; the reference laws until one does
+    // A universe's laws come from its package; until a package supplies
+    // them, the reference laws are used.
     let sc = Laws::default().scales();
     let ctx = Ctx::new(sc);
     let gal = Galaxy {
@@ -136,8 +148,8 @@ pub fn with<T>(
     eprintln!("universe: forecast in {:.1?}", t0.elapsed());
     xyl_core::watch::stage("genesis and begin (the bells weighed)");
     let cosmic = Cosmic::genesis(gal, schedule);
-    // the heavy stars, found once and kept in the home like the forecast: the
-    // bells' weights are recomputed from them, never read from the file
+    // The heavy stars are found once and kept in the home, like the forecast;
+    // the bells' weights are recomputed from them, never read from the file.
     let heavy_path = o.home.join(format!(
         "bells-{}-{}",
         xyl_cosmos::minds::key(&cosmic.gal),
@@ -188,8 +200,10 @@ pub fn with<T>(
     f(&mut u, source, &bang)
 }
 
-/// The roster: every people with its role, home and numbers - the readings by
-/// role (ancients hold the ancient seats, every other people a sovereign's).
+/// The roster: each people with its role, star, world, region, population and
+/// housing capacity, then the totals by role (ancient peoples hold the
+/// ancient seats, every other people a sovereign seat) and the count of
+/// steward seats.
 pub(crate) fn roster(u: &Universe<'_>) -> String {
     let mut out = String::new();
     let (mut anc, mut sov) = ((0usize, Dy::ZERO), (0usize, Dy::ZERO));
@@ -216,9 +230,11 @@ pub(crate) fn roster(u: &Universe<'_>) -> String {
     out
 }
 
-/// The civilizations in one line: peoples living, their numbers, what the
-/// most learned knows, the pulses the stars have absorbed and the radiation
-/// the peoples live in.
+/// The civilizations in one line: the peoples living and their total
+/// population, the largest knowledge stock, the count of peoples whose
+/// rulers set a focus, the pulses the stars have absorbed, the most sheared
+/// world, the count of peoples with a home radiation reading, and the most
+/// numerous people's body, metabolism, housing and biology mastery.
 pub(crate) fn summary(u: &Universe<'_>) -> String {
     let living: Vec<&xyl_kernel::cosmic::People> = u
         .cosmic
@@ -254,8 +270,9 @@ pub(crate) fn summary(u: &Universe<'_>) -> String {
         .iter()
         .filter(|k| k.focus.is_some())
         .count();
-    // the most numerous people, in the terms its numbers come from: what one
-    // of its bodies weighs and burns, and what its world's harvest gives
+    // The most numerous people, described by the quantities its population is
+    // derived from: the mass and metabolic power of one body, and the harvest
+    // its housing capacity supplies (capacity x metabolic power).
     let rulers = xyl_kernel::growth::Rulers::default();
     let numerous = u
         .cosmic
@@ -310,12 +327,13 @@ pub(crate) fn summary(u: &Universe<'_>) -> String {
     )
 }
 
-/// The galaxy's forecast of minds for its first `o.stars` stars, kept in the
-/// universe's home: whole (`forecast-<stars>-<key>-<laws digest>`), read back
-/// when nothing moved; otherwise star by star (`forecast-stars/`), each
-/// star's share kept under its own inputs, so a change to the laws re-reads
-/// only the stars it moved. A cache of what the laws give, never the
-/// universe's truth.
+/// The galaxy's forecast of minds for its first `stars` stars, kept in the
+/// universe's home. The whole forecast
+/// (`forecast-<stars>-<sight>-<key>-<laws digest>`) is read back when it
+/// exists; otherwise it is computed star by star (`forecast-stars/`), each
+/// star's part kept under a key of that star's inputs, so a change to the
+/// laws recomputes only the stars it affects. The files are a cache of what
+/// the laws compute, not a source of the universe's state.
 pub(crate) fn forecast(
     gal: &Galaxy,
     ctx: &Ctx,
@@ -371,18 +389,18 @@ pub(crate) fn forecast(
 
 /// What a network uplink does beside live play: after each ring it reads
 /// and answers the universe; at each checkpoint it records what it ships;
-/// it reports the last final clock height it heard. Local play has none.
+/// it reports the last final clock height it heard. Local play has no link.
 pub trait Link {
-    /// After each ring, with the universe's bells and their relays.
+    /// Called after each ring with the universe, its bells and their relays.
     fn ring(
         &mut self,
         u: &mut Universe<'_>,
         bells: &[xyl_cosmos::pulse::Node],
         relays: &[xyl_cosmos::pulse::Relay],
     );
-    /// At each checkpoint, after it is written.
+    /// Called at each checkpoint, after the checkpoint is written.
     fn saved(&mut self, home: &Path, u: &Universe<'_>) -> Result<(), String>;
-    /// The last final clock height heard.
+    /// The last final clock height the link has heard, if any.
     fn height(&self) -> Option<u64>;
 }
 
@@ -394,6 +412,8 @@ pub trait Link {
 /// universe cannot be carried to its checkpoint.
 ///
 /// # Examples
+///
+/// Ten rings of live play on an existing home:
 ///
 /// ```no_run
 /// let words: Vec<String> = ["--home", "var/universe-7", "--for", "10"]
@@ -408,12 +428,14 @@ pub fn run(o: Options) -> Result<bool, String> {
     run_with(o, |_, _| Ok(None))
 }
 
-/// Live play: one ring of the bell per advance (`--for N` rings, `--save-every
-/// K` rings), each event inside it at its own count, a checkpoint every K
-/// rings; `link` builds the uplink beside it from the options and the stop
-/// flag (None: local play).
+/// Live play: one ring of the bell per advance (`--for N` rings,
+/// `--save-every K` rings), every event inside the ring resolved at the
+/// event's count, a checkpoint every K rings; `link` builds the uplink beside
+/// it from the options and the stop flag (`None`: local play).
 ///
 /// # Examples
+///
+/// Live play with an uplink built by the closure:
 ///
 /// ```no_run
 /// use xylarium::run::{run_with, Link};
@@ -421,7 +443,7 @@ pub fn run(o: Options) -> Result<bool, String> {
 /// # fn uplink() -> Box<dyn Link> { unimplemented!() }
 /// let words: Vec<String> = ["--home", "var/universe-7"].iter().map(|w| w.to_string()).collect();
 /// let (o, _) = xylarium::options(&words)?;
-/// // the closure receives the options and the stop flag and builds the link
+/// // The closure receives the options and the stop flag and builds the link.
 /// run_with(o, |_options, _stop| Ok(Some(uplink())))?;
 /// # Ok::<(), String>(())
 /// ```
@@ -469,7 +491,7 @@ fn play(
     let pause = (o.velocity > 0).then(|| std::time::Duration::from_micros(1_000_000 / o.velocity));
     // The clock is the bell's count: each pass advances one ring and resolves
     // every event inside it (a waking, an input, a ley line falling due) at
-    // its own count, not on a calendar year.
+    // the event's count, not on a calendar year.
     let ring = Q::ONE;
     let mut rings = 0u64;
     while !stop.load(Ordering::SeqCst) && o.until.is_none_or(|n| rings < n) {
@@ -511,13 +533,15 @@ fn play(
 ///
 /// # Examples
 ///
+/// Founding universe 9 in a new home:
+///
 /// ```no_run
 /// let words: Vec<String> = ["--home", "var/universe-9", "--seed", "9"]
 ///     .iter()
 ///     .map(|w| w.to_string())
 ///     .collect();
 /// let (o, _) = xylarium::options(&words)?;
-/// xylarium::run::genesis(o)?; // minutes: founds the universe
+/// xylarium::run::genesis(o)?; // Takes minutes: founds the universe.
 /// # Ok::<(), String>(())
 /// ```
 pub fn genesis(o: Options) -> Result<bool, String> {
@@ -532,7 +556,8 @@ pub fn genesis(o: Options) -> Result<bool, String> {
     let bang = BigBang::of(o.seed).ok_or("no Big Bang")?;
     let chem = Chemistry::of(&bang).ok_or("no chemistry")?;
     let elements = xyl_cosmos::elements::founded(&bang.parent.share())?;
-    // the package supplies the universe's laws; the reference laws until one does
+    // A universe's laws come from its package; until a package supplies
+    // them, the reference laws are used.
     let sc = Laws::default().scales();
     let ctx = Ctx::new(sc);
     let gal = Galaxy {

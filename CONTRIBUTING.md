@@ -1,14 +1,14 @@
 # Contributing
 
-Thank you for your interest in Xylarium. This document describes how to set
-up a development environment, the checks a change must pass, and how changes
-are proposed.
+This document describes how to set up a development environment, the checks
+a change must pass, and how changes are proposed.
 
 ## Development environment
 
-- Rust 1.85 or later (`rustup toolchain install stable`), with the `rustfmt`
-  and `clippy` components.
-- Linux or macOS. The build uses no system libraries beyond the Rust toolchain.
+- Rust 1.85 or later is required (`rustup toolchain install stable`), with
+  the `rustfmt` and `clippy` components.
+- The supported platforms are Linux and macOS. The build uses no system
+  libraries beyond the Rust toolchain.
 
 From a clone of the repository:
 
@@ -27,7 +27,7 @@ cargo build --profile fast
 
 ## Getting started
 
-A first session, from clone to a first change:
+The following steps lead from a clone to a first change.
 
 1. Read [docs/concepts.md](docs/concepts.md) for the model's layers and
    vocabulary, and keep [docs/glossary.md](docs/glossary.md) open.
@@ -47,8 +47,8 @@ A first session, from clone to a first change:
 
 4. Pick a task from the [good first
    issue](https://github.com/SAIOS-SAMN/xylarium/labels/good%20first%20issue)
-   label or the roadmap's Next lists, read the module's `//!` header, and follow
-   [Extending a tier](docs/development.md#extending-a-tier).
+   label or the roadmap's Next lists, read the module's `//!` header, and
+   follow [Extending a tier](docs/development.md#extending-a-tier).
 
 The first `cargo test -p xyl-cosmos` founds the shared test genesis, which
 takes about 20 minutes in the `dev` profile; later runs reuse it while the
@@ -70,7 +70,7 @@ scripts/check-style
 Run them locally before opening a pull request; the repository runs no
 hosted CI.
 
-While iterating, run the tests of the modules you change
+While iterating, run the tests of the changed modules only
 (`cargo test --profile fast -p <crate> <module>::`). Tests that need a
 founded universe share one test genesis; see
 [docs/development.md](docs/development.md).
@@ -87,16 +87,17 @@ Linux); every command works without them. See
 ## Code standards
 
 The code standards, the workspace lints and the modelling conventions are
-in [docs/development.md](docs/development.md), with the steps for extending
-a tier ([Extending a tier](docs/development.md#extending-a-tier)).
+described in [docs/development.md](docs/development.md), together with the
+steps in [Extending a tier](docs/development.md#extending-a-tier).
 
 ## Commit messages
 
-- A summary line of at most 72 characters in the imperative mood
+- The summary line has at most 72 characters and uses the imperative mood
   ("Add the exodus to the carry", not "Added ...").
-- A blank line, then a body explaining what changed and why, wrapped at 72
-  columns. Reference readings or issues where relevant.
-- One logical change per commit.
+- A blank line follows, then a body that explains what changed and why,
+  wrapped at 72 columns. The body references readings or issues where
+  relevant.
+- Each commit holds one logical change.
 
 ## Issues and pull requests
 

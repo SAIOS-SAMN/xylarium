@@ -42,9 +42,10 @@ fn main() {
         files(d, &mut all);
     }
     all.sort();
-    // the files the founding is derived from: the Big Bang, the bounce, the
-    // elements and atoms, the cascade and lighting, the circuit, the package
-    // and the mathematics; a change to a layer above them keeps the digest
+    // The founding is derived from these files: the Big Bang, the bounce, the
+    // elements, atoms, compounds and fibres, the galactic cores and the chain,
+    // the package, the formation cascade, the circuit, the data tables and
+    // xyl-core. A change to any other file leaves the founding digest unchanged.
     let founding = |name: &str| {
         const FILES: [&str; 9] = [
             "src/bang.rs",
@@ -83,9 +84,10 @@ fn digest<'a>(root: &Path, paths: impl Iterator<Item = &'a PathBuf>, key: &str) 
             .unwrap_or(p)
             .to_string_lossy()
             .to_string();
-        // the watch (xyl-core watch.rs) monitors the process and enters no
-        // law: its file and every line naming it are excluded, so changing
-        // watch labels does not invalidate a forecast made under the same laws
+        // The watch (xyl-core watch.rs) monitors the process and enters no
+        // law. Its file and every line containing `watch::` are excluded, so a
+        // change to watch labels does not invalidate a forecast made under the
+        // same laws.
         if name.ends_with("watch.rs") {
             continue;
         }

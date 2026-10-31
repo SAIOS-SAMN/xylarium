@@ -22,7 +22,7 @@ pub struct Orbit {
     pub node: Q,
     /// Argument of periapsis, as a fraction of a turn in \[0, 1).
     pub peri: Q,
-    /// The cosine of its spin axis's tilt.
+    /// Cosine of the spin axis's tilt at birth, in \[-1, 1\].
     pub cos_obliquity: Q,
     /// Spin at birth, in rad/s (a share 0.1 to 0.5 of break-up spin).
     pub spin0: Q,
@@ -47,16 +47,17 @@ pub struct Now {
     pub cos_obliquity: Q,
 }
 
-/// A body's self-gravity pressure (Pa): the unit world's rho g R (3.4e11 Pa) times its
-/// mass over its radius in world units.
+/// A body's self-gravity pressure (Pa): the unit world's rho g R (3.4e11 Pa)
+/// times the body's mass over its radius, both in world units.
 pub(super) fn self_pressure(mass: &Q, radius: &Q) -> Q {
     (&Rock::world_pressure() * mass)
         .checked_div(radius)
         .unwrap_or(Q::ZERO)
 }
 
-/// k2 of a uniform elastic body: 1.5 / (1 + 19 mu / (2 P)), P its
-/// self-gravity pressure.
+/// The Love number `k2` of a uniform elastic body:
+/// `k2 = 1.5 / (1 + 19 mu / (2 P))`, with mu the shear rigidity of rock or
+/// ice and P the body's self-gravity pressure.
 pub fn love(mass: &Q, radius: &Q, icy: bool) -> Q {
     let mu = if icy { Rock::mu_ice() } else { Rock::mu_rock() };
     let den = &Q::ONE
@@ -70,7 +71,8 @@ pub fn love(mass: &Q, radius: &Q, icy: bool) -> Q {
 /// it, delta(a - R) - delta(a + R), with delta(x) = M / (x + M) and M the
 /// host's mass as a length (G M / c^2).
 pub(super) fn stretch(host_kg: &Q, a_m: &Q, r_m: &Q) -> Q {
-    // the host's mass as a length: r_g times its mass over the core's
+    // The host's mass as a length is r_g times the host's mass over the
+    // core's mass.
     let core_kg = &crate::package::hole_mass() * &Si::star_mass_kg();
     let m_len = &crate::chain::units().r_g_m * &host_kg.checked_div(&core_kg).unwrap_or(Q::ZERO);
     let delta = |x: &Q| m_len.checked_div(&(x + &m_len)).unwrap_or(Q::ZERO);
@@ -138,11 +140,11 @@ pub fn orbits(star_kg: &Q, worlds: &[&World], rng: &mut Stream) -> Vec<Orbit> {
             .cloned()
             .map(|x| &x * &Q::ratio(1, 2))
             .unwrap_or(Q::ratio(9, 10));
-        // the orbit's shape from the settling (systems::settle_about): its
-        // starting eccentricity is the greatest swing its neighbours gave it
-        // as a share of its reach, within its gap; its tilt is that swing's
-        // deficit angle, swing / (1 + swing) of a quarter turn; its node and
-        // periapsis are its settled phase
+        // The orbit's shape comes from the settling (systems::settle_about).
+        // The birth eccentricity is the settled swing, capped by the gap to
+        // the nearest neighbour; the inclination is the swing's deficit
+        // angle, swing / (1 + swing) of a quarter turn; node and periapsis
+        // are both the settled phase.
         let e0 = w.swing.clone().min(cap);
         let inc = &(&pi_q() * &Q::ratio(1, 2))
             * &w.swing
@@ -175,7 +177,9 @@ pub fn orbits(star_kg: &Q, worlds: &[&World], rng: &mut Stream) -> Vec<Orbit> {
             tau_e,
         });
     }
-    // what each neighbour forces (Laplace-Lagrange, leading term)
+    // Forced eccentricity (Laplace-Lagrange, leading term): for each
+    // neighbour, 5/4 x (inner axis / outer axis) x the neighbour's e0; the
+    // largest value is kept.
     let forced: Vec<Q> = (0..worlds.len())
         .map(|n| {
             let mut f = Q::ZERO;
@@ -203,9 +207,10 @@ pub fn orbits(star_kg: &Q, worlds: &[&World], rng: &mut Stream) -> Vec<Orbit> {
 }
 
 impl Orbit {
-    /// The orbit and spin at an age (Gyr): eccentricity damped toward the
-    /// forced, spin braked toward lock (then the day is the year and the axis
-    /// upright).
+    /// The orbit and spin at an age `t` (Gyr): eccentricity damped
+    /// exponentially toward the forced value with time constant `tau_e`, and
+    /// spin braked linearly toward the mean motion until `lock_gyr`. Once
+    /// locked, the day equals the year and the obliquity cosine is 1.
     pub fn at(&self, t: &Q) -> Now {
         let e = if self.tau_e.signum() <= 0 {
             self.e_forced.clone()

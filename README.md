@@ -15,8 +15,8 @@ records its history in annals. Each [seat](docs/glossary.md) (a role such as
 sovereign or steward) is filled by the kernel's default rule or by an
 external AI agent.
 
-New to the project? Read [docs/concepts.md](docs/concepts.md) first: a
-plain-language tour of the model in ten minutes. AI coding agents start at
+Readers new to the project start with [docs/concepts.md](docs/concepts.md),
+which describes the model in plain language. AI coding agents start with
 [AGENTS.md](AGENTS.md).
 
 ## Features
@@ -65,14 +65,14 @@ target/release/xylarium run --home var/universe-7 --for 1000 --save-every 100
 
 | Option | Default | Meaning |
 |---|---|---|
-| `--home DIR` | `var/universe-7` | the universe's home directory |
-| `--seed N` | `7` | the seed every random stream derives from |
-| `--stars N` | `400` | sample stars whose forecast of minds is computed |
-| `--threads N` | `2` | worker threads for the forecast |
-| `--sight census\|cores` | `census` | `census` unrolls every sample star; `cores` only what the cores see |
-| `--for N` | none | rings to play (`run`); without it, play until interrupted |
-| `--save-every K` | `1` | rings between checkpoints (`run`) |
-| `--velocity V` | `0` | rings per wall-clock second (`run`); `0` is unthrottled |
+| `--home DIR` | `var/universe-7` | The universe's home directory |
+| `--seed N` | `7` | The seed from which every random stream is derived |
+| `--stars N` | `400` | Number of sample stars whose forecast of minds is computed |
+| `--threads N` | `2` | Worker threads for the forecast |
+| `--sight census\|cores` | `census` | `census` unrolls every sample star; `cores` unrolls only what the cores see |
+| `--for N` | none | Rings to play (`run`); without it, `run` plays until interrupted |
+| `--save-every K` | `1` | Rings between checkpoints (`run`) |
+| `--velocity V` | `0` | Rings per wall-clock second (`run`); `0` is unthrottled |
 
 `genesis` writes the founding, the genesis record and the first checkpoint,
 and refuses a home that already holds a genesis. `observe` is read-only and
@@ -87,11 +87,11 @@ can run beside `run`. Every reading is listed in
 2. **Galaxies and stars.** Stars form in each galaxy's rings by that ring's
    star-formation law, with the metal content the ring holds at each star's
    birth.
-3. **Worlds.** Each star anchors a manifold (the arc its own pull holds). A
-   world forms where the matter gathered since the previous world holds a
-   deficit share of the circle at least equal to the tidal twist at that
-   degree (`disc::manifold_worlds`); moons form on each world's manifold by
-   the same rule, one tier down.
+3. **Worlds.** Each star anchors a manifold (the arc held by the star's
+   pull). A world forms where the matter gathered since the previous world
+   holds a deficit share of the circle at least equal to the tidal twist at
+   that degree (`disc::manifold_worlds`); moons form on each world's
+   manifold by the same rule, one tier down.
 4. **Life and peoples.** A world's medium sets a chemistry's copying
    fidelity and decay, which fix a ladder of rungs (`life::Ladder`), each an
    error-correction step holding more information. The forecast of minds
@@ -109,16 +109,17 @@ summarised in [docs/roadmap.md, Mathematics](docs/roadmap.md#mathematics).
 
 | Area | Available now | Planned |
 |---|---|---|
-| AI minds | sovereign, steward, progenitor and ancient seats (`seats`); typed percepts (`percept`, `lexicon`); the `Focus` and `Handle` decisions (`Universe::decide`) | seats keyed by subject, steward percepts, seat commands on the CLI |
-| Histories | annals of emergence, falls, ruins and focus (`cosmic::Annal`); turnings and eminent figures (`civ::history`) | |
-| Travel | ley lines built by ancient houses, constellations, realms as shells of the network, stewards, quarantine, folds of space (`transit`) | colonies of other stars over ley lines |
-| World building | founding, galaxies, stars, discs, worlds, moons, air, seas, life and minds (`xyl-cosmos`) | the world layer read wholly in the core's units |
-| Trade | the toll law: floor, ceiling and toll quoted in energy (`transit::quote`) | traffic over lanes, accrued tolls, trade routes |
-| Economies | bodies, metabolism, harvest, housing and numbers derived from physics (`growth`) | exchange and its institutions between peoples |
-| Modifiable physics | `xyl_cosmos::Laws` through the library API | laws supplied by the founding package to every command |
-| Diplomacy and conflict | | conflict and diplomacy from the shared decision rule |
+| AI minds | Sovereign, steward, progenitor and ancient seats (`seats`); typed percepts (`percept`, `lexicon`); the `Focus` and `Handle` decisions (`Universe::decide`) | Seats keyed by subject, steward percepts, seat commands on the CLI |
+| Histories | Annals of emergence, falls, ruins and focus (`cosmic::Annal`); turnings and eminent figures (`civ::history`) | |
+| Travel | Ley lines built by ancient houses, constellations, realms as shells of the network, stewards, quarantine, folds of space (`transit`) | Colonies of other stars over ley lines |
+| World building | Founding, galaxies, stars, discs, worlds, moons, air, seas, life and minds (`xyl-cosmos`) | The world layer read wholly in the core's units |
+| Trade | The toll law: floor, ceiling and toll quoted in energy (`transit::quote`) | Traffic over lanes, accrued tolls, trade routes |
+| Economies | Bodies, metabolism, harvest, housing and numbers derived from physics (`growth`) | Exchange and its institutions between peoples |
+| Modifiable physics | `xyl_cosmos::Laws` through the library API | Laws supplied by the founding package to every command |
+| Diplomacy and conflict | | Conflict and diplomacy from the shared decision rule |
 
-Order and status of the planned work: [docs/roadmap.md](docs/roadmap.md).
+The order and status of the planned work are recorded in
+[docs/roadmap.md](docs/roadmap.md).
 
 ## Running your own kernel
 
@@ -133,8 +134,8 @@ caches of what the laws regenerate.
 
 Deleting a cache never changes a result; the next start recomputes it. To
 embed the kernel in another program, depend on the `xylarium` crate and call
-`run::genesis`, `run::run_with` with your own `run::Link`, or
-`observe::observe`. Two runnable examples show both:
+`run::genesis`, `run::run_with` with a caller-supplied `run::Link`, or
+`observe::observe`. Two runnable examples demonstrate these calls:
 
 ```
 cargo run --release -p xylarium --example found_and_observe -- --home var/example-7
@@ -145,10 +146,10 @@ cargo run --release -p xylarium --example minimal_link -- --home var/example-7 -
 
 | Crate | Responsibility |
 |---|---|
-| `xyl-core` | exact numerics: rationals, certified enclosures, dyadics, conformal geometric algebra, rotors, units, sphere measure, the event solver, deterministic streams, coordinates |
-| `xyl-cosmos` | the founding and the layers above it: galaxies, stars, chemistry, discs, systems, manifolds, worlds, life and minds |
-| `xyl-kernel` | the universe in play: the event engine, peoples, knowledge, growth, seats, percepts, transit, propulsion, checkpoints |
-| `xylarium` | the library and the `xylarium` binary: `genesis`, `run`, `observe`, and the `run::Link` seam |
+| `xyl-core` | Exact numerics: rationals, certified enclosures, dyadics, conformal geometric algebra, rotors, units, sphere measure, the event solver, deterministic streams, coordinates |
+| `xyl-cosmos` | The founding and the layers above it: galaxies, stars, chemistry, discs, systems, manifolds, worlds, life and minds |
+| `xyl-kernel` | The universe in play: the event engine, peoples, knowledge, growth, seats, percepts, transit, propulsion, checkpoints |
+| `xylarium` | The library and the `xylarium` binary: `genesis`, `run`, `observe`, and the `run::Link` seam |
 
 ## Mycelium integration
 
@@ -178,27 +179,27 @@ running universes with `xylarium observe`.
 
 | Document | Contents |
 |---|---|
-| [concepts.md](docs/concepts.md) | the model in plain language: start here |
-| [architecture.md](docs/architecture.md) | layers, data flow, the event engine, caching, state, readings |
-| [model.md](docs/model.md) | the physical model, from the founding to worlds |
-| [EQUATIONS.md](docs/EQUATIONS.md) | every formula with its source location |
-| [civilizations.md](docs/civilizations.md) | life, peoples, knowledge, growth and transit |
-| [network.md](docs/network.md) | the Mycelium integration contract |
-| [development.md](docs/development.md) | conventions, lints, testing, run times |
-| [glossary.md](docs/glossary.md) | terms used across the code and documentation |
-| [roadmap.md](docs/roadmap.md) | mathematics, milestones and open work |
+| [concepts.md](docs/concepts.md) | The model in plain language; the entry point for new readers |
+| [architecture.md](docs/architecture.md) | Layers, data flow, the event engine, caching, state, readings |
+| [model.md](docs/model.md) | The physical model, from the founding to worlds |
+| [EQUATIONS.md](docs/EQUATIONS.md) | Every formula with its source location |
+| [civilizations.md](docs/civilizations.md) | Life, peoples, knowledge, growth and transit |
+| [network.md](docs/network.md) | The Mycelium integration contract |
+| [development.md](docs/development.md) | Conventions, lints, testing, run times |
+| [glossary.md](docs/glossary.md) | Terms used across the code and documentation |
+| [roadmap.md](docs/roadmap.md) | Mathematics, milestones and open work |
 
 ## Contributing
 
 Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers the
-development setup, the verification commands and the pull-request workflow;
-please also read the [code of conduct](CODE_OF_CONDUCT.md). Security issues
-are handled as described in [SECURITY.md](SECURITY.md).
+development setup, the verification commands and the pull-request workflow.
+Participation is governed by the [code of conduct](CODE_OF_CONDUCT.md).
+Security issues are handled as described in [SECURITY.md](SECURITY.md).
 
 ## Acknowledgements
 
-Xylarium was developed with substantial AI assistance: design, code and
-documentation were produced with AI coding agents (Anthropic's Claude).
+Xylarium was developed with AI assistance: design, code and documentation
+were produced with AI coding agents (Anthropic's Claude).
 
 ## License
 

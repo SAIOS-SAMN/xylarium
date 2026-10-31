@@ -17,7 +17,8 @@
 //! - Waking ([`Cosmic::wake`]): each forecast mind due by the target time
 //!   arises on its world, unless the world is held or cannot feed a viable
 //!   people (then it is counted `silent`). [`select`] reads its [`Traits`]
-//!   from its world: strategy (a tilted axis or a small star gives r),
+//!   from its world: strategy (an axial tilt above 23 degrees or a star
+//!   mass below 1/2 gives r),
 //!   sense, form, sociality, mind shape and size. Its numbers start at what
 //!   its world houses with nothing learned (civ/housing.rs).
 //! - Ancients: a mind born in a galactic core within one core assembly time
@@ -61,23 +62,24 @@ pub(crate) const SYLLABLES: [&str; 16] = [
     "ok",
 ];
 
-/// How a people's lineage bred (a variable world breeds r, a steady one K).
+/// How a people's lineage bred: r where the world's axial tilt exceeds 23
+/// degrees or its star's mass is below 1/2, K otherwise.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Strategy {
-    /// r-strategist: the smaller, faster-turning body; bred by a variable world.
+    /// The r-strategist: the smaller body with the faster generations.
     R,
-    /// K-strategist: the larger, slower-turning body; bred by a steady world.
+    /// The K-strategist: the larger body with the slower generations.
     K,
 }
 
-/// What its mind is shaped as.
+/// The shape of a people's mind.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Shape {
     /// A people of many minds.
     Society,
     /// A colony that thinks as one.
     Superorganism,
-    /// A mind spread slow through its medium.
+    /// A mind spread through its medium.
     Distributed,
 }
 
@@ -88,20 +90,23 @@ pub struct Traits {
     pub strategy: Strategy,
     /// The solvent its chemistry lives in.
     pub solvent: Solvent,
-    /// Whether its medium is one starlight does not reach (under ice or in a giant's deep
-    /// interior).
+    /// Whether its medium is one starlight does not reach (under ice or in a
+    /// giant's deep interior).
     pub dark: bool,
-    /// Where on its world its medium lies (surface, under ice, supercritical, deep).
+    /// Where on its world its medium lies (surface, under ice, supercritical,
+    /// deep).
     pub at: Where,
-    /// The temperature its body keeps (K): its chemistry's best.
+    /// The temperature its body keeps (K): the best temperature for its
+    /// solvent (`worlds::body_temperature`).
     pub body_t: Dy,
-    /// Its leading sense: "fields", "heat and pressure", "chemistry", "heat" or "light".
+    /// Its leading sense: "fields", "heat and pressure", "chemistry", "heat"
+    /// or "light".
     pub sense: &'static str,
-    /// Its body's form: "drifting", "swimming", "low and many-limbed", "tall and slender" or
-    /// "walking".
+    /// Its body's form: "drifting", "swimming", "low and many-limbed", "tall
+    /// and slender" or "walking".
     pub form: &'static str,
-    /// What it works with: "shaped fields", "grasping limbs", "tendrils", "mouths and tongues" or
-    /// "jointed palps".
+    /// What it works with: "shaped fields", "grasping limbs", "tendrils",
+    /// "mouths and tongues" or "jointed palps".
     pub hands: &'static str,
     /// How social it is, 0 to 1.
     pub social: Dy,
@@ -112,11 +117,13 @@ pub struct Traits {
 }
 
 impl Traits {
-    /// The medium this body's chemistry lives in on a world: the richest of
-    /// its own solvent's, wherever the world holds it (surface, under ice,
-    /// supercritical). The body keeps its chemistry at its solvent's best
-    /// (growth.rs `metabolism_w`), so it follows its solvent as the world
-    /// changes; a region is a reading of a medium, never a bound on a people.
+    /// The medium this body's chemistry lives in on a world: of the media of
+    /// the body's solvent, wherever the world holds them (surface, under ice,
+    /// supercritical, deep), the one with the largest richness x min(energy,
+    /// 1). None where the world holds no medium of that solvent. The body
+    /// keeps its chemistry at the solvent's best temperature (growth.rs
+    /// `metabolism_w`), so it follows its solvent as the world changes; a
+    /// region is a reading of a medium, never a bound on a people.
     pub fn medium<'m>(&self, ms: &'m [Medium]) -> Option<&'m Medium> {
         ms.iter()
             .filter(|m| m.solvent == self.solvent)
@@ -156,7 +163,7 @@ impl Traits {
 /// A people that has woken.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct People {
-    /// Its display name, spoken in generated syllables.
+    /// Its display name, two or three syllables of `SYLLABLES`.
     pub name: String,
     /// Its star (index in the galaxy's sample).
     pub star: u64,
@@ -170,19 +177,21 @@ pub struct People {
     pub dawn: Dy,
     /// Its numbers (bodies).
     pub population: Dy,
-    /// Numbers its world carries of its bodies (growth.rs).
+    /// The numbers of its bodies its world houses, as last read
+    /// (civ/housing.rs; scaled by the radiation environment in the carry).
     pub capacity: Dy,
     /// Its growth rate (per year).
     pub rate: Dy,
     /// When its numbers were last carried forward (Gyr after the Big Bang).
     pub updated: Dy,
-    /// Born in the core within one core assembly time of the core's first mind.
+    /// Whether it was born in a galactic core within one core assembly time
+    /// of that core's first core-born mind.
     pub ancient: bool,
     /// When its lineage climbed each rung (Gyr after the Big Bang).
     pub steps: Vec<Dy>,
     /// Number of impacts that threw its lineage back a rung.
     pub setbacks: u32,
-    /// When its world stopped feeding it, if it has fallen.
+    /// When its world stopped feeding it (Gyr), if it has fallen.
     pub fell: Option<Dy>,
 }
 
@@ -211,7 +220,8 @@ pub struct Cosmic<'g> {
     pub gal: Galaxy<'g>,
     /// The physical scales worlds are built under.
     pub ctx: Ctx,
-    /// When and where each mind would wake in the undisturbed galaxy, in order of waking.
+    /// When and where each mind would wake in the undisturbed galaxy, in
+    /// order of waking.
     pub forecast: Schedule,
     /// Deep time now (Gyr after the Big Bang).
     pub now: Dy,
@@ -236,7 +246,9 @@ pub struct Cosmic<'g> {
 }
 
 impl<'g> Cosmic<'g> {
-    /// Starts the universe's clock at its first mind's waking.
+    /// Starts deep time at the epoch of the forecast's first mind (0 when
+    /// the forecast is empty), records the Big Bang annal and wakes the
+    /// minds due by then.
     pub fn genesis(gal: Galaxy<'g>, forecast: Schedule) -> Cosmic<'g> {
         let ctx = Ctx::new(gal.sc);
         let now = forecast.minds.first().map(|m| m.epoch).unwrap_or(Dy::ZERO);
@@ -270,7 +282,8 @@ impl<'g> Cosmic<'g> {
         c
     }
 
-    /// The system of star `n`, witnessed (built once, from physics).
+    /// The system of star `n`, witnessed (built once, from physics). None
+    /// when the star or its system cannot be built.
     pub fn witness(&mut self, n: u64) -> Option<&Witnessed> {
         if let std::collections::btree_map::Entry::Vacant(e) = self.systems.entry(n) {
             let s = star(self.gal.seed, self.gal.bang, n)?;
@@ -290,7 +303,8 @@ impl<'g> Cosmic<'g> {
         self.systems.get(&n)
     }
 
-    /// Where star `n` is now (kpc about the core).
+    /// Where star `n` is now (kpc about the core). None for a star not yet
+    /// witnessed.
     pub fn place(&self, n: u64) -> Option<Place> {
         self.systems
             .get(&n)
@@ -314,8 +328,9 @@ impl<'g> Cosmic<'g> {
         Some(out)
     }
 
-    /// A world's heartbeat at an epoch: its day and year as it absorbs the
-    /// bells' echo (worlds.rs Path::heartbeat). None for a world with no path.
+    /// A world's heartbeat at an epoch: its day and year (worlds.rs
+    /// `Path::heartbeat`), at the star's age quantised to degrees of its
+    /// life. None for an unwitnessed star or a world with no path.
     pub fn heartbeat(
         &self,
         star_n: u64,

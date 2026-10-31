@@ -27,19 +27,21 @@ use xyl_core::dyadic::Dy;
 use xyl_cosmos::life::{growing_share, Body};
 use xyl_cosmos::worlds::{body_pace, Ctx, Medium};
 
-/// The rulers growth is measured against. Declared rulers: each is a
-/// measured value kept as a ruler and listed in the emergence register.
+/// The rulers growth is measured against. Each is a declared ruler, a
+/// measured value held until it is derived, and is listed in
+/// docs/roadmap.md (Declared rulers).
 pub struct Rulers {
-    /// A mind-bearing body (kg): life.rs's M_MIND.
+    /// The mass of a mind-bearing body (kg), the value of `m_mind_kg` in
+    /// xyl-cosmos `life`.
     pub m_mind: Dy,
-    /// The unit body's generation (years). Declared ruler, pending its
-    /// derivation from the body's own life history: 14.2 yr, a measured
-    /// value held as a ruler; every people's generation scales it by
-    /// 2s / (1 + s).
+    /// The unit body's generation (years), 14.2 yr. It is a declared ruler
+    /// until it is derived from the unit body's life history; every
+    /// people's generation scales it by 2s / (1 + s).
     pub generation_yr: Dy,
     /// The share of free energy a biosphere fixes (primary production).
     pub eta_primary: Dy,
-    /// What one link of a food chain passes on (Lindeman).
+    /// The share of energy one link of a food chain passes to the next
+    /// (Lindeman's tenth).
     pub trophic: Dy,
     /// The flux unit (W/m^2).
     pub flux_w: Dy,
@@ -62,21 +64,24 @@ pub fn body_kg(traits: &Traits, r: &Rulers) -> Dy {
     r.m_mind * traits.size
 }
 
-/// The unit body's metabolism (W): the mind-bearing body's, held as a ruler
-/// in xyl-cosmos life.rs (19.1 W).
+/// The unit body's metabolism (W), the metabolism of the mind-bearing body
+/// held as a ruler in xyl-cosmos `life` (19.1 W).
 pub fn unit_metabolism_w() -> Dy {
     xyl_cosmos::life::unit_metabolism_w()
 }
 
-/// A body's metabolism (W): the unit body's, scaled by the size share
-/// 2s / (1 + s), at its chemistry's own pace.
+/// A body's metabolism (W): the unit body's metabolism scaled by the size
+/// share 2s / (1 + s), s = m_b / M_MIND, and by the body pace of the
+/// people's solvent (`worlds::body_pace`).
 pub fn metabolism_w(traits: &Traits, ctx: &Ctx, r: &Rulers) -> Dy {
     let s = (body_kg(traits, r) / r.m_mind.max(Dy::sci(1, -12))).max(Dy::ZERO);
     unit_metabolism_w() * (Dy::int(2) * s / (Dy::ONE + s)) * body_pace(traits.solvent, ctx)
 }
 
-/// Food power the world offers one link up the biosphere (W), averaged over
-/// the year (its growing share).
+/// The food power the world offers one link up the biosphere (W): free
+/// energy x flux unit x surface area x living band x `eta_primary` x
+/// `trophic`, averaged over the year by the growing share (one half on a
+/// tidally locked world).
 pub fn food_w(med: &Medium, body: &Body, r: &Rulers) -> Dy {
     let season = if body.locked {
         Dy::ratio(1, 2)
@@ -99,35 +104,40 @@ pub fn generation_yr(traits: &Traits, r: &Rulers) -> Dy {
     r.generation_yr * (Dy::int(2) * s / (Dy::ONE + s))
 }
 
-/// Its natural growth rate (per year): one e-fold per its own generation.
+/// A people's natural growth rate (per year): one e-fold per generation,
+/// `r = 1 / generation_yr`.
 pub fn growth_per_yr(traits: &Traits, r: &Rulers) -> Dy {
     Dy::ONE / generation_yr(traits, r).max(Dy::sci(1, -9))
 }
 
-/// Numbers after `years` from `now`, toward `cap` (exact logistic:
-/// K / (1 + (K/N - 1) e^(-r t))). Above capacity it decays back the same way.
+/// Numbers after `years` from `now`, toward the capacity `cap`, by the
+/// closed-form logistic K / (1 + (K/N - 1) e^(-r t)); above capacity the
+/// numbers decay toward it by the same form. Returns zero when `cap` or
+/// `now` is not positive. The exponent r t is capped at 200.
 pub fn grow(now: Dy, cap: Dy, rate: Dy, years: Dy) -> Dy {
     if cap.signum() <= 0 || now.signum() <= 0 {
         return Dy::ZERO;
     }
     let x = (rate * years).min(Dy::int(200));
-    // zero span: return unchanged (the closed form would round)
+    // A span of zero returns the numbers unchanged; the closed form would
+    // round them.
     if x.signum() <= 0 {
         return now;
     }
     cap / (Dy::ONE + (cap / now - Dy::ONE) * (-x).exp())
 }
 
-/// Power a world offers a people's works, and what its bodies already turn
-/// (W). Until seated minds direct capture of the world's flows, a people
-/// commands only its bodies.
+/// The power a world offers a people's works and the power the people's
+/// bodies already convert (W). Until seated minds direct the capture of the
+/// world's flows, a people commands only the power of its bodies.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Power {
-    /// Its star's light over its world's whole surface (the year's mean flux).
+    /// The star's light over the world's whole surface, at the year's mean
+    /// flux.
     pub starlight_w: Dy,
-    /// Its world's own heat flowing out.
+    /// The world's internal heat flowing out through the surface.
     pub heat_w: Dy,
-    /// Its bodies' metabolism, all of them.
+    /// The total metabolism of the people's bodies.
     pub bodies_w: Dy,
 }
 
@@ -135,13 +145,14 @@ pub struct Power {
 fn surface_m2(body: &Body) -> Dy {
     let unit_r = Dy::from_q(&xyl_cosmos::package::Si::world_radius_m());
     let r_m = body.radius * unit_r;
-    // linear area rule against the unit world: 4 pi r R_unit
+    // Linear area rule against the unit world: A = 4 pi r R_unit.
     Dy::int(4) * Dy::PI * r_m * unit_r
 }
 
-/// The power available to a people of `numbers` bodies on world `body` in state `state` (W): its
-/// star's light over the whole surface, the world's heat flow over it, and its bodies' total
-/// metabolism under `traits`, `ctx` and rulers `r`.
+/// The power available to a people of `numbers` bodies on world `body` in
+/// state `state` (W): the star's light over the whole surface, the world's
+/// heat flow through it, and the bodies' total metabolism under `traits`,
+/// `ctx` and the rulers `r`.
 pub fn power(
     state: &xyl_cosmos::worlds::State,
     body: &Body,
@@ -159,7 +170,7 @@ pub fn power(
 }
 
 /// The world's starlight over its whole surface plus its internal heat flow
-/// (W): the power a people's own producers may capture (civ::housing
+/// (W): the power a people's producers may capture (civ::housing
 /// `feeds_w`).
 pub fn world_w(state: &xyl_cosmos::worlds::State, body: &Body, r: &Rulers) -> Dy {
     let area = surface_m2(body);
@@ -193,13 +204,15 @@ mod tests {
         let r = Rulers::default();
         let t = traits(Dy::ONE, Strategy::K);
         let cap = Dy::int(1_000_000);
-        // the logistic: towards the capacity, never past it, from either side
+        // The logistic approaches the capacity from either side and does not
+        // cross it.
         let rate = growth_per_yr(&t, &r);
         let later = grow(Dy::int(500), cap, rate, Dy::int(1000));
         assert!(later > Dy::int(500) && later <= cap);
         assert!(grow(cap * Dy::int(2), cap, rate, Dy::int(1000)) < cap * Dy::int(2));
         assert_eq!(grow(Dy::int(500), cap, rate, Dy::ZERO), Dy::int(500));
-        // one e-fold per its own generation: a larger body breeds slower
+        // One e-fold per generation: a larger body has a longer generation
+        // and grows more slowly.
         assert!(growth_per_yr(&traits(Dy::int(8), Strategy::K), &r) < rate);
     }
 }

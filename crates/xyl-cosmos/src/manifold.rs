@@ -16,15 +16,15 @@
 //!   turn equal to the anchor's deficit. A giant's moons sit on a 2:1 chain:
 //!   each rate is the innermost's halved k times, k the nearest power of two
 //!   to the turning-law ratio.
-//! - `Manifold::stand` and `bearing`: the vector and the bearing
-//!   (direction, distance a (1 - e cos M)) at an age, as enclosures.
+//! - `Manifold::stand` and `bearing`: the vector (as enclosures) and the
+//!   bearing (direction, distance a (1 - e cos M)) at an age.
 //! - `reach`, `Manifold::reach`: the arc `2 pi a m / (M + m)`.
 //! - `cap_degrees`, `star_cap_degrees`: the share of the anchor's S^n a
 //!   reach fills (`measure::share_turns`), times 360. `share`: belonging, 1
 //!   at the centre, 1/2 at the reach, falling beyond.
 //! - `gap`, `out_to_star`, `galaxy_place`: distances composed up the chain;
 //!   turns between directions use a dyadic `acos`. `gap` and `out_to_star`
-//!   return None for a world not in the list.
+//!   return `None` for a world not in the list.
 //!
 //! Terms: manifold (docs/glossary.md).
 
@@ -81,8 +81,8 @@ pub struct Manifold {
     pub tier: Tier,
     /// The semi-major axis in its tier's unit, exact.
     pub a: Q,
-    /// Eccentricity relaxing from `e0` toward `e_forced` over `tau_e` Gyr
-    /// (no relaxation when `tau_e` is 0).
+    /// Initial eccentricity, relaxing toward `e_forced` over `tau_e` Gyr (when
+    /// `tau_e` is 0 the eccentricity is `e_forced` at every age).
     pub e0: Q,
     /// Forced eccentricity the orbit relaxes toward.
     pub e_forced: Q,
@@ -94,20 +94,22 @@ pub struct Manifold {
     pub m0: Q,
     /// The orbital plane by half-angles: periapsis about its axis,
     /// inclination about the line of nodes, node about the anchor's axis,
-    /// composed into one exact frame.
+    /// composed into one exact frame (the identity for a moon).
     pub frame: Rotor,
     /// The anchor's deficit (degrees): the twist per turn.
     pub twist_deg: Q,
     /// Mass over the anchor's mass (the Hill scale ratio).
     pub mass_ratio: Q,
     /// On a captured chain: the innermost moon's index and this moon's step
-    /// count along the chain.
+    /// count along the chain (`None` for a planet).
     pub chain: Option<(usize, u32)>,
 }
 
 /// The manifolds of a star's planets and moons, from the same orbits used
 /// for the worlds' settings (`bodies::orbits`, keyed by `path`), with each
-/// world's mean anomaly at the star's birth drawn from its own stream.
+/// world's mean anomaly at the star's birth drawn from a stream derived from
+/// the seed, the star's index and the world's index. A moon whose host is
+/// missing, or a planet without a drawn orbit, is skipped.
 pub fn manifolds(
     seed: u64,
     path: &[u64],
@@ -125,7 +127,7 @@ pub fn manifolds(
     let in_tier = |m: &Q, tier: Tier| units.in_tier(m, tier);
     let mut planet = 0usize;
     let mut out = Vec::with_capacity(sys.worlds.len());
-    // the innermost moon of each giant, for its chain
+    // The innermost moon of each giant, for its chain.
     let innermost = |host: usize| {
         sys.worlds
             .iter()
@@ -146,9 +148,9 @@ pub fn manifolds(
                 let ef = w.e_forced.clone().unwrap_or(Q::ZERO);
                 let chain = innermost(h).and_then(|first| {
                     let a_in = sys.worlds[first].a_host_radii.clone()?;
-                    // steps along the 2:1 chain: the innermost's turning over
-                    // this moon's is 2^k (turning law at each, no squared
-                    // distance)
+                    // Steps along the 2:1 chain: k (below 24) makes 2^k the
+                    // nearest power of two to the innermost's turning over
+                    // this moon's (turning law at each, no squared distance).
                     let a_in_m = &(&a_in * &g.radius) * &Si::world_radius_m();
                     let ratio = crate::turning::turning_si(&host_kg, &a_in_m)
                         .checked_div(&crate::turning::turning_si(&host_kg, &a_m))?;
@@ -248,10 +250,12 @@ impl Manifold {
     pub fn stand(&self, age: &Q, all: &[Manifold]) -> Stand {
         let ecc = self.e(age);
         let mean = Encl::exact(self.m0.clone()).add(&self.rate(all).mul(&Encl::exact(age.clone())));
-        // the orbit as pivots: the main pivot at its turning rate, and the
-        // stretch as a second pivot at twice the rate, radius a e / 2, about a
-        // centre a 3e/2 behind the anchor - periapsis a (1 - e), apoapsis
-        // a (1 + e), closed form at any age with no equation solved
+        // The orbit as two circles: the main circle at the turning rate, and
+        // the stretch as a second circle at twice the rate, radius a e / 2,
+        // about a centre offset by -3 a e / 2 along x:
+        // x = a (cos M + (e / 2) (cos 2M - 3)), y = a (sin M + (e / 2) sin 2M).
+        // Periapsis is a (1 - e) and apoapsis a (1 + e), in closed form at any
+        // age with no equation solved.
         let (cm, sm) = cos_sin_turns(&mean);
         let (c2, s2) = (
             cm.mul(&cm).sub(&sm.mul(&sm)),
@@ -261,8 +265,8 @@ impl Manifold {
         let half_e = ecc.mul(&Encl::exact(Q::ratio(1, 2)));
         let x = a.mul(&cm.add(&half_e.mul(&c2.sub(&Encl::exact(Q::int(3))))));
         let y = a.mul(&sm.add(&half_e.mul(&s2)));
-        // the twist over time (uniform in degrees), then the plane's frame
-        // (half-angles, exact)
+        // The twist over time (uniform in degrees), then the plane's frame
+        // (half-angles, exact).
         let (cw, sw) = cos_sin_turns(&self.twist(&ecc, all).mul(&Encl::exact(age.clone())));
         let (xp, yp) = (x.mul(&cw).sub(&y.mul(&sw)), x.mul(&sw).add(&y.mul(&cw)));
         let vector = self.frame.apply(&[xp, yp, Encl::exact(Q::ZERO)]);
@@ -281,9 +285,10 @@ impl Manifold {
         ))
     }
 
-    /// Reach (its tier's unit): the arc of the anchor's circle it holds, its
-    /// deficit share of the pair m / (M + m) of a turn at its distance (the
-    /// turning law's form, delta = M / (r + M)). No root.
+    /// Reach (in the tier's unit): the arc of the anchor's circle the world
+    /// holds, the deficit share m / (M + m) of the full circle at its
+    /// semi-major axis (the turning law's form, delta = M / (r + M)). No
+    /// root.
     pub fn reach(&self) -> Encl {
         reach(&Encl::exact(self.a.clone()), &self.mass_ratio)
     }
@@ -309,7 +314,7 @@ impl Manifold {
 }
 
 /// A world's bearing from its anchor (`Manifold::bearing`): unit direction
-/// and distance in its tier's unit.
+/// and distance in the tier's unit.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Bearing {
     /// Unit direction from the anchor (exact).
@@ -318,16 +323,18 @@ pub struct Bearing {
     pub r: Q,
 }
 
-/// The turn between two unit directions (radians): acos of their dot product.
+/// The turn between two unit directions (radians): acos of their dot
+/// product.
 pub fn turn_between(a: &[Q; 3], b: &[Q; 3]) -> Q {
     let agree = a.iter().zip(b).fold(Q::ZERO, |acc, (x, y)| &acc + &(x * y));
     xyl_core::dyadic::Dy::from_q(&agree).acos().to_q()
 }
 
 /// The gap between two worlds of one system at `age` (system tier units).
-/// Within one anchor: the turn between their directions times the inner
-/// distance, plus the difference in distances. A moon first adds its own
-/// distance to its giant. No squared lengths or roots.
+/// Within one anchor: the turn between their directions times the smaller
+/// distance, plus the difference in distances. Otherwise a moon's distance
+/// to its giant is added to the giant's gap. No squared lengths or roots.
+/// `None` for a world not in `all`.
 pub fn gap(all: &[Manifold], wa: usize, wb: usize, age: &Q) -> Option<Q> {
     if wa == wb {
         return Some(Q::ZERO);
@@ -372,10 +379,10 @@ fn frame_of(inc: &Q, node: &Q, peri: &Q) -> Rotor {
         .then_after(&Rotor::about(2, &h(peri)))
 }
 
-/// The volume a cap holds: seen from a point, a reach `x` (arc over
-/// distance) subtends x radians, x / 2 pi of a turn, at most half; that cone
-/// holds share_n of the point's sphere of directions, n the dimension. Taken
-/// from the angle (measure.rs), without cosines or roots. Enclosed.
+/// The share of a point's S^n of directions a cap holds: a reach `x` (arc
+/// over distance) subtends x radians, x / (2 pi) of a turn, at most half a
+/// turn; that cone holds `measure::share_turns(n, turns)` of the sphere.
+/// Taken from the angle, without cosines or roots, as an enclosure.
 fn cone_share(n: u32, x: &Encl) -> Encl {
     let half = Q::ratio(1, 2);
     let turns = |q: &Q, up: bool| {
@@ -389,14 +396,15 @@ fn cone_share(n: u32, x: &Encl) -> Encl {
     }
 }
 
-/// An arc over its distance as turns: x / 2 pi, bounded outward.
+/// An arc over its distance as turns: x / (2 pi), the upper or lower bound.
 fn x_turns(x: &Q, up: bool) -> Q {
     let p = per_turn();
     x * if up { &p.hi } else { &p.lo }
 }
 
-/// A child's cap on its anchor's sphere of directions, in degrees as volume:
-/// the share of the anchor's S^n its reach fills, times 360.
+/// A child's cap on its anchor's sphere of directions, in degrees of volume:
+/// the share of the anchor's S^n that `reach` at distance `d` fills, times
+/// 360.
 pub fn cap_degrees(n: u32, reach: &Encl, d: &Encl) -> Encl {
     let x = Encl {
         lo: reach.lo.checked_div(&d.hi).unwrap_or(Q::ZERO),
@@ -408,7 +416,8 @@ pub fn cap_degrees(n: u32, reach: &Encl, d: &Encl) -> Encl {
 /// A point's belonging to a child of `reach` at distance `d`, as a share of
 /// directions of S^n. Outside the reach: the share of the point's directions
 /// the child's reach fills (1/2 at the edge, falling smoothly). Inside: one
-/// minus the share the distance would fill of the child's (1 at the centre).
+/// minus the share the distance fills seen from the reach (1 at the centre).
+/// Where `d` and `reach` overlap, the hull of both readings and 1/2.
 pub fn share(n: u32, d: &Encl, reach: &Encl) -> Encl {
     let out = |num: &Encl, den: &Encl| Encl {
         lo: num.lo.checked_div(&den.hi).unwrap_or(Q::ZERO),
@@ -433,8 +442,9 @@ pub fn share(n: u32, d: &Encl, reach: &Encl) -> Encl {
 }
 
 /// A star's cap on its core's sphere of directions (degrees of S^360's
-/// volume): its reach, the deficit share m / (M(<R) + m) of the circle at R,
-/// over R, with M(<R) the mass inside its orbit (scaled to its galaxy).
+/// volume): the star's reach, the deficit share m / (M(<R) + m) of the circle
+/// at R, over R, with M(<R) the home-equivalent mass inside its orbit scaled
+/// to the star's galaxy.
 pub fn star_cap_degrees(star: &Star, star_suns: &Q) -> Encl {
     let inside =
         &crate::galaxy::inside_mass(&star.r) * &crate::cores::ratio_of_scale(&star.scale.to_q());
@@ -446,9 +456,10 @@ pub fn star_cap_degrees(star: &Star, star_suns: &Q) -> Encl {
     )
 }
 
-/// A world's distance to its star at `age` (system tier units): a planet's
-/// own distance; a moon's own distance dilated from the planet tier (an
-/// exact power of sixty) plus its giant's.
+/// A world's distance to its star at `age` (system tier units): for a planet
+/// its orbital distance; for a moon its distance to the giant, dilated from
+/// the planet tier (an exact power of sixty), plus the giant's distance.
+/// `None` for a world not in `all`.
 pub fn out_to_star(all: &[Manifold], world: usize, age: &Q) -> Option<Q> {
     let m = all.iter().find(|m| m.world == world)?;
     let own = &m.bearing(age, all).r * &dilation(m.tier, Tier::System);
@@ -461,7 +472,7 @@ pub fn out_to_star(all: &[Manifold], world: usize, age: &Q) -> Option<Q> {
 /// A world's place at `t` Gyr on its galaxy's sphere, composed up the
 /// chain: the star's bearing from its core, offset by the world's distance
 /// to the star dilated to the galaxy tier; the core lies on the universe's
-/// sphere of radius `r`.
+/// sphere of radius `r`. `None` for a world not in `all`.
 pub fn galaxy_place(
     star: &Star,
     all: &[Manifold],

@@ -1,32 +1,35 @@
 # Development
 
-This guide is for contributors working on the code: the standards the lints
-enforce, the modelling conventions every law follows, how to extend a tier,
-how to build and test efficiently, and how to keep the documentation in step.
-The pull-request workflow is in [CONTRIBUTING.md](../CONTRIBUTING.md).
+This guide is for contributors working on the code. It describes the standards
+the lints enforce, the modelling conventions every law follows, how to extend a
+tier, how to build and test efficiently, and how to keep the documentation
+consistent with the code. The pull-request workflow is in
+[CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Code standards
 
-Enforced by workspace lints (`Cargo.toml`, `clippy.toml`):
+The workspace lints (`Cargo.toml`, `clippy.toml`) enforce the following
+rules:
 
 - `unsafe_code` is denied.
 - Floating point is denied (`float_arithmetic`, `cast_precision_loss`,
   `cast_possible_truncation`). Use `Q` for held values, `Encl` for certified
-  transcendentals, `Dy` for bounded intermediate readings.
+  transcendentals and `Dy` for bounded intermediate readings.
 - `unwrap`, `expect`, `panic`, `todo` and `unimplemented` are denied outside
   tests. The kernel refuses invalid input (returns `None` or `Err`) rather
   than aborting.
-- `missing_docs` warns: every public item is documented, with units for
+- `missing_docs` warns, so every public item is documented, with units for
   physical quantities and the conditions under which it returns `None` or
   `Err`.
 
 ## Code style
 
-Beyond `rustfmt` (run `cargo fmt --all`):
+The following conventions apply in addition to `rustfmt` (run
+`cargo fmt --all`):
 
-- **Lines.** At most 100 columns, string literals included; split long
-  `format!` strings across `concat!` pieces or build output rows with small
-  helpers. `scripts/check-style` checks this.
+- **Lines.** A line has at most 100 columns, string literals included.
+  Long `format!` strings are split across `concat!` pieces, or output rows
+  are built with small helpers. `scripts/check-style` checks this.
 - **Modules.** A file over about 800 lines is split into a directory module
   (`worlds/mod.rs` with `worlds/climate.rs`, ...) along its sections; the
   public paths stay the same through `pub use`.
@@ -39,13 +42,18 @@ Beyond `rustfmt` (run `cargo fmt --all`):
   private one-letter wrappers. Single-letter bindings are for the symbols of
   a formula written in the comment above them (`m`, `r`, `delta`).
 - **Comments.** A `//` comment says why the code does what it does, or
-  which formula a block evaluates (with its symbols), in plain technical
-  prose. It does not narrate what the next line obviously does and does not
-  use figurative language. Model vocabulary is used as defined in
-  [glossary.md](glossary.md).
-- **Doc comments.** `///` on every public item: what it returns, its units,
-  and when it returns `None` or `Err`. Entry points carry an `# Examples`
-  section.
+  which formula a block evaluates (with its symbols), in academic technical
+  prose: complete sentences that start with a capital letter and end with a
+  full stop, third person, facts only, ASCII only. Formulas sit inside the
+  sentence ("The amplitude is `A = vz / nu`."). A comment does not narrate
+  what the next line obviously does, does not use figurative language or
+  personification, and names what is meant rather than writing "its own".
+  Model vocabulary is used as defined in [glossary.md](glossary.md).
+  `scripts/check-style` checks capitalisation, sentence endings and "its
+  own".
+- **Doc comments.** Every public item has a `///` comment that states what it
+  returns, its units, and when it returns `None` or `Err`. Entry points carry an
+  `# Examples` section.
 - **Tests.** Test names state the property checked
   (`outflow_conserves_founded_mass`), in snake case, at most about 60
   characters.
@@ -57,16 +65,16 @@ Beyond `rustfmt` (run `cargo fmt --all`):
   (`xyl_core::event`). Do not add fixed-timestep loops.
 - Places are bearings on spheres; distances are arcs (`chain::Place::arc`).
   Do not introduce grids or Euclidean distances.
-- Work in the core's units, `G = c = M_core = 1`, and in each tier's own unit
-  on the sexagesimal ladder (`xyl_core::units`).
+- Work in the core's units, `G = c = M_core = 1`, and in the unit of each
+  tier on the sexagesimal ladder (`xyl_core::units`).
 - Prefer deficit shares `M / (R + M)` and linear laws in shares and angles.
 - Derive quantities from lower tiers. A constant that cannot yet be derived
   is a declared ruler: name it in code and list it in
   [roadmap.md](roadmap.md).
 - One law per quantity. Replace a model in place and delete the old one; do
   not add parallel versions.
-- Randomness only through `xyl_core::Stream`, derived from the seed and a
-  label path.
+- Draw randomness only through `xyl_core::Stream`, derived from the seed
+  and a label path.
 
 ## Extending a tier
 
@@ -91,16 +99,15 @@ implementation per quantity.
   (`xyl_core::dyadic`) for heavy intermediate readings, gridded back to
   `Q` before they are stored (`xyl_core::certified::down`).
 - Express time dependence as a closed form of `t` or as a crossing found by
-  `xyl_core::event`; no loop advances a state by a time step.
-- Read quantities in the tier's own unit (`xyl_core::units::Tier`) and
+  `xyl_core::event`. No loop advances a state by a time step.
+- Read quantities in the unit of the tier (`xyl_core::units::Tier`) and
   convert between tiers with `Tier::in_rg`.
 - Return `Option` or `Result` for inputs outside the law's domain; the
   kernel refuses rather than panics (`unwrap` and `expect` are denied
   outside tests).
-- A constant that is not yet derived from a lower tier is a declared ruler:
-  give it a named constant or a field of the module's `Rulers`, document
-  its source, and add it to
-  [roadmap.md, Declared rulers](roadmap.md#declared-rulers).
+- A constant that is not yet derived from a lower tier is a declared ruler: give
+  it a named constant or a field of the module's `Rulers`, document its source,
+  and add it to [roadmap.md, Declared rulers](roadmap.md#declared-rulers).
 - Draw randomness only from `xyl_core::Stream::derive(seed, &[parts])`, with a
   label path unique to the call site.
 
@@ -110,8 +117,8 @@ implementation per quantity.
 
 | Digest | Covers | Keys |
 |---|---|---|
-| `XYL_FOUNDING_DIGEST` | `bang`, `bounce`, `elements`, `atoms`, `compound`, `fibres`, `formation`, `cores`, `chain`, `package`, `circuit/`, `data/` and all of `xyl-core/src` | the founding cache (`founding-*` in a home, `target/genesis` for tests) |
-| `XYL_SOURCE_DIGEST` | every `.rs` and `.tsv` file of `xyl-cosmos` and `xyl-core` | the forecast caches (`forecast-*`, `forecast-stars/`, `bells-*`) |
+| `XYL_FOUNDING_DIGEST` | `bang`, `bounce`, `elements`, `atoms`, `compound`, `fibres`, `formation`, `cores`, `chain`, `package`, `circuit/`, `data/` and all of `xyl-core/src` | The founding cache (`founding-*` in a home, `target/genesis` for tests) |
+| `XYL_SOURCE_DIGEST` | Every `.rs` and `.tsv` file of `xyl-cosmos` and `xyl-core` | The forecast caches (`forecast-*`, `forecast-stars/`, `bells-*`) |
 
 Both digests hash file contents, comments included. An edit to any
 founding file invalidates every cached founding, and the next genesis or
@@ -120,9 +127,9 @@ the founding out of those files so homes and the test genesis are reused.
 
 ### 4. Test the law's invariants
 
-Tests sit in a `#[cfg(test)] mod tests` at the end of the module. Tests that
-need a founded universe read the shared test genesis
-(`crates/xyl-cosmos/src/genesis.rs`, seed 7) and never found their own:
+Tests are placed in a `#[cfg(test)] mod tests` at the end of the module. Tests
+that need a founded universe read the shared test genesis
+(`crates/xyl-cosmos/src/genesis.rs`, seed 7) and never found a universe:
 
 ```rust
 #[test]
@@ -159,24 +166,29 @@ A reading is read-only and can run beside `xylarium run`.
 
 ### 6. Document it in the same change
 
-- [EQUATIONS.md](EQUATIONS.md): the formula, its code location and its
-  status (built, partial or placeholder).
-- [model.md](model.md) or [civilizations.md](civilizations.md): how the law
-  follows from the tier below.
-- [roadmap.md](roadmap.md): move the item from Next to Landed, and add or
-  remove declared rulers.
-- [CHANGELOG.md](../CHANGELOG.md): an entry under Unreleased.
+- [EQUATIONS.md](EQUATIONS.md) records the formula, its code location and
+  its status (built, partial or placeholder).
+- [model.md](model.md) or [civilizations.md](civilizations.md) states how
+  the law follows from the tier below.
+- In [roadmap.md](roadmap.md), the item moves from Next to Landed, and
+  declared rulers are added or removed.
+- [CHANGELOG.md](../CHANGELOG.md) receives an entry under Unreleased.
 
 ### Checklist
 
-- [ ] Inputs come from existing lower-tier functions; no duplicate model.
-- [ ] Held values are `Q`; no floating point; out-of-domain input refused.
-- [ ] Founding files untouched unless the change is to the founding.
-- [ ] Invariant tests added; module tests pass in `dev` and `fast`.
+- [ ] Inputs come from existing lower-tier functions, and no model is
+      duplicated.
+- [ ] Held values are `Q`, no floating point is used, and out-of-domain
+      input is refused.
+- [ ] Founding files are unchanged unless the change is to the founding.
+- [ ] Invariant tests are added, and the module tests pass in `dev` and
+      `fast`.
 - [ ] `cargo fmt`, `cargo clippy --workspace --all-targets -- -D warnings`
-      and `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps` clean.
-- [ ] Observer reading compared before and after.
-- [ ] EQUATIONS, model or civilizations, roadmap and changelog updated.
+      and `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps`
+      report no problems.
+- [ ] The observer reading is compared before and after the change.
+- [ ] EQUATIONS, model or civilizations, roadmap and changelog are
+      updated.
 
 ## Building and testing
 
@@ -215,8 +227,8 @@ command works without them.
 
 | Script | Use |
 |---|---|
-| `scripts/heavy CMD...` | runs a build or test suite under a machine-wide lock at low priority |
-| `scripts/long CMD...` | runs a long job (genesis, a deep-time reading) under a separate lock, with at most 3 worker threads |
+| `scripts/heavy CMD...` | Runs a build or test suite under a machine-wide lock at low priority |
+| `scripts/long CMD...` | Runs a long job (genesis, a deep-time reading) under a separate lock, with at most 3 worker threads |
 
 ```
 scripts/heavy cargo test --profile fast -p xyl-kernel

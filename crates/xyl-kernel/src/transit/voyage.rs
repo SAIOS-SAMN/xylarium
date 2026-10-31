@@ -1,7 +1,7 @@
 //! Places, voyages and drives: the distance between two places
 //! ([`separation_m`]), a drive's voyage out of a well ([`voyage`]), the
 //! transfer window within a system ([`window_years`]) and the drive a people
-//! flies ([`best_spec`], [`blended`]).
+//! uses ([`best_spec`], [`blended`]).
 
 use super::{kpc_m, year_s};
 use crate::cosmic::Cosmic;
@@ -17,26 +17,28 @@ use xyl_cosmos::systems::World;
 /// A place: a world of a star's system.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Place {
-    /// The star, by its sample number.
+    /// The star, by sample number.
     pub star: u64,
     /// The world, by its index in the star's system.
     pub world: usize,
 }
 
-/// A world's escape speed (m/s): the turning law at its surface (turning.rs),
-/// its turning there times its radius, i.e. c delta with delta = M / (R + M)
-/// in the white hole's units (a deficit share, not sqrt(2 G M / R)).
+/// Returns a world's escape speed (m/s): the turning rate of the turning law
+/// (turning.rs) at the world's surface times the world's radius. In the
+/// core's units this is c delta with delta = M / (R + M), a deficit share in
+/// place of sqrt(2 G M / R).
 pub fn escape_speed(w: &World) -> Dy {
     let m = &w.mass * &Si::world_mass_kg();
     let r = &w.radius * &Si::world_radius_m();
     Dy::from_q(&(&xyl_cosmos::turning::rad_s(&xyl_cosmos::turning::turning_si(&m, &r)) * &r))
 }
 
-/// The gap between two worlds of one system at its star's `age` (Gyr), in
-/// metres, read on the ocean (manifold.rs `gap`): the turn between where
-/// their orbits stand now - each by its phase, plane, shape and twist; a
-/// moon about its giant - swept at the inner one's reach, then the climb
-/// between them. No squared length or root is taken.
+/// Returns the gap (m) between worlds `wa` and `wb` of one system at the
+/// star's `age` (Gyr), read on the ocean (manifold.rs `gap`): the turn
+/// between the current positions of the two orbits (each given by phase,
+/// plane, shape and twist; a moon orbits its giant), swept at the inner
+/// world's reach, plus the climb between them. No squared length or root is
+/// taken. Returns None if `gap` refuses.
 pub fn orbit_gap_m(all: &[Manifold], wa: usize, wb: usize, age: &Q) -> Option<Dy> {
     let g = gap(all, wa, wb, age)?;
     Some(Dy::from_q(
@@ -44,9 +46,10 @@ pub fn orbit_gap_m(all: &[Manifold], wa: usize, wb: usize, age: &Q) -> Option<Dy
     ))
 }
 
-/// The distance between two places now (m): within a system by where their
-/// orbits stand now, between systems by the arc between their stars (both
-/// witnessed).
+/// Returns the distance (m) between two places at the current time: within
+/// a system, the gap between the current positions of the orbits
+/// ([`orbit_gap_m`]); between systems, the arc between the stars. Returns
+/// None if a needed star is not witnessed.
 pub fn separation_m(cosmic: &Cosmic, a: Place, b: Place) -> Option<Dy> {
     if a.star == b.star {
         let wit = cosmic.systems.get(&a.star)?;
@@ -59,25 +62,27 @@ pub fn separation_m(cosmic: &Cosmic, a: Place, b: Place) -> Option<Dy> {
     Some(cosmic.distance(a.star, b.star)? * kpc_m())
 }
 
-/// A voyage, as one drive makes it.
+/// A voyage made by one drive.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Voyage {
     /// Travel time at the coasting speed, in years.
     pub years: Dy,
-    /// Its coasting speed (m/s).
+    /// The coasting speed (m/s).
     pub cruise: Dy,
-    /// The fuel's energy it burns per kg carried (J/kg).
+    /// The fuel energy burned per kg carried (J/kg): (R - 1) x the fuel's
+    /// energy per kg.
     pub energy_per_kg: Dy,
 }
 
-/// The speed a drive coasts at out of a well of this escape speed (m/s): half
-/// of what its mass ratio buys beyond the climb out (the other half brakes).
+/// Returns the coasting speed (m/s) of a drive leaving a well of escape
+/// speed `escape`: half of the speed change bought by the mass ratio beyond
+/// the escape speed (the other half brakes), and zero if none remains.
 pub fn cruise_speed(spec: &Spec, ratio: Dy, escape: Dy) -> Dy {
     ((delta_v(spec.v_e, ratio) - escape) / Dy::int(2)).max(Dy::ZERO)
 }
 
-/// A voyage of `dist_m` out of a well of `escape` (m/s); None if the drive
-/// cannot climb out of it.
+/// Returns a voyage of `dist_m` metres out of a well of escape speed
+/// `escape` (m/s), or None if the drive cannot climb out of it.
 pub fn voyage(spec: &Spec, ratio: Dy, escape: Dy, dist_m: Dy) -> Option<Voyage> {
     let cruise = cruise_speed(spec, ratio, escape);
     if cruise.signum() <= 0 {
@@ -91,18 +96,19 @@ pub fn voyage(spec: &Spec, ratio: Dy, escape: Dy, dist_m: Dy) -> Option<Voyage> 
     })
 }
 
-/// The farthest a drive carries within `years` out of this well (kpc).
+/// Returns the greatest distance (kpc) a drive covers within `years` after
+/// leaving a well of escape speed `escape`.
 pub fn reach_kpc(spec: &Spec, ratio: Dy, escape: Dy, years: Dy) -> Dy {
     cruise_speed(spec, ratio, escape) * years * year_s() / kpc_m()
 }
 
-/// The transfer window between two worlds of one system: a transfer is half a
-/// circulation, so it leaves when the target's phase leads the
-/// origin's by half a turn less what the target turns on the way; the
-/// phases come round on each other at their synodic rate. Years to wait
-/// from `age` (Gyr) for a leg of `leg_years`, and the origin's orbital speed
-/// (m/s, its turning times its reach); None where the two never part (one
-/// rate) or are not of one anchor.
+/// Returns the transfer window between worlds `wa` and `wb` of one system.
+/// A transfer is half a circulation, so it departs when the target's phase
+/// leads the origin's by half a turn less the target's turning during the
+/// leg; the phases meet again at their synodic rate. The result is the wait
+/// in years from `age` (Gyr) for a leg of `leg_years`, and the origin's
+/// orbital speed (m/s, turning rate times reach). Returns None when the two
+/// rates are equal or the worlds do not share an anchor.
 pub fn window_years(
     all: &[Manifold],
     wa: usize,
@@ -133,8 +139,10 @@ pub fn window_years(
     Some((wait, v_orb))
 }
 
-/// A drive between two specs, by a share: what a people that has mastered a
-/// share of its energy's domain flies (linear in the share).
+/// Returns the drive between specs `lo` and `hi` at `share` (clamped to
+/// [0, 1]): energy per kg and exhaust speed are linear in the share, and the
+/// drive kind is `hi`'s above one half. It is the drive of a people that has
+/// mastered that share of the energy domain.
 pub fn blended(lo: &Spec, hi: &Spec, share: Dy) -> Spec {
     let s = share.clamp(Dy::ZERO, Dy::ONE);
     Spec {
@@ -148,8 +156,8 @@ pub fn blended(lo: &Spec, hi: &Spec, share: Dy) -> Spec {
     }
 }
 
-/// The swiftest drive a people's chemistry allows (an ancient house
-/// understands every fuel).
+/// Returns the drive with the highest exhaust speed that the people's traits
+/// and the galaxy's chemistry allow.
 pub fn best_spec(cosmic: &Cosmic, p: &crate::cosmic::People) -> Spec {
     crate::propulsion::Drive::ALL
         .iter()
@@ -165,7 +173,8 @@ pub fn best_spec(cosmic: &Cosmic, p: &crate::cosmic::People) -> Spec {
         })
 }
 
-/// A people's home world's escape speed (m/s).
+/// Returns the escape speed (m/s) of a people's home world, or zero if that
+/// world is not witnessed.
 pub fn home_escape(cosmic: &Cosmic, p: &crate::cosmic::People) -> Dy {
     cosmic
         .systems

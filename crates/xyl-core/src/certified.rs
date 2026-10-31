@@ -18,7 +18,8 @@
 //! - an operation on enclosures (sum, product, monotone map) encloses its
 //!   result;
 //! - out-of-domain input is refused with `None`: `sqrt` of a negative, `ln`
-//!   and `powq` of a non-positive value, `recip` of an interval holding zero;
+//!   and `powq` of a non-positive value (except `powq` with `p = 0`), `recip`
+//!   of an interval holding zero;
 //! - no floating point is used, so the same inputs give the same enclosure on
 //!   every machine.
 //!
@@ -46,10 +47,11 @@ fn pow2(bits: u32) -> BigInt {
     BigInt::one() << bits
 }
 
-/// `k / 2^bits` in lowest terms without a gcd: the power of two's common
-/// factor is the numerator's trailing zero bits.
+/// `k / 2^bits` in lowest terms without a gcd: the common factor of
+/// numerator and denominator is two to the numerator's count of trailing zero
+/// bits.
 fn dyadic(k: BigInt, bits: u32) -> Q {
-    // zero has no trailing zeros to count: it is the one canonical zero
+    // Zero has no trailing zero bits to count; it maps to the canonical zero.
     if k.is_zero() {
         return Q::ZERO;
     }
@@ -60,7 +62,7 @@ fn dyadic(k: BigInt, bits: u32) -> Q {
 }
 
 /// `q` rounded down to the grid of `2^-bits`: one floor division of the
-/// numerator, shifted, by the denominator.
+/// numerator, shifted left by `bits`, by the denominator.
 pub fn down(q: &Q, bits: u32) -> Q {
     dyadic((q.numer() << bits).div_floor(&q.denom()), bits)
 }
@@ -79,9 +81,10 @@ impl Encl {
         }
     }
 
-    /// The midpoint, for display or as a representative (exact).
+    /// The exact midpoint, for display or as a representative value.
     pub fn mid(&self) -> Q {
-        // halved by a product, so a dyadic stays on the gcd-free path
+        // The sum is halved by multiplying by 1/2, so a dyadic sum stays on
+        // the gcd-free path of `Q`.
         &(&self.lo + &self.hi) * &Q::Small { n: 1, d: 2 }
     }
 
@@ -116,7 +119,8 @@ impl Encl {
 
     /// The product: the extremes of the four corner products.
     pub fn mul(&self, o: &Encl) -> Encl {
-        // an exact factor scales the other's bounds, swapped if negative
+        // An exact factor scales the bounds of the other enclosure; the
+        // bounds are swapped if the factor is negative.
         if self.lo == self.hi || o.lo == o.hi {
             let (k, e) = if self.lo == self.hi {
                 (&self.lo, o)
@@ -153,8 +157,9 @@ impl Encl {
         }
     }
 
-    /// Rounded outward to the grid of `2^-bits`: still an enclosure, with
-    /// smaller numbers.
+    /// The enclosure rounded outward to the grid of `2^-bits`: it still
+    /// contains the value, and its bounds have smaller numerators and
+    /// denominators.
     pub fn outward(&self, bits: u32) -> Encl {
         Encl {
             lo: down(&self.lo, bits),
@@ -163,13 +168,15 @@ impl Encl {
     }
 }
 
-/// `√x` for `x ≥ 0`, to within `2^-bits`: integer square roots of the
-/// scaled value bound it from both sides. `None` for negative `x`.
+/// `sqrt(x)` for `x >= 0`, to within `2^-bits`: the integer square root of
+/// the scaled value bounds it from both sides. Returns `None` for negative
+/// `x`.
 pub fn sqrt(x: &Q, bits: u32) -> Option<Encl> {
     if x.signum() < 0 {
         return None;
     }
-    // √(n/d) = √(n·d)/d; scale by 2^bits: floor(√(n·d·4^bits)) / (d·2^bits)
+    // `sqrt(n/d) = sqrt(n d) / d`; scaled by 2^bits, the lower bound is
+    // `floor(sqrt(n d 4^bits)) / (d 2^bits)` and the upper bound adds one unit.
     let (n, d) = (x.numer(), x.denom());
     let s = pow2(bits);
     let radicand = &n * &d * &s * &s;
@@ -185,15 +192,16 @@ pub fn sqrt(x: &Q, bits: u32) -> Option<Encl> {
     Some(Encl { lo, hi })
 }
 
-/// `exp(x)`, enclosed within a relative `2^-bits` or so.
+/// `exp(x)`, enclosed to a relative width of about `2^-bits`.
 ///
 /// The argument is halved until it is at most 1/2, then enclosed on a dyadic
-/// grid. The Taylor series of `exp(y)` for `y ≥ 0` has only positive terms,
-/// so each term is carried as a dyadic pair rounded outward (lower bound
-/// down, upper bound up) and the numbers never grow. The series stops at a
-/// term below `2^-g`, and its remainder is bounded by twice that term
-/// (`y ≤ 1/2`). The enclosure is then squared back up, rounding outward. A
-/// negative argument is `1/exp(−x)`.
+/// grid of `2^-g`. The Taylor series of `exp(y)` for `y >= 0` has only
+/// positive terms, so each term is carried as a dyadic pair rounded outward
+/// (lower bound down, upper bound up), which keeps the rationals small. The
+/// series stops at the first term below `2^-(g - 8)`, and the remainder is
+/// bounded by twice that term (`y <= 1/2`). The enclosure is then squared
+/// once per halving, rounding outward. A negative argument is evaluated as
+/// `1 / exp(-x)`.
 pub fn exp(x: &Q, bits: u32) -> Encl {
     if x.signum() < 0 {
         return exp(&-x.clone(), bits + 2)
@@ -210,8 +218,9 @@ pub fn exp(x: &Q, bits: u32) -> Encl {
     }
     let g = bits + 24 + halvings;
     let (ylo, yhi) = (down(&y, g), up(&y, g));
-    // stop 8 bits coarser than the rounding grid: an outward-rounded term is
-    // never below one grid step, so a threshold at the grid would never be met
+    // The stopping threshold is 8 bits coarser than the rounding grid: an
+    // upper bound rounded up is never below one grid step, so a threshold at
+    // the grid would never be met.
     let tiny = Q::from_big(BigRational::new(BigInt::one(), pow2(g - 8)));
     let (mut slo, mut shi) = (Q::ZERO, Q::ZERO);
     let (mut tlo, mut thi) = (Q::ONE, Q::ONE);
@@ -226,7 +235,8 @@ pub fn exp(x: &Q, bits: u32) -> Encl {
             break;
         }
     }
-    // the remainder after the kept terms is at most 2·(next term) for y ≤ 1/2
+    // The remainder after the kept terms is at most twice the first omitted
+    // term for y <= 1/2.
     let mut e = Encl {
         lo: slo,
         hi: &shi + &thi.scale(2),
@@ -237,10 +247,11 @@ pub fn exp(x: &Q, bits: u32) -> Encl {
     e.outward(bits + 16)
 }
 
-/// `atanh(z)` for `0 ≤ z ≤ 1/3`, from a dyadic enclosure of `z`: the
-/// positive series `Σ z^(2k+1)/(2k+1)` carried outward, its remainder bounded
-/// by the geometric tail `t/(1 − z²)` of the next term `t`. Odd: a negative
-/// `z` is `−atanh(−z)`.
+/// `atanh(z)` for `0 <= z <= 1/3`, from a dyadic enclosure of `z`: the
+/// positive series `sum z^(2k+1) / (2k+1)` carried outward, with the
+/// remainder bounded by the geometric tail `t / (1 - z^2)` of the first
+/// omitted term `t`. The function is odd: a negative `z` is evaluated as
+/// `-atanh(-z)`.
 fn atanh(z: &Q, bits: u32) -> Encl {
     if z.signum() < 0 {
         return atanh(&-z.clone(), bits).neg();
@@ -248,7 +259,8 @@ fn atanh(z: &Q, bits: u32) -> Encl {
     let g = bits + 16;
     let (zlo, zhi) = (down(z, g), up(z, g));
     let (z2lo, z2hi) = (down(&(&zlo * &zlo), g), up(&(&zhi * &zhi), g));
-    // stop 8 bits coarser than the rounding grid (see `exp`)
+    // The stopping threshold is 8 bits coarser than the rounding grid (see
+    // `exp`).
     let tiny = Q::from_big(BigRational::new(BigInt::one(), pow2(g - 8)));
     let (mut plo, mut phi) = (zlo, zhi);
     let (mut slo, mut shi) = (Q::ZERO, Q::ZERO);
@@ -276,8 +288,9 @@ fn atanh(z: &Q, bits: u32) -> Encl {
     }
 }
 
-/// `atan(x)` for `|x| ≤ 1/5`: the alternating series `Σ (−1)ᵏ x^(2k+1)/(2k+1)`,
-/// whose remainder is bounded by its first omitted term.
+/// `atan(x)` for `|x| <= 1/5`: the alternating series
+/// `sum (-1)^k x^(2k+1) / (2k+1)`, whose remainder is bounded by the first
+/// omitted term.
 fn atan_small(x: &Q, bits: u32) -> Encl {
     let tiny = Q::from_big(BigRational::new(BigInt::one(), pow2(bits)));
     let x2 = x * x;
@@ -300,7 +313,7 @@ fn atan_small(x: &Q, bits: u32) -> Encl {
     }
 }
 
-/// `π`, by Machin: `16·atan(1/5) − 4·atan(1/239)`.
+/// `pi`, by Machin's formula `16 atan(1/5) - 4 atan(1/239)`.
 pub fn pi(bits: u32) -> Encl {
     let a = atan_small(&Q::new(1, 5).unwrap_or(Q::ZERO), bits + 8);
     let b = atan_small(&Q::new(1, 239).unwrap_or(Q::ZERO), bits + 8);
@@ -309,15 +322,15 @@ pub fn pi(bits: u32) -> Encl {
         .outward(bits + 4)
 }
 
-/// `ln 2 = 2·atanh(1/3)`.
+/// `ln 2`, enclosed as `2 atanh(1/3)`.
 pub fn ln2(bits: u32) -> Encl {
     let a = atanh(&Q::new(1, 3).unwrap_or(Q::ZERO), bits + 4);
     a.add(&a)
 }
 
-/// `ln x` for `x > 0`: `x = 2^k·m` with `m ∈ [2/3, 4/3]`, then
-/// `ln m = 2·atanh((m−1)/(m+1))` (`|z| ≤ 1/7`) and `k·ln 2`. `None` for
-/// `x ≤ 0`.
+/// `ln x` for `x > 0`: `x = 2^k m` with `m` in `[2/3, 4/3]`, then
+/// `ln x = 2 atanh(z) + k ln 2` with `z = (m - 1) / (m + 1)` in
+/// `[-1/5, 1/7]`. Returns `None` for `x <= 0`.
 pub fn ln(x: &Q, bits: u32) -> Option<Encl> {
     if x.signum() <= 0 {
         return None;
@@ -342,7 +355,8 @@ pub fn ln(x: &Q, bits: u32) -> Option<Encl> {
     Some(lnm.add(&kk.mul(&l2)).outward(guard))
 }
 
-/// `exp` of an enclosure: monotone, so the bounds map to bounds.
+/// `exp` of an enclosure: `exp` is increasing, so the lower bound maps to
+/// the lower bound and the upper to the upper.
 pub fn exp_of(x: &Encl, bits: u32) -> Encl {
     Encl {
         lo: exp(&x.lo, bits).lo,
@@ -353,12 +367,15 @@ pub fn exp_of(x: &Encl, bits: u32) -> Encl {
 /// The fixed point of [`exp_fixed`]: values in units of `2^-60`.
 pub const FIXED: u32 = 60;
 
-/// `exp(a)` for `a` in `[lo, hi] x 2^-60` with `0 <= lo <= hi < 2^61`,
-/// proven, in 128-bit integers: each bound's Taylor series is summed with
-/// every product rounded toward its own side (the lower bound's terms
-/// floored, the upper's raised), and the upper bound adds the series'
-/// remainder (once a term `t_n` falls to one unit at `n >= 4 a`, the rest
-/// is below `2 t_n`). An enclosure as much as `exp`'s, at integer speed.
+/// `exp(a)` for `a` in `[lo, hi] x 2^-60` with `0 <= lo <= hi < 2^61`
+/// (so `a < 2`), proven, in 128-bit integers. Each bound's Taylor series is
+/// summed with every product rounded toward the side of that bound (the
+/// lower bound's terms floored, the upper bound's rounded up). The series
+/// stops once `n >= 4` and a term `t_n` has fallen to one unit; with `a < 2`
+/// each later term is less than half the one before, so the upper bound adds
+/// `2 t_n + 2` units for the remainder. Negative inputs are read as zero. The
+/// result is a proven enclosure like that of `exp`, computed in integer
+/// arithmetic.
 pub fn exp_fixed(lo: i128, hi: i128) -> Encl {
     let one: i128 = 1 << FIXED;
     let series = |x: i128, up: bool| -> i128 {
@@ -396,13 +413,16 @@ pub fn fixed_bounds(q: &Q) -> (i128, i128) {
     )
 }
 
-/// cos and sin of an angle given in turns (fractions of the full circle),
-/// proven, in 128-bit fixed point. The quadrant is read exactly from the
-/// turns (angles are turns), the rest `y` in `[0, 1/4)` turn is
-/// carried to radians by an enclosure of 2 pi, and on `[0, pi/2)` sine
-/// rises and cosine falls, so each is bounded by its series at the ends of
-/// `y`'s enclosure: an alternating series with falling terms, wrong by less
-/// than its first omitted term, plus one unit per rounded product.
+/// Enclosures of the cosine and sine of an angle given in turns (fractions
+/// of the full circle), proven, in 128-bit fixed point. The quadrant is read
+/// exactly from the turns; the remainder `y` in `[0, 1/4)` turn is converted
+/// to radians with an enclosure of 2 pi. On `[0, pi/2)` the sine increases
+/// and the cosine decreases, so each is bounded by its series at the ends of
+/// the enclosure of `y`: an alternating series with decreasing terms, in
+/// error by less than the first omitted term plus two units per term for
+/// the rounded products. An interval that spans a whole turn gives `[-1, 1]`
+/// for both; one that crosses a quadrant edge gives the hull of its ends and
+/// the edge.
 pub fn cos_sin_turns(t: &Encl) -> (Encl, Encl) {
     let whole = |q: &Q| Q::from_reduced(BigRational::from_integer(q.floor()));
     let base = whole(&t.lo);
@@ -417,8 +437,8 @@ pub fn cos_sin_turns(t: &Encl) -> (Encl, Encl) {
     let quarter = |f: &Q| (f * &Q::int(4)).floor();
     let (q_lo, q_hi) = (quarter(&f_lo), quarter(&f_hi));
     if q_lo != q_hi {
-        // straddles a quadrant's edge: the hull of both ends and the edge,
-        // where cos and sin take 0 or +-1
+        // The interval crosses a quadrant edge, where cos and sin take 0 or
+        // +-1: the result is the hull of both ends and the edge.
         let edge = Q::from_reduced(BigRational::new(q_hi.clone(), BigInt::from(4)));
         let parts = [
             cos_sin_turns(&Encl {
@@ -469,7 +489,7 @@ pub fn cos_sin_turns(t: &Encl) -> (Encl, Encl) {
     }
 }
 
-/// 2 pi's bounds in units of 2^-60.
+/// Lower and upper bounds of 2 pi in units of 2^-60, computed once.
 fn two_pi_fixed() -> (i128, i128) {
     static P: std::sync::OnceLock<(i128, i128)> = std::sync::OnceLock::new();
     *P.get_or_init(|| {
@@ -482,9 +502,9 @@ fn two_pi_fixed() -> (i128, i128) {
     })
 }
 
-/// sin (`odd`) or cos of `x` in units of 2^-60, `0 <= x < 2`, as bounds:
-/// the series summed, give or take its first omitted term and one unit for
-/// each rounded product.
+/// Bounds on the sine (`odd`) or cosine of `x` in units of 2^-60, for
+/// `0 <= x < 2`: the series sum, widened by the first omitted term and two
+/// units for each term's rounded products.
 fn alternating(x: i128, odd: bool) -> (i128, i128) {
     let one: i128 = 1 << FIXED;
     let (mut term, mut n) = if odd { (x, 1i128) } else { (one, 0i128) };
@@ -502,12 +522,13 @@ fn alternating(x: i128, odd: bool) -> (i128, i128) {
     }
 }
 
-/// asin x for `0 <= x <= 1/2`, proven: `x` times its series in `x^2`,
-/// `1 + x^2/6 + 3x^4/40 + ...` (all terms positive, each the last times
-/// `x^2 (2n+1)^2 / ((2n+2)(2n+3))`, so the tail after a term is under a
-/// third of it), summed in fixed point floored for the lower bound and
-/// raised for the upper; the product keeps `x`'s own exactness however
-/// small it is.
+/// `asin x` for `0 <= x <= 1/2`, proven: `x` times the series in `x^2`
+/// `1 + x^2/6 + 3x^4/40 + ...`. All terms are positive and each is the
+/// previous one times `x^2 (2n+1)^2 / ((2n+2)(2n+3))`, which is below 1/4,
+/// so the tail after a term is under a third of it. The factor is summed in
+/// fixed point, floored for the lower bound and rounded up for the upper,
+/// and multiplied by the exact bounds of `x`, which keeps the relative
+/// precision for small `x`. Outside the domain the result is `[0, 2]`.
 pub fn asin_small(x: &Encl) -> Encl {
     let half = Q::new(1, 2).unwrap_or(Q::ZERO);
     if x.lo.signum() < 0 || x.hi > half {
@@ -545,9 +566,10 @@ pub fn asin_small(x: &Encl) -> Encl {
     }
 }
 
-/// asin of any `x` in [0, 1] (radians), enclosed: the small series below a
-/// half, else the angle found by halving a bracket of turns on the
-/// certified sine (each bound the turn certainly on its side).
+/// `asin x` in radians for `x` in [0, 1], enclosed: the series of
+/// `asin_small` when `x <= 1/2`, otherwise 56 bisections of the quarter turn
+/// on the certified sine, each bound a turn whose sine certainly lies on the
+/// bound's side of `x`. Bounds of `x` outside [0, 1] are clamped.
 pub fn asin_any(x: &Encl) -> Encl {
     let half = Q::new(1, 2).unwrap_or(Q::ZERO);
     if x.hi <= half && x.lo.signum() >= 0 {
@@ -559,7 +581,9 @@ pub fn asin_any(x: &Encl) -> Encl {
         for _ in 0..56 {
             let mid = (&lo + &hi).checked_div(&Q::int(2)).unwrap_or(Q::ZERO);
             let s = cos_sin_turns(&Encl::exact(mid.clone())).1;
-            // below: the largest turn whose sine is certainly under target
+            // For the lower bound, `lo` moves up while the sine is certainly
+            // below the target; for the upper, `hi` moves down while it is
+            // certainly above.
             let past = if below {
                 s.hi < *target
             } else {
@@ -588,7 +612,8 @@ pub fn asin_any(x: &Encl) -> Encl {
     }
 }
 
-/// `x^p` for `x > 0` and a rational power `p`: `exp(p·ln x)`, enclosed.
+/// `x^p` for `x > 0` and a rational power `p`, enclosed as `exp(p ln x)`.
+/// Returns exactly 1 for `p = 0`, and `None` for `x <= 0` otherwise.
 pub fn powq(x: &Q, p: &Q, bits: u32) -> Option<Encl> {
     if p.is_zero() {
         return Some(Encl::exact(Q::ONE));
@@ -602,7 +627,7 @@ mod tests {
     use super::*;
 
     fn dec(s: &str) -> Q {
-        // a decimal literal as an exact rational
+        // A decimal literal as an exact rational.
         let (int, frac) = s.split_once('.').unwrap_or((s, ""));
         let den = 10i128.pow(u32::try_from(frac.len()).unwrap());
         let num: i128 = format!("{int}{frac}").parse().unwrap();
@@ -639,7 +664,7 @@ mod tests {
                 back.hi
             );
         }
-        // negative arguments: exp(-3)·exp(3) encloses 1
+        // Negative arguments: exp(-3) exp(3) encloses 1.
         let p = exp(&Q::int(-3), 80).mul(&exp(&Q::int(3), 80));
         assert!(p.contains(&Q::ONE));
     }

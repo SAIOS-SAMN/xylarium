@@ -102,7 +102,8 @@ pub fn antipoles_hold(t: &Q) -> Option<(bool, bool)> {
     let x = cga::point_at(std::slice::from_ref(t));
     let inv = axis_antipole().sandwich(&x);
     let inversion = cga::projective_ratio(&inv, &cga::point_at(&[inverted(t)?])).is_some();
-    // a point on the axis and on every plane: (t, 1, 0, 1, 0, ...)
+    // A point with coordinate t on the axis and 1 on the first axis of every
+    // plane: (t, 1, 0, 1, 0, ...).
     let mut p = vec![t.clone()];
     let mut m = vec![t.clone()];
     for _ in 0..PLANES {

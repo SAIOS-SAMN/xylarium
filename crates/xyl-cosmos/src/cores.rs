@@ -11,8 +11,8 @@
 //!
 //! - `substrate_for`: founds the substrate at the drawn spin; where the
 //!   firmament's margin is negative it refounds at the least admissible
-//!   spin (`bang::spin_of_share` of `least_share`), up to three times, then
-//!   sets `circuit::anchor`. None where the element table fails.
+//!   spin (`bang::spin_of_share` of `least_share`), with at most three
+//!   foundings in all, then sets `circuit::anchor`. None where the element table fails.
 //! - `shapes`, `shape`, `held`: the home galaxy is index 0 at the universe
 //!   core with mass `hole_mass` and a flat plane; every other galaxy is a
 //!   bead of the founding cascade, of mass `hole_mass x state`, its plane
@@ -43,15 +43,16 @@ pub struct Shape {
     /// Position relative to the universe core at the founding (cluster tier,
     /// exact), kept for reference; the bearing below is used for placement.
     pub place: [Q; 3],
-    /// Bearing from the universe core: reach (cluster tier) and phase about
-    /// it (turns).
+    /// Reach from the universe core at the founding (cluster tier).
     pub reach: Q,
     /// Phase about the universe core at the founding (turns).
     pub phase: Q,
-    /// When it formed (Gyr after the Big Bang).
+    /// When the galaxy formed (Gyr after the Big Bang); every galaxy takes the
+    /// first-star time.
     pub born: Q,
-    /// The galaxy's plane on S^360: tilt and node as half-angle directions,
-    /// set by magnetic repulsion among the galaxies; flat for the home galaxy.
+    /// Tilt of the galaxy's plane on S^360, as a half-angle direction (c, s)
+    /// set by magnetic repulsion among the galaxies; (1, 0), flat, for the home
+    /// galaxy.
     pub tilt: (Dy, Dy),
     /// Node of the galaxy's plane about the universe's axis, as a half-angle
     /// direction (c, s); (1, 0) for the home galaxy.
@@ -195,7 +196,7 @@ impl Weights {
     }
 }
 
-/// The founding, computed once per universe and cached: the substrate and
+/// The founding, computed once per parent spin and cached: the substrate and
 /// the galaxies' shapes on it.
 struct Founding {
     substrate: Arc<crate::circuit::Substrate>,
@@ -209,9 +210,9 @@ fn cache() -> &'static Mutex<BTreeMap<(u64, String), Arc<Founding>>> {
 
 /// The substrate founded at the parent's `spin`, once per spin per process:
 /// the founding depends on the laws and the spin alone (the torsion share
-/// sets the chain and the cascade), not on a seed's other draws. The first
-/// founding sets the anchor (circuit::anchor). None where the element table
-/// fails.
+/// sets the chain and the cascade), not on a seed's other draws. Each
+/// founding not found in the cache sets the anchor (circuit::anchor) to the
+/// admitted founding's. None where the element table fails.
 pub fn substrate_for(spin: &Q) -> Option<Arc<crate::circuit::Substrate>> {
     static S: OnceLock<Mutex<BTreeMap<String, Arc<crate::circuit::Substrate>>>> = OnceLock::new();
     let table = S.get_or_init(|| Mutex::new(BTreeMap::new()));
@@ -219,10 +220,10 @@ pub fn substrate_for(spin: &Q) -> Option<Arc<crate::circuit::Substrate>> {
     if let Some(s) = table.lock().ok()?.get(&drawn) {
         return Some(s.clone());
     }
-    // admission: while the firmament's margin is negative and the spin is
+    // Admission: while the firmament's margin is negative and the spin is
     // below the least admissible one (bang::spin_of_share of
     // Substrate::least_share), refound at that spin; at most three foundings.
-    // The anchor is the admitted founding's
+    // The anchor is the admitted founding's.
     let mut spin = spin.clone();
     let mut found = None;
     for _ in 0..3 {
@@ -253,7 +254,7 @@ fn founding_of(seed: u64, bang: &BigBang) -> Option<Arc<Founding>> {
     }
     let substrate = substrate_for(&bang.parent.spin)?;
     let first = bang.first_stars_gyr().mid();
-    // the home galaxy at the universe core
+    // The home galaxy sits at the universe core.
     let flat = (Dy::ONE, Dy::ZERO);
     let mut shapes = vec![Shape {
         index: 0,
@@ -266,27 +267,28 @@ fn founding_of(seed: u64, bang: &BigBang) -> Option<Arc<Founding>> {
         node: flat,
         rate: Dy::ZERO,
     }];
-    // a bead's reach about the throat is read in the cluster tier as founded
-    // (one core ring is one cluster unit, circuit::anchor)
+    // A bead's reach about the throat is read in the cluster tier as founded
+    // (one core ring is one cluster unit, circuit::anchor).
     for (index, bead) in substrate.galaxies().into_iter().skip(1) {
         let g = bead?;
         let out = g.reach.clone();
         let (cs, sn) = xyl_core::rotor::Half::of_turns(&g.phase, 60).cos_sin();
-        // hole_suns = M_core x state: a bead's state is its mass in units of
-        // the universal core's state (1)
+        // The hole mass is hole_suns = M_core x state: a bead's state is its
+        // mass in units of the universal core's state (1).
         let hole_suns = &crate::package::hole_mass() * &g.state;
-        // the plane from the galaxies' magnetic-repulsion spacing (galaxy.rs):
-        // node from index x golden turn, tilt from index x plastic share
+        // The plane follows the galaxies' magnetic-repulsion spacing
+        // (galaxy.rs): node from index x golden turn, tilt from index x
+        // plastic share.
         let pivot = |by: &Q| Dy::from_q(&(&Q::int(i64::from(index)) * by).frac());
         let (tilt, node) = (
             crate::galaxy::tilt_of(pivot(&crate::galaxy::plastic_turns())),
             crate::galaxy::node_of(pivot(&crate::galaxy::golden_turns())),
         );
-        // rate = 4 delta / echo, delta = inside / (reach + inside)
+        // The circulation is rate = 4 delta / echo, delta = inside / (reach + inside).
         let delta = Dy::from_q(&g.inside)
             / (Dy::from_q(&g.reach) + Dy::from_q(&g.inside)).max(Dy::sci(1, -300));
         let rate = Dy::int(4) * delta / crate::circuit::echo_gyr();
-        // place at t = 0, kept for reference; readings use place_at
+        // The place at t = 0 is kept for reference; readings use place_at.
         let dir0 = {
             use xyl_core::rotor::{Half, Rotor};
             let h = |p: (Dy, Dy)| Half {

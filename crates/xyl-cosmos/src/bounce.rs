@@ -34,11 +34,13 @@ use xyl_core::cga::{self, keeping, Mv, Source};
 use xyl_core::Q;
 
 /// The horizon's reach from the centre, in the deficit grammar. The share a
-/// hole of `mass` holds at reach `R` is `δ = M / (R + M)`; the horizon is
-/// the reach where the received share `1 − δ` is twice the held share, so
-/// `δ_h = 1/3` and `R_h = M (1 − δ_h) / δ_h`. Linear in `M`, exact.
+/// hole of `mass` holds at reach `R` is `delta = M / (R + M)`; the horizon is
+/// the reach where the received share `1 - delta` is twice the held share, so
+/// `delta_h = 1/3` and `R_h = M (1 - delta_h) / delta_h = 2M`. Linear in `M`,
+/// exact.
 pub fn horizon_reach(mass: &Q) -> Q {
-    // delta_h = 1/3, where the received share 1 - delta is twice delta
+    // The horizon's held share is delta_h = 1/3, where the received share
+    // 1 - delta is twice delta.
     let held = Q::ONE.checked_div(&Q::int(3)).unwrap_or(Q::ONE);
     let received = &Q::ONE - &held;
     (mass * &received).checked_div(&held).unwrap_or(Q::ZERO)
@@ -78,7 +80,7 @@ pub fn crossing(centre: &[Q], x: &Q, psi: &Q) -> Vec<Q> {
     at
 }
 
-/// A black hole's horizon as the conformal sphere `σ` about `centre` through
+/// A black hole's horizon as the conformal sphere `sigma` about `centre` through
 /// the crossing point: the horizon reach ([`horizon_reach`]) taken along the
 /// S^360 enclosure of curvature radius `enclosure` ([`curved_reach`]), at
 /// the pulse's phase `psi` on the first plane (`xyl_core::cga::sphere_through`),
@@ -115,7 +117,7 @@ pub struct Bounce {
     /// Black hole mass M in natural units (G = c = 1); the horizon's reach is
     /// [`horizon_reach`]`(M)`.
     pub mass: Q,
-    /// The Kerr parameter `J/M²`, in `(0, 1)`.
+    /// The Kerr parameter `J / M^2`, in `(0, 1)`.
     pub spin: Q,
     /// The curvature radius of the S^360 enclosure the horizon is read in
     /// (the universe's sphere for the universal core, a galaxy's for its
@@ -128,7 +130,8 @@ pub struct Bounce {
     /// the pulse's phase; eleven coordinates, the pole axis first.
     pub at: Vec<Q>,
     /// The horizon as the conformal sphere about the origin through the
-    /// crossing point `at`, at the one-third reach (see [`horizon()`]).
+    /// crossing point `at`, at the horizon reach, where the held share is 1/3
+    /// (see [`horizon()`]).
     pub horizon: Mv,
     /// The white hole at the crossing: the null generator N = P ^ (P . K) that
     /// fixes the crossing point and keeps the horizon, K the five planes'
@@ -147,12 +150,14 @@ impl Bounce {
         crate::bang::torsion_share(&self.spin)
     }
 
-    /// The bounce of a black hole of `mass` and Kerr parameter `spin`, crossed
-    /// on its equator at `(R_h, 0, 0)` with `R_h` the [`horizon_reach`],
-    /// spinning in the `e₁e₂` plane. `None`
-    /// unless `0 < spin < 1` and `mass > 0`, or if the source fails any of its
-    /// checks (which cannot happen for a turn that moves an equatorial point;
-    /// the check is still made).
+    /// The bounce of a black hole of `mass` and Kerr parameter `spin`, read in
+    /// the S^360 enclosure of curvature radius `enclosure` and crossed on the
+    /// first isoclinic plane at the [`horizon_reach`] taken along the
+    /// enclosure ([`curved_reach`]) and at the pulse's `phase`; the spin turns
+    /// all five planes ([`spin_bivector`]). `None` unless `mass > 0`,
+    /// `0 < spin < 1` and `enclosure > 0`, or if the horizon-keeping component
+    /// of the spin or the source cannot be built (the checks are made for
+    /// every input).
     pub fn of(mass: &Q, spin: &Q, enclosure: &Q, phase: &Q) -> Option<Bounce> {
         if mass.signum() <= 0 || spin.signum() <= 0 || spin >= &Q::ONE || enclosure.signum() <= 0 {
             return None;
@@ -165,11 +170,11 @@ impl Bounce {
             phase,
         );
         let p = point(&at);
-        // the spin bivector: an isoclinic turn about the centre, magnitude a
-        // in each of the five planes
+        // The spin bivector is an isoclinic turn about the centre, of magnitude
+        // a in each of the five planes.
         let k = spin_bivector(spin);
-        // the component that preserves the horizon (all of it for a turn
-        // about the centre)
+        // Only the component that preserves the horizon generates the source;
+        // for a turn about the centre that is the whole bivector.
         let kept = keeping(&sigma, &k)?;
         let source = Source::of(&sigma, &p, &kept)?;
         let far = crate::circuit::plane_antipole()?.sandwich(&p);
@@ -193,15 +198,15 @@ mod tests {
     #[test]
     fn spin_makes_the_white_hole_a_null_source() {
         let b = Bounce::of(&Q::int(1), &Q::ratio(9, 10), &Q::int(1000), &Q::ratio(1, 5)).unwrap();
-        // the crossing point lies on the horizon, at the one-third reach
+        // The crossing point lies on the horizon, at the horizon reach.
         assert!(point(&b.at).geo(&b.horizon).scalar_part().is_zero());
-        // its far face, the antipode under the planes' half turn, lies on the
-        // horizon too, and is not the crossing point
+        // The far face, the antipode under the planes' half turn, lies on the
+        // horizon too, and is not the crossing point.
         assert!(b.far.geo(&b.horizon).scalar_part().is_zero());
         assert!(!b.far.projective_eq(&point(&b.at)));
         assert_eq!(horizon_reach(&Q::ratio(3, 2)), Q::int(3));
         let n = &b.source.generator;
-        assert!(n.geo(n).is_zero() && !n.is_zero(), "null: N² = 0");
+        assert!(n.geo(n).is_zero() && !n.is_zero(), "null: N^2 = 0");
         let p = point(&b.at);
         for t in [Q::ratio(1, 7), Q::ratio(2, 5)] {
             let s = b.source.sliver(&t);
@@ -214,13 +219,13 @@ mod tests {
                 "the horizon is kept"
             );
         }
-        // no spin, or a spin past the extremal bound, is no bounce
+        // Zero spin, or a spin at the extremal bound, gives no bounce.
         assert!(Bounce::of(&Q::int(1), &Q::ZERO, &Q::int(1000), &Q::ZERO).is_none());
         assert!(Bounce::of(&Q::int(1), &Q::ONE, &Q::int(1000), &Q::ZERO).is_none());
-        // no enclosure, no horizon to read
+        // Without an enclosure no horizon is read.
         assert!(Bounce::of(&Q::int(1), &Q::ratio(9, 10), &Q::ZERO, &Q::ZERO).is_none());
-        // the enclosure's curvature shortens the reach: under the flat reach, and
-        // nearer it the larger the enclosure
+        // The enclosure's curvature shortens the reach: the curved reach is
+        // below the flat reach, and nearer to it the larger the enclosure.
         let flat = horizon_reach(&Q::int(1));
         let (near, far) = (
             curved_reach(&flat, &Q::int(10)),

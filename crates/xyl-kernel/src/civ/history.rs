@@ -9,7 +9,8 @@
 //!
 //! This module holds only the types; `civ::Civilizations::turning` reports
 //! turnings and `civ::Civilizations::remember` names figures, reading each
-//! figure's role from the people at its turning rather than from a table.
+//! figure's role from the people at the carry that names it rather than from
+//! a table.
 //! Figures are held in the checkpoint.
 //!
 //! Terms: eminent, turning (docs/glossary.md).
@@ -17,7 +18,8 @@
 use crate::knowledge::Domain;
 use xyl_core::dyadic::Dy;
 
-/// Memory below this is gone: three e-folds of fading.
+/// The memory threshold exp(-3), three e-folds of fading; a figure whose
+/// memory falls below it is dropped.
 pub fn forgotten() -> Dy {
     Dy::int(-3).exp()
 }
@@ -47,29 +49,30 @@ pub enum Held {
     Locus,
 }
 
-/// A figure a people remembers a turning by: the domain its effort led in
-/// at the turning and that domain's share of its effort, how the people
-/// holds it, and how well it is remembered.
+/// A figure a people remembers a turning by: the domain the people's effort
+/// led in when the figure was named and that domain's share of the effort,
+/// how the people holds the figure, and how well it is remembered.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Eminent {
     /// A placeholder name drawn from the seed, until a mind of the people
     /// names it.
     pub name: String,
-    /// The domain the people's effort led in at the turning.
+    /// The domain the people's effort led in when the figure was named.
     pub domain: Domain,
     /// That domain's share of the people's effort, in \[0, 1\].
     pub lead: Dy,
-    /// How the people holds it.
+    /// How the people holds the figure.
     pub held: Held,
     /// What it is remembered for.
     pub title: String,
     /// The turning's time (standard years).
     pub born_yr: Dy,
-    /// One of its people's generations after the turning (standard years).
+    /// One generation of the people after the turning (standard years).
     pub dies_yr: Dy,
-    /// How well it is remembered, in \[0, 1\]: fades at the people's
-    /// forgetting share a year; below [`forgotten`] it is dropped.
+    /// How well the figure is remembered, in \[0, 1\]: it fades by the
+    /// people's forgetting share each year; below [`forgotten`] the figure
+    /// is dropped.
     pub memory: Dy,
-    /// Whether its span has passed.
+    /// Whether `dies_yr` had passed at the last carry.
     pub dead: bool,
 }

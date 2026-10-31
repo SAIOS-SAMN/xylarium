@@ -9,7 +9,7 @@
 // `neutrons_of` (mass number rounded to the nearest nucleon, less the
 // charge, summed over a cluster's parts); `nucleus_weights`; `mix_weights`
 // (whole nuclei only); `electron_phase`, R = kappa (1 - 2 frac(p)) in
-// [-kappa, kappa], zero for a neutral kind; and `Substrate::two_weights`,
+// [-kappa, kappa], zero for a kind with no charge; and `Substrate::two_weights`,
 // the universe's nuclides at t (firmament held, galaxies, matter in
 // flight). All counts are exact rationals.
 
@@ -24,12 +24,13 @@ use xyl_core::Q;
 /// - R is the electrons' coherence kappa (the share fibred on S^11, fibres.rs)
 ///   times the hemisphere response 1 - 2 frac(p), so R = kappa (1 - 2 frac(p))
 ///   in [-kappa, kappa]: held face early in the echo, zero at its turn, open
-///   face late.
+///   face late. R is not stored; `electron_phase` computes it.
 #[derive(Clone, Debug, Default)]
 pub struct TwoWeights {
     /// Z: proton count (summed over whole nuclei for a mix).
     pub protons: Q,
-    /// Q: neutron count, mass number less charge (summed over whole nuclei for a mix).
+    /// Q: neutron count, mass number less charge (summed over whole nuclei for
+    /// a mix).
     pub neutrons: Q,
 }
 
@@ -118,9 +119,9 @@ impl Substrate {
         elements: &[crate::elements::Element],
     ) -> TwoWeights {
         let mut all = Mix::new();
-        // galaxies' compositions already include their intake, so the
+        // The galaxies' compositions already include their intake, so the
         // firmament adds its held part (amount - left) and the matter in
-        // flight (left - taken)
+        // flight (left - taken).
         let out = self.outflow(t);
         let mut taken: std::collections::BTreeMap<u32, Q> = std::collections::BTreeMap::new();
         for (i, took) in self.intakes(t) {

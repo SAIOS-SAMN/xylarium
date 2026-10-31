@@ -60,8 +60,8 @@ fn ex(x: &Q) -> Q {
     on_grid(exp(x, BITS).mid())
 }
 
-/// A body's turning at its own surface (rad/s): the turning law c delta / R,
-/// its break-up spin.
+/// The turning rate at a body's surface (rad/s): the turning law c delta / R
+/// evaluated at radius R, which is the body's break-up spin.
 fn surface_turning(m_kg: &Q, r_m: &Q) -> Q {
     crate::turning::rad_s(&crate::turning::turning_si(m_kg, r_m))
 }
@@ -78,8 +78,8 @@ fn unit(rng: &mut Stream) -> Q {
 /// A rocky body's measured constants.
 pub struct Rock;
 impl Rock {
-    /// The unit world's self-gravity pressure rho g R, 3.4e11 Pa: the unit of a body's
-    /// own (`self_pressure`).
+    /// The unit world's self-gravity pressure rho g R, 3.4e11 Pa: the unit in
+    /// which a body's self-gravity pressure (`self_pressure`) is expressed.
     pub fn world_pressure() -> Q {
         Q::int(340_000_000_000)
     }

@@ -1,7 +1,7 @@
 //! An exact, compact binary codec for snapshots.
 //!
 //! Inputs: values to write (integers, flags, strings, [`Q`]) or a byte slice
-//! to read; reads `q` for the rational byte form.
+//! to read. The rational byte form is defined in `crate::q`.
 //!
 //! Outputs: [`Enc`], which appends fixed-width little-endian integers,
 //! length-prefixed strings and rationals in [`Q::put_bytes`]' canonical form,
@@ -138,8 +138,9 @@ impl<'a> Dec<'a> {
     pub fn i128(&mut self) -> Option<i128> {
         self.arr().map(i128::from_le_bytes)
     }
-    /// A length, bounded by the bytes that remain (a hostile length cannot
-    /// make the decoder allocate more than the snapshot holds).
+    /// Reads a length or count written by [`Enc::len`]. Returns `None` when
+    /// it exceeds the bytes that remain, so a hostile length cannot make the
+    /// decoder allocate more than the snapshot holds.
     pub fn count(&mut self) -> Option<usize> {
         let n = usize::try_from(self.u64()?).ok()?;
         (n <= self.buf.len().saturating_sub(self.at)).then_some(n)
@@ -158,7 +159,8 @@ impl<'a> Dec<'a> {
             0 => {
                 let n = self.i64()?;
                 let d = self.i64()?;
-                // canonical form is checked, not trusted
+                // The canonical form is checked: the pair must already be in
+                // lowest terms with a positive denominator.
                 let q = Q::new(n, d)?;
                 (q == (Q::Small { n, d })).then_some(q)
             }

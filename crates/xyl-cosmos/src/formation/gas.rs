@@ -27,9 +27,10 @@ pub(crate) struct Cooling {
 /// A bead's cooling, read one tier down as a piece of the home galaxy's gas:
 /// the bead's state over the founding `unit` is its holding (the galaxy's
 /// grains hold one ring together), spread over its span; its kinds stand at
-/// its pinch, each with the agitation the push leaves there and its own
-/// emission. `h` is the core's hold, 1 plus the held share; `swing` is
-/// 1 + A_in. None for an empty bead or span.
+/// its pinch. The piece's agitation is what the push leaves there,
+/// (p - delta) / p, and its emission is the share-weighted mean of the kinds'
+/// emissions. `h` is the core's hold, 1 plus the held share; `swing` is
+/// 1 + A_in. None for an empty bead or span, or a unit that is not positive.
 pub(crate) fn cooling(bead: &Bead, unit: &Q, h: &Q, swing: &Q) -> Option<Cooling> {
     let grid = |x: &Q| xyl_core::certified::down(x, 64);
     let width = &bead.span.1 - &bead.span.0;
@@ -61,8 +62,9 @@ pub(crate) fn cooling(bead: &Bead, unit: &Q, h: &Q, swing: &Q) -> Option<Cooling
             .fold(Q::ZERO, |a, (z, s)| &a + &(s * &emission(*z))),
     );
     let mu = grid(&(&lambda * &emission));
-    // the measure's dimension: n = 1 (a circle in the galaxy's plane) outside
-    // the core's reach of one galaxy ring, n = 2 (the bulge's ball) within it
+    // The measure's dimension is n = 1 (a circle in the galaxy's plane)
+    // outside the core's reach of one galaxy ring and n = 2 (the bulge's ball)
+    // within it.
     let n = if reach > Q::ONE { 1 } else { 2 };
     let (cools_in, infall, cloud, clouds, cooled, heat) = collapse(
         &lambda, &mu, &agitation, &emission, &reach, h, &width, swing, n,
@@ -97,8 +99,8 @@ pub(crate) fn lights(c: &Cooling) -> bool {
 pub struct Lighting {
     /// Rings until the first piece lights.
     pub cools_in: Option<i64>,
-    /// The lit pieces' holding (those that collapse into clouds) over every
-    /// piece's, in [0, 1].
+    /// The lit pieces' holding (those that collapse into clouds and light)
+    /// over every piece's, in [0, 1].
     pub lit: Q,
     /// Each piece: inner edge, outer edge (galaxy rings), rings until it
     /// lights, and its infall's extent (galaxy rings; zero where it never
@@ -171,9 +173,9 @@ pub fn lighting(beads: &[Bead], unit: &Q, held: &Q, swing: &Q) -> Lighting {
 
 /// The share of a piece an infall of extent `w` at reach `r` gathers: the
 /// measure of S^n within the infall's angle (measure.rs: the circle's arc
-/// for the disc, n = 1; the sphere's cap for the bulge, n = 2), the angle
-/// the deficit share gives in turns, `w / (w + r)` of the half turn, exact;
-/// on the 2^-64 grid; the whole at the half turn.
+/// for the disc, n = 1; the sphere's cap for the bulge, n = 2). The angle is
+/// the deficit share `w / (w + r)` of the half turn, in turns; the measure is
+/// the whole at the half turn. Rounded down to the 2^-64 grid.
 fn gathered(w: &Q, r: &Q, n: u32) -> Q {
     use xyl_core::dyadic::Dy;
     let turns = w.checked_div(&(&Q::int(2) * &(w + r))).unwrap_or(Q::ZERO);
@@ -186,21 +188,22 @@ fn gathered(w: &Q, r: &Q, n: u32) -> Q {
 /// A piece's collapse. The piece holds (lambda + mu) W at reach R about the
 /// galaxy's core (lambda its holding per ring, mu the magnetism of its open
 /// frames, W its width); an infall of extent w on it gathers the piece's
-/// measure within its own angle, m(w) = (lambda + mu) W share_n(theta), theta
-/// the deficit angle w / (w + R) of the half turn in turns
-/// (`n` 1 in the disc, 2 in the bulge), and grips it at its own rim by the
-/// deficit law, m / (w + m). It holds where that grip exceeds its agitation
+/// measure within the infall's angle, m(w) = (lambda + mu) W share_n(theta),
+/// theta the deficit angle w / (w + R) of the half turn in turns
+/// (`n` 1 in the disc, 2 in the bulge), and grips it at the infall's rim by
+/// the deficit law, m / (w + m). It holds where that grip exceeds its agitation
 /// plus the shear across it, H w / (R (R + w)), and the heat the pulse
 /// leaves: the ring the bell brings at R, 1 / (pi (R + 1)), swung by the
-/// inbound echo (`swing` = 1 + A_in) and taken by the piece's grip, over
-/// what the piece sheds per ring (its open frames' emission e and the
+/// inbound echo (`swing` = 1 + A_in) and taken by the whole piece's grip,
+/// over what the piece sheds per ring, capped at 1 (its open frames' emission e and the
 /// vacuum's halving). The extents are read on a ladder of halvings of the
 /// width: the piece cools by whole halvings (radiative every ceil(1 / e)
 /// rings, plus the vacuum's) until its residue is under the best extent's
 /// spare, then fragments at the largest extent that holds into as many
 /// infalls as fit. Returns (rings to cool, the extent, each infall's
-/// holding, count, cooled residue, the heat); a piece whose grip never
-/// exceeds the shear and the heat never collapses (None, no infall).
+/// holding, count, cooled residue, the heat). A piece whose grip never
+/// exceeds the shear and the heat, or that needs more than 4096 halvings or
+/// has no cooling channel, never collapses (None, no infall).
 pub(crate) fn collapse(
     lambda: &Q,
     mu: &Q,
@@ -213,23 +216,23 @@ pub(crate) fn collapse(
     n: u32,
 ) -> (Option<i64>, Q, Q, i64, Q, Q) {
     let grid = |x: &Q| xyl_core::certified::down(x, 64);
-    // the piece's hold (lambda + mu) W, and an infall's grip at its rim,
-    // m / (w + m) with m = (lambda + mu) W share_n(theta)
+    // The piece's hold is (lambda + mu) W, and an infall's grip at its rim is
+    // m / (w + m) with m = (lambda + mu) W share_n(theta).
     let shell = &(lambda + mu) * width;
     let grip = |w: &Q| {
         let m = &shell * &gathered(w, reach, n);
         m.checked_div(&(w + &m)).unwrap_or(Q::ZERO)
     };
-    // agitation shed per ring: e by the open frames' emission plus
-    // ln 2 / k_v for the vacuum's halving every k_v rings
+    // The agitation shed per ring is e from the open frames' emission plus
+    // ln 2 / k_v for the vacuum's halving every k_v rings.
     let vacuum = vacuum_halving(reach, h);
     let ln2 = xyl_core::certified::ln2(64).mid();
     let shed = e + &vacuum
         .map(|k| ln2.checked_div(&Q::int(k)).unwrap_or(Q::ZERO))
         .unwrap_or(Q::ZERO);
-    // the pulse's heat: 1 / (pi (R + 1)) times the swing and the whole
+    // The pulse's heat is 1 / (pi (R + 1)) times the swing and the whole
     // piece's grip, over the shed per ring, capped at 1; with no shedding
-    // the heat is 1
+    // the heat is 1.
     let ring = Q::ONE
         .checked_div(&(&xyl_core::certified::pi(64).mid() * &(reach + &Q::ONE)))
         .unwrap_or(Q::ZERO);
@@ -240,15 +243,15 @@ pub(crate) fn collapse(
         Q::ONE
     });
     let none = (None, Q::ZERO, Q::ZERO, 0, Q::ZERO, heat.clone());
-    // spare(w) = grip(w) - H w / (R (R + w)) - heat: the agitation an
-    // infall of extent w can still hold against
+    // The spare, spare(w) = grip(w) - H w / (R (R + w)) - heat, is the
+    // agitation an infall of extent w can still hold against.
     let spare = |w: &Q| {
         let shear = (h * w)
             .checked_div(&(reach * &(reach + w)))
             .unwrap_or(Q::ZERO);
         &(&grip(w) - &shear) - &heat
     };
-    // the extents read: W, W/2, ..., W/2^47 (nonzero ones only)
+    // The extents read are W, W/2, ..., W/2^47 (nonzero ones only).
     let ladder: Vec<Q> = (0..48)
         .scan(width.clone(), |w, _| {
             let out = w.clone();
@@ -264,8 +267,8 @@ pub(crate) fn collapse(
     if critical.signum() <= 0 {
         return none;
     }
-    // the halvings needed for the residue to fall to the best spare; past
-    // 4096 the piece is treated as never collapsing
+    // Count the halvings needed for the residue to fall to the best spare;
+    // past 4096 the piece is treated as never collapsing.
     let mut halvings = 0i64;
     let mut a = a0.clone();
     while a > critical {
@@ -278,8 +281,8 @@ pub(crate) fn collapse(
     let Some(cools_in) = rings_to_cool(halvings, e, vacuum) else {
         return none;
     };
-    // the infall's extent: the largest on the ladder whose spare covers the
-    // cooled residue
+    // The infall's extent is the largest on the ladder whose spare covers the
+    // cooled residue.
     let infall = spares
         .iter()
         .filter(|(_, sp)| *sp >= a)

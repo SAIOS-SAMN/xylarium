@@ -8,15 +8,20 @@ use std::collections::BTreeMap;
 use xyl_core::dyadic::Dy;
 use xyl_cosmos::galaxy::Star;
 
-/// The turn a body of `suns` gives a neighbour `span_kpc` away (degrees per
-/// Gyr): the master equation's pair term, the turning law at their span.
+/// Returns the turning (degrees per Gyr) that a body of `suns` gives a
+/// neighbour `span_kpc` away: the master equation's pair term, the turning
+/// law evaluated at the span (at least 1e-9 kpc).
 fn pair_turning(suns: Dy, span_kpc: Dy) -> Dy {
     xyl_cosmos::turning::turning_kpc_dy(suns, span_kpc.max(Dy::sci(1, -9)))
 }
 
-/// The same, with the inner star's own turning `rate0` already read (by the
-/// same law as the turning across the span, so the shear is the law's own
-/// difference).
+/// Returns the binding share of stars `a` and `b` (masses `ma`, `mb` in suns)
+/// at separation `span_kpc`: `turn / (turn + shear)`, where `turn` is the
+/// pair turning of the combined mass at the span and `shear` is the
+/// difference between the inner star's turning `rate0` at its orbit radius
+/// and the galaxy's turning one span further out. Both turnings come from the
+/// same law, so the shear is a difference of that law. Returns zero for stars
+/// of different cores or when both terms vanish.
 pub fn binding_at(a: &Star, ma: Dy, b: &Star, mb: Dy, rate0: Dy, span_kpc: Dy) -> Dy {
     if a.core != b.core {
         return Dy::ZERO;
@@ -36,8 +41,10 @@ pub fn binding_at(a: &Star, ma: Dy, b: &Star, mb: Dy, rate0: Dy, span_kpc: Dy) -
     }
 }
 
-/// A star's binding reach (kpc): the span at which it binds a neighbour like
-/// itself by a half, found by bisection over [0, r].
+/// Returns a star's binding reach (kpc): the span at which the star binds an
+/// identical neighbour with share one half, found by 40 bisections over
+/// [0, r] with r the orbit radius (at least 1e-3 kpc). Returns r when the
+/// share at r is still at least one half.
 pub fn binding_reach(s: &Star, m: Dy) -> Dy {
     let half = Dy::ratio(1, 2);
     let rate0 = s.rate_at_dy(s.orbit.radius);
@@ -56,21 +63,23 @@ pub fn binding_reach(s: &Star, m: Dy) -> Dy {
     lo
 }
 
-/// A constellation: the stars whose mutual turnings bind them tighter than
-/// the galaxy's shear at their place; the unit of passage.
+/// A constellation: a set of stars joined by pairs whose mutual turning is
+/// at least the galaxy's shear at their place (binding share >= 1/2). It is
+/// the unit of passage.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Constellation {
-    /// Its stars (sample indices), least first: the least is its key.
+    /// The stars by sample number, in ascending order; the least is the key.
     pub stars: Vec<u64>,
-    /// Galactic core index of its least star.
+    /// The galactic core index of the stars (pairs bind only within one
+    /// core).
     pub core: u32,
-    /// Its reach (kpc): the widest binding reach of its stars, and the width of
-    /// a ley line's mouth there.
+    /// The reach (kpc): the largest binding reach of the stars, and the width
+    /// of a ley line's mouth in this constellation.
     pub reach_kpc: Dy,
 }
 
 impl Constellation {
-    /// Its key: its least star's sample number (0 for an empty
+    /// Returns the key: the least sample number of the stars (0 for an empty
     /// constellation, which the network never builds).
     pub fn key(&self) -> u64 {
         self.stars.first().copied().unwrap_or(0)
@@ -85,19 +94,20 @@ fn find(parent: &mut [usize], mut i: usize) -> usize {
     i
 }
 
-/// A star in play: the star as the Big Bang made it and the suns it carries
-/// at the sample's resolution (its own share times the sample over the stars
-/// worked out in its galaxy).
+/// A star in play: the star as the Big Bang made it and the suns it stands
+/// for at the sample's resolution (the star's `stands_for` times the sample
+/// size over the number of stars in play in its galaxy).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct InPlay {
     /// The star as the Big Bang made it.
     pub star: Star,
     /// How many suns it carries at the sample's resolution (count of stars).
     pub suns: Dy,
-    /// Its binding reach (kpc) and its own turning (degrees per Gyr), read
-    /// once: neither moves with time.
+    /// The binding reach (kpc), read once because it does not change with
+    /// time.
     pub reach: Dy,
-    /// Its own turning about its galaxy at its orbit's radius, in degrees per Gyr.
+    /// The star's turning about the galaxy at its orbit radius, in degrees per
+    /// Gyr, read once.
     pub rate0: Dy,
 }
 
@@ -113,10 +123,11 @@ impl InPlay {
         }
     }
 
-    /// The most it moves through its galaxy a Gyr (kpc): its circulation,
-    /// its turning times its reach, and its swing through the plane at its
-    /// fullest (its spread read 10 Gyr on, the share's saturation); a bound
-    /// on how fast any arc to it can change.
+    /// Returns an upper bound (kpc per Gyr) on the star's motion through the
+    /// galaxy at time `t`, and so on how fast any arc to it can change: the
+    /// circulation (orbital rate in radians per Gyr times orbit radius) plus
+    /// the vertical swing through the plane at its largest (the vertical
+    /// speed read 10 Gyr later, where the share saturates, times the scale).
     pub fn speed_bound(&self, t: Dy) -> Dy {
         let circ = self.star.orbit.rate.abs() * Dy::PI / Dy::int(180) * self.star.orbit.radius;
         let age = (t - Dy::from_q(&self.star.born)).max(Dy::ZERO) + Dy::int(10);
@@ -129,14 +140,16 @@ impl InPlay {
     }
 }
 
-/// The stars in play: each galaxy's first `limit` sample stars that its sight
-/// opens (as `minds::schedule` reads them), regenerated from the seed (orbit
-/// and place only, no system), each carrying
-/// m = stands_for x sample / worked in its galaxy.
+/// Returns the stars in play: of each galaxy's first `limit` sample stars,
+/// those the sight opens (as `minds::schedule` reads them), regenerated from
+/// the seed (orbit and place only, no system). Each carries
+/// m = stands_for x sample / n suns, where n is the number of stars in play
+/// in that galaxy.
 pub fn in_play(seed: u64, bang: &xyl_cosmos::bang::BigBang, limit: u64) -> Vec<InPlay> {
     use xyl_cosmos::minds::Sight;
-    // Seated with the cores' sight only; each witnessed system is added later
-    // by `Network::admit`, so the whole sample is never placed at once.
+    // The stars are seated with the cores' sight only; each witnessed system
+    // is added later by `Network::admit`, so the whole sample is never placed
+    // at once.
     let sight = Sight::Cores;
     let sample = xyl_cosmos::galaxy::sample(bang);
     let total = limit.min(sample);
@@ -158,11 +171,13 @@ pub fn in_play(seed: u64, bang: &xyl_cosmos::bang::BigBang, limit: u64) -> Vec<I
     out
 }
 
-/// The pairs that can bind, read once: stars sorted by (core, reach), each
-/// paired outward while their binding at the reaches' difference (a lower
-/// bound on their arc, fixed for circling stars) still holds a half; each
-/// pair's span s_ij where its binding falls to a half, found by bisection.
-/// Returns (i, j, s_ij), indices into `stars`.
+/// Returns the pairs that can bind, read once. The stars are sorted by
+/// (core, orbit radius, sample number), and each is paired outward while the
+/// binding at the difference of the orbit radii (a lower bound on the arc,
+/// fixed for circling stars) is still at least one half. Each pair's span
+/// s_ij, where the binding falls to one half, is bracketed by doubling (up to
+/// 1000 kpc) and refined by 24 bisections. Returns (i, j, s_ij) with indices
+/// into `stars`.
 pub fn binding_pairs(stars: &[InPlay]) -> Vec<(usize, usize, Dy)> {
     let half = Dy::ratio(1, 2);
     let mut order: Vec<usize> = (0..stars.len()).collect();
@@ -207,7 +222,8 @@ pub fn binding_pairs(stars: &[InPlay]) -> Vec<(usize, usize, Dy)> {
     out
 }
 
-/// The constellations from the pairs bound now: each bound pair joined.
+/// Returns the constellations formed by joining every pair marked in
+/// `bound`, sorted by key; an unbound star forms a constellation alone.
 pub fn constellations(
     stars: &[InPlay],
     pairs: &[(usize, usize, Dy)],

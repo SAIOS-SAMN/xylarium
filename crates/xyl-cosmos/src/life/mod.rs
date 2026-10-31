@@ -22,14 +22,16 @@
 //!   `t_cell (1 + log2(body / cell))`, and the population the medium's power
 //!   feeds.
 //! - Climb ([`climb`]): the expected completion of each rung under impacts
-//!   at rate `mu` ([`strikes_per_gyr`]), `(e^(mu m) - 1) / mu`; the first
-//!   rung is never undone. A surface is sterilised at `1 / hazard`
-//!   ([`sterilise_per_gyr`], scaled by cosmic rays and plane exposure); media
-//!   under ice or deep are shielded. A surface chemistry's window closes at
-//!   0.9 of the star's lifetime; every window closes when the world merges.
+//!   at rate `mu` ([`strikes_per_gyr`]), `(e^(mu m) - 1) / mu` for a rung of
+//!   mean wait `m`; the first rung is never undone. A surface is sterilised
+//!   at `1 / hazard` ([`sterilise_per_gyr`], scaled by cosmic rays and plane
+//!   exposure); media under ice or in the deep are shielded. A surface
+//!   chemistry's window closes at 0.9 of the star's lifetime; every window
+//!   closes when the world merges.
 //! - Transfer ([`system_life`]): life reaches a sibling world after
-//!   [`transfer_gyr`] (its year over the share `R / (2 pi a)` of its orbit
-//!   its body covers), divided by the dormant lineage's survival in transit.
+//!   [`transfer_gyr`] (the target's year over the share `R / (2 pi a)` of
+//!   the orbit that the target's body covers), divided by the dormant
+//!   lineage's survival in transit.
 //!   Transfer is modelled within a system only.
 //! - Feeding ([`foragers`]): living area, growing season ([`growing_share`])
 //!   and energy through one trophic link, over each body's metabolism;
@@ -83,34 +85,34 @@ fn constants() -> &'static Constants {
         ev_j: Dy::from_q(&crate::package::Si::ev_j()),
         gyr_s: Dy::from_q(&crate::package::Si::gyr_s()),
         flux_w: Dy::int(340),
-        // an alphabet of four, the fewest letters that pair two ways: 2 bits
-        // (a counting argument, not chemistry)
+        // An alphabet of four letters, the fewest that pair two ways, carries
+        // 2 bits per monomer (a counting argument, not chemistry).
         bits_per_monomer: Dy::int(2),
-        // discrimination d: a partner is told apart by one contact, half the
-        // solvent's cohesion per molecule (declared)
+        // Discrimination d: a partner is distinguished by one contact, half
+        // the solvent's cohesion per molecule (declared).
         discrimination: Dy::ratio(1, 2),
-        // open rulers, to be derived from each world's own chemistry once
-        // planets are stable: the information a mind's blueprint holds, the
-        // body built per monomer of genome, and the mass of a mind-bearing body
+        // Open rulers, to be derived from each world's chemistry: the
+        // information a mind's blueprint holds (bits), the body built per
+        // monomer of genome, and the mass of a mind-bearing body (kg).
         i_mind: Dy::sci(1, 9),
         body_per_monomer: Dy::sci(1, 3),
         m_mind_kg: Dy::int(10),
         amu_kg: Dy::from_q(&crate::package::Si::amu_kg()),
         bits_per_generation: Dy::ONE,
         reproductive_excess: Dy::ratio(1, 2),
-        // open ruler: the chance a dying star's pulse sterilises an open
-        // surface over 10 Gyr where the cosmic-ray crowd is 1
+        // Open ruler: the chance that a dying star's pulse sterilises an open
+        // surface over 10 Gyr where the cosmic-ray crowd is 1.
         sterilise_at_r0: Dy::ratio(1, 10),
     })
 }
 
-/// A mind's blueprint (bits): I_MIND, for the kernel's readings of a mind
-/// (how legible its heredity is: xyl-kernel knowledge.rs).
+/// The information in a mind's blueprint, `I_MIND` (bits). The kernel reads
+/// it to rate how legible a mind's heredity is (xyl-kernel `knowledge.rs`).
 pub fn i_mind() -> Dy {
     constants().i_mind
 }
 
-/// Bits a monomer carries (the alphabet's).
+/// The information one monomer carries (bits), set by the alphabet's size.
 pub fn bits_per_monomer() -> Dy {
     constants().bits_per_monomer
 }
@@ -124,16 +126,16 @@ pub fn horizon_gyr() -> Dy {
     Dy::int(30)
 }
 
-/// The earliest age a world is read at (Gyr after its star's birth): one
-/// degree of its own star's life (`worlds::star_degree_gyr`), at the star's
-/// distance from the core `r_kpc`.
+/// The earliest age at which a world is read (Gyr after its star's birth):
+/// one degree of the star's lifetime (`worlds::star_degree_gyr`) at the
+/// star's distance `r_kpc` from the core.
 pub fn first_age(r_kpc: Dy, ctx: &Ctx) -> Dy {
     worlds::star_degree_gyr(r_kpc, ctx)
 }
 
-/// The ages a world's media are probed at (Gyr after its star's birth): one
-/// degree of its star's life and each doubling after, while its star's birth
-/// plus the age lies within the horizon.
+/// The ages at which a world's media are probed (Gyr after its star's
+/// birth): one degree of the star's lifetime and each doubling of it, while
+/// the star's birth plus the age lies within the horizon, at most 64 ages.
 pub fn probe_ages(home: &Home, ctx: &Ctx) -> Vec<Dy> {
     let mut out = Vec::new();
     let mut a = first_age(home.r_kpc, ctx);
@@ -144,12 +146,13 @@ pub fn probe_ages(home: &Home, ctx: &Ctx) -> Vec<Dy> {
     out
 }
 
-/// The settled age a world's chemistry is read at (Gyr).
+/// The settled age at which a world's chemistry is read (Gyr).
 pub fn settled_gyr() -> Dy {
     Dy::int(3)
 }
 
-/// Franklin's 50/500: the number that keeps a people's evolutionary potential.
+/// The 500 of Franklin's 50/500 rule: the population size that keeps a
+/// people's evolutionary potential.
 pub fn viable() -> Dy {
     Dy::int(500)
 }

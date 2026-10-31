@@ -2,11 +2,10 @@
 
 use super::*;
 
-/// The laws the forecast was worked out under, as a digest of their source
-/// (the laws' digest): a cache kept under other laws is
-/// worked out again, not reused.
+/// The digest of the source of the laws under which the forecast was
+/// computed: a cache stored under other laws is recomputed, not reused.
 pub fn laws_digest() -> String {
-    // every source file of the laws, hashed at build time (build.rs)
+    // Every source file of the laws, hashed at build time (build.rs).
     env!("XYL_SOURCE_DIGEST").to_string()
 }
 
@@ -82,7 +81,8 @@ impl Schedule {
         e.buf
     }
 
-    /// A schedule from its bytes; `None` for anything damaged or left over.
+    /// A schedule from its bytes; `None` for damaged input, a different
+    /// format tag or trailing bytes.
     pub fn decode(buf: &[u8]) -> Option<Schedule> {
         let mut d = xyl_core::codec::Dec::new(buf);
         if d.str()? != FORECAST_FORMAT {
@@ -157,8 +157,9 @@ impl Schedule {
     }
 }
 
-/// The key a universe's schedule is kept under: its seed, its kind of Big
-/// Bang and its laws (a universe rebuilt under other laws is another).
+/// The key under which a universe's schedule is cached: the seed and a hash
+/// of the seed and the universe's scales (`laws::Scales`), so a universe
+/// founded under other scales has another key.
 pub fn key(gal: &Galaxy) -> String {
     let mut h = blake3::Hasher::new_derive_key("xylarium 2026-10-08 schedule key v1");
     h.update(&gal.seed.to_le_bytes());

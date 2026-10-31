@@ -1,7 +1,8 @@
 //! A minimal `run::Link`: the seam an uplink uses to drive live play.
 //!
-//! It prints the universe's ring, its time in Gyr and the number of peoples
-//! after every ring, and the home after every checkpoint. An uplink to the
+//! After every ring it prints the ring number, the time in Gyr and the
+//! numbers of peoples and bells; after every checkpoint it prints the home
+//! and the ring. An uplink to the
 //! Mycelium network implements the same three methods.
 //!
 //! ```text
@@ -41,7 +42,7 @@ impl run::Link for Printer {
         Ok(())
     }
 
-    // a local link hears no network clock
+    // A local link has heard no network clock height.
     fn height(&self) -> Option<u64> {
         None
     }

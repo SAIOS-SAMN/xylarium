@@ -1,18 +1,17 @@
-//! A world's moons on its own manifold, and the belts and comet cloud of a
-//! system.
+//! A world's moons on the manifold the world anchors, and the belts and comet
+//! cloud of a system.
 
 use super::*;
 
-/// A world's moons, on its own manifold: it anchors the reach its pull holds
-/// in its star's field, 2 pi a m / (M + m), out from five of its radii. The
-/// matter is `budget` (world masses, the disc's unheld matter inside that
-/// reach); the world holds its own share, m / (m + budget), and moons gather
-/// across the rest degree by degree where their matter holds its region
-/// against the star's `tide` at the world (disc::manifold_worlds, the
-/// star tier's law one tier down), then settle about the world (see
-/// [`settle_about`]). Each moon's forced eccentricity is its neighbours' pull
-/// over their rates' distance from a first-order resonance. Returns the
-/// moons' mass placed, which leaves the belts' books.
+/// The moons of the last world in `worlds`, on the manifold the world anchors
+/// in the star's field: reach `2 pi a m / (M + m)`, from five world radii
+/// outwards. The matter is `budget` (world masses, the disc's unheld matter
+/// inside that reach). The world takes the share `m / (m + budget)`, and moons
+/// gather across the remainder where their matter holds a region against the
+/// star's `tide` at the world (disc::manifold_worlds, the star tier's law one
+/// tier down), then settle about the world (see [`settle_about`]). Bodies that
+/// are below 1/10000 world masses or not round are dropped. Returns the mass
+/// of the moons placed, which the caller removes from the belts' pool.
 pub(super) fn moons(
     worlds: &mut Vec<World>,
     gas: &Gas,
@@ -38,7 +37,8 @@ pub(super) fn moons(
         * &crate::package::Si::star_mass_kg()
             .checked_div(&crate::package::Si::world_mass_kg())
             .unwrap_or(Q::ZERO);
-    // its reach in its star's field, in its own radii: 2 pi a m / (M + m)
+    // The world's reach in the star's field, 2 pi a m / (M + m), in metres;
+    // `outer` is that reach in world radii.
     let a_m = &(&g_a * &crate::package::Si::au());
     let reach_m = &(&(&Q::int(2) * &pi(BITS).mid()) * a_m)
         * &g_mass
@@ -52,7 +52,8 @@ pub(super) fn moons(
     if outer <= inner {
         return Q::ZERO;
     }
-    // the world's manifold: it holds its own share, the moons the rest
+    // On the world's manifold the world holds the share m / (m + budget) and
+    // the moons the remainder.
     let all = &g_mass + budget;
     let own = g_mass.checked_div(&all).unwrap_or(Q::ONE);
     let (gathered, _) = crate::disc::manifold_worlds(&own, &Q::ZERO, tide);
@@ -111,9 +112,10 @@ pub(super) fn moons(
     placed
 }
 
-/// Each moon's forced eccentricity, capped at 1/10: its neighbours' mass
-/// over the giant's, divided by their rates' distance from the nearest
-/// first-order resonance p / (p + 1) (floored at 1/1000).
+/// Each moon's forced eccentricity, capped at 1/10: the largest, over the two
+/// adjacent moons, of the neighbour's mass over the host world's mass divided
+/// by the distance of the two turning rates' ratio from the nearest
+/// first-order resonance p / (p + 1) (that distance floored at 1/1000).
 fn forced_eccentricities(settled: &[Embryo], anchor: Dy, radius_rg: Dy, g_mass: &Q) -> Vec<Q> {
     let rate = |a_r: &Q| {
         let a = Dy::from_q(a_r) * radius_rg;
@@ -142,9 +144,9 @@ fn forced_eccentricities(settled: &[Embryo], anchor: Dy, radius_rg: Dy, g_mass: 
         .collect()
 }
 
-/// A moon of mass `m` with ice share `share`: its layer shares, and its
-/// whole and mantle element masses apportioned exactly from the gas as it
-/// condenses at `t_form`.
+/// A moon of mass `m` with ice share `share`: the layer shares, and the
+/// element masses of the whole moon and of its mantle, apportioned exactly
+/// from the gas as it condenses at `t_form`.
 fn moon_matter(m: &Q, gas: &Gas, t_form: &Q, share: &Q) -> ([Q; 4], Vec<Q>, Vec<Q>) {
     let (core_share, ices) = gas.solids(t_form);
     let rock = m * &(&Q::ONE - share);
@@ -175,8 +177,8 @@ fn moon_matter(m: &Q, gas: &Gas, t_form: &Q, share: &Q) -> ([Q; 4], Vec<Q>, Vec<
 }
 
 /// The system's belts and comet cloud: an outer belt of the `ungathered`
-/// solids beyond the outermost world, and the cloud the giants flung out,
-/// kept in the share exp(-env) the stellar neighbourhood allows.
+/// solids beyond the outermost world, and the cloud the giants scattered,
+/// retained in the share `exp(-env)` with `env` the local stellar density.
 pub(super) fn belts(
     spec: &Spec,
     gas: &Gas,
@@ -203,8 +205,9 @@ pub(super) fn belts(
             &Q::ZERO,
         )
     };
-    // beyond the outermost world, what the regions never gathered (the
-    // manifold's remainder, disc::manifold_worlds) out to its reach
+    // The outer belt holds what the regions did not gather (the manifold's
+    // remainder, disc::manifold_worlds), from the outermost world out to the
+    // manifold's reach; its composition is read at the midpoint.
     if let Some(a) = orbits.iter().map(|(a, _)| a.clone()).max() {
         if ungathered.signum() > 0 && *a_out > a {
             let mid = (&a + a_out).checked_div(&Q::int(2)).unwrap_or(Q::ONE);
@@ -216,7 +219,8 @@ pub(super) fn belts(
             });
         }
     }
-    // the comet cloud: 5% of a tenth of the giants' mass, kept in exp(-env)
+    // The comet cloud is 5% of a tenth of the giants' mass, retained in the
+    // share exp(-env); it condenses at 30 times the outermost reach.
     let comets = (giants_mass.signum() > 0).then(|| {
         let kept = fix(&exp(&-env.clone(), BITS));
         let mass = &(&(giants_mass * &Q::ratio(1, 10)) * &Q::ratio(5, 100)) * &kept;

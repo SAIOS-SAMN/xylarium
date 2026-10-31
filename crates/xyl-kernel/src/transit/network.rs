@@ -1,5 +1,5 @@
-//! The network: its ley lines ([`Ley`]), the stars in play and their
-//! constellations as last read, and the arcs between stars at a time.
+//! The network: the ley lines ([`Ley`]), the stars in play and their
+//! constellations as last read, and the arcs between stars at a given time.
 
 use super::{binding_pairs, constellations, in_play, kpc_m, year_s};
 use super::{Constellation, Handling, InPlay};
@@ -8,42 +8,42 @@ use std::collections::BTreeMap;
 use xyl_core::dyadic::Dy;
 
 /// A ley line: a circulation held open between two constellations, built by
-/// an ancient house, with its mouths at two stars.
+/// an ancient house or its progenitors, with its mouths at two stars.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Ley {
-    /// The star of its first mouth, by sample number.
+    /// The star of the first mouth, by sample number.
     pub from: u64,
-    /// The star of its second mouth, by sample number.
+    /// The star of the second mouth, by sample number.
     pub to: u64,
-    /// Its builder (a people's index: an ancient house, or its progenitors
-    /// when `progenitor`) and the builder's tag.
+    /// The builder, as a people's index: an ancient house, whose
+    /// progenitors built the line when `progenitor` is set.
     pub builder: usize,
     /// The builder's name tag (see [`crate::checkpoint::tag`]).
     pub tag: String,
     /// Whether the house's progenitors built it rather than the house itself.
     pub progenitor: bool,
-    /// When it opened (Gyr after the Big Bang) and what holding it open cost
-    /// (J): a passage's energy for every mouth's width it spans.
+    /// When the line opens or opened, in Gyr after the Big Bang.
     pub built: Dy,
-    /// What holding it open cost, in J.
+    /// The energy that holding the line open cost, in J.
     pub cost_j: Dy,
-    /// How it is handled for passers, as its realm's steward set it.
+    /// The line's handling of passers, as the realm's steward set it.
     pub handling: Handling,
 }
 
-/// The most lines one house opens in one reading (the next reading carries
-/// on from where it stopped). Declared ruler: a bound on one reading's work.
+/// The largest number of lines one house opens in one reading; the next
+/// reading continues from where it stopped. This is a declared ruler that
+/// bounds the work of one reading.
 pub const LINES_PER_READING: usize = 1024;
 
-/// The network: the stars in play and where they stand, the ley lines built,
-/// the works under way, the constellations as last read and how far each is
-/// held closed.
+/// The network: the stars in play and their positions, the ley lines built,
+/// the works under way, the constellations as last read and the quarantine
+/// share of each.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Network {
     /// Every ley line opened, in opening order.
     pub lines: Vec<Ley>,
-    /// Each builder's line under way (by its house and whether its
-    /// progenitors build it), `built` its due.
+    /// Each builder's line under way, keyed by the house and whether its
+    /// progenitors build it; the line's `built` is its due time.
     pub works: BTreeMap<(usize, bool), Ley>,
     /// The constellations as last read.
     pub constellations: Vec<Constellation>,
@@ -51,28 +51,29 @@ pub struct Network {
     /// appearance; a steward seat's index into this list is stable.
     pub realm_keys: Vec<u64>,
     /// Each people's folds of space: the passage energy folded (J) and when
-    /// its folding was last read (Gyr).
+    /// the people's folding was last read (Gyr).
     pub folds: BTreeMap<usize, (Dy, Dy)>,
-    /// Each constellation's quarantine share (by its key), as last read.
+    /// Each constellation's quarantine share, by constellation key, as last
+    /// read.
     pub quarantine: BTreeMap<u64, Dy>,
-    /// Deep time the network was carried to (Gyr).
+    /// The time to which the network was carried, in Gyr.
     pub read_to: Dy,
-    /// The stars in play (`in_play`), with every witnessed star added, and
-    /// each one's index by its sample number.
+    /// The stars in play (`in_play`), with every witnessed star added.
     pub sample: Vec<InPlay>,
     /// Each star's index into `sample`, by its sample number.
     pub index: BTreeMap<u64, usize>,
-    /// The pairs that can bind and their spans (read once).
+    /// The pairs of `sample` indices that can bind, with their spans (kpc),
+    /// read once per sample.
     pub pairs: Vec<(usize, usize, Dy)>,
-    /// Each pair bound as last measured, and when it must be measured again
-    /// (Gyr): its arc's gap to its span over the two stars' speed bounds,
-    /// never sooner than a ring, so a pair is re-read only when it could
-    /// have crossed.
+    /// Whether each pair (as `pairs`) was bound at its last measurement.
     pub bound: Vec<bool>,
-    /// When each pair (as `pairs`) must be measured again, in Gyr.
+    /// When each pair (as `pairs`) must be measured again, in Gyr: the gap
+    /// between the pair's arc and its span divided by the sum of the two
+    /// stars' speed bounds, but never sooner than one ring of the bell, so a
+    /// pair is re-read only when it could have crossed.
     pub check: Vec<Dy>,
     /// Each star's constellation (index into `constellations`), as last
-    /// read, when it was read and until when it holds (Gyr).
+    /// read.
     pub of: BTreeMap<u64, usize>,
     /// When the constellations were last read, in Gyr.
     pub read_at: Dy,
@@ -80,16 +81,16 @@ pub struct Network {
     pub holds_to: Dy,
 }
 
-/// The light time across a mouth (years): a passage's crossing. The throat
-/// shortens any span to its mouth's width, so no light time is charged for
-/// the span itself.
+/// Returns a passage's crossing time (years): the light time across a
+/// mouth of width `reach_kpc`. The throat shortens any span to the mouth's
+/// width, so no light time is charged for the span itself.
 pub fn crossing_years(reach_kpc: Dy) -> Dy {
     reach_kpc * kpc_m() / crate::propulsion::c_m_s() / year_s()
 }
 
 impl Network {
-    /// Seat the stars in play for a universe's forecast (`limit` per galaxy,
-    /// its sight).
+    /// Seats the stars in play for a universe's forecast (`limit` per galaxy,
+    /// the galaxy's sight) and resets the pairs and constellations.
     pub fn seat(&mut self, seed: u64, bang: &xyl_cosmos::bang::BigBang, limit: u64) {
         self.sample = in_play(seed, bang, limit);
         self.reindex();
@@ -109,8 +110,10 @@ impl Network {
         self.constellations.clear();
     }
 
-    /// Every witnessed star in play, carrying its galaxy's resolution (the
-    /// pairs read again only when one joins).
+    /// Adds every witnessed star not yet in play. Each new star stands for
+    /// `stands_for` times the ratio `suns / stands_for` of a sampled star of
+    /// the same core (1 when there is none). The pairs are read again only
+    /// when a star joins.
     fn admit(&mut self, cosmic: &Cosmic) {
         let mut grew = false;
         for (k, w) in &cosmic.systems {
@@ -133,10 +136,11 @@ impl Network {
         }
     }
 
-    /// The constellations current at `t`: only the pairs whose check has
-    /// come are measured again (all of them when `t` is earlier than the last
-    /// reading), each star placed once; the groups re-formed only when a
-    /// pair's bond changed.
+    /// Brings the constellations up to time `t`. Only the pairs whose check
+    /// time has come are measured again (all of them when `t` is earlier
+    /// than the last reading), each star is placed once, and the groups are
+    /// re-formed only when a pair's bond changed. The reading holds until the
+    /// earliest check time.
     pub(super) fn current(&mut self, cosmic: &Cosmic, t: Dy) {
         self.admit(cosmic);
         let back = t < self.read_at;
@@ -189,7 +193,8 @@ impl Network {
             .unwrap_or(t + Dy::sci(1, 3));
     }
 
-    /// The arc between two stars in play at `t` (kpc), each placed then.
+    /// Returns the arc (kpc) between stars `a` and `b` at time `t`, each
+    /// placed at `t`, or None if either is not in play.
     pub fn arc_at(&self, a: u64, b: u64, t: Dy) -> Option<Dy> {
         let sphere = xyl_cosmos::chain::radius();
         let (sa, sb) = (
@@ -199,17 +204,18 @@ impl Network {
         Some(sa.place(t, &sphere).arc_kpc(&sb.place(t, &sphere), &sphere))
     }
 
-    /// The arc between two stars in play now (kpc).
+    /// Returns the arc (kpc) between stars `a` and `b` at the current time.
     pub fn arc(&self, cosmic: &Cosmic, a: u64, b: u64) -> Option<Dy> {
         self.arc_at(a, b, cosmic.now)
     }
 
-    /// The next ley line falling due (Gyr): an event of the universe.
+    /// Returns the due time (Gyr) of the next line under way, an event of the
+    /// universe.
     pub fn next_due(&self) -> Option<Dy> {
         self.works.values().map(|w| w.built).min()
     }
 
-    /// A constellation's reach by one of its stars.
+    /// Returns the reach (kpc) of the constellation containing `star`.
     pub fn reach_of(&self, star: u64) -> Option<Dy> {
         self.of
             .get(&star)

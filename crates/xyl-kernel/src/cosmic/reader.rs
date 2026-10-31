@@ -14,10 +14,10 @@ use xyl_cosmos::worlds::{
 };
 
 impl Cosmic<'_> {
-    /// Precomputes, in parallel, the star systems and worlds for every mind the
-    /// forecast wakes by `now` (pure functions of the seed), so the minds then
-    /// arise in order from cached results. The event engine calls it once per
-    /// carried span rather than once per waking.
+    /// Precomputes, in parallel, the star systems and worlds for every
+    /// unwoken mind the forecast schedules by `now` (pure functions of the
+    /// seed), so the minds then arise in order from cached results.
+    /// [`Cosmic::wake`] calls it once per wake rather than once per mind.
     pub fn prepare(&mut self, now: Dy) {
         use rayon::prelude::*;
         let due: Vec<Mind> = self
@@ -54,7 +54,8 @@ impl Cosmic<'_> {
                 ))
             })
             .collect();
-        // timing diagnostics: total system cost and the slowest systems
+        // Timing diagnostics: the total build time and the five slowest
+        // systems.
         let mut slow: Vec<(std::time::Duration, u64, usize)> = built
             .iter()
             .map(|(k, w, d)| (*d, *k, w.system.worlds.len()))
@@ -131,7 +132,8 @@ pub struct SystemReader<'a> {
 
 impl<'a> SystemReader<'a> {
     /// A reader for star `star_n`, computing its worlds' settings once.
-    /// Returns `None` when the star's system has not been witnessed (is not in `systems`).
+    /// Returns `None` when the star's system has not been witnessed (is not
+    /// in `systems`).
     pub fn of(
         gal: &Galaxy,
         ctx: &'a Ctx,
@@ -148,12 +150,12 @@ impl<'a> SystemReader<'a> {
         })
     }
 
-    /// The degree of its star's life at `t` Gyr.
+    /// The degree of the star's life at `t` Gyr.
     pub fn degree(&self, t: Dy) -> i64 {
         degree_of(t - self.born, self.deg)
     }
 
-    /// When (Gyr) its star's life reaches `degree`.
+    /// When (Gyr) the star's life reaches `degree`.
     pub fn epoch(&self, degree: i64) -> Dy {
         self.born + age_of_degree(degree, self.deg)
     }
@@ -163,11 +165,12 @@ impl<'a> SystemReader<'a> {
         self.sets.len()
     }
 
-    /// World `w`'s state, media and body at `degree`.
+    /// World `w`'s state, media and body at `degree`, with the age floored
+    /// at one degree. None for a world index outside the system or a world
+    /// that has merged into its neighbour by that age.
     pub fn read(&self, w: usize, degree: i64) -> Option<(State, Vec<Medium>, Body)> {
         let set = self.sets.get(w)?;
         let age = age_of_degree(degree, self.deg).max(self.deg);
-        // a world that has merged into its neighbour by this age is gone
         if set
             .world
             .merged_at
@@ -182,8 +185,8 @@ impl<'a> SystemReader<'a> {
     }
 }
 
-/// A world's state at its key's age, a pure function of its laws (safe on any
-/// thread).
+/// A world's state, media and body at the degree in its key, a pure function
+/// of the seed and the key (safe on any thread).
 pub(super) fn world_read(
     gal: &Galaxy,
     ctx: &Ctx,

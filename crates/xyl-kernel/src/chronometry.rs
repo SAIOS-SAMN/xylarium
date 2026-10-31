@@ -10,14 +10,15 @@
 //! - Keepers ([`Chronometry::of`]): the epicenter (the universe core, rate
 //!   1, no delay), then per galaxy a hub and three [`Shell`]s (deep core at
 //!   the nuclear-cluster radius, inner mantle at the bulge, outer rim at the
-//!   disc edge). Each counts in its own ring: the echo of the enclosure it
-//!   keeps time in.
+//!   disc edge). Each counts in units of its ring, the echo period of the
+//!   enclosure it keeps time in.
 //! - Rate: a layer at radius r with M(<r) inside runs at r / (r + M(<r)) of
 //!   the layer above it; nested wells multiply, and a galaxy's well holds
 //!   the cores nearer the epicenter than it.
 //! - Reading ([`Keeper::read`]) at the epicenter's count N (bells): local =
 //!   rate (N - delay) / ring; slip = (1 - rate)(N - delay) / ring;
-//!   coherence = 1 - 2 |slip - round(slip)|; rung = floor(slip).
+//!   coherence = 1 - 2 |slip - round(slip)|; rung = floor(slip). N - delay
+//!   is clamped at zero.
 //! - Chain ([`Chronometry::commit`]): every keeper appends an [`Entry`]
 //!   hashed (BLAKE3) over its reading, its residual slip against the keeper
 //!   inside it (kept, not averaged), its previous entry and the inner
@@ -39,10 +40,11 @@ use xyl_cosmos::bang::BigBang;
 /// Where a keeper stands.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Shell {
-    /// The universe core, ringing on the universe's own echo at rate 1 with no delay.
+    /// The universe core, counting in the universe's echo at rate 1 with no
+    /// delay.
     Epicenter,
-    /// A galactic core as its galaxy's hub: its uplink to the epicenter,
-    /// ringing on its galaxy's own echo.
+    /// A galactic core as its galaxy's hub: the galaxy's link to the
+    /// epicenter, counting in the galaxy's echo.
     Hub,
     /// A galaxy's deep core, at its nuclear-cluster radius.
     Core,
@@ -53,8 +55,8 @@ pub enum Shell {
 }
 
 impl Shell {
-    /// Human-readable name of the shell, as used in reports ("epicenter", "galaxy hub", "deep
-    /// core", "inner mantle", "outer rim").
+    /// Human-readable name of the shell, as used in reports ("epicenter",
+    /// "galaxy hub", "deep core", "inner mantle", "outer rim").
     pub fn name(self) -> &'static str {
         match self {
             Shell::Epicenter => "epicenter",
@@ -74,37 +76,38 @@ pub struct Keeper {
     pub galaxy: Option<u32>,
     /// Which shell of its galaxy (or the epicenter) the keeper stands at.
     pub shell: Shell,
-    /// Distance from the epicenter in kpc: the galaxy core's reach along its bearing plus the
-    /// shell's radius.
+    /// Distance from the epicenter in kpc: the galaxy core's reach along the
+    /// core's bearing plus the shell's radius.
     pub from_epicenter_kpc: Q,
-    /// Clock rate relative to the epicenter, in (0, 1]: the product of the nested wells r / (r +
-    /// M(<r)).
+    /// Clock rate relative to the epicenter, in (0, 1]: the product of the
+    /// nested wells r / (r + M(<r)).
     pub rate: Q,
-    /// Travel time of the pulse from the epicenter to the keeper, in bells.
+    /// Travel time of the pulse from the epicenter to the keeper, in bells:
+    /// the distance over the pulse wavelength.
     pub delay: Q,
-    /// Its own ring, in the engine's bells: the echo of the enclosure it keeps
-    /// time in (the universe's sphere for the epicenter, its galaxy's sphere
-    /// for a hub and its shells).
+    /// The keeper's ring, in the engine's bells: the echo period of the
+    /// enclosure it keeps time in (the universe's sphere for the epicenter,
+    /// the galaxy's sphere for a hub and its shells).
     pub ring: Q,
 }
 
 /// What a keeper reads at the epicenter's count.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Reading {
-    /// Local count in the keeper's own rings: rate x (N - delay) / ring.
+    /// Local count in the keeper's rings: rate x (N - delay) / ring.
     pub local: Q,
     /// Turns fallen behind the epicenter: (1 - rate) x (N - delay) / ring.
     pub slip: Q,
-    /// Phase agreement with the epicenter in [0, 1]: 1 - 2 |slip - round(slip)| (1 in phase, 0 half
-    /// a turn out).
+    /// Phase agreement with the epicenter in \[0, 1\]:
+    /// 1 - 2 |slip - round(slip)| (1 in phase, 0 half a turn out).
     pub coherence: Q,
     /// Whole turns of slip (the floor of `slip`); 0 for a keeper at rate 1.
     pub rung: i128,
 }
 
 impl Keeper {
-    /// Count, slip, coherence and rungs in its own rings at the engine's
-    /// count `n` (bells).
+    /// The keeper's count, slip, coherence and rung, in the keeper's rings,
+    /// at the engine's count `n` (bells). A zero ring gives a zero count.
     pub fn read(&self, n: &Q) -> Reading {
         let since = (n - &self.delay).max(Q::ZERO);
         let own = since.checked_div(&self.ring).unwrap_or(Q::ZERO);
@@ -126,7 +129,7 @@ impl Keeper {
     }
 }
 
-/// One link of the chain.
+/// One entry of the hashed chain.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Entry {
     /// Index of the keeper in [`Chronometry::keepers`] that wrote the entry.
@@ -135,30 +138,35 @@ pub struct Entry {
     pub at: Q,
     /// The keeper's reading at that count.
     pub reading: Reading,
-    /// Its slip against the keeper inside it (turns): kept, never averaged.
+    /// The keeper's slip minus the slip of the keeper inside it (turns), kept
+    /// as computed and not averaged; zero for the epicenter.
     pub residual: Q,
     /// Hash of the same keeper's previous entry (all zeros for its first).
     pub parent: [u8; 32],
-    /// Head hash of the keeper inside it at commit time (all zeros for the epicenter).
+    /// Head hash of the keeper inside it at commit time (all zeros for the
+    /// epicenter).
     pub inner: [u8; 32],
-    /// BLAKE3 hash of this entry over the keeper index, count, reading, residual, parent and inner
-    /// hashes (and, for the epicenter, the receipt height).
+    /// BLAKE3 hash of this entry over the keeper index, the count, the local
+    /// count and slip, the residual, the parent and inner hashes and, for the
+    /// epicenter, the receipt height.
     pub hash: [u8; 32],
 }
 
 /// The universe's keepers and their chain.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Chronometry {
-    /// All keepers: the epicenter first, then for each galaxy its hub, deep core, inner mantle and
-    /// outer rim.
+    /// All keepers: the epicenter first, then for each galaxy its hub, deep
+    /// core, inner mantle and outer rim.
     pub keepers: Vec<Keeper>,
     /// For each keeper, the keeper inside it (the epicenter has none).
     pub inside: Vec<Option<usize>>,
-    /// Every entry committed, in commit order, epicenter first within each commit.
+    /// Every entry committed, in commit order, epicenter first within each
+    /// commit.
     pub entries: Vec<Entry>,
     /// Each keeper's head: its last entry's hash.
     pub heads: Vec<[u8; 32]>,
-    /// The counts committed at, in order (path-dependent: held).
+    /// The counts committed at, in order; they depend on the run's history and
+    /// are held in the checkpoint.
     pub commits: Vec<Q>,
     /// For each commit, the last final point's receipt height received (None
     /// when unlinked): the pairs `pace` is measured from.
@@ -169,8 +177,7 @@ pub struct Chronometry {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Pace {
     /// Rings advanced per final-point advance, between the first and last
-    /// commits that heard a point.
-    /// Measured pace between the first and last commits that heard a point.
+    /// commits that recorded a receipt height.
     Measured {
         /// Epicenter count advance (bells) per receipt-height advance.
         rings_per_point: Q,
@@ -179,26 +186,26 @@ pub enum Pace {
         /// Receipt-height advance between those two commits.
         points: u64,
     },
-    /// Fewer than two commits received a point (unlinked): only the rings
-    /// committed are known.
-    /// No pace measurable: only the commits' own span is known.
+    /// No pace is measurable, because no two commits recorded receipt
+    /// heights that advanced: only the span of the commits is known.
     Unlinked {
-        /// Epicenter count advance (bells) between the first and last commits; 0 with none.
+        /// Epicenter count advance (bells) between the first and last
+        /// commits; 0 with none.
         rings: Q,
         /// Number of commits made.
         commits: usize,
     },
 }
 
-/// The rate of a well of `inside_rg` at `r_rg` (both lengths of r_g):
-/// r / (r + M), exact.
+/// The rate of a well of mass `inside_rg` at radius `r_rg` (both in r_g):
+/// r / (r + M), exact; 1 when r + M is zero.
 fn well(r_rg: &Q, inside_rg: &Q) -> Q {
     r_rg.checked_div(&(r_rg + inside_rg)).unwrap_or(Q::ONE)
 }
 
 impl Chronometry {
-    /// The keepers of a founding: the epicenter, then each galactic core's
-    /// deep core, inner mantle and outer rim.
+    /// The keepers of a founding: the epicenter, then for each galactic core
+    /// its hub, deep core, inner mantle and outer rim. The chain starts empty.
     pub fn of(seed: u64, bang: &BigBang) -> Chronometry {
         let units = xyl_cosmos::chain::units();
         let kpc_m = xyl_cosmos::package::Si::kpc();
@@ -215,13 +222,14 @@ impl Chronometry {
         let shapes = xyl_cosmos::cores::shapes(seed, bang);
         let mass =
             |s: &xyl_cosmos::cores::Shape| &xyl_cosmos::turning::home_mass() * &s.mass_ratio();
-        // a core's distance from the universe core: its reach along its own
-        // bearing (not a Euclidean norm)
+        // A core's distance from the universe core is its reach along the
+        // core's bearing, not a Euclidean norm.
         let dist = |s: &xyl_cosmos::cores::Shape| &s.reach * &cluster_kpc;
-        // rings: the universe's echo around its great circle, 2 pi R_u / c;
-        // a galaxy's echo out to its rim (where the pulse refocuses) and back,
-        // 2 rim / c; each in the engine's bells (the founding's 2 rim / c,
-        // circuit::anchor)
+        // Rings: the universe's echo around its great circle is 2 pi R_u / c;
+        // a galaxy's echo out to its rim (where the pulse refocuses) and back
+        // is 2 rim / c. Each is expressed in the engine's bells, the
+        // founding's 2 rim / c (circuit::anchor), so the epicenter's ring is
+        // pi R_u / rim and a galaxy's ring is its scale.
         let r_u = xyl_cosmos::galaxy::radius_kpc();
         let ring_u = (&xyl_core::certified::pi(64).mid() * &r_u)
             .checked_div(&xyl_cosmos::galaxy::rim_kpc())
@@ -238,14 +246,15 @@ impl Chronometry {
         c.inside.push(None);
         for s in &shapes {
             let d = dist(s);
-            // the galaxy's well: the cores nearer the epicenter than it
+            // The galaxy's well holds the masses of the cores nearer the
+            // epicenter than this one.
             let nearer = shapes
                 .iter()
                 .filter(|o| o.index != s.index && dist(o) < d)
                 .fold(Q::ZERO, |a, o| &a + &mass(o));
             let galaxy_rate = well(&(&d * &kpc_rg), &suns_rg(&nearer));
             let scale = s.scale().to_q();
-            // hub: the galactic core, ringing on its galaxy's own echo
+            // The hub is the galactic core, counting in the galaxy's echo.
             c.keepers.push(Keeper {
                 galaxy: Some(s.index),
                 shell: Shell::Hub,
@@ -280,10 +289,10 @@ impl Chronometry {
         c
     }
 
-    /// Commits a moment: every keeper appends its entry, epicenter first, each
-    /// citing its parent and the keeper inside it. `point` is the last final
-    /// point's receipt height received (None when unlinked), recorded in the
-    /// epicenter's entry.
+    /// Commits the readings at count `n`: every keeper appends an entry,
+    /// epicenter first, each hashing its parent and the head of the keeper
+    /// inside it. `point` is the receipt height of the last final point
+    /// received (None when unlinked), recorded in the epicenter's entry.
     pub fn commit(&mut self, n: &Q, point: Option<u64>) {
         let mut slips: Vec<Q> = Vec::with_capacity(self.keepers.len());
         for (k, keeper) in self.keepers.iter().enumerate() {
@@ -325,7 +334,9 @@ impl Chronometry {
         self.points.push(point);
     }
 
-    /// Pace: rings per final-point advance, measured from the pairs.
+    /// Pace: rings per final-point advance, measured between the first and
+    /// last commits that recorded a receipt height. Returns
+    /// `Pace::Unlinked` when the height did not advance between them.
     pub fn pace(&self) -> Pace {
         let paired: Vec<(&Q, u64)> = self
             .commits

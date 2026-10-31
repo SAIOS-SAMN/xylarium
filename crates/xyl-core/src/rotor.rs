@@ -26,7 +26,8 @@
 use crate::certified::{cos_sin_turns, down, Encl};
 use crate::Q;
 
-/// A half-angle as its direction (c, s), any scale: the angle is twice it.
+/// A half-angle held as its direction (c, s) at any scale; the angle it
+/// represents is twice the half-angle.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Half {
     /// The direction's cosine-like component (any scale).
@@ -44,7 +45,7 @@ impl Half {
         }
     }
 
-    /// From the half-angle's tangent t.
+    /// The half-angle whose tangent is `t`.
     pub fn of_t(t: Q) -> Half {
         Half { c: Q::ONE, s: t }
     }
@@ -61,7 +62,8 @@ impl Half {
         }
     }
 
-    /// The two halves added: the angles add.
+    /// The sum of the two angles: the directions multiplied as complex
+    /// numbers.
     pub fn compose(&self, o: &Half) -> Half {
         Half {
             c: &(&self.c * &o.c) - &(&self.s * &o.s),
@@ -73,7 +75,8 @@ impl Half {
         &(&self.c * &self.c) + &(&self.s * &self.s)
     }
 
-    /// The whole angle's cosine and sine, exact.
+    /// The whole angle's cosine and sine, exact:
+    /// `((c^2 - s^2) / n, 2 c s / n)` with `n = c^2 + s^2`.
     pub fn cos_sin(&self) -> (Q, Q) {
         let n = self.norm();
         let cos = (&(&self.c * &self.c) - &(&self.s * &self.s))
@@ -85,9 +88,9 @@ impl Half {
         (cos, sin)
     }
 
-    /// The volume it holds on an ordinary sphere (S^2): the share within the
-    /// whole angle of an axis, sin^2 of the half, exact; other dimensions
-    /// read their own curve (measure.rs).
+    /// The share of the ordinary sphere (S^2) within the whole angle of an
+    /// axis: `sin^2` of the half-angle, exact. Other dimensions use the
+    /// curve of `measure`.
     pub fn share(&self) -> Q {
         (&self.s * &self.s)
             .checked_div(&self.norm())
@@ -135,7 +138,7 @@ impl Rotor {
         r
     }
 
-    /// `self` after `o`: applying the product turns by `o`, then `self`.
+    /// `self` after `o`: the product rotates by `o` first, then by `self`.
     pub fn then_after(&self, o: &Rotor) -> Rotor {
         let (a, b) = (self, o);
         Rotor {
@@ -146,7 +149,8 @@ impl Rotor {
         }
     }
 
-    /// Its rotation as an exact rational matrix.
+    /// The rotor's rotation as an exact rational matrix; the entries are
+    /// divided by the squared norm, so the rotor's scale does not matter.
     pub fn matrix(&self) -> [[Q; 3]; 3] {
         let (w, x, y, z) = (&self.w, &self.x, &self.y, &self.z);
         let (ww, xx, yy, zz) = (w * w, x * x, y * y, z * z);
@@ -173,7 +177,7 @@ impl Rotor {
         ]
     }
 
-    /// A vector turned by it.
+    /// An enclosed vector rotated by the rotor's matrix.
     pub fn apply(&self, v: &[Encl; 3]) -> [Encl; 3] {
         let m = self.matrix();
         std::array::from_fn(|i| {
@@ -190,13 +194,15 @@ mod tests {
 
     #[test]
     fn halves_compose_exactly_and_hold_a_spheres_volume() {
-        // two right angles make a half turn: cos -1, sin 0, the whole sphere
+        // Two right angles compose to a half turn: cos -1, sin 0, and the
+        // share of the whole sphere.
         let right = Half::of_t(Q::ONE);
         let half_turn = right.compose(&right);
         assert_eq!(half_turn.cos_sin(), (-Q::ONE, Q::ZERO));
         assert_eq!(half_turn.share(), Q::ONE);
         assert_eq!(right.share(), Q::new(1, 2).unwrap());
-        // a quarter turn about z then x carries x to y, then y to z
+        // A quarter turn about z, then one about x, carries x to y and then y
+        // to z.
         let r = Rotor::about(0, &right).then_after(&Rotor::about(2, &right));
         let m = r.matrix();
         assert_eq!(

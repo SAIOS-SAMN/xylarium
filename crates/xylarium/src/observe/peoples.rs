@@ -7,7 +7,7 @@ use xyl_kernel::seats::On;
 use xyl_kernel::universe::Universe;
 
 /// The `people N` reading: one people's home, traits, body, numbers, power,
-/// knowledge, gauges, radiation, world and seats.
+/// knowledge and focus, gauges, home radiation, world and media, and seats.
 pub(super) fn people(u: &Universe<'_>, n: Option<usize>) -> String {
     let Some((i, p)) = n.and_then(|i| u.cosmic.peoples.get(i).map(|p| (i, p))) else {
         return format!("observe: no people {n:?} (0..{})", u.cosmic.peoples.len());
@@ -134,10 +134,10 @@ fn sync_line(u: &Universe<'_>, i: usize, v: Dy) -> String {
     )
 }
 
-/// A people in step with its universe, at scale (xyl-kernel sync.rs):
-/// every living people's readings as a distribution (quartiles), then per
-/// reading the `k` most out of step - each reading ranked alone, never one
-/// score.
+/// The `sync K` reading (xyl-kernel `sync`): the quartiles of gamma and of
+/// each step reading over the living peoples, then, for each reading
+/// separately, the `k` peoples most out of step (both ends for the two-sided
+/// R). The readings are not combined into one score.
 pub(super) fn sync(u: &Universe<'_>, k: usize) -> String {
     let steps = xyl_kernel::sync::living(u);
     let living: Vec<usize> = steps.iter().map(|(i, _)| *i).collect();
@@ -146,8 +146,8 @@ pub(super) fn sync(u: &Universe<'_>, k: usize) -> String {
         living.len(),
         u.cosmic.peoples.len()
     );
-    // each reading: its label, its value on a step, and whether the highest
-    // values are the most out of step
+    // Each reading: its label, the function that reads it from a step, and
+    // whether the highest values are the most out of step.
     type Reader = fn(&xyl_kernel::sync::Step) -> Option<Dy>;
     let readings: [(&str, Reader, bool); 3] = [
         (
@@ -188,7 +188,8 @@ pub(super) fn sync(u: &Universe<'_>, k: usize) -> String {
         for (x, i) in v.iter().take(k) {
             out.push_str(&sync_line(u, *i, *x));
         }
-        // a two-sided reading (R) is out of step at both ends
+        // A two-sided reading (R) is out of step at both ends, so the highest
+        // values are listed as well.
         if !*high {
             out.push_str("  ... and by the same, highest:\n");
             for (x, i) in v.iter().rev().take(k) {

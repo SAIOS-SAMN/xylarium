@@ -21,13 +21,16 @@ pub struct Interior {
     /// Heat the core gives the mantle per m^2 of core surface, in W/m^2; a
     /// dynamo runs while it exceeds `q_ad`.
     pub q_cmb: Dy,
-    /// Heat the core's iron conducts along its own adiabat, in W/m^2.
+    /// Heat the core's iron conducts along the core's adiabat,
+    /// `k alpha g T / c_p`, in W/m^2.
     pub q_ad: Dy,
     /// The core's radius (m).
     pub r_core: Dy,
     /// The dynamo's strength, 0 to 1.
     pub field: Dy,
-    /// How many times its heat could have melted its mantle (what it has degassed).
+    /// The heat passed out of the mantle since birth over the heat that
+    /// raises the mantle from the surface temperature to the melting point:
+    /// how many times the mantle has been processed (and so degassed).
     pub processed: Dy,
     /// The whole heat flowing out (W).
     pub heat_w: Dy,
@@ -60,8 +63,8 @@ pub(super) struct Lab {
 }
 
 impl Lab {
-    /// The unit world's surface gravity (m/s^2), the reference for every body's g
-    /// (this times its mass over its radius, world units).
+    /// The unit world's surface gravity (m/s^2). A body's surface gravity is
+    /// this value times the body's mass over its radius, in world units.
     fn unit_world_gravity(&self) -> Dy {
         Dy::sci(981, -2)
     }
@@ -94,7 +97,8 @@ impl Lab {
     }
 }
 
-/// Rock's liquidus temperature, in K, used for magma oceans (worlds.rs).
+/// Rock's liquidus temperature, in K, used for the magma ocean's melted share
+/// in `worlds::setting`.
 pub fn liquidus_k() -> Dy {
     Lab::get().liquidus
 }
@@ -118,20 +122,21 @@ pub(super) fn viscosity(t: Dy, sc: &Scales) -> Dy {
     l.eta_ref * x.min(Dy::int(200)).exp()
 }
 
-/// The convective boundary layer's thickness (m); declared, the unit world's
-/// lithosphere.
+/// The convective boundary layer's thickness (m): a declared ruler, the unit
+/// world's lithosphere of 100 km.
 pub(super) fn boundary_m() -> Dy {
     Dy::sci(1, 5)
 }
 
-/// A layer's mobility, 1 + eta_ref / eta: near one at the reference
-/// viscosity, rising steeply as it warms.
+/// A layer's mobility, `1 + eta_ref / eta`: near 1 for a cold, stiff layer,
+/// 2 at the reference viscosity, rising steeply as the layer warms.
 pub(super) fn mobility(layer: Dy, sc: &Scales) -> Dy {
     Dy::ONE + Lab::get().eta_ref / viscosity(layer, sc).max(Dy::sci(1, -30))
 }
 
 /// Heat flux (W/m^2) a convecting layer at `hot` passes to `cold`:
-/// k dT (g / g_E) mobility / d.
+/// `k dT (g / g_E) mobility / d`, with the mobility read at temperature
+/// `layer`; zero when `hot <= cold` or the gravity is not positive.
 pub(super) fn conv_flux(hot: Dy, cold: Dy, grav: Dy, layer: Dy, sc: &Scales) -> Dy {
     let l = Lab::get();
     let dt = hot - cold;
@@ -160,8 +165,9 @@ impl Thermostat<'_> {
         conv_flux(t_int, self.t_surf, self.grav, t_int, self.sc) * self.area
     }
 
-    /// dq/dT at T: k (g / g_E) / d (area) [mobility
-    /// + dT (mobility - 1) (E_a / R / T) / T].
+    /// The derivative of `q_out` in the mantle temperature T:
+    /// `k (g / g_E) A / d [mobility + dT (mobility - 1) E_a / (R T^2)]`,
+    /// with A the surface area and dT = T - t_surf.
     fn dq(&self, t_int: Dy) -> Dy {
         let l = Lab::get();
         let ea = l.creep_ea * self.sc.chem / l.r_gas;
@@ -172,9 +178,10 @@ impl Thermostat<'_> {
             * (mob + dt * (mob - Dy::ONE) * (ea / t_int.max(Dy::ONE)) / t_int.max(Dy::ONE))
     }
 
-    /// The T in [t_surf, t_top] with q_out(T) = `h`. q_out is monotone, so
-    /// the root is unique; safeguarded Newton from the hot end (bisection
-    /// when a step leaves the bracket), to a millikelvin.
+    /// The T in \[t_surf, t_top\] with q_out(T) = `h`, or `t_top` when even
+    /// `t_top` carries no more than `h`. Since q_out increases with T, the
+    /// root is unique; it is found by safeguarded Newton iteration from the
+    /// hot end (bisection when a step leaves the bracket) to a millikelvin.
     fn regulated(&self, h: Dy) -> Dy {
         if self.q_out(self.t_top) <= h {
             return self.t_top;
@@ -202,8 +209,9 @@ impl Thermostat<'_> {
     }
 }
 
-/// The heat a world's isotopes make (W) as boosts: each isotope's decay
-/// energy, scaled by the nuclear scale, halving at the universe's own
+/// The heat a world's isotopes make (W) as boosts: each isotope's mass times
+/// its heat per kg, scaled by the present-day half-life over the half-life
+/// under the universe's laws and by the nuclear scale, halving at the latter
 /// half-life.
 fn radiogenic(sources: &[Q; 4], sc: &Scales) -> Modes {
     Modes::of(
@@ -223,8 +231,9 @@ fn radiogenic(sources: &[Q; 4], sc: &Scales) -> Modes {
     )
 }
 
-/// The core's radius (m) from its mass `m_core` (kg) by systems.rs
-/// `extent`, its iron denser than rock by rho_core / rho_rock.
+/// The core's radius (m) from its mass `m_core` (kg): `elements::extent` of
+/// the rock-equivalent mass in world units, the iron mass times
+/// rho_rock / (rho_core x the density scale).
 fn core_radius(m_core: Dy, sc: &Scales) -> Dy {
     let l = Lab::get();
     let rock_equiv =
@@ -233,11 +242,11 @@ fn core_radius(m_core: Dy, sc: &Scales) -> Dy {
 }
 
 /// The core above the mantle's base temperature `base` (K): its temperature
-/// (K) and the heat it passes the mantle (W). A linear boundary conductance
-/// k_b carries flux k_b Delta; the formation excess `delta0` relaxes as
+/// (K) and the heat it passes the mantle (W). A boundary conductance k_b
+/// carries flux k_b Delta; the formation excess `delta0` relaxes as
 /// Delta0 e^(-k_b t / C), and following the base's cooling `cooling` (K/s)
-/// adds C adiabat cooling / k_b. The boundary viscosity is read at the base,
-/// then at the layer's midpoint.
+/// adds C x adiabat x cooling / k_b. The boundary mobility is read first at
+/// the base, then at the midpoint of the excess so found.
 fn core_heat(
     base: Dy,
     delta0: Dy,
@@ -273,8 +282,8 @@ fn core_heat(
 /// T_reg(H) plus the lag behind a falling thermostat, time constant C / q'
 /// times its fall H' / q' (capped at the initial excess t_melt - T_reg),
 /// plus the formation transient (t_melt - T_reg0) e^(-t / tau0) with
-/// tau0 = C / q'(T_reg0). The cooling is the thermostat's fall H' / q' and
-/// the transient's relaxation.
+/// tau0 = C / q'(T_reg0). The cooling rate is the sum of the thermostat's
+/// fall -H' / q' and the transient's relaxation rate.
 fn mantle_temperature(
     thermostat: &Thermostat,
     made_birth: Dy,
@@ -324,8 +333,9 @@ struct Shape {
     g_core: Dy,
 }
 
-/// A world's [`Shape`]: the core is the core layer's share of the non-envelope
-/// mass.
+/// A world's [`Shape`]. The core mass is the world's mass times the core
+/// layer's share of the non-envelope layers, `layers[0] / (1 - layers[3])`;
+/// the mantle is the remainder.
 fn shape(world: &World, sc: &Scales) -> Shape {
     let l = Lab::get();
     let mass = Dy::from_q(&world.mass);
@@ -366,20 +376,22 @@ fn shape(world: &World, sc: &Scales) -> Shape {
     }
 }
 
-/// A world's interior at `age` Gyr: `sources` its isotopes (kg in its mantle
-/// at birth), `t_surf` its surface temperature, `tide` its tidal heating as
-/// an orbit (`tide_modes`), under a universe's scales.
+/// A world's interior at `age` Gyr: `sources` are its isotopes (kg in the
+/// mantle at birth), `t_surf` its surface temperature (K), `tide` its tidal
+/// heating as modes in age (from the orbit path's `tide`), under a
+/// universe's scales.
 ///
 /// Evaluated in closed form at `age`, without time-stepping. Heat is a sum of
-/// boosts (each isotope halving at its own rate, the tide's three modes). The
+/// boosts (each isotope halving at its half-life, the tide's three modes). The
 /// mantle is a thermostat: convective loss rises steeply with temperature
 /// (Arrhenius viscosity), so it sits at T_reg(t) where loss equals heat made,
 /// lags that curve by C H' / q'^2 while heat falls, and its formation heat
 /// relaxes onto it with time constant C / q'. The core follows the mantle's
 /// base: its flux carries its cooling at the base's rate (C_core x the base's
-/// cooling) plus its formation excess, which decays in its own conductance.
-/// What the mantle has passed out (and so melted) is the energy balance: heat
-/// made plus what both layers have cooled.
+/// cooling) plus its formation excess, which decays with time constant
+/// C_core / k_b. What the mantle has passed out (and so melted) follows from
+/// the energy balance: heat made plus the heat both layers have lost by
+/// cooling.
 pub fn interior(
     world: &World,
     sources: &[Q; 4],
@@ -403,8 +415,8 @@ pub fn interior(
         g_core,
     } = shape(world, sc);
     let cap_mantle = mantle * l.cp_rock;
-    // rock melting point: the liquidus times 1/2 + m / (1 + m) (one for the
-    // unit world)
+    // Rock's melting point is the liquidus times 1/2 + m / (1 + m), which is
+    // 1 for the unit world.
     let t_melt = l.liquidus * sc.chem * (Dy::ratio(1, 2) + mass / (Dy::ONE + mass));
     let thermostat = Thermostat {
         t_surf,
@@ -413,8 +425,8 @@ pub fn interior(
         area,
         sc,
     };
-    // central pressure p = m / R (one for the unit world); iron melting
-    // point is the iron liquidus times 2 p / (1 + p)
+    // The central pressure is p = m / R (1 for the unit world); iron's
+    // melting point is the iron liquidus times 2 p / (1 + p).
     let press = (mass / radius.max(Dy::sci(1, -3))).max(Dy::sci(1, -4));
     let t_liq_core = l.iron_liquidus * sc.chem * (Dy::int(2) * press / (Dy::ONE + press));
     let cap_core = m_core * (l.cp_iron + l.l_iron / (l.freeze_span * t_liq_core));
@@ -423,7 +435,7 @@ pub fn interior(
         (l.alpha / (Dy::ONE + l.rho_rock * grav * depth / l.bulk) * grav * depth / l.cp_rock).exp();
     let heat = radiogenic(sources, sc).plus(tide);
     let dy = |e: xyl_core::certified::Encl| Dy::from_q(&e.mid());
-    // the heat read once at the world's age, and at its birth
+    // The heat is read once at the world's age and once at its birth.
     let now = heat.at(&age.max(Dy::ZERO).to_q());
     let made_now = dy(now.value());
     let made_birth = dy(heat.value(&Q::ZERO));
@@ -438,7 +450,8 @@ pub fn interior(
         t_melt,
         age,
     );
-    // the core: its temperature excess Delta over the mantle's base
+    // The core's formation excess Delta0 is the iron melting point above
+    // the mantle base's temperature at birth.
     let base0 = t0 * adiabat;
     let base = t_int * adiabat;
     let delta0 = (t_liq_core - base0).max(Dy::ZERO);
@@ -449,8 +462,8 @@ pub fn interior(
     } else {
         (base.max(t_liq_core.min(base)), Dy::ZERO)
     };
-    // energy balance: heat made plus the mantle's and core's cooling since
-    // birth is what has passed out of the mantle
+    // Energy balance: the heat made since birth plus the mantle's and the
+    // core's heat lost by cooling is what has passed out of the mantle.
     let passed = dy(now.integral()) * gyr
         + cap_mantle * (t0 - t_int)
         + cap_core * (t_liq_core - t_core).max(Dy::ZERO);
@@ -463,8 +476,8 @@ pub fn interior(
     } else {
         Dy::ZERO
     };
-    // outflow is at least the heat made: a world heated faster than it
-    // convects melts
+    // The outflow is at least the heat made: a world heated faster than
+    // convection carries the heat out melts.
     let heat_w = q_total.max(h_rad + h_tide);
     let q_ad = l.k_core * l.alpha_core * g_core * t_core / l.cp_iron;
     let q_cmb_area = if a_core.signum() > 0 {
@@ -493,7 +506,7 @@ pub fn interior(
     }
 }
 
-/// k2 of a uniform elastic body, as a dyadic (see [`love`]).
+/// The Love number `k2` of a uniform elastic body, as a dyadic (see [`love`]).
 pub(super) fn love_dy(mass: Dy, radius: Dy, icy: bool) -> Dy {
     let p_self = Dy::from_q(&Rock::world_pressure()) * mass / radius.max(Dy::sci(1, -6));
     let mu = Dy::from_q(&if icy { Rock::mu_ice() } else { Rock::mu_rock() });
@@ -501,15 +514,16 @@ pub(super) fn love_dy(mass: Dy, radius: Dy, icy: bool) -> Dy {
 }
 
 /// Tidal heating of a synchronously rotating world on an eccentric orbit (W):
-/// 10.5 (k2 / Q) (G M m / a) n e stretch. `host_kg` and `a_m` in SI, `mass`
-/// and `radius` in world units.
+/// `10.5 (k2 / Q) (G M m / a) n e stretch` with Q = 100. `host_kg` and `a_m`
+/// are in SI, `mass` and `radius` in world units; zero when `e` or `a_m` is
+/// not positive.
 pub fn tidal_w(host_kg: Dy, a_m: Dy, e: Dy, mass: Dy, radius: Dy, icy: bool) -> Dy {
     if e.signum() <= 0 || a_m.signum() <= 0 {
         return Dy::ZERO;
     }
     let l = Lab::get();
     let r = radius * l.world_radius_m;
-    // mean motion from the turning law (rad/s)
+    // The mean motion n (rad/s) comes from the turning law.
     let n = Dy::from_q(&crate::turning::rad_s(&crate::turning::turning_si(
         &host_kg.to_q(),
         &a_m.to_q(),
@@ -523,7 +537,8 @@ pub fn tidal_w(host_kg: Dy, a_m: Dy, e: Dy, mass: Dy, radius: Dy, icy: bool) -> 
         * st
 }
 
-/// An orbit's eccentricity at `t` Gyr: damped from `e0` toward the forced.
+/// An orbit's eccentricity at `t` Gyr, damped exponentially from `e0` toward
+/// `e_forced` with time constant `tau_e`; `e_forced` when `tau_e <= 0`.
 pub fn eccentricity(e0: Dy, e_forced: Dy, tau_e: Dy, t: Dy) -> Dy {
     if tau_e.signum() <= 0 {
         return e_forced;

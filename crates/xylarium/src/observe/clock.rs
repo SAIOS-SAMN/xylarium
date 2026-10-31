@@ -33,7 +33,7 @@ pub(super) fn clock(u: &Universe<'_>) -> String {
     let mut slips: Vec<Q> = Vec::new();
     for (k, keeper) in c.keepers.iter().enumerate() {
         let r = keeper.read(&u.now);
-        // slip relative to the keeper inside: slip_k - slip_inside
+        // The slip relative to the keeper inside: `slip_k - slip_inside`.
         let rel = c.inside[k].map(|i| &r.slip - &slips[i]).unwrap_or(Q::ZERO);
         slips.push(r.slip.clone());
         let lag = &Q::ONE - &keeper.rate;
@@ -79,8 +79,8 @@ pub(super) fn clock(u: &Universe<'_>) -> String {
     out
 }
 
-/// The bridge line: rings per TUniversal final-point advance once measured,
-/// or the rings over commits while no final point has been heard.
+/// The bridge line: the rings per TUniversal final-point advance once
+/// measured, or the rings over commits while no final point has been heard.
 fn bridge(pace: Pace) -> String {
     match pace {
         Pace::Measured {

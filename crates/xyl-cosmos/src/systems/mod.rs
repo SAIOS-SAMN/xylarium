@@ -8,8 +8,9 @@
 //! constants from `package::Si`. Reaches are in AU, masses in world masses,
 //! temperatures in K; the settling runs in core units (lengths in `r_g`).
 //!
-//! - Star (`Spec`, `luminosity`): `L = M delta`, `delta = 1 / (r + 1)` the
-//!   vacuum's share at its reach about the universal core, in suns.
+//! - Star (`Spec`, `luminosity`): `L = M delta` in solar luminosities, where
+//!   `delta = 1 / (r + 1)` is the vacuum share at the star's reach r about
+//!   the universal core.
 //! - Orbits: each region at its share of the manifold's reach becomes an
 //!   embryo whose solids are the star's mass over its gathering share times
 //!   the gas's metal mass fraction, enriched past each ice line. Embryos
@@ -23,8 +24,8 @@
 //!   a core past ten world masses gathers an envelope in the share its
 //!   growth beats the disc's dispersal; inside the snow line ices arrive by
 //!   comet. Bodies that are not round (`is_world`) are dropped. Each world
-//!   gathers moons on its own manifold, `2 pi a m / (M + m)`, by the same
-//!   region and settling laws one tier down.
+//!   gathers moons on a manifold of reach `2 pi a m / (M + m)` about the
+//!   world, by the same region and settling laws one tier down.
 //! - Matter (`Gas::apportion_layers`): an element is in the solids only
 //!   where the disc was cooler than its condensation temperature;
 //!   siderophile and chalcophile elements go to the core less the share the
@@ -75,10 +76,9 @@ fn held(x: &Q) -> Q {
 
 /// The certified exponential of a held argument.
 fn exp(x: &Q, bits: u32) -> Encl {
-    // below the resolution: e^x under 2^-bits is enclosed by [0, 2^-bits]
-    // (x <= -(bits + 1), since e^-(bits + 1) < 2^-bits), never computed in
-    // ever-larger rationals (a far world's growth time made one such
-    // argument run for minutes)
+    // For x <= -(bits + 1), e^x < 2^-bits, so the result is enclosed by
+    // [0, 2^-bits] without evaluating the series; exact evaluation of such
+    // arguments (the growth time of a distant world) took minutes.
     if x <= &-Q::int(i64::from(bits) + 1) {
         let floor = (0..bits).fold(Q::ONE, |a, _| a.checked_div(&Q::int(2)).unwrap_or(Q::ZERO));
         return Encl {
@@ -103,17 +103,18 @@ pub(crate) fn star_length_m() -> Q {
         .unwrap_or(Q::ZERO)
 }
 
-/// A star's mean luminosity in suns: its light is its burn (stars.rs), the
-/// pulse it absorbs at its reach `r` about the universal core in proportion
-/// to its mass, `L = M / (r + 1)`: a one-sun star at the core's reach shines
-/// one sun, the unit; one in a galaxy further out, dimmer by the vacuum's
-/// share there. Every main sequence at a reach lasts the same span and every
-/// disc has the same ratio of rock line to outer reach.
+/// A star's mean luminosity in solar luminosities, `L = M / (r + 1)`: the
+/// mass M times the vacuum share at the star's reach r about the universal
+/// core (`circuit::vacuum_share`; the burn itself is modelled in stars.rs). A
+/// one-solar-mass star at the core's reach has L = 1; a star in a galaxy
+/// further out is dimmer by the vacuum share there. Consequently every main
+/// sequence at a given reach lasts the same span and every disc has the same
+/// ratio of rock line to outer reach.
 pub fn luminosity(mass: &Q, reach: Dy) -> Q {
     mass * &crate::circuit::vacuum_share(reach, Dy::ONE).to_q()
 }
 
-/// A star's spec: its mass and its light (suns).
+/// A star's specification: its mass and luminosity, in solar units.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Spec {
     /// Stellar mass, in solar masses (floored at 1/10000).
@@ -140,7 +141,7 @@ impl Spec {
 /// A world (a planet, or a giant's moon).
 #[derive(Clone, Debug)]
 pub struct World {
-    /// Its orbit about its star, its reach a (AU; a moon shares its giant's).
+    /// Semi-major axis about the star, in AU; a moon carries its giant's.
     pub a: Q,
     /// Mass, in world masses.
     pub mass: Q,
@@ -154,28 +155,31 @@ pub struct World {
     /// For a moon, its orbital distance in the giant's radii; `None` for a
     /// planet.
     pub a_host_radii: Option<Q>,
-    /// Layer shares of its mass: core, mantle, ices, envelope.
+    /// Mass shares of the layers: core, mantle, ices, envelope.
     pub layers: [Q; 4],
-    /// Each element's mass in it (world masses), indexed as the element table.
+    /// Each element's mass in the world (world masses), indexed as the
+    /// element table.
     pub elements: Vec<Q>,
-    /// Each element's mass in its silicate mantle (world masses); empty where
+    /// Each element's mass in the silicate mantle (world masses); empty where
     /// not apportioned.
     pub mantle: Vec<Q>,
-    /// The volatiles it gathered, each per unit of its rock (its ices:
-    /// what condensed where it formed, scaled by the gas's
-    /// metals, or what comets brought inside the snow line). A moon has its
+    /// The gathered volatiles, each as mass per unit of rock: the ices that
+    /// condensed at the formation reach, scaled by the gas's metallicity, or,
+    /// inside the snow line, the ices delivered by comets. A moon carries its
     /// giant's.
     pub ices: Vec<(&'static str, Q)>,
-    /// A moon's eccentricity, forced for ever by its neighbours in the chain.
+    /// A moon's forced eccentricity from its neighbours in the resonance
+    /// chain; `None` for a planet.
     pub e_forced: Option<Q>,
-    /// The greatest swing its neighbours gave it at the settled age, as a
-    /// share of its reach: its starting eccentricity, and its tilt as the
-    /// swing's deficit angle (bodies::orbits).
+    /// The largest swing the neighbours imparted by the settled age, as a
+    /// share of the reach. `bodies::orbits` reads it as the starting
+    /// eccentricity and reads the tilt as the swing's deficit angle.
     pub swing: Q,
-    /// Its settled phase about its anchor (turns): its node and periapsis.
+    /// The settled phase about the anchor (turns), which sets the node and
+    /// periapsis.
     pub phase: Q,
-    /// The age (Gyr) at which it merges into its heavier neighbour and ends;
-    /// None for a world that stands to the horizon.
+    /// The age (Gyr) at which the world merges into its heavier neighbour;
+    /// `None` for a world that persists to the horizon.
     pub merged_at: Option<Q>,
 }
 
@@ -203,12 +207,13 @@ pub struct System {
     /// The disc's ungathered solids: at most an inner belt in the innermost
     /// giant's resonances and an outer belt beyond the outermost world.
     pub belts: Vec<Belt>,
-    /// The comet cloud its giants flung out: (mass, elements).
+    /// The comet cloud scattered by the giants: (mass, elements).
     pub comets: Option<(Q, Vec<Q>)>,
 }
 
-/// Whether a body is round: the turn its own curvature gives at its surface
-/// meets its material's rigidity angle (turning.rs).
+/// Whether a body is round: the turn that the body's gravity gives at its
+/// surface reaches the material's rigidity angle (`turning::roundness` at
+/// least 1). Returns false for a non-positive mass or radius.
 pub fn is_world(mass: &Q, radius: &Q, icy: bool) -> bool {
     if mass.signum() <= 0 || radius.signum() <= 0 {
         return false;
@@ -233,8 +238,9 @@ pub fn settled_gyr() -> Q {
     Q::int(3)
 }
 
-/// The system of `star`, at galactocentric radius `r`, in the universe whose
-/// chemistry is `chem`: `path` keys its draws (seed, cell, slot).
+/// The system of `star` in the universe whose chemistry is `chem`; `path`
+/// keys the draws (seed, cell, slot). Returns `None` where the birth gas or
+/// its metallicity cannot be read or a division fails.
 pub fn system(
     seed: u64,
     bang: &crate::bang::BigBang,
@@ -250,9 +256,10 @@ pub fn system(
     let lump = chem
         .lump(&star.r, &star.born, &unit(&mut rng))
         .unwrap_or(Q::ONE);
-    // the birth gas: the ring chemistry at the star's place and birth,
-    // weighted by its galaxy's composition at that time (founding recipe plus
-    // what it took from the core); the home galaxy and the others alike
+    // The birth gas is the ring chemistry at the star's radius and birth
+    // time, weighted by the galaxy's composition at that time (the founding
+    // recipe plus the matter drawn from the core). The home galaxy and the
+    // other galaxies use the same law.
     let weights = crate::cores::weights_at(seed, bang, star.core, &star.born, elements)?;
     let (gas, z) = (
         Gas::at(chem, elements, &star.r, &star.born, &lump, &weights),
@@ -262,25 +269,25 @@ pub fn system(
         return Some(empty(spec));
     }
     let env = density(&star.r).mid();
-    // the star's manifold about the core, gathering its inner share; each
-    // world's region is cut against the core's tide at the star
-    // (disc::manifold_worlds), so the core-star-planet chain is one law
+    // The star's manifold about the core; each world's region is cut against
+    // the core's tide at the star (disc::manifold_worlds), so the
+    // core-star-planet chain follows one law.
     let Some(frame) = crate::galaxy::disc_frame(&star.r, &spec.mass) else {
         return Some(empty(spec));
     };
     let (regions, belt_share) =
         crate::disc::manifold_worlds(&frame.star_share, &frame.a_disc, &frame.tide);
-    // the worlds' outer edge is the star's manifold reach (AU); a world's
-    // reach is its share of it
+    // The worlds' outer edge is the star's manifold reach (AU); a world's
+    // reach is its region's share of it.
     let a_out = held(
         &(&frame.reach_kpc * &crate::package::Si::kpc())
             .checked_div(&crate::package::Si::au())
             .unwrap_or(Q::ZERO),
     );
-    // the infall's solids (world masses): the star's mass over its share of
-    // the infall, times the gas's metal mass fraction (its metallicity
-    // against the Sun's birth gas times the Sun's,
-    // Rulers::reference_metallicity, a ruler)
+    // The infall's solids (world masses): the star's mass over the star's
+    // share of the infall, times the gas's metal mass fraction (the
+    // metallicity relative to the Sun's birth gas times the Sun's metal
+    // fraction, Rulers::reference_metallicity, a declared ruler).
     let star_earths = &spec.mass
         * &crate::package::Si::star_mass_kg()
             .checked_div(&crate::package::Si::world_mass_kg())
@@ -294,7 +301,8 @@ pub fn system(
     let t_rock = rock_line_k(elements);
     let sigma1 = surface_density(&infall_solids, &a_out);
     let mut worlds: Vec<World> = Vec::new();
-    // the disc's ungathered solids: the belts', less what worlds take as moons
+    // The disc's ungathered solids (the belts' share), less the mass that
+    // worlds take as moons.
     let mut moon_pool = held(&(&belt_share * &infall_solids));
     let mut giants_mass = Q::ZERO;
     let mut orbits: Vec<(Q, bool)> = Vec::new();
@@ -342,10 +350,11 @@ pub fn system(
     })
 }
 
-/// A world's moon budget and the star's tide at it. Each world anchors its
-/// own manifold, reach 2 pi a m / (M + m); its moons gather there from the
-/// disc's unheld matter (`moon_pool` at most), against the star's tide at
-/// the world, s / (x + s) in the star's manifold units.
+/// A world's moon budget and the star's tide at the world. Each world
+/// anchors a manifold of reach `2 pi a m / (M + m)`; the budget is the disc's
+/// solids over that width (at most `moon_pool`), and the tide is `s / (x + s)`
+/// with s the star's share and x the world's reach in the star's manifold
+/// units.
 fn moon_budget(
     a: &Q,
     mass: &Q,
@@ -382,9 +391,9 @@ fn rock_line_k(elements: &[Element]) -> Q {
         .unwrap_or(Q::int(1300))
 }
 
-/// The disc's solid surface density at its mean reach (g/cm^2), which sets
-/// a core's gas accretion time: `infall_solids` (world masses) over
-/// pi `a_out`^2 (AU).
+/// The disc's mean solid surface density (g/cm^2), which sets a core's gas
+/// accretion time: `infall_solids` over `pi a_out^2`, converted from world
+/// masses and AU to grams and centimetres.
 fn surface_density(infall_solids: &Q, a_out: &Q) -> Q {
     let au_cm = &crate::package::Si::au() * &Q::int(100);
     (infall_solids * &(&crate::package::Si::world_mass_kg() * &Q::int(1000)))
@@ -404,9 +413,10 @@ fn empty(spec: Spec) -> System {
     }
 }
 
-/// The disc's embryos: each region of the manifold inside the rock line
-/// becomes a body at its share of `a_out`, with its holding of the infall's
-/// solids enriched past each ice line, at phase k times the golden turn.
+/// The disc's embryos: each region of the manifold outside the rock line
+/// (where the disc is cooler than `t_rock`) becomes a body at the region's
+/// share of `a_out`, with the region's holding of the infall's solids
+/// enriched past each ice line, at phase k times the golden turn.
 fn embryos(
     regions: &[(Q, Q)],
     a_out: &Q,
@@ -449,12 +459,13 @@ fn embryos(
 /// ice share: `Some(None)` where it is not round or not kept, `None` where a
 /// division fails (the system is then refused).
 ///
-/// The core is the embryo's matter. A core past ten world masses gathers an
-/// envelope in the share its growth beats the disc's dispersal; the growth
-/// time is its turning period over the period at 1 AU,
-/// a (a + M) / (1 + M) with M the star as a length in AU (G M / c^2 per
-/// sun), over the surface density `sigma1`. Inside the snow line its ices
-/// arrive late, by comet.
+/// The core is the embryo's matter. A core of at least ten world masses
+/// gathers an envelope in the share `exp(-grow / 3)` by which its growth
+/// outpaces the disc's dispersal. The growth time is
+/// `grow = [a (a + M) / (1 + M)] / 25 / (sigma1 / 10)`, where
+/// `a (a + M) / (1 + M)` is the turning period over the period at 1 AU and M
+/// is the star as a length in AU (G M / c^2 per solar mass). Inside the snow
+/// line the ices arrive late, by comet.
 fn planet(
     e: &Embryo,
     spec: &Spec,
@@ -524,7 +535,7 @@ fn planet(
         })
         .collect();
     let icy = ice_share > Q::ratio(1, 5);
-    // a world is lost when its survival share is below one half
+    // A world is lost when its survival share is below one half.
     let lost = survival(&oq, r_kpc, &settled_gyr()) < Q::ratio(1, 2);
     if !is_world(&total, &radius, icy) || lost {
         return Some(None);

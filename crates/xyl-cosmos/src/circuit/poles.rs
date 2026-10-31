@@ -29,33 +29,33 @@ pub fn pole_point(w: &Q, u: &Q) -> Option<Mv> {
 /// The flux as a versor: an echo carries X(t0) to X(t1) by the dilator D(rho),
 /// rho = t1 / t0 - toward Z (the origin) where rho < 1, toward Q (infinity)
 /// where rho > 1. Each booked channel moving `toward_z` frames from Q to Z
-/// (negative: Z to Q) is its own dilator on the state it finds; channels
+/// (negative: Z to Q) is a separate dilator on the state it finds; channels
 /// compose by the geometric product, and the books close where the composed
 /// versor is projectively equal to the observed one. Any unbooked channel
 /// remains as the residual dilator.
 pub struct PoleFlux {
-    /// The pole point's coordinate before and after (t = U / W).
+    /// The pole point's coordinate before the echo, U0 / W0.
     pub t0: Q,
     /// The pole point's coordinate after the echo, U1 / W1.
     pub t1: Q,
-    /// The observed dilation, each channel's, and the residual (observed over
-    /// the channels' product: 1 where the books close).
+    /// The observed dilation, t1 / t0.
     pub rho: Q,
-    /// Each booked channel's name and its own dilation, in booking order.
+    /// Each booked channel's name and dilation, in booking order.
     pub channels: Vec<(&'static str, Q)>,
-    /// The observed dilation over the channels' product: 1 where the books close.
+    /// The observed dilation over the channels' product: 1 where the books
+    /// close.
     pub residual: Q,
     /// Whether the composed channel versor is projectively the observed one.
     pub closed: bool,
 }
 
-/// Reads an echo's pole flux from the closed frames `w0`, `w1` and open frames
-/// `u0`, `u1` before and after, composing each `booked` channel (name, frames moved
-/// from Q to Z) as a dilator on the state it finds.
+/// Reads an echo's pole flux from the closed frames `w0`, `w1` and open
+/// frames `u0`, `u1` before and after, composing each `booked` channel (name,
+/// frames moved from Q to Z) as a dilator on the state it finds.
 ///
 /// Returns `None` when a ratio along the way is undefined: a zero closed-frame
 /// count, a zero starting coordinate U0 / W0, or a channel that empties the
-/// open frames. Read per firmament kind and echo by `Substrate::loop_flux`,
+/// open or the closed frames. Read per firmament kind and echo by `Substrate::loop_flux`,
 /// the jetstream.
 pub fn pole_flux(w0: &Q, u0: &Q, w1: &Q, u1: &Q, booked: &[(&'static str, Q)]) -> Option<PoleFlux> {
     let (t0, t1) = (u0.checked_div(w0)?, u1.checked_div(w1)?);

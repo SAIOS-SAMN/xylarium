@@ -12,11 +12,12 @@
 //! temperature (K), pressure (bar), light and liquid media; its
 //! [`Heartbeat`] (day, year, lock), which the caller uses to pace percepts;
 //! the bells' [`Hearing`] at its star (`pulse::hear`); its neighbours; and
-//! the latest eight annals naming it. Times are deep time in Gyr.
+//! the latest eight annals naming the people. Times are deep time in Gyr.
 //!
-//! Neighbours ([`Heard`]): every other people at its current separation
-//! (`transit::separation_m`, in kpc) whose dawn lies at least the light
-//! delay in the past; a word does not outrun its fastest physical carrier.
+//! Neighbours ([`Heard`]): every other people, at the current separation of
+//! the two worlds (`transit::separation_m`, converted to kpc), whose dawn
+//! lies at least the light delay in the past, so that no neighbour is known
+//! before light could have crossed the separation.
 //!
 //! Returns `None` for a seat that does not exist, is not seated on a people,
 //! or whose people or world cannot be read now. Read-only.
@@ -28,8 +29,8 @@ use xyl_core::dyadic::Dy;
 use xyl_cosmos::pulse::{c_kpc_yr, hear, Hearing, Node, Relay};
 use xyl_cosmos::worlds::Heartbeat;
 
-/// A neighbour as heard: its name, how far (kpc), and how long its word took
-/// to arrive (yr).
+/// A neighbouring people: its name, the separation in kpc and the light delay
+/// across it in years.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Heard {
     /// The neighbouring people's name (sent on the wire only as a key).
@@ -62,7 +63,7 @@ pub struct Percept {
     pub people: String,
     /// Whether that people is an ancient people.
     pub ancient: bool,
-    /// Deep time now (Gyr) and the people's dawn.
+    /// Deep time at the present, in Gyr.
     pub gyr: Dy,
     /// When the people woke, in Gyr after the Big Bang.
     pub dawn: Dy,
@@ -70,13 +71,13 @@ pub struct Percept {
     pub traits: String,
     /// The people's population (count of bodies).
     pub numbers: Dy,
-    /// How many of its bodies the people's world carries (count).
+    /// The carrying capacity of the people's world, as a count of bodies.
     pub capacity: Dy,
     /// The people's growth rate, per year.
     pub growth_per_yr: Dy,
     /// The people's power budget in W; `None` when it is not read.
     pub power: Option<Power>,
-    /// Its world: surface temperature (K), pressure (bar), light (flux units).
+    /// Surface temperature of the people's world, in K.
     pub surface_k: Dy,
     /// Surface pressure of the people's world, in bar.
     pub pressure_bar: Dy,
@@ -84,21 +85,24 @@ pub struct Percept {
     pub light: Dy,
     /// Every liquid medium of the people's world.
     pub media: Vec<MediumSeen>,
-    /// The world's day and year (and lock), which pace percepts; `None` when unread.
+    /// The world's day, year and tidal lock, which pace percepts; `None` when
+    /// they cannot be read.
     pub heartbeat: Option<Heartbeat>,
-    /// The bells as heard at the people's star; `None` when the star has no place or nothing is
-    /// heard.
+    /// The bells as heard at the people's star; `None` when the star has no
+    /// place or nothing is heard.
     pub hearing: Option<Hearing>,
-    /// Every other people whose dawn's word has had time to arrive.
+    /// Every other people whose dawn lies at least the light delay in the
+    /// past.
     pub neighbours: Vec<Heard>,
-    /// The annals that name its people, latest first.
+    /// The latest eight annals that name the people, latest first, each as
+    /// `epoch kind text`.
     pub annals: Vec<String>,
 }
 
-/// What the seat `seat` perceives now. `nodes` and `relays` are the bells at
-/// the universe's present (pulse.rs). Neighbours are read at current
-/// positions and kept only when their dawn lies at least the light delay in
-/// the past; annals are the latest eight naming the people.
+/// Returns what seat `seat` perceives at the universe's present. `nodes` and
+/// `relays` are the bells at the present (pulse.rs). Neighbours are read at
+/// current positions and kept only when their dawn lies at least the light
+/// delay in the past; annals are the latest eight naming the people.
 ///
 /// Returns `None` when `seat` does not exist, is not seated on a people, or
 /// the people or its world cannot be read at the present.
@@ -124,8 +128,8 @@ pub fn perceive(
         .enumerate()
         .filter(|(j, _)| *j != i)
         .filter_map(|(_, q)| {
-            // current positions: a neighbour in the same system is separated
-            // by where both orbits have carried them, never at zero distance
+            // Separation at current positions: two peoples in the same system
+            // are separated by their orbital positions, not taken as zero.
             let at = |x: &crate::cosmic::People| crate::transit::Place {
                 star: x.star,
                 world: x.world,
@@ -133,7 +137,8 @@ pub fn perceive(
             let kpc =
                 crate::transit::separation_m(&u.cosmic, at(p), at(q))? / crate::transit::kpc_m();
             let light_yr = kpc / c;
-            // heard once its dawn's word could have arrived
+            // Heard once light could have crossed the separation since the
+            // neighbour's dawn; the factor 10^9 converts Gyr to years.
             ((gyr - q.dawn) * Dy::sci(1, 9) >= light_yr).then(|| Heard {
                 people: q.name.clone(),
                 kpc,

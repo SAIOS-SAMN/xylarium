@@ -81,15 +81,15 @@ pub fn star_year() -> Q {
 }
 
 /// A hole's light per sun of its mass (suns): the share of an Eddington-fed
-/// flow (32 000 suns per sun) that crosses its horizon, radiated at its
-/// efficiency (centre.rs).
+/// flow (32 000 suns per sun) that crosses the horizon, radiated at the
+/// centre's efficiency (`centre`).
 pub fn hole_light_per_star_mass() -> Q {
     &(&Q::int(32_000) * &horizon_share()) * &efficiency()
 }
 
-// ---------------------------------------------------------------------- versors
+// ------------------------------------------------------------------- Versors.
 
-/// The bivector of the plane a turn about `axis` turns in (`axis`'s dual):
+/// The bivector of the plane of a turn about `axis` (the dual of `axis`):
 /// `x e2e3 + y e3e1 + z e1e2`.
 fn plane_of(axis: &[Q; 3]) -> Mv {
     Mv::blade(E2 | E3, axis[0].clone())
@@ -109,13 +109,15 @@ pub fn rotate(axis: &[Q; 3], t: &Q) -> Mv {
     Mv::scalar(Q::ONE).add(&plane_of(axis).scale(t))
 }
 
-/// Twist: a turn about `axis` combined with the translation `along`.
+/// Twist: a turn about `axis` (as in `rotate`) followed by the translation
+/// `along`.
 pub fn twist(axis: &[Q; 3], t: &Q, along: &[Q; 3]) -> Mv {
     bend(along).geo(&rotate(axis, t))
 }
 
 /// A point moved by a versor, exactly (an odd versor acts by its twisted
-/// adjoint, as a reflection does).
+/// adjoint, as a reflection does). `None` where the moved point cannot be
+/// read back.
 pub fn carry(v: &Mv, x: &[Q; 3]) -> Option<[Q; 3]> {
     let p = cga::point_at(x);
     let moved = if v.parity() == Some(true) {
@@ -127,16 +129,17 @@ pub fn carry(v: &Mv, x: &[Q; 3]) -> Option<[Q; 3]> {
     Some([b.first()?.clone(), b.get(1)?.clone(), b.get(2)?.clone()])
 }
 
-// ---------------------------------------------------------------------- the bells
+// ----------------------------------------------------------------- The bells.
 
-/// A bell's own screw and its light.
+/// A bell's screw and its light.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Bell {
-    /// The hole's spin axis (a direction, exact on the grid) and Kerr spin.
+    /// The hole's spin axis (a direction, exact on the grid).
     pub axis: [Q; 3],
     /// The hole's Kerr spin parameter J / M^2, in (0, 1).
     pub spin: Q,
-    /// Pitch: the wavelength set by the bounce (kpc).
+    /// Pitch (kpc): the core's wavelength scaled by the hole's mass
+    /// (`pitch_kpc`).
     pub pitch_kpc: Q,
     /// Period: the pitch at light speed (yr), one ring per period.
     pub period_yr: Q,
@@ -149,7 +152,7 @@ pub struct Bell {
 }
 
 /// The pitch of a hole of `mass` suns: the core's wavelength scaled by the
-/// extent of M / M_core under the body measure (systems.rs `extent`, used in
+/// extent of M / M_core under the body measure (`elements::extent`, used in
 /// place of (M / M_core)^(1/3)).
 pub fn pitch_kpc(mass: Dy) -> Dy {
     let ratio = (mass / Dy::from_q(&hole_mass())).max(Dy::sci(1, -30));
@@ -164,20 +167,20 @@ fn drawn_spin(seed: u64, n: u64) -> Q {
     h.update(&n.to_le_bytes());
     let b = h.finalize();
     let x = u64::from_le_bytes(b.as_bytes()[..8].try_into().unwrap_or([0; 8])) >> 12;
-    // (x + 1) / (2^52 + 2): strictly inside (0, 1)
+    // (x + 1) / (2^52 + 2) with x < 2^52: strictly inside (0, 1).
     Q::new(i64::try_from(x).unwrap_or(0) + 1, (1i64 << 52) + 2).unwrap_or(Q::ratio(1, 2))
 }
 
 impl Bell {
-    /// A node's bell: the core spins about the disc's axis at the measured
-    /// spin; a stellar hole spins about its progenitor's orbit normal at its
-    /// drawn spin.
+    /// A node's bell: a galactic core spins about the z axis (the disc's axis)
+    /// at the universal core's spin (`circuit::anchor`); a stellar hole spins
+    /// about its progenitor star's orbit normal at a drawn spin.
     pub fn of(node: &Node, seed: u64) -> Bell {
         let (axis, spin) = match &node.kind {
             Kind::Core(_) => ([Q::ZERO, Q::ZERO, Q::ONE], crate::circuit::anchor().spin),
             Kind::Stellar(s) => {
                 let o = &s.orbit;
-                // the orbit plane's normal: the frame's image of the z axis
+                // The orbit plane's normal: the frame's image of the z axis.
                 let m = o.frame().matrix();
                 (
                     [
@@ -207,7 +210,8 @@ impl Bell {
 
     /// The number of rings reaching a place `delay_yr` of light away within
     /// `(from_gyr, to_gyr]`: ring k sounds at born + k periods and arrives one
-    /// light time later. Closed form.
+    /// light time later. Closed form; zero for an empty span or a
+    /// non-positive period.
     pub fn arrivals(&self, delay_yr: Dy, from_gyr: Dy, to_gyr: Dy) -> u64 {
         let period = Dy::from_q(&self.period_yr);
         if period.signum() <= 0 || to_gyr <= from_gyr {
@@ -225,23 +229,24 @@ impl Bell {
     }
 
     /// The pulse at a place `d_kpc` away: the bell's screw scaled by the
-    /// strain there, a turn about its axis by `2 atan(t |axis|)` with
-    /// `t = spin x r_g / d`, plus a translation along the axis of the pitch in
-    /// proportion to the turn (in AU).
+    /// strain there: a turn about its axis by `2 atan(t |axis|)` with
+    /// `t = spin x r_g / d`, followed by a translation along the axis of one
+    /// pitch per full turn (in AU). `|axis|` is taken in first degree.
     pub fn received(&self, d_kpc: Dy) -> Mv {
-        // the hole's r_g: the core's r_g scaled by mass over the core's
+        // The hole's r_g: the core's r_g times the hole's mass over the
+        // core's.
         let rg_kpc = Dy::from_q(&crate::chain::units().r_g_m)
             / Dy::from_q(&crate::package::Si::kpc())
             * Dy::from_q(&self.mass)
             / Dy::from_q(&hole_mass());
         let t = grid(Dy::from_q(&self.spin) * rg_kpc / d_kpc.max(Dy::sci(1, -9)));
-        // the axis length in first degree (sum of |components|, no root)
+        // The axis length in first degree (sum of |components|, no root).
         let norm = self
             .axis
             .iter()
             .fold(Dy::ZERO, |s, x| s + Dy::from_q(x).abs());
         let angle = Dy::int(2) * (Dy::from_q(&t) * norm).atan();
-        // the screw's translation for this turn, in AU, along the axis
+        // The screw's translation for this turn, in AU, along the axis.
         let shift = Dy::from_q(&self.pitch_kpc) * Dy::from_q(&au_per_kpc()) * angle
             / (Dy::int(2) * Dy::PI)
             / norm.max(Dy::sci(1, -30));
@@ -254,8 +259,9 @@ impl Bell {
     }
 
     /// The energy of one ring intercepted by a system of radius `a_out_au` at
-    /// `d_kpc`: one period of light times the sphere share the system's disc
-    /// covers (pi a^2 over 4 pi d^2: a^2 / 4 d^2, exact).
+    /// `d_kpc`: one period of light times the share of the sphere the system's
+    /// disc covers (pi a^2 over 4 pi d^2: a^2 / (4 d^2), exact), with d at
+    /// least 1 AU; in field energy units.
     pub fn energy_at(&self, d_kpc: Dy, a_out_au: &Q) -> Q {
         let d_au = grid(d_kpc * Dy::from_q(&au_per_kpc())).max(Q::ONE);
         let share = qd(&(a_out_au * a_out_au), &(&Q::int(4) * &(&d_au * &d_au)));
@@ -276,7 +282,7 @@ pub fn path(node: &Node, place: &Place, t: Dy) -> (Dy, Dy) {
     (d / c_kpc_yr(), d)
 }
 
-// ---------------------------------------------------------------------- the star burns
+// ------------------------------------------------------------ The star burns.
 
 /// Measured binding energies (MeV) of the nuclei a star burns through (He-4,
 /// C-12, O-16).
@@ -309,10 +315,10 @@ pub enum Burning {
     Remnant,
 }
 
-/// The step a star at reach `r` (core rings) is on at `age_gyr`: hydrogen
+/// The step a star at reach `r` (galaxy rings) is on at `age_gyr`: hydrogen
 /// until it leaves the main sequence, helium until its giant core's helium
 /// is spent, then remnant; both ends from the pulse's burn of its hold
-/// (stars::ends).
+/// (`stars::ends`).
 pub fn burning(reach: Dy, age_gyr: Dy) -> Burning {
     let (main, giant) = crate::stars::ends(reach);
     let age = age_gyr.to_q();
@@ -329,12 +335,12 @@ pub fn burning(reach: Dy, age_gyr: Dy) -> Burning {
 /// defect, the binding released over the inputs' rest energy.
 pub fn burn_out_share(b: Burning) -> Q {
     match b {
-        // 4 H -> He-4: two protons converted to neutrons
+        // 4 H -> He-4: two protons are converted to neutrons.
         Burning::Hydrogen => qd(
             &(&binding_mev(4) - &(&Q::int(2) * &weak_mev())),
             &(&Q::int(4) * &nucleon_mev()),
         ),
-        // 3 He-4 -> C-12
+        // 3 He-4 -> C-12.
         Burning::Helium => qd(
             &(&binding_mev(12) - &(&Q::int(3) * &binding_mev(4))),
             &(&Q::int(12) * &nucleon_mev()),
@@ -343,7 +349,7 @@ pub fn burn_out_share(b: Burning) -> Q {
     }
 }
 
-// ---------------------------------------------------------------------- the star absorbs
+// ---------------------------------------------------------- The star absorbs.
 
 /// A world as held by its star: its native anchor (its place on its orbit,
 /// from the star's G point) and its current place (sheared by pulses the star
@@ -411,10 +417,12 @@ impl Absorbed {
 
 /// A star of `mass` suns on `step` absorbs a pulse `v` bringing `energy_in`.
 /// The pulse moves each world relative to the star's G point (which also
-/// moves: the drift). The star's gravity pulls each back toward its native
-/// place by the share of the work it can pay for: fully re-locking a world
-/// costs `1/2 m (M/a)^2 |dx|^2`, with `a` its native orbit and `dx` its
-/// displacement. The unpaid share remains as shear, exact on the grid.
+/// moves: the drift). The star's gravity returns each world toward its
+/// native place by the share of the work the energy pays for: fully
+/// re-locking a world costs `1/2 m (M/a)^2 |dx|^2`, with `a` its native
+/// orbit and `dx` its displacement. The unpaid share remains as shear,
+/// rounded down to the 2^-60 grid. `None` where a moved point cannot be
+/// read back.
 pub fn absorb(
     mass: &Q,
     step: Burning,
@@ -427,11 +435,11 @@ pub fn absorb(
     let mut need = Q::ZERO;
     for w in worlds {
         let c = carry(v, &w.at)?;
-        // displacement from the native place, with the G point's drift removed
+        // Displacement from the native place, with the G point's drift removed.
         let dx: [Q; 3] = std::array::from_fn(|i| &(&c[i] - &drift[i]) - &w.native[i]);
         let a2 = (0..3).fold(Q::ZERO, |s, i| &s + &(&w.native[i] * &w.native[i]));
         let d2 = (0..3).fold(Q::ZERO, |s, i| &s + &(&dx[i] * &dx[i]));
-        // the turning M / a, squared: M^2 / a^2
+        // Work 1/2 m (M / a)^2 |dx|^2, the turning M / a squared.
         let work = if a2.signum() > 0 {
             qd(&(&qd(&(&w.mass * &(mass * mass)), &a2) * &d2), &Q::int(2))
         } else {
@@ -440,14 +448,14 @@ pub fn absorb(
         need = &need + &work;
         moved.push(dx);
     }
-    // every term is held as a 62-bit dyadic (Dy), so books summed over a
+    // Every term is held as a 62-bit dyadic (Dy), so books summed over a
     // universe's life keep power-of-two denominators and stay bounded; the
     // rounding is monotone (gravity never exceeds the input) and light takes
-    // the exact remainder, so the books still balance
+    // the exact remainder, so the books still balance.
     let energy_in = &dyadic(energy_in);
     let gravity = dyadic(if &need < energy_in { &need } else { energy_in });
-    // full payment is decided on the exact need, not the rounded gravity,
-    // so a fully paid re-lock leaves no shear
+    // Full payment is decided on the exact need, not the rounded gravity,
+    // so a fully paid re-lock leaves no shear.
     let held = if need.signum() <= 0 || &need <= energy_in {
         Q::ONE
     } else {
@@ -457,8 +465,8 @@ pub fn absorb(
     let anchors = worlds
         .iter()
         .zip(moved)
-        // only the remaining shear is rounded to the grid: a fully re-locked
-        // world sits exactly on its native place
+        // Only the remaining shear is rounded to the grid: a fully re-locked
+        // world sits exactly on its native place.
         .map(|(w, dx)| Anchor {
             at: std::array::from_fn(|i| &w.native[i] + &down(&(&left * &dx[i]), GRID)),
             native: w.native.clone(),
@@ -484,8 +492,7 @@ mod tests {
     use crate::bang::BigBang;
     use crate::galaxy::{star, NUCLEUS_BASE};
 
-    /// The core's node, and a stellar hole's on a nucleus star - built
-    /// directly, not by sampling the galaxy for heavy stars.
+    /// The core's node, built directly rather than by sampling the galaxy.
     fn core() -> Node {
         Node {
             kind: Kind::Core(Box::new(crate::cores::Shape {
@@ -504,8 +511,8 @@ mod tests {
         }
     }
     fn stellar(bang: &BigBang) -> Node {
-        // the first sample star that exists (stars exist only where their
-        // ring's gas lights, galaxy::birth_gyr)
+        // A 50-sun stellar hole on the first sample star that exists (stars
+        // exist only where their ring's gas lights, `galaxy::birth_gyr`).
         let s = (0..crate::galaxy::sample(bang))
             .chain(std::iter::once(NUCLEUS_BASE))
             .find_map(|n| star(7, bang, n))
@@ -523,17 +530,18 @@ mod tests {
 
     #[test]
     fn versors_bend_and_rotate_exactly() {
-        // bent: a translation by (1/3, -2, 5/7)
+        // Bend: a translation by (1/3, -2, 5/7).
         let d = [Q::ratio(1, 3), Q::ratio(-2, 1), Q::ratio(5, 7)];
         assert_eq!(carry(&bend(&d), &origin()).unwrap(), d);
-        // rotated: a quarter turn about z (t = 1: 2 atan 1) takes x to y
+        // Rotate: a quarter turn about z (t = 1: 2 atan 1) takes x to +-y.
         let zaxis = [Q::ZERO, Q::ZERO, Q::ONE];
         let r = carry(&rotate(&zaxis, &Q::ONE), &[Q::ONE, Q::ZERO, Q::ZERO]).unwrap();
         assert!(
             r[0] == Q::ZERO && r[2] == Q::ZERO && (r[1] == Q::ONE || r[1] == -Q::ONE),
             "{r:?}"
         );
-        // a rational turn (t = 1/2: cos 3/5, sin 4/5) lands on a rational point
+        // A rational turn (t = 1/2: cos 3/5, sin 4/5) lands on a rational
+        // point.
         let r = carry(
             &rotate(&zaxis, &Q::ratio(1, 2)),
             &[Q::int(5), Q::ZERO, Q::ZERO],
@@ -547,16 +555,16 @@ mod tests {
     fn bell_pitch_period_and_arrivals_in_closed_form() {
         let bang = crate::genesis::bang();
         let bs = bells(&[core(), stellar(bang)], 7);
-        // the core bell's pitch is the wavefront's wavelength, its axis z and
-        // its spin the anchor's
+        // The core bell's pitch is the wavefront's wavelength, its axis z and
+        // its spin the anchor's.
         assert!((Dy::from_q(&bs[0].pitch_kpc) - wavelength_kpc()).abs() < Dy::sci(1, -9));
         assert_eq!(bs[0].axis, [Q::ZERO, Q::ZERO, Q::ONE]);
         assert_eq!(bs[0].spin, crate::circuit::anchor().spin);
-        // a stellar hole has a shorter pitch and period, and a spin in (0, 1)
+        // A stellar hole has a shorter pitch and period, and a spin in (0, 1).
         let s = bs.get(1).expect("a stellar bell");
         assert!(s.pitch_kpc < bs[0].pitch_kpc && s.period_yr < bs[0].period_yr);
         assert!(s.spin.signum() > 0 && s.spin < Q::ONE);
-        // arrivals are counted in closed form: a period's span holds one ring
+        // Arrivals are counted in closed form: a period's span holds one ring.
         let b = &bs[0];
         let per_gyr = Dy::from_q(&b.period_yr) / Dy::sci(1, 9);
         let t0 = Dy::int(10);
@@ -565,7 +573,7 @@ mod tests {
         assert_eq!(one, 1, "one period, one ring");
         assert_eq!(b.arrivals(delay, t0, t0 + per_gyr * Dy::int(10)), 10);
         assert_eq!(b.arrivals(delay, t0, t0), 0);
-        // nothing arrives before a bell has formed and its light crossed
+        // Nothing arrives before a bell has formed and its light has crossed.
         let late = Bell {
             born: Dy::int(12),
             ..b.clone()
@@ -590,14 +598,14 @@ mod tests {
             a.balances(),
             "in = gravity + light + burned out, exactly: {a:?}"
         );
-        // every term dyadic (power-of-two denominator): books summed over a
-        // life stay bounded
+        // Every term is dyadic (power-of-two denominator), so books summed
+        // over a life stay bounded.
         for x in [&a.energy_in, &a.gravity, &a.burned_out] {
             assert_eq!(dyadic(x), *x, "{x} is not held to 62 bits");
         }
         assert!(a.gravity.signum() > 0, "the star re-locks its worlds");
         assert!(a.burned_out.signum() > 0 && a.light > a.burned_out);
-        // a pulse too weak to pay for the re-locking leaves the orbits sheared
+        // A pulse too weak to pay for the re-locking leaves the orbits sheared.
         let weak = qd(&a.gravity, &Q::int(2));
         let b = absorb(&Q::ONE, Burning::Hydrogen, &worlds, &v, &weak).unwrap();
         assert!(b.balances());
@@ -606,13 +614,13 @@ mod tests {
             b.anchors.iter().any(|w| w.sheared().signum() > 0),
             "what it could not re-lock stays sheared"
         );
-        // a fully paid re-lock leaves no shear
+        // A fully paid re-lock leaves no shear.
         assert!(
             a.anchors.iter().all(|w| w.sheared() == Q::ZERO),
             "wholly re-locked"
         );
-        // the next pulse acts on the sheared worlds where they stand: shear
-        // accumulates while the star cannot pay
+        // The next pulse acts on the sheared worlds where they are: shear
+        // accumulates while the energy does not pay for the re-lock.
         let c = absorb(&Q::ONE, Burning::Hydrogen, &b.anchors, &v, &weak).unwrap();
         assert!(c.balances());
         let (s1, s2): (Q, Q) = (
@@ -626,21 +634,21 @@ mod tests {
                 .fold(Q::ZERO, |x, y| &x + &y),
         );
         assert!(s2 > s1, "sheared further: {s1} -> {s2}");
-        // the drift is the pulse's translation along the z axis
+        // The drift is the pulse's translation along the z axis.
         assert!(a.drift[2].signum() != 0 && a.drift[0] == Q::ZERO && a.drift[1] == Q::ZERO);
     }
 
     #[test]
     fn burn_out_share_follows_each_steps_mass_defect() {
-        // each step converts a share of what it burns, the helium step less
-        // per nucleon than the hydrogen step, a remnant nothing
+        // Each step converts a share of what it burns, the helium step less
+        // per nucleon than the hydrogen step, a remnant nothing.
         let h = burn_out_share(Burning::Hydrogen);
         let he = burn_out_share(Burning::Helium);
         assert!(h > Q::ZERO && h < Q::ONE, "H -> He: {h}");
         assert!(he > Q::ZERO && he < h, "He -> C: {he}");
         assert_eq!(burn_out_share(Burning::Remnant), Q::ZERO);
-        // the step by age at r = 0: hydrogen, helium, then remnant (the
-        // universe is founded first because the bell sets the life)
+        // The step by age at r = 0: hydrogen, helium, then remnant (the
+        // universe is founded first because the bell sets the life).
         let _ = crate::genesis::bang();
         let (main, giant) = crate::stars::ends(Dy::ZERO);
         assert!(main.signum() > 0 && giant > main, "{main} {giant}");

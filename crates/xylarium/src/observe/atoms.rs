@@ -6,8 +6,8 @@ use std::collections::BTreeMap;
 use xyl_core::Q;
 use xyl_cosmos::bang::BigBang;
 
-/// Z's hold on band `n` of atom `a`: tau_b = (Z - electrons of every
-/// shallower turning) / n.
+/// The hold of the nucleus on band `n` of atom `a`:
+/// `tau_b = (Z - the electrons of every shallower turning) / n`.
 fn band_hold(a: &xyl_cosmos::atoms::Atom, z: u32, n: u32) -> Q {
     let shallower: u32 = a
         .bands
@@ -18,21 +18,24 @@ fn band_hold(a: &xyl_cosmos::atoms::Atom, z: u32, n: u32) -> Q {
     Q::ratio(i64::from(z) - i64::from(shallower), i64::from(n))
 }
 
-/// Like atoms as a body, Z in Q, opened by orthogonal capacity: like
-/// elements bond into a body, converging in Q over R, with Z incorporated
-/// into Q (without it the read is only linear). Each open band b of the atom
-/// carries u_b open frames, d_b = orientations(l) mutually orthogonal
-/// directions on S^11 (its capacity), and Z's hold on it,
+/// The `bonding N` reading: how atoms of one kind bond into a body,
+/// converging in Q over R, with Z incorporated into Q through the nucleus's
+/// hold (without it the reading is only linear) and limited by each band's
+/// orthogonal capacity. Each open band b of the atom carries u_b open frames
+/// and d_b = orientations(l) mutually orthogonal directions on S^11 (the
+/// band's capacity), and is held by
 /// tau_b = (Z - the electrons of every shallower turning) / n:
 ///     Q_Z = sum u_b tau_b                 (Z in Q)
-///     omega_b = u_b / d_b                 (its orthogonal capacity in use)
-/// In a body's space (three planes and R, 8 like atoms touching one;
-/// declared) the tightest-held frames take the contacts first, the body's
-/// grip G = sum tau over its bonded frames; a frame past the contacts in a
-/// band with free orthogonal room (1 - omega_b) can turn into an empty
-/// orientation and flow, one in a full band is locked on the surface:
+///     omega_b = u_b / d_b                 (the share of the capacity in use)
+/// In a body (three planes and R, with 8 like atoms touching one, a declared
+/// count) the most tightly held frames take the contacts first, and the
+/// body's grip is G = sum tau over the bonded frames. A frame beyond the
+/// contacts in a band with free orthogonal room (1 - omega_b) can turn into
+/// an empty orientation and conduct; one in a full band is locked on the
+/// surface. The conduction is the share:
 ///     sigma = sum_surplus u_b (1 - omega_b) / tau_b  /  sum u_b / tau_b
-/// its conduction, a share. A reading for the bench, never law.
+/// The form follows from the contact count c: 0 inert, 1 molecule, 2 chain,
+/// 3 or 4 sheet, more framework. The reading is diagnostic; no law uses it.
 pub(super) fn bonding(top: usize) -> String {
     const CONTACT: u32 = 8;
     let mut out = String::from(
@@ -44,7 +47,7 @@ pub(super) fn bonding(top: usize) -> String {
         let Some(a) = xyl_cosmos::atoms::atom(z) else {
             continue;
         };
-        // per open frame: tau_b and the band's free room 1 - omega_b
+        // Per open frame: tau_b and the band's free room 1 - omega_b.
         let mut frames: Vec<(Q, Q)> = Vec::new();
         for b in a.bands.iter().filter(|b| b.unpaired() > 0) {
             let tau = band_hold(&a, z, b.n);
@@ -109,14 +112,15 @@ pub(super) fn bonding(top: usize) -> String {
     out
 }
 
-/// A kind's push with Z in both poles (Z incorporated into Q; Q_Z alone
-/// loses the mass in the denominator): each band b holds 3 e_b frames, u_b
-/// of them open and 3 e_b - u_b held, all under Z's hold tau_b; so
+/// The `push N` reading: each kind's push with Z in both poles (Z
+/// incorporated into Q; Q_Z alone would lose the mass in the denominator).
+/// Each band b holds 3 e_b frames, u_b of them open and 3 e_b - u_b held,
+/// all under the nucleus's hold tau_b, so:
 ///     A_Z = sum (3 e_b - u_b) tau_b,  Q_Z = sum u_b tau_b,
 ///     A_Z + Q_Z = 3 sum e_b tau_b      (the mass in Z; 3Z where every tau is 1)
 ///     p_Z = 1/2 Q_Z / (A_Z + Q_Z)      (at most 1/2)
-/// read against the built push 1/2 Q / A (emission over held) and the linear
-/// share 1/2 Q / (A + Q). A reading for the bench, never law.
+/// It is compared with the built push 1/2 Q / A (emission over held) and the
+/// linear share 1/2 Q / (A + Q). The reading is diagnostic; no law uses it.
 pub(super) fn push_reading(top: usize) -> String {
     let mut out = String::from(
         "Z: p built (1/2 Q/A), p linear (1/2 Q/(A+Q)), p_Z (1/2 Q_Z/(A_Z+Q_Z)), p_Z / p built\n",
@@ -134,8 +138,8 @@ pub(super) fn push_reading(top: usize) -> String {
             a_z = &a_z + &(&tau * &Q::int(i64::from(held)));
             q_z = &q_z + &(&tau * &Q::int(i64::from(open)));
         }
-        // the built push: 1/2 open / hold, open = compound::open(z) (the
-        // electrons' open frames), hold = formation::weight(z)
+        // The built push is `1/2 open / hold`, with `open = compound::open(z)`
+        // (the electrons' open frames) and `hold = formation::weight(z)`.
         let (open, hold) = (
             Q::int(i64::from(xyl_cosmos::compound::open(z))),
             xyl_cosmos::formation::weight(z),
@@ -184,12 +188,14 @@ pub(super) fn push_reading(top: usize) -> String {
     out
 }
 
-/// The quantum capacity under each kind (3Q from the 3Z formulas), read on
-/// each atom's own bands: 3Z its filled frames, 3Q three times the room of
-/// every shape of every turning it reaches (the quantum state 3Z lives on),
-/// R_Q = 6Z - 3Q, rho_Q = (2Z - Q_cap) / Q_cap; the kinds that seal (every
-/// winding full and every shape of the outermost turning full: rho_Q = +1)
-/// are the convergence points of the table.
+/// The `seals Z` reading: the quantum capacity under each kind up to `top`
+/// (3Q from the 3Z formulas), read on the atom's bands. 3Z counts the filled
+/// frames; 3Q is three times Q_cap, the room of every shape of every turning
+/// the atom reaches; then R_Q = 6Z - 3Q and rho_Q = (2Z - Q_cap) / Q_cap.
+/// The kinds that seal (every winding full and every shape of the outermost
+/// turning full, rho_Q = +1) are the convergence points of the table. The
+/// reading also lists the seams and the vessel, and prints rows for selected
+/// kinds.
 pub(super) fn seals_read(o: &Options, top: usize) -> String {
     let share = BigBang::of(o.seed).map(|b| b.parent.share());
     let mut out = String::from(
@@ -203,15 +209,15 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
         let Some(a) = xyl_cosmos::atoms::atom(z) else {
             continue;
         };
-        // a seam: unpaired(Z - 1) + 1 - unpaired(Z) < 0, so a single-nucleon
-        // peel releases
+        // A seam: `unpaired(Z - 1) + 1 - unpaired(Z) < 0`, so a single-nucleon
+        // peel releases.
         if z > 1 {
             let unpaired = |z: u32| i64::from(xyl_cosmos::atoms::unpaired(z));
             if unpaired(z - 1) + 1 - unpaired(z) < 0 {
                 seams.push(z);
             }
         }
-        // Q_cap = sum over turnings n of sum over shapes l < n of 2 d(l)
+        // `Q_cap = sum over turnings n of sum over shapes l < n of 2 d(l)`.
         let cap: u32 = (1..=a.outer_n)
             .map(|n| {
                 (0..n)

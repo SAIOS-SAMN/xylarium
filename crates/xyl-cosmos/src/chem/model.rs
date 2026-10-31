@@ -11,17 +11,18 @@ use xyl_core::certified::{exp, pi, Encl};
 use xyl_core::motion::ExpSum;
 use xyl_core::Q;
 
-/// Where what ring `j` throws lands, `reach` the carrier's reach against
-/// air's (`2x / (1 + x)` with `x = 28 / A`, the share in place of Graham's
-/// root): each ring's share, and the share falling inside the centre (to the
-/// core), exact; what lands past the disc leaves it.
+/// Where the gas thrown by ring `j` lands, with `reach` the carrier's reach
+/// relative to air (`2x / (1 + x)` with `x = 28 / A`, the share in place of
+/// Graham's root): each ring's share, and the share falling inside the
+/// centre (r < 0, to the core), exact; what lands past the disc leaves it.
 ///
 /// A landing map from orbits, not a diffusion. The fountain throws gas at
-/// `70 km/s` isotropically; the radial part `v cos(theta)` is uniform on
-/// `[-v, v]` (Archimedes' hat-box). It rides one epicycle and lands
-/// `v cos(theta) / kappa` from where it rose, `kappa = sqrt2 V / r`, scaled by
-/// weight (`reach`). It therefore lands uniformly over `[r - L, r + L]`,
-/// `L = (7 r / 22) reach`; each ring takes its overlap.
+/// `v = 70 km/s` isotropically; the radial part `v cos(theta)` is uniform on
+/// `[-v, v]` (Archimedes' hat-box). The gas follows one epicycle and lands
+/// `v cos(theta) / kappa` from where it rose, with `kappa` taken as `V / r`
+/// (`V = 220 km/s`), scaled by `reach`. It therefore lands uniformly over
+/// `[r - L, r + L]`, `L = (7 r / 22) reach`, with r at least 0.25 kpc; each
+/// ring takes its overlap.
 fn landing(reach: &Q, j: usize) -> ([Q; RINGS], Q) {
     let dr = Rulers::dr();
     let r = ring_mid(j).max(&dr * &decimal("0.5").unwrap_or(Q::ZERO));
@@ -54,12 +55,13 @@ pub struct Ring {
     /// Star-formation rate, in solar masses per pc^2 per Gyr, as a closed
     /// form in Gyr since the first stars.
     pub sfr: ExpSum,
-    /// Per channel (indexed as [`CHANNELS`]), what the ring's own stars make
-    /// at unit yield, as a closed form in Gyr since that channel's first delay.
+    /// Per channel (indexed as [`CHANNELS`]), what the ring's stars make at
+    /// unit yield, as a closed form in Gyr since that channel's first delay.
     pub landed: Vec<ExpSum>,
     /// Per channel (indexed as [`CHANNELS`]), the metals the ring's gas holds
-    /// at unit yield (own making plus the fountain and the core's jets, less
-    /// what stars lock away), in Gyr since that channel's first delay.
+    /// at unit yield (the ring's making plus the fountain and the core's
+    /// jets, less what stars lock away), in Gyr since that channel's first
+    /// delay.
     pub metal: Vec<ExpSum>,
 }
 
@@ -71,8 +73,9 @@ pub struct Model {
     pub rings: Vec<Ring>,
 }
 
-/// `f` over `0..n` on `XYL_THREADS` threads (default: all cores), results in
-/// order. The rings are independent, so each is built whole.
+/// `f` over `0..n` on `XYL_THREADS` threads (default: the available
+/// parallelism, at most `n`), results in order. The rings are independent,
+/// so each is built whole on one thread.
 fn par_map<T: Send>(n: usize, f: impl Fn(usize) -> T + Sync) -> Vec<T> {
     let cores = std::thread::available_parallelism()
         .map(|c| c.get())
@@ -142,20 +145,20 @@ struct Alone {
 /// today.
 fn ring_alone(p: &Params, span: &Q, j: usize) -> Alone {
     let r = ring_mid(j);
-    // a ring whose gas never lights forms no stars
+    // A ring whose gas never lights forms no stars.
     let (tau, lights) = match infall_gyr(p, j) {
         Some(t) => (t, true),
         None => (Q::ONE, false),
     };
     let lam = rate_of(&tau);
-    // infall a e^(-lam t), normalised so that its integral to today is the
-    // ring's surface density: a = sigma lam / (1 - e^(-span / tau))
+    // Infall a e^(-lam t), normalised so that its integral to today is the
+    // ring's surface density: a = sigma lam / (1 - e^(-span / tau)).
     let norm = Encl::exact(Q::ONE).sub(&exp(&-(span.checked_div(&tau).unwrap_or(Q::ZERO)), BITS));
     let a = sigma_total(&r)
         .mul(&Encl::exact(lam.clone()))
         .mul(&norm.recip().unwrap_or_else(|| Encl::exact(Q::ONE)));
-    // star formation at efficiency x Omega / 2 pi of the gas, Omega = v / r
-    // in 1/Gyr (km/s per kpc times 1000 gyr_s / kpc)
+    // Star formation at efficiency x Omega / (2 pi) of the gas, Omega = v / r
+    // converted from km/s per kpc to 1/Gyr, with r at least 0.25 kpc.
     let omega = (&Rulers::v_flat() * &km_s_per_kpc_to_per_gyr())
         .checked_div(&r.clone().max(decimal("0.25").unwrap_or(Q::ZERO)))
         .unwrap_or(Q::ZERO);
@@ -168,8 +171,8 @@ fn ring_alone(p: &Params, span: &Q, j: usize) -> Alone {
     };
     let deplete = &(&(&Q::ONE - &Rulers::prompt()) + &Rulers::loading()) * &form;
     let infall = ExpSum::decay(a.outward(120), lam);
-    // the giants' slow return, driven by one iterate of the star formation
-    // without it: half over 0.3 Gyr and half over 3 Gyr
+    // The giants' slow return, driven by one iterate of the star formation
+    // computed without the return: half over 0.3 Gyr and half over 3 Gyr.
     let first = infall.relaxed(&deplete).scaled(&Encl::exact(form.clone()));
     let slow = [("0.3", "0.5"), ("3", "0.5")]
         .map(|(tau, share)| {
@@ -226,8 +229,8 @@ struct Flows {
 impl Flows {
     /// The flows of the rings `alone`.
     fn of(alone: &[Alone]) -> Flows {
-        // the fountain's reach against air's as a share, 2x / (1 + x) with
-        // x = 28 / A, in place of a square root
+        // The fountain's reach relative to air as a share, 2x / (1 + x) with
+        // x = 28 / A, in place of a square root.
         let reach = {
             let x = Q::int(28).checked_div(&Rulers::gas_mu()).unwrap_or(Q::ONE);
             (&Q::int(2) * &x)
@@ -250,9 +253,9 @@ impl Flows {
             .collect();
         // Einstein-Cartan recycling: what the fountain drops inside the
         // centre falls to the core, which returns it as jets launched from
-        // the core's reach with e-fold time the galaxy's echo
-        // (centre::galaxy_episode_myr); the share of the jets that falls
-        // back inside stays in the core
+        // the ring at the core's reach with e-fold time the galaxy's echo
+        // (`centre::galaxy_episode_myr`); the share of the jets that falls
+        // back inside stays in the core.
         let edge = ring_of(&crate::galaxy::core_kpc());
         let back_in = maps[edge].1.clone();
         let echo_gyr = crate::centre::galaxy_episode_myr()
@@ -283,8 +286,10 @@ impl Flows {
         }
     }
 
-    /// What lands on ring `k` per unit area: every ring's `thrown` by its
-    /// landing share and area, and the core's `core` as jets.
+    /// What lands on ring `k` per unit area: each ring's `thrown` times its
+    /// landing share on `k` and its area, plus the core's `core` times the
+    /// jet rate and the launching ring's landing share on `k`, all over the
+    /// area of `k`.
     fn lands(&self, k: usize, thrown: &dyn Fn(usize) -> ExpSum, core: &ExpSum) -> ExpSum {
         let ak = ring_area(k);
         let from_rings = (0..RINGS).fold(ExpSum::default(), |acc, j| {
@@ -303,8 +308,8 @@ impl Flows {
         from_rings.plus(&core.scaled(&Encl::exact(weight)))
     }
 
-    /// Ring `k` with the flows: its own feed plus the fountain and the jets
-    /// landing on it (fed once), its star formation and its metals.
+    /// Ring `k` with the flows: the ring's feed plus the fountain and the
+    /// jets landing on it (fed once), its star formation and its metals.
     fn ring(&self, x: &Alone, k: usize) -> Ring {
         let gas = x
             .feed
@@ -339,7 +344,7 @@ impl Model {
         let span = &Rulers::today_gyr() - &p.first_stars;
         let alone: Vec<Alone> = par_map(RINGS, |j| ring_alone(p, &span, j));
         let flows = Flows::of(&alone);
-        // the rings are independent once the flows are known
+        // The rings are independent once the flows are known.
         let rings = par_map(RINGS, |k| flows.ring(&alone[k], k));
         Model {
             params: p.clone(),
@@ -348,7 +353,8 @@ impl Model {
     }
 
     /// Every channel's metals per gas (unit yield) on ring `k` at `t` Gyr,
-    /// each read once; None before the first stars or where there is no gas.
+    /// each read once; `None` before the first stars, for a ring index out of
+    /// range or where there is no gas.
     pub(super) fn concs(&self, k: usize, t: &Q) -> Option<Vec<Q>> {
         let dt = t - &self.params.first_stars;
         if dt.signum() <= 0 {
@@ -359,8 +365,8 @@ impl Model {
         if gas.signum() <= 0 {
             return None;
         }
-        // channels sharing a delay share their times, and so every rate's
-        // exponential, read once per time
+        // Channels with the same first delay share the elapsed time, so each
+        // rate's exponential is evaluated once per distinct time.
         let mut by_time: Vec<(Q, xyl_core::motion::Grown)> = Vec::new();
         Some(
             CHANNELS

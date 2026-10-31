@@ -1,4 +1,5 @@
-//! Exact rationals that live on the stack until they cannot.
+//! Exact rationals, held in two machine words while numerator and denominator
+//! fit `i64` and as a heap `BigRational` otherwise.
 //!
 //! Inputs: integers (`int`, `new`, `from_i128`) or big ratios (`from_big`,
 //! `from_reduced`); no other module.
@@ -39,7 +40,7 @@ use std::ops::{Add, Mul, Neg, Sub};
 /// use xyl_core::Q;
 ///
 /// let half = Q::new(1, 2).unwrap_or_default();
-/// let third = Q::new(2, 6).unwrap_or_default(); // reduced to 1/3
+/// let third = Q::new(2, 6).unwrap_or_default(); // Reduced to 1/3.
 /// assert_eq!(third, Q::new(1, 3).unwrap_or_default());
 /// assert_eq!(&half + &third, Q::new(5, 6).unwrap_or_default());
 /// assert_eq!(&half * &third, Q::new(1, 6).unwrap_or_default());
@@ -57,7 +58,8 @@ pub enum Q {
         /// Denominator, always positive and coprime to `n`.
         d: i64,
     },
-    /// Lowest terms, positive denominator, and does not fit `Small`.
+    /// Lowest terms, positive denominator, for a value that does not fit
+    /// `Small`.
     Big(Box<BigRational>),
 }
 
@@ -99,7 +101,8 @@ impl Q {
         Q::new(n, d).unwrap_or(Q::ZERO)
     }
 
-    /// `n / d` from wide parts, reduced; promoted only if it does not fit.
+    /// `n / d` from wide parts, reduced; held as `Big` only if it does not fit
+    /// `Small`. Returns `None` when `d` is zero.
     pub fn from_i128(n: i128, d: i128) -> Option<Q> {
         if d == 0 {
             return None;
@@ -134,7 +137,8 @@ impl Q {
         })
     }
 
-    /// Canonicalize an arbitrary big ratio: reduce, then demote if it fits.
+    /// The canonical form of an arbitrary big ratio: reduced, then held as
+    /// `Small` if it fits.
     pub fn from_big(r: BigRational) -> Q {
         let r = r.reduced();
         if let (Some(n), Some(d)) = (r.numer().to_i64(), r.denom().to_i64()) {
@@ -214,7 +218,7 @@ impl Q {
         }
     }
 
-    /// Largest integer not above the value.
+    /// The largest integer not above the value.
     pub fn floor(&self) -> BigInt {
         match self {
             Q::Small { n, d } => BigInt::from(n.div_floor(d)),
@@ -222,7 +226,8 @@ impl Q {
         }
     }
 
-    /// Its fractional part, in [0, 1): a turn's place within the circle.
+    /// The fractional part, in [0, 1); for a value in turns, the position
+    /// within the turn.
     pub fn frac(&self) -> Q {
         self - &Q::from_reduced(BigRational::from_integer(self.floor()))
     }
@@ -311,7 +316,8 @@ fn two_power(d: &BigInt) -> Option<u64> {
     (d == &(BigInt::one() << e)).then_some(e)
 }
 
-/// `n / 2^e` in lowest terms: the common factor is `n`'s trailing zeros.
+/// `n / 2^e` in lowest terms: the common factor is two to the count of
+/// trailing zero bits of `n`.
 fn dyadic(n: BigInt, e: u64) -> Q {
     if n.is_zero() {
         return Q::ZERO;
@@ -320,8 +326,9 @@ fn dyadic(n: BigInt, e: u64) -> Q {
     Q::from_reduced(BigRational::new_raw(n >> tz, BigInt::one() << (e - tz)))
 }
 
-/// Both operands dyadic (power-of-two denominators) and at least one big:
-/// their numerators and powers, for a gcd-free result.
+/// When both operands are dyadic (power-of-two denominators) and at least one
+/// is big: their numerators and exponents, for a gcd-free result. `None`
+/// otherwise.
 fn dyadic_pair(a: &Q, b: &Q) -> Option<(BigInt, u64, BigInt, u64)> {
     if matches!((a, b), (Q::Small { .. }, Q::Small { .. })) {
         return None;
@@ -353,7 +360,8 @@ macro_rules! small_or_big {
             }
             (l, r) => {
                 let ($x, $y) = (l.to_big(), r.to_big());
-                // num's ops return lowest terms already: no second gcd
+                // The `num` crate's operations return lowest terms, so no
+                // second gcd is taken.
                 Q::from_reduced($big)
             }
         }
@@ -569,7 +577,7 @@ mod tests {
             if c != 0 {
                 prop_assert_eq!(x.checked_div(&y).unwrap().to_big(), &bx / &by);
             }
-            // canonical: equal values have equal forms
+            // The form is canonical: equal values have equal forms.
             prop_assert_eq!(Q::from_big((&x + &y).to_big()), &x + &y);
         }
     }

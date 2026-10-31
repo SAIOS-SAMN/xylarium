@@ -1,8 +1,8 @@
 # AGENTS.md
 
-Orientation for AI coding agents working in this repository. Human
-contributors: start with [docs/concepts.md](docs/concepts.md) and
-[CONTRIBUTING.md](CONTRIBUTING.md); everything here also applies to you.
+This file orients AI coding agents working in this repository. Human
+contributors start with [docs/concepts.md](docs/concepts.md) and
+[CONTRIBUTING.md](CONTRIBUTING.md); the rules below apply to them as well.
 
 ## What this repository is
 
@@ -22,8 +22,9 @@ in [docs/glossary.md](docs/glossary.md), not by their everyday meaning.
    its inputs and units, its invariants. Module headers are the source of
    truth; the Markdown docs summarise them.
 3. Search by identifier, not by prose: `grep -rn "fn manifold_worlds" crates/`.
-4. Formulas with their code locations: [docs/EQUATIONS.md](docs/EQUATIONS.md).
-   Planned work and its order: [docs/roadmap.md](docs/roadmap.md).
+4. Formulas with their code locations are listed in
+   [docs/EQUATIONS.md](docs/EQUATIONS.md). Planned work and its order are
+   listed in [docs/roadmap.md](docs/roadmap.md).
 
 ## Map
 
@@ -33,13 +34,13 @@ A module `foo` is `src/foo.rs` or, when split, the directory `src/foo/`
 | Concern | Crate / module | Doc |
 |---|---|---|
 | Exact numbers: `Q`, `Encl`, `Dy`, CGA, rotors, units, streams | `crates/xyl-core/src` | [roadmap.md#mathematics](docs/roadmap.md#mathematics) |
-| Founding: Big Bang, bounce, elements, atoms, firmament, beads, galactic cores | xyl-cosmos modules `bang`, `bounce`, `elements`, `atoms`, `compound`, `fibres`, `formation`, `cores`, `chain`, `package`, `circuit` | [model.md](docs/model.md) sections 2-4 |
-| Galaxy, stars, chemistry | xyl-cosmos `galaxy`, `stars`, `chem`, `turning`, `pulse`, `field` | [model.md](docs/model.md) section 5 |
-| Discs, worlds, moons, world state | xyl-cosmos `disc`, `systems`, `manifold`, `bodies`, `worlds`, `hydro` | [model.md](docs/model.md) section 6 |
-| Life and the forecast of minds | xyl-cosmos `life`, `minds` | [model.md](docs/model.md) section 7 |
-| Universe in play, peoples, carry, annals | xyl-kernel `universe`, `cosmic`, `civ` | [civilizations.md](docs/civilizations.md) |
-| Knowledge, growth, transit, seats, clocks | xyl-kernel `knowledge`, `growth`, `transit`, `propulsion`, `seats`, `percept`, `chronometry` | [civilizations.md](docs/civilizations.md), [network.md](docs/network.md) |
-| CLI and library: `genesis`, `run`, `observe`, `run::Link` | xylarium `run`, `observe` | [architecture.md](docs/architecture.md) |
+| Founding: Big Bang, bounce, elements, atoms, firmament, beads, galactic cores | `xyl-cosmos` modules `bang`, `bounce`, `elements`, `atoms`, `compound`, `fibres`, `formation`, `cores`, `chain`, `package`, `circuit` | [model.md](docs/model.md) sections 2-4 |
+| Galaxy, stars, chemistry | `xyl-cosmos` modules `galaxy`, `stars`, `chem`, `turning`, `pulse`, `field` | [model.md](docs/model.md) section 5 |
+| Discs, worlds, moons, world state | `xyl-cosmos` modules `disc`, `systems`, `manifold`, `bodies`, `worlds`, `hydro` | [model.md](docs/model.md) section 6 |
+| Life and the forecast of minds | `xyl-cosmos` modules `life`, `minds` | [model.md](docs/model.md) section 7 |
+| Universe in play, peoples, carry, annals | `xyl-kernel` modules `universe`, `cosmic`, `civ` | [civilizations.md](docs/civilizations.md) |
+| Knowledge, growth, transit, seats, clocks | `xyl-kernel` modules `knowledge`, `growth`, `transit`, `propulsion`, `seats`, `percept`, `chronometry` | [civilizations.md](docs/civilizations.md), [network.md](docs/network.md) |
+| CLI and library: `genesis`, `run`, `observe`, `run::Link` | `xylarium` modules `run`, `observe` | [architecture.md](docs/architecture.md) |
 
 ## Rules that must hold
 
@@ -64,13 +65,13 @@ A module `foo` is `src/foo.rs` or, when split, the directory `src/foo/`
 
 | Command | Time | Notes |
 |---|---|---|
-| `cargo build --profile fast` | 1-3 min cold | optimised, incremental; use for iteration |
-| `cargo test --profile fast -p xyl-core` | seconds | |
+| `cargo build --profile fast` | 1-3 min cold | Optimised and incremental; the profile for iteration |
+| `cargo test --profile fast -p xyl-core` | Seconds | |
 | `cargo test --profile fast -p xyl-kernel` | ~1-2 min | |
-| `cargo test --profile fast -p xyl-cosmos <module>::` | seconds to minutes | run only the module changed |
-| `cargo test -p xyl-cosmos` (dev profile) | ~20 min | founds the test genesis if the founding digest changed |
-| `xylarium genesis --home DIR --seed N` | minutes | founds a universe; refuses an existing home |
-| `xylarium observe --home DIR <word>` | seconds to minutes | read-only; list of words in [architecture.md#readings](docs/architecture.md#readings) |
+| `cargo test --profile fast -p xyl-cosmos <module>::` | Seconds to minutes | Runs only the module changed |
+| `cargo test -p xyl-cosmos` (dev profile) | ~20 min | Founds the test genesis if the founding digest changed |
+| `xylarium genesis --home DIR --seed N` | Minutes | Founds a universe; refuses an existing home |
+| `xylarium observe --home DIR <word>` | Seconds to minutes | Read-only; the words are listed in [architecture.md#readings](docs/architecture.md#readings) |
 
 - The `fast` profile inherits `release`, which turns integer overflow checks
   off. Run changed modules' tests once in the `dev` profile before
@@ -78,7 +79,7 @@ A module `foo` is `src/foo.rs` or, when split, the directory `src/foo/`
 - Editing any founding file (`crates/xyl-cosmos/build.rs` lists them; all of
   `xyl-core` is included), even a comment, changes `XYL_FOUNDING_DIGEST` and
   forces the next genesis or test run to found the universe again.
-- Before finishing: `cargo fmt --all`, `cargo clippy --workspace
+- Before finishing, run `cargo fmt --all`, `cargo clippy --workspace
   --all-targets -- -D warnings`, `RUSTDOCFLAGS="-D warnings" cargo doc
   --workspace --no-deps`, `scripts/check-docs` and `scripts/check-style`.
 

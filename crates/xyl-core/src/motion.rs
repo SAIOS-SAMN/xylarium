@@ -2,7 +2,7 @@
 //! in one step, with no loop over time.
 //!
 //! Inputs: exact amplitudes, rates and times ([`Q`]) in the caller's units;
-//! reads `certified` for `ln 2` and the fixed-point `exp`.
+//! uses `certified` for `ln 2` and the fixed-point `exp`.
 //!
 //! Outputs:
 //! - [`Boost`], one mode `amp x base^(rate t)` with [`Base`] `E` (e-folds) or
@@ -29,13 +29,14 @@ use num_rational::BigRational;
 use num_traits::{One, Signed, ToPrimitive};
 use std::sync::OnceLock;
 
-/// ln 2, enclosed once to well past any read's precision.
+/// The enclosure of ln 2 to 2^-100, computed once; finer than any reading
+/// requires.
 fn ln2_held() -> &'static Encl {
     static LN2: OnceLock<Encl> = OnceLock::new();
     LN2.get_or_init(|| ln2(100).outward(100))
 }
 
-/// ln 2's bounds in units of 2^-60.
+/// The lower and upper bounds of ln 2 in units of 2^-60.
 fn ln2_fixed() -> (i128, i128) {
     static L: OnceLock<(i128, i128)> = OnceLock::new();
     *L.get_or_init(|| {
@@ -63,7 +64,8 @@ fn pow2(k: &BigInt) -> Q {
 pub enum Base {
     /// The rapidity counts e-folds: the mode grows as `e^(rate t)`.
     E,
-    /// The rapidity counts halvings or doublings: the mode grows as `2^(rate t)`.
+    /// The rapidity counts doublings (halvings when negative): the mode grows
+    /// as `2^(rate t)`.
     Two,
 }
 
@@ -98,7 +100,7 @@ impl Boost {
         }
     }
 
-    /// Its rate in e-folds per unit time (`rate ln 2` for halvings).
+    /// The mode's rate in e-folds per unit time (`rate ln 2` for base two).
     fn efolds(&self) -> Encl {
         match self.base {
             Base::E => Encl::exact(self.rate.clone()),
@@ -106,16 +108,17 @@ impl Boost {
         }
     }
 
-    /// `base^(rate t)`: the rapidity's whole halvings as an exact power of
-    /// two, and only the remainder (under two halvings) through the series,
-    /// in fixed-point integers bounded outward (`exp_fixed`).
+    /// `base^(rate t)`, enclosed: the whole halvings of the rapidity as an
+    /// exact power of two, and only the remainder (under two halvings)
+    /// through the series, in fixed-point integers bounded outward
+    /// (`exp_fixed`). A rapidity above 4096 goes through `exp_of` directly.
     pub fn grown(&self, t: &Q) -> Encl {
         let x = &self.rate * t;
         if x.is_zero() {
             return Encl::exact(Q::ONE);
         }
-        // a decay past 4096 halvings (or e-folds) is below 2^-4096: held as
-        // that bound, never shifted out bit by bit
+        // A decay past 4096 halvings (or e-folds) is below 2^-4096 and is
+        // returned as the enclosure [0, 2^-4096].
         let far = Q::int(4096);
         if x < -far.clone() {
             return Encl {
@@ -129,15 +132,15 @@ impl Boost {
         let (l_lo, l_hi) = ln2_fixed();
         let (k, a_lo, a_hi) = match self.base {
             Base::Two => {
-                // x = k + f, f in [0, 1): f ln 2 bounded by the products of
-                // f's and ln 2's fixed-point bounds
+                // `x = k + f` with f in [0, 1); f ln 2 is bounded by the products
+                // of the fixed-point bounds of f and of ln 2.
                 let k = x.floor();
                 let f = &x - &Q::from_reduced(BigRational::from_integer(k.clone()));
                 let (f_lo, f_hi) = fixed_bounds(&f);
                 (k, (f_lo * l_lo) >> FIXED, ((f_hi * l_hi) >> FIXED) + 1)
             }
             Base::E => {
-                // x = k ln 2 + r, r in [0, 2 ln 2)
+                // `x = k ln 2 + r` with r in [0, 2 ln 2).
                 let (x_lo, x_hi) = fixed_bounds(&x);
                 let mut k = x_lo.div_euclid(l_hi);
                 let r = |k: i128| {
@@ -171,8 +174,9 @@ impl Modes {
         Modes { terms }
     }
 
-    /// The orbit read at `t`: each mode grown once, from which its value,
-    /// slope and integral all follow (enclosed to about 2^-60 relative).
+    /// The orbit read at `t`: each mode's `base^(rate t)` is evaluated once,
+    /// and the value, slope and integral are computed from it (enclosed to
+    /// about 2^-60 relative).
     pub fn at(&self, t: &Q) -> Reading<'_> {
         Reading {
             modes: self,
@@ -224,25 +228,26 @@ impl Reading<'_> {
             .fold(Encl::exact(Q::ZERO), |acc, (b, g)| acc.add(&f(b, g)))
     }
 
-    /// Its value.
+    /// The orbit's value at the reading's time.
     pub fn value(&self) -> Encl {
         self.sum(|b, g| Encl::exact(b.amp.clone()).mul(g))
     }
 
-    /// Its rate of change: each mode's value times its e-fold rate.
+    /// The orbit's rate of change: each mode's value times its e-fold rate.
     pub fn slope(&self) -> Encl {
         self.sum(|b, g| Encl::exact(b.amp.clone()).mul(g).mul(&b.efolds()))
     }
 
-    /// Its integral from 0: `amp (grown - 1) / k` for each mode, `amp t` for
-    /// a constant.
+    /// The orbit's integral from 0: `amp (grown - 1) / k` for each mode, with
+    /// `k` its rate in e-folds, and `amp t` for a constant mode.
     pub fn integral(&self) -> Encl {
         self.sum(|b, g| {
             if b.rate.is_zero() {
                 return Encl::exact(&b.amp * &self.t);
             }
-            // 1/k rounded outward to a dyadic: still an enclosure, and every
-            // product after it stays on the gcd-free dyadic path
+            // 1/k is rounded outward to a dyadic grid: it is still an
+            // enclosure, and every later product stays on the gcd-free dyadic
+            // path of `Q`.
             match b.efolds().recip().map(|inv| inv.outward(FIXED + 32)) {
                 Some(inv) => Encl::exact(b.amp.clone())
                     .mul(&g.sub(&Encl::exact(Q::ONE)))
@@ -265,17 +270,17 @@ pub struct Term {
 }
 
 /// A sum of decaying modes with polynomial factors: the closed form of any
-/// chain of linear relaxations driven by boosts (a gas filling, its stars
-/// forming, their elements made and locked away). Rates are exact; only
-/// coefficients carry enclosures.
+/// chain of linear relaxations driven by exponential modes (for example a
+/// gas reservoir, the stars formed from it and the elements they produce).
+/// Rates are exact; only coefficients carry enclosures.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct ExpSum {
     /// The terms summed; an empty list is the zero function.
     pub terms: Vec<Term>,
 }
 
-/// The precision coefficients are kept to (outward): relative to their own
-/// size, far past what any read needs.
+/// Coefficients are rounded outward to the grid of `2^-KEEP`: an absolute
+/// precision far finer than any reading requires.
 const KEEP: u32 = 120;
 
 impl ExpSum {
@@ -304,7 +309,7 @@ impl ExpSum {
         }
     }
 
-    /// Two orbits added, like terms merged.
+    /// Two orbits added; terms with equal power and rate are merged.
     pub fn plus(&self, other: &ExpSum) -> ExpSum {
         let mut out = self.clone();
         for t in &other.terms {
@@ -325,10 +330,11 @@ impl ExpSum {
     }
 
     /// The process this orbit drives through a relaxation at rate `k`:
-    /// y' = -k y + self, y(0) = 0, in closed form. For a term
-    /// c t^m e^(-l t) with a = k - l: if a = 0, c t^(m+1) / (m+1) e^(-k t);
-    /// otherwise c [sum over i of (-1)^i m!/(m-i)! t^(m-i) / a^(i+1)] e^(-l t)
-    /// minus c (-1)^m m! / a^(m+1) e^(-k t).
+    /// `y' = -k y + self`, `y(0) = 0`, in closed form. For a term
+    /// `c t^m e^(-l t)` with `a = k - l`: if `a = 0`, the result is
+    /// `c t^(m+1) / (m+1) e^(-k t)`; otherwise it is
+    /// `c [sum over i of (-1)^i m!/(m-i)! t^(m-i) / a^(i+1)] e^(-l t)` minus
+    /// `c (-1)^m m! / a^(m+1) e^(-k t)`.
     pub fn relaxed(&self, k: &Q) -> ExpSum {
         let mut out = ExpSum::default();
         for t in &self.terms {
@@ -350,7 +356,7 @@ impl ExpSum {
                 continue;
             }
             let inv = Q::ONE.checked_div(&a).unwrap_or(Q::ZERO);
-            // falling factorial m!/(m-i)! and (1/a)^(i+1), exact
+            // The falling factorial m!/(m-i)! and (1/a)^(i+1), both exact.
             let (mut fall, mut pow) = (Q::ONE, inv.clone());
             for i in 0..=m {
                 let sign = if i % 2 == 0 { Q::ONE } else { -Q::ONE };
@@ -365,7 +371,8 @@ impl ExpSum {
                 fall = &fall * &Q::int(i64::from(m - i));
                 pow = &pow * &inv;
             }
-            // the homogeneous part, so y(0) = 0: -c (-1)^m m! / a^(m+1)
+            // The homogeneous part, chosen so that y(0) = 0, has the
+            // coefficient -c (-1)^m m! / a^(m+1).
             let m_fact = (1..=m).fold(Q::ONE, |acc, j| &acc * &Q::int(i64::from(j)));
             let sign = if m % 2 == 0 { -Q::ONE } else { Q::ONE };
             let last = (0..=m).fold(Q::ONE, |acc, _| &acc * &inv);
@@ -381,13 +388,14 @@ impl ExpSum {
         out
     }
 
-    /// Its value at `t` (t >= 0).
+    /// The orbit's value at `t` (t >= 0), enclosed.
     pub fn at(&self, t: &Q) -> Encl {
         self.at_with(t, &mut Grown::default())
     }
 
-    /// Its value at `t`, each distinct rate's `e^(-rate t)` read once in
-    /// `grown` and shared with every other orbit read at the same `t`.
+    /// The orbit's value at `t`, with each distinct rate's `e^(-rate t)`
+    /// evaluated once in `grown` and shared with every other orbit read at
+    /// the same `t`.
     pub fn at_with(&self, t: &Q, grown: &mut Grown) -> Encl {
         let mut sum = Encl::exact(Q::ZERO);
         for term in &self.terms {
@@ -399,7 +407,8 @@ impl ExpSum {
     }
 }
 
-/// Each rate's `e^(-rate t)` at one `t`, computed once.
+/// A cache of `e^(-rate t)` by rate, for one `t`; each rate is evaluated
+/// once.
 #[derive(Default)]
 pub struct Grown {
     at: std::collections::BTreeMap<Q, Encl>,

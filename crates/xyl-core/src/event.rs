@@ -13,7 +13,7 @@
 //! the current bracket is returned. The result is the event's time when the
 //! function crosses once inside the bracket, which the caller ensures (a
 //! monotone piece of its law). Between events nothing is computed: a reading
-//! evaluates the orbits it needs at its own time.
+//! evaluates the orbits it needs at the time of the reading.
 
 use crate::certified::Encl;
 use crate::Q;
@@ -23,8 +23,9 @@ use crate::Q;
 /// ends (`None` otherwise). The bracket is halved on the side the
 /// midpoint's sign certainly falls; where the midpoint's enclosure holds
 /// zero the crossing is within the bracket already, and the bracket is
-/// returned. The bracket is the event's time if `f` crosses once inside it
-/// (a monotone piece, the caller's knowledge of its law).
+/// returned. The bracket encloses the event's time if `f` crosses zero once
+/// inside it, for example on a monotone piece of the law, which the caller
+/// establishes.
 pub fn crossing(lo: &Q, hi: &Q, width: &Q, f: impl Fn(&Q) -> Encl) -> Option<Encl> {
     let sign = |e: &Encl| -> i8 {
         if e.lo.signum() > 0 {

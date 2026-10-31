@@ -79,8 +79,9 @@ pub struct Medium {
     /// The free energy reaching it (flux units): drive-band light, the work the
     /// world's heat can do, and radiolysis, as each applies.
     pub energy: Dy,
-    /// How much of the solvent there is: a sea's open part or a supercritical
-    /// gas as partial pressure (bar); 1 for a melt or plasma.
+    /// How much of the solvent there is, in bar: a sea's open part, an ocean
+    /// under ice, or a supercritical gas's partial pressure; 1 for a melt or
+    /// plasma.
     pub amount: Dy,
     /// Whether no starlight reaches it.
     pub dark: bool,
@@ -93,19 +94,21 @@ pub struct Medium {
     /// How fast its chemistry runs relative to the unit temperature (see [`pace`]).
     pub pace: Dy,
     /// The share of its world's area this medium lives across, in \[0, 1\]:
-    /// 1 on a rocky world; on a giant, the share of its depth over which the
-    /// temperature, rising linearly from its surface to its interior, lies in
-    /// the solvent's own range (`living_band`).
+    /// 1 on a rocky world; on a giant, the share of the giant's depth over
+    /// which the temperature, rising linearly from the surface to the
+    /// interior, lies in the solvent's range (`living_band`).
     pub band: Dy,
-    /// The energy its field holds per carrier (eV): what tells a right
-    /// pattern from a wrong one in a plasma, which has no bonds; zero for a
-    /// bonded solvent.
+    /// The field energy per carrier (eV): the energy scale that separates
+    /// ordered from disordered patterns in a plasma, which has no bonds; zero
+    /// for a bonded solvent.
     pub field_ev: Dy,
 }
 
-/// The world's own heat flowing out through each unit of its surface (flux units).
+/// The world's internal heat flowing out through each unit of its surface
+/// (flux units): `geo_flux x heat / radius`.
 pub fn geothermal(w: &State) -> Dy {
-    // heat over radius (not radius squared)
+    // The heat is divided by the radius, not its square, because the surface
+    // area is linear in radius in the interior model.
     constants().geo_flux * w.heat / w.radius.max(Dy::sci(1, -6))
 }
 
@@ -121,8 +124,9 @@ pub fn free_heat(w: &State, t_medium: Dy) -> Dy {
 }
 
 /// The thickness (km) of an ice shell whose base sits at its melting point,
-/// conducting `q` W/m^2 to a surface at `t_surf` (conductivity 567 / T);
-/// `None` with no heat flow (no shell is thin enough).
+/// conducting `q` W/m^2 to a surface at `t_surf` with conductivity 567 / T:
+/// `567 ln(t_melt / t_surf) / q / 1000`. `None` when `q <= 0` (no shell is
+/// thin enough).
 pub fn shell_km(q: Dy, t_surf: Dy, t_melt: Dy) -> Option<Dy> {
     if q.signum() <= 0 {
         return None;
@@ -142,12 +146,14 @@ pub(super) fn solvents(w: &State, ctx: &Ctx) -> Vec<(Solvent, Where, Dy, Dy, Dy,
     let mut out = Vec::new();
     let (t, p) = (w.t_surf, w.p_bar.max(Dy::sci(1, -9)));
     let light = w.light * band(w.star_t, &ctx.sc).drive;
-    // radiolysis: chemical energy from particles reaching the surface (hydro.rs)
+    // Radiolysis is the chemical energy from particles reaching the surface
+    // (hydro.rs).
     let rad = hydro::radiolysis(w);
     for (s, amount) in w.seas.iter() {
         let ph = ctx.phase(s, t, p);
         if ph == Phase::Liquid || ph == Phase::Supercritical {
-            // a sea partly frozen at its melting point counts only its open water
+            // A sea partly frozen at its melting point counts only its open
+            // water.
             let open = Dy::ONE - w.frozen.amount(s);
             out.push((
                 Solvent::Volatile(s),
@@ -159,8 +165,10 @@ pub(super) fn solvents(w: &State, ctx: &Ctx) -> Vec<(Solvent, Where, Dy, Dy, Dy,
                 rad,
             ));
         } else if ph == Phase::Solid && matches!(s, Species::H2O | Species::NH3) && !w.giant {
-            // a subsurface ocean exists where the conducted shell thickness at
-            // the world's heat flow (tides included) is below the ice layer's
+            // A subsurface ocean exists where the thickness of a conducting
+            // shell at the world's heat flow (tides included) is less than the
+            // ice layer's thickness. The ocean sits at the triple point, plus
+            // 5 K (scaled) for water.
             let t_under = ctx.diagram(s).tt
                 + if s == Species::H2O {
                     Dy::int(5) * chem
@@ -227,7 +235,11 @@ pub(super) fn solvents(w: &State, ctx: &Ctx) -> Vec<(Solvent, Where, Dy, Dy, Dy,
     out
 }
 
-/// The middle of a solvent's own liquid range (K).
+/// The middle of a solvent's liquid range (K): 2000 K for a melt and 1e4 K
+/// for a plasma (both scaled by the chemistry scale); for a volatile, the
+/// mean of the triple point and the boiling point at the reference pressure,
+/// with the critical point as the upper end when it is lower or when the
+/// volatile sublimes at the reference pressure.
 pub fn mid(s: Solvent, ctx: &Ctx) -> Dy {
     let chem = ctx.sc.chem;
     match s {
@@ -235,22 +247,27 @@ pub fn mid(s: Solvent, ctx: &Ctx) -> Dy {
         Solvent::Plasma => Dy::sci(1, 4) * chem,
         Solvent::Volatile(v) => {
             let d = ctx.diagram(v);
-            // a solvent that sublimes at a bar is liquid only under pressure
+            // A solvent that sublimes at the reference pressure is liquid only
+            // under higher pressure, up to the critical point.
             let top = if d.tb > d.tt { d.tb } else { d.tc };
             (d.tt + top.min(d.tc)) * Dy::ratio(1, 2)
         }
     }
 }
 
-/// How fast a chemistry runs, relative to the unit temperature (Eyring, the
-/// activation energy scaled to its solvent's own range).
+/// How fast a chemistry runs at `t`, relative to the unit temperature: the
+/// Eyring form `(t / t_unit) exp(B (1 - m / t))`, with B the solvent barrier
+/// and m the middle of the solvent's range, so the activation energy is
+/// B k m. A volatile below its triple point is read at the triple point;
+/// above its critical point the pace is `t / t_unit`.
 pub fn pace(s: Solvent, t: Dy, ctx: &Ctx) -> Dy {
     let m = mid(s, ctx);
     let mut t = t;
     if let Solvent::Volatile(v) = s {
         let d = ctx.diagram(v);
         if t > d.tc {
-            // a supercritical fluid runs at its own temperature
+            // A supercritical fluid has no liquid range, so the barrier term
+            // is dropped.
             return t / constants().t_unit;
         }
         t = t.max(d.tt);
@@ -258,8 +275,8 @@ pub fn pace(s: Solvent, t: Dy, ctx: &Ctx) -> Dy {
     (t / constants().t_unit) * (constants().solvent_barrier * (Dy::ONE - m / t.max(Dy::ONE))).exp()
 }
 
-/// A minded body keeps itself where its chemistry works best: the middle of
-/// its solvent's range; its pace there is that temperature over the unit's.
+/// A minded body's temperature (K): the middle of its solvent's range, where
+/// its chemistry's pace is that temperature over the unit temperature.
 pub fn body_temperature(s: Solvent, ctx: &Ctx) -> Dy {
     mid(s, ctx)
 }
@@ -309,9 +326,11 @@ pub fn weak_bond_ev(s: Solvent, ctx: &Ctx) -> Dy {
     }
 }
 
-/// How much chemistry a medium allows, 0 to 1: the elements that can join it
-/// x strong bonds that outlast a structure (bond energy over kT above ~40) x
-/// weak bonds that hold yet flex on the solvent's own cohesion (near ~10 kT).
+/// How much chemistry a medium allows, 0 to 1: the share of the four element
+/// groups available (metals by `z`, carbon, nitrogen and the solvent) x a
+/// logistic in the strong bond's energy over kT centred at 40 x a peak in
+/// the solvent's cohesion over kT centred at 10. A plasma, which has no
+/// bonds, takes the element share times the plasma window.
 pub fn richness(w: &State, s: Solvent, t: Dy, z: Dy, ctx: &Ctx) -> Dy {
     let c = constants();
     let t = t.max(Dy::ONE);
@@ -325,7 +344,7 @@ pub fn richness(w: &State, s: Solvent, t: Dy, z: Dy, ctx: &Ctx) -> Dy {
     }
     let share = (elements / Dy::int(4)).clamp(Dy::ZERO, Dy::ONE);
     if s == Solvent::Plasma {
-        // a plasma has no bonds; its structure is carried by fields
+        // A plasma has no bonds; its structure is carried by fields.
         return share * c.plasma_window;
     }
     let kt = c.kb_ev * t;
@@ -377,8 +396,8 @@ pub fn plasma_field_ev(w: &State) -> Dy {
 
 /// The share of a world's area a solvent lives across (`Medium::band`): 1 on
 /// a rocky world; on a giant, the depth share x_hi - x_lo over which the
-/// temperature T(x) = T_surf + (T_int - T_surf) x lies in the solvent's own
-/// range - a volatile's from its triple point to its critical point, a
+/// temperature T(x) = T_surf + (T_int - T_surf) x lies in the solvent's
+/// range: a volatile's from its triple point to its critical point, a
 /// melt's and a plasma's from where they form to the interior.
 pub fn living_band(w: &State, s: Solvent, ctx: &Ctx) -> Dy {
     if !w.giant {
@@ -405,7 +424,8 @@ pub fn living_band(w: &State, s: Solvent, ctx: &Ctx) -> Dy {
     (at(hi) - at(lo)).max(Dy::ZERO)
 }
 
-/// The richest medium (of a region, if asked): richness x energy (capped at 1).
+/// The richest medium (of a region, if one is given) by richness x energy,
+/// with the energy capped at 1; ties go to the solvent name.
 pub fn best(ms: &[Medium], region: Option<Region>) -> Option<&Medium> {
     ms.iter()
         .filter(|m| region.is_none_or(|r| m.region == r))

@@ -7,8 +7,8 @@ use xyl_core::certified::down;
 fn stars_circle_the_core_and_the_core_holds_its_share() {
     let bang = crate::genesis::bang();
     let stars: Vec<Star> = (0..1000).filter_map(|n| star(7, bang, n)).collect();
-    // a star exists only where its ring's gas lights; its birth is at or
-    // after the ring's first light and before the horizon
+    // A star exists only where its ring's gas lights; its birth is at or
+    // after the ring's first light and at or before the horizon.
     assert!(!stars.is_empty() && stars.len() <= 1000);
     let horizon = crate::life::horizon_gyr().to_q();
     for s in &stars {
@@ -19,20 +19,20 @@ fn stars_circle_the_core_and_the_core_holds_its_share() {
         );
         assert!(s.born <= horizon, "born before the horizon");
     }
-    // in_core and Pop::Bulge select the same stars: a star within the
-    // core's reach (one galaxy unit) is a bulge star
+    // `in_core` and `Pop::Bulge` select the same stars: a star within the
+    // core's reach (one galaxy unit) is a bulge star.
     let core = stars.iter().filter(|s| s.in_core()).count();
     let bulge = stars.iter().filter(|s| s.pop == Pop::Bulge).count();
     assert_eq!(core, bulge, "core {core} bulge {bulge}");
-    // every star lies within the outermost ring's outer edge
+    // Every star lies within the outermost ring's outer edge.
     let edge = structure()
         .rings
         .last()
         .map(|r| r.1.clone())
         .unwrap_or(rim_kpc());
     assert!(stars.iter().all(|s| s.orbit.radius.to_q() <= edge));
-    // a star's distance from its core is its orbit radius, and its place
-    // changes with t
+    // A star's distance from its core is its orbit radius to within 0.5 kpc,
+    // and its place changes with t.
     let r = crate::chain::radius();
     let s = &stars[0];
     let (p0, p1) = (s.place(Dy::int(5), &r), s.place(Dy::sci(51, -1), &r));
@@ -44,7 +44,7 @@ fn stars_circle_the_core_and_the_core_holds_its_share() {
         s.orbit.radius
     );
     assert!(p0 != p1, "it moves");
-    // a disc star stays near the plane; a bulge star's orbit is tilted
+    // A disc star stays within 2 kpc of the plane.
     let height = |s: &Star, t: Dy| {
         let (reach, dir, climb) = s.bearing(t);
         Dy::from_q(
@@ -55,9 +55,9 @@ fn stars_circle_the_core_and_the_core_holds_its_share() {
     };
     let disc = stars.iter().find(|s| s.pop == Pop::Disc).unwrap();
     assert!(height(disc, Dy::int(8)) < Dy::int(2));
-    // nucleus orbits are tilted, so some stars stand off the plane by more
+    // Nucleus orbits are tilted, so some stars lie off the plane by more
     // than a tenth of their radius, all within the nucleus; if the nucleus
-    // never lights, no nucleus star exists
+    // never lights, no nucleus star exists.
     let nuc: Vec<Star> = (0..64)
         .filter_map(|k| star(7, bang, NUCLEUS_BASE + k))
         .collect();
@@ -73,12 +73,12 @@ fn stars_circle_the_core_and_the_core_holds_its_share() {
             "within the nucleus"
         );
     }
-    // the mass inside r includes the hole and grows outward
+    // The mass inside r includes the hole and grows outward.
     assert!(inside_mass(&Q::ratio(1, 1000)) >= hole_mass());
     assert!(inside_mass(&rim_kpc()) >= inside_mass(&r0()));
     assert!(inside_mass(&r0()) > inside_mass(&Q::ratio(1, 1000)));
-    // the arc: zero to itself, symmetric, and never shorter than the
-    // difference between the two reaches
+    // The arc from a place to itself is zero; the arc is symmetric and never
+    // shorter than the difference between the two reaches.
     let (a, b) = (
         stars[1].place(Dy::int(4), &r),
         stars[2].place(Dy::int(4), &r),
@@ -99,8 +99,9 @@ fn imf_heavier_where_rings_crowd_births_after_first_stars() {
         });
         s.checked_div(&Q::int(n)).unwrap()
     };
-    // the IMF's break is heavier where the rings crowd: the mean mass at
-    // the ring of greatest holding per kpc is at least that at r0
+    // The IMF's break is heavier where the rings crowd: the mean mass at the
+    // ring of greatest holding per kpc is at least that at r0. Every star has
+    // positive mass and is born no earlier than the first stars.
     let densest = structure()
         .rings
         .iter()

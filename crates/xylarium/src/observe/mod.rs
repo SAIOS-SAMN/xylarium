@@ -2,10 +2,10 @@
 //!
 //! A carried reading builds the universe from its seed and checkpoint
 //! exactly as `xylarium run` does on a start (`run::with`: the laws
-//! regenerate what they give, the checkpoint lays back the rest), then reads
-//! it. A law reading is computed from the seed without carrying the
+//! regenerate what they derive, and the checkpoint restores the rest), then
+//! reads it. A law reading is computed from the seed without carrying the
 //! universe. Neither changes the universe's state: the command writes only
-//! caches and its own log into the home, so it can run beside `run`.
+//! caches and the observer log into the home, so it can run beside `run`.
 //!
 //!   xylarium observe [--seed 7] [--stars 400] [--threads 2]
 //!                    [--home var/universe-7] [--sight census] WHAT
@@ -22,19 +22,22 @@
 //!   star N            one reached star: its books, drift and worlds
 //!   house             the seats minds hold and the councils
 //!   world S W         world W of star S read across its life: its air,
-//!                     seas, surface, field, and what it houses its people
-//!   system S \[S..\]    star S's manifolds inside its own: each planet on its
-//!                     star's sphere, each moon on its giant's, their caps
-//!                     in degrees and their shares of belonging, and
-//!                     relations read in the lowest tier holding both ends;
-//!                     several stars give one line each below two planets
+//!                     seas, surface, field, and the housing it gives its
+//!                     people
+//!   system S \[S..\]    star S's nested manifolds: each planet on its star's
+//!                     sphere, each moon on its giant's, their caps in
+//!                     degrees and their shares of belonging, and relations
+//!                     read in the lowest tier holding both ends; with
+//!                     several stars, a star with fewer than two planets
+//!                     gets one line
 //!   galaxy            the units from the white hole, the bells, and sample
 //!                     stars on their galactic manifolds: arc from the core,
 //!                     height over the plane, phase in degrees
 //!   chemistry         the galaxy's elements across the disc, then and now,
-//!                     and its books (everything made is somewhere)
+//!                     and its books (where every element made is held)
 //!   ley \[K\]           the ley network: constellations, lines, passages,
 //!                     discord and quarantine, the star map by degree cells
+//!                     (K default 10)
 //!   annals \[K\]        the last K annals (default 20)
 //!   events \[K\]        the last K events logged, each at its count
 //!                     (default 20)
@@ -47,8 +50,9 @@
 //!   core \[T\]          the substrate at T Gyr (default 14): the core's
 //!                     reverberation kind by kind, its outflow, the ocean's
 //!                     shares and every galaxy's intake, the books, Z Q R
-//!   cores             the cut one tier up: each candidate core's weight,
-//!                     reach, held or medium, ring phase and period
+//!   cores             the founding's galaxies: the home core and each bead
+//!                     of the cascade: hole mass in suns, its ratio to the
+//!                     home hole's, and place
 //!   tiers S           star S and its worlds, each turn in its anchor's rings
 //!   formation         each galaxy's cut, gas, cooling and stars
 //!   seals \[Z\]         the sealed kinds, the seams and the vessel (the
@@ -56,8 +60,8 @@
 //!   founding          the founding's equitable cascade and its stacks
 //!   founding-reach    each kind's reach about the throat at the founding
 //!   worlds \[N\]        the planets of the first N stars (default 200),
-//!                     settled, with each star's chain (piece, cut,
-//!                     manifold, worlds) and why a star stands without worlds
+//!                     settled, why a star stands without worlds, and the
+//!                     chain (piece, cut, manifold, worlds) of the first 12
 //!   push \[N\]          the throat's push in Z kind by kind (default 150)
 //!   bonding \[N\]       the clusters the bond law closes kind by kind
 //!                     (default 150)
@@ -112,9 +116,12 @@ fn count(what: &[String], default: usize) -> usize {
 /// printed.
 ///
 /// Returns `Err` with a message when the universe cannot be founded or
-/// carried from `o` (for example a reading that cannot be founded).
+/// carried from `o`, or when a required argument is missing (`tiers` without
+/// a star).
 ///
 /// # Examples
+///
+/// The planets of the first 20 sample stars:
 ///
 /// ```no_run
 /// let words: Vec<String> = ["--home", "var/universe-7"].iter().map(|w| w.to_string()).collect();
@@ -143,14 +150,14 @@ fn law_reading(o: &Options, what: &[String]) -> Result<Option<String>, String> {
         Some("push") => atoms::push_reading(count(what, 150)),
         Some("bonding") => atoms::bonding(count(what, 150)),
         Some("core") => {
-            // the substrate at T Gyr, every value a closed form of T
+            // The substrate at T Gyr, every value a closed form of T.
             let t = what
                 .get(1)
                 .and_then(|v| xyl_cosmos::elements::decimal(v))
                 .unwrap_or_else(|| Q::int(14));
             substrate::core_read(o, t)?
         }
-        // the cascade report already ends each line with a newline
+        // The cascade report already ends each line with a newline.
         Some("founding") => return founding::founding_cascade(o).map(Some),
         Some("cores") => {
             let bang = BigBang::of(o.seed).ok_or("no Big Bang")?;
@@ -178,7 +185,7 @@ fn carried(
 ) -> Result<bool, String> {
     // `people N Y` and `sync K Y` carry live play Y years in memory first,
     // since the gauges are set only by a live step; nothing is written, so
-    // the home on disk is unchanged
+    // the home on disk is unchanged.
     if let (Some("people" | "sync"), Some(years)) = (
         what.first().map(String::as_str),
         what.get(2).and_then(|s| s.parse::<i64>().ok()),
@@ -188,8 +195,8 @@ fn carried(
                 .count(&Q::new(years, 1_000_000_000).ok_or("observe people N Y: years")?);
         let _ = u.advance_to(&to, true);
     }
-    // witnessing a star unrolls its system from the seed, so `system` reads
-    // any star, in play or not
+    // `witness` unrolls a star's system from the seed, so `system` can read
+    // any star, in play or not.
     let systems: Vec<u64> = if what.first().map(String::as_str) == Some("system") {
         what.iter().skip(1).filter_map(|s| s.parse().ok()).collect()
     } else {

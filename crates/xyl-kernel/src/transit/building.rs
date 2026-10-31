@@ -1,5 +1,5 @@
 //! Building ley lines: carrying the network through time event by event
-//! ([`Network::step`]), and where a builder sites its next line by the worth
+//! ([`Network::step`]), and the siting of a builder's next line by the worth
 //! law.
 
 use super::{best_spec, cruise_speed, home_escape, kpc_m, kpc_per_gyr, passage_j, tithe, year_s};
@@ -12,8 +12,8 @@ use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 use xyl_cosmos::chain::{units, Place};
 
-/// A house able to build: its people's index, its cruise speed out of its
-/// home well (m/s), its spare power (W) and its drive's exhaust speed (m/s).
+/// A house able to build: the people's index, the cruise speed out of the
+/// home well (m/s), the spare power (W) and the drive's exhaust speed (m/s).
 type Builder = (usize, Dy, Dy, Dy);
 
 /// Each joined star by galactic core, as (orbit radius in kpc, sample
@@ -28,16 +28,17 @@ type CoreAndRadius = BTreeMap<u64, (u32, Dy)>;
 type Best = (Dy, u64, u64, Dy, Dy);
 
 impl Network {
-    /// Carry the network to `to` (Gyr), event by event. Every line falling due
-    /// by then opens at its own moment, in order, and its builder begins the
-    /// next there: the far mouth is the line worth the most to a constellation
-    /// the network has not joined (constellations current at that moment);
-    /// its due time is the later of the voyage (the swiftest drive out of the
-    /// home well, along the arc) and the time the world's spare power takes to
-    /// pay the line's cost. A house with no line under way begins one at once.
-    /// Then each constellation's quarantine is read at `to` from its peoples'
-    /// discord (by index, a share each). Returns (epoch, kind, text) for the
-    /// annals.
+    /// Carries the network to `to` (Gyr), event by event. Every line falling
+    /// due by then opens at its due time, in time order, and its builder
+    /// begins the next line at that time: the far mouth is the one of greatest
+    /// worth in a constellation the network has not joined (constellations as
+    /// current at that time). The new line's due time is the later of the
+    /// voyage (the swiftest drive out of the home well, along the arc) and the
+    /// time the world's spare power takes to pay the line's cost. A house with
+    /// no line under way begins one at once. At most [`LINES_PER_READING`]
+    /// events are taken per call. Then each constellation's quarantine is read
+    /// at `to` from the peoples' discord (`discord`, a share per people
+    /// index). Returns (epoch, kind, text) entries for the annals.
     pub fn step(
         &mut self,
         cosmic: &Cosmic,
@@ -49,8 +50,9 @@ impl Network {
         self.read_to = to.max(from);
         let houses = builders(cosmic);
         let in_tune = in_tune_stars(cosmic, discord);
-        // Starts of idle builders and dues of works are taken in one time
-        // order, so `current` only ever reads the constellations forward.
+        // The starts of idle builders and the due times of works are taken in
+        // one time order, so `current` only ever reads the constellations
+        // forward in time.
         let mut idle = self.idle_builders(cosmic, &houses, from, to);
         for _ in 0..LINES_PER_READING {
             let due = self
@@ -91,9 +93,10 @@ impl Network {
         out
     }
 
-    /// The builders with no line under way and the time each begins: after
-    /// its last line opened, never before its dawn or the last reading
-    /// (`from`), and only those beginning by `to`.
+    /// Returns the builders (house, progenitors flag) with no line under way
+    /// and the time each begins: when the builder's last line opened, but
+    /// never before the people's dawn or the last reading (`from`), and only
+    /// those beginning by `to`.
     fn idle_builders(
         &self,
         cosmic: &Cosmic,
@@ -124,13 +127,15 @@ impl Network {
         idle
     }
 
-    /// A builder begins its next line at `start`: among the constellations it
-    /// has discovered (within its craft's reach since its dawn) and the network
-    /// has not joined, the line worth the most by the siting law. Each
-    /// candidate's worth is bounded from its arc's lower bound and the greatest
-    /// bounds are read first; arcs are read with both stars placed at `start`.
-    /// An ancient house explores any unjoined constellation; its progenitors
-    /// (`want`) build only to the constellations of the given stars.
+    /// Begins builder `key`'s next line at `start`: among the constellations
+    /// the builder has discovered (within the craft's reach since the
+    /// people's dawn) and the network has not joined, the line of greatest
+    /// worth by the siting law. Each candidate's worth is bounded from the
+    /// lower bound on its arc, and the greatest bounds are read first; arcs
+    /// are read with both stars placed at `start`. An ancient house explores
+    /// any unjoined constellation; its progenitors (`want`) build only to the
+    /// constellations of the given stars. No work is entered when no
+    /// candidate has positive worth.
     fn begin(
         &mut self,
         cosmic: &Cosmic,
@@ -159,9 +164,9 @@ impl Network {
             .collect();
         let mine = self.joined_by_core(&joined, &by_n);
         let placer = Placer::new(self, start);
-        // A house has discovered the sky its craft could have crossed since
-        // its dawn, kpc_per_gyr(cruise) (start - dawn); constellations beyond
-        // that are not candidates.
+        // A house has discovered the region its craft could have crossed since
+        // the people's dawn, kpc_per_gyr(cruise) (start - dawn); constellations
+        // beyond that distance are not candidates.
         let seen = kpc_per_gyr(cruise) * (start - p.dawn).max(Dy::ZERO);
         let per = self.candidates(&placer, &joined, wanted.as_ref(), &by_n, &mine, seen);
         let siting = Siting::new(self, cosmic, p, key.1, v_e);
@@ -188,7 +193,8 @@ impl Network {
         );
     }
 
-    /// The joined stars by galactic core, each core's sorted by orbit radius.
+    /// Returns the stars of the joined constellations by galactic core, each
+    /// core's list sorted by orbit radius.
     fn joined_by_core(&self, joined: &[bool], by_n: &CoreAndRadius) -> JoinedByCore {
         let mut mine: JoinedByCore = BTreeMap::new();
         for (&k, &c) in &self.of {
@@ -204,11 +210,12 @@ impl Network {
         mine
     }
 
-    /// One candidate per discovered, unjoined constellation (restricted to
-    /// `wanted` when given): its star nearest the joined stars by a lower
-    /// bound on the arc - within a galaxy the difference of orbit radii,
-    /// across galaxies the arc between the cores. Returns (lower bound in
-    /// kpc, star) by constellation.
+    /// Returns one candidate per discovered, unjoined constellation
+    /// (restricted to `wanted` when given): the constellation's star nearest
+    /// the joined stars by a lower bound on the arc, which within a galaxy is
+    /// the difference of orbit radii and across galaxies the arc between the
+    /// cores. Constellations whose bound exceeds `seen` are left out. The
+    /// result maps each constellation to (lower bound in kpc, star).
     fn candidates(
         &self,
         placer: &Placer<'_>,
@@ -253,8 +260,9 @@ impl Network {
     }
 }
 
-/// The houses that can build: living ancient peoples whose swiftest drive
-/// climbs out of their home well and whose world has spare power.
+/// Returns the houses that can build: living ancient peoples whose swiftest
+/// drive climbs out of the home well and whose world has spare power
+/// (starlight plus heat less the bodies' use, at least zero).
 fn builders(cosmic: &Cosmic) -> Vec<Builder> {
     let ratio = Dy::int(crate::propulsion::MASS_RATIO);
     cosmic
@@ -274,8 +282,8 @@ fn builders(cosmic: &Cosmic) -> Vec<Builder> {
         .collect()
 }
 
-/// The progenitors' targets: the stars of living non-ancient peoples whose
-/// discord is under a half.
+/// Returns the progenitors' targets: the stars of living non-ancient peoples
+/// whose discord is under one half or has not been read.
 fn in_tune_stars(cosmic: &Cosmic, discord: &BTreeMap<usize, Dy>) -> Vec<u64> {
     cosmic
         .peoples
@@ -290,7 +298,7 @@ fn in_tune_stars(cosmic: &Cosmic, discord: &BTreeMap<usize, Dy>) -> Vec<u64> {
         .collect()
 }
 
-/// The annals entry for a line opening.
+/// Returns the annals entry for the opening of line `done`.
 fn opening_entry(cosmic: &Cosmic, key: (usize, bool), done: &Ley) -> (Dy, &'static str, String) {
     let name = cosmic
         .peoples
@@ -312,10 +320,10 @@ fn opening_entry(cosmic: &Cosmic, key: (usize, bool), done: &Ley) -> (Dy, &'stat
     )
 }
 
-/// A lower bound on the arc (kpc) from the joined stars to any star of
-/// galaxy `core`: the least arc between `core`'s centre and a joined
-/// galaxy's centre, memoised in `between`; 10^12 kpc where a centre is not
-/// placed.
+/// Returns a lower bound on the arc (kpc) from the joined stars to any star
+/// of galaxy `core`: the least arc between the centre of `core` and the
+/// centre of a joined galaxy, memoised in `between`, or 10^12 kpc when no
+/// such centre is placed.
 fn core_lower_bound(
     between: &mut BTreeMap<u32, Dy>,
     cores_at: &BTreeMap<u32, Place>,
@@ -335,7 +343,8 @@ fn core_lower_bound(
     })
 }
 
-/// Stars in play placed at one time, each placed once and cached.
+/// Places stars in play at one time, computing each position once and
+/// caching it.
 struct Placer<'a> {
     net: &'a Network,
     start: Dy,
@@ -353,7 +362,7 @@ impl<'a> Placer<'a> {
         }
     }
 
-    /// Star `n` placed at `start`; None if it is not in play.
+    /// Returns star `n` placed at `start`, or None if it is not in play.
     fn place(&self, n: u64) -> Option<Place> {
         if let Some(p) = self.placed.borrow().get(&n) {
             return Some(p.clone());
@@ -368,14 +377,15 @@ impl<'a> Placer<'a> {
         Some(p)
     }
 
-    /// The arc between stars `a` and `b` at `start` (kpc).
+    /// Returns the arc (kpc) between stars `a` and `b` at `start`, or None if
+    /// either is not in play.
     fn arc(&self, a: u64, b: u64) -> Option<Dy> {
         Some(self.place(a)?.arc_kpc_dy(&self.place(b)?, &self.sphere))
     }
 
-    /// Each galaxy's centre at `start`, read from the first of its stars in
-    /// play that carries it. The arc between two centres is a lower bound on
-    /// every arc between their stars.
+    /// Returns each galaxy's centre at `start`, read from the first star in
+    /// play of that galaxy whose place carries it. The arc between two
+    /// centres is used as a lower bound on every arc between their stars.
     fn cores(&self) -> BTreeMap<u32, Place> {
         let mut cores_at: BTreeMap<u32, Place> = BTreeMap::new();
         for s in &self.net.sample {
@@ -389,12 +399,12 @@ impl<'a> Placer<'a> {
     }
 }
 
-/// The siting law. A line is worth its passer's mass times what it saves per
-/// kg against normal transit, less its tithe: the two wells' remainders at
-/// their mouths, c^2 (delta_A(r_m) + delta_B(r_m)), plus the voyage across
-/// the span within the passer's generation, c min(S / T, c); the tithe is
-/// `passage_j` for every mouth's width spanned. A line is built only where
-/// the worth is positive.
+/// The siting law. A line's worth is the passer's mass times the energy it
+/// saves per kg against normal transit, less the tithe. The saving per kg is
+/// the two wells' remainders at the mouths, c^2 (delta_A(r_m) + delta_B(r_m)),
+/// plus the voyage across the span S within the passer's generation T,
+/// c min(S / T, c); the tithe is `passage_j` for every mouth width spanned.
+/// A line is built only where the worth is positive.
 struct Siting<'a> {
     net: &'a Network,
     cosmic: &'a Cosmic<'a>,
@@ -428,8 +438,9 @@ impl<'a> Siting<'a> {
         }
     }
 
-    /// Star `n`'s well remainder at its mouth, delta = m / (r + m), with the
-    /// star's mass m and its mouth's reach r both in the core's r_g.
+    /// Returns star `n`'s well remainder at the mouth, delta = m / (r + m),
+    /// with the star's mass m (in hole masses) and the star's binding reach r
+    /// (in the core's r_g); zero when the star is not in play.
     fn well(&self, n: u64) -> Dy {
         let Some(st) = self.net.index.get(&n).and_then(|&x| self.net.sample.get(x)) else {
             return Dy::ZERO;
@@ -445,9 +456,10 @@ impl<'a> Siting<'a> {
         }
     }
 
-    /// The passer for a line to star `k`: the builder itself, or for
-    /// progenitors the living non-ancient people at `k`. Returns its body
-    /// mass (kg) and generation (s); None where progenitors find no people.
+    /// Returns the passer for a line to star `k`: the builder, or for
+    /// progenitors the first living non-ancient people at `k`. The result is
+    /// the passer's body mass (kg) and generation (s), or None when
+    /// progenitors find no people at `k`.
     fn passer(&self, k: u64) -> Option<(Dy, Dy)> {
         let who = if self.progenitors {
             self.cosmic
@@ -463,7 +475,8 @@ impl<'a> Siting<'a> {
         ))
     }
 
-    /// The tithe (J) of a line of `arc` kpc ending at star `k`.
+    /// Returns the tithe (J) of a line of `arc` kpc ending at star `k`, for a
+    /// passer of mass `body` (kg).
     fn toll(&self, body: Dy, arc: Dy, k: u64) -> Dy {
         tithe(
             passage_j(body, self.v_e),
@@ -472,17 +485,20 @@ impl<'a> Siting<'a> {
         )
     }
 
-    /// The line's worth (J) from mouth `m` to `k` across `arc` kpc.
+    /// Returns the worth (J) of a line from mouth `m` to mouth `k` across
+    /// `arc` kpc, for a passer of mass `body` (kg) and generation `gen` (s).
     fn worth(&self, body: Dy, gen: Dy, arc: Dy, m: u64, k: u64) -> Dy {
         let c = self.c;
         let voyage = c * (arc * kpc_m() / gen.max(Dy::ONE)).min(c);
         body * (c * c * (self.well(m) + self.well(k)) + voyage) - self.toll(body, arc, k)
     }
 
-    /// The best line by branch and bound: each candidate's worth is bounded
-    /// above from its arc's lower bound (voyage at its cap c, wells at their
-    /// greatest, tithe at the shortest span); candidates are taken greatest
-    /// bound first, stopping once no remaining bound can beat the best worth.
+    /// Returns the best line by branch and bound. Each candidate's worth is
+    /// bounded above from the lower bound on its arc (voyage term at its cap
+    /// c^2, the near well at the greatest joined well, tithe at the shortest
+    /// span); candidates are taken greatest bound first, stopping once no
+    /// remaining bound can exceed the best worth. Returns None when no
+    /// candidate has positive worth.
     fn best(
         &self,
         placer: &Placer<'_>,
@@ -532,9 +548,10 @@ impl<'a> Siting<'a> {
     }
 }
 
-/// The joined mouths a candidate at radius `r_k` of galaxy `core` is read
-/// from: the nearest few by radius in its own galaxy. Across galaxies the
-/// arc is dominated by the cores' span, which is the same from any joined
+/// Returns the joined mouths from which a candidate at radius `r_k` of
+/// galaxy `core` is read: within the candidate's galaxy, up to four joined
+/// stars on each side by orbit radius. Across galaxies the arc is dominated
+/// by the span between the cores, which is about the same from any joined
 /// star, so the first eight joined stars stand for all.
 fn mouth_pool(mine: &JoinedByCore, core: u32, r_k: Dy) -> Vec<u64> {
     match mine.get(&core) {

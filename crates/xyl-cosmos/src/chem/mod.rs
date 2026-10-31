@@ -74,12 +74,12 @@ impl Rulers {
     }
     /// The disc's total surface density at the reference radius `r0`, in solar
     /// masses per square parsec (M_sun pc^-2): 50. The profile across the
-    /// rings is the structure's own crowding (galaxy::density), scaled to it.
+    /// rings is the structure's crowding (`galaxy::density`), scaled to it.
     pub fn sigma_r0() -> Q {
         decimal("50").unwrap_or(Q::ZERO)
     }
-    /// What forming stars give back at once, and what the giants give back
-    /// later (0.4 in all).
+    /// The share of formed stellar mass returned at once (0.2); with the slow
+    /// return of `Rulers::slow`, 0.4 is returned in all.
     pub fn prompt() -> Q {
         decimal("0.2").unwrap_or(Q::ZERO)
     }
@@ -93,9 +93,9 @@ impl Rulers {
     pub fn loading() -> Q {
         decimal("1").unwrap_or(Q::ZERO)
     }
-    /// The gas's mean particle mass (proton masses): what sets the
-    /// fountain's reach against air's, x = 28 / A read as the share
-    /// 2x / (1 + x) (no root), at A = 1.3.
+    /// The gas's mean particle mass A in proton masses (1.3), which sets the
+    /// fountain's reach relative to air: x = 28 / A read as the share
+    /// 2x / (1 + x), with no root.
     pub fn gas_mu() -> Q {
         decimal("1.3").unwrap_or(Q::ZERO)
     }
@@ -112,7 +112,7 @@ impl Rulers {
         decimal("13.8").unwrap_or(Q::ZERO)
     }
     /// The reference ring (kpc): the galaxy's half-holding reach
-    /// (galaxy::r0), read from the founding's structure.
+    /// (`galaxy::r0`), read from the founding's structure.
     pub fn r0() -> Q {
         crate::galaxy::r0()
     }
@@ -120,7 +120,8 @@ impl Rulers {
     pub fn v_flat() -> Q {
         decimal("220").unwrap_or(Q::ZERO)
     }
-    /// The gas at R0 today, in dex against solar (the Cosmic Abundance Standard).
+    /// The gas at R0 today, in dex against solar (the Cosmic Abundance
+    /// Standard); 0 for elements not listed.
     pub fn ism_today_dex(sym: &str) -> Q {
         decimal(match sym {
             "C" => "-0.10",
@@ -135,7 +136,8 @@ impl Rulers {
     }
 }
 
-/// A channel's delay window (Gyr): its first delay and its last.
+/// A channel's delay window (Gyr): its first delay and its last; zero for
+/// the prompt channels.
 fn delay(c: Channel) -> (Q, Q) {
     match c {
         Channel::CoreCollapse | Channel::Spallation | Channel::BigBang => (Q::ZERO, Q::ZERO),
@@ -167,14 +169,16 @@ fn channel_index(c: Channel) -> Option<usize> {
     CHANNELS.iter().position(|&x| x == c)
 }
 
-/// A delay law t^-1 over [lo, hi], held as four boosts after `lo`: e-folds
-/// log-spaced across the window, each a quarter of the mass (a log-even
-/// mixture, as t^-1 is), the e-folds rounded to 1/1024 Gyr (declared).
+/// A delay law t^-1 over [lo, hi], held as four boosts after `lo`: e-fold
+/// times log-spaced across the window, each carrying a quarter of the mass
+/// (a log-even mixture, as t^-1 is), the e-fold times rounded down to
+/// 1/1024 Gyr and at least 1/1024 Gyr (declared).
 fn delay_modes(lo: &Q, hi: &Q) -> Vec<(Q, Q)> {
     let ratio = Dy::from_q(&hi.checked_div(lo).unwrap_or(Q::ONE));
     (0..4)
         .map(|j| {
-            // tau_j = lo (hi / lo)^((2j + 1) / 8): log-even across the window
+            // The e-fold times `tau_j = lo (hi / lo)^((2j + 1) / 8)` are log-even
+            // across the window.
             let tau =
                 Dy::from_q(lo) * (ratio.max(Dy::sci(1, -30)).log() * Dy::ratio(2 * j + 1, 8)).exp();
             let tau = Q::new((tau * Dy::int(1024)).trunc_i64().max(1), 1024).unwrap_or(Q::ONE);
@@ -190,7 +194,7 @@ pub struct Params {
     /// When the first stars shone, in Gyr after the Big Bang.
     pub first_stars: Q,
     /// Each ring's first light (Gyr after the Big Bang), by ring index
-    /// (`galaxy::birth_gyr`); None where the ring's gas never lights and no
+    /// (`galaxy::birth_gyr`); `None` where the ring's gas never lights and no
     /// stars form.
     pub infall: Vec<Option<Q>>,
     /// The star efficiency: the lit share of the gas, turned into stars each
@@ -211,8 +215,8 @@ impl Params {
     }
 }
 
-/// km/s per kpc read in 1/Gyr: 1000 m/s per km over the kiloparsec, times
-/// the seconds in a Gyr (package::Si).
+/// The factor converting km/s per kpc to 1/Gyr: 1000 m per km times the
+/// seconds in a Gyr, over the metres in a kpc (`package::Si`).
 fn km_s_per_kpc_to_per_gyr() -> Q {
     use crate::package::Si;
     (&Q::int(1000) * &Si::gyr_s())
@@ -224,8 +228,8 @@ fn ring_mid(j: usize) -> Q {
     &Q::int(i64::try_from(2 * j + 1).unwrap_or(0)) * &decimal("0.25").unwrap_or(Q::ZERO)
 }
 
-/// Ring `j`'s star-formation timescale (Gyr): its first light, where its
-/// gas lights at all.
+/// Ring `j`'s star-formation timescale (Gyr): its first light, at least
+/// 0.001 Gyr; `None` where the ring's gas never lights.
 fn infall_gyr(p: &Params, j: usize) -> Option<Q> {
     p.infall
         .get(j)
@@ -235,17 +239,18 @@ fn infall_gyr(p: &Params, j: usize) -> Option<Q> {
 }
 
 fn sigma_total(r: &Q) -> Encl {
-    // the disc's profile is the galaxy's own (galaxy::density), scaled to
-    // the reference ring's surface density
+    // The disc's profile is the galaxy's crowding (`galaxy::density`), scaled
+    // to the reference ring's surface density.
     crate::galaxy::density(r).mul(&Encl::exact(Rulers::sigma_r0()))
 }
 
-/// ln 10, as a rational inside its enclosure.
+/// The value of ln 10: the midpoint of its 72-bit enclosure (1 if the enclosure fails).
 pub fn ln10() -> Q {
     ln(&Q::int(10), BITS).map(|e| e.mid()).unwrap_or(Q::ONE)
 }
 
-/// Which ring holds radius `r`.
+/// The index of the ring holding radius `r` (kpc): floor(2r), clamped to
+/// [0, RINGS - 1].
 pub fn ring_of(r: &Q) -> usize {
     let j = (r * &Q::int(2)).floor_i128().unwrap_or(0).max(0);
     usize::try_from(j).unwrap_or(0).min(RINGS - 1)
@@ -260,13 +265,13 @@ mod tests {
         let bang = crate::genesis::bang();
         let chem = crate::genesis::chem();
         let today = Rulers::today_gyr();
-        // oxygen's abundance at r0 today is non-negative
+        // Oxygen's abundance at r0 today is non-negative.
         let o = chem.relative("O", &Rulers::r0(), &today, &Q::ONE).unwrap();
         assert!(o.signum() >= 0, "O at R0 today: {o}");
-        // so is the metallicity
+        // So is the metallicity.
         let made = chem.metals(&Rulers::r0(), &today).unwrap();
         assert!(made.signum() >= 0, "metals {made}");
-        // at half the first stars' epoch no channel has made uranium yet
+        // At half the first stars' epoch no channel has made uranium yet.
         let before = bang.first_stars_gyr().lo.checked_div(&Q::int(2)).unwrap();
         assert_eq!(
             chem.relative("U", &Rulers::r0(), &before, &Q::ONE).unwrap(),

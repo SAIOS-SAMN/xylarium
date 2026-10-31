@@ -7,12 +7,13 @@ use xyl_core::Q;
 use xyl_cosmos::bang::BigBang;
 use xyl_cosmos::circuit::{PoleFlux, Substrate};
 
-/// The substrate, read at T Gyr after the bounce: the core's
+/// The `core T` reading, the substrate at T Gyr after the bounce: the core's
 /// firmament kind by kind (its reach, the hold inside it, its deficit, the
 /// share of its band the reverberation carries past the throat, its rate of
-/// leaving and what it still holds), the outflow, the ocean's share and delay
-/// for every galaxy and what each has taken, the books, and Z, Q and R. Every
-/// value a closed form at T: no echo stepped, no parcel counted.
+/// leaving and what it still holds), the jetstream, the lighting, the
+/// outflow, the ocean's share and delay for every galaxy and what each has
+/// taken, the books, and Z, Q and R. Every value is a closed form at T; no
+/// echo is stepped and no parcel counted.
 pub(super) fn core_read(o: &Options, t_gyr: Q) -> Result<String, String> {
     let bang = BigBang::of(o.seed).ok_or("no Big Bang")?;
     let elements = xyl_cosmos::elements::founded(&bang.parent.share())?;
@@ -266,8 +267,9 @@ fn ocean(s: &Substrate, t: Dy) -> String {
 /// Each galaxy in the ocean at T: its reach then and now, recession, drift,
 /// swing, shift, circulation, place, and the tide across its extent.
 fn galaxies(o: &Options, bang: &BigBang, s: &Substrate, t: Dy) -> String {
-    // a galaxy's extent in the ocean's rings: its rim (r_max x its scale,
-    // kpc) over the kpc one of its reach's rings spans
+    // A galaxy's extent in the ocean's rings: its rim (r_max x its scale,
+    // converted to galaxy units) over the length one ring of its reach spans
+    // (its anchor distance over its reach in rings).
     let shapes = xyl_cosmos::cores::shapes(o.seed, bang);
     let kpc = xyl_cosmos::chain::kpc();
     let mut out = String::new();

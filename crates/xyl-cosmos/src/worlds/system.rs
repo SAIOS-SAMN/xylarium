@@ -32,11 +32,11 @@ pub fn settings<'a>(gal: &Galaxy, path: &[u64], sys: &'a System, star: &Star) ->
     parts.extend(path.iter().map(|&p| p.into()));
     let mut rng = xyl_core::Stream::derive(seed, &parts);
     let orbits = bodies::orbits(&star_kg, &planets, &mut rng);
-    // the ring's formation time: its first light
+    // The ring's star-formation time scale is its first-light time.
     let tau_f = crate::galaxy::birth_gyr(&star.r).unwrap_or_else(|| bang.first_stars_gyr().mid());
-    // isotope inventories are measured in the reference world's bulk
+    // Isotope inventories are measured in the reference world's bulk
     // silicate; dividing by the model's solar birth gas makes that gas carry
-    // exactly the measured inventory
+    // exactly the measured inventory.
     let mut kept = bodies::kept(&tau_f, &bang.first_stars_gyr().mid(), &star.born, sc);
     for (k, (_, el, _, _, _)) in kept.iter_mut().zip(bodies::isotopes().iter()) {
         let sun = crate::chem::reference_birth_gas(el).unwrap_or(Q::ONE);
@@ -91,9 +91,9 @@ pub fn settings<'a>(gal: &Galaxy, path: &[u64], sys: &'a System, star: &Star) ->
         .collect()
 }
 
-/// A world's own events over its life to `age` (Gyr since its star's
-/// birth), each solved rather than stepped: its host locking its spin
-/// (exact on its path), and its dynamo stopping where core-mantle heat flow
+/// A world's events over its life to `age` (Gyr since its star's birth),
+/// each solved rather than stepped: the host locking its spin (exact on the
+/// path), and its dynamo stopping where core-mantle heat flow
 /// falls below what the core's adiabat conducts (a crossing of q_cmb - q_ad,
 /// read from the world as built at each age).
 pub fn events(set: &Setting, age: Dy, ctx: &Ctx) -> Vec<(&'static str, Encl)> {

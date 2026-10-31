@@ -8,8 +8,9 @@
 //!   Ancient      an ancient people's house (cosmic/): holds the reserve
 //!                and is the only seat facing the network.
 //!   Progenitor   one per ancient house: builds, keeps and runs passage.
-//!   Steward      one per realm (transit/realms.rs): diplomacy, trade and disputes
-//!                between its sovereigns, and its lines' handling.
+//!   Steward      one per realm (transit/realms.rs): diplomacy, trade and
+//!                disputes between the realm's sovereigns, and the handling
+//!                of the realm's ley lines.
 //!   Sovereign    one people's worlds.
 //!
 //! Inputs: the peoples of a [`Cosmic`] world and the realm count of the ley
@@ -64,12 +65,12 @@ pub enum On {
 /// Who holds a seat.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Holder {
-    /// The universe's own mind: its built-in rule (the role's
-    /// own rule), until someone takes the seat.
+    /// The kernel's default rule for the seat's role, which holds the seat
+    /// until a player or a mind takes it.
     Universe,
     /// A player, by name.
     Player(String),
-    /// A mind joined through its universe's ancients' house, by its key.
+    /// A network mind, by its key, seated on an ancient house's council.
     Mind([u8; 32]),
 }
 
@@ -80,7 +81,7 @@ pub struct Seat {
     pub role: Role,
     /// The people or realm the seat is seated on.
     pub on: On,
-    /// Who holds the seat: the universe's own mind until it is taken.
+    /// Who holds the seat: `Holder::Universe` until the seat is taken.
     pub holder: Holder,
 }
 
@@ -92,17 +93,19 @@ pub struct Seats {
 }
 
 impl Seats {
-    /// The seats the cosmic world raises: an ancient seat for every ancient
-    /// people, a sovereign seat for every other people. Stewards' seats open
-    /// as realms emerge.
+    /// Returns the seats of the cosmic world's peoples: for every ancient
+    /// people an ancient seat and a progenitor seat, for every other people a
+    /// sovereign seat. Steward seats are added by [`Seats::extend_realms`] as
+    /// realms emerge.
     pub fn of(cosmic: &Cosmic<'_>) -> Seats {
         Seats::default().extend(cosmic)
     }
 
-    /// The same, adding seats for peoples woken since: one seat per people,
-    /// sovereign or, for an ancient house, its council's (where the network's
-    /// minds sit; a house holds only its home, settling not being modelled).
-    /// New seats are appended, so a seat's index never changes.
+    /// Returns a copy with seats added for peoples woken since: a sovereign
+    /// seat per people or, for an ancient people, an ancient (council) seat,
+    /// where network minds sit, and a progenitor seat. An ancient house holds
+    /// only its home world; settlement by houses is not modelled. New seats
+    /// are appended, so a seat's index never changes.
     pub fn extend(&self, cosmic: &Cosmic<'_>) -> Seats {
         let mut out = self.clone();
         for (i, p) in cosmic.peoples.iter().enumerate() {
@@ -122,8 +125,8 @@ impl Seats {
                     holder: Holder::Universe,
                 });
             }
-            // an ancient house's progenitor seat: the builders of passage
-            // (transit/building.rs: they build to the peoples in tune)
+            // An ancient people also has a progenitor seat; progenitors build
+            // passage to the peoples in tune (transit/building.rs).
             if p.ancient
                 && !out
                     .list
@@ -140,9 +143,9 @@ impl Seats {
         out
     }
 
-    /// The seats with a steward seat for every realm of the first `realms`
-    /// realm keys (transit/ `Network::realm_keys`) not yet seated; a
-    /// realm's seat is `On::Realm(index)`.
+    /// Returns a copy with a steward seat added for every realm index below
+    /// `realms` (the order of transit/ `Network::realm_keys`) not yet seated;
+    /// a realm's seat is `On::Realm(index)`.
     pub fn extend_realms(&self, realms: usize) -> Seats {
         let mut out = self.clone();
         for r in 0..realms {
@@ -161,8 +164,8 @@ impl Seats {
         out
     }
 
-    /// The seats of an ancient house's council (the network's minds sit here
-    /// and nowhere else).
+    /// Every ancient seat, with its index: the council seats, the only seats
+    /// network minds hold.
     pub fn council(&self) -> impl Iterator<Item = (usize, &Seat)> {
         self.list
             .iter()
@@ -178,8 +181,8 @@ impl Seats {
             .filter(|(_, s)| s.role == Role::Steward)
     }
 
-    /// Take a seat the universe's own mind holds (or re-take one `holder`
-    /// already holds), returning the seat.
+    /// Assigns `holder` to a seat held by `Holder::Universe` (or already held
+    /// by `holder`) and returns the seat.
     ///
     /// Returns `Err` with a message when `seat` does not exist or another
     /// holder already holds it.

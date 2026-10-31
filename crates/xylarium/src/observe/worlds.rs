@@ -18,9 +18,9 @@ use xyl_cosmos::worlds::{Medium, State};
 use xyl_kernel::cosmic::People;
 use xyl_kernel::universe::Universe;
 
-/// The `world S W` reading: one row per Gyr of the world's life (surface
-/// temperature, pressure, field, air, seas, ices and its people's housing),
-/// then the world's events.
+/// The `world S W` reading: one row per Gyr from half a Gyr after the star's
+/// birth to now (surface temperature, pressure, field, air, seas, ices and
+/// the housing of the world's people), then the world's events.
 pub(super) fn world(u: &Universe<'_>, star: Option<u64>, w: Option<usize>) -> String {
     let (Some(star), Some(w)) = (star, w) else {
         return "observe: world S W (a star's sample index and its world)".into();
@@ -73,8 +73,8 @@ pub(super) fn world(u: &Universe<'_>, star: Option<u64>, w: Option<usize>) -> St
         }
         t += Dy::ONE;
     }
-    // the world's events from the crossing solver (xyl_core::event), from
-    // its star's birth to now
+    // The world's events from the crossing solver (`xyl_core::event`), from
+    // the star's birth to now.
     let sets = xyl_cosmos::worlds::settings(&u.cosmic.gal, &[star], &wit.system, &wit.star);
     if let Some(set) = sets.get(w) {
         let age = u.cosmic.now - born;
@@ -263,8 +263,8 @@ fn planet_line(
     units: &Units,
 ) -> String {
     let st = m.stand(age, all);
-    // distance from the anchor: the bearing's radius on its pivots, not a
-    // Euclidean vector length
+    // The distance from the anchor is the bearing's radius on its pivots, not
+    // a Euclidean vector length.
     let d = Encl::exact(m.bearing(age, all).r);
     let hill = m.reach();
     let a_au = (&m.a * &tier_m(units, Tier::System))
@@ -306,8 +306,9 @@ fn moon_line(
         .checked_div(&Q::int(1000))
         .unwrap_or(Q::ZERO);
     let host = all.iter().find(|x| x.world == h);
-    // belonging to the giant: share(d, giant's reach dilated from the system
-    // tier to the planet tier); belonging to the star is 1 minus it
+    // Belonging to the giant is `share(d, giant's reach)`, with the reach
+    // dilated from the system tier to the planet tier; belonging to the star
+    // is 1 minus it.
     let host_hill_planet = host.map(|x| {
         x.reach().mul(&Encl::exact(xyl_cosmos::manifold::dilation(
             Tier::System,
@@ -555,10 +556,12 @@ fn star_rows(k: u64, st: &Star, sys: &System, planets: &[(Q, Q, bool)]) -> Strin
     rows
 }
 
-/// The worlds as the settling leaves them: the first `n` sample stars of the
-/// home galaxy built straight from the seed - each system's planets, their
-/// orbits (AU), masses (world units) and the ratio between neighbours' orbits -
-/// read before any genesis.
+/// The `worlds N` reading, the worlds as the settling leaves them: the first
+/// `n` sample stars of the home galaxy built from the seed without a genesis.
+/// It gives the distribution of planets per star, the counts of giants,
+/// moons, belts and comet clouds, the causes of stars without planets, the
+/// distribution of neighbouring orbits' ratios, and for the first 12 stars
+/// the chain frame and the planets (orbit in AU, mass in world units).
 pub(super) fn worlds_read(o: &Options, n: usize) -> Result<String, String> {
     let bang = BigBang::of(o.seed).ok_or("no Big Bang")?;
     let elements = xyl_cosmos::elements::founded(&bang.parent.share())?;

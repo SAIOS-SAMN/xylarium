@@ -2,9 +2,10 @@
 
 use super::*;
 
-/// The core's assembly time (Gyr): its ring's star-formation timescale at the
-/// centre, in this universe's assembly - the window within which a galaxy's
-/// first minds count as its first.
+/// The core's assembly time (Gyr): the star-formation time at the centre
+/// (`galaxy::birth_gyr` at radius zero), or the midpoint of the Big Bang's
+/// first-stars time where that is undefined. It is the window within which
+/// a galaxy's core-born minds count as ancients.
 pub fn ancient_window(gal: &Galaxy) -> Dy {
     Dy::from_q(
         &crate::galaxy::birth_gyr(&xyl_core::Q::ZERO)
@@ -12,16 +13,16 @@ pub fn ancient_window(gal: &Galaxy) -> Dy {
     )
 }
 
-/// A star's distance from the core at `t` Gyr, its reach and its climb: the
-/// bulge is a ball, so a disc star swinging high over the core is outside it
-/// however near its cylinder's axis.
+/// A star's distance from the core at `t` Gyr, the sum of its reach and its
+/// height off the plane. The bulge is a ball, so a disc star high above the
+/// core is outside it however near the axis of its orbit's cylinder.
 ///
-/// Read in its own galaxy's tier: its bearing from its own galactic core, in
-/// the home galaxy's equivalent kiloparsecs (distance over its galaxy's
-/// scale), so the bulge is the same test in every galaxy.
+/// The distance is read in the tier of the star's galaxy: the bearing from
+/// that galaxy's core, in the home galaxy's equivalent kiloparsecs (distance
+/// over the galaxy's scale), so the bulge is the same test in every galaxy.
 pub fn from_centre_kpc(star: &crate::galaxy::Star, t: Dy) -> Dy {
-    // distance out from the core: its reach plus its climb off the plane
-    // (a path sum, not the hypotenuse)
+    // The distance from the core is the reach plus the height off the plane
+    // (a path sum, not the hypotenuse).
     let (reach, _, climb) = star.bearing(t);
     let way = &reach + &climb.abs();
     Dy::from_q(
@@ -30,19 +31,21 @@ pub fn from_centre_kpc(star: &crate::galaxy::Star, t: Dy) -> Dy {
     ) / star.scale.max(Dy::sci(1, -9))
 }
 
-/// Whether a mind was born in the galaxy's core: its star within the bulge's
-/// radius of the core when it woke, in three dimensions.
+/// Whether a mind was born in the galaxy's core: its star lay within
+/// `galaxy::core_kpc` of the core when the mind woke (see
+/// `from_centre_kpc`).
 pub fn in_core(m: &Mind) -> bool {
     m.r_kpc <= Dy::from_q(&crate::galaxy::core_kpc())
 }
 
-/// The ancients by birth: the
-/// minds born in the core that wake within one core assembly time of the
-/// core's own first mind, earliest first. Their number follows from the seed.
-/// They hold the throats at the core and the uplink to the network.
+/// The ancients by birth: the minds born in the core that wake within one
+/// core assembly time (`ancient_window`) of that core's first core-born
+/// mind, earliest first. Their number follows from the seed. They hold the
+/// throats at the core and the uplink to the network.
 ///
-/// Per galaxy (T1 ancients at each galactic core): a mind is ancient against
-/// its own galactic core's first core-born mind.
+/// The test is per galaxy (T1 ancients at each galactic core): a mind is
+/// compared with the first core-born mind of the galactic core its star
+/// belongs to.
 pub fn ancients<'s>(s: &'s Schedule, gal: &Galaxy) -> Vec<&'s Mind> {
     let window = ancient_window(gal);
     s.minds
@@ -55,7 +58,8 @@ pub fn ancients<'s>(s: &'s Schedule, gal: &Galaxy) -> Vec<&'s Mind> {
         .collect()
 }
 
-/// The first core-born mind's dawn in galactic core `core`.
+/// The epoch of the first core-born mind in galactic core `core`; `None`
+/// where that core has no core-born mind.
 pub fn first_core_dawn(s: &Schedule, core: u32) -> Option<Dy> {
     s.minds
         .iter()

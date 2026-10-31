@@ -12,14 +12,14 @@ pub struct Path {
     pub a_m: Dy,
     /// Eccentricity at the star's birth, 0 to 1.
     pub e0: Dy,
-    /// Eccentricity its neighbours force for ever, the value `e0` relaxes toward.
+    /// Eccentricity forced by the neighbours, the value `e0` relaxes toward.
     pub e_forced: Dy,
     /// The eccentricity's damping time (Gyr); zero or less means it sits at `e_forced`.
     pub tau_e: Dy,
-    /// The cosine of its axis's tilt before it locks; a locked world stands
-    /// upright to its host.
+    /// The cosine of the spin axis's tilt before lock; once locked, the axis
+    /// is upright (cosine 1).
     pub cos_obliquity: Dy,
-    /// The age at which its host locks its spin (Gyr).
+    /// The age at which the host's tides lock the spin (Gyr).
     pub lock_gyr: Dy,
     /// Its spin at birth (rad/s); zero for a moon locked from the start.
     pub spin0: Dy,
@@ -53,8 +53,8 @@ impl Path {
     }
 
     /// Its day and year at age `t` (Gyr): the turning law sets the year; the
-    /// spin brakes linearly from its birth spin toward the orbital rate until
-    /// the host locks it (bodies.rs `Orbit::at`).
+    /// spin brakes linearly from the birth spin toward the orbital rate until
+    /// lock (bodies.rs `Orbit::at`). A path with no birth spin is locked.
     pub fn heartbeat(&self, t: Dy) -> Heartbeat {
         let mean = Dy::from_q(&crate::turning::rad_s(&crate::turning::turning_si(
             &self.host_kg.to_q(),
@@ -82,10 +82,11 @@ impl Path {
     }
 
     /// The tide's heating (W) of a world of `mass` and `radius` on this path,
-    /// as an orbit in its age (Gyr): it goes as e^2, and the eccentricity
-    /// relaxes from `e0` toward `e_forced` as a boost, so the heating is
-    /// three modes - the forced part, the cross term and the free part - at
-    /// rates 0, -1/tau_e and -2/tau_e.
+    /// as modes in age (Gyr). The coefficient is `bodies::tidal_w` at e = 1,
+    /// taken to multiply e^2; the eccentricity relaxes from `e0` toward
+    /// `e_forced` exponentially, so the heating is three modes (the forced
+    /// part, the cross term and the free part) at rates 0, -1/tau_e and
+    /// -2/tau_e. With `tau_e <= 0` only the forced part remains.
     pub fn tide(&self, mass: Dy, radius: Dy, icy: bool) -> Modes {
         let per_e2 = bodies::tidal_w(self.host_kg, self.a_m, Dy::ONE, mass, radius, icy).to_q();
         if per_e2.is_zero() {
@@ -103,8 +104,8 @@ impl Path {
         ])
     }
 
-    /// The cosine of its axis's tilt at age `t` (Gyr): its birth value, or 1
-    /// (upright) once its host has locked it.
+    /// The cosine of the spin axis's tilt at age `t` (Gyr): the birth value,
+    /// or 1 (upright) at or after `lock_gyr`.
     pub fn cos_obliquity_at(&self, t: Dy) -> Dy {
         if t >= self.lock_gyr {
             Dy::ONE
@@ -121,8 +122,8 @@ pub struct Setting<'a> {
     pub world: &'a World,
     /// Its star's mass (solar masses).
     pub star_mass: Dy,
-    /// Its star's luminosity (solar) as it shines; a swelling giant's glare
-    /// is the caller's to supply.
+    /// Its star's luminosity (solar) at the age read; the caller supplies the
+    /// raised luminosity of a star that has left the main sequence.
     pub lum: Dy,
     /// Its distance from its star (AU): a moon's is its giant's.
     pub a_au: Dy,
@@ -130,7 +131,8 @@ pub struct Setting<'a> {
     pub z: Dy,
     /// Its star's distance from the galaxy's centre (kpc).
     pub r_kpc: Dy,
-    /// Its isotopes (kg in its mantle at its star's birth: bodies::heat_sources).
+    /// Its isotopes (kg in the mantle at the star's birth, from
+    /// `bodies::heat_sources`).
     pub sources: [Q; 4],
     /// Its orbit and spin; `None` when not drawn (the world then reads as
     /// circular, untided and at a 45 degree tilt).
@@ -149,8 +151,8 @@ pub struct State {
     pub mass: Dy,
     /// Radius (world radii).
     pub radius: Dy,
-    /// The radiation: the year's mean light at its distance (flux units of
-    /// 340 W/m^2), the bell's mean of the star's burn.
+    /// The year's mean light at the world's distance, `L / a` (flux units of
+    /// 340 W/m^2), with L the star's mean luminosity over the bell.
     pub flux: Dy,
     /// Temperature (K) of the light where it formed: the unit temperature times
     /// luminosity over distance.
@@ -180,8 +182,8 @@ pub struct State {
     pub t_int: Dy,
     /// Heat the core gives the mantle per m^2 of the core's surface (W/m^2).
     pub q_cmb: Dy,
-    /// Heat the core's iron conducts along its own adiabat (W/m^2); a dynamo
-    /// runs while `q_cmb` exceeds it.
+    /// Heat the core's iron conducts along the core's adiabat (W/m^2); a
+    /// dynamo runs while `q_cmb` exceeds it.
     pub q_ad: Dy,
     /// The core's radius (m).
     pub r_core: Dy,
@@ -189,7 +191,8 @@ pub struct State {
     pub field: Dy,
     /// Share of the mantle its accretion melted, 0 to 1 (the magma ocean).
     pub melted: Dy,
-    /// How many times its convecting heat could have melted its mantle.
+    /// The heat passed out of the mantle over the heat that raises the mantle
+    /// to its melting point (`bodies::Interior::processed`).
     pub processed: Dy,
     /// Share of its gathered volatiles released to the surface, 0 to 1.
     pub degassed: Dy,
@@ -206,8 +209,9 @@ pub struct State {
     pub escaped: Dy,
     /// Share of its standing air the wind took, 0 to 1.
     pub air_escaped: Dy,
-    /// The stellar density of its galactic neighbourhood: the structure's
-    /// crowding at its reach, galaxy::density.
+    /// The stellar crowding of its galactic neighbourhood relative to the
+    /// reference ring: `galaxy::density` at the star's distance from the
+    /// galaxy's centre.
     pub env: Dy,
     /// Its star's surface temperature (K).
     pub star_t: Dy,
@@ -229,9 +233,10 @@ pub struct State {
     pub sc: Scales,
 }
 
-/// A star's surface temperature (K): its light over its extent, read
-/// linearly, with radius linear in mass in the universe's stellar scales
-/// (not M^0.8, not the fourth root of L / R^2).
+/// A star's surface temperature (K), linear in luminosity over radius:
+/// `5772 L / R`, with R linear in mass (at least 0.08 of the reference mass)
+/// in the universe's stellar scales (not M^0.8, not the fourth root of
+/// L / R^2).
 pub fn star_t(star_mass: Dy, lum: Dy, sc: &Scales) -> Dy {
     let radius = (star_mass / sc.star_mass).max(Dy::ratio(2, 25)) * sc.star_radius;
     Dy::int(5772) * lum.max(Dy::sci(1, -9)) / radius
@@ -246,7 +251,8 @@ type Solved = (Dy, Dy, Mix, Mix, Dy, Mix);
 pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
     let blank = radiated(set, age, ctx);
     if set.world.giant {
-        // a giant's state is its cloud tops: no surface, interior or escape
+        // A giant's state is its cloud tops from radiation alone; no surface,
+        // interior or escape is solved.
         return blank;
     }
     let c = constants();
@@ -255,7 +261,8 @@ pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
     let (mass, radius, flux, ices) = (blank.mass, blank.radius, blank.flux, blank.ices);
     let t_eq0 = blank.t_surf;
     let star_rel = set.star_mass / sc.star_mass;
-    // interior heat sources: isotopes, formation warmth, tides from the host
+    // Interior heat sources: isotopes, formation heat and tides from the
+    // host.
     let ice_sum = ices.total();
     let ice_share = ice_sum / (Dy::ONE + ice_sum);
     let icy = ice_share > Dy::ratio(1, 5);
@@ -265,9 +272,10 @@ pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
         .unwrap_or_default();
     let inside = bodies::interior(w, &set.sources, age, t_eq0, &tide, sc);
     let heat = inside.heat_w / c.heat_unit_w;
-    // degassed share: the mantle share accretion melted, (3/5) G M / R over
-    // the sensible plus latent heat of rock, released as the magma ocean
-    // froze; then what convection has processed since
+    // Degassed share: the magma ocean releases `magma_degas` of the mantle
+    // share that accretion melted, (3/5) G M / R over the sensible plus latent
+    // heat of rock (capped at 1); convection then releases the rest at the
+    // rate it processes the mantle: 1 - (1 - 0.9 melted) exp(-processed).
     let gm_r = c.gm_over_r_unit * mass / radius.max(Dy::sci(1, -6));
     let accreted = Dy::ratio(3, 5) * gm_r;
     let melted = (accreted
@@ -276,8 +284,9 @@ pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
     let out = Dy::ONE - (Dy::ONE - c.magma_degas * melted) * (-inside.processed).exp();
     let field = inside.field;
     let act = activity(star_rel, age);
-    // exosphere temperature: the thermosphere factor times 2 act / (1 + act)
-    // (1 for a quiet star, toward 2 for a saturated one), x 3/2 with no field
+    // Exosphere temperature: the thermosphere factor times the equilibrium
+    // temperature times 2 act / (1 + act) (1 at activity 1, approaching 2 for
+    // a saturated star), times 3/2 with no magnetic field.
     let t_exo = c.thermosphere
         * t_eq0
         * (Dy::int(2) * act / (Dy::ONE + act))
@@ -288,8 +297,10 @@ pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
         };
     let mut gas = jeans_held(&ices, gm_r, t_exo, out, sc);
     photolyse(&mut gas, flux * band(blank.star_t, sc).brk * act);
-    // wind stripping: a fragment escapes if its few eV of kinetic energy
-    // exceed its binding mu m_H G M / R
+    // Wind stripping: the budget is strip_rate x flux x the activity dose
+    // over the world's mass. A broken fragment escapes with weight
+    // exp(-E_b / E_hot), with E_b = bind_ev x the fragment's mass, bind_ev =
+    // 2 m_H G M / R in eV, and E_hot the fragments' kinetic energy of a few eV.
     let wind = c.strip_rate * flux * wind_dose(star_rel, age) / mass.max(Dy::sci(1, -6));
     let bind_ev = gm_r * Dy::int(2) * c.m_h_kg * sc.proton / c.ev_j;
     let g = mass / (radius.max(Dy::sci(1, -6)) * radius.max(Dy::sci(1, -6)));
@@ -344,7 +355,7 @@ pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
         },
         albedo,
         g,
-        // the air column attenuates light as exp(-p / 10 bar)
+        // The air column attenuates light as exp(-p / 10 bar).
         light: flux * (Dy::ONE - albedo) * (-(Dy::ratio(1, 10) * p_bar)).exp(),
         ..blank
     }
@@ -362,8 +373,9 @@ fn radiated(set: &Setting, age: Dy, ctx: &Ctx) -> State {
     let star_rel = set.star_mass / sc.star_mass;
     let star_t = star_t(set.star_mass, set.lum, sc);
     let e_now = set.path.map(|p| p.e(age)).unwrap_or(Dy::ZERO);
-    // flux L / a: the star's mean light over the bell (stars.rs); its swing
-    // within a bell is read by stars::flicker and does not enter the climate
+    // The flux is L / a, with L the star's mean light over the bell
+    // (stars.rs); the variation within a bell is read by stars::flicker and
+    // does not enter the climate.
     let flux = set.lum / a_au;
     let t_form = c.t_unit * set.lum / a_au;
     let env = Dy::from_q(&crate::galaxy::density(&set.r_kpc.to_q()).mid());

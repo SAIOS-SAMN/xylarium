@@ -1,44 +1,49 @@
-//! Discord, folding and quarantine: a people's [`Discord`] parts, its
-//! breach share from folding space, and the share a constellation is held
-//! closed.
+//! Discord, folding and quarantine: the parts of a people's [`Discord`], the
+//! people's breach share from folding space, and the share by which a
+//! constellation is held closed.
 
 use super::{kpc_m, passage_j, year_s, Ley, Network};
 use crate::cosmic::Cosmic;
 use std::collections::BTreeMap;
 use xyl_core::dyadic::Dy;
 
-/// A people's discord in its parts (universe.rs `discord_parts`).
+/// A people's discord and the parts it is computed from (universe.rs
+/// `discord_parts`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Discord {
-    /// Its ships' reach in a generation and its constellation's (kpc).
+    /// The distance the people's ships cover in one generation, in kpc.
     pub reach_kpc: Dy,
-    /// Its constellation's reach (the width of a ley mouth there), in kpc.
+    /// The reach of the people's constellation (the width of a ley mouth
+    /// there), in kpc.
     pub mouth_kpc: Dy,
-    /// Its forgetting share, 1 - z.
+    /// The forgetting share, 1 - z.
     pub forget: Dy,
-    /// Its constellation holds a ley mouth.
+    /// Whether the people's constellation holds a ley mouth.
     pub joined: bool,
-    /// Its drive's exhaust, cruise and its home's escape (m/s).
+    /// The exhaust speed of the people's drive, in m/s.
     pub v_e: Dy,
-    /// Its ships' coasting speed out of its home well, in m/s.
+    /// The ships' coasting speed out of the home well, in m/s.
     pub cruise: Dy,
-    /// Its home world's escape speed, in m/s.
+    /// The home world's escape speed, in m/s.
     pub escape: Dy,
-    /// Its breach share from folding space, in \[0, 1\]: the energy it has
-    /// folded over that plus its constellation's lawful lines' and one
-    /// passage of its own (see [`Network::breach`]).
+    /// The breach share from folding space, in \[0, 1\]: the energy the
+    /// people has folded, divided by that energy plus the cost of the lawful
+    /// lines of its constellation plus one passage by the people's drive (see
+    /// [`Network::breach`]).
     pub breach: Dy,
-    /// Its discord, a share in \[0, 1\]: `1 - (1 - o f (1 - J))(1 - breach)`,
-    /// o its off-constellation share, f its forgetting share, J whether its
-    /// constellation holds a ley mouth.
+    /// The discord, a share in \[0, 1\]: `1 - (1 - o f (1 - J))(1 - breach)`,
+    /// where o = reach / (reach + mouth) is the off-constellation share, f
+    /// the forgetting share and J is 1 when the constellation holds a ley
+    /// mouth and 0 otherwise.
     pub discord: Dy,
 }
 
 impl Network {
-    /// People `i`'s breach share from folding space: the passage energy it
-    /// has folded, over that plus the cost of the lawful lines with a mouth
-    /// in its constellation plus one passage of its own (`own_j`). Zero for
-    /// a people that has not folded.
+    /// Returns people `i`'s breach share from folding space: the passage
+    /// energy the people has folded, divided by that energy plus the cost of
+    /// the lawful lines with a mouth in its constellation plus one passage
+    /// by the people's drive (`own_j`). Returns zero for a people that has
+    /// not folded.
     pub fn breach(&self, cosmic: &Cosmic, i: usize, own_j: Dy) -> Dy {
         let Some(&(folded, _)) = self.folds.get(&i) else {
             return Dy::ZERO;
@@ -64,14 +69,15 @@ impl Network {
         }
     }
 
-    /// Folding space (`Laws::ftl`): people `i`, with drive exhaust `v_e`,
-    /// body mass `body_kg` and generation `gen_yr`, folds where its
-    /// constellation holds no ley mouth and a passage out of it is worth
-    /// building by the siting law at its own drive - the shortest span out,
-    /// its constellation's reach S, gives c min(S / T, c) > c (c - v_e) per
-    /// kg. It folds once a generation over the span since its folding was
-    /// last read (to `at` Gyr), each fold costing [`passage_j`]. Returns the
-    /// energy folded in this span (J).
+    /// Carries people `i`'s folding of space (`Laws::ftl`) to time `at`
+    /// (Gyr) and returns the energy folded in that interval (J). A people
+    /// with drive exhaust `v_e`, body mass `body_kg` and generation `gen_yr`
+    /// (years) folds when the universe's laws allow it, its constellation
+    /// holds no ley mouth, and a passage out is worth building by the siting
+    /// law at the people's drive: over the shortest span out, the
+    /// constellation's reach S, c min(S / T, c) > c (c - v_e) per kg with T
+    /// one generation. It folds once per generation over the interval since
+    /// its folding was last read, each fold costing [`passage_j`].
     pub fn fold(
         &mut self,
         cosmic: &Cosmic,
@@ -105,8 +111,9 @@ impl Network {
         energy
     }
 
-    /// The share star `star`'s constellation is held closed by quarantine, in
-    /// [0, 1] (0 where it belongs to no constellation).
+    /// Returns the share, in [0, 1], by which the constellation of star
+    /// `star` is held closed by quarantine (0 when the star belongs to no
+    /// constellation or the constellation has no quarantine entry).
     pub fn shut_of(&self, star: u64) -> Dy {
         self.of
             .get(&star)
@@ -116,7 +123,7 @@ impl Network {
             .unwrap_or(Dy::ZERO)
     }
 
-    /// Whether a star's constellation holds a ley mouth.
+    /// Returns whether the constellation of `star` holds a ley mouth.
     pub fn holds_mouth(&self, star: u64) -> bool {
         let Some(c) = self.of.get(&star) else {
             return false;
@@ -126,15 +133,16 @@ impl Network {
             .any(|l| self.of.get(&l.from) == Some(c) || self.of.get(&l.to) == Some(c))
     }
 
-    /// A line's open share: each mouth's constellation open by what its
-    /// quarantine leaves.
+    /// Returns a line's open share: the product of (1 - quarantine share) of
+    /// the constellations at the two mouths.
     pub fn open_share(&self, l: &Ley) -> Dy {
         (Dy::ONE - self.shut_of(l.from)) * (Dy::ONE - self.shut_of(l.to))
     }
 
-    /// Reads each constellation's quarantine at `to`: the share
-    /// 1 - prod(1 - discord) over its peoples, re-read at every step rather
-    /// than latched. A share crossing a half either way is entered in `out`.
+    /// Reads each constellation's quarantine at time `to`: the share
+    /// 1 - prod(1 - discord) over the constellation's peoples, recomputed at
+    /// every reading rather than latched. A share that crosses one half in
+    /// either direction is entered in `out`.
     pub(super) fn read_quarantine(
         &mut self,
         cosmic: &Cosmic,

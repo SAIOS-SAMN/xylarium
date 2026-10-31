@@ -1,5 +1,5 @@
 //! The Xylarium kernel: the game layer that carries a founded universe in
-//! play, with the peoples that wake in it and the seats players hold. It
+//! play, with the peoples that arise in it and the seats players hold. It
 //! reads the founded galaxy, systems, worlds and forecast from `xyl_cosmos`
 //! and exact numbers from `xyl_core`.
 //!

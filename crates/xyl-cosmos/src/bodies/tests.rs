@@ -5,7 +5,7 @@ use super::*;
 fn rocky_world() -> World {
     let elements = crate::elements::table().unwrap();
     let mut el = vec![Q::ZERO; elements.len()];
-    // a two-thirds mantle carrying U, Th and K
+    // A mantle of two thirds of the mass carries U, Th and K.
     let mantle = Q::ratio(2, 3);
     let set = |el: &mut Vec<Q>, s: &str, share: &str| {
         let i = elements.iter().position(|e| e.sym == s).unwrap();
@@ -57,8 +57,8 @@ fn closer_world_locks_sooner_with_shorter_year() {
     );
     let now = os[1].at(&Q::int(3));
     assert!(now.day > Q::ZERO, "a world that turns has a day");
-    // the year is one turn at the turning law's rate, and is longer for the
-    // farther world
+    // The year is one turn at the turning law's rate and is longer for the
+    // farther world.
     let law = (&Q::int(360) * &Si::gyr_s())
         .checked_div(&crate::turning::turning_si(&sun, &os[1].a_m))
         .unwrap();

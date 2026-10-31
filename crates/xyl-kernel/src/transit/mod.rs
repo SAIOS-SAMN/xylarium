@@ -2,37 +2,42 @@
 //! its constellations, realms and quarantine, folding, and toll quotes
 //! (docs/civilizations.md).
 //!
-//! Inputs: the [`Cosmic`](crate::cosmic::Cosmic) world (witnessed systems, star places), drives
-//! from propulsion.rs, stars from `xyl_cosmos::galaxy`, orbits from
-//! `xyl_cosmos::manifold`, the turning law (`xyl_cosmos::turning`) and the
-//! SI seam (`package::Si`). Distances are in m or kpc, speeds in m/s,
-//! energies in J, times in years or Gyr as each item states.
+//! Inputs are the [`Cosmic`](crate::cosmic::Cosmic) world (witnessed
+//! systems, star places), the drives from propulsion.rs, the stars from
+//! `xyl_cosmos::galaxy`, the orbits from `xyl_cosmos::manifold`, the turning
+//! law (`xyl_cosmos::turning`) and the SI seam (`package::Si`). Distances are
+//! in m or kpc, speeds in m/s, energies in J, and times in years or Gyr as
+//! each item states.
 //!
-//! - Distance ([`separation_m`]): within a system, the gap between where
-//!   the two orbits stand now ([`orbit_gap_m`]); between systems, the arc
-//!   between the stars ([`Cosmic::distance`](crate::cosmic::Cosmic::distance)).
-//! - Voyage ([`voyage`]): out of the well at [`escape_speed`], coasting at
-//!   half the speed change left ([`cruise_speed`]) and braking with the
-//!   other half; fuel is payload x (R - 1) at the fuel's energy per kg.
-//!   [`window_years`] is the wait for a transfer window within a system.
-//! - Constellations ([`constellations`]): stars bound by their mutual
-//!   turning tighter than the galaxy's shear across their span; the unit of
-//!   passage. Pairs are re-measured only when they could have crossed.
-//! - [`Network`]: ley lines ([`Ley`]) built by ancient houses and their
-//!   progenitors, each sited where a passage is worth most and opened at
-//!   its due time (an event of the universe); a crossing takes a mouth's
-//!   light time ([`crossing_years`]). Realms are connected sets of
-//!   constellations joined by open lines. A people's [`Discord`] (reaching
-//!   off its constellation while forgetting, plus its breach from folding
-//!   space) closes its constellation by the quarantine share.
-//! - Tolls ([`quote`]): floor = unrecovered cost over last year's traffic;
-//!   ceiling = what the lane saves the passer; toll = half way between,
-//!   never above the ceiling; an open line asks only its floor. [`tithe`]
-//!   is a passage's energy per lane length spanned. Tolls are quoted, not
-//!   collected: no traffic is carried yet.
+//! - Distance ([`separation_m`]): within a system it is the gap between the
+//!   current positions of the two orbits ([`orbit_gap_m`]); between systems
+//!   it is the arc between the stars
+//!   ([`Cosmic::distance`](crate::cosmic::Cosmic::distance)).
+//! - Voyage ([`voyage`]): the craft leaves the well at [`escape_speed`],
+//!   coasts at half the remaining speed change ([`cruise_speed`]) and brakes
+//!   with the other half; the fuel is payload x (R - 1) at the fuel's energy
+//!   per kg. [`window_years`] is the wait for a transfer window within a
+//!   system.
+//! - Constellations ([`constellations`]): a constellation is a set of stars
+//!   whose mutual turning is at least the galaxy's shear across their span; it
+//!   is the unit of passage. Pairs are re-measured only when they could have
+//!   crossed.
+//! - [`Network`]: ley lines ([`Ley`]) are built by ancient houses and their
+//!   progenitors, each sited where a passage has the greatest worth and
+//!   opened at its due time (an event of the universe); a crossing takes the
+//!   light time across a mouth ([`crossing_years`]). Realms are connected
+//!   sets of constellations joined by open lines. A people's [`Discord`]
+//!   (reaching off its constellation while forgetting, plus the breach from
+//!   folding space) closes its constellation by the quarantine share.
+//! - Tolls ([`quote`]): the floor is the unrecovered cost over last year's
+//!   traffic; the ceiling is what the lane saves the passer; the toll lies
+//!   half way between them and never above the ceiling; an open line asks
+//!   only its floor. [`tithe`] is a passage's energy per lane length
+//!   spanned. Tolls are quoted, not collected, because no traffic is carried
+//!   yet.
 //!
-//! Lines built, stewards' handling and peoples' folds are held in the
-//! checkpoint; constellations and quarantine are re-read from the laws.
+//! The lines built, the stewards' handling and the peoples' folds are held in
+//! the checkpoint; constellations and quarantine are re-read from the laws.
 //!
 //! Terms: constellation, ley line, realm, quarantine, discord, fold,
 //! handling, tithe, worth law (docs/glossary.md).
@@ -69,14 +74,15 @@ use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 use xyl_cosmos::package::Si;
 
-/// An astronomical unit (m).
+/// Returns one astronomical unit in metres.
 #[cfg(test)]
 fn au_m() -> Dy {
     Dy::from_q(&Si::au())
 }
 
-/// Kiloparsecs per Gyr in one km/s: a thousand metres a second over a Gyr
-/// in seconds, per kiloparsec (the one SI seam, crate::package::Si).
+/// Returns the speed of one km/s in kpc per Gyr: 1000 m/s times one Gyr in
+/// seconds, divided by one kiloparsec in metres (the SI seam
+/// `xyl_cosmos::package::Si`). Returns zero if the division is undefined.
 pub fn kms_to_kpc_gyr() -> Dy {
     Dy::from_q(
         &(&Q::int(1000) * &Si::gyr_s())
@@ -85,26 +91,27 @@ pub fn kms_to_kpc_gyr() -> Dy {
     )
 }
 
-/// A kiloparsec (m), the one SI seam (package::Si).
+/// Returns one kiloparsec in metres, read from the SI seam (`package::Si`).
 pub fn kpc_m() -> Dy {
     Dy::from_q(&Si::kpc())
 }
 
-/// A standard year (s).
+/// Returns one year in seconds: one Gyr in seconds divided by 10^9.
 pub fn year_s() -> Dy {
     Dy::from_q(&Si::gyr_s()) / Dy::sci(1, 9)
 }
 
-/// A speed in m/s as kpc per Gyr.
+/// Converts a speed `m_s` in m/s to kpc per Gyr.
 pub fn kpc_per_gyr(m_s: Dy) -> Dy {
     m_s * Dy::from_q(&Si::gyr_s()) / kpc_m()
 }
 
-/// A passage's energy (J), set by the builder's capability rather than a
-/// constant: a throat carries a body of `body_kg` across at the pulse's
-/// speed, and the hole supplies only what the builder's drive (exhaust `v_e`)
-/// does not: body c (c - v_e). At v_e -> c a passage costs nothing; a people
-/// that cannot leave its well pays the body's whole energy.
+/// Returns a passage's energy (J), which depends on the builder's drive
+/// rather than on a constant. A throat carries a body of `body_kg` across at
+/// the pulse's speed `c`, and the hole supplies only the part the builder's
+/// drive (exhaust speed `v_e`, clamped to [0, c]) does not:
+/// `E = body_kg * c * (c - v_e)`. As v_e -> c the passage costs nothing; at
+/// v_e = 0 it costs `body_kg * c^2`.
 pub fn passage_j(body_kg: Dy, v_e: Dy) -> Dy {
     let c = crate::propulsion::c_m_s();
     body_kg * c * (c - v_e.clamp(Dy::ZERO, c))

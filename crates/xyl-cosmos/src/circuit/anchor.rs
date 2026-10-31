@@ -12,8 +12,8 @@
 // at least one ring), `anchor`, `set` and `register_spin`.
 //
 // One universe per process: the first `set` wins. `anchor` founds the
-// substrate at the registered spin when no anchor is set; where that fails
-// every field is zero.
+// substrate at the registered spin when no anchor is set; where no spin is
+// registered or the founding fails, every field is zero.
 // Terms: anchor (docs/glossary.md).
 
 use xyl_core::dyadic::Dy;
@@ -38,7 +38,7 @@ use xyl_core::Q;
 /// - The universe's radius: each enclosed sphere's rim is half a great
 ///   circle, so the radius is rim / pi.
 /// - The first stars: the home galaxy's gas collapses where its first piece
-///   cools, in rings of the bell (formation.rs `cools_in`).
+///   cools, in rings of the bell (formation.rs `cools_in`), at least one ring.
 ///
 /// One universe per process: the first founding sets the anchor and every
 /// later reading in the process is of that universe.
@@ -63,7 +63,8 @@ pub struct Anchor {
     pub radius_rg: Q,
     /// When the first stars shone (Gyr after the Big Bang).
     pub first_stars_gyr: Q,
-    /// The parent's Kerr spin, the universe's own draw.
+    /// The parent's Kerr spin as admitted (drawn from the seed, floored by
+    /// cores::substrate_for).
     pub spin: Q,
     /// The share the jet carries through the throat at each crossing, from
     /// the spin by torsion (bang::torsion_share).
@@ -94,15 +95,15 @@ pub fn set(anchor: Anchor) {
 
 /// The anchor of the process's universe. Where no founding has happened yet
 /// the substrate is founded first (once per process, cores.rs): the founding
-/// depends on the parent's spin alone, so it needs no Big Bang. Where the
-/// founding fails, every value is zero: a reading then shows zeros, never a
-/// hidden default.
+/// depends on the parent's spin alone, so it needs no Big Bang. Where no spin
+/// is registered or the founding fails, every value is zero: a reading then
+/// shows zeros, not a hidden default.
 pub fn anchor() -> Anchor {
     if let Some(a) = ANCHOR.get() {
         return a.clone();
     }
-    // founding the substrate at the registered spin calls `set` before the
-    // reverberation is read, so the anchor is available below
+    // Founding the substrate at the registered spin calls `set`
+    // (cores::substrate_for), so the anchor is available below.
     if let Some(spin) = SPIN.get() {
         let _ = crate::cores::substrate_for(spin);
     }
@@ -137,8 +138,8 @@ pub(crate) fn of(rim: &Q, cools_in: Option<i64>, spin: &Q, share: &Q, margin: &Q
         .unwrap_or(Q::ZERO);
     let c = crate::package::Si::c();
     let gyr_s = crate::package::Si::gyr_s();
-    // bell = 2 rim r_galaxy / (c Gyr): light's round trip to the home rim,
-    // the rim read in galaxy-tier units (60^5 r_g)
+    // The bell is 2 rim r_galaxy / (c Gyr): light's round trip to the home
+    // rim, the rim read in galaxy-tier units (60^5 r_g).
     let galaxy_m = &Tier::Galaxy.in_rg() * &units.r_g_m;
     let bell = (&(&Q::int(2) * rim) * &galaxy_m)
         .checked_div(&(&c * &gyr_s))
@@ -148,7 +149,7 @@ pub(crate) fn of(rim: &Q, cools_in: Option<i64>, spin: &Q, share: &Q, margin: &Q
     let radius_rg = (rim * &Tier::Cluster.in_rg())
         .checked_div(&pi)
         .unwrap_or(Q::ZERO);
-    // first stars = rings x bell, with at least one ring
+    // The first stars shine at rings x bell, with at least one ring.
     let rings = Q::int(cools_in.unwrap_or(1).max(1));
     Anchor {
         rim: rim.clone(),

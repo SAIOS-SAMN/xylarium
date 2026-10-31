@@ -25,7 +25,8 @@
 //! Invariant (`Core::conserved`, exact at all times): fallen + arrived =
 //! radiated + reservoir + returned + in throat + far released, and the
 //! amount in the throat equals the hole's mass beyond its formation mass.
-//! `Core::new` and `capture` return None where `Bounce::of` refuses.
+//! `Core::new`, `capture` and `far_run` return `None` where `Bounce::of`
+//! refuses.
 
 use crate::bounce::Bounce;
 use xyl_core::certified::{down, exp, Encl};
@@ -43,9 +44,9 @@ pub fn horizon_share() -> Q {
 pub fn efficiency() -> Q {
     Q::ratio(1, 10)
 }
-/// A galaxy's jet episode (Myr): its own echo, the pulse out to its rim and
-/// back twice (circuit::anchor), so the jet returns on the galaxy's clock
-/// and no span is declared. Zero until a universe is founded in the process;
+/// A galaxy's jet episode (Myr): the galaxy's echo, the pulse out to its rim
+/// and back twice (`circuit::anchor`), so the jet returns on the galaxy's
+/// clock and no span is declared. Zero until a universe is founded in the process;
 /// a centre carries the episode it was made with.
 pub fn galaxy_episode_myr() -> Q {
     (crate::circuit::echo_gyr() * xyl_core::dyadic::Dy::int(1000)).to_q()
@@ -62,7 +63,7 @@ pub struct FarCore {
     pub released: Q,
     /// Sent back through the throat from the far side, cumulative (suns).
     pub sent: Q,
-    /// The far core's own elapsed deep time (Myr).
+    /// The far core's elapsed deep time (Myr).
     pub clock_myr: Q,
     /// An ordered digest of every record that crossed; seeds the far universe.
     pub records: [u8; 32],
@@ -71,7 +72,8 @@ pub struct FarCore {
 }
 
 impl FarCore {
-    /// The far universe's seed, from the digest of what crossed.
+    /// The far universe's seed: the first eight bytes of the digest of what
+    /// crossed, little-endian.
     pub fn seed(&self) -> u64 {
         let b = self.records;
         u64::from_le_bytes([b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]])
@@ -86,15 +88,14 @@ pub struct Core {
     /// The curvature radius of the galaxy's S^360 enclosure the horizon is
     /// read in (the hole's units).
     pub enclosure: Q,
-    /// The jet episode's e-folding time (Myr): the galaxy's own echo
+    /// The jet episode's e-folding time (Myr): the galaxy's echo
     /// ([`galaxy_episode_myr`]).
     pub episode_myr: Q,
     /// Mass at formation (suns).
     pub mass0: Q,
     /// Held outside the horizon, to be returned as jets (suns).
     pub reservoir: Q,
-    /// Every account, cumulative (suns): fallen in, radiated as light,
-    /// returned as jets, and arrived from a paired universe.
+    /// Fallen in, cumulative (suns).
     pub fallen: Q,
     /// Radiated as light on the way through the horizon, cumulative (suns).
     pub radiated: Q,
@@ -102,7 +103,8 @@ pub struct Core {
     pub returned: Q,
     /// Arrived from the paired universe through the throat, cumulative (suns).
     pub arrived: Q,
-    /// The throat's far face: the matter it holds and what it has released and sent.
+    /// The throat's far face: the matter it holds and what it has released
+    /// and sent.
     pub far: FarCore,
 }
 
@@ -111,7 +113,7 @@ impl Core {
     /// its galaxy's S^360 enclosure of curvature radius `enclosure`, crossed
     /// at the galaxy's phase `phase` (its bead's capture phase, turns), its
     /// jets returning over `episode_myr` (the galaxy's echo,
-    /// [`galaxy_episode_myr`]).
+    /// [`galaxy_episode_myr`]). `None` where `Bounce::of` refuses.
     pub fn new(mass: Q, spin: &Q, enclosure: &Q, phase: &Q, episode_myr: &Q) -> Option<Core> {
         let hole = Bounce::of(&mass, spin, enclosure, phase)?;
         Some(Core {
@@ -128,13 +130,16 @@ impl Core {
         })
     }
 
-    /// The hole's current mass (suns): its formation mass plus what the throat holds.
+    /// The hole's current mass (suns): its formation mass plus what the
+    /// throat holds.
     pub fn mass(&self) -> &Q {
         &self.hole.mass
     }
 
     /// `suns` fall to the centre, recorded as `record` (e.g. a star's shed
-    /// matter, an unbound world). Returns the mass added to the throat.
+    /// matter, an unbound world). Returns the mass added to the throat; zero
+    /// for a non-positive `suns`, `None` where `Bounce::of` refuses the new
+    /// mass.
     pub fn capture(&mut self, suns: &Q, record: &[u8]) -> Option<Q> {
         if suns.signum() <= 0 {
             return Some(Q::ZERO);
@@ -145,8 +150,8 @@ impl Core {
         self.fallen = &self.fallen + suns;
         self.radiated = &self.radiated + &light;
         self.reservoir = &self.reservoir + &(suns - &crossed);
-        // the hole grows by what enters the throat; its bounce (horizon and
-        // white hole) is rebuilt at the new mass
+        // The hole grows by what enters the throat; its bounce (horizon and
+        // white hole) is rebuilt at the new mass.
         self.hole = Bounce::of(
             &(self.mass() + &grows),
             &self.hole.spin,
@@ -162,8 +167,8 @@ impl Core {
     }
 
     /// Advances `myr` of deep time: the reservoir returns
-    /// `reservoir·(1 − exp(−Δt/τ))` to the bulge as jets (fixed on the grid).
-    /// Returns the amount returned.
+    /// `reservoir x (1 - exp(-dt / tau))` to the bulge as jets, the lower
+    /// bound rounded down to the 2^-40 grid. Returns the amount returned.
     pub fn run(&mut self, myr: &Q) -> Q {
         if self.reservoir.signum() <= 0 || myr.signum() <= 0 {
             return Q::ZERO;
@@ -182,9 +187,10 @@ impl Core {
     }
 
     /// Advances the far core's clock by `myr`: its engine releases
-    /// `held x (1 - exp(-dt/tau))` of the throat's matter into its universe
-    /// (fixed on the grid), and the hole's mass falls by that amount, never
-    /// below its formation mass. Returns the amount released.
+    /// `held x (1 - exp(-dt / tau))` of the throat's matter into the far
+    /// universe (the lower bound rounded down to the 2^-40 grid), and the
+    /// hole's mass falls by that amount, never below its formation mass.
+    /// Returns the amount released, or `None` where `Bounce::of` refuses.
     pub fn far_run(&mut self, myr: &Q) -> Option<Q> {
         if myr.signum() <= 0 {
             return Some(Q::ZERO);
@@ -211,8 +217,8 @@ impl Core {
         Some(out)
     }
 
-    /// The far core sends `suns` of its universe's matter back through the
-    /// throat: it arrives at this face, outside the horizon, to be returned as
+    /// The far core sends `suns` of the far universe's matter back through
+    /// the throat: it arrives at this face, outside the horizon, to be returned as
     /// jets (a handoff over the uplink from the joined domain).
     pub fn arrive(&mut self, suns: &Q) {
         if suns.signum() > 0 {
@@ -251,21 +257,22 @@ mod tests {
         .unwrap();
         assert!(c.conserved());
         let crossed = c.capture(&Q::int(20), b"a star's shed envelope").unwrap();
-        // what crosses is a share of what fell, and the hole grows by it
+        // What crosses is a share of what fell, and the hole grows by it.
         assert!(crossed.signum() > 0 && crossed < Q::int(20), "{crossed}");
         assert_eq!(c.mass(), &(&Q::int(4_000_000) + &crossed));
         assert!(c.conserved());
         let r0 = c.reservoir.clone();
         let back = c.run(&Q::int(100));
-        // one e-fold returns 1 - 1/e of the reservoir, to the grid
+        // One e-fold returns 1 - 1/e of the reservoir, to the grid.
         assert!(
             back > &r0 * &Q::ratio(632, 1000) && back < &r0 * &Q::ratio(633, 1000),
             "{back}"
         );
         c.arrive(&Q::int(3));
         assert!(c.conserved());
-        // the far core releases what the throat holds, on its own clock: the
-        // hole's mass falls back toward what it formed with, never below
+        // The far core releases what the throat holds, on the far core's
+        // clock: the hole's mass falls back toward its formation mass, never
+        // below it.
         let before = c.mass().clone();
         let out = c.far_run(&Q::int(300)).unwrap();
         assert!(out.signum() > 0 && c.mass() < &before && c.mass() >= &c.mass0);
@@ -283,8 +290,8 @@ mod tests {
             c.run(&Q::int(100));
         }
         assert!(c.conserved() && c.reservoir < Q::ONE);
-        // the horizon grew with the hole, exactly at the one-third reach along
-        // its enclosure
+        // The horizon grew with the hole: it stands exactly at the reach where
+        // the deficit is one third, curved along the enclosure.
         assert_eq!(
             c.hole.at[1],
             crate::bounce::curved_reach(&crate::bounce::horizon_reach(c.mass()), &c.enclosure)

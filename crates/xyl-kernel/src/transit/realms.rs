@@ -1,5 +1,6 @@
 //! Realms and handling: the constellations joined over open lines, the
-//! realms' keys for steward seats, and how a line's handling admits a passer.
+//! realms' keys for steward seats, and the rule by which a line's handling
+//! admits a passer.
 
 use super::{Handling, Lane, Ley, Network};
 use crate::cosmic::Cosmic;
@@ -7,8 +8,9 @@ use std::collections::BTreeMap;
 use xyl_core::dyadic::Dy;
 
 impl Network {
-    /// The constellations joined to `home` over the lines (the network is
-    /// common: every signatory's lines carry every signatory).
+    /// Returns, per constellation, whether it is joined to constellation
+    /// `home` over any line, whatever the line's handling or open share (the
+    /// network is common: every signatory's lines carry every signatory).
     pub(super) fn joined(&self, home: usize) -> Vec<bool> {
         let mut seen = vec![false; self.constellations.len()];
         let Some(s) = seen.get_mut(home) else {
@@ -31,8 +33,10 @@ impl Network {
         seen
     }
 
-    /// Whether line `l` carries passer `who` (a people's index; `None` an
-    /// unnamed passer) by its handling.
+    /// Returns whether line `l` carries passer `who` (a people's index;
+    /// `None` is an unnamed passer) under the line's handling. A guarded line
+    /// carries its builder and the peoples whose star lies in the realm of the
+    /// line's first mouth.
     pub fn carries(&self, cosmic: &Cosmic, l: &Ley, who: Option<usize>) -> bool {
         match l.handling {
             Handling::Open | Handling::Tolled => true,
@@ -47,9 +51,10 @@ impl Network {
         }
     }
 
-    /// The realms: each a connected set of constellations joined by ley
-    /// lines with a non-zero open share, keyed by its least constellation
-    /// key, as (key, constellation keys).
+    /// Returns the realms as (key, constellation keys). A realm is a
+    /// connected set of constellations joined by ley lines with a positive
+    /// open share, keyed by its least constellation key. A constellation with
+    /// no such line belongs to no realm.
     pub fn realms(&self) -> Vec<(u64, Vec<u64>)> {
         let mut parent: BTreeMap<u64, u64> = BTreeMap::new();
         fn root(parent: &mut BTreeMap<u64, u64>, x: u64) -> u64 {
@@ -93,7 +98,8 @@ impl Network {
         by.into_iter().collect()
     }
 
-    /// The key of the realm star `star`'s constellation belongs to, if any.
+    /// Returns the key of the realm to which the constellation of star
+    /// `star` belongs, or None if it belongs to none.
     pub fn realm_of(&self, star: u64) -> Option<u64> {
         let c = self
             .of
@@ -106,8 +112,8 @@ impl Network {
             .map(|(k, _)| k)
     }
 
-    /// Records every realm's key not yet seen, so steward seats keep their
-    /// index. Returns the keys added.
+    /// Records every realm key not yet seen, so that steward seats keep
+    /// their index, and returns the keys added.
     pub fn note_realms(&mut self) -> Vec<u64> {
         let mut added = Vec::new();
         for (k, _) in self.realms() {
@@ -119,9 +125,9 @@ impl Network {
         added
     }
 
-    /// Sets the handling of every line between stars `a` and `b` (either
-    /// way) that lies in the realm keyed `realm`. Returns how many lines
-    /// changed.
+    /// Sets the handling of every line between stars `a` and `b` (in either
+    /// direction) whose first mouth lies in the realm keyed `realm`, and
+    /// returns the number of lines changed.
     pub fn handle(&mut self, realm: u64, a: u64, b: u64, handling: Handling) -> usize {
         let in_realm: Vec<bool> = self
             .lines
@@ -141,8 +147,9 @@ impl Network {
         changed
     }
 
-    /// Line `l`'s books as a lane: its cost, and what it has collected (no
-    /// traffic is carried yet, so nothing), for the toll law [`quote`](super::quote).
+    /// Returns the books of line `l` as a lane for the toll law
+    /// [`quote`](super::quote): the line's cost, with zero collected and zero
+    /// passages last year, because no traffic is carried yet.
     pub fn lane(&self, l: &Ley) -> Lane {
         Lane {
             cost_j: l.cost_j,

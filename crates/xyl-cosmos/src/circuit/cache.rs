@@ -15,10 +15,10 @@ use xyl_core::codec::{Dec, Enc};
 
 /// The founding is derived (the laws regenerate it from the bounce's share),
 /// so it is kept in the home directory only as an accelerator, keyed by the
-/// laws' source digest and the bounce's share: a change to either founds
-/// anew, and deleting the file changes nothing (docs/architecture.md, cached
-/// derived state). The reverberation is not kept; it is recomputed from the
-/// anchor on load.
+/// founding digest and the torsion share: a change to either founds anew,
+/// and deleting the file changes nothing (docs/architecture.md, cached
+/// derived state). The bell and the reverberation are not kept; they are
+/// recomputed from the rim on load.
 static DIR: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
 
 const VERSION: u32 = 8;

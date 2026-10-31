@@ -8,8 +8,8 @@ use xyl_core::certified::{exp, ln};
 use xyl_core::Q;
 
 /// The calibration: each channel's yield scale (from the measured gas
-/// rulers) and its unit-yield concentration at R0 today, on the universe's
-/// own history (one universe per process: the first history calibrates).
+/// rulers) and its unit-yield concentration at R0 today, on the history of
+/// the first universe built in the process (one universe per process).
 pub struct Calibration {
     pub(super) elements: Vec<Element>,
     model: Model,
@@ -17,7 +17,7 @@ pub struct Calibration {
     reference: Vec<Q>,
     /// Each element's abundance in the Sun's birth gas (R0, 9.2 Gyr, the
     /// reference Big Bang) under this calibration; rulers measured on the
-    /// Sun's own matter (an isotope inventory) are read against it.
+    /// Sun's matter (an isotope inventory) are read against it.
     sun: Vec<Q>,
 }
 
@@ -69,7 +69,7 @@ impl Calibration {
             reference,
             sun: Vec::new(),
         };
-        // the Sun was born 9.2 Gyr after the Big Bang (13.8 - 4.6)
+        // The Sun was born 9.2 Gyr after the Big Bang (13.8 - 4.6).
         let at_birth = cal.model.concs(k0, &decimal("9.2").unwrap_or(Q::ZERO));
         let sun = (0..cal.elements.len())
             .map(|ei| {
@@ -83,7 +83,8 @@ impl Calibration {
     }
 
     /// The calibration on the history `p`, built once per process and
-    /// shared. Returns `None` when the element table fails to load or a
+    /// shared; a failed build is also kept. Returns `None` when the element
+    /// table fails to load, ln 10 cannot be enclosed or a
     /// channel's yield scale cannot be solved (a zero origin share for Fe
     /// or N).
     pub fn of(p: &Params) -> Option<&'static Calibration> {
@@ -96,9 +97,11 @@ impl Calibration {
     }
 
     /// Element `ei`'s (smooth, merger) relative parts from the channels'
-    /// concentrations `concs` (None: nothing made yet there and then): each
-    /// channel's share of it, its yield scale, and its concentration against
-    /// the reference's.
+    /// concentrations `concs` (`None`: nothing made yet at that place and
+    /// time). Each channel contributes its origin share of the element times
+    /// its yield scale times its concentration over the reference
+    /// concentration; the Big Bang share enters the smooth part unchanged.
+    /// `None` for an index out of range.
     pub(super) fn parts(&self, concs: Option<&[Q]>, ei: usize) -> Option<(Q, Q)> {
         let e = self.elements.get(ei)?;
         let (mut smooth, mut merger) = (Q::ZERO, Q::ZERO);
@@ -110,8 +113,8 @@ impl Calibration {
             let Some(ci) = channel_index(*c) else {
                 continue;
             };
-            // no concentrations (before the first stars, or no gas): an
-            // element any channel makes is absent
+            // No concentrations (before the first stars, or no gas): an
+            // element any stellar channel makes is absent.
             let Some(concs) = concs else {
                 return Some((Q::ZERO, Q::ZERO));
             };
@@ -129,8 +132,9 @@ impl Calibration {
 }
 
 /// An element's abundance in the gas the Sun formed from, as the calibration
-/// reads it (R0, 9.2 Gyr): 1 for an element the Big Bang alone made. None
-/// before a chemistry has been built in the process.
+/// reads it (R0, 9.2 Gyr): 1 for an element the Big Bang alone made. `None`
+/// before a chemistry has been built in the process or for an unknown
+/// symbol.
 pub fn reference_birth_gas(sym: &str) -> Option<Q> {
     let cal = Calibration::held()?;
     let ei = cal.elements.iter().position(|e| e.sym == sym)?;

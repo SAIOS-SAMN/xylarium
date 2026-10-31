@@ -81,10 +81,10 @@ pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
     Ok(out)
 }
 
-/// The founding's kinds by reach (the table's ceiling at TOP_Z): every
-/// founded kind's reach about the Wellspring from the founding cascade, its
-/// open share Q / 3Z, and the ratio of reaches Z 115 / Z top (under the
-/// linear law).
+/// The `founding-reach` reading (the table's ceiling at TOP_Z): for selected
+/// founded kinds and the heaviest, the reach about the Wellspring from the
+/// founding cascade and the open share Q / 3Z, then the ratio of reaches
+/// Z 115 / Z top (under the linear law).
 pub(super) fn founding_read(o: &Options) -> Result<String, String> {
     let bang = BigBang::of(o.seed).ok_or("no Big Bang")?;
     let elements = xyl_cosmos::elements::founded(&bang.parent.share())?;
@@ -124,15 +124,16 @@ pub(super) fn founding_read(o: &Options) -> Result<String, String> {
     Ok(out)
 }
 
-/// Formation, read (laws not yet wired into the game's stars): each
-/// galaxy's cut, gas, cooling and stars, its counts in its own echo rings
-/// (the ring a turning counts in: its anchor's echo), years only at the seam.
+/// The `formation` reading (laws not yet connected to the game's stars): the
+/// founding's matter, then each galaxy's cut, gas, cooling and stars, counted
+/// in rings of the galaxy's echo (a turning counts in its anchor's echo),
+/// with years only at the seam, then the scratch infalls.
 pub(super) fn formation(o: &Options) -> Result<String, String> {
     let bang = BigBang::of(o.seed).ok_or("no Big Bang")?;
     let elements = xyl_cosmos::elements::founded(&bang.parent.share())?;
     let shapes = xyl_cosmos::cores::shapes(o.seed, &bang);
     let mut out = founding_matter(&bang, &elements);
-    // Units are the universe's own: time in rings, reach as a deficit share
+    // Units are the universe's: time in rings, reach as a deficit share
     // of its enclosure, mass as a holding share (never years, kpc or suns).
     // The pieces are the founding's beads one tier down, heated by the pulse
     // at swing = 1 + the inbound echo's mean over the first echo, as at the
@@ -148,7 +149,7 @@ pub(super) fn formation(o: &Options) -> Result<String, String> {
 /// The founding's matter: each element's count per hydrogen and the mean
 /// mass number by count.
 fn founding_matter(bang: &BigBang, elements: &[Element]) -> String {
-    // mean mass number by count: sum(n_i A_i) / sum(n_i)
+    // The mean mass number by count is `sum(n_i A_i) / sum(n_i)`.
     let (count, mass) = elements
         .iter()
         .filter(|e| e.abundance.signum() > 0)
@@ -191,7 +192,7 @@ fn founding_matter(bang: &BigBang, elements: &[Element]) -> String {
 /// tier and the first four pieces.
 fn galaxies(shapes: &[Shape], f: &Formation, sub: &Substrate) -> String {
     let total = shapes.iter().fold(Q::ZERO, |a, s| &a + &s.mass_ratio());
-    // gas = sum lambda (to - from) over the pieces
+    // `gas = sum lambda (to - from)` over the pieces.
     let gas: Q = f
         .pieces
         .iter()
@@ -250,12 +251,13 @@ fn galaxies(shapes: &[Shape], f: &Formation, sub: &Substrate) -> String {
             dash_or(big.as_ref()),
             show(&dark)
         ));
-        // the star tier (the core's cut and its disc) of each forming piece
+        // The star tier (the core's cut and its disc) of each of the first
+        // four pieces that form stars.
         for pc in formed.iter().filter(|p| p.stars.signum() > 0).take(4) {
             out.push_str(&star_tier(pc));
             out.push_str(&worlds_line(&pc.worlds));
         }
-        // the first pieces, lit or not
+        // The first four pieces, lit or not.
         for pc in f.pieces.iter().take(4) {
             out.push_str(&piece_line(pc));
         }
@@ -266,7 +268,8 @@ fn galaxies(shapes: &[Shape], f: &Formation, sub: &Substrate) -> String {
 /// A forming piece's star tier: its tide, agitation, the star's share of
 /// its infall, open shares, worlds and belts.
 fn star_tier(pc: &Piece) -> String {
-    // a world's holding over its star's (holding shares, never world units)
+    // Each world's holding as a share of its star's holding (holding shares,
+    // not world units).
     let shares = |w: &Q| show(&w.checked_div(&pc.star_share).unwrap_or(Q::ZERO));
     format!(
         concat!(
@@ -316,7 +319,7 @@ fn piece_line(pc: &Piece) -> String {
     )
 }
 
-/// The planetary cores on the founding's own mix: a scratch reading of the
+/// The planetary cores on the founding's mix: a scratch reading of the
 /// law (one infall of the founding's matter, not a formed star: no star
 /// forms here until convection is modelled), at the galaxy's tide inside
 /// its rim, delta_gal = 2 / (R + 2) for R = 1, 3/2, 2.

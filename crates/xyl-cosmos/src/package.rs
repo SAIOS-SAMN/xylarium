@@ -10,7 +10,7 @@
 //! the files the founding is derived from (build.rs), recorded in a genesis.
 //!
 //! A genesis is determined by this package and its seed. The founding reads
-//! only this module and the founding's own files, so a change to a world, a
+//! only this module and the founding files listed in build.rs, so a change to a world, a
 //! disc or a life law keeps the genesis and its cache.
 //! Terms: package, founding digest (docs/glossary.md).
 
@@ -20,13 +20,14 @@ use xyl_core::Q;
 /// The universal core's mass (suns): the package's one bridge to SI, the
 /// mass whose gravitational radius is the unit of length (xyl-core
 /// units.rs). The home galaxy surrounds the core, so its hole is the core.
-/// Declared by the package until the founding manifest supplies it; its spin is the
-/// parent's spin, the universe's own draw (bang.rs).
+/// Declared by the package until the founding manifest supplies it; its spin
+/// is the parent's spin, drawn from the universe's seed (bang.rs).
 pub fn hole_mass() -> Q {
     Q::int(4_300_000)
 }
 
-/// Units (SI): the unit world's mass and radius (5.972e24 kg, 6.371e6 m), the planet layer's unit.
+/// The SI constants and rulers the package declares, as exact rationals; the
+/// unit world (5.972e24 kg, 6.371e6 m) is the planet layer's unit.
 pub struct Si;
 impl Si {
     /// The unit world mass, 5.972e24 kg.
@@ -109,8 +110,9 @@ impl Si {
 }
 
 /// The founding's digest: the files the founding is derived from (the Big
-/// Bang, the bounce, the elements and atoms, the cascade and lighting, the
-/// circuit, this package and the mathematics), hashed at build time. A
+/// Bang, the bounce, the elements, atoms, compounds and fibres, the galactic
+/// cores and the chain, this package, the formation cascade, the circuit, the
+/// data tables and xyl-core), hashed at build time. A
 /// genesis records it; a founding cached under it is the same founding, and
 /// a change to any layer built on the founding leaves it unchanged.
 pub fn founding_digest() -> &'static str {

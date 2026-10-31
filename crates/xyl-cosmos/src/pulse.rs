@@ -5,8 +5,8 @@
 //! harmonics) that runs out to the founding's rim and back once per bell.
 //! Its wavelength is light speed x the bell (`wavelength_kpc`), so no
 //! separate constant is set. Every hole (black face, throat, white face; see
-//! centre.rs) passes the wavefront on continuous in phase, with no period
-//! of its own.
+//! `centre`) passes the wavefront on continuous in phase, without a separate
+//! period.
 //!
 //! Reads `bang::BigBang`, `cores::shapes` and `cores::held`, `galaxy::star`,
 //! `chain::Place` and `chain::radius`, `stars::life` and
@@ -22,11 +22,11 @@
 //! - `relays` -> one `Relay` per node: the nearest live node closer to the
 //!   core, the route along that chain, and continuity
 //!   `cos(2 pi detour / wavelength)`. `nodes[0]` is the universe core.
-//! - `hear` -> `Option<Hearing>` (None with no live node): each node weighs
+//! - `hear` -> `Option<Hearing>` (`None` with no live node): each node weighs
 //!   mass / arc (first degree, suns per kpc) at the phase of its path; the
 //!   dominance is the loudest node's share of the sum, the coherence
-//!   `|sum I_k e^(i psi_k)| / sum I_k`, its length read by projecting on
-//!   its own angle so no square root is taken.
+//!   `|sum I_k e^(i psi_k)| / sum I_k`, the phasor sum's length read by
+//!   projecting it on its angle so no square root is taken.
 
 use crate::bang::BigBang;
 use crate::chain::Place;
@@ -43,18 +43,18 @@ pub fn c_kpc_yr() -> Dy {
 /// The kind of node.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Kind {
-    /// A galactic core: its galaxy's source bell (cores.rs).
+    /// A galactic core: its galaxy's source bell (`cores`).
     Core(Box<crate::cores::Shape>),
-    /// The hole a heavy sample star left.
+    /// The remnant hole a sample star leaves when its life ends.
     Stellar(Box<Star>),
 }
 
 /// A bell of the network.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Node {
-    /// What rings: a galactic core or a stellar hole.
+    /// The node's kind: a galactic core or a stellar hole.
     pub kind: Kind,
-    /// Ringing strength: the hole mass it represents (suns).
+    /// The hole mass the node represents (suns), which sets its intensity.
     pub mass: Dy,
     /// When it formed (Gyr after the Big Bang).
     pub born: Dy,
@@ -92,7 +92,7 @@ pub fn nodes(seed: u64, bang: &BigBang, limit: Option<u64>) -> Vec<Node> {
 /// candidate's remnant from the end of its life. Callers may pass a subset
 /// of the sample; an incomplete list omits bells but never adds one.
 pub fn nodes_among(seed: u64, bang: &BigBang, candidates: &[u64]) -> Vec<Node> {
-    // each galactic core is a node from its formation time
+    // Each galactic core is a node from its formation time.
     let mut out: Vec<Node> = crate::cores::shapes(seed, bang)
         .into_iter()
         .map(|sh| Node {
@@ -105,12 +105,12 @@ pub fn nodes_among(seed: u64, bang: &BigBang, candidates: &[u64]) -> Vec<Node> {
         let Some(s) = star(seed, bang, k) else {
             continue;
         };
-        // a stellar node forms when the star's main-sequence life ends
-        // (stars::life)
+        // A stellar node forms when the star's main-sequence life ends
+        // (`stars::life`).
         let life = Dy::from_q(&crate::stars::life(s.reach_rings()));
         let born = Dy::from_q(&s.born) + life;
-        // remnant mass: the stellar mass the sample star stands for times
-        // the share of the hold not transduced (stars::remnant_share)
+        // Remnant mass: the stellar mass the sample star stands for times
+        // the share of the hold not transduced (`stars::remnant_share`).
         let mass = s.stands_for * Dy::from_q(&crate::stars::remnant_share());
         out.push(Node {
             kind: Kind::Stellar(Box::new(s)),
@@ -122,7 +122,7 @@ pub fn nodes_among(seed: u64, bang: &BigBang, candidates: &[u64]) -> Vec<Node> {
 }
 
 /// The core's period (yr): the bell, the pulse's round trip to the
-/// founding's rim and back (circuit::anchor).
+/// founding's rim and back (`circuit::anchor`).
 pub fn core_period_yr() -> Dy {
     crate::circuit::bell_gyr() * Dy::sci(1, 9)
 }
@@ -135,18 +135,18 @@ pub fn wavelength_kpc() -> Dy {
 /// What a place hears of the bells at `t` Gyr.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Hearing {
-    /// The loudest bell (its index in the nodes) and that bell's share.
+    /// The loudest bell's index in the nodes.
     pub dominant: usize,
     /// The loudest bell's share of the summed intensity, in (0, 1].
     pub dominance: Dy,
     /// Phase coherence: the phasor sum's length over the summed intensity, in [0, 1].
     pub coherence: Dy,
-    /// The summed intensity (suns per kpc^2).
+    /// The summed intensity (suns per kpc).
     pub intensity: Dy,
 }
 
-/// The relay network at `t`: for each live node, the bell it relays from (the
-/// nearest live bell closer to the core; none for the core), the wavefront's
+/// A node's relay at `t`: the bell it relays from (the live bell nearest to
+/// it among those closer to the core; none for the core), the wavefront's
 /// route length along the relay chain (kpc), and its continuity.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Relay {
@@ -159,7 +159,9 @@ pub struct Relay {
 }
 
 /// The relay network at `t` Gyr over `nodes`, one [`Relay`] per node in the
-/// same order. Nodes not yet born keep the default relay (no source, route 0).
+/// same order. Nodes not yet born keep the default relay (no source, route 0,
+/// continuity 1). A node with no live source closer to the core takes the
+/// direct arc from the core as its route.
 ///
 /// `nodes[0]` is taken as the universe core; an empty `nodes` gives an empty
 /// network.
@@ -171,7 +173,7 @@ pub fn relays(nodes: &[Node], t: Dy) -> Vec<Relay> {
         return Vec::new();
     };
     let from_core: Vec<Dy> = places.iter().map(|p| arc(p, core)).collect();
-    // nearest the core first, so each relay's source has its route already
+    // Nearest the core first, so each relay's source already has its route.
     let mut order: Vec<usize> = (0..nodes.len()).collect();
     order.sort_by(|&a, &b| from_core[a].cmp(&from_core[b]));
     let mut out = vec![
@@ -207,7 +209,8 @@ pub fn relays(nodes: &[Node], t: Dy) -> Vec<Relay> {
     out
 }
 
-/// What `place` hears of the live bells at `t` Gyr.
+/// What `place` hears of the live bells at `t` Gyr; `None` when no node is
+/// live. Arcs are at least 1e-6 kpc.
 pub fn hear(place: &Place, nodes: &[Node], relays: &[Relay], t: Dy) -> Option<Hearing> {
     let r = crate::chain::radius();
     let lambda = wavelength_kpc();
@@ -218,10 +221,10 @@ pub fn hear(place: &Place, nodes: &[Node], relays: &[Relay], t: Dy) -> Option<He
             continue;
         }
         let d = place.arc_kpc(&node.place(t, &r), &r).max(Dy::sci(1, -6));
-        // weight I = M / d (first degree, in place of M / d^2)
+        // Weight I = M / d (first degree, in place of M / d^2).
         let i = node.mass / d;
-        // path: the route along the relay chain to this node, plus the arc
-        // from it to the place
+        // Path: the route along the relay chain to this node, plus the arc
+        // from it to the place.
         let path = relays.get(k).map(|r| r.route).unwrap_or(Dy::ZERO) + d;
         let (s, c) = (Dy::int(2) * Dy::PI * path / lambda).sin_cos();
         sum += i;
@@ -232,8 +235,8 @@ pub fn hear(place: &Place, nodes: &[Node], relays: &[Relay], t: Dy) -> Option<He
         }
     }
     let (k, top) = best?;
-    // the phasor sum's length via its own phase: re cos(phi) + im sin(phi),
-    // phi its angle (avoids the root of re^2 + im^2)
+    // The phasor sum's length from its phase: re cos(phi) + im sin(phi), with
+    // phi the sum's angle (avoids the root of re^2 + im^2).
     let phi = if re.signum() == 0 {
         Dy::PI * Dy::ratio(1, 2) * Dy::int(i64::from(im.signum()))
     } else {

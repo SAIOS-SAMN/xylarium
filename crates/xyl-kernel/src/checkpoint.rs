@@ -1,12 +1,12 @@
 //! The checkpoint: the path-dependent state the laws do not regenerate,
-//! taken at a count of the bell and laid back over a universe regenerated
-//! from its seed. Restoring reconstructs that state; it is not a byte-exact
+//! taken at a count of the bell and applied to a universe regenerated from
+//! its seed. Restoring reconstructs that state; it is not a byte-exact
 //! replay.
 //!
 //! Held ([`Checkpoint`]): the count it was taken at; each seat's holder
 //! other than the default rule; each people's numbers, housing, knowledge
-//! stocks, focus and tuned home radiation ([`Held`]); its eminent figures
-//! and folds; the ley lines built and any handling other than tolled; the
+//! stocks, focus and tuned home radiation ([`Held`]); each people's eminent
+//! figures and folds of space; the ley lines built and any handling other than tolled; the
 //! keepers' commit counts with their receipt heights; and every input
 //! applied, at its count. Per-people records are keyed by index and the
 //! name [`tag`], and are applied only where both match. Regenerated, not
@@ -36,27 +36,30 @@ const FORECAST_FORMAT: &str = "xylarium checkpoint v3";
 pub struct Held {
     /// The people's index in the cosmic world when the checkpoint was taken.
     pub index: usize,
-    /// The people's name tag from [`tag`]; a record is applied only where it matches.
+    /// The people's name tag from [`tag`]; a record is applied only where it
+    /// matches.
     pub tag: String,
     /// The people's population (count of bodies).
     pub population: Q,
-    /// How many of its bodies the people's world carries (count).
+    /// The carrying capacity of the people's world, as a count of bodies.
     pub capacity: Q,
-    /// Knowledge held in each of the four domains, in [`Domain`] index order; `None` when the
-    /// people had no knowledge layer.
+    /// Knowledge held in each of the four domains, in [`Domain`] index order;
+    /// `None` when the people had no knowledge layer.
     pub stock: Option<[Q; 4]>,
     /// The domain the people's inquiry is turned to; `None` when unturned.
     pub focus: Option<Domain>,
-    /// The home radiation the people's repair is tuned to; `None` until it first lived in any.
+    /// The home radiation the people's repair is tuned to; `None` until the
+    /// people first received nonzero radiation.
     pub home: Option<Q>,
 }
 
-/// The checkpoint.
+/// The checkpoint: the path-dependent state held for restoring a regenerated
+/// universe.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Checkpoint {
     /// The bell's count the checkpoint was taken at.
     pub at: Q,
-    /// Every seat not held by the universe's own mind: (seat index, holder).
+    /// Every seat not held by `Holder::Universe`: (seat index, holder).
     pub holders: Vec<(usize, Holder)>,
     /// Each people's held record, ordered by index.
     pub peoples: Vec<Held>,
@@ -66,20 +69,23 @@ pub struct Checkpoint {
     /// final point's receipt height heard then.
     pub commits: Vec<(Q, Option<u64>)>,
     /// The ley lines built, held rather than re-derived: each line's mouths,
-    /// builder (index and tag), opening time (Gyr) and cost (J).
+    /// builder (index and tag), opening time (Gyr), cost (J) and whether a
+    /// progenitor built it.
     pub lines: Vec<(u64, u64, usize, String, Q, Q, bool)>,
-    /// Each people's eminent figures (people index, its tag, the figure):
+    /// Each people's eminent figures (people index, people tag, figure):
     /// history the laws do not regenerate.
     pub eminent: Vec<(usize, String, crate::civ::history::Eminent)>,
     /// Every ley line whose steward set a handling other than tolled: its
     /// mouths and the handling.
     pub handling: Vec<(u64, u64, crate::transit::Handling)>,
-    /// Each people's folds of space (people index, its tag, energy folded in
-    /// J, when its folding was last read in Gyr).
+    /// Each people's folds of space (people index, people tag, energy folded
+    /// in J, time of the last folding reading in Gyr).
     pub folds: Vec<(usize, String, Q, Q)>,
 }
 
-/// A people's name as an 8-hex tag (names may hold spaces).
+/// Returns a people's name as an 8-hex-digit tag, the first four bytes of the
+/// name's BLAKE3 hash; the tag keeps a record one word wide, since names may
+/// contain spaces.
 pub fn tag(name: &str) -> String {
     blake3::hash(name.as_bytes()).as_bytes()[..4]
         .iter()
@@ -102,7 +108,7 @@ fn key(s: &str) -> Option<[u8; 32]> {
     Some(k)
 }
 
-/// An exact rational from its text (`n` or `n/d`, each an integer or a
+/// Parses an exact rational from text (`n` or `n/d`, each an integer or a
 /// decimal).
 ///
 /// Returns `None` when either part does not parse or the denominator is zero.
@@ -126,7 +132,7 @@ fn domain_text(d: Option<Domain>) -> String {
 }
 
 impl Checkpoint {
-    /// What the universe holds now.
+    /// Returns the checkpoint of the universe at its present count.
     pub fn of(u: &Universe<'_>) -> Checkpoint {
         let holders = u
             .seats
@@ -218,8 +224,10 @@ impl Checkpoint {
         }
     }
 
-    /// As text: the version line, then one line per held item (`at`, `held`,
-    /// `people`, `know`, `home`, `commit`, `ley`, `input`); [`Checkpoint::decode`] reads it back.
+    /// Returns the checkpoint as text: the version line, then one line per
+    /// held item (`at`, `held`, `people`, `know`, `home`, `handle`, `fold`,
+    /// `eminent`, `commit`, `ley`, `input`); [`Checkpoint::decode`] reads it
+    /// back.
     pub fn encode(&self) -> String {
         let mut out = format!("{FORECAST_FORMAT}\nat {}\n", self.at);
         for (i, h) in &self.holders {
@@ -313,8 +321,8 @@ impl Checkpoint {
         out
     }
 
-    /// From its text, as written by [`Checkpoint::encode`]. Unknown lines are
-    /// skipped.
+    /// Parses a checkpoint from the text written by [`Checkpoint::encode`].
+    /// Unknown lines are skipped.
     ///
     /// Returns `None` when the first line is not this checkpoint version, or
     /// when a known line holds a number, key or index that does not parse.
@@ -414,13 +422,15 @@ impl Checkpoint {
         Some(c)
     }
 
-    /// Lay the checkpoint over the regenerated universe: the universe is
-    /// carried to the checkpoint's count by its laws, then each held record is
-    /// applied where its people matches; inputs held after the count wait for
-    /// their own count. Returns how many peoples' records were applied.
+    /// Applies the checkpoint to the regenerated universe: the laws carry the
+    /// universe to the checkpoint's count with deciding switched off, then
+    /// the holders and each people record whose index and tag match are
+    /// applied; inputs held after the count are queued at their counts.
+    /// Returns how many people records were applied.
     pub fn restore(&self, u: &mut Universe<'_>) -> usize {
-        // exoduses and settlements land at their counts as the universe is
-        // carried back; the carry decides none of its own meanwhile
+        // Recorded exoduses and settlements up to the count are queued so that
+        // they apply at their counts while the universe is carried to the
+        // count; with `decide` off, the carry decides no other acts.
         for (at, input) in &self.inputs {
             if at <= &self.at && matches!(input, Input::Move { .. } | Input::Settle { .. }) {
                 u.queue(at.clone(), input.clone());
@@ -455,7 +465,8 @@ impl Checkpoint {
             }
             taken += 1;
         }
-        // the stewards' handling of their lines, and each people's folds
+        // Restore the stewards' handling of the ley lines and each people's
+        // folds of space.
         for l in &mut u.network.lines {
             if let Some((_, _, h)) = self
                 .handling
@@ -470,7 +481,8 @@ impl Checkpoint {
                 u.network.folds.insert(*i, (Dy::from_q(e), Dy::from_q(at)));
             }
         }
-        // the eminent figures, where their people matches
+        // Restore the eminent figures where the people's index and tag match;
+        // the held figures replace the regenerated ones.
         u.civ
             .numbers
             .resize_with(u.cosmic.peoples.len(), Default::default);
@@ -484,12 +496,13 @@ impl Checkpoint {
                 n.eminent.push(e.clone());
             }
         }
-        // re-commit the keepers' chain at its held counts: the entries come
-        // from the laws, the commit moments are held
+        // Re-commit the keepers' chain at the held counts: the entries are
+        // regenerated by the laws, the commit moments are held.
         for (at, point) in &self.commits {
             u.clocks.commit(at, *point);
         }
-        // the ley lines as built; works under way are begun again from them
+        // Replace the ley lines with those held as built; works under way are
+        // cleared, and building resumes from the restored lines.
         if !self.lines.is_empty() {
             u.network.lines = self
                 .lines
@@ -543,8 +556,8 @@ fn eminent_of(w: &[&str]) -> Option<crate::civ::history::Eminent> {
     })
 }
 
-/// A held ley line from a `ley` line's words: mouths, builder, tag, opening
-/// time and cost.
+/// Parses a held ley line from a `ley` line's words: mouths, builder, tag,
+/// opening time and cost; `progenitor` marks a line a progenitor built.
 fn ley_of(w: [&&str; 6], progenitor: bool) -> Option<(u64, u64, usize, String, Q, Q, bool)> {
     let [a, b, i, t, at, cost] = w;
     Some((
@@ -579,7 +592,7 @@ fn held_ley(
     }
 }
 
-/// How a figure is held, as its checkpoint word.
+/// Returns the checkpoint word for how a figure is held.
 fn held_text(h: crate::civ::history::Held) -> &'static str {
     match h {
         crate::civ::history::Held::Person => "person",
@@ -588,7 +601,8 @@ fn held_text(h: crate::civ::history::Held) -> &'static str {
     }
 }
 
-/// How a figure is held, from its checkpoint word; `None` for any other word.
+/// Parses how a figure is held from its checkpoint word; `None` for any other
+/// word.
 fn held_of(w: &str) -> Option<crate::civ::history::Held> {
     Some(match w {
         "person" => crate::civ::history::Held::Person,
@@ -598,7 +612,7 @@ fn held_of(w: &str) -> Option<crate::civ::history::Held> {
     })
 }
 
-/// A handling as its checkpoint word.
+/// Returns the checkpoint word for a handling.
 fn handling_text(h: crate::transit::Handling) -> &'static str {
     match h {
         crate::transit::Handling::Open => "open",
@@ -608,7 +622,7 @@ fn handling_text(h: crate::transit::Handling) -> &'static str {
     }
 }
 
-/// A handling from its checkpoint word; `None` for any other word.
+/// Parses a handling from its checkpoint word; `None` for any other word.
 fn handling_of(w: &str) -> Option<crate::transit::Handling> {
     Some(match w {
         "open" => crate::transit::Handling::Open,

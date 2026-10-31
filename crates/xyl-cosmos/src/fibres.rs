@@ -3,7 +3,7 @@
 //!
 //! No inputs beyond a count of ends; all arithmetic is exact `u64`. Each
 //! arriving end, held (Z++) or open (Q++), stands on S^11, whose independent
-//! directions at harmonic degree l number
+//! directions at harmonic degree l number:
 //!
 //! ```text
 //! d(l) = C(l + 11, 11) - C(l + 9, 11)      (1, 12, 77, 352, ...)
@@ -21,13 +21,13 @@
 //! Outputs: `Coherence` (with `arrive`, `kappa`, `sealed`, `whole`), `grow`
 //! and `sealed_fibres`. Invariant: ends = 2 G + free after every arrival
 //! (`whole`). Coherence is kappa = 2 G / ends; a body seals when kappa = 1
-//! and its last degree is closed, which happens at
+//! and its last degree is closed, which happens when the fibre count is:
 //!
 //! ```text
 //! G = C(N + 11, 12) + C(N + 10, 12)        (1, 14, 104, 546, ...)
 //! ```
 //!
-//! fibres (ends 2, 28, 208, 1092).
+//! for N closed turnings (ends 2, 28, 208, 1092).
 
 /// C(n, k), exact; zero when k exceeds n.
 fn choose(n: u64, k: u64) -> u64 {
@@ -60,7 +60,7 @@ pub struct Coherence {
     pub fibres: u64,
     /// Lone ends: a direction claimed, not yet bound.
     pub free: u64,
-    /// The turning (from 1) and the degree within it (0..turning).
+    /// The current turning, counted from 1.
     pub turning: u64,
     /// Degree within the current turning, 0 <= degree < turning.
     pub degree: u64,
@@ -137,15 +137,16 @@ mod tests {
 
     #[test]
     fn fibre_seals_match_the_atom_and_lose_no_end() {
-        // directions(l) equals the S^11 harmonic count atoms::orientations
+        // The count directions(l) equals the S^11 harmonic count
+        // atoms::orientations.
         for l in 0..8u32 {
             assert_eq!(
                 directions(u64::from(l)),
                 u64::from(crate::atoms::orientations(l))
             );
         }
-        // grown end by end to 1200: no end is lost at any step, and every
-        // seal carries the telescoped harmonics' fibre count
+        // Grown end by end to 1200, no end is lost at any arrival, and every
+        // seal carries the telescoped harmonics' fibre count.
         let mut c = Coherence::new();
         let mut seals = Vec::new();
         for z in 1..=1200u64 {
@@ -162,7 +163,7 @@ mod tests {
             }
         }
         assert_eq!(seals, vec![2, 28, 208, 1092]);
-        // the atom fill seals at the same Z
+        // The atom fill seals at the same Z.
         for z in [2u32, 28, 208, 1092] {
             assert!(
                 crate::atoms::atom(z).is_some_and(|a| a.sealed()),

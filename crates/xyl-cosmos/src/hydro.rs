@@ -16,9 +16,10 @@
 //!             share 2x / (1 + x) of B against the wind pressure P.
 //!   Exposure  `exposure`: R / r_mp, the whole sky (1) with no field.
 //!   Dose      `particle_power`, `dose`: the star's wind through the exposed
-//!             sky plus cosmic rays above the field's cutoff (Stormer; the
-//!             integral spectrum falls as rigidity^-1.7), both attenuated by
-//!             the air's column (185 g/cm^2). `radiolysis` stores 3% of the
+//!             sky plus the cosmic rays that pass the field's cutoff
+//!             rigidity (Stormer), the passing share being
+//!             1 / (1 + 1.7 R_c / 4 GV); both are attenuated by the air's
+//!             column over 185 g/cm^2. `radiolysis` stores 3% of the
 //!             absorbed power as surface oxidants.
 //!
 //! Every function is total and deterministic: a world with no convective
@@ -27,7 +28,8 @@
 use crate::worlds::{unit, State};
 use xyl_core::dyadic::Dy;
 
-/// The unit world's magnetopause in its radii (subsolar, quiet wind).
+/// The unit world's magnetopause distance in unit-world radii (subsolar, quiet
+/// wind).
 fn unit_world_standoff() -> Dy {
     Dy::ratio(101, 10)
 }
@@ -36,16 +38,17 @@ fn power(w: &State) -> Dy {
     (w.q_cmb - w.q_ad).max(Dy::ZERO) * w.r_core
 }
 
-/// The share 2x / (1 + x): 1 at x = 1, rising and saturating at 2. Used here
-/// in place of power laws.
+/// The share `2x / (1 + x)`: 0 at x = 0, 1 at x = 1, approaching 2 as x grows.
+/// The module uses it in place of power laws.
 fn share2(x: Dy) -> Dy {
     let x = x.max(Dy::ZERO);
     Dy::int(2) * x / (Dy::ONE + x)
 }
 
-/// The world's dipole moment in units of the unit world's: the share of its
-/// convective power against the unit's, times its core radius over the
-/// unit's.
+/// The world's dipole moment in units of the unit world's moment: the share
+/// `2x / (1 + x)` of the convective power ratio x, times the ratio of the
+/// world's core radius to the unit world's. Returns 0 when either convective
+/// power or core radius is not positive.
 pub fn moment(w: &State) -> Dy {
     moment_against(w, unit())
 }
@@ -58,12 +61,15 @@ fn moment_against(w: &State, u: &State) -> Dy {
     share2(p / pu) * (rc / ru)
 }
 
-/// The dipole field at the surface, in the unit world's.
+/// The dipole field at the surface: the moment over the world's radius, in the
+/// unit world's units.
 pub fn surface_field(w: &State) -> Dy {
     moment(w) / w.radius.max(Dy::sci(1, -6))
 }
 
-/// Where the field holds off the wind, in the world's radii (0: no field).
+/// The magnetopause standoff distance in world radii: 10.1 times the share
+/// `2x / (1 + x)` of the surface field against the wind pressure. Returns 0
+/// when the world has no field.
 pub fn standoff(w: &State, pressure: Dy) -> Dy {
     let b = surface_field(w);
     if b.signum() <= 0 {
@@ -72,7 +78,8 @@ pub fn standoff(w: &State, pressure: Dy) -> Dy {
     unit_world_standoff() * share2(b / pressure.max(Dy::sci(1, -12)))
 }
 
-/// The share of the world's sky its star's wind reaches.
+/// The share of the world's sky that the stellar wind reaches: `R / r_mp`,
+/// or 1 when the standoff is at most one world radius.
 pub fn exposure(w: &State, pressure: Dy) -> Dy {
     let rr = standoff(w, pressure);
     if rr <= Dy::ONE {
@@ -82,27 +89,28 @@ pub fn exposure(w: &State, pressure: Dy) -> Dy {
     }
 }
 
-/// The share of the galaxy's cosmic rays the field lets through: above its
-/// cutoff rigidity (6 GV at the unit world, rising with the moment over r^2),
-/// the integral spectrum falling as rigidity^-1.7 about a 4 GV median.
+/// The share of the galactic cosmic rays that the field lets through. The
+/// cutoff rigidity is `R_c = 6 GV x moment / radius` (6 GV at the unit world);
+/// the passing share is `1 / (1 + 1.7 R_c / 4 GV)`.
 fn gcr_through_field(w: &State) -> Dy {
     let radius = w.radius.max(Dy::sci(1, -6));
     let cutoff = Dy::int(6) * moment(w) / radius;
     Dy::ONE / (Dy::ONE + Dy::ratio(17, 10) * cutoff / Dy::int(4))
 }
 
-/// What passes the air's column (1033 g/cm^2 per bar at unit gravity,
-/// attenuated over 185 g/cm^2 with its cascade).
+/// The share that passes the air's column: `exp(-column / 185 g/cm^2)`, the
+/// column being 1033 g/cm^2 per bar at unit gravity, scaled by `p_bar / g`.
+/// The 185 g/cm^2 attenuation length includes the secondary cascade.
 fn through_air(w: &State) -> Dy {
     let g = if w.g.signum() > 0 { w.g } else { Dy::ONE }.max(Dy::sci(1, -6));
     let column = Dy::int(1033) * w.p_bar / g;
     (-(column / Dy::int(185))).exp()
 }
 
-/// The particles' power reaching a world's surface (W/m^2): its star's wind
-/// (2.7e-4 W/m^2 through the unit orbit) through the share of sky its field
-/// leaves open, the galaxy's cosmic rays (1.2e-5 W/m^2 at R0) above its
-/// cutoff - both through its air.
+/// The particle power reaching a world's surface (W/m^2): the stellar wind
+/// (2.7e-4 W/m^2 at the unit orbit, scaled by `sw`) through the exposed share
+/// of sky, plus the galactic cosmic rays (1.2e-5 W/m^2 at R0, scaled by `cr`)
+/// that pass the cutoff, both attenuated by the air's column.
 pub fn particle_power(w: &State) -> Dy {
     let stellar = if w.sw.signum() > 0 {
         Dy::sci(27, -5) * w.sw * exposure(w, w.sw)
@@ -113,9 +121,10 @@ pub fn particle_power(w: &State) -> Dy {
     (stellar + cosmic) * through_air(w)
 }
 
-/// Chemical energy the particles store in a world's surface ices and seas
-/// (flux units): 3% of the absorbed energy stored as oxidants (G ~ 2 per
-/// 100 eV at ~1.5 eV each), over the 340 W/m^2 flux unit.
+/// The chemical energy flux that particles store in a world's surface ices
+/// and seas, in flux units: 3% of the particle power is stored as oxidants
+/// (a yield of G ~ 2 per 100 eV at ~1.5 eV each), divided by the 340 W/m^2
+/// flux unit.
 pub fn radiolysis(w: &State) -> Dy {
     Dy::ratio(3, 100) * particle_power(w) / Dy::int(340)
 }
@@ -126,8 +135,10 @@ fn dose_raw(w: &State, pressure: Dy, galactic: Dy) -> Dy {
     (stellar + cosmic) * through_air(w)
 }
 
-/// Particles reaching the surface, in the unit world's dose under one bar of
-/// its own air. `galactic`: the cosmic-ray flux where it circles.
+/// The particle dose reaching the surface, relative to the unit world's dose
+/// under one bar of air at unit gravity with unit wind pressure and unit
+/// cosmic-ray flux. `galactic` is the cosmic-ray flux at the world's galactic
+/// orbit, relative to the unit world's.
 pub fn dose(w: &State, pressure: Dy, galactic: Dy) -> Dy {
     let u = State {
         p_bar: Dy::ONE,
@@ -144,12 +155,12 @@ mod tests {
     #[test]
     fn standoff_falls_with_wind_pressure_and_bounds_exposure() {
         let u = unit();
-        // the standoff falls as the wind's pressure rises (the model's linear
-        // share, not (B^2 / P)^(1/6))
+        // The standoff falls as the wind pressure rises (the share
+        // 2x / (1 + x), not the power law (B^2 / P)^(1/6)).
         let (r1, r64) = (standoff(u, Dy::ONE), standoff(u, Dy::int(64)));
         assert!(r64 < r1 && r64.signum() > 0, "{r1} against {r64}");
-        // the exposure is R / r_mp (not squared), the share of directions
-        // the wind reaches, below 1 for a magnetised world
+        // The exposure is R / r_mp (not squared), the share of directions
+        // the wind reaches; it is below 1 for a magnetised world.
         let e = exposure(u, Dy::ONE);
         assert!(
             (e - Dy::ONE / r1).abs() < e * Dy::sci(1, -9),

@@ -11,9 +11,9 @@ fn phases_follow_their_diagrams() {
     let ctx = Ctx::new(Scales::default());
     for s in [Species::H2O, Species::CH4] {
         let d = *ctx.diagram(s);
-        // at its reference pressure: solid below its triple point,
-        // liquid between the triple point and the boiling point, gas
-        // above the boiling point, supercritical past the critical point
+        // At the reference pressure the species is solid below its triple
+        // point, liquid between the triple point and the boiling point, gas
+        // above the boiling point, and supercritical past the critical point.
         let p = d.pref;
         assert_eq!(ctx.phase(s, d.tt / Dy::int(2), p), Phase::Solid);
         assert_eq!(ctx.phase(s, (d.tt + d.tb) / Dy::int(2), p), Phase::Liquid);
@@ -22,8 +22,8 @@ fn phases_follow_their_diagrams() {
             ctx.phase(s, d.tc * Dy::int(2), d.pc * Dy::int(2)),
             Phase::Supercritical
         );
-        // the boiling point at the reference pressure is the diagram's,
-        // and falls under less pressure
+        // The boiling point at the reference pressure is the diagram's, and
+        // it falls under lower pressure.
         let b = ctx.boiling(s, p);
         assert!(
             (b - d.tb).abs() < Dy::sci(1, -9),
@@ -31,14 +31,15 @@ fn phases_follow_their_diagrams() {
             d.tb
         );
         assert!(ctx.boiling(s, p / Dy::int(10)) < b);
-        // the saturation pressure at the triple point is the triple pressure
+        // The saturation pressure at the triple point is the triple pressure.
         assert!((ctx.saturation(s, d.tt) - d.pt).abs() < Dy::sci(1, -12));
     }
 }
 
 #[test]
 fn light_share_above_threshold_falls_with_it() {
-    // (1 + x) e^(-x): 1 at x = 0, decreasing in x, 0 above the cutoff
+    // The share (1 + x) e^(-x) is 1 at x = 0, decreasing in x, and 0 above
+    // the cutoff.
     assert_eq!(planck_above(Dy::ZERO), Dy::ONE);
     assert!(planck_above(Dy::ONE) > planck_above(Dy::int(10)));
     assert_eq!(planck_above(Dy::int(61)), Dy::ZERO);
@@ -53,7 +54,7 @@ fn light_share_above_threshold_falls_with_it() {
         hot.drive > hot.brk,
         "more light drives chemistry than breaks it"
     );
-    // a cooler star has a smaller bond-breaking share
+    // A cooler star has a smaller bond-breaking share.
     assert!(cool.brk < hot.brk);
 }
 
@@ -61,9 +62,9 @@ fn light_share_above_threshold_falls_with_it() {
 fn unit_world_state_is_physical() {
     let u = unit();
     let ctx = Ctx::new(Scales::default());
-    // bounds only, not target values: core radius inside the world, field
+    // Bounds only, not target values: core radius inside the world, field
     // non-negative, positive surface temperature, flux L / a = 1 at the unit
-    // distance, and every medium at a positive temperature
+    // distance, and every medium at a positive temperature.
     assert!(
         u.r_core > Dy::ZERO
             && u.r_core < u.radius * Dy::from_q(&crate::package::Si::world_radius_m())
@@ -131,7 +132,8 @@ fn surface_temperature_falls_with_distance() {
         far.t_surf
     );
     assert!(close.t_surf > u.t_surf && u.t_surf > far.t_surf);
-    // a giant's state has no surface air or seas; its medium is a deep plasma
+    // A giant's state has no surface air or seas; its media include a deep
+    // plasma.
     let giant = World {
         giant: true,
         mass: Q::int(318),

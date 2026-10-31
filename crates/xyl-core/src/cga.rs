@@ -33,7 +33,7 @@
 //! use xyl_core::cga::{base_at, point_at, translator_at};
 //!
 //! let x = point_at(&[Q::int(1), Q::int(2), Q::int(3)]);
-//! assert!(x.norm2().is_zero()); // conformal points are null
+//! assert!(x.norm2().is_zero()); // Conformal points are null.
 //!
 //! let t = translator_at(&[Q::int(1), Q::int(0), Q::int(-1)]);
 //! let moved = t.sandwich(&x);
@@ -180,7 +180,8 @@ impl Mv {
         self.map_terms(|_, v| v * s)
     }
 
-    /// The geometric product.
+    /// The geometric product. A term changes sign for an odd reordering and
+    /// for a shared `e-` (`e-^2 = -1`).
     pub fn geo(&self, o: &Mv) -> Mv {
         let mut terms = Vec::with_capacity(self.c.len() * o.c.len());
         for (i, x) in &self.c {
@@ -291,8 +292,8 @@ pub fn point_at(x: &[Q]) -> Mv {
 /// The dual sphere about `c` through the point `p`: `C + (C . P) e_inf` with
 /// `C = X(c)`, `P = X(p)`, and `C . P` the scalar part of their geometric
 /// product. The radius enters only through that product (for null points
-/// it is the negative half of the squared distance), never as a written
-/// square. A point `Y` lies on the sphere exactly when `Y . sigma = 0`.
+/// it is the negative half of the squared distance); no radius is squared
+/// explicitly. A point `Y` lies on the sphere exactly when `Y . sigma = 0`.
 pub fn sphere_through(c: &[Q], p: &[Q]) -> Mv {
     let centre = point_at(c);
     let through = point_at(p);
@@ -301,7 +302,8 @@ pub fn sphere_through(c: &[Q], p: &[Q]) -> Mv {
 }
 
 /// The first `n` base coordinates of a conformal point or sphere, by its
-/// weight `-(P . e_inf)`. `None` at infinity.
+/// weight `-(P . e_inf)`. Returns `None` when the weight is zero (a point at
+/// infinity) or an axis lies past [`MAX_N`].
 pub fn base_at(p: &Mv, n: usize) -> Option<Vec<Q>> {
     let alpha = -p.geo(&e_inf()).scalar_part();
     (1..=n)
@@ -333,6 +335,8 @@ pub fn dilator(rho: &Q) -> Mv {
 }
 
 /// `Some(lambda)` where `a = lambda b`, read by cross multiplication.
+/// Returns `None` when the two have different blades or are not
+/// proportional, or `b` is zero.
 pub fn projective_ratio(a: &Mv, b: &Mv) -> Option<Q> {
     if a.term_count() != b.term_count() {
         return None;
@@ -362,9 +366,9 @@ pub fn keeping(sigma: &Mv, l: &Mv) -> Option<Mv> {
     Some(l.grade(2).add(&mirrored).scale(&half()))
 }
 
-/// A white-hole source: the point `at` on a dual sphere it emanates from and
-/// its null generator `N = P ^ (P . K)`, which fixes `P` and keeps the
-/// sphere.
+/// A white-hole source: a conformal point `at` on a dual sphere and the null
+/// generator `N = P ^ (P . K)` of a flow that fixes `P` and maps the sphere
+/// to itself.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Source {
     /// The conformal point `P` on the dual sphere that the flow fixes.
@@ -374,9 +378,10 @@ pub struct Source {
 }
 
 impl Source {
-    /// The source at `p` on `sigma` pushed by `k`, verified null, fixing `p`
-    /// and keeping `sigma`. `None` where `p` is off the sphere, `k` does not
-    /// move it, or a check fails.
+    /// The source at `p` on `sigma` with the generator built from `k`,
+    /// verified to be null and to commute with `p` and with `sigma`. Returns
+    /// `None` where `p` is not on the sphere, `p . k` is zero, or a check
+    /// fails.
     pub fn of(sigma: &Mv, p: &Mv, k: &Mv) -> Option<Source> {
         if !p.geo(sigma).scalar_part().is_zero() {
             return None;
@@ -412,7 +417,7 @@ mod tests {
             point_at(&[Q::int(4), Q::int(6), Q::int(3)]),
         );
         assert!(a.norm2().is_zero() && b.norm2().is_zero());
-        // X(a) . X(b) = -1/2 |a - b|^2 = -12.5
+        // X(a) . X(b) = -1/2 |a - b|^2 = -12.5.
         assert_eq!(a.geo(&b).scalar_part(), Q::new(-25, 2).unwrap());
         assert_eq!(
             base_at(&a, 3).unwrap(),
@@ -427,7 +432,7 @@ mod tests {
         assert!(t
             .sandwich(&x)
             .projective_eq(&point_at(&[Q::int(3), Q::int(-1), Q::int(5)])));
-        // a half turn in e1e2
+        // The rotor e1e2 (s = 0, b = 1) is a half turn in the e1e2 plane.
         let r = rotator_on_blade(&Q::ZERO, &Q::ONE, E1 | E2);
         assert!(r
             .sandwich(&x)
@@ -436,13 +441,13 @@ mod tests {
         assert!(d
             .sandwich(&point_at(&[Q::int(2)]))
             .projective_eq(&point_at(&[Q::int(6)])));
-        // a point lies on a sphere through it
+        // A point lies on a sphere through it.
         let s = sphere_through(
             &[Q::int(0), Q::int(0), Q::int(0)],
             &[Q::int(1), Q::int(0), Q::int(0)],
         );
         assert!(x.geo(&s).scalar_part().is_zero());
-        // and another point of the same reach lies on it too
+        // Another point at the same distance from the centre lies on it too.
         let y = point_at(&[Q::int(0), Q::int(0), Q::int(1)]);
         assert!(y.geo(&s).scalar_part().is_zero());
     }

@@ -34,19 +34,19 @@ fn realms_join_constellations_and_stewards_set_handling() {
     net.of = [(1, 0), (2, 0), (3, 1), (5, 2), (7, 3)]
         .into_iter()
         .collect();
-    // one realm of three constellations, keyed by its least key; the
-    // lone constellation forms none
+    // The lines form one realm of three constellations, keyed by the least
+    // constellation key; the unconnected constellation forms none.
     assert_eq!(net.realms(), vec![(1, vec![1, 3, 5])]);
     assert_eq!(net.realm_of(5), Some(1));
     assert_eq!(net.realm_of(7), None);
     assert_eq!(net.note_realms(), vec![1]);
     assert!(net.note_realms().is_empty(), "a realm is noted once");
-    // the steward closes one line of its realm; a line outside it is untouched
+    // The steward closes one line of the realm; a line outside it is untouched.
     assert_eq!(net.handle(1, 5, 3, Handling::Closed), 1);
     assert_eq!(net.lines[1].handling, Handling::Closed);
     assert_eq!(net.handle(9, 1, 3, Handling::Guarded), 0);
     assert_eq!(net.lines[0].handling, Handling::Tolled);
-    // the toll law reads a line's books
+    // The toll law reads a line's books.
     let q = quote(
         &net.lane(&net.lines[0]),
         None,
@@ -94,8 +94,8 @@ fn world(mass: i64, radius: i64, host: Option<usize>, a_host: Option<i64>) -> Wo
 
 #[test]
 fn orbit_gaps_and_voyages_follow_drives_and_wells() {
-    // a unit world's climb out of its well: the turning law at its
-    // surface, c delta with delta = M / (R + M) in the core's units
+    // A unit world's escape speed is the turning law at the surface,
+    // c delta with delta = M / (R + M) in the core's units.
     let unit_world = world(1, 1, None, None);
     let esc = escape_speed(&unit_world);
     let c = crate::propulsion::c_m_s();
@@ -107,9 +107,9 @@ fn orbit_gaps_and_voyages_follow_drives_and_wells() {
         (esc / (c * m / (r + m)) - Dy::ONE).abs() < Dy::sci(1, -9),
         "escape {esc}"
     );
-    // orbits: where each stands now, read as turns and reaches - two
-    // planets on circles of 1 and 5 units, in line then opposite; a moon
-    // from its giant by its own orbit
+    // Orbits: the current position of each, read as turns and reaches. Two
+    // planets on circles of 1 and 5 units are taken in line and then
+    // opposite; a moon is measured from its giant along the moon's orbit.
     let ring = |world: usize, anchor: Anchor, tier: Tier, a: i64, m0: Q| Manifold {
         world,
         anchor,
@@ -134,8 +134,8 @@ fn orbit_gaps_and_voyages_follow_drives_and_wells() {
         ring(1, Anchor::Star, Tier::System, 5, Q::ZERO),
     ];
     assert!(close(gap(&inline, 0, 1, &Q::ZERO), 4));
-    // opposite, the way round is half a turn swept at the inner reach
-    // (pi) plus the climb (4), not the chord through the star
+    // Opposite, the way round is half a turn swept at the inner reach (pi)
+    // plus the climb (4), not the chord through the star.
     let pi_plus_4 = Dy::from_q(&xyl_core::certified::pi(80).mid()) + Dy::int(4);
     let near = |x: Dy, want: Dy| (x - want).abs() < Dy::ratio(1, 1000);
     let opposite = vec![
@@ -143,8 +143,9 @@ fn orbit_gaps_and_voyages_follow_drives_and_wells() {
         ring(1, Anchor::Star, Tier::System, 5, half.clone()),
     ];
     assert!(near(gap(&opposite, 0, 1, &Q::ZERO), pi_plus_4));
-    // ...and the gap moves as they turn: half a turn on, the inner one
-    // has come round to its far side of a still outer one
+    // The gap changes as the orbits turn: with the outer world held still,
+    // half a Gyr later the inner world has turned half a turn to the far
+    // side.
     let mut paced = inline.clone();
     paced[1].rate = Q::ZERO;
     assert!(near(gap(&paced, 0, 1, &half), pi_plus_4));
@@ -154,13 +155,13 @@ fn orbit_gaps_and_voyages_follow_drives_and_wells() {
     ];
     let k = Dy::from_q(&xyl_cosmos::manifold::dilation(Tier::Planet, Tier::System));
     assert!((gap(&moon, 0, 1, &Q::ZERO) - Dy::int(60) * k).abs() < Dy::ratio(1, 1_000_000));
-    // drive and well are compared in one law, c delta: a ten-to-one chemical
-    // drive's speed change (v_e ln R) is below the unit world's escape speed,
-    // so it cannot climb out...
+    // Drive and well are compared in one law, c delta: the speed change of a
+    // chemical drive at mass ratio 10 is below the unit world's escape
+    // speed, so it cannot climb out.
     let chem = spec(Drive::Chemical);
     let r = Dy::int(MASS_RATIO);
     assert!(voyage(&chem, r, esc, Dy::int(4) * au_m()).is_none());
-    // ...while from a Moon-sized world it climbs out, slowly
+    // From a Moon-sized world the same drive climbs out, slowly.
     let moon_world = World {
         mass: Q::new(123, 10_000).unwrap(),
         radius: Q::new(273, 1000).unwrap(),
@@ -169,23 +170,24 @@ fn orbit_gaps_and_voyages_follow_drives_and_wells() {
     let slow = voyage(&chem, r, escape_speed(&moon_world), Dy::int(4) * au_m())
         .expect("off a Moon it climbs out");
     assert!(slow.years > Dy::ZERO, "chemical in-system {}", slow.years);
-    // fusion out of a unit world climbs out, and the same drive takes
-    // longer over the longer span
+    // A fusion drive climbs out of a unit world, and takes longer over the
+    // longer span.
     let fusion = spec(Drive::Fusion);
     let near = voyage(&fusion, r, esc, Dy::int(4) * au_m()).expect("fusion climbs out");
     let pc = kpc_m() / Dy::int(1000);
     let far = voyage(&fusion, r, esc, pc).unwrap();
     assert!(far.years > near.years, "{} vs {}", far.years, near.years);
-    // and faster than the chemical drive over the same span
+    // It is also faster than the chemical drive over the same span.
     assert!(near.years < slow.years);
-    // a collapsed body (a sun's mass in ten kilometres) has an escape speed
-    // above what fusion reaches
+    // A collapsed body (a solar mass within about ten kilometres) has an
+    // escape speed above what fusion reaches.
     let collapsed = World {
         radius: Q::new(1, 637).unwrap(),
         ..world(333_000, 1, None, None)
     };
     assert!(voyage(&fusion, r, escape_speed(&collapsed), pc).is_none());
-    // the fuel burned per kg carried: (R - 1) x its energy per kg
+    // The fuel energy burned per kg carried is (R - 1) x the fuel's energy
+    // per kg.
     assert_eq!(near.energy_per_kg, Dy::int(9) * fusion.energy_per_kg);
     assert!(
         reach_kpc(&spec(Drive::Fusion), r, esc, Dy::int(20))
@@ -201,7 +203,8 @@ fn the_toll_sits_half_way_and_a_throat_tithes_its_span() {
         last_year: 4,
     };
     assert_eq!(floor(&lane), Dy::int(200));
-    // round is 5 hops, the lane 1: it saves 4 hops at 100 each
+    // The way round is 5 hops and the lane 1, so the lane saves 4 hops at 100
+    // each.
     let q = quote(
         &lane,
         Some(Dy::int(5)),
@@ -212,7 +215,7 @@ fn the_toll_sits_half_way_and_a_throat_tithes_its_span() {
     );
     assert_eq!(q.ceiling, Dy::int(400));
     assert_eq!(q.toll, Dy::int(300));
-    // open: only its floor; never above the ceiling
+    // An open lane asks only its floor, and never more than the ceiling.
     assert_eq!(
         quote(
             &lane,
@@ -242,7 +245,7 @@ fn the_toll_sits_half_way_and_a_throat_tithes_its_span() {
         .toll,
         Dy::int(400)
     );
-    // no way round: all it carries and a hop
+    // With no way round, the ceiling is the cargo's value plus one hop.
     assert_eq!(
         quote(
             &dear,

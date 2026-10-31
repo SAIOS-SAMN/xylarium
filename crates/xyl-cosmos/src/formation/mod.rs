@@ -107,25 +107,26 @@ pub struct Kind {
 /// A piece of the gas, a bead read one tier down, and what it forms.
 #[derive(Clone, Debug)]
 pub struct Piece {
-    /// Inner edge of the piece (galaxy rings): its bead's span.
+    /// Inner edge of the piece (galaxy rings): the start of its bead's span.
     pub from: Q,
     /// Outer edge of the piece (galaxy rings).
     pub to: Q,
     /// The pinch the piece's kinds stand at (galaxy rings): its bead's reach.
     pub reach: Q,
-    /// Holding per light-ring of reach.
+    /// Holding per galaxy ring of the piece's width.
     pub lambda: Q,
-    /// Holding-weighted mean agitation of the shells covering the piece.
+    /// Agitation at the piece's reach, (p - delta) / p, the share of the
+    /// throat's push the core's deficit leaves.
     pub agitation: Q,
-    /// Holding-weighted mean emission of the shells covering the piece (per
-    /// ring).
+    /// Holding-weighted mean emission of the piece's kinds (per ring).
     pub emission: Q,
     /// Rings until it cools to collapse (None: it never does).
     pub cools_in: Option<i64>,
-    /// Infall width (the smallest holding width, a cloud), each cloud's
-    /// holding, and how many fit.
+    /// Infall width: the largest extent on the ladder of halvings whose spare
+    /// covers the cooled residue (one cloud).
     pub infall: Q,
-    /// Holding of each cloud: `lambda` times the infall width.
+    /// Holding of each cloud: the piece's hold `(lambda + mu) W` times the
+    /// share an infall of that width gathers.
     pub cloud: Q,
     /// Number of clouds that fit in the piece (at least 1 once it collapses;
     /// 0 when it never does).
@@ -136,11 +137,10 @@ pub struct Piece {
     /// share there, the push the pulse delivers.
     pub tide: Q,
     /// The infall's agitation at ignition: cooled residue plus the pulse's
-    /// heat, the ring the bell brings at the reach taken by the infall's
+    /// heat, the ring the bell brings at the reach taken by the whole piece's
     /// grip over what it sheds per ring, swung by the inbound echo.
     pub heated: Q,
-    /// The star tier's cut: the share of each infall its core holds (the
-    /// star), and the open share of the infall and of its disc.
+    /// The star tier's cut: the share of each infall the star holds.
     pub star_share: Q,
     /// Open share of the infall's matter.
     pub infall_open: Q,
@@ -151,8 +151,7 @@ pub struct Piece {
     pub worlds: Vec<World>,
     /// Share of the disc left as belts rather than worlds.
     pub belts: Q,
-    /// The stars the clouds make: each one's holding and the count (all
-    /// clouds together).
+    /// Holding of each cloud's star: `cloud` times `star_share`.
     pub star: Q,
     /// Number of stars: the cloud count when a cloud's star holds anything,
     /// else 0.
@@ -215,8 +214,8 @@ pub fn of(beads: &[Bead], unit: &Q, held: &Q, swing: &Q) -> Formation {
             tide,
             heated,
         } = c;
-        // the star tier's cut at the core's own push p_core and P_0 = 1: the
-        // tide does not change the push, it enters the disc only as heat
+        // The star tier's cut uses the throat's push p_core and P_0 = 1: the
+        // tide does not change the push and enters the disc only as heat.
         let cut = if lit {
             Some(hold_at_heat(&mix, &p_core, &Q::ZERO, &Q::ZERO, &Q::ONE))
         } else {
@@ -226,8 +225,8 @@ pub fn of(beads: &[Bead], unit: &Q, held: &Q, swing: &Q) -> Formation {
             .as_ref()
             .map(|c| (c.held.clone(), c.open.clone(), c.rest_open.clone()))
             .unwrap_or((Q::ZERO, Q::ZERO, Q::ZERO));
-        // the released remainder forms the disc, heated by the tide; each
-        // world takes its own planetary core's cut (disc::star_disc)
+        // The released remainder forms the disc, heated by the tide; each
+        // world takes the cut of the world's planetary core (disc::star_disc).
         let (worlds, belts) = match &cut {
             Some(c) if star_share < Q::ONE => star_disc(&star_share, &tide, &c.rest),
             _ => (Vec::new(), Q::ZERO),
@@ -277,8 +276,8 @@ mod tests {
         let bang = crate::genesis::bang();
         let s = crate::cores::substrate(7, bang).unwrap();
         let f = of(&s.beads, &s.unit(), &s.held_share(), &Q::ONE);
-        // each piece holds its bead's state over the unit, so the holdings
-        // sum to 1; the held share and the push lie in [0, 1]
+        // Each piece holds its bead's state over the unit, so the holdings
+        // sum to 1; the held share lies in [0, 1] and the push below 1.
         let gas = f
             .pieces
             .iter()
@@ -291,7 +290,7 @@ mod tests {
         let l = &s.lighting;
         assert!(l.lit >= Q::ZERO && l.lit <= Q::ONE, "lit {}", l.lit);
         assert_eq!(l.pieces.len(), f.pieces.len());
-        // a piece has a lighting time exactly when it fragments into clouds
+        // A piece has a lighting time exactly when it fragments into clouds.
         for (p, piece) in l.pieces.iter().zip(&f.pieces) {
             assert_eq!(p.2.is_some(), piece.clouds > 0);
         }

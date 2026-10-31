@@ -6,7 +6,7 @@ labels: bug
 
 ## What happened
 
-<!-- What you ran and what went wrong. -->
+<!-- Describe the command that was run and what went wrong. -->
 
 ## What you expected
 
@@ -19,7 +19,7 @@ labels: bug
 
 ## Output
 
-<!-- The error, or the relevant part of the reading. -->
+<!-- Paste the error, or the relevant part of the reading. -->
 
 ## Environment
 

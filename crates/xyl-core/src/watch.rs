@@ -41,7 +41,8 @@ fn watch() -> &'static Watch {
     })
 }
 
-/// Note into `<home>/observer.log` from now on (appended).
+/// Appends every later note to `<home>/observer.log`, creating `home` if
+/// needed.
 pub fn into(home: &std::path::Path) {
     let _ = std::fs::create_dir_all(home);
     let file = std::fs::OpenOptions::new()
@@ -54,7 +55,8 @@ pub fn into(home: &std::path::Path) {
     }
 }
 
-/// A note: what happened, stamped with the time run.
+/// Writes a note to stderr (and to the log, if set), stamped with the seconds
+/// since the watch started.
 pub fn note(text: &str) {
     let w = watch();
     let line = format!("[{:>8.1}s] {text}", w.began.elapsed().as_secs_f64());
@@ -66,7 +68,8 @@ pub fn note(text: &str) {
     }
 }
 
-/// Enter a stage: noted, and named in every heartbeat until the next.
+/// Enters a stage: the stage is noted and named in every heartbeat until the
+/// next stage is entered.
 pub fn stage(name: &str) {
     if let Ok(mut s) = watch().stage.lock() {
         *s = name.to_string();
@@ -97,10 +100,12 @@ impl Drop for Busy {
     }
 }
 
-/// The process's CPU time so far (user and system, in clock ticks of 1/100 s).
+/// The process's CPU time so far (user and system, in clock ticks of
+/// 1/100 s).
 fn cpu_ticks() -> Option<u64> {
     let stat = std::fs::read_to_string("/proc/self/stat").ok()?;
-    // the fields after the command's closing parenthesis; utime and stime are the 12th and 13th
+    // Fields are counted after the command's closing parenthesis; utime and
+    // stime are the 12th and 13th of them (fields 14 and 15 of the line).
     let rest = stat.rsplit_once(')')?.1;
     let f: Vec<&str> = rest.split_whitespace().collect();
     Some(f.get(11)?.parse::<u64>().ok()? + f.get(12)?.parse::<u64>().ok()?)
@@ -125,16 +130,18 @@ fn load() -> String {
         .unwrap_or_else(|| "-".into())
 }
 
-/// The heartbeat: every `every`, the stage, the cores' share used since the
-/// last beat (100% is one core), memory and the host's load - until `stop`.
+/// Starts the heartbeat thread: every `every` it notes the stage, the CPU
+/// share used since the last beat (100% is one core), resident memory, the
+/// host load, the count of work in flight and each piece running 30 seconds
+/// or more, until `stop` is set.
 pub fn heartbeat(every: Duration, stop: Arc<AtomicBool>) {
     std::thread::spawn(move || {
         let mut last = (Instant::now(), cpu_ticks().unwrap_or(0));
         while !stop.load(Ordering::Relaxed) {
             std::thread::sleep(every);
             let (now, ticks) = (Instant::now(), cpu_ticks().unwrap_or(0));
-            // CPU ticks are hundredths of a second: percent of one core is
-            // ticks x 1000 over the wall's milliseconds, in whole numbers
+            // CPU ticks are hundredths of a second, so the percentage of one
+            // core is `ticks x 1000 / wall_ms`, truncated to an integer.
             let wall_ms = u64::try_from(now.duration_since(last.0).as_millis())
                 .unwrap_or(u64::MAX)
                 .max(1);

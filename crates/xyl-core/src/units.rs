@@ -33,7 +33,7 @@ pub enum Tier {
     Galaxy,
     /// 60 r_g: the system's tier, where a world's reach about its star reads.
     System,
-    /// r_g / 60^2: the planet's tier, where a world's radius and its moons'
+    /// `r_g / 60^2`: the planet's tier, where a world's radius and its moons'
     /// reaches read.
     Planet,
 }
@@ -49,7 +49,7 @@ impl Tier {
         }
     }
 
-    /// Its unit in `r_g`: 60 to its power, exact.
+    /// The tier's unit in `r_g`: 60 raised to the tier's power, exact.
     pub fn in_rg(self) -> Q {
         let p = self.power();
         let sixty = Q::int(60);

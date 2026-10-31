@@ -18,14 +18,14 @@
 use crate::universe::Universe;
 use xyl_core::dyadic::Dy;
 
-/// A people's readings. `None` where the reading is not yet modelled or the
-/// people has no layer to read yet.
+/// A people's readings. A field is `None` where the people has no knowledge
+/// stock or gauge to read.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Step {
-    /// Poles, read on knowledge: learning per year (KU) against forgetting
-    /// per year (the forgetting share of what is held):
-    /// z = learn / (learn + forget), R = (learn - forget) / (learn + forget),
-    /// in [-1, 1].
+    /// Learning share on knowledge: learning per year (KU) against forgetting
+    /// per year (the forgetting share times the knowledge held),
+    /// `z = learn / (learn + forget)`, in \[0, 1\]. `None` when
+    /// `learn + forget` is not positive.
     pub z: Option<Dy>,
     /// Pole balance R = (learn - forget) / (learn + forget), in \[-1, 1\];
     /// positive while a people learns faster than it forgets.
@@ -39,7 +39,8 @@ fn share(a: Dy, b: Dy) -> Option<Dy> {
     (both.signum() > 0).then(|| a / both)
 }
 
-/// Every living people's readings now.
+/// Returns the readings of every people with a population above zero, as
+/// (people index, `Step`) pairs, computed from the current state.
 pub fn living(u: &Universe<'_>) -> Vec<(usize, Step)> {
     let mut out = Vec::new();
     for (i, _) in u

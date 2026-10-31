@@ -6,18 +6,19 @@ labels: enhancement
 
 ## What
 
-<!-- The change you propose. -->
+<!-- Describe the proposed change. -->
 
 ## Why
 
-<!-- The motivation, and where it fits in docs/roadmap.md if it does. -->
+<!-- State the motivation and, where applicable, the place of the change in
+docs/roadmap.md. -->
 
 ## Tier and derivation
 
-<!-- For a change to the model: which tier, which lower-tier quantities the
+<!-- For a change to the model, name the tier, the lower-tier quantities the
 law reads (docs/development.md, Extending a tier), and any declared ruler
-it adds or retires. -->
+the change adds or retires. -->
 
 ## Reading
 
-<!-- The `xylarium observe` reading that would show it. -->
+<!-- Name the `xylarium observe` reading that would show the change. -->

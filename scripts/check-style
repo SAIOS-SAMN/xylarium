@@ -2,7 +2,13 @@
 """Style checks rustfmt does not make (docs/development.md, Code style).
 
 1. No line of a Rust source exceeds 100 columns (string literals included).
-2. No private one-letter wrapper functions (`fn n(`, `fn r(`, ...) stand in
+2. Comments are prose: every comment block (consecutive `//`, `///` or
+   `//!` lines) starts with a capital letter, a digit or code in
+   backticks, and ends with a full stop, colon, question mark or the close
+   of a code fence. Code fences inside doc comments are exempt.
+3. No "its own" / "their own" in comments or documentation: name what is
+   meant (docs/development.md, Code style).
+4. No private one-letter wrapper functions (`fn n(`, `fn r(`, ...) stand in
    for the shared numeric constructors. Public items named for a physical
    symbol (`Si::g`, `Si::c`) are allowed.
 
@@ -20,13 +26,67 @@ os.chdir(ROOT)
 MAX = 100
 failures = []
 one_letter = re.compile(r"^\s*fn [a-z]\s*[(<]")
-for path in sorted(glob.glob("crates/*/src/**/*.rs", recursive=True) + glob.glob("crates/*/build.rs")):
+for path in sorted(glob.glob("crates/*/src/**/*.rs", recursive=True) + glob.glob("crates/*/build.rs") + glob.glob("crates/*/examples/*.rs")):
     for i, line in enumerate(open(path, encoding="utf-8"), 1):
         line = line.rstrip("\n")
         if len(line) > MAX:
             failures.append(f"{path}:{i}: {len(line)} columns (max {MAX})")
         if one_letter.match(line):
             failures.append(f"{path}:{i}: one-letter function; use the shared constructors")
+
+# --- comment blocks ---------------------------------------------------------
+comment = re.compile(r"^\s*(//[/!]?)(?: ?(.*))?$")
+own = re.compile(r"(?<![\"'])\b(its|their) own\b", re.I)
+
+
+def check_block(path, start, kind, lines):
+    text = [l for l in lines]
+    body = [l for l in text if l.strip()]
+    if not body:
+        return
+    first, last = body[0].lstrip(), body[-1].rstrip()
+    if not re.match(r"[A-Z0-9`(\[\"'|#*-]", first):
+        failures.append(f"{path}:{start}: comment starts lowercase: {first[:50]!r}")
+    if not re.search(r"([.:?!]|```)[)\"'`]*$", last) and not last.startswith(("|", "```")):
+        failures.append(f"{path}:{start}: comment does not end a sentence: {last[-50:]!r}")
+
+
+for path in sorted(glob.glob("crates/*/src/**/*.rs", recursive=True) + glob.glob("crates/*/build.rs") + glob.glob("crates/*/examples/*.rs")):
+    block, kind, start, fence = [], None, 0, False
+    for i, raw in enumerate(open(path, encoding="utf-8").read().split("\n") + [""], 1):
+        m = comment.match(raw)
+        if m and m.group(1) == kind:
+            text = m.group(2) or ""
+        elif m:
+            if block and not fence:
+                check_block(path, start, kind, block)
+            block, kind, start, fence = [], m.group(1), i, False
+            text = m.group(2) or ""
+        else:
+            if block and not fence:
+                check_block(path, start, kind, block)
+            block, kind, fence = [], None, False
+            continue
+        if own.search(text):
+            failures.append(f"{path}:{i}: 'its own' or 'their own'; name what is meant")
+        if text.lstrip().startswith("```"):
+            if fence:
+                fence = False
+                block.append("```")
+            else:
+                if block:
+                    check_block(path, start, kind, block)
+                block, fence = [], True
+            continue
+        if not fence:
+            block.append(text)
+
+for path in sorted(glob.glob("*.md") + glob.glob("docs/*.md")):
+    if path == "CHANGELOG.md":
+        continue
+    for i, line in enumerate(open(path, encoding="utf-8"), 1):
+        if own.search(line):
+            failures.append(f"{path}:{i}: 'its own' or 'their own'; name what is meant")
 
 for msg in failures:
     print(msg)

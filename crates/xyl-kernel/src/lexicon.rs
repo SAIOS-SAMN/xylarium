@@ -44,25 +44,28 @@ pub struct Record {
     pub values: Vec<Value>,
 }
 
-/// [ancient flag, dawn Gyr, now Gyr]
+/// Values: the ancient flag, the dawn in Gyr and the present time in Gyr.
 pub const PEOPLE: u16 = 1;
-/// [numbers, capacity, growth per year]
+/// Values: the numbers, the carrying capacity and the growth rate per year.
 pub const NUMBERS: u16 = 2;
-/// [bodies W, starlight W, heat W]
+/// Values: the power of bodies, of starlight and of heat, each in W.
 pub const POWER: u16 = 3;
-/// [surface K, pressure bar, light flux units]
+/// Values: the surface temperature in K, the pressure in bar and the light
+/// flux in the percept's flux units.
 pub const WORLD: u16 = 4;
-/// [solvent id, temperature K, free energy flux units]
+/// Values: the solvent id, the temperature in K and the free-energy flux in
+/// the percept's flux units.
 pub const MEDIUM: u16 = 5;
-/// [day s, year s, locked flag]
+/// Values: the day in s, the year in s and the tidal-lock flag.
 pub const HEARTBEAT: u16 = 6;
-/// [dominant bell index, dominance, coherence]
+/// Values: the index of the dominant bell, its dominance and the coherence.
 pub const HEARING: u16 = 7;
-/// [people key, distance kpc, light delay yr]
+/// Values: the people key, the distance in kpc and the light delay in years.
 pub const NEIGHBOUR: u16 = 8;
 
-/// The solvents by id (worlds.rs `Solvent` names): every volatile species in
-/// its table order (`Species::ALL`), then the melt and the plasma.
+/// Returns the solvent names indexed by id (worlds.rs `Solvent` names): every
+/// volatile species in table order (`Species::ALL`), then the melt and the
+/// plasma.
 pub fn solvents() -> Vec<&'static str> {
     Species::ALL
         .iter()
@@ -75,8 +78,10 @@ fn value_q(x: Dy) -> Value {
     Value::Q(x.to_q())
 }
 
-/// A people's key on the seat surface: its name under its universe's domain,
-/// hashed (the house knows the mapping; a mind sees only keys and records).
+/// Returns the key that stands for a people's name on the seat surface: the
+/// BLAKE3 derived-key hash of the universe's domain key followed by the name.
+/// The kernel holds the mapping from names to keys; a mind receives only keys
+/// and records.
 pub fn people_key(domain: &[u8; 32], name: &str) -> [u8; 32] {
     let mut h = blake3::Hasher::new_derive_key("xylarium seat people v1");
     h.update(domain);

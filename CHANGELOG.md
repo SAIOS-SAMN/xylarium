@@ -11,34 +11,37 @@ may change public APIs and the model's laws.
 
 ### Added
 
-- `Q::ratio`, the constant-ratio constructor (zero on a zero denominator).
-- `AGENTS.md`, `docs/concepts.md` and the glossary as a lexicon with code
-  paths.
-- Examples `found_and_observe` and `minimal_link` (`crates/xylarium/examples`)
-  and `# Examples` on `run::genesis`, `run::run`, `run::run_with` and
-  `observe::observe`.
-- `scripts/check-docs` and `scripts/check-style`, run locally with the other
-  checks (CONTRIBUTING.md, Verification).
+- `Q::ratio` is the constant-ratio constructor; it returns zero on a zero
+  denominator.
+- `AGENTS.md` and `docs/concepts.md` are added, and the glossary is
+  rewritten as a lexicon with code paths.
+- The examples `found_and_observe` and `minimal_link`
+  (`crates/xylarium/examples`) are added, with `# Examples` sections on
+  `run::genesis`, `run::run`, `run::run_with` and `observe::observe`.
+- `scripts/check-docs` and `scripts/check-style` are added and are run
+  locally with the other checks (CONTRIBUTING.md, Verification).
 
 ### Changed
 
-- Minimum supported Rust is 1.85, the version the locked dependencies
-  require.
-- Code style: modules over about 800 lines split into directory modules
+- The minimum supported Rust version is 1.85, the version the locked
+  dependencies require.
+- Code style: Modules over about 800 lines are split into directory modules
   (`observe`, `transit`, `cosmic`, `formation`, `galaxy`, `chem`, `worlds`,
-  `systems`, `life`, `bodies`, `minds`) with public paths unchanged; long
-  functions split into named steps; lines at most 100 columns; private
-  one-letter numeric wrappers replaced by the shared constructors; inline
-  comments state reasons and formulas.
+  `systems`, `life`, `bodies`, `minds`) with public paths unchanged. Long
+  functions are split into named steps, and lines are at most 100 columns.
+  Private one-letter numeric wrappers are replaced by the shared
+  constructors, and inline comments state reasons and formulas.
 - `run::Options` derives `Clone` and `Debug`.
-- README restructured; the roadmap opens with the mathematics (number
-  systems, algebra and geometry, and the nucleon model: the 3Z span, the
-  3Q capacity and the polarity R).
+- The README is restructured. The roadmap opens with the mathematics:
+  number systems, algebra and geometry, and the nucleon model (the 3Z span,
+  the 3Q capacity and the polarity R).
+- The Markdown documentation is edited to complete sentences in technical
+  prose.
 
 ### Removed
 
-- Hosted CI (`.github/workflows/ci.yml`) and its README badge; the checks
-  are run locally.
+- Hosted CI (`.github/workflows/ci.yml`) and its README badge are removed;
+  the checks are run locally.
 
 ## 0.3.0 - 2026-10-30
 

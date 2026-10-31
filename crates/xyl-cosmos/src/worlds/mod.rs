@@ -143,9 +143,10 @@ fn constants() -> &'static Constants {
         kb_ev: Dy::from_q(&crate::package::Si::kb_ev()),
         r_gas: Dy::from_q(&crate::package::Si::r_gas()),
         delivered: Dy::sci(1, -4),
-        // declared: bond-breaking light (flux units) above which NH3 and CH4 are
-        // photolysed within years: 0.03 of a Sun's flux at its ~6.5% share and
-        // middle-aged activity (Titan, at ~0.01, keeps its methane)
+        // Declared: the bond-breaking light (flux units) above which NH3 and
+        // CH4 are photolysed within years, 0.03 of a Sun's flux times its
+        // bond-breaking share of about 6.5 percent times a middle-aged
+        // activity of 1.4. Titan, at about 0.01, keeps its methane.
         photolysis_uv: Dy::sci(3, -2) * Dy::sci(65, -3) * Dy::ratio(14, 10),
         strip_rate: Dy::sci(2, -6),
         transport_bar: Dy::ratio(1, 10),
@@ -155,7 +156,8 @@ fn constants() -> &'static Constants {
         jeans_hold: Dy::int(15),
         thermosphere: Dy::int(4),
         runaway_flux: Dy::ratio(282, 340),
-        // provisional: calibrated so the unit world reads near 288 K (286 K)
+        // Provisional: calibrated so that the unit world reads near 288 K
+        // (it reads 286 K).
         greenhouse_tau: Dy::ratio(31, 5),
         melt_k: Dy::int(1400),
         giant_plasma_mass: Dy::int(10),
@@ -204,12 +206,14 @@ pub fn covalent_ev(sc: &Scales) -> Dy {
     constants().covalent_ev * sc.chem
 }
 
-/// Activation energy in units of kT at a solvent's own mid-range (declared).
+/// Activation energy in units of kT at the middle of a solvent's liquid
+/// range (declared).
 pub fn solvent_barrier() -> Dy {
     constants().solvent_barrier
 }
 
-/// The unit temperature (K at flux 1 and albedo 0: the flux unit's).
+/// The unit temperature, 278 K: the equilibrium temperature at flux 1 and
+/// albedo 0.
 pub fn t_unit() -> Dy {
     constants().t_unit
 }

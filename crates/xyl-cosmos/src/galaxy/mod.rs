@@ -18,13 +18,13 @@
 //! - [`star`]: sample star `n`, at most [`SAMPLE_CAP`] per galaxy plus
 //!   [`NUCLEUS_SAMPLE`] from [`NUCLEUS_BASE`], the galactic core in the high
 //!   bits ([`core_of`], [`in_galaxy`]). Placement uses exact irrational
-//!   pivots of the index (golden, silver, plastic, sqrt 3 - 1 turns), as
-//!   magnetised drops settle (Douady and Couder): radius along the rings'
+//!   rotations of the index (golden, silver, plastic, sqrt 3 - 1 turns), the
+//!   phyllotaxis pattern of magnetised drops (Douady and Couder): radius along the rings'
 //!   cumulative holding, phase, and for bulge and nucleus a tilt holding
 //!   that share of S^360's measure. Birth (first light, then along the
 //!   ring's star formation; `None` where the ring never lights), mass
 //!   ([`imf`], its break heavier where rings crowd), companion and vertical
-//!   swing come from the star's own `Stream`. The turning rate is the
+//!   swing come from the star's `Stream`. The turning rate is the
 //!   turning law over the mass inside; a homologue's lengths scale by its
 //!   shape's scale and its masses by its hole ratio.
 //! - [`Star::bearing`] and [`Star::place`]: position at `t` from the exact
@@ -58,26 +58,26 @@ use xyl_core::Q;
 /// The grid a drawn value is rounded to (as in the Big Bang).
 const GRID_BITS: u32 = 40;
 
-/// The home galaxy's structure, read from the founding: the home galaxy is
-/// the core's own matter, so it is the founding's cascade read one tier
-/// down. Its rings are the beads, their reaches and spans in the galaxy
-/// tier's unit (60^5 r_g) instead of the cluster's, their holding their
-/// states; the core holds the universal state, 1, so the galaxy's whole
-/// holding is its core's and the core's deficit at reach r is 1 / (r + 1).
-/// In suns, the profile hangs from the one declared bridge, the core's mass.
-/// Computed once per process.
+/// The home galaxy's structure, read from the founding. The home galaxy is
+/// the core's matter, so its structure is the founding's cascade read one
+/// tier down: its rings are the beads, with reaches and spans in the galaxy
+/// tier's unit (60^5 r_g) instead of the cluster's, and each ring's holding
+/// is the bead's state. The core holds the universal state, 1, so the
+/// galaxy's whole holding is the core's and the core's deficit at reach r is
+/// 1 / (r + 1). Masses in suns come from the one declared bridge, the core's
+/// mass. Cached once per process after the universe is founded.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Structure {
     /// Kiloparsecs per galaxy unit.
     pub kpc_per_unit: Q,
-    /// Each ring, inner first: inner and outer edge (kpc), its state (its
-    /// share of the galaxy's holding), its state per kpc of span, and the
-    /// core's deficit at its reach.
+    /// Each ring, inner first: inner and outer edge (kpc), state (the ring's
+    /// share of the galaxy's holding), state per kpc of span, and the core's
+    /// deficit at the ring's reach.
     pub rings: Vec<(Q, Q, Q, Q, Q)>,
-    /// The holding of all rings: the founding unit, the core's own state.
+    /// The holding of all rings: the founding unit, equal to the core's state.
     pub holding: Q,
-    /// The reach the core holds at least half the turn to (kpc): one galaxy
-    /// unit, where its deficit 1 / (r + 1) is one half.
+    /// The reach (kpc) out to which the core's deficit is at least one half:
+    /// one galaxy unit, where 1 / (r + 1) = 1/2.
     pub core_kpc: Q,
     /// The innermost ring's outer edge (kpc): the nucleus.
     pub nucleus_kpc: Q,
@@ -89,8 +89,8 @@ pub struct Structure {
 
 fn structure() -> std::sync::Arc<Structure> {
     static S: std::sync::OnceLock<std::sync::Arc<Structure>> = std::sync::OnceLock::new();
-    // cached only once the universe is founded (rim > 0): a structure built
-    // before the founding is empty and must not be kept
+    // Cached only once the universe is founded (rim > 0): a structure built
+    // before the founding is empty and must not be kept.
     if let Some(s) = S.get() {
         return s.clone();
     }
@@ -131,7 +131,8 @@ fn structure() -> std::sync::Arc<Structure> {
         let half = Q::ratio(1, 2);
         let core_kpc = kpc_per_unit.clone();
         let nucleus_kpc = rings.first().map(|r| r.1.clone()).unwrap_or(Q::ZERO);
-        // the reference ring: where the cumulative holding crosses one half
+        // The reference ring: where the cumulative holding crosses one half,
+        // interpolated linearly within the crossing ring.
         let target = &holding * &half;
         let mut cum = Q::ZERO;
         let mut r0_kpc = rings.last().map(|r| r.1.clone()).unwrap_or(Q::ONE);
@@ -167,18 +168,19 @@ fn structure() -> std::sync::Arc<Structure> {
 pub fn r0() -> Q {
     structure().r0_kpc.clone()
 }
-/// The home galaxy's rim (kpc): where its matter ends and the first bead's
-/// begins, from the founding (circuit::anchor). Its disc extends to it.
+/// The home galaxy's rim (kpc): where the galaxy's matter ends and the first
+/// bead's matter begins, from the founding (`circuit::anchor`). The disc
+/// extends to it.
 pub fn rim_kpc() -> Q {
     crate::circuit::anchor().home_rim_kpc
 }
 /// The universe's curvature radius (kpc): the founding's rim over pi
-/// (circuit::anchor).
+/// (`circuit::anchor`).
 pub fn radius_kpc() -> Q {
     crate::circuit::anchor().radius_kpc
 }
-/// The core's reach (kpc): out to where the core holds at least half the
-/// turn (the tide one half); a star within it is in the core.
+/// The core's reach (kpc): out to where the core's deficit is at least one
+/// half; a star within it is in the core.
 pub fn core_kpc() -> Q {
     structure().core_kpc.clone()
 }
@@ -191,10 +193,10 @@ pub fn nucleus_kpc() -> Q {
 pub const SAMPLE_CAP: u64 = 65_536;
 
 /// The galaxy's stellar mass (suns). The founding is in the core's units
-/// (the parent's mass, 1); the home galaxy is the universal state, 1 of
-/// them, and its stars are the share of it whose gas lights
-/// (`Lighting::lit`), so its stellar mass is the lit share of the core's
-/// mass. Kept once the universe is founded; before it, zero.
+/// (the parent's mass, 1); the home galaxy holds the universal state, 1, and
+/// its stars are the share whose gas lights (`Lighting::lit`), so the stellar
+/// mass is the lit share of the core's mass. Cached once the universe is
+/// founded; zero before the founding.
 pub fn stellar_mass() -> Q {
     static M: std::sync::OnceLock<Q> = std::sync::OnceLock::new();
     if let Some(m) = M.get() {
@@ -211,14 +213,15 @@ pub fn stellar_mass() -> Q {
     m
 }
 
-/// The stellar mass within the nucleus (suns).
+/// The stellar mass within the nucleus (suns): the mass inside the nucleus's
+/// reach less the hole.
 pub fn nucleus_mass() -> Q {
     inside_mass(&nucleus_kpc()) - &hole_mass()
 }
 
 /// The nucleus: the innermost lit ring about the hole, the only strongly
 /// curved region. It is sampled separately and more finely than its mass
-/// alone would give: its stars have indices from NUCLEUS_BASE, each standing
+/// share would give: its stars have indices from `NUCLEUS_BASE`, each standing
 /// for an equal share of the nucleus's mass.
 pub const NUCLEUS_BASE: u64 = 1 << 40;
 /// Number of sample stars drawn for the nucleus, indexed from [`NUCLEUS_BASE`].
@@ -246,8 +249,9 @@ pub fn sample(_bang: &BigBang) -> u64 {
     SAMPLE_CAP
 }
 
-/// Crowding at reach `r` (kpc): the ring's holding per kpc over the
-/// reference ring's, read from the structure (one within a ring).
+/// Crowding at reach `r` (kpc): the holding per kpc of the ring containing
+/// `r` over that of the reference ring. The value is constant within a ring;
+/// beyond the rim the outermost ring is used, elsewhere the innermost.
 pub fn density(r: &Q) -> Encl {
     let st = structure();
     let lambda = st
@@ -265,12 +269,12 @@ pub fn density(r: &Q) -> Encl {
     )
 }
 
-/// When the stars at reach `r` (kpc) of the home galaxy are born (Gyr after
-/// the Big Bang): the ring's gas is one piece of the founding, cooling from
-/// the bounce, and collapses once, where its piece lights
+/// The birth time (Gyr after the Big Bang) of the stars at reach `r` (kpc)
+/// of the home galaxy. The ring's gas is one piece of the founding, cooling
+/// from the bounce, and collapses once when the piece lights
 /// (`formation::Lighting::cools_in_at`, in galaxy rings), so every star of a
-/// ring is born at its piece's first light, in bells. None where the piece
-/// never lights: no star stands there.
+/// ring is born at the piece's first light, counted in bells (at least one).
+/// `None` where the piece never lights, so no star is placed there.
 pub fn birth_gyr(r: &Q) -> Option<Q> {
     let anchor = crate::circuit::anchor();
     let sub = crate::cores::substrate_for(&anchor.spin)?;
@@ -287,7 +291,7 @@ pub fn birth_gyr(r: &Q) -> Option<Q> {
 /// The home galaxy's mass inside `r` kpc (suns): the hole plus the rings'
 /// states within `r` (a ring counted by the share of its span inside) over
 /// the whole holding, times the core's mass. This mass's deficit sets a
-/// star's turning there (turning.rs).
+/// star's turning rate there (`turning`).
 pub fn inside_mass(r_kpc: &Q) -> Q {
     let st = structure();
     let r = r_kpc.clone().max(Q::ZERO);
@@ -313,9 +317,9 @@ pub fn inside_mass_dy(r_kpc: Dy) -> Dy {
     Dy::from_q(&inside_mass(&r_kpc.to_q()))
 }
 
-/// The reach (kpc) at which the cumulative holding of the rings reaches
-/// the share `u` of the whole (`u` in [0, 1)): where a star of that share
-/// of the population sits, linear within a ring.
+/// The reach (kpc) at which the cumulative holding of the rings reaches the
+/// share `u` of the total (`u` clamped to [0, 1]), interpolated linearly
+/// within a ring. Only rings whose outer edge is at most `up_to_kpc` count.
 fn reach_at(u: Dy, up_to_kpc: Option<&Q>) -> Dy {
     let st = structure();
     let rings: Vec<&(Q, Q, Q, Q, Q)> = st
@@ -341,7 +345,7 @@ fn reach_at(u: Dy, up_to_kpc: Option<&Q>) -> Dy {
 }
 
 /// The sample star indices of a home galaxy: disc and bulge first, then the
-/// nucleus (from NUCLEUS_BASE).
+/// nucleus (from `NUCLEUS_BASE`).
 pub fn indices(bang: &BigBang) -> impl Iterator<Item = u64> {
     (0..sample(bang)).chain(NUCLEUS_BASE..NUCLEUS_BASE + NUCLEUS_SAMPLE)
 }

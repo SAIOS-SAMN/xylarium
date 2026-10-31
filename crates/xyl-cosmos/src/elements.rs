@@ -83,7 +83,7 @@ pub struct Element {
     pub melt: Option<Q>,
     /// Boiling point in K, if known or predicted.
     pub boil: Option<Q>,
-    /// Condensed density, g/cm3.
+    /// Condensed density, g/cm^3.
     pub rho: Option<Q>,
     /// Solar-system abundance, atoms per 10^6 Si (zero: none survives).
     pub abundance: Q,
@@ -213,8 +213,9 @@ pub fn founding_bits(a: &Q) -> u32 {
     let bits = {
         let a = a.clone();
         let top = crate::atoms::vessel().map(|(_, hi)| hi).unwrap_or(1);
-        // the unfloored chain from one hydrogen: the product of a times the
-        // closed share of every kind up to the vessel's top
+        // The unfloored chain from one hydrogen is the product of a and the
+        // closed share over every kind up to the vessel's top; it is doubled
+        // until it reaches one.
         let mut count = Q::ONE;
         for z in 2..=top {
             count = &(&count * &a) * &closed_share(z);
@@ -224,8 +225,9 @@ pub fn founding_bits(a: &Q) -> u32 {
             count = &count * &Q::int(2);
             bits += 1;
         }
-        // each floor along the chain loses under one nucleus; double the
-        // hydrogen count until the sealing kind's count reaches one
+        // Each floor along the chain loses less than one nucleus, so the
+        // floored chain can fall short; the hydrogen count is doubled until
+        // the sealing kind's floored count reaches one.
         let mut hydrogen = (0..bits).fold(Q::ONE, |acc, _| &acc * &Q::int(2));
         while chain_to(&hydrogen, &a, top) < Q::ONE && bits < 1 << 14 {
             hydrogen = &hydrogen * &Q::int(2);
@@ -318,8 +320,8 @@ fn row(line: &str) -> Result<Row, String> {
 
 /// The integer A on the valley of beta stability nearest `z`, by certified
 /// bounds: `Z = A/(1.98 + 0.334 e(A/100))`, where the surface term e is the
-/// extent of A against a hundred nucleons on S^2 (systems.rs) in place of
-/// A^(2/3), exact at A = 100.
+/// extent of A against a hundred nucleons on S^2 (`extent`) in place of
+/// (A/100)^(2/3); the two agree at A = 100. None if an enclosure fails.
 pub fn valley_a(z: u32) -> Option<u32> {
     let target = Q::int(i64::from(z));
     let miss = |a: u32| -> Option<Q> {
@@ -331,8 +333,9 @@ pub fn valley_a(z: u32) -> Option<u32> {
         Some((&zv.mid() - &target).abs())
     };
     // Z(A) rises with A, so the miss has a single minimum: start from the
-    // inverted formula (surface term at A ~ 5Z/2) and step to the neighbour
-    // with the smaller miss, preferring the smaller A on a tie
+    // inverted formula (surface term at A ~ 5Z/2), clamped to [2Z, 3Z], and
+    // step to the neighbour with the smaller miss, preferring the smaller A on
+    // a tie.
     let (lo, hi) = (2 * z, 3 * z);
     let guess = Dy::int(i64::from(z))
         * (Dy::ratio(198, 100)
@@ -365,13 +368,14 @@ pub fn valley_a(z: u32) -> Option<u32> {
 /// each element's nucleus count in place of the measured abundance. Nuclei
 /// are built one capture at a time from hydrogen, so
 /// count_Z = count_(Z-1) s_Z with s_Z = a h_Z: each capture is one pass of the
-/// outbound jet through the throat, a is the share it carries on (the parent
-/// bounce's spin, 1/2) and h_Z the new nucleus's closed share,
+/// outbound jet through the throat, a is the share the jet carries (the
+/// parent's torsion share, from 1/2 to 3/5) and h_Z the new nucleus's closed share,
 /// (3Z - unpaired) / 3Z. Counts are whole nuclei out of 2^`founding_bits()`
 /// hydrogen, the fewest that found the vessel's sealing kind whole, so a kind
 /// with fewer than one nucleus has none and every mixture stays in whole
 /// numbers. Only count ratios are used. Other columns (masses, phases,
-/// classes) are as measured.
+/// classes) are as in the table, measured or predicted. `Err` as for the
+/// table.
 pub fn founded(a: &Q) -> Result<Vec<Element>, String> {
     let mut out = table()?;
     out.sort_by_key(|e| e.z);
@@ -402,10 +406,10 @@ fn build_table() -> Result<Vec<Element>, String> {
         .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
         .map(row)
         .collect::<Result<_, _>>()?;
-    // rows past the file's last Z up to TOP_Z use the rule of the file's
-    // predicted rows: systematic name, valley A, uranium as the homologue
-    // for the material columns. Their counts come from the founding chain
-    // and the burns, as for every kind.
+    // Rows past the file's last Z up to TOP_Z follow the rule of the file's
+    // predicted rows: systematic name, valley A, uranium as the homologue for
+    // the material columns. Their counts come from the founding chain and
+    // stellar burning (chem), as for every kind.
     let top = rows.iter().map(|r| r.e.z).max().unwrap_or(0);
     for z in (top + 1)..=TOP_Z {
         rows.push(row(&systematic_row(z))?);
@@ -413,7 +417,8 @@ fn build_table() -> Result<Vec<Element>, String> {
     let measured: Vec<Element> = rows.iter().map(|r| r.e.clone()).collect();
     let by_sym = |s: &str| measured.iter().find(|e| e.sym == s).cloned();
     let (u, pt) = (by_sym("U").ok_or("no U")?, by_sym("Pt").ok_or("no Pt")?);
-    // the r-process's fall per unit Z: d = log10(Pt/U)/14, ln-enclosed
+    // The r-process fall per unit Z is d = log10(Pt / U) / 14, evaluated with
+    // enclosed logarithms.
     let ratio = pt
         .abundance
         .checked_div(&u.abundance)
@@ -437,15 +442,16 @@ fn build_table() -> Result<Vec<Element>, String> {
             e.melt = e.melt.or(h.melt.clone());
             let own_boil = e.boil.is_some();
             e.boil = e.boil.or(h.boil.clone());
-            // rho = rho_h A / A_h from the homologue, unless measured or given
+            // Without a density in the row, rho = rho_h A / A_h from the
+            // homologue.
             if e.rho.is_none() {
                 e.rho = match (&h.rho, h.a.is_zero()) {
                     (Some(hr), false) => Some((hr * &e.a).checked_div(&h.a).ok_or("homologue A")?),
                     _ => None,
                 };
             }
-            // T_c = T_c,h boil / boil_h when the row gives its own boiling
-            // point, else the homologue's T_c
+            // T_c = T_c,h boil / boil_h when the row gives a boiling point,
+            // else the homologue's T_c.
             if e.tc.is_none() {
                 e.tc = match (&h.tc, &h.boil, &e.boil, own_boil) {
                     (Some(htc), Some(hb), Some(b), true) => {
@@ -457,7 +463,7 @@ fn build_table() -> Result<Vec<Element>, String> {
             }
         }
         if r.island {
-            // ab_U · 10^(−d (Z − 92)) = ab_U · exp(−d ln10 (Z − 92))
+            // The abundance is ab_U 10^(-d (Z - 92)) = ab_U exp(-d ln10 (Z - 92)).
             let x = d
                 .mul(&ln10)
                 .mul(&Encl::exact(Q::int(i64::from(e.z) - 92)))
@@ -472,7 +478,8 @@ fn build_table() -> Result<Vec<Element>, String> {
 
 /// A body's radius from its mass (world units): the share s = m / (m + 1) is
 /// held by the angle theta on S^2 (measure.rs), and R = 4 theta (turns).
-/// the unit world gives 1, a mass of 0.012 gives 0.14, of 0.107 gives 0.40, of 10 gives 1.61.
+/// The unit world gives 1; a mass of 0.012 gives 0.14, of 0.107 gives 0.40,
+/// of 10 gives 1.61. A mass that is not positive gives 0.
 pub(crate) fn extent(m: &Q) -> Q {
     use xyl_core::dyadic::Dy;
     if m.signum() <= 0 {
@@ -510,9 +517,9 @@ mod tests {
 
     #[test]
     fn valley_of_stability_places_unmeasured_rows() {
-        // the valley: every nucleus holds at least its protons, heavier kinds
-        // hold more neutrons per proton, and the table's predicted rows lie
-        // on it beyond the measured ones
+        // On the valley every nucleus holds more nucleons than protons,
+        // heavier kinds hold more neutrons per proton, and the table's
+        // predicted rows lie on it beyond the measured ones.
         let (fe, u) = (valley_a(26).unwrap(), valley_a(92).unwrap());
         assert!(fe > 26 && u > 92, "{fe} {u}");
         assert!(

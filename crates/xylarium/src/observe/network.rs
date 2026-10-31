@@ -5,8 +5,9 @@ use xyl_core::dyadic::Dy;
 use xyl_kernel::transit::{best_spec, home_escape, Place};
 use xyl_kernel::universe::Universe;
 
-/// The ley network: the constellations, the lines the ancient houses have
-/// built, the passages they open, and the quarantine.
+/// The `ley K` reading: the constellations and ley lines, passage times from
+/// the ancient houses, the star map by degree cells, and the discord and
+/// quarantine.
 pub(super) fn ley(u: &Universe<'_>, k: usize) -> String {
     let mut out = lines(u, k);
     out.push_str(&passages(u, k));
@@ -237,7 +238,7 @@ fn discord(u: &Universe<'_>, k: usize) -> String {
     for (x, i) in d.iter().take(k) {
         let p = &u.cosmic.peoples[*i];
         let q = &parts[i];
-        // d = reach / (reach + mouth) x forget x (1 - joined)
+        // `d = reach / (reach + mouth) x forget x (1 - joined)`.
         out.push_str(&format!(
             concat!(
                 "    {:<14} d {} = reach {} kpc / (reach + mouth {} kpc) x forget {} ",

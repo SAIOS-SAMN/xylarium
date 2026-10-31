@@ -304,8 +304,8 @@ pub enum Phase {
     Supercritical,
 }
 
-/// The constants the models run on, as dyadics, and a universe's scales and
-/// phase diagrams.
+/// The context the world models are read under: a universe's scales and
+/// each volatile's phase diagram under them.
 pub struct Ctx {
     /// The universe's scales the diagrams and models are read under.
     pub sc: Scales,
@@ -339,7 +339,8 @@ impl Ctx {
 
     /// The measured points of a volatile's liquid-vapour curve, as
     /// (1/T, ln p): its triple point, its normal boiling point where it boils
-    /// above its triple point (a solvent that sublimes at a bar has none),
+    /// above its triple point (a volatile that sublimes at the reference
+    /// pressure has none),
     /// and its critical point. Clausius-Clapeyron makes ln p linear in 1/T
     /// between measured points, so the curve runs through every one of them:
     /// it boils at its triple temperature at its triple pressure, never below.
@@ -386,8 +387,8 @@ impl Ctx {
                     * (Dy::ONE / d.tt - Dy::ONE / t.max(Dy::ONE)))
                 .exp();
         }
-        // above the critical point there is no liquid: the last curve
-        // segment is extrapolated, so the pressure keeps rising with T
+        // Above the critical point there is no liquid: the last curve
+        // segment is extrapolated, so the pressure keeps rising with T.
         let x = Dy::ONE / t;
         let pts = self.liquid_curve(s);
         for w in pts.windows(2) {

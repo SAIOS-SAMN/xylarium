@@ -64,10 +64,10 @@ impl Cosmic<'_> {
 
     /// Founds a daughter people of `parent` on world `w` of its star at `at`
     /// Gyr, with `emigrants` bodies taken from the parent: the same traits,
-    /// lineage and standing, its region read from the world's medium for
-    /// those traits, its name drawn for its world. Returns its index, or
+    /// lineage and ancient standing, its region read from the world's medium
+    /// for those traits, its name drawn for its world. Returns its index, or
     /// `None` when the parent does not exist, the world cannot be read, or
-    /// the emigrants exceed the parent's numbers.
+    /// the emigrants are not positive or exceed the parent's numbers.
     pub fn settle(&mut self, parent: usize, w: usize, emigrants: Dy, at: Dy) -> Option<usize> {
         let p = self.peoples.get(parent)?.clone();
         if emigrants.signum() <= 0 || emigrants > p.population {
@@ -98,7 +98,9 @@ impl Cosmic<'_> {
         Some(self.peoples.len() - 1)
     }
 
-    /// Wakes a mind on the world its lineage climbed on, witnessing only its own system.
+    /// Wakes mind `m` on the world its lineage climbed on, witnessing only
+    /// that star's system. The mind is counted silent where the world is
+    /// already held or feeds fewer foragers than a viable people.
     fn arise(&mut self, m: &Mind) -> Option<String> {
         self.witness(m.star)?;
         if self
@@ -126,7 +128,7 @@ impl Cosmic<'_> {
             &["body".into(), m.star.into(), (m.w as u64).into()],
         );
         let traits = select(&state, &ms, m.region, strategy, &mut rng, &self.ctx)?;
-        // Numbers start at the world's capacity for bodies like its own
+        // Numbers start at the world's capacity for bodies of these traits
         // (growth.rs), with no knowledge yet: foraging alone
         // (civ/housing.rs `houses` with zero biology and energy mastery).
         let rulers = crate::growth::Rulers::default();
@@ -142,8 +144,8 @@ impl Cosmic<'_> {
         );
         let rate = crate::growth::growth_per_yr(&traits, &rulers);
         let name = self.name(m);
-        // Ancient is measured against the first core-born mind of its own
-        // galactic core (T1), not the universe's.
+        // Ancient is measured against the first core-born mind of the
+        // mind's galactic core (T1), not of the universe core.
         let ancient = in_core(m)
             && xyl_cosmos::minds::first_core_dawn(
                 &self.forecast,
@@ -237,8 +239,9 @@ fn emergence_text(m: &Mind, name: &str, ancient: bool, traits: &Traits) -> Strin
     )
 }
 
-/// The traits a world selected in a lineage, from
-/// its best medium for that chemistry, its gravity and its strategy.
+/// The traits a world selected in a lineage, read from the world's best
+/// medium in `region`, its surface gravity, the `strategy` and draws from
+/// `rng`. None when the world has no medium in the region.
 pub fn select(
     state: &State,
     ms: &[Medium],
@@ -310,8 +313,9 @@ pub fn select(
             "jointed palps",
         ][usize::try_from(rng.below(4).unwrap_or(0)).unwrap_or(0)]
     };
-    // size: life history (the strategies' size rulers, r 2.5, K 1.2) over
-    // the world's gravity, linear in g
+    // Size relative to a K-strategist on a unit-gravity world:
+    // `1.2 / ceiling` with the strategies' size rulers (r 2.5, K 1.2),
+    // divided by the world's gravity g (floored at 0.001) except in plasma.
     let ceiling = if strategy == Strategy::R {
         Dy::ratio(5, 2)
     } else {

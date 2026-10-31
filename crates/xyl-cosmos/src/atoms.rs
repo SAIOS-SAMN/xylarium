@@ -18,7 +18,7 @@
 //! fill before pairing. Shell crossings (from Z 31) follow from this rule.
 //!
 //! Outputs: `Atom` (bands, outer shell, `unpaired`, `tightness`
-//! n_out / P_out, `closed`, `sealed`), `unpaired`, `unpaired_hot` (strips
+//! (Z - inner electrons) / n_out, `closed`, `sealed`), `unpaired`, `unpaired_hot` (strips
 //! every band held no tighter than the heat, capped at 1), `vessel`, `bond`
 //! (shared share tau_min / tau_max, grip tau_min), `closes` and `hold` (a
 //! cluster's light holding from stretches, bends and dipole). `atom` returns
@@ -32,7 +32,8 @@ use xyl_core::Q;
 /// One band: its turning n, its pivot's degree l and the electrons it holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Band {
-    /// Turning count: the whole number of ticks in which the band's orbit closes (1, 2, ...).
+    /// Turning count: the whole number of ticks in which the band's orbit
+    /// closes (1, 2, ...).
     pub n: u32,
     /// Shape degree of the band's windings (its eccentricity), 0 <= l < n.
     pub l: u32,
@@ -60,17 +61,19 @@ impl Band {
 /// An atom's computed structure.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Atom {
-    /// Atomic number: the centre's charge count, equal to the neutral atom's electron count.
+    /// Atomic number: the centre's charge count, equal to the neutral atom's
+    /// electron count.
     pub z: u32,
     /// Occupied bands, ordered by (n, l).
     pub bands: Vec<Band>,
-    /// The outermost turning, and the electrons sharing it.
+    /// The outermost occupied turning n.
     pub outer_n: u32,
     /// Electrons in the outermost turning `outer_n`.
     pub outer: u32,
     /// Unpaired electrons over the open bands: bonding capacity.
     pub unpaired: u32,
-    /// How tightly the outermost electrons are held: n_out / P_out (exact).
+    /// How tightly the outermost electrons are held: the charge they enclose,
+    /// Z minus the electrons of shallower turnings, over `outer_n` (exact).
     pub tightness: Q,
 }
 
@@ -117,12 +120,12 @@ pub fn orientations(l: u32) -> u32 {
 /// deepest occupied are open; an exact tie goes to the lower (n, l). Shell
 /// crossings follow from the law rather than a stated order.
 pub fn atom(z: u32) -> Option<Atom> {
-    // a cluster is not an atom: its properties come from its parts (compound.rs)
+    // A cluster is not an atom: its properties come from its parts (compound.rs).
     if z == 0 || crate::compound::is_cluster(z) {
         return None;
     }
-    // each Z is filled once and cached: fusion products 2Z may lie past any
-    // table, and the fill is expensive to repeat
+    // Each Z is filled once and cached: fusion products 2Z may lie past any
+    // table, and the fill is expensive to repeat.
     static TABLE: std::sync::OnceLock<std::sync::Mutex<std::collections::BTreeMap<u32, Atom>>> =
         std::sync::OnceLock::new();
     let table = TABLE.get_or_init(|| std::sync::Mutex::new(std::collections::BTreeMap::new()));
@@ -141,8 +144,9 @@ pub fn unpaired_hot(z: u32, heat: &Q) -> u32 {
     if heat.signum() <= 0 {
         return unpaired(z);
     }
-    // heat is the core's turning in whole turns of its bell, capped at one
-    // (hydrogen's lone electron); windings with tightness <= heat are stripped
+    // The heat is the core's turning in whole turns of the core's bell, capped
+    // at one (hydrogen's lone electron); windings with tightness <= heat are
+    // stripped.
     let heat = heat.clone().min(Q::ONE);
     let heat = &heat;
     let Some(a) = atom(z) else { return 0 };
@@ -319,7 +323,7 @@ pub fn closes(zs: &[u32]) -> bool {
 }
 
 /// How a cluster holds outgoing light: every motion that swings charge
-/// holds light, in units of the cluster's own motions.
+/// holds light, counted per motion of the cluster.
 /// - In plane: stretches, one per bond, each holding the most unequal pair's
 ///   transfer, 1 - tau_min / tau_max; bends, one per atom beyond the second,
 ///   each holding the cluster's mixture (twice the share of atoms not of the
@@ -358,7 +362,8 @@ pub fn hold(zs: &[u32]) -> Q {
             .min(Q::ONE)
     };
     let mixture = share_not_most(&atoms);
-    // the shape: straight or bent, and the dipole its symmetry leaves
+    // The shape (straight or bent) and the dipole the cluster's symmetry
+    // leaves uncancelled.
     let (axes, dipole) = match atoms.as_slice() {
         [] | [_] => (0, Q::ZERO),
         [_, _] => (2, asymmetry.clone()),
@@ -377,9 +382,9 @@ pub fn hold(zs: &[u32]) -> Q {
             (axes, &asymmetry * &left)
         }
     };
-    // twists: bonds between two inner atoms. A cluster is a star about its
+    // Twists are bonds between two inner atoms. A cluster is a star about the
     // first atom with every other atom an arm, so no bond joins two inner
-    // atoms; twists apply only to chains, which are not yet modelled
+    // atoms; twists apply only to chains, which are not yet modelled.
     let twists = 0i64;
     let in_plane = &(&asymmetry * &Q::int(stretches)) + &(&mixture * &Q::int(bends));
     let perpendicular = &(&dipole * &Q::int(axes)) + &(&mixture * &Q::int(twists));
@@ -392,7 +397,7 @@ mod tests {
 
     #[test]
     fn the_atom_on_s11_closes_where_its_shells_fill() {
-        // orientations: the degree-l harmonics in twelve dimensions
+        // The orientations are the degree-l harmonics in twelve dimensions.
         assert_eq!(
             (
                 orientations(0),
@@ -402,29 +407,31 @@ mod tests {
             ),
             (1, 12, 77, 352)
         );
-        // full shells (rooms 2, 26, 180): the sealed kinds
+        // The sealed kinds fill whole shells (rooms 2, 26, 180).
         let sealed: Vec<u32> = (1..=300)
             .filter(|&z| atom(z).is_some_and(|a| a.sealed()))
             .collect();
         assert_eq!(sealed, vec![2, 28, 208]);
-        // the ring-density fill's crossings emerge from Z 31: a deeper shell's
-        // round winding penetrates and opens ahead of the shell beneath it
+        // The ring-density fill's crossings begin at Z 31: a deeper shell's
+        // round winding penetrates and opens ahead of the shell beneath it.
         let d = |z| atom(z).unwrap().outer_n;
         assert_eq!((d(28), d(31), d(33)), (2, 4, 5));
-        // wide open shells: twelve unpaired at shell 2's half, seventy-seven at most
+        // Open shells hold many unpaired electrons: twelve at shell 2's half,
+        // seventy-seven at most.
         assert_eq!(atom(16).unwrap().unpaired, 12);
         assert_eq!((1..=300).map(|z| atom(z).unwrap().unpaired).max(), Some(77));
     }
 
     #[test]
     fn clusters_close_and_hold_light_by_their_asymmetry() {
-        // on S^11 oxygen opens four (never two): it closes with four
-        // hydrogens, not two; a closed kind (Z 28) bonds nothing
+        // On S^11 oxygen has four unpaired electrons: it closes with four
+        // hydrogens, not two; a closed kind (Z 28) bonds nothing.
         assert_eq!(atom(8).unwrap().unpaired, 4);
         assert!(
             closes(&[8, 1, 1, 1, 1]) && closes(&[1, 1]) && !closes(&[8, 1, 1]) && !closes(&[28, 1])
         );
-        // a symmetric pair swings no charge and holds no light; a mixed one holds some
+        // A symmetric pair swings no charge and holds no light; a mixed cluster
+        // holds some.
         assert_eq!(hold(&[7, 7]), Q::ZERO);
         assert!(hold(&[8, 1, 1, 1, 1]) > Q::ZERO);
     }

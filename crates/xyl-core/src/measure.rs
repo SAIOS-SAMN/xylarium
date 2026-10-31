@@ -14,16 +14,17 @@
 //!
 //! Outputs: `share_turns(n, theta)`, the share within `theta` turns (clamped
 //! to 0..1/2; for `n` = 1 the arc `2 theta`); `angle_holding(n, s)`, the angle
-//! in turns within which the sphere holds share `s` (the ladder's rung, then
-//! up to four Newton steps on the slope `sin^(n-1)`).
+//! in turns within which the sphere holds share `s` (linear interpolation on
+//! the ladder's rung, then up to four Newton steps on the slope `sin^(n-1)`).
 //!
 //! Invariants: the integral is evaluated once per dimension on 2^14 rungs of
 //! the half turn (Simpson's rule on each rung), then cached for the process; it
 //! is computed from the measure, not a table of chosen values. Results are
 //! `Dy`, so they are deterministic across machines but not certified.
 //!
-//! In high dimension the measure crowds toward the equator: on S^360 almost
-//! all of it lies within about 3 degrees of 90.
+//! In high dimension the measure concentrates at the equator: on S^360 the
+//! angle from the axis has a spread of about 1/sqrt(359) rad, about 3 degrees,
+//! about 90 degrees.
 
 use crate::dyadic::Dy;
 use std::collections::BTreeMap;
@@ -94,9 +95,9 @@ pub fn share_turns(n: u32, theta: Dy) -> Dy {
     (l[i] + rung(n, lo, rad)) / whole
 }
 
-/// The angle (turns, 0 to 1/2) within which S^n holds `s` of itself: the
-/// ladder's rung that holds it, then Newton's steps on the measure's own
-/// slope, sin^(n - 1) over the whole.
+/// The angle (turns, 0 to 1/2) within which S^n holds the share `s` of its
+/// measure: linear interpolation on the ladder's rung that contains it, then
+/// up to four Newton steps on the slope of the measure, sin^(n - 1).
 pub fn angle_holding(n: u32, s: Dy) -> Dy {
     let s = s.clamp(Dy::ZERO, Dy::ONE);
     let l = ladder(n);

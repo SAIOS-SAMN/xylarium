@@ -1,15 +1,16 @@
 # Concepts
 
-A first read for new contributors: what Xylarium computes, in what order,
-and the few ideas everything else builds on. Each term is introduced once
-here in ordinary words and linked to its precise entry in the
-[glossary](glossary.md). The full model is in [model.md](model.md) and
-[civilizations.md](civilizations.md); every formula is in
-[EQUATIONS.md](EQUATIONS.md).
+This document is a first read for new contributors. It describes what Xylarium
+computes, in what order, and the few ideas on which the rest of the model
+depends. Each term is introduced once here in ordinary words and linked to its
+precise entry in the [glossary](glossary.md). The full model is in
+[model.md](model.md) and [civilizations.md](civilizations.md); every formula is
+in [EQUATIONS.md](EQUATIONS.md).
 
-Xylarium's physics is the game's own model. It borrows the names of real
-physics (black holes, elements, orbits) and their general behaviour, but it is a
-self-consistent rule set rather than a simulation of the real universe.
+Xylarium's physics is a model written for the game. It borrows the names of
+real physics (black holes, elements, orbits) and their general behaviour,
+but it is a self-consistent rule set rather than a simulation of the real
+universe.
 
 ## The pipeline
 
@@ -66,10 +67,10 @@ the unit of length is the core's gravitational radius, `r_g`. Kilograms,
 metres and years appear only when a value is displayed
 (`package::Si`).
 
-Distances span a huge range, so space is divided into
-[tiers](glossary.md) (universe, cluster, galaxy, system, planet), each with
-its own unit: a power of sixty of `r_g` (`xyl_core::units::Tier`). A law
-works in the unit of its tier.
+Distances span many orders of magnitude, so space is divided into
+[tiers](glossary.md) (universe, cluster, galaxy, system, planet). Each tier
+has a unit of length that is a power of sixty of `r_g`
+(`xyl_core::units::Tier`), and a law is evaluated in the unit of its tier.
 
 ## The deficit share
 
@@ -80,9 +81,9 @@ holds at distance `R`,
 delta(R, M) = M / (R + M)
 ```
 
-It is 0 far away, approaches 1 close in, and never needs a square root or a
-power. Orbital speeds, the region a planet's gravity controls, where worlds
-form and how far a core's push reaches are all written with it
+It tends to 0 at large distance and to 1 at small distance, and it requires no
+square root or power. Orbital speeds, the region a planet's gravity controls,
+where worlds form and how far a core's push reaches are all written with it
 ([deficit](glossary.md)).
 
 ## Time: the bell and the ring
@@ -98,16 +99,17 @@ The founding is what a seed determines before any galaxy exists
 ([model.md, section 3](model.md#3-the-bounce-and-the-founding)):
 
 1. **The parent's spin.** The seed draws one number, the spin of the black
-   hole the universe bounces from. Everything else follows from it.
+   hole the universe bounces from. Every later quantity of the founding is
+   derived from it.
 2. **Elements.** Nuclei are built one capture at a time from hydrogen; how
    many of each element survive is set by how completely its electron
    shells close (`elements::founded`). The element table runs to Z = 1700.
 3. **The firmament.** A band of heavy elements stays bound at the core
-   ([firmament](glossary.md)); its total mass is scaled to 1, the core's
-   own.
-4. **Beads and galactic cores.** The matter thrown out settles in shells
-   that pinch into [beads](glossary.md); a bead heavy enough to light a
-   star becomes a galaxy, and its mass sets that galaxy's core.
+   ([firmament](glossary.md)); its total mass is scaled to 1, equal to the
+   mass of the core.
+4. **Beads and galactic cores.** The ejected matter settles in shells that
+   pinch into [beads](glossary.md); a bead heavy enough to light a star
+   becomes a galaxy, and its mass sets the mass of that galaxy's core.
 
 Atoms in the model are described by three numbers: protons (Z), neutrons
 (Q) and the state of the electrons (R). Chemistry reads how many electron
@@ -121,14 +123,14 @@ beads, read at the galaxy tier; stars form along each ring with the
 elements that ring has accumulated by the time of their birth
 (`chem::Chemistry::birth_along`).
 
-Every body controls a region around it, its [manifold](glossary.md): the
-arc of its orbit its own gravity holds against the body it orbits. Worlds
-form on a star's manifold. Reading outward degree by degree, matter
-accumulates until it controls a region against the star's tide, and a world
-forms there (`disc::manifold_worlds`). Moons form on each world's manifold
-by the same rule. Matter that never controls a region is a
-[belt](glossary.md). Nearby worlds whose orbits disturb each other enough
-merge (`systems::settle_about`).
+Every body controls a region around it, its [manifold](glossary.md): the arc of
+its orbit over which the body's gravity dominates the gravity of the body it
+orbits. Worlds form on a star's manifold. Reading outward degree by degree,
+matter accumulates until it controls a region against the star's tide, and a
+world forms there (`disc::manifold_worlds`). Moons form on each world's manifold
+by the same rule. Matter that never controls a region is a [belt](glossary.md).
+Nearby worlds whose orbits disturb each other enough merge
+(`systems::settle_about`).
 
 ## Life and minds
 
@@ -147,24 +149,24 @@ recorded input) and computes nothing in between. At each step it
 [carries](glossary.md) every people forward: population, knowledge,
 housing, travel and history (`civ::Civilizations::carry`).
 
-- **Peoples** grow toward what their world can house, accumulate knowledge
-  in domains (biology, materials, energy, information), and move when their
-  world fails.
+- **Peoples** grow toward the population their world can house, accumulate
+  knowledge in domains (biology, materials, energy, information), and
+  migrate when their world can no longer support them.
 - **Travel** is orbital within a system, along arcs within a constellation
   of stars, and over [ley lines](glossary.md) between constellations.
 - **Seats** are roles (sovereign, steward, progenitor, ancient) that make
   decisions. Each is filled by a built-in rule until an external agent takes
   it through `run::Link`. Every decision is a recorded input, held in the
   checkpoint and applied again on restart.
-- **Annals** record what happened: emergence, settlement, exodus, falls.
+- **Annals** record events: emergence, settlement, exodus and falls.
 
 ## Where to go next
 
 | To | Read |
 |---|---|
-| build, run and read a universe | [README, Quick start](../README.md#quick-start) |
-| make a first change | [CONTRIBUTING.md](../CONTRIBUTING.md), [development.md, Extending a tier](development.md#extending-a-tier) |
-| understand a module | its `//!` header, then [architecture.md](architecture.md) |
-| look up a term | [glossary.md](glossary.md) |
-| find a formula | [EQUATIONS.md](EQUATIONS.md) |
-| see what is planned | [roadmap.md](roadmap.md) |
+| Build, run and read a universe | [README, Quick start](../README.md#quick-start) |
+| Make a first change | [CONTRIBUTING.md](../CONTRIBUTING.md), [development.md, Extending a tier](development.md#extending-a-tier) |
+| Understand a module | The module's `//!` header, then [architecture.md](architecture.md) |
+| Look up a term | [glossary.md](glossary.md) |
+| Find a formula | [EQUATIONS.md](EQUATIONS.md) |
+| See what is planned | [roadmap.md](roadmap.md) |

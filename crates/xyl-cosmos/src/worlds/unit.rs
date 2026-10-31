@@ -10,17 +10,19 @@ use super::*;
 pub fn unit() -> &'static State {
     static U: OnceLock<State> = OnceLock::new();
     U.get_or_init(|| {
-        // the core's share of rock from solar abundances (Lodders 2003): metal
-        // (Fe, Ni, S) against silicate (Mg, Si and three O)
+        // The core's share of rock from solar abundances (Lodders 2003): metal
+        // (Fe, Ni, S) against silicate (Mg, Si and three O).
         let core = Q::ratio(63_988, 164_468);
         let mantle = &Q::ONE - &core;
-        // cometary delivery across the snow line at unit crowding and metals
+        // Ices arrive by cometary delivery across the snow line at unit
+        // crowding and metals.
         let late = constants().delivered;
         let ices: Vec<(&'static str, Q)> = Species::ALL
             .iter()
             .map(|s| (s.name(), (late * s.comet()).to_q()))
             .collect();
-        // layers: the delivered ices over the rock
+        // Layers: the delivered ices over the rock, split into core and
+        // mantle.
         let ice_sum = ices.iter().fold(Q::ZERO, |a, (_, v)| &a + v);
         let ice = ice_sum
             .checked_div(&(&Q::ONE + &ice_sum))
@@ -44,15 +46,16 @@ pub fn unit() -> &'static State {
             phase: Q::ZERO,
             merged_at: None,
         };
-        // bulk-silicate isotopes per kg of mantle today (U238, U235, Th232,
-        // K40), decayed back to the Sun's birth below
+        // Bulk-silicate isotopes per kg of mantle today (U238, U235, Th232,
+        // K40), scaled back to the Sun's birth 4.57 Gyr ago below.
         let today = [
             Dy::sci(19856, -12),
             Dy::sci(144, -12),
             Dy::sci(80, -9),
             Dy::sci(2808, -11),
         ];
-        // mantle mass: all but the core (bodies::interior's m_kg - m_core)
+        // The mantle mass is all but the core (bodies::interior's
+        // m_kg - m_core).
         let mantle_kg =
             (Dy::ONE - Dy::from_q(&layers_core)) * Dy::from_q(&crate::package::Si::world_mass_kg());
         let mut sources: [Q; 4] = Default::default();
@@ -77,8 +80,8 @@ pub fn unit() -> &'static State {
 
 /// One degree of a star's life (Gyr): its main-sequence lifetime over 360,
 /// never shorter than one core period. A world changes at its star's pace,
-/// so it is treated as unchanged within a degree. The lifetime is the star's
-/// own at its distance from the core (stars::life).
+/// so it is treated as unchanged within a degree. The lifetime is that of a
+/// star at `r_kpc` from the core (`life::lifetime`).
 pub fn star_degree_gyr(r_kpc: Dy, ctx: &Ctx) -> Dy {
     let ring = crate::pulse::core_period_yr() / Dy::sci(1, 9);
     (crate::life::lifetime(r_kpc, ctx) / Dy::int(360))

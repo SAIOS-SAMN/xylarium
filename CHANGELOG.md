@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Until 1.0.0, minor versions may change public APIs and the model's laws.
 
+## Unreleased
+
+### Changed
+
+- Minimum supported Rust is 1.85, the version the locked dependencies
+  require.
+- README restructured; the roadmap opens with the mathematics (number
+  systems, algebra and geometry, and the nucleon model: the 3Z span, the
+  3Q capacity and the polarity R).
+
+### Fixed
+
+- `Dy::trunc_i64` rounds negative values toward zero, as documented; it
+  previously rounded them down, which overflowed `Dy::sin_cos` for angles
+  just below a negative half quarter turn.
+
 ## 0.3.0 - 2026-10-30
 
 First public release.

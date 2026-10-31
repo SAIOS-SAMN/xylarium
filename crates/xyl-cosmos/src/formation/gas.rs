@@ -50,7 +50,7 @@ pub(crate) fn cooling(bead: &Bead, unit: &Q, h: &Q, swing: &Q) -> Option<Cooling
     let holding = bead.state.checked_div(unit).unwrap_or(Q::ZERO);
     let lambda = grid(&holding.checked_div(&width).unwrap_or(Q::ZERO));
     let push = throat_push();
-    let deficit = h.checked_div(&(&reach + h)).unwrap_or(Q::ZERO);
+    let deficit = xyl_core::shares::deficit(h, &reach).unwrap_or(Q::ZERO);
     let agitation = grid(
         &(&push - &deficit)
             .checked_div(&push)

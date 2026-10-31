@@ -162,7 +162,7 @@ fn hold_about(mix: &[(u32, Q)], p: &Q, add: &Q, state: &Q, heat: &Q, p0: &Q) -> 
 fn held_set(carried: &[(Q, Q, Q, u32, Q)], state: &Q, p: &Q) -> (usize, Q) {
     let holds = |l: &Q, h: &Q| {
         let r = l.checked_div(h).unwrap_or(Q::ZERO);
-        h.checked_div(&(&r + h)).unwrap_or(Q::ZERO) >= *p
+        xyl_core::shares::deficit(h, &r).unwrap_or(Q::ZERO) >= *p
     };
     let total_s = carried.iter().fold(Q::ZERO, |a, k| &a + &k.1);
     let mut h = state + &total_s;

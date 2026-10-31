@@ -31,6 +31,7 @@
 use crate::elements::decimal;
 use crate::package::Si;
 use xyl_core::dyadic::Dy;
+use xyl_core::shares::deficit;
 use xyl_core::units::Tier;
 use xyl_core::Q;
 
@@ -38,14 +39,6 @@ use xyl_core::Q;
 /// founding's lit rings (`galaxy::stellar_mass`) plus the universal core, 1.
 pub fn home_mass() -> Q {
     &crate::galaxy::stellar_mass() + &Q::ONE
-}
-
-/// The deficit share `M / (r + M)` of the mass `inside_rg` at radius `r_rg`,
-/// both in r_g, exact. A zero denominator gives zero.
-pub fn deficit_share(inside_rg: &Q, r_rg: &Q) -> Q {
-    inside_rg
-        .checked_div(&(r_rg + inside_rg))
-        .unwrap_or(Q::ZERO)
 }
 
 /// The turning law in r_g: `omega = delta bell / r` radians per ring about
@@ -56,7 +49,7 @@ fn turning_rg(inside: &Q, r_rg: &Q) -> Q {
     if r_rg.signum() <= 0 {
         return Q::ZERO;
     }
-    let delta = deficit_share(&inside.clone().max(Q::ZERO), r_rg);
+    let delta = deficit(&inside.clone().max(Q::ZERO), r_rg).unwrap_or(Q::ZERO);
     (&delta * &crate::circuit::anchor().bell)
         .checked_div(r_rg)
         .unwrap_or(Q::ZERO)
@@ -123,7 +116,7 @@ fn core_units_of_si(inside_kg: &Q, r_m: &Q) -> (Q, Q) {
 /// the core's units (r_g). Boundary.
 fn deficit_si(inside_kg: &Q, r_m: &Q) -> Q {
     let (m, r) = core_units_of_si(inside_kg, r_m);
-    deficit_share(&m, &r)
+    deficit(&m, &r).unwrap_or(Q::ZERO)
 }
 
 /// The turning law at `r_m` metres about `inside_kg` kilograms in radians
@@ -264,7 +257,7 @@ mod tests {
             // The speed `omega r / bell` is the deficit share, below light.
             let r_rg = &r * &Tier::Galaxy.in_rg();
             let v = (&w * &r_rg).checked_div(&bell).unwrap();
-            assert_eq!(v, deficit_share(&m, &r_rg));
+            assert_eq!(Some(v.clone()), deficit(&m, &r_rg));
             assert!(v > Q::ZERO && v < Q::ONE);
             // The rate falls outward about a fixed mass.
             if let Some(prev) = last {

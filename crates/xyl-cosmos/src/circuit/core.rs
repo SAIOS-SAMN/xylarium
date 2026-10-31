@@ -9,7 +9,8 @@
 // (weights.rs). Reaches are core rings,
 // amounts held frames, times in rings (one ring one bell), rates per ring.
 //
-// - Deficit: `vacuum_share(r, h) = h / (r + h)`; `throat_push` is its value
+// - Deficit: `xyl_core::shares::deficit_dy(h, r) = h / (r + h)`, the vacuum's
+//   share at reach `r` about a hold `h`; `throat_push` is its value
 //   at r = h, 1/2; `echo_dilation` (1 + p) / (1 - p) = 3 there.
 // - Clock: `bell` is one ring, `echo` two; a kind's `onset_echoes` is
 //   ln(hold / open) / ln 3 (None for a sealed kind), `onset` the same in
@@ -32,36 +33,28 @@
 
 use super::*;
 use xyl_core::dyadic::Dy;
+use xyl_core::shares::{deficit_dy, dilation_dy};
 use xyl_core::Q;
-
-/// The vacuum's share at reach `r` about a hold `h`: `h / (r + h)`, the
-/// deficit law. It is the push the pulse delivers there: what the hold
-/// cannot keep at that reach the vacuum takes back and swings. Read at the
-/// throat itself (r = h) it is one half, the bounce's push.
-pub fn vacuum_share(r: Dy, h: Dy) -> Dy {
-    let h = h.max(Dy::sci(1, -300));
-    h / (r.max(Dy::ZERO) + h)
-}
 
 /// The push at the throat: the vacuum's share read at the throat's reach,
 /// `delta(H, H) = 1/2`. Not a constant: the one point of the deficit law
 /// where reach and hold coincide.
 pub fn throat_push() -> Dy {
     let h = Dy::from_q(&crate::bounce::horizon_reach(&Q::ONE));
-    vacuum_share(h, h)
+    deficit_dy(h, h)
 }
 
 /// The dilation per echo of what a band carries: a band swinging between
 /// `r (1 - p)` and `r (1 + p)` dilates the pole coordinate of what it
-/// carries by `(1 + p) / (1 - p)` per echo (poles.rs). One law for every
-/// holder: `p` is the push the holder receives, the throat's `1/2` for the
-/// firmament and a star's compactness for its collective. `None` for `p`
-/// outside `[0, 1)`.
+/// carries by `D(p) = (1 + p) / (1 - p)` per echo (poles.rs,
+/// `xyl_core::shares::dilation_dy`). `p` is the push the holder receives,
+/// the throat's `1/2` for the firmament and a star's compactness for its
+/// collective; a push is not negative. `None` for `p` outside `[0, 1)`.
 pub fn dilation(p: Dy) -> Option<Dy> {
-    if p.signum() < 0 || p >= Dy::ONE {
+    if p.signum() < 0 {
         return None;
     }
-    Some((Dy::ONE + p) / (Dy::ONE - p))
+    dilation_dy(p)
 }
 
 /// The echo's dilation along the filament at the throat's push, three
@@ -268,7 +261,7 @@ impl Substrate {
             let k = &self.firmament[i];
             let h = Dy::ONE + inside / unit;
             let r = Dy::from_q(&k.spin) / h;
-            let delta = vacuum_share(r, h);
+            let delta = deficit_dy(h, r);
             let beyond = beyond_share(r, delta, h);
             out[i] = Reverberation {
                 reach: r,
@@ -319,7 +312,7 @@ impl Substrate {
     /// The push at reach `r` about hold `h` at `t`: the vacuum's share there
     /// swung by the inbound echo, `h / (r + h) (1 + A_in(t))`.
     pub fn push_at(&self, r: Dy, h: Dy, t: Dy) -> Dy {
-        vacuum_share(r, h) * (Dy::ONE + self.inbound(t))
+        deficit_dy(h, r) * (Dy::ONE + self.inbound(t))
     }
 
     /// Firmament kind `i`'s share past the throat at `t`: its band swung by
@@ -363,7 +356,7 @@ impl Substrate {
         let rho = echo_dilation().to_q();
         let filament = (&(&(&rho - &Q::ONE) * &u) * &w).checked_div(&(&w + &(&rho * &u)))?;
         // Vacuum channel: f_v = p w, p the vacuum's share swung by 1 + A_in.
-        let p = (vacuum_share(rv.reach, rv.hold) * swing).to_q();
+        let p = (deficit_dy(rv.hold, rv.reach) * swing).to_q();
         if p >= Q::ONE {
             return None;
         }
@@ -473,7 +466,7 @@ impl Substrate {
                         Dy::from_q(&b.reach),
                         Dy::from_q(&b.state) / mean.max(Dy::sci(1, -300)),
                     );
-                    (i, h / (r + h), bell() / Dy::int(2) * r / rim)
+                    (i, deficit_dy(h, r), bell() / Dy::int(2) * r / rim)
                 }
             })
             .collect();
@@ -507,7 +500,7 @@ impl Substrate {
                     let (r, h) = (Dy::from_q(&b.reach), Dy::from_q(&b.state) / mean);
                     (
                         i,
-                        h / (r + h),
+                        deficit_dy(h, r),
                         b.phase.clone(),
                         bell() / Dy::int(2) * r / rim,
                     )
@@ -719,7 +712,7 @@ impl Substrate {
         if t <= delay {
             return Dy::ZERO;
         }
-        (self.ringing(t - delay) + self.rate(t - delay).0) * vacuum_share(r, Dy::ONE)
+        (self.ringing(t - delay) + self.rate(t - delay).0) * deficit_dy(Dy::ONE, r)
     }
 
     /// The force on every galaxy at `t`, in closed form: push over inertia on
@@ -743,7 +736,7 @@ impl Substrate {
                 let hold = Dy::from_q(&b.state) / mean;
                 // The gain is delta(r0, 1) d / hold, with delta(r0, 1) = 1 / (r0 + 1)
                 // the vacuum's share at the galaxy's reach about the universal state.
-                let gain = vacuum_share(r0, Dy::ONE) * d / hold.max(Dy::sci(1, -300));
+                let gain = deficit_dy(Dy::ONE, r0) * d / hold.max(Dy::sci(1, -300));
                 let reached = t > delay;
                 let sent = if reached { t - delay } else { Dy::ZERO };
                 let (ring, rung) = if reached {

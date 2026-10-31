@@ -176,11 +176,8 @@ pub fn pitch_kpc(mass: Dy) -> Dy {
 /// A stellar hole's Kerr spin in (0, 1), drawn deterministically from the
 /// seed and star index.
 fn drawn_spin(seed: u64, n: u64) -> Q {
-    let mut h = blake3::Hasher::new_derive_key("xylarium 2026-10-08 stellar hole spin");
-    h.update(&seed.to_le_bytes());
-    h.update(&n.to_le_bytes());
-    let b = h.finalize();
-    let x = u64::from_le_bytes(b.as_bytes()[..8].try_into().unwrap_or([0; 8])) >> 12;
+    let x =
+        xyl_core::Stream::derive(seed, &["stellar hole spin".into(), n.into()]).next_u64() >> 12;
     // (x + 1) / (2^52 + 2) with x < 2^52: strictly inside (0, 1).
     Q::new(i64::try_from(x).unwrap_or(0) + 1, (1i64 << 52) + 2).unwrap_or(Q::ratio(1, 2))
 }

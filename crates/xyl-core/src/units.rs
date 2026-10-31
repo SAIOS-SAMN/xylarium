@@ -21,7 +21,7 @@
 //! Invariants: every conversion is exact; moving between tiers multiplies by a
 //! power of sixty, so each tier's readings stay within a few powers of sixty
 //! of one. SI enters only through `Units::of`, converted once. A zero
-//! denominator yields zero rather than a refusal.
+//! speed of light or a zero length unit is refused (`None`).
 //!
 //! Terms: tier (docs/glossary.md).
 
@@ -79,16 +79,15 @@ pub struct Units {
 
 impl Units {
     /// From the measured G (m^3 / kg s^2), c (m/s) and the core's mass (kg).
-    pub fn of(g: &Q, c: &Q, core_kg: &Q) -> Units {
-        Units {
-            r_g_m: (g * core_kg).checked_div(&(c * c)).unwrap_or(Q::ZERO),
-        }
+    /// `None` for a zero speed of light.
+    pub fn of(g: &Q, c: &Q, core_kg: &Q) -> Option<Units> {
+        Some(Units {
+            r_g_m: (g * core_kg).checked_div(&(c * c))?,
+        })
     }
 
-    /// A length in metres, read in a tier's unit.
-    pub fn in_tier(&self, metres: &Q, tier: Tier) -> Q {
-        metres
-            .checked_div(&(&self.r_g_m * &tier.in_rg()))
-            .unwrap_or(Q::ZERO)
+    /// A length in metres, read in a tier's unit. `None` where `r_g` is zero.
+    pub fn in_tier(&self, metres: &Q, tier: Tier) -> Option<Q> {
+        metres.checked_div(&(&self.r_g_m * &tier.in_rg()))
     }
 }

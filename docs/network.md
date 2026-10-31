@@ -111,8 +111,9 @@ The seam carries the following today.
   (`circuit::onset_echoes`), stay inside the kernel and do not cross the
   boundary.
 - The coordinate (`crates/xyl-core/src/coordinate.rs`) holds a body's
-  readings on four lanes `{S, G, T, H}`, each an exact share of the turn
-  written as six sexagesimal places.
+  readings on four lanes `{S, G, T, H}`, each whole turns and an exact share
+  of the turn, written in degrees, minutes, seconds and three finer places
+  of arc (the rings kept on the T lane).
 
 ## Mu
 

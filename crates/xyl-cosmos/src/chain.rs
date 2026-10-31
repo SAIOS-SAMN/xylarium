@@ -28,18 +28,21 @@ use xyl_core::dyadic::Dy;
 use xyl_core::units::{Tier, Units};
 use xyl_core::Q;
 
-/// This galaxy's units: the core hole's scale (measured G, c and hole mass).
+/// This galaxy's units: the core hole's scale (measured G, c and hole mass),
+/// the SI seam removed with the SI layers (#25). The package's measured
+/// constants are nonzero; a refusal of `Units::of` reads as no scale, zero.
 pub fn units() -> Units {
     Units::of(
         &Si::g(),
         &Si::c(),
         &(&crate::package::hole_mass() * &Si::star_mass_kg()),
     )
+    .unwrap_or(Units { r_g_m: Q::ZERO })
 }
 
-/// One kiloparsec in the galaxy tier's unit (exact).
+/// One kiloparsec in the galaxy tier's unit (exact); zero with no scale.
 pub fn kpc() -> Q {
-    units().in_tier(&Si::kpc(), Tier::Galaxy)
+    units().in_tier(&Si::kpc(), Tier::Galaxy).unwrap_or(Q::ZERO)
 }
 
 /// The universe's curvature radius in the galaxy tier's unit: the founding's

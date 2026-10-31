@@ -39,8 +39,8 @@
 //! element masses are exact `Q` and sum to its mass exactly; reaches and
 //! masses are held on a dyadic grid; draws come from the stream keyed by
 //! the seed and `["system", path]`, so a system is deterministic. Stellar
-//! encounters (`survival`, always 1) and the vertical exposure that thins
-//! comet clouds are not modelled; orbital elements and spins are in
+//! encounters and the vertical exposure that thins comet clouds are not
+//! modelled; orbital elements and spins are in
 //! `bodies`.
 //!
 //! Terms: belt, merge age, settling, swing (docs/glossary.md).
@@ -225,14 +225,6 @@ pub fn is_world(mass: &Q, radius: &Q, icy: bool) -> bool {
     ) >= Q::ONE
 }
 
-/// The share of worlds at reach `a` (AU) that keep their star for `gyr`, the
-/// star circling at `r` galaxy rings. Provisional: stellar encounters are not yet
-/// modelled (a column-density reading stripped every world), so every world
-/// keeps its star.
-pub fn survival(_a: &Q, _r: &Q, _gyr: &Q) -> Q {
-    Q::ONE
-}
-
 /// The settled age at which systems are read (Gyr).
 pub fn settled_gyr() -> Q {
     Q::int(3)
@@ -310,8 +302,7 @@ pub fn system(
     if a_out.signum() > 0 && !regions.is_empty() {
         let embryos = embryos(&regions, &a_out, &spec, &gas, &t_rock, &infall_solids, &z);
         for e in settle(embryos, &spec.mass, &settled_gyr()) {
-            let Some((world, t_form, ice_share)) =
-                planet(&e, &spec, &gas, &z, &env, &sigma1, &star.r)?
+            let Some((world, t_form, ice_share)) = planet(&e, &spec, &gas, &z, &env, &sigma1)?
             else {
                 continue;
             };
@@ -474,7 +465,6 @@ fn planet(
     z: &Q,
     env: &Q,
     sigma1: &Q,
-    reach: &Q,
 ) -> Option<Option<(World, Q, Q)>> {
     let oq = e.a.clone();
     let t_form = spec.t_form(&oq);
@@ -536,9 +526,7 @@ fn planet(
         })
         .collect();
     let icy = ice_share > Q::ratio(1, 5);
-    // A world is lost when its survival share is below one half.
-    let lost = survival(&oq, reach, &settled_gyr()) < Q::ratio(1, 2);
-    if !is_world(&total, &radius, icy) || lost {
+    if !is_world(&total, &radius, icy) {
         return Some(None);
     }
     let layers = [

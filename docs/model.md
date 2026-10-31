@@ -41,10 +41,12 @@ Three number types, defined in `xyl-core`, carry every law:
   `minds`). A `Dy` value is converted to `Q`, often on a 2^-40 or 2^-64
   grid, before it is held.
 
-Angles are held as exact turns where the rate is rational and are displayed
-in degrees of 360. Phases about a throat are rounded to the coordinate grid
-of 60^-6 of a turn (`circuit::turn`); drawn values are rounded to the 2^-40
-grid.
+Angles are held as exact turns where the rate is rational and are read in
+degrees: the coordinate (`xyl_core::coordinate`) writes a value as degrees,
+minutes, seconds and three finer sexagesimal places of arc, with the whole
+turns kept (on the T lane, the rings). Phases about a throat are rounded to
+the coordinate grid of 1/(360 60^5) of a turn, the fifth sexagesimal place of arc (`circuit::turn`); drawn values are
+rounded to the 2^-40 grid.
 
 ## 2. Units and the master frame
 
@@ -291,7 +293,7 @@ longer holds.
   every hold in the model takes its form: `delta(R, M) = M / (R + M)`, with
   received share `1 - delta`. The vacuum's share at reach `R` about a hold
   `H` is that deficit, the push that the pulse delivers there
-  (`circuit::vacuum_share`); read at the throat, it is the throat's push,
+  (`xyl_core::shares::deficit_dy`); read at the throat, it is the throat's push,
   `p = delta(H, H) = 1/2` (`circuit::throat_push`). A band swinging over
   `r (1 +/- p)` scales the pole coordinate by `rho = (1 + p) / (1 - p) = 3`
   per echo (`circuit::echo_dilation`).
@@ -717,7 +719,7 @@ continuum and back through the vacuum:
   to the Q pole.
 - **Vacuum (inflow).** The return is through the vacuum's share at the
   holder's reach about the universal state, `p_v = H / (R + H)`
-  (`circuit::vacuum_share`), swung by the inbound echo; it moves `p_v w`
+  (`xyl_core::shares::deficit_dy`), swung by the inbound echo; it moves `p_v w`
   frames from Z to Q.
 - **Electron phase.** The electrons' phase state `R = kappa (1 - 2 frac(p))`
   moves `R u` frames from Q to Z (`circuit::electron_phase`); over a whole

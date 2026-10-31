@@ -64,7 +64,8 @@ pub(crate) fn nucleon_unit() -> Q {
     u
 }
 
-/// A turn rounded to the coordinate grid (60^-6), so phases carry no growing
+/// A turn rounded to the coordinate grid (1/(360 60^5) of a turn, the fifth
+/// sexagesimal place of arc), so phases carry no growing
 /// denominators (a resolution choice, not a law).
 pub(crate) fn turn(x: &Q) -> Q {
     let marks = Q::int(xyl_core::coordinate::MARKS);
@@ -94,8 +95,4 @@ pub(crate) fn add(m: &mut Mix, z: u32, x: &Q) {
         let e = m.entry(z).or_insert(Q::ZERO);
         *e = &*e + x;
     }
-}
-
-pub(crate) fn deficit(r: &Q, h: &Q) -> Q {
-    h.checked_div(&(r + h)).unwrap_or(Q::ZERO)
 }

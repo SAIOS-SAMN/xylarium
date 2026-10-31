@@ -1,5 +1,10 @@
 # Architecture
 
+This document describes how Xylarium is put together: the tiers of the
+simulation, how data flows between them, the event engine, determinism and
+caching, state and its checkpoints, and the readings `xylarium observe`
+provides.
+
 ## Layers
 
 The simulation is a stack of tiers. Each tier reads only the tiers beneath
@@ -20,7 +25,7 @@ it and is evaluated lazily, when a reading or an event requires it.
 | Time | `xyl-kernel` `chronometry` | the keepers chained from the universal core outward |
 | Commands | `xylarium` `run`, `observe` | `genesis`, `run`, `observe`, and the `run::Link` seam |
 
-The uplink to mycelium is not in this repository. It attaches to live play
+The uplink to Mycelium is not in this repository. It attaches to live play
 through `xylarium::run::Link` (see [network.md](network.md)).
 
 ## The founding and the package

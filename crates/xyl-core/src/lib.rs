@@ -1,4 +1,4 @@
-//! Exact numerics for xylarium.
+//! Exact numerics for Xylarium.
 //!
 //! Every held quantity is exact: rationals ([`Q`]), certified enclosures
 //! ([`certified::Encl`]) for roots and transcendentals, and dyadic rationals

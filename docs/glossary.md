@@ -1,6 +1,6 @@
 # Glossary
 
-Xylarium's own terms. Formulas are in [EQUATIONS.md](EQUATIONS.md); module
+Terms used across Xylarium's code and documentation. Formulas are in [EQUATIONS.md](EQUATIONS.md); module
 paths are relative to `crates/xyl-cosmos/src` unless prefixed with another
 crate.
 
@@ -42,7 +42,7 @@ crate.
 | home | a universe's directory: its genesis record, checkpoint and caches (`--home`) | `xylarium run::Options::home` |
 | horizon | the sphere about a core through the crossing at the one-third deficit, `R_h = 2M`, read along its enclosure | `bounce::horizon` |
 | house | an ancient people and the seats it holds; it builds ley lines and assigns progenitors | `xyl-kernel seats`, `transit` |
-| hypha | the network mycelium runs; xylarium reaches it through the uplink | `xylarium run::Link` |
+| hypha | the network Mycelium runs; Xylarium reaches it through the uplink | `xylarium run::Link` |
 | inbound echo | the waveform at the throat per echo, `cos(2 pi t / echo) + echo q(t)`; every push swings by `1 + A_in` | `Substrate::inbound` |
 | jet | the firmament's outflow: a kind leaves once its pole state reaches the throat | `circuit::onset_echoes`, `Substrate::outflow` |
 | jetstream | the loop the pulse makes on a held kind over an echo: filament, vacuum and electron phase composed as dilators; one per held kind | `Substrate::loop_flux` |
@@ -52,7 +52,7 @@ crate.
 | lumpiness | the founding's contrast: the beads' states above the mean over every bead's state, in `[0, 1)` | `bang::BigBang::lumpiness` |
 | manifold | the region a body holds about its anchor: the arc of its circle its own pull holds, `2 pi r m / (M + m)` | `manifold::reach`, `galaxy::DiscFrame` |
 | merge age | the first age a pair's swing spans its gap; the lighter body ends then | `systems::World::merged_at` |
-| mu | the mycelium network's unit of account; xylarium quotes passage costs in energy | `xyl-kernel transit` |
+| mu | the Mycelium network's unit of account; Xylarium quotes passage costs in energy | `xyl-kernel transit` |
 | ocean | the medium between galaxies, carrying the core's waveform and the jet | `circuit::core` |
 | package | what a universe is founded from that its laws do not derive: the core's mass, the SI seam, the founding digest | `package.rs` |
 | people | one woken species' population on one world | `xyl-kernel cosmic::People` |
@@ -81,7 +81,7 @@ crate.
 | tier | a level of the containment chain, read in its own unit, a power of sixty of `r_g` | `xyl-core units::Tier` |
 | tithe | a passage's energy for every lane's length it spans | `xyl-kernel transit::tithe` |
 | torsion share | the share the jet carries through the throat at each crossing, `a = (H + J) / (2H + J)` | `bang::torsion_share` |
-| TUniversal | the mycelium network's signed clock; xylarium measures its pace in rings per final point | `xyl-kernel chronometry` |
+| TUniversal | the Mycelium network's signed clock; Xylarium measures its pace in rings per final point | `xyl-kernel chronometry` |
 | turning (history) | an event of a people's history, remembered by an eminent figure | `xyl-kernel civ::history::Turning` |
 | turning law | a body at `r` turns at `omega = c delta(<r) / r` | `turning.rs` |
 | universal state | the core's own holding, 1 in its units; the firmament carries it | `Substrate::found` |

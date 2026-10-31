@@ -1,6 +1,6 @@
 # The physical model
 
-This document explains xylarium's physics: the master frame, the founding,
+This document explains Xylarium's physics: the master frame, the founding,
 and how each tier follows from the one before it. Every formula, with its
 code location and status, is listed in [EQUATIONS.md](EQUATIONS.md); terms
 are defined in [glossary.md](glossary.md); declared constants are listed in

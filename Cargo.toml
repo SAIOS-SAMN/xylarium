@@ -9,6 +9,8 @@ rust-version = "1.85"
 license = "Apache-2.0"
 authors = ["xylarium contributors"]
 repository = "https://github.com/SAIOS-SAMN/xylarium"
+keywords = ["simulation", "exact-arithmetic", "grand-strategy", "game-engine", "procedural"]
+categories = ["simulation", "game-engines", "mathematics"]
 
 [workspace.dependencies]
 num-bigint = "0.4"

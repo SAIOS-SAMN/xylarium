@@ -15,5 +15,5 @@ impact you observed. The maintainers acknowledge the report, work on a fix
 in a private advisory, and publish the advisory with the release that
 fixes it.
 
-The uplink that connects a universe to the mycelium network is not part of
-this repository; report issues in mycelium to that project.
+The uplink that connects a universe to the Mycelium network is not part of
+this repository; report issues in Mycelium to that project.

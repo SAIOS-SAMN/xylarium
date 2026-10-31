@@ -1,4 +1,4 @@
-//! The xylarium kernel: a universe in play and the peoples that live in it.
+//! The Xylarium kernel: a universe in play and the peoples that live in it.
 //!
 //! Layout: [`universe`] (the event engine, advancing from event to event on
 //! the bell's count), [`cosmic`] (the galaxy, its deep time, its peoples and

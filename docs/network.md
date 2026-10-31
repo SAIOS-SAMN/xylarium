@@ -1,11 +1,11 @@
-# Integration with the hypha (mycelium)
+# Mycelium integration
 
-[mycelium](https://github.com/SAIOS-SAMN/mycelium) is a separate public
-project; xylarium integrates against its tagged release `v0.2.0`. The
-network it runs is the hypha. This document describes xylarium's side of the
-integration only. mycelium's own design is documented in its repository.
+[Mycelium](https://github.com/SAIOS-SAMN/mycelium) is a separate public
+project; Xylarium integrates against its tagged release `v0.2.0`. The
+network it runs is the hypha. This document describes Xylarium's side of the
+integration only. Mycelium's own design is documented in its repository.
 
-No crate in this workspace depends on mycelium, and the uplink that connects
+No crate in this workspace depends on Mycelium, and the uplink that connects
 a universe to the hypha is not part of this repository. Without an uplink,
 `xylarium run` plays a universe locally.
 
@@ -20,7 +20,7 @@ a universe to the hypha is not part of this repository. Without an uplink,
 - **The founding package.** A universe is founded from a package
   (`crates/xyl-cosmos/src/package.rs`): what its laws do not derive. On the
   network the package is a manifest of nuclei per atomic number: counts
-  only, for `Z <= 1700` (the element table's `elements::TOP_Z`). xylarium
+  only, for `Z <= 1700` (the element table's `elements::TOP_Z`). Xylarium
   converts the counts into the universal core's units itself
   (`G = c = M_core = 1`); no mass crosses the boundary. Today the package
   declares the universal core's mass (`package::hole_mass`), holds the SI
@@ -130,5 +130,5 @@ in-game costs (ley lines, tolls, folds) are kept in physical units.
 4. **Freshness and crossings.** When passage mouths are published to the
    network, carry a freshness in final-point advances, and apply crossings
    at an anchor so their reconciliation closes.
-5. **A `xyl-hypha` crate.** A workspace crate pinned to mycelium `v0.2.0`
+5. **A `xyl-hypha` crate.** A workspace crate pinned to Mycelium `v0.2.0`
    that implements `run::Link` over the SDK client session. Not built yet.

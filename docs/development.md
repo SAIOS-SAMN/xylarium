@@ -1,5 +1,10 @@
 # Development
 
+This guide is for contributors working on the code: the standards the lints
+enforce, the modelling conventions every law follows, how to extend a tier,
+how to build and test efficiently, and how to keep the documentation in step.
+The pull-request workflow is in [CONTRIBUTING.md](../CONTRIBUTING.md).
+
 ## Code standards
 
 Enforced by workspace lints (`Cargo.toml`, `clippy.toml`):

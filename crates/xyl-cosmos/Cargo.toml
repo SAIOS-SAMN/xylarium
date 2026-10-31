@@ -1,12 +1,14 @@
 [package]
 publish = false
 name = "xyl-cosmos"
-description = "The xylarium physical model: founding, substrate, galaxies, stars, worlds, chemistry and life"
+description = "The Xylarium physical model: founding, substrate, galaxies, stars, worlds, chemistry and life"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
 authors.workspace = true
 
 [dependencies]

@@ -1,6 +1,6 @@
 # Equations
 
-The master equations of xylarium's physics, formula by formula, in the order
+The master equations of Xylarium's physics, formula by formula, in the order
 of [model.md](model.md), which explains how each follows from the one before.
 Each entry gives the formula, its code location and its status:
 

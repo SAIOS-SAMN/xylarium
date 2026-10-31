@@ -1,4 +1,4 @@
-//! The xylarium physical model, in exact arithmetic.
+//! The Xylarium physical model, in exact arithmetic.
 //!
 //! The founding: a universe begins as the white hole of a parent's black
 //! hole ([`bounce`]); its Big Bang ([`bang`]) is drawn from the seed. The

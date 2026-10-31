@@ -1,12 +1,14 @@
 [package]
 publish = false
 name = "xyl-kernel"
-description = "The xylarium universe in play: event engine, civilizations, transit, seats and economy"
+description = "The Xylarium universe in play: event engine, civilizations, transit, seats and economy"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
 authors.workspace = true
 
 [dependencies]

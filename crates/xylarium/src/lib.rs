@@ -1,4 +1,4 @@
-//! The xylarium kernel as a library: the commands [`run::genesis`],
+//! The Xylarium kernel as a library: the commands [`run::genesis`],
 //! [`run::run`] and [`observe::observe`], shared by the `xylarium` binary
 //! and by any program that embeds the kernel. An uplink runs live play with
 //! [`run::run_with`] and a [`run::Link`] beside it.

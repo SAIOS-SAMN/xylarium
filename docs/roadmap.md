@@ -1,6 +1,7 @@
 # Roadmap
 
-Status: pre-alpha. The milestones below are in intended order. Each states
+Xylarium is pre-alpha. This roadmap opens with the mathematics every law is
+built on, then lists the milestones in intended order. Each milestone states
 its goal, why it comes where it does, what has landed, what is next, and
 the `xylarium observe` reading that shows it done. Changes are recorded in
 [CHANGELOG.md](../CHANGELOG.md). To build, found and run a universe, see
@@ -13,6 +14,85 @@ Every change follows the steps in
 the law from the tier below, land one tier per change, guard it with
 targeted tests on the shared test genesis, and read it once on a running
 universe with `xylarium observe`.
+
+## Mathematics
+
+Xylarium holds no floating-point state: `clippy::float_arithmetic` is denied
+across the workspace. The number systems, the algebra and the nucleon model
+below carry every law; [EQUATIONS.md](EQUATIONS.md) gives each formula with
+its source location.
+
+### Number systems
+
+| System | Role | Where |
+|---|---|---|
+| Integers (ZZ) | Everything counted: protons and neutrons, whole nuclei, frames, S^11 harmonics, the seal counts, the sexagesimal places of a coordinate, seeds and stream states | `u32` / `i64` indices; counts beyond a machine word as `Q` with denominator 1 (`num-bigint`); `atoms`, `fibres`, `circuit::grain`, `xyl_core::coordinate`, `xyl_core::rng` |
+| Rationals (QQ) | All held state: element counts, firmament and bead amounts, reaches, spans, phases, the anchor, star and world masses | `xyl_core::Q`, lowest terms, `i64` on the stack and promoted to big integers on overflow; division is checked |
+| Reals (RR) | Never held directly. A real value enters as a proven rational enclosure `lo <= x <= hi` (pi, roots, exp, ln, sin, cos), or as a dyadic reading `m 2^e` at a seam, rounded toward zero and gridded back to `Q` before it is held | `xyl_core::certified::Encl`; `xyl_core::dyadic::Dy` |
+
+Angles are exact turns, displayed in degrees of 360; phases about a throat
+sit on the `60^-6` coordinate grid, drawn values on the `2^-40` grid.
+
+### Algebra and geometry
+
+- Conformal geometric algebra `Cl(n+1, 1)` over `Q` (`xyl_core::cga`):
+  points, versors and dilators; the nucleon poles below are its origin and
+  its point at infinity.
+- Rotors (`xyl_core::rotor`): rational quaternions, the even part of
+  `Cl(3)`; every manifold holds its frame as an exact rotor.
+- Sphere measure (`xyl_core::measure`): the share of an n-sphere within an
+  angle of an axis, the basis of caps and shares on a manifold.
+- Harmonics on S^11 (`fibres`, `atoms`): degree `l` has
+  `d(l) = C(l + 11, 11) - C(l + 9, 11)` directions (1, 12, 77, 352, ...);
+  shells and seals follow by exact binomial sums.
+- Motion (`xyl_core::motion`, `xyl_core::event`): every change is a
+  one-parameter motion with an exact phase at `t`; boosts are modes
+  `amp x base^(rate t)` with exact rapidity, and crossings are solved with
+  certified bounds.
+- Units (`xyl_core::units`): `G = c = M_core = 1`, the length unit `r_g`,
+  and one power of sixty per tier of the anchor chain.
+
+### Nucleons: 3Z, 3Q and the polarity R
+
+A kind is a nuclide `(Z, Q)`: `Z` its protons, `Q` its neutrons. Its mass
+is `Z + Q` nucleons, which gravity and inertia read
+(`circuit::nucleus_weights`, `formation::mass_weight`). Chemistry, the
+founding and the light read the frames instead:
+
+- **3Z, the span.** Each proton spans three frames, split between the Z pole
+  (held, coherence) and the Q pole (open, decoherence). The hold is
+  `w = 3Z - u`, `u` the open (unpaired) frames (`compound::hold`,
+  `compound::open`). Pairing moves frames from the Q pole to the Z pole with
+  the span fixed. The closed share `h_Z = (3Z - u_Z) / 3Z` drives the capture
+  chain (`elements::closed_share`); amounts move in whole nuclei of `w`
+  frames, so fusion conserves 3Z (`circuit::grain::nuclei_of`), and the
+  stars' burn transduces light with the 3Z hold conserved.
+- **3Q, the capacity.** Three times the room of every shape of every turning
+  the atom reaches: `cap = sum_n sum_(l < n) 2 d(l)`, `3Q = 3 cap`. The
+  balance `R_Q = 6Z - 3Q` and its share `rho_Q = (2Z - cap) / cap` mark the
+  seals where `rho_Q = +1`, at Z 2, 28, 208 and 1092
+  (`xylarium observe seals`).
+- **R, the polarity.** The electron phase state
+  `R = kappa (1 - 2 frac(p))` lies in `[-kappa, kappa]`: its sign is the
+  hemisphere of the bounce's pulse `p` (in turns), its magnitude the
+  electrons' coherence on S^11, `kappa = 2 G / ends` (`fibres`), and it is
+  zero for a kind with no charge (`circuit::electron_phase`).
+- **The pole point.** A carrier's pole state is the conformal point `X(t)`
+  at `t = u / w`, open over held: the Z pole is the origin `e_o`, the Q pole
+  the point at infinity `e_inf`, the throat `t = 1`. The vacuum's inversion
+  `X(t) -> X(1 / t)` swaps the poles; an echo's flux is the dilator `D(rho)`,
+  toward Z where `rho < 1` and toward Q where `rho > 1`, and the books close
+  where the composed channel versors equal the observed one
+  (`circuit/poles.rs`).
+
+Next, in order:
+
+1. Rotor inverse and the versor angle in `xyl_core::rotor`, so relations are
+   read through the versor between frames (milestone 2, phase 4) rather
+   than by `acos` in `manifold::turn_between` and `chain::Place::arc`.
+2. The atom's catalogue columns (mass number, phase temperatures, density)
+   derived from 3Z, 3Q and R rather than read from `data/elements.tsv`
+   (milestone 3, chemistry from the census).
 
 ## 1. Founding in the core's units (done)
 
@@ -144,8 +224,8 @@ restart, and a decision from anyone but the holder is refused.
 ## 5. The xyl-hypha crate
 
 Goal: a universe joins the hypha as a domain through a `xyl-hypha` crate
-pinned to mycelium `v0.2.0`, implementing `run::Link` over an SDK client
-session ([network.md](network.md)). Mu, the mycelium network's unit,
+pinned to Mycelium `v0.2.0`, implementing `run::Link` over an SDK client
+session ([network.md](network.md)). Mu, the Mycelium network's unit,
 enters a universe only through an uplink, which is not part of this
 repository.
 

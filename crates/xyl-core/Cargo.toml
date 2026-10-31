@@ -1,12 +1,14 @@
 [package]
 publish = false
 name = "xyl-core"
-description = "Exact numerics for xylarium: rationals, certified enclosures, conformal geometric algebra, units and deterministic streams"
+description = "Exact numerics for Xylarium: rationals, certified enclosures, conformal geometric algebra, units and deterministic streams"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
 authors.workspace = true
 
 [dependencies]

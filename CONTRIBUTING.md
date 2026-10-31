@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for your interest in xylarium. This document describes how to set
+Thank you for your interest in Xylarium. This document describes how to set
 up a development environment, the checks a change must pass, and how changes
 are proposed.
 

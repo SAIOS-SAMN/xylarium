@@ -1,6 +1,6 @@
-# Civilizations: the game layer
+# Civilizations
 
-xylarium is a grand-strategy space game in which sovereign minds operate
+Xylarium is a grand-strategy space game in which sovereign minds operate
 civilizations. The physical model ([model.md](model.md)) produces the
 galaxy, its stars and its worlds; the kernel (`crates/xyl-kernel`) wakes
 peoples on those worlds, carries their numbers, knowledge and histories on

@@ -3,8 +3,9 @@
 All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-Until 1.0.0, minor versions may change public APIs and the model's laws.
+and this project adheres to [Semantic
+Versioning](https://semver.org/spec/v2.0.0.html). Until 1.0.0, minor versions
+may change public APIs and the model's laws.
 
 ## Unreleased
 
@@ -31,7 +32,8 @@ core's units (`G = c = M_core = 1`), and worlds form on the manifold chain.
   `galaxy.rs` and `bodies.rs`.
 - `xyl_cosmos::disc` (`disc.rs`): a star's cut of its piece's infall
   (`star_cut`) and the worlds on its manifold (`manifold_worlds`), moved
-  from `formation.rs`. Built on the founding and never part of it.
+  from `formation.rs`. It reads the founding and is not part of the
+  founding digest.
 - The founding digest (`XYL_FOUNDING_DIGEST`, `crates/xyl-cosmos/build.rs`):
   a digest of the founding's own files only (the Big Bang, the bounce, the
   elements and atoms, the cascade and lighting, the circuit, the package and
@@ -114,24 +116,24 @@ core's units (`G = c = M_core = 1`), and worlds form on the manifold chain.
   a ball (`measure::share_turns`); an infall gathers its own angle of a
   piece and grips it at its own rim, `m / (w + m)`; the pulse's heat is the
   ring the bell brings at the piece; a piece that never lights forms no
-  stars, and nothing stands in for it.
+  stars, and no substitute is used.
 - A star's cut of its piece's infall is read on the chain
   (`galaxy::disc_frame`, `disc::star_cut`): the disc's agitation is the
   pulse's heat on the disc, and the core-star tie is the galaxy's tide at
   the pinch. The Sun's disc mass, the 360 parts in `ln a`, `Spec::limits`
   and the stirred inner belt are gone.
-- The jetstream is read: `Substrate::loop_flux` composes the filament's
+- The jetstream reading: `Substrate::loop_flux` composes the filament's
   dilation, the vacuum's share and the electrons' phase state as dilators on
   each firmament kind's pole state (`circuit::PoleFlux`) and reads the
   residual.
 - The parent's spin is admitted only where its torsion share holds the
   firmament whole against the pulse (`Substrate::least_share`,
   `bang::spin_of_share`); the genesis record states the margin.
-- The Big Bang draws nothing but the spin. The lumpiness, the held share,
-  the assembly and the star efficiency are read off the cascade; the
+- The Big Bang's only random draw is the parent's spin. The lumpiness, the held
+  share, the assembly and the star efficiency are read off the cascade; the
   chemistry is calibrated on the universe's own history
-  (`chem::Calibration::of`); the Big Bang `Kind`s and the `--kind` option
-  are gone; the home defaults to `var/universe-7`.
+  (`chem::Calibration::of`); the Big Bang `Kind`s and the `--kind` option are
+  gone; the home defaults to `var/universe-7`.
 - Stars are fuelled by the pulse (`stars`): the burn per bell is the ring
   the bell brings at the star's reach times its own deficit at its rim; its
   light is that burn; its life and its giant's end are its hydrogen and
@@ -140,7 +142,7 @@ core's units (`G = c = M_core = 1`), and worlds form on the manifold chain.
 - Radiation and temperature are distinct readings: a world's flux is the
   bell's mean of its star's burn, the swing within a bell is the light's own
   reading (`stars::flicker`), and temperatures are the media's agitation.
-- Minds wake by the chemistry's expectation, in closed form: rungs take
+- The forecast of minds uses expected values in closed form: rungs take
   their means, impacts stretch them to `(e^(mu m) - 1) / mu`, and the
   sterilising pulse falls at its hazard's expected time; the forecast's
   default sight is the census of the sample.
@@ -164,7 +166,7 @@ core's units (`G = c = M_core = 1`), and worlds form on the manifold chain.
   point (`cga::sphere_through`). The founding precedes the Big Bang, is
   founded once per process (`cores::substrate_for`) and is cached in the
   home directory as `founding-*`.
-- Civilization layer reduced to its emergent core in `civ`: one housing law
+- Civilization layer consolidated in `civ`: one housing law
   (`civ::housing`), numbers as the logistic toward housing scaled by the
   radiation environment, history (`civ::history`), settlers when crowded
   past the logistic's inflection.
@@ -174,7 +176,7 @@ core's units (`G = c = M_core = 1`), and worlds form on the manifold chain.
   `growth::Rulers::generation_yr` (14.2 yr).
 - Turnings carry one lowercase act set: `exodus`, `settlement`, `network`,
   `quarantine`, `biology`, `information`, `fold`.
-- Whether space folds is the universe's own: `Scales::ftl` carries
+- Whether space can be folded is a law of the universe: `Scales::ftl` carries
   `Laws::ftl`, and `Network::fold` reads it from the galaxy's scales.
 - The lexicon's solvent ids are derived from `worlds::Species::ALL` plus the
   melt and the plasma (`lexicon::solvents`).
@@ -197,8 +199,8 @@ core's units (`G = c = M_core = 1`), and worlds form on the manifold chain.
 - The Planck draw centres and the Big Bang `Kind`s; the Chiappini infall
   fit (`galaxy::infall_fit`); the stellar rulers `10 Gyr x M / L`, `L = M`,
   the faint-young-Sun slope and the 20-sun hole cut; the main-sequence
-  brightening in `worlds`; the chemistry's reference history
-  (the chemistry's reference parameters).
+  brightening in `worlds`; the chemistry's reference history and its
+  parameters.
 - The disc partition `formation::disc`, replaced by
   `disc::manifold_worlds`.
 - The trade-route optimiser in `transit` (`Offer`, `Market`, `Leg`, `Route`,
@@ -240,7 +242,7 @@ Initial release.
   arcs.
 - Planetary systems formed from the matter available, nested manifolds for
   planets and moons, and world state read per degree of the star's life.
-- Life and the forecast of minds; peoples woken where their world feeds a
+- Life and the forecast of minds; peoples created where their world feeds a
   viable population.
 - One civilization carry for live play and readings: knowledge, the fall or
   exodus of a people, food, fertility, lifespan and gauges, with housing from

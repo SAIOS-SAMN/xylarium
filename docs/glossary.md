@@ -1,18 +1,19 @@
 # Glossary
 
-Terms used across Xylarium's code and documentation. Formulas are in [EQUATIONS.md](EQUATIONS.md); module
-paths are relative to `crates/xyl-cosmos/src` unless prefixed with another
-crate.
+Terms used across Xylarium's code and documentation. Formulas are in
+[EQUATIONS.md](EQUATIONS.md); module paths are relative to
+`crates/xyl-cosmos/src` unless prefixed with another crate.
 
 | Term | Meaning | Code |
 |---|---|---|
 | admission | the floor on the parent's drawn spin: its torsion share must reach the furthest held kind's reach over the rim, swung by the inbound echo's peak | `circuit::Substrate::least_share`, `cores::substrate_for` |
 | anchor | what the founding fixes for every tier: rim, bell, home galaxy's rim, universe radius, first stars, admitted spin, torsion share, firmament margin | `circuit::anchor` |
-| ancient | a mind born in a galactic core within one core assembly time of that core's first core-born mind; its house holds the reserve and is the only seat facing the network | `minds::ancients`, `xyl-kernel seats::Role::Ancient` |
+| ancient | a mind born in a galactic core within one core assembly time of that core's first core-born mind; its house holds the reserve; ancient seats are the only seats a mind joined through the network can hold | `minds::ancients`, `xyl-kernel seats::Role::Ancient` |
 | annal | an entry of a universe's record: what happened and when | `xyl-kernel cosmic::Annal` |
 | bead | a pinch in a run of founding shells, with its reach, span, state, phase and recipe; a galaxy where its lit mass holds a sun | `circuit::Bead` |
 | bell | the unit of time: light's round trip to the home galaxy's rim, `2 rim_galaxy / c` | `circuit::bell_gyr` |
 | belt | a disc's matter that held no region of its own, beyond the outermost world | `disc::manifold_worlds`, `systems::Belt` |
+| books | a reading's conservation balances, which close when the parts sum to the total: a star's absorbed pulse energy as gravity + light + burned out, the firmament as held + left = founded, and the matter that has left as taken by galaxies + in flight | `xyl-kernel field::Books`, `circuit::Substrate::books` |
 | burn | the share of a star's hold the pulse transduces per bell at its reach | `stars::burn_per_bell` |
 | capture chain | the founding's nuclei built one capture at a time, `count_Z = floor(count_(Z-1) a h_Z)` | `elements::founded` |
 | carry | advancing every people's numbers, knowledge, housing and history over a span; live play and readings use the same carry | `xyl-kernel civ::Civilizations::carry` |
@@ -22,7 +23,7 @@ crate.
 | coherence | the share of a kind a galaxy takes by phase, `1 - 2 min(d, 1 - d)` | `circuit::coherence` |
 | constellation | stars bound by their mutual turning tighter than the galaxy's shear across them; the unit of passage | `xyl-kernel transit` |
 | council | the ancient seats of an ancient house, where minds joined through the network sit | `xyl-kernel seats::Seats::council` |
-| deficit | the share a mass holds at a reach, `delta = M / (R + M)`; the grammar of every hold | `circuit::vacuum_share`, `turning::deficit_share` |
+| deficit | the share a mass holds at a reach, `delta = M / (R + M)`; the form every holding law in the model takes | `circuit::vacuum_share`, `turning::deficit_share` |
 | degree (of a star's life) | its lifetime over 360, at least one bell; worlds in play are read per degree | `worlds::star_degree_gyr` |
 | discord | a people's pull against its constellation, `1 - (1 - o f (1 - J))(1 - breach)` | `xyl-kernel transit::Discord` |
 | `Dy` | a dyadic rational with a 62-bit mantissa, for readings at seams | `xyl-core dyadic` |
@@ -32,7 +33,7 @@ crate.
 | filament | the pole axis of the pulse, Z at the origin and Q at infinity, the throat at `t = 1` | `circuit::axes`, `circuit::poles` |
 | firmament | the throat's held kinds in the vessel band, scaled so their mass is the universal state, 1 | `circuit::Kind`, `Substrate::found` |
 | fold | a passage a people makes by folding space where its constellation holds no ley mouth; its energy counts toward its breach | `xyl-kernel transit::Network::fold` |
-| forecast (of minds) | for each candidate world, when (if ever) its lineage climbs its rungs to a mind; worked out at genesis and cached | `minds::schedule`, `minds::Schedule` |
+| forecast (of minds) | for each candidate world, the time (if any) at which its lineage reaches the rung that holds a mind; worked out at genesis and cached | `minds::schedule`, `minds::Schedule` |
 | founding digest | a digest of the founding's own source files; it keys the founding cache | `package::founding_digest`, `XYL_FOUNDING_DIGEST` |
 | galactic core | a galaxy's central hole, of mass `hole_mass x state` | `cores::Shape` |
 | galaxy ring | a bead read one tier down: a ring of the home galaxy in galaxy units | `galaxy::Structure` |
@@ -55,7 +56,7 @@ crate.
 | mu | the Mycelium network's unit of account; Xylarium quotes passage costs in energy | `xyl-kernel transit` |
 | ocean | the medium between galaxies, carrying the core's waveform and the jet | `circuit::core` |
 | package | what a universe is founded from that its laws do not derive: the core's mass, the SI seam, the founding digest | `package.rs` |
-| people | one woken species' population on one world | `xyl-kernel cosmic::People` |
+| people | the population of one species with minds on one world | `xyl-kernel cosmic::People` |
 | piece | a bead read as a parcel of the home galaxy's gas | `formation::cooling` |
 | progenitor | a seat assigned by an ancient house: builds, keeps and runs passage | `xyl-kernel seats::Role::Progenitor` |
 | `Q` | an exact rational | `xyl-core q` |
@@ -65,10 +66,10 @@ crate.
 | reverberation | a firmament kind's band swinging about the throat: its reach, hold, deficit, share past the throat and leaving rate | `circuit::Reverberation` |
 | rim | the outermost founding shell's outer edge | `Substrate::rim` |
 | ring (of time) | one full bell; every count of time is in whole rings | `xyl-kernel universe::ring` |
-| ruler | a declared constant standing until a law derives it | roadmap, Declared rulers |
+| ruler | a declared constant used until a law derives it | roadmap, Declared rulers |
 | rung | one step of a chemistry's ladder toward a mind: the information it holds, its copying error, its wait and the bodies it feeds | `life::Step`, `life::Ladder` |
 | seal | a kind whose every band and every shape of its outermost shell is full: Z 2, 28, 208, 1092 | `atoms::Atom::sealed` |
-| seat | a role in the universe: ancient, progenitor, steward, sovereign; held by the universe's own rule or taken by a keyed mind | `xyl-kernel seats::Role` |
+| seat | a role in the universe: ancient, progenitor, steward, sovereign; filled by the kernel's default rule or taken by a keyed mind | `xyl-kernel seats::Role` |
 | settling | the closed-form merging of a disc's bodies by their kicks, carried as ages | `systems::settle_about` |
 | sight | which sample stars are unrolled for the forecast: `census` every sample star, `cores` the stars within the cores' reach (`--sight`) | `minds::Sight` |
 | sovereign | the seat over one people's worlds | `xyl-kernel seats::Role::Sovereign` |

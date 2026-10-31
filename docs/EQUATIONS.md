@@ -1,7 +1,8 @@
 # Equations
 
-The master equations of Xylarium's physics, formula by formula, in the order
-of [model.md](model.md), which explains how each follows from the one before.
+Xylarium's physics equations, formula by formula, in the order of
+[model.md](model.md), which explains how each follows from the one before.
+Terms are defined in [glossary.md](glossary.md).
 Each entry gives the formula, its code location and its status:
 
 - built: derived from the laws above it and read by the engine;
@@ -11,8 +12,8 @@ Each entry gives the formula, its code location and its status:
   derives it (listed in [roadmap.md](roadmap.md), Declared rulers).
 
 Module paths are relative to `crates/xyl-cosmos/src` unless prefixed with
-another crate. Laws are linear in shares and angles; no square or cube
-stands at the root of a law.
+another crate. Laws are composed from shares (ratios of the form
+`M / (R + M)`) and angles, not from squares or cubes of a quantity.
 
 ## 1. Numbers
 
@@ -109,13 +110,12 @@ stands at the root of a law.
   `g = min(s D, T) / T`; take `contact g m_i / (m_i + m_j)` of `m_j`, scaled
   by held over asked; new reach the holding-weighted mean of release
   reaches. Built.
-- Kind density in a run (`Substrate::found`):
-  `mass / t`, `t = |delta(lo, 1) - delta(hi, 1)| / (delta(lo, 1) + delta(hi, 1))`;
-  beads at the local maxima of the superposed hold, parted at its minima.
-  Built.
+- Kind density in a run (`Substrate::found`): `mass / t`, `t = |delta(lo, 1) -
+  delta(hi, 1)| / (delta(lo, 1) + delta(hi, 1))`; beads at the local maxima of
+  the superposed hold, parted at its minima. Built.
 - Bead (`Substrate::found`): state = recipe mass; reach and phase of the most
-  abundant kind, phase `turn(a Z)`; inside `1 + 2 sum(inner states / pushed-out mass)`.
-  Built.
+  abundant kind, phase `turn(a Z)`; inside `1 + 2 sum(inner states / pushed-out
+  mass)`. Built.
 - Rim (`Substrate::found`): `max R (1 + s_final)` over every shell. Built.
 
 ## 4. The firmament and the core
@@ -140,8 +140,8 @@ stands at the root of a law.
 - Outflow rate (`Substrate::rate`):
   `q(t) = sum m0 (1 + e_z) rate exp(-rate (t - onset))`,
   `e_z = open_z / hold_z` (`formation::emission`). Built.
-- Inbound echo (`Substrate::inbound`): `A_in(t) = cos(2 pi t / echo) + echo q(t)`.
-  Built.
+- Inbound echo (`Substrate::inbound`): `A_in(t) = cos(2 pi t / echo) + echo
+  q(t)`. Built.
 - Inbound peak (`Substrate::inbound_peak`): `1 + echo max_j q(onset_j)`.
   Built.
 - Inbound mean (`Substrate::inbound_mean`):
@@ -153,12 +153,12 @@ stands at the root of a law.
   deficit replaced by `p(r, t)`. Built.
 - Pulse phase (`Substrate::pulse`): `frac((t / echo) / t_u)`,
   `t_u = floor(2 (rim + 2)) + 1` echoes. Built.
-- Jetstream (`Substrate::loop_flux`, `circuit::pole_flux`): channels on a
-  kind of hold `w` and open frames `u`: filament
-  `(rho - 1) u w / (w + rho u)` frames Z to Q; vacuum `p(r, t) w` frames
-  Z to Q (none where `p >= 1`); echo `R u` frames Q to Z. Each is a dilator
-  on the state it finds; residual = observed dilation over the channels'
-  product, one where the loop closes. Partial (read by the observer).
+- Jetstream (`Substrate::loop_flux`, `circuit::pole_flux`): channels on a kind
+  of hold `w` and open frames `u`: filament `(rho - 1) u w / (w + rho u)` frames
+  Z to Q; vacuum `p(r, t) w` frames Z to Q (none where `p >= 1`); echo `R u`
+  frames Q to Z. Each is a dilator applied to the state left by the previous
+  channel; residual = observed dilation over the channels' product, equal to 1
+  where the loop closes. Partial (read by the observer).
 - Waveform (`Substrate::amplitude`):
   `A(r, t) = [cos(2 pi (t - tau) / echo) / echo + q(t - tau)] / (r + 1)`,
   `tau = (r / rim) bell / 2`. Built.
@@ -172,12 +172,11 @@ stands at the root of a law.
 - Intake and composition (`Substrate::intakes`, `Substrate::composition`):
   intake = landing share x `outflow(t - tau)`; composition = recipe + intake.
   Built.
-- Books (`Substrate::books`): held + left = founded; taken + in flight =
-  left. Built.
-- Push on a galaxy (`Substrate::push`):
-  `l(t) = R inside + d [Q(t - tau) + sin(2 pi (t - tau) / echo) / 2 pi] / ((R + 1) H)`,
-  `reach = l / inside`; recession `dl/dt / inside`; shift
-  `z = recession / c_ocean`. Built.
+- Books (`Substrate::books`), mass conservation: held + left = founded;
+  taken + in flight = left. Built.
+- Push on a galaxy (`Substrate::push`): `l(t) = R inside + d [Q(t - tau) + sin(2
+  pi (t - tau) / echo) / 2 pi] / ((R + 1) H)`, `reach = l / inside`; recession
+  `dl/dt / inside`; shift `z = recession / c_ocean`. Built.
 - Tide (`Substrate::tide`): `A(R - x, t) - A(R + x, t)`. Built.
 - Galaxy selection (`Substrate::holds_a_star`):
   `lit x hole_mass x state >= 1` (solar masses). Built.
@@ -307,10 +306,10 @@ stands at the root of a law.
   `x = s + (k + 1)(1 - s) / 360`; each adds `(1 - a)(1 - s) / 360`; a world
   where `m / (s + m) >= tide x`, reach the gathered matter's mean; belts
   `1 - s - sum worlds`. Built.
-- Solids (`systems::system`): `M_star / s x Z_rel x Rulers::reference_metallicity` (world
-  masses); a region's mass `holding x solids x enrichment`; skipped inside
-  the rock line `min Tc(Fe, Si, Mg)`; phase `k x golden turn`. Partial
-  (`reference_metallicity`).
+- Solids (`systems::system`): `M_star / s x Z_rel x
+  Rulers::reference_metallicity` (world masses); a region's mass `holding x
+  solids x enrichment`; skipped inside the rock line `min Tc(Fe, Si, Mg)`; phase
+  `k x golden turn`. Partial (`reference_metallicity`).
 - Formation temperature (`systems::Spec::t_form`): `278 L / a`. Placeholder.
 - Envelope (`systems::system`): core `>= 10` world masses; declared
   gathering law. Placeholder.
@@ -345,8 +344,8 @@ stands at the root of a law.
   chain).
 - Degree of a star's life (`worlds::star_degree_gyr`):
   `max(life / 360, bell)`. Built.
-- Orbital speed (`turning.rs`): `v = c delta(<r)`, below light at every
-  reach. Built.
+- Orbital speed (`turning.rs`): `v = c delta(<r)`, less than `c` at every
+  reach since `delta < 1`. Built.
 
 ## 7. Life and minds
 

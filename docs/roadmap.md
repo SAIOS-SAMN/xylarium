@@ -1,6 +1,6 @@
 # Roadmap
 
-Xylarium is pre-alpha. This roadmap opens with the mathematics every law is
+Xylarium is pre-alpha. This roadmap opens with the mathematics the laws are
 built on, then lists the milestones in intended order. Each milestone states
 its goal, why it comes where it does, what has landed, what is next, and
 the `xylarium observe` reading that shows it done. Changes are recorded in
@@ -111,7 +111,7 @@ Landed:
   part of it.
 - The founding digest: the founding cache is keyed by a digest of the
   founding's own files (`XYL_FOUNDING_DIGEST`), so a change to a world,
-  disc, life or kernel law keeps the genesis.
+  disc, life or kernel law does not invalidate the cached founding.
 - The genesis record v2: the seed, the founding digest, the package and the
   founding's census kind by kind (`Substrate::census`).
 - The element table to `Z = 1700` (`elements::TOP_Z`).
@@ -134,8 +134,9 @@ against the tier above; bodies gather on an anchor's manifold where their
 matter holds its own region against that anchor's twist, read at every
 degree, with no seed draw and no partition.
 
-Why this order: worlds are where peoples wake, so the game layers wait on
-them.
+Why this order: peoples are created on worlds (`Cosmic::wake` reads each
+world at a mind's epoch), so the civilization and game layers depend on
+the world layer.
 
 Landed:
 
@@ -192,15 +193,17 @@ Next:
    the core's units, with `package::Si` used for display only.
 
 Done when: `xylarium observe founding` and `observe chemistry` read from a
-manifest-founded universe, and `scripts/calibration-anchors` counts no anchors in
-the founding and chemistry.
+manifest-founded universe, and `scripts/calibration-anchors` counts no anchors
+in the founding and chemistry.
 
 ## 4. Seats for minds
 
-Goal: external minds, AI or human, hold seats by identity and act through
-them with the same interfaces as the universe's own rule.
+Goal: external agents, AI or human, hold seats by identity and act through
+them with the same interfaces as the built-in rule (`Holder::Universe`).
 
-Why this order: seats need stable worlds and peoples (2) to act on.
+Why this order: a seat's subject is a people or a realm, and both are
+derived from the worlds (2), so seat identity is only stable once worlds
+are.
 
 Landed: seats for sovereign, steward, progenitor and ancient; typed
 percepts for seats on a people (`percept::perceive`); the `Focus` and
@@ -229,8 +232,9 @@ session ([network.md](network.md)). Mu, the Mycelium network's unit,
 enters a universe only through an uplink, which is not part of this
 repository.
 
-Why this order: the uplink carries what seats (4) decide; mu carried with
-work and passages through the uplink needs both.
+Why this order: the crate transmits seat decisions (4) to the network, so
+seats come first; mu accounting for work and passages needs both the seats
+and the uplink session.
 
 Next:
 
@@ -242,16 +246,16 @@ Next:
 5. Freshness for published passage mouths, and crossings applied at an
    anchor.
 
-Done when: `xylarium observe clock` shows the bridge's pace read from
-final points heard through the crate.
+Done when: `xylarium observe clock` shows the pace in rings per final point,
+read from final points received through the crate.
 
 ## 6. Game economies
 
-Goal: the network of passages between peoples grows into economies
+Goal: economies built on the network of passages between peoples
 ([civilizations.md](civilizations.md)).
 
-Why this order: economies are carried over the worlds (2), seats (4) and
-network (5) that come before.
+Why this order: trade and tolls read the worlds (2) and are directed by
+seat decisions (4), and any exchange in mu passes through the uplink (5).
 
 Landed: peoples, numbers, knowledge, histories (annals, turnings, eminent
 figures), drives, constellations, ley lines sited by the worth law, realms
@@ -269,7 +273,7 @@ Next:
    numbers, power and knowledge.
 5. Conflict, arising where taking is worth more than trading;
    communications bounded by the fastest physical carrier.
-6. Figures and peoples named by their own minds in place of the seed's
+6. Figures and peoples named by seated minds in place of the seed's
    placeholder syllables.
 
 Done when: `xylarium observe ley` shows tolls booked per line and peoples
@@ -304,13 +308,13 @@ Constants declared rather than derived, by layer, each with what derives it:
   species; to derive from each world's own chemistry.
 - **Life** (`life`): the viable people (500); to derive from each world's
   chemistry.
-- **Growth** (`life`, `xyl-kernel growth::Rulers`): the mind-bearing body,
-  10 kg (`m_mind_kg` in `life`, read as `growth::Rulers::m_mind`), and the
-  unit metabolism it sets (19.1 W), the unit generation (14.2 yr), `eta_primary = 0.015`,
-  `trophic = 0.1` and the flux ruler 340 W/m^2; to derive from each people's
-  own chemistry.
+- **Growth** (`life`, `xyl-kernel growth::Rulers`): the mind-bearing body, 10 kg
+  (`m_mind_kg` in `life`, read as `growth::Rulers::m_mind`), and the unit
+  metabolism it sets (19.1 W), the unit generation (14.2 yr), `eta_primary =
+  0.015`, `trophic = 0.1` and the flux ruler 340 W/m^2; to derive from each
+  people's own chemistry.
 - **Laws** (`laws`): each constant expressed as a ratio to a measured value;
-  to be stated as the universe's own.
+  to be stated in the universe's own units.
 - **Civilizations** (`xyl-kernel`): the mass ratio 10, the 18 amu exhaust
   and the fission share (`propulsion`); the knowledge unit's thousand minds
   (`knowledge`); the trait thresholds (`cosmic.rs`); the memory threshold

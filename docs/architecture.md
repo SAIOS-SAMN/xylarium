@@ -31,57 +31,64 @@ through `xylarium::run::Link` (see [network.md](network.md)).
 ## The founding and the package
 
 `xyl_cosmos::package` holds what a universe is founded from that its laws do
-not derive: the universal core's mass (`hole_mass`, the bridge to SI used
-for display), the SI constants (`Si`, the seam where measured values enter),
-and the founding's digest (`founding_digest`). The founding reads only the
-package and the parent's spin drawn from the seed; it never reads the layers
-built on it.
+not derive: the universal core's mass (`hole_mass`, in solar masses, the
+one quantity that converts the core's units to SI for display), the SI
+constants (`Si`, where measured values enter, converted once), and the
+founding's digest (`founding_digest`). The founding reads only the package
+and the parent's spin drawn from the seed; it does not read the layers built
+on it.
 
-Units are `G = c = M_core = 1`. The universal core holds the universal
-state, 1. The firmament, the throat's held kinds (the vessel band computed
-by `atoms::vessel`), carries that state. Each galactic core's mass is its
-bead's state in the universal core's units.
+Units are `G = c = M_core = 1`. The universal core's holding, the
+universal state, is 1 in these units. The [firmament](glossary.md) (the
+[throat](glossary.md)'s held kinds, the vessel band computed by
+`atoms::vessel`) is scaled so its mass equals that state. Each galactic
+core's mass is its [bead](glossary.md)'s state in the universal core's
+units.
 
-Above the founding, `disc::star_cut` takes a star's cut of its piece's
-infall, and `disc::manifold_worlds` places worlds on the star's manifold,
-read every degree, with no seed draw or partition. Moons gather on each
-world's own manifold (`systems`).
+Above the founding, `disc::star_cut` computes the share of a lit bead's
+infall the star holds, and `disc::manifold_worlds` places worlds on the
+star's manifold by reading it degree by degree outward (360 degrees), with
+no seed draw or partition. Moons form on each world's own manifold by the
+same function (`systems`).
 
 ## Data flow
 
 1. `genesis` derives the Big Bang from the seed, founds the substrate, forms
    the galaxies' star samples and runs the forecast of minds: for each
-   candidate world, when (if ever) its lineage climbs the hard steps to a
-   mind. It writes the genesis record and a first checkpoint at the first
-   mind's dawn.
+   candidate world, the time (if any) at which its lineage reaches the rung
+   of its ladder that holds a mind (`minds::schedule`). It writes the
+   genesis record and a first checkpoint at the time of the first mind.
 2. On every start the universe is regenerated from the seed. State that the
    laws do not determine is restored from the checkpoint. A home with no
    checkpoint is carried to 14 Gyr.
 3. The event engine (`Universe::advance_to`) advances from event to event:
-   forecast wakings, queued inputs and ley lines falling due. Between events
-   nothing is computed.
+   forecast wakings (a mind arising on its world), queued inputs and ley
+   lines falling due. Between events nothing is computed.
 4. At the target time the engine takes its readings: the bells' rings
    delivered, every people carried over its own span, the ley network
-   carried, seats of fallen peoples released.
+   carried, and the seats of peoples whose population has reached zero
+   released.
 5. `observe` evaluates the requested reading at the universe's time and
    prints it. Law readings are taken without carrying the universe; the
    others carry it first (see [Readings](#readings)).
 
 ## The event engine
 
-Time is the bell count of the universe's core. Events are kept in a queue
+Time is counted in [bells](glossary.md) of the universe's core (one bell
+is light's round trip to the home galaxy's rim). Events are kept in a queue
 ordered by count. An advance:
 
 - prepares, in parallel, the systems and worlds of every mind due in the
   span (pure functions of the seed);
-- wakes each mind at its own epoch; a world that can no longer feed a viable
-  people at that moment produces no people;
+- adds each forecast mind's people at its own epoch; a world that can no
+  longer feed a viable people at that moment produces no people;
 - opens ley lines at their due times and begins each builder's next line;
 - lands queued inputs (`universe::Input`: seat taken, inquiry focused, ley
   line handling, exodus, settlement) at their counts;
 - at the target, performs the readings.
 
-Live play (`run`) advances one ring of the bell at a time. A reading
+Live play (`run`) advances one [ring](glossary.md) (one full bell) at a
+time. A reading
 (`observe`) carries each people once over its whole span. Both use the same
 carry (`civ::Civilizations::carry`). The civilization layer is the only
 stepped layer; it is carried over spans no longer than its own turnover
@@ -92,8 +99,8 @@ allows.
 All randomness is drawn from `xyl_core::Stream`, derived from the seed and a
 path of labels, so every draw is reproducible and independent of evaluation
 order. Caches hold only values the laws regenerate; deleting a cache never
-changes a result. Verification is by conservation (books that close), not
-byte-for-byte replay.
+changes a result. Results are verified by conservation (each reading's
+balances close), not by byte-for-byte replay.
 
 Two build-time digests key the caches (`crates/xyl-cosmos/build.rs`):
 
@@ -121,7 +128,7 @@ A universe's state is split by how it is obtained:
 | Kind | Examples | Storage |
 |---|---|---|
 | Derived | the founding, galaxies, star orbits, systems, world states, the forecast of minds, the bells | recomputed from the seed on every start; never stored as truth |
-| Cached derived | the founding (`founding-*`), the forecast (`forecast-*`, `forecast-stars/`), the heavy stars (`bells-*`) | written to the home directory as accelerators; deleting them changes nothing |
+| Cached derived | the founding (`founding-*`), the forecast (`forecast-*`, `forecast-stars/`), the heavy stars (`bells-*`) | written to the home directory as accelerators; deleting them does not change results |
 | Path-dependent | each people's numbers, housing, knowledge and focus, home radiation, eminent figures, ley lines built and their handling, folds, the keepers' commits | written to `checkpoint` at each save |
 | Inputs | seat takes, focus, handling, moves and settlements | recorded at their counts in `checkpoint` |
 
@@ -152,12 +159,12 @@ never leaves a partial checkpoint.
 ## Readings
 
 `xylarium observe [options] WORD [ARGS]` prints one reading
-(`crates/xylarium/src/observe.rs`). A law reading is evaluated from the
-seed and the laws alone, without carrying the universe. A carried reading
-first builds the universe from its seed and lays back its checkpoint (or
-carries a fresh genesis to 14 Gyr when the home has none), exactly as a
-`run` start does. Every reading is read-only and may run beside `run`.
-Bracketed arguments are optional, with their defaults.
+(`crates/xylarium/src/observe.rs`). A law reading is evaluated from the seed and
+the laws alone, without carrying the universe. A carried reading first builds
+the universe from its seed and lays back its checkpoint (or carries a fresh
+genesis to 14 Gyr when the home has none), as a `run` start does. "The books" in
+a reading are its conservation balances. Every reading is read-only and may run
+beside `run`. Bracketed arguments are optional, with their defaults.
 
 | Word | Arguments | Kind | Shows |
 |---|---|---|---|
@@ -184,4 +191,4 @@ Bracketed arguments are optional, with their defaults.
 | `world` | `S W` | carried | world W of star S across its star's life: air, seas, surface, field and what it houses |
 | `annals` | `[K=20]` | carried | the last K annals |
 | `events` | `[K=20]` | carried | the last K events logged, each at its count |
-| `clock` | | carried | the bell, the keepers from the core outward, and the bridge's pace |
+| `clock` | | carried | the bell, the keepers from the core outward, and the measured pace in rings per network final point (`Chronometry::pace`) |

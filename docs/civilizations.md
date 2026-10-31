@@ -1,19 +1,20 @@
 # Civilizations
 
-Xylarium is a grand-strategy space game in which sovereign minds operate
-civilizations. The physical model ([model.md](model.md)) produces the
-galaxy, its stars and its worlds; the kernel (`crates/xyl-kernel`) wakes
-peoples on those worlds, carries their numbers, knowledge and histories on
-the universe's clock, and builds the network of passages between them.
-External minds, AI or human, take seats and act through recorded inputs.
+Xylarium is a grand-strategy space game kernel. The physical model
+([model.md](model.md)) produces the galaxy, its stars and its worlds. The
+kernel (`crates/xyl-kernel`) creates peoples on those worlds, advances their
+numbers, knowledge and histories on the universe's clock, and builds the
+network of passages between them. External agents, AI or human, take seats
+and act through recorded inputs. Terms such as people, seat, carry, annal,
+ley line and realm are defined in the [glossary](glossary.md).
 
-Status in this document: **Built** (in the code and run by live play and
-readings), **Partial** (some of it is in the code), **Planned** (on the
+Status in this document: **Built** (implemented and exercised by live play
+and readings), **Partial** (partly implemented), **Planned** (on the
 [roadmap](roadmap.md)).
 
 | Area | Status | Code |
 |---|---|---|
-| Peoples waking from the forecast of minds | Built | `xyl-cosmos/src/minds.rs`, `xyl-kernel/src/cosmic.rs` |
+| Peoples created from the forecast of minds | Built | `xyl-cosmos/src/minds.rs`, `xyl-kernel/src/cosmic.rs` |
 | Numbers, housing, growth | Built | `growth.rs`, `civ/housing.rs`, `civ/mod.rs` |
 | Knowledge in four domains | Built | `knowledge.rs` |
 | Annals, turnings, eminent figures | Built | `cosmic.rs`, `civ/history.rs`, `civ/mod.rs` |
@@ -33,41 +34,43 @@ Paths below are relative to `crates/xyl-kernel/src` unless stated.
 
 ## Peoples
 
-### How a people wakes
+### How a people is created
 
 The forecast of minds (`xyl-cosmos/src/minds.rs`) gives, for every world of
-the galaxy's sample, the epoch at which its life would climb to a
-mind-bearing rung in the undisturbed galaxy. The climb is the chemistry's
-own expectation in closed form: each rung takes its mean, and impacts at
-rate `mu` stretch a rung of mean `m` to `(e^(mu m) - 1) / mu`. No draw
-enters, so a mind's epoch is a function of its world and its system.
+the galaxy's sample, the epoch at which its life would reach a mind-bearing
+rung (see [glossary](glossary.md)) if the galaxy were undisturbed. The epoch
+is computed as an expected value in closed form: each rung takes its mean
+duration, and impacts at rate `mu` stretch a rung of mean `m` to
+`(e^(mu m) - 1) / mu`. No random draw is used, so a mind's epoch is a
+function of its world and its system only.
 
-`Cosmic::wake` (`cosmic.rs`) advances deep time and wakes each forecast
-mind whose epoch has come. A mind becomes a people only where its world, read
-at that epoch, feeds a viable people (`xyl_cosmos::life::viable`, 500
-bodies); otherwise it stays silent. The world then selects the people's
-traits (`cosmic::select`), its numbers start at what its world houses on
-foraging alone, and two annals are written: `DEEP_HISTORY` (when life began
-and the rungs it passed) and `EMERGENCE`.
+`Cosmic::wake` (`cosmic.rs`) advances deep time to a target epoch and
+processes each forecast mind whose epoch falls before it. A mind becomes a
+people only where its world, read at that epoch, feeds a viable population
+(`xyl_cosmos::life::viable`, 500 bodies); otherwise no people is created.
+For a new people, `cosmic::select` derives its traits from its world, its
+numbers start at what its world houses on foraging alone, and two annals
+are written: `DEEP_HISTORY` (when life began and the rungs it passed) and
+`EMERGENCE`.
 
-A people is **ancient** when it wakes in a galactic core within one core
+A people is **ancient** when it emerges in a galactic core within one core
 assembly time (`minds::ancient_window`) of that core's first core-born mind.
 Ancient peoples hold the ancient and progenitor seats and build the ley
 network.
 
 ### What a people is
 
-`cosmic::People` holds its name (placeholder syllables, display only), star
-and world, the region of chemistry it arose in, its traits, its dawn, its
-numbers and what its world houses, its growth rate, whether it is ancient,
-its rungs and setbacks, and when it fell.
+`cosmic::People` holds its name (placeholder syllables, display only), star and
+world, the region of chemistry it arose in, its traits, its emergence epoch
+(`dawn`), its numbers and what its world houses, its growth rate, whether it is
+ancient, its rungs and setbacks, and when it fell.
 
-`cosmic::Traits` holds what its world selected: its breeding strategy (r or
-K, from the world's variability), its solvent and where its medium lies
-(surface, under ice, supercritical, deep), its body temperature, leading
-sense, form, what it works with, its sociality, its size, and the shape of
-its mind: a society of many minds, a colony that thinks as one, or a mind
-spread through its medium.
+`cosmic::Traits` holds the traits selected from its world: its breeding strategy
+(r or K, from the world's variability), its solvent and where its medium lies
+(surface, under ice, supercritical, deep), its body temperature, leading sense,
+form, what it works with, its sociality, its size, and the shape of its mind: a
+society of many minds, a colony that thinks as one, or a mind spread through its
+medium.
 
 ### Numbers
 
@@ -102,24 +105,27 @@ Knowledge (`knowledge.rs`) is a stock per people in four domains: energy,
 materials, biology and information. There is no technology tree.
 
 - Mastery is `1 - 1 / (1 + ln(1 + K / U))`, below one for any stock.
-- A people thinks with the power it commands (its bodies' metabolism), at
-  Landauer's cost for its temperature; free thought is the share of bodies
-  food no longer needs, and every member adds a lived share.
+- Knowledge production per year is the power a people commands (its
+  bodies' metabolism) times the Landauer factor `T_unit / T` at its body
+  temperature (`knowledge::landauer`). The free share is the share of
+  bodies not needed for food production, and every member adds a lived
+  share (`knowledge::lived_share`).
 - Each domain follows `dK/dt = e - lam K`, carried in closed form
   (`knowledge::advance`): `K(t) = e / lam + (K0 - e / lam) exp(-lam t)`.
   Forgetting follows the people's generation; a collective forgets less.
-- Thought is directed by the people's needs (hunger to biology, a spent
-  crust to materials, a power shortfall to energy, trade to information)
-  over a floor of curiosity, plus any focus its ruler sets. The trade pull
-  reads zero until trade exists.
+- Effort is allocated across domains by the people's needs (hunger to
+  biology, a spent crust to materials, a power shortfall to energy, trade
+  to information) over a floor (`knowledge::curiosity`, one quarter of a
+  domain's pull), plus any focus set by a seat (`Input::Focus`). The trade
+  term is zero until trade is implemented.
 
-Masteries feed housing (biology, energy), drive performance (energy) and
-the gauges (information is sentience).
+Masteries are inputs to housing (biology, energy), drive performance
+(energy) and the gauges (information mastery is the sentience gauge).
 
 ### The carry
 
-Every people is carried by one procedure, `Civilizations::carry`
-(`civ/mod.rs`), in live play and in readings alike. For each living people,
+Every people is advanced by one procedure, `Civilizations::carry`
+(`civ/mod.rs`), in both live play and readings. For each living people,
 over its own span from where it was last carried to the target time:
 
 1. **Knowledge.** Its stocks advance (`Knowledge::step_one`), its thinkers
@@ -131,7 +137,8 @@ over its own span from where it was last carried to the target time:
    `transit::best_spec`). It sails if the cruise speed left after escaping
    its world is positive.
 4. **World, reach and fall** (in parallel across peoples). Its world is read
-   at the target time. For a sailing people whose world fails or that has
+   at the target time. For a sailing people (one with a positive cruise
+   speed) whose world fails or that has
    grown past half of what its world houses, the reach is read: the worlds
    of its system within four orbital places that no living people holds and
    that house a viable people. If its world no longer houses one body, the
@@ -151,8 +158,9 @@ over its own span from where it was last carried to the target time:
    knowledge (`SETTLE`).
 
 Exoduses and settlements are returned as `civ::Act` and recorded as
-`Input::Move` and `Input::Settle` at their counts, so a checkpoint lays them
-back; while a checkpoint is laid back the carry decides neither. Live play
+`Input::Move` and `Input::Settle` at their counts, so a checkpoint replays
+them on restart; while a checkpoint is replayed the carry makes neither
+decision itself. Live play
 carries in pieces no longer than a tenth of the shortest turning time of any
 living people (`Universe::civilizations`); a reading carries each people
 once to the reading's time (`Universe::read_at_now`).
@@ -161,14 +169,15 @@ once to the reading's time (`Universe::read_at_now`).
 
 ### Annals
 
-An annal (`cosmic::Annal`) is an epoch, a kind and a text. The annals are
-the universe's history: what happened is kept, never re-derived.
+An annal (`cosmic::Annal`) is an epoch, a kind and a text. Annals are the
+universe's stored history: they are kept in the checkpoint and not
+recomputed.
 
 | Kind | Written when | Code |
 |---|---|---|
 | `BIG_BANG` | genesis | `cosmic.rs` |
-| `DEEP_HISTORY` | a people wakes: its life's climb | `cosmic.rs` |
-| `EMERGENCE` | a people wakes | `cosmic.rs` |
+| `DEEP_HISTORY` | a people emerges: its life's rungs | `cosmic.rs` |
+| `EMERGENCE` | a people emerges | `cosmic.rs` |
 | `FALL` | a world no longer feeds its people | `cosmic.rs`, `civ/mod.rs` |
 | `EXODUS` | a people leaves its world | `civ/mod.rs` |
 | `SETTLE` | a daughter people is founded | `civ/mod.rs` |
@@ -193,24 +202,24 @@ A turning (`civ::history::Turning`) is reported by an act:
 | `fold` | it first folds space |
 
 At the people's next carry each turning is named by a figure
-(`civ::history::Eminent`) whose role is read from the people at that
-moment: the domain its effort led in and that domain's share of its effort,
-and how the people holds the figure, by the shape of its mind (a person in a
-society, the colony itself, or a locus of a distributed mind). A figure's
-span is one generation from its turning. Memory fades as `(1 - f)^years`,
-`f` the people's forgetting share; figures below `history::forgotten()`
-(three e-folds) are dropped. Names are placeholders drawn from the seed
-until a mind of the people names its figures. Figures are held in the
-checkpoint.
+(`civ::history::Eminent`) whose role is read from the people at that moment: the
+domain its effort led in and that domain's share of its effort, and how the
+people holds the figure, by the shape of its mind (a person in a society, the
+colony itself, or a locus of a distributed mind). A figure's span is one
+generation from its turning. Memory fades as `(1 - f)^years`, `f` the people's
+forgetting share; figures below `history::forgotten()` (three e-folds) are
+dropped. Names are placeholder syllables drawn from the seed; naming by a seated
+mind is on the roadmap (Game economies). Figures are held in the checkpoint.
 
 ### Rises, exoduses and falls
 
-A people rises by waking (`EMERGENCE`), growing toward what its world
-houses, raising its masteries (`biology`, `information` turnings), joining
-the ley network (`network`) and founding daughters (`SETTLE`). It moves when
-its world fails and its drive reaches an open world (`EXODUS`), and falls
-when its world no longer feeds it and it cannot leave (`FALL`). A fallen
-people's seat returns to the universe's own mind.
+A people's history is recorded by these events: emergence (`EMERGENCE`),
+growth toward what its world houses, masteries passing one half
+(`biology`, `information` turnings), joining the ley network (`network`)
+and founding daughters (`SETTLE`). It moves when its world fails and its
+drive reaches an open world (`EXODUS`), and falls when its world no longer
+feeds it and it cannot leave (`FALL`). A fallen people's seat returns to the
+built-in rule (`Holder::Universe`).
 
 ### Reading histories
 
@@ -220,15 +229,17 @@ people's seat returns to the universe's own mind.
 - `events [K]`: the last K entries of the event log, at their counts;
 - `peoples`: the roster; `people N [Y]`: one people, optionally after
   carrying live play Y years in memory;
-- `house`, `ley [K]`, `sync [K]`, `clock`: the ancient houses, the ley
-  network, discord and quarantine, and the keepers of time.
+- `house`, `ley [K]`, `sync [K]`, `clock`: the seats and their holders,
+  the ley network, discord and quarantine, and the bell, the current count
+  and the clock keepers (`Universe::clocks`).
 
 ## Seats
 
 ### Roles
 
-Seats (`seats.rs`) are the places an external mind takes. Every seat is
-bound by the same laws; a seat acts only through recorded inputs.
+Seats (`seats.rs`) are the roles an external agent can hold. All seats
+are subject to the same laws, and a seat acts only through recorded
+inputs.
 
 | Role | Seated on | Raised |
 |---|---|---|
@@ -238,24 +249,25 @@ bound by the same laws; a seat acts only through recorded inputs.
 | Steward | a realm | one per realm, as the realm first forms |
 
 Seats are append-only; a seat's index is its id. A seat's holder is the
-universe's own mind (`Holder::Universe`: the built-in laws decide) or a
+built-in rule (`Holder::Universe`: the role's own rule decides) or a
 mind joined by its key (`Holder::Mind`, taken by `Input::Take`); the
 checkpoint also records a named player (`Holder::Player`), and taking a
-seat as a player is on the roadmap (Seats for minds). At
-each reading a mind holding any seat other than an ancient seat is returned
-to the universe's own mind, so minds joined through the network sit on the
-ancient houses' councils.
+seat as a player is on the roadmap (Seats for minds). At each reading,
+any seat other than an ancient seat that is held by a mind is returned to
+`Holder::Universe` (`Universe::read_at_now`), so minds joined through the
+network hold only the ancient seats (the council, `Seats::council`).
 
 ### Perceiving
 
-`percept::perceive` gives the record a seat on a people perceives at the
-present: its role, the people's name, whether it is ancient, its dawn and
-the time now, its traits, numbers, what its world houses, its growth rate
-and power budget, its world's surface temperature, pressure and light, every
-medium of its world, its day and year (which pace percepts), the bells as
-heard at its star, its neighbours and the latest eight annals that name it.
-A neighbour is heard only once its dawn lies at least the light delay in the
-past. Percepts for steward seats are on the roadmap (Seats for minds).
+`percept::perceive` returns the record visible to a seat on a people at the
+current time: its role, the people's name, whether it is ancient, its emergence
+epoch and the time now, its traits, numbers, what its world houses, its growth
+rate and power budget, its world's surface temperature, pressure and light,
+every medium of its world, its day and year (which set the percept cadence), the
+bells as received at its star, its neighbours and the latest eight annals that
+name it. A neighbour is included only once its emergence epoch lies at least the
+light delay in the past. Percepts for steward seats are on the roadmap (Seats
+for minds).
 
 On the seat surface a percept is sent as typed exact records
 (`lexicon::records`): `PEOPLE`, `NUMBERS`, `POWER`, `WORLD`, `MEDIUM`,
@@ -284,19 +296,20 @@ caller holds the seat is the uplink's part.
 
 The `xylarium` binary has no command for decisions. External minds act
 through a `run::Link` beside live play (`crates/xylarium/src/run.rs`; see
-[network.md](network.md)), which receives the universe after every ring.
+[network.md](network.md)), which receives the universe after every ring
+(one bell; see [glossary](glossary.md)).
 
 ## Grand strategy
 
 ### Drives
 
 A drive (`propulsion.rs`) is chemical, fission, fusion or annihilation. Its
-exhaust speed is the energy released per mass over light speed, capped at
-light. A hull of mass ratio `R` gains `dv = c tanh((v_e / c) ln R)`; it
-climbs out of its world's well, coasts at half of what is left and brakes
-with the other half (`transit::cruise_speed`, `transit::voyage`). Each
-people's drive is its chemical drive blended toward the best its chemistry
-allows by its energy mastery.
+exhaust speed is the energy released per mass over light speed, capped at light.
+A hull of mass ratio `R` gains `dv = c tanh((v_e / c) ln R)`; it spends what it
+needs to escape its world's well, coasts at half of what is left and brakes with
+the other half (`transit::cruise_speed`, `transit::voyage`). Each people's drive
+is its chemical drive blended toward the best its chemistry allows by its energy
+mastery.
 
 ### Constellations
 
@@ -309,10 +322,10 @@ constellations only over ley lines.
 
 ### Ley lines and the worth law
 
-Ley lines are built by the ancient houses and their progenitors
-(`Network::step`). A house begins a line when idle; the line opens when both
-its voyage and the time its world's spare power takes to pay the line's
-cost have passed (`LEY`). A line's worth to its passer, per kilogram, is
+Ley lines are built by the ancient houses (the seats of an ancient people) and
+their progenitors (`Network::step`). A house begins a line when idle; the line
+opens when both its voyage and the time its world's spare power takes to pay the
+line's cost have passed (`LEY`). A line's worth to its passer, per kilogram, is
 the two wells' remainders at its mouths plus the voyage it saves within the
 passer's generation, less its tithe:
 
@@ -326,7 +339,7 @@ passage_energy = m_body * c * (c - v_e)
 builder's drive does not. Lines are built only where worth is positive.
 
 - Discovery: a house considers only constellations its craft could have
-  reached since its dawn and that the network has not joined.
+  reached since its emergence epoch and that the network has not joined.
 - Optimisation: candidates are bounded above from the lower bound of their
   arc and evaluated in descending bound order until no remaining bound can
   exceed the best worth found.
@@ -402,23 +415,22 @@ its constellation is driven toward quarantine. The first fold writes a
 
 ## The in-game economy
 
-What is built is physical: numbers grow from food and power, knowledge from
-the power a people commands, ley lines are paid for in energy from a house's
-spare power, and tolls are quoted in joules. Banks, currencies and markets
-are planned and will emerge from these quantities.
+The implemented quantities are physical: numbers grow from food and power,
+knowledge from the power a people commands, ley lines are paid for in energy
+from a house's spare power, and tolls are quoted in joules. Banks, currencies
+and markets are planned and are to be derived from these quantities.
 
 Mu, the network's unit, is not represented in the kernel. It enters and
 leaves a universe only through the uplink ([network.md](network.md)).
 
 ## Declared rulers
 
-The civilization layer reads a set of declared rulers that the roadmap
-derives from each people's own chemistry, senses and economy: the unit
-body's generation (14.2 yr), the mind-bearing body (10 kg), primary
-efficiency 0.015, trophic transfer 0.1 and the flux ruler 340 W/m^2
-(`growth::Rulers`); the stage's mass ratio 10, the chemical exhaust's 18 amu
-and the fission share (`propulsion`); the thousand unit minds of the
-knowledge unit (`knowledge`); the trait thresholds in `cosmic.rs` (the r
-or K strategy and `select`); and
-the memory threshold `e^-3` (`history::forgotten`). The full list is in
+The civilization layer reads a set of declared rulers (constants not yet
+derived; the roadmap states what is to derive each): the unit body's generation
+(14.2 yr), the mind-bearing body (10 kg), primary efficiency 0.015, trophic
+transfer 0.1 and the flux ruler 340 W/m^2 (`growth::Rulers`); the stage's mass
+ratio 10, the chemical exhaust's 18 amu and the fission share (`propulsion`);
+the thousand unit minds of the knowledge unit (`knowledge`); the trait
+thresholds in `cosmic.rs` (the r or K strategy and `select`); and the memory
+threshold `e^-3` (`history::forgotten`). The full list is in
 [roadmap.md](roadmap.md#declared-rulers).

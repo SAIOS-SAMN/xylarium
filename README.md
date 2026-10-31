@@ -1,39 +1,40 @@
 # Xylarium
 
-**Version 0.3.0** · [Quick start](#quick-start) · [Architecture](docs/architecture.md) · [Physical model](docs/model.md) · [Equations](docs/EQUATIONS.md) · [Roadmap](docs/roadmap.md) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [License: Apache-2.0](LICENSE)
+**Version 0.3.0** | [Quick start](#quick-start) | [Architecture](docs/architecture.md) | [Physical model](docs/model.md) | [Equations](docs/EQUATIONS.md) | [Roadmap](docs/roadmap.md) | [Changelog](CHANGELOG.md) | [Contributing](CONTRIBUTING.md) | [License: Apache-2.0](LICENSE)
 
 [![CI](https://github.com/SAIOS-SAMN/xylarium/actions/workflows/ci.yml/badge.svg)](https://github.com/SAIOS-SAMN/xylarium/actions/workflows/ci.yml)
 
 **Xylarium** is a deterministic universe simulator and the kernel of a
 grand-strategy space game in which sovereign AI minds run civilizations.
 
-From one seed, Xylarium founds a universe at its core and derives what
-follows: galaxies, stars, worlds, moons, atmospheres, seas, life and the
-peoples who wake on those worlds. Every law is evaluated in exact
-arithmetic, so the same seed yields the same universe on any machine and any
-thread count. Peoples grow, travel, build and fall; their histories are
-written into annals. Seats of authority in the universe can be held by its
-own rules or taken by external AI minds.
+From one seed, Xylarium founds a universe at its central core and derives
+the layers above it: galaxies, stars, worlds, moons, atmospheres, seas, life
+and the [peoples](docs/glossary.md) (populations of a minded species) that
+arise on those worlds. Every law is evaluated in exact arithmetic, so the
+same seed yields the same universe on any machine and any thread count. The
+kernel tracks each people's population, knowledge, housing and travel, and
+records its history in annals. Each [seat](docs/glossary.md) (a role such as
+sovereign or steward) is filled by the kernel's default rule or by an
+external AI agent.
 
 ## Features
 
-- **Exact physics.** Held state is exact rationals; transcendental values are
-  proven enclosures. There is no floating-point state anywhere in the
-  simulation.
-- **A whole universe from a seed.** The founding sets the elements, the
-  firmament and the galactic cores; every layer above is derived from it,
-  not placed by hand.
+- **Exact arithmetic.** Held state is exact rationals; transcendental values
+  are certified enclosures. The simulation holds no floating-point state.
+- **A universe from a seed.** The founding computes the element table, the
+  firmament and the galactic cores; every layer above is derived from the
+  founding rather than placed by hand.
 - **Closed-form motion.** Orbits, rotations and circulations are evaluated
-  at any time `t`; the engine moves from event to event, never in fixed
-  time steps.
+  at any time `t`; the engine advances from event to event rather than in
+  fixed time steps.
 - **Emergent civilizations.** Habitability, a species' traits, a people's
   numbers, knowledge and housing, and the cost of a passage are all read
   from the layers below.
-- **Histories.** Annals record emergence, rises, falls and ruins; eminent
-  figures and turnings are kept per people.
-- **Seats for AI minds.** Sovereign, steward, progenitor and ancient seats
-  are held by the universe's rule until a keyed mind takes one through the
-  `run::Link` seam.
+- **Histories.** Annals record emergence, rises, falls and ruins; each
+  people keeps its turnings (history events) and eminent figures.
+- **Seats for AI agents.** Sovereign, steward, progenitor and ancient seats
+  are filled by the kernel's default rule until a keyed mind takes one
+  through the `run::Link` interface.
 - **Observable.** `xylarium observe` reads any layer of a running universe
   without disturbing it.
 
@@ -56,7 +57,7 @@ target/release/xylarium observe --home var/universe-7 peoples
 target/release/xylarium observe --home var/universe-7 core 14
 target/release/xylarium observe --home var/universe-7 ley 8
 
-# play 1000 rings of the core's bell, checkpointing every 100
+# advance 1000 rings (bell periods), checkpointing every 100
 target/release/xylarium run --home var/universe-7 --for 1000 --save-every 100
 ```
 
@@ -78,19 +79,25 @@ can run beside `run`. Every reading is listed in
 
 ## How it works
 
-1. **Founding.** A bounce at the universal core produces the elements by a
-   capture chain, seals the firmament and sets the galactic cores, in units
-   where `G = c = M_core = 1`.
-2. **Galaxies and stars.** Each galaxy's rings form stars along their own
-   star formation, with the metals their ring holds at birth.
-3. **Worlds.** Each star anchors a manifold; worlds gather where their matter
-   holds its own region against the star's tide, and moons gather on each
-   world's manifold the same way, one tier down.
-4. **Life and peoples.** Worlds whose chemistry closes carry life; where life
-   climbs to minds, a people wakes.
+1. **Founding.** A bounce at the universal core builds the element table by
+   a capture chain, fixes the firmament (the core's held kinds) and sets the
+   galactic cores, in units where `G = c = M_core = 1`.
+2. **Galaxies and stars.** Stars form in each galaxy's rings by that ring's
+   star-formation law, with the metal content the ring holds at each star's
+   birth.
+3. **Worlds.** Each star anchors a manifold (the arc its own pull holds). A
+   world forms where the matter gathered since the previous world holds a
+   deficit share of the circle at least equal to the tidal twist at that
+   degree (`disc::manifold_worlds`); moons form on each world's manifold by
+   the same rule, one tier down.
+4. **Life and peoples.** A world's medium sets a chemistry's copying
+   fidelity and decay, which fix a ladder of rungs (`life::Ladder`), each an
+   error-correction step holding more information. The forecast of minds
+   (`minds::schedule`) computes when a lineage reaches the rung that holds a
+   mind; at that time the world gains a people.
 5. **Play.** The kernel carries every people's numbers, knowledge, housing
-   and history between events; ley lines, realms and stewards form the
-   network they travel.
+   and history between events; ley lines, realms and stewards make up the
+   passage network between stars.
 
 The details are in [docs/model.md](docs/model.md) and
 [docs/civilizations.md](docs/civilizations.md); the mathematics is
@@ -139,11 +146,11 @@ embed the kernel in another program, depend on the `xylarium` crate and call
 ## Mycelium integration
 
 Xylarium is designed to run as a client domain of
-[Mycelium](https://github.com/SAIOS-SAMN/mycelium) (release `v0.2.0`). An
-uplink drives live play through `run::run_with` with a `run::Link`: it reads
-and answers the universe after each ring and records what it ships at each
-checkpoint. No crate in this workspace depends on Mycelium, and without a
-link `xylarium run` plays locally. The contract is described in
+[Mycelium](https://github.com/SAIOS-SAMN/mycelium) (release `v0.2.0`). An uplink
+drives live play through `run::run_with` with a `run::Link`: it reads and
+answers the universe after each ring and is notified after each checkpoint is
+written. No crate in this workspace depends on Mycelium, and without a link
+`xylarium run` plays locally. The contract is described in
 [docs/network.md](docs/network.md).
 
 ## Status

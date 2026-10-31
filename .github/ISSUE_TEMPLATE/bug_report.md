@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Something the kernel does that it should not, or a reading whose books do not close
+about: An error, a crash, or a reading whose conservation balances do not close
 labels: bug
 ---
 

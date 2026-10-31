@@ -1,34 +1,36 @@
-//! Chronometry inside a universe: time is kept by keepers chained from the
-//! epicenter outward, not by one scalar read everywhere.
+//! Chronometry: the keepers that count time at the epicenter and at each
+//! galaxy's hub and shells, and the hashed chain of their readings.
 //!
-//! - Keepers: the epicenter (the universe core) rings on the universe's own
-//!   echo. Each galactic core has a hub (its uplink; each galaxy is its own
-//!   enclosed sphere) ringing on its galaxy's echo, with three shells under
-//!   it: deep core (nuclear-cluster scale), inner mantle (bulge scale) and
-//!   outer rim (disc edge). Every keeper counts in its own rings, the echo of
-//!   the enclosure it keeps time in.
-//! - Rate (law of the wells): at radius r with M(<r) inside, in white-hole
-//!   units (G = c = M_core = 1, r and M both in r_g), a layer runs at
-//!   r / (r + M(<r)) of the layer above it, exactly; nested wells multiply. A
-//!   galaxy's well counts the cores nearer the epicenter than it.
-//! - Count: at the epicenter's count N (bells), a keeper reads
-//!   local = rate (N - delay) / ring, where delay is the pulse's travel time
-//!   from the epicenter in bells.
-//! - Slip, coherence, rung: a slower keeper falls behind by
-//!   slip = (1 - rate)(N - delay) / ring turns; coherence is
-//!   1 - 2 |slip - round(slip)| (1 in phase, 0 half a turn out); rungs are
-//!   whole slips. A keeper at rate 1 has no rungs.
-//! - Chain: at each committed moment every keeper appends a hashed entry
-//!   citing its own previous entry (parent) and the entry of the keeper inside
-//!   it (rim -> mantle -> core -> hub -> epicenter). Its slip relative to the
-//!   inner keeper is kept as the entry's residual, never averaged. A
-//!   universe's ledger cites the rims' heads, and through them the chain.
-//! - Pace: the universe's physics is independent of the machine computing it;
-//!   its pace is not. The epicenter's entry pairs the committed count with the
-//!   last TUniversal final point received (receipt height h), so rings per
-//!   final-point advance is measured, never declared. A faster machine
-//!   computes more rings between two final points, so its universe's time
-//!   runs faster relative to the network.
+//! Inputs: the seed and [`BigBang`] (galactic core shapes from
+//! `xyl_cosmos::cores`), galaxy radii and enclosed masses
+//! (`xyl_cosmos::galaxy`), the pulse wavelength (`xyl_cosmos::pulse`) and
+//! the white-hole units (`xyl_cosmos::chain::units`, G = c = M_core = 1,
+//! lengths and masses in r_g).
+//!
+//! - Keepers ([`Chronometry::of`]): the epicenter (the universe core, rate
+//!   1, no delay), then per galaxy a hub and three [`Shell`]s (deep core at
+//!   the nuclear-cluster radius, inner mantle at the bulge, outer rim at the
+//!   disc edge). Each counts in its own ring: the echo of the enclosure it
+//!   keeps time in.
+//! - Rate: a layer at radius r with M(<r) inside runs at r / (r + M(<r)) of
+//!   the layer above it; nested wells multiply, and a galaxy's well holds
+//!   the cores nearer the epicenter than it.
+//! - Reading ([`Keeper::read`]) at the epicenter's count N (bells): local =
+//!   rate (N - delay) / ring; slip = (1 - rate)(N - delay) / ring;
+//!   coherence = 1 - 2 |slip - round(slip)|; rung = floor(slip).
+//! - Chain ([`Chronometry::commit`]): every keeper appends an [`Entry`]
+//!   hashed (BLAKE3) over its reading, its residual slip against the keeper
+//!   inside it (kept, not averaged), its previous entry and the inner
+//!   keeper's head (rim -> mantle -> core -> hub -> epicenter).
+//! - Pace ([`Chronometry::pace`]): the epicenter's entry records the last
+//!   TUniversal final point's receipt height, so rings per final-point
+//!   advance is measured from the commit pairs, not declared.
+//!
+//! Every quantity is an exact `Q`. Keepers and entries are recomputed from
+//! the seed; only the commit counts and receipt heights are held in the
+//! checkpoint.
+//!
+//! Terms: TUniversal (docs/glossary.md).
 
 use xyl_core::units::Tier;
 use xyl_core::Q;

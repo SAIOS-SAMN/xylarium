@@ -1,21 +1,32 @@
-//! Civilizations: every layer of a people's life, carried together on the
-//! universal clock in the order each reads the others (docs/civilizations.md).
-//! Every subsystem runs for every woken people, whether observed or not.
+//! Civilizations: the carry that advances every living people's knowledge,
+//! world, numbers, gauges, settlers and history over a span, in the order
+//! each layer reads the others (docs/civilizations.md).
 //!
-//! One carry per span, in order:
-//! - Mind (knowledge.rs): each people thinks with the power it commands; every
-//!   member adds a lived share (a people at its land's limit still learns),
-//!   and it forgets at its own life's rate. Biology mastery feeds its harvest
-//!   and synthesis (housing.rs). A ruler may direct its inquiry
-//!   (`focus`).
-//! - World: the world at the span's end, and a fall or exodus inside the span.
-//! - Numbers: the logistic toward what its world houses ([`housing`]), at one
-//!   e-fold per its own generation, scaled by its radiation environment; a
-//!   fall when the world no longer feeds it.
-//! - Gauges: instinct, intelligence, sentience, consciousness and the combined
-//!   gauge, read from the layers after every carry. Each is a multiplier, never
-//!   a requirement or a latched state; consciousness scales the next span's
-//!   thought (F = 1 + g_C).
+//! Inputs: the [`Cosmic`] universe (peoples, systems read per degree of a
+//! star's life through [`SystemReader`]), the target time in Gyr and each
+//! people's radiation environment from `field::Field::environment`.
+//!
+//! [`Civilizations::carry`] runs, per living people, regardless of whether
+//! it is observed:
+//! - Knowledge ([`Knowledge::step_one`]) over the people's own span.
+//! - World: what it houses at the span's end ([`housing`]); where it fails,
+//!   the first failing degree by bisection.
+//! - Drive and reach: the chemical drive blended toward `transit::best_spec`
+//!   by energy mastery; the open worlds within four orbital places that
+//!   house a viable people.
+//! - Numbers: the logistic (`growth::grow`) toward housing x environment, at
+//!   one e-fold per generation; a fall (annal `FALL`) when housing is below
+//!   one body.
+//! - Gauges ([`Gauges::read`]): instinct, intelligence, sentience,
+//!   consciousness and gamma, each a share in [0, 1]; consciousness scales
+//!   the next span's thought by 1 + g_C.
+//! - With `decide`: an exodus ([`Act::Move`]) from a failing world, or a
+//!   daughter people ([`Act::Settle`]) past the logistic's inflection.
+//!   Acts are applied and returned so the caller records them as inputs;
+//!   without `decide` (laying a checkpoint back) the recorded inputs apply.
+//! - History ([`Civilizations::remember`]): turnings named as figures.
+//!
+//! Terms: carry, gauges (docs/glossary.md).
 
 pub mod history;
 pub mod housing;

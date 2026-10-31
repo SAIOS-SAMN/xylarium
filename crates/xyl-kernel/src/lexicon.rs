@@ -1,7 +1,21 @@
-//! The lexicon for the seat surface: the typed, exact records a seat's
-//! percept is sent as. Kinds and solvents are ids on the wire; their names
-//! live here. Every number is an exact rational; times are in seconds of the
-//! seat's own clock or in Gyr as stated per field; masses in kg.
+//! The lexicon of the seat surface: the typed records a
+//! [`Percept`] is sent as, and the ids and keys that stand in for names on
+//! the wire.
+//!
+//! Input: a [`Percept`] (percept.rs) and the universe's 32-byte domain key.
+//!
+//! Outputs: [`records`] returns one [`Record`] per item, its kind one of the
+//! constants [`PEOPLE`] ..= [`NEIGHBOUR`] and its [`Value`]s in the order
+//! documented on that constant; [`solvents`] is the id table for solvent
+//! names (`xyl_cosmos::worlds` species order, then melt and plasma); and
+//! [`people_key`] hashes a people's name under the domain (BLAKE3 derived
+//! key), so neighbours appear only as keys and no people's name is sent.
+//!
+//! Invariants: every quantity is an exact rational (`Value::Q`, converted
+//! from `Dy` without loss); units are fixed per field: deep time in Gyr,
+//! day and year in seconds, temperatures in K, pressure in bar, power in W,
+//! distance in kpc, light delay in years. A solvent missing from the table
+//! is sent with id `u64::MAX`.
 
 use crate::percept::Percept;
 use xyl_core::dyadic::Dy;

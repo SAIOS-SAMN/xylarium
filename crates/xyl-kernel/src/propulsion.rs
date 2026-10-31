@@ -1,24 +1,27 @@
-//! Propulsion: what a drive can do, from the energy its fuel releases.
+//! Propulsion: a drive's exhaust speed and speed change from the energy its
+//! fuel releases per kilogram.
 //!
-//! - Exhaust: the turning law's speed (turning.rs) for the energy released
-//!   per mass. With delta = e / c^2 held as one ratio, v_e = c delta = e / c,
-//!   capped at light (no square root of 2e), so a drive climbs the same well
-//!   it is weighed against (transit.rs: the climb c delta at a world's
-//!   surface). Chemical bonds (the people's covalent bond over its exhaust
-//!   molecule) give centimetres per second; fission and fusion (nuclear mass
-//!   defect) under a percent of light; annihilation, light itself.
-//! - Voyage: a hull of mass ratio R gains dv = c tanh((v_e / c) ln R)
-//!   (relativistic Tsiolkovsky); it climbs out of its world's well, coasts at
-//!   half of what is left, and brakes with the other half (transit.rs).
+//! Inputs: a people's `cosmic::Traits` (its solvent sets the chemical
+//! fuel's exhaust molecule), the universe's `xyl_cosmos::laws::Scales`
+//! (covalent bond energy, nuclear scale), the element table (hydrogen and
+//! helium masses for fusion), and light's speed from `package::Si`.
 //!
-//! The live carry (civ/mod.rs, universe.rs, transit.rs) builds every people's
-//! first drive for its own chemistry (`Spec::of` with `Drive::Chemical`) and
-//! blends toward the drives its knowledge reaches (transit.rs `best_spec`).
+//! - Energy ([`energy_per_kg`], J/kg) per [`Drive`]: chemical, the covalent
+//!   bond over the exhaust molecule's mass; fission, [`FISSION_SHARE`] of
+//!   rest mass; fusion, [`fusion_share`]; annihilation, c^2.
+//! - Exhaust ([`exhaust_speed`], m/s): the turning law's speed for the
+//!   energy's share of light's, v_e = e / c, capped at c (no square root of
+//!   2e). Chemical bonds give centimetres per second, nuclear fuels under a
+//!   percent of light, annihilation light itself.
+//! - Voyage: [`delta_v`] = c tanh((v_e / c) ln R), the relativistic rocket
+//!   (Tsiolkovsky's v_e ln R while slow, below c always);
+//!   [`propellant_per_kg`] = R - 1. transit.rs spends the speed change.
 //!
-//! Not ported: fuel choice by abundance and tradition, bunkers, port stocks,
-//! refits and their prices, skimming wells into port warehouses and the
-//! degraded-readiness beacon. They belong to a later ships and starports
-//! layer.
+//! Outputs are bundled as a [`Spec`] (`Spec::of`). civ/mod.rs and transit.rs
+//! build each people's chemical drive and blend it toward
+//! `transit::best_spec` by energy mastery. Declared rulers:
+//! [`FISSION_SHARE`], [`CHEM_EXHAUST_AMU`], [`MASS_RATIO`]. Fuel choice,
+//! bunkers, ports, refits and their prices are not modelled here.
 
 use crate::cosmic::Traits;
 use xyl_core::dyadic::Dy;

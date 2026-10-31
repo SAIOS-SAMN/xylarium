@@ -1,17 +1,26 @@
-//! A people's numbers, from physics (docs/civilizations.md): growth is
-//! derived, never read from a game table.
+//! A people's bodies, food, power and numbers, derived from its traits and
+//! its world rather than read from a game table (docs/civilizations.md).
 //!
-//! - Body: m_b = M_MIND x size (from life history and the world's gravity).
-//! - Metabolism: the unit body's (Kleiber) scaled by the size share
-//!   2s / (1 + s), s = m_b / M_MIND, at the chemistry's pace.
-//! - Food: the free energy reaching the medium over the living area, of which
-//!   a biosphere fixes a share and passes a tenth up one food-chain link.
-//! - Capacity: N_cap = food / B, scaled by the share of the year the world
-//!   grows (a tilted world has winters, a locked one a dark side).
-//! - Births and deaths: a generation is the unit generation scaled by
-//!   2s / (1 + s); a people grows toward N_cap logistically at
-//!   one e-fold per its own generation. The logistic is solved exactly
-//!   over any span, so results do not depend on step size.
+//! Inputs: `cosmic::Traits` (size, solvent), the world's `Body`, `State`
+//! and `Medium` (`xyl_cosmos::life`, `xyl_cosmos::worlds`), and [`Rulers`],
+//! the declared constants (mind-bearing body mass, unit generation, primary
+//! production share, trophic share, flux unit).
+//!
+//! - Body ([`body_kg`]): m_b = M_MIND x size (kg).
+//! - Metabolism ([`metabolism_w`]): the unit body's (W) scaled by the size
+//!   share 2s / (1 + s), s = m_b / M_MIND, at the solvent's body pace.
+//! - Food ([`food_w`]): the medium's free energy over the living area, of
+//!   which the biosphere fixes `eta_primary` and passes `trophic` up one
+//!   link, times the growing share of the year (one half when locked).
+//! - Generation ([`generation_yr`]): the unit generation scaled by
+//!   2s / (1 + s); [`growth_per_yr`] is one e-fold per generation.
+//! - Numbers ([`grow`]): the logistic K / (1 + (K/N - 1) e^(-r t)) in
+//!   closed form, so the result does not depend on step size; above
+//!   capacity it decays back the same way.
+//! - Power ([`power`], [`world_w`]): starlight and internal heat over the
+//!   world's whole surface, and the bodies' total metabolism (W).
+//!
+//! What a world houses (capacity) is computed from these in civ/housing.rs.
 
 use crate::cosmic::Traits;
 use xyl_core::dyadic::Dy;

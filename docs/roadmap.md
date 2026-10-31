@@ -208,7 +208,7 @@ are.
 Landed: seats for sovereign, steward, progenitor and ancient; typed
 percepts for seats on a people (`percept::perceive`); the `Focus` and
 `Handle` decisions (`Universe::decide`); seats taken by keyed minds as
-recorded inputs (`Input::Take`), laid back on restart.
+recorded inputs (`Input::Take`), applied again on restart.
 
 Next:
 

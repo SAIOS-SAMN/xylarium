@@ -1,12 +1,21 @@
-//! Units anchored at the white hole.
+//! Units anchored at the universal core: `G = c = M_core = 1`, so the length
+//! unit is the core's gravitational radius `r_g = G M_core / c^2`.
 //!
-//! The base is the core hole's own scale: G = c = M_core = 1, so the length
-//! unit is its gravitational radius `r_g = G M_core / c^2`, exact from the
-//! laws. Each tier of the anchor chain reads in its own unit, an exact power
-//! of sixty of `r_g` (the sexagesimal ladder): moving between tiers
-//! multiplies by a power of sixty, exact, and the numbers each tier reads
-//! stay within a few powers of sixty of one. SI enters only where a measured
-//! law is read in from outside, converted once.
+//! Inputs: the measured `G` (m^3 / kg s^2), `c` (m/s) and the core's mass (kg)
+//! as exact rationals ([`Q`]), supplied from outside (in the cosmos crate, by
+//! `package::Si`).
+//!
+//! Outputs: [`Tier`], a level of the anchor chain by its unit's power of sixty
+//! over `r_g` (Universe 60^10, Cluster 60^7, Galaxy 60^5, System 60, Planet
+//! 60^-2), with `in_rg` its unit in `r_g`; [`Units`], holding metres per `r_g`
+//! (`of`), with `in_tier` converting a length in metres to a tier's unit.
+//!
+//! Invariants: every conversion is exact; moving between tiers multiplies by a
+//! power of sixty, so each tier's readings stay within a few powers of sixty
+//! of one. SI enters only through `Units::of`, converted once. A zero
+//! denominator yields zero rather than a refusal.
+//!
+//! Terms: tier (docs/glossary.md).
 
 use crate::Q;
 

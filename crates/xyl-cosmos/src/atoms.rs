@@ -1,35 +1,31 @@
-//! The atom: matter at the lowest tier of the turning law. An atom is a
-//! centre of Z charges with Z electrons turning about it, and its chemistry
-//! is computed from that motion rather than looked up. The counts follow from
-//! the shape the electrons turn on.
+//! The atom: the electron structure of a neutral atom of Z charges, filled
+//! electron by electron on S^11, and the chemistry read from it (bonding
+//! capacity, tightness, ionization by heat, bonds, light holding).
 //!
-//! The forms:
-//! - an electron turns at omega = Q(<r) / r, Q the charge its orbit encloses
-//!   (the centre less the electrons further in), so inner electrons shield
-//!   outer ones;
-//! - an orbit closes in a whole number of ticks n, so r = Q n;
-//! - each frame of a band holds one electron in each sense; opposite senses
-//!   on one frame pair;
-//! - a new electron takes a free frame before it pairs.
+//! Reads only `compound::is_cluster` and `elements::TOP_Z`; all counts are
+//! exact integers and tightnesses exact `Q`, in hydrogen units (hydrogen's
+//! lone electron = 1). Each atom is filled once and cached per process.
 //!
-//! The atom on S^11 with its Hopf fibration: windings are counted and phases
-//! flow; there is no lattice. A shell is the family of windings closing with
-//! the same count n; within it a winding's shape l (0 <= l < n) is its
-//! eccentricity. The atom's sphere is S^11 (six turning planes); its
-//! orientations of shape l are the degree-l harmonics in twelve dimensions,
-//! C(l + 11, 11) - C(l + 9, 11) = 1, 12, 77, 352, ... (rather than 2l + 1 on
-//! S^2). Spin is the turning along each point's Hopf fibre (S^1 over CP^5):
-//! each orientation holds one counter-turning pair, so a shape-l subshell
-//! holds twice its orientations; shells hold 2, 26, 180. The fill order is
-//! given by the ring-density law (see [`atom`]), with free orientations
-//! before pairing. Closures at Z = 2, 28 (then 208); sub-closures where every
-//! orientation pairs.
+//! Model: a band (n, l) is the family of windings closing in n ticks with
+//! shape l (0 <= l < n). Its orientations are the degree-l harmonics on
+//! S^11, `orientations(l) = C(l + 11, 11) - C(l + 9, 11)` = 1, 12, 77, 352,
+//! ...; each holds one counter-turning pair along its Hopf fibre, so a band
+//! holds twice its orientations and shells hold 2, 26, 180, 884. `atom`
+//! adds each electron to the tightest open band by the ring-density law:
+//! band (n, l) reaches (n + 1)(l + 1), the electrons of every other shell m
+//! with m (m + 1) below that reach shield it, and its tightness is
+//! (Z - inside) / n; exact ties go to the lower (n, l). Free orientations
+//! fill before pairing. Shell crossings (from Z 31) follow from this rule.
 //!
-//! Computed properties: the outermost turning and the electrons sharing it,
-//! the unpaired count over the open bands (bonding capacity), whether every
-//! frame is paired (inert), and the tightness, the outermost electrons'
-//! enclosed charge over their turning, n_out / P_out (in a neutral atom the
-//! outermost electrons enclose their own count).
+//! Outputs: `Atom` (bands, outer shell, `unpaired`, `tightness`
+//! n_out / P_out, `closed`, `sealed`), `unpaired`, `unpaired_hot` (strips
+//! every band held no tighter than the heat, capped at 1), `vessel`, `bond`
+//! (shared share tau_min / tau_max, grip tau_min), `closes` and `hold` (a
+//! cluster's light holding from stretches, bends and dipole). `atom` returns
+//! None for Z = 0 or a cluster id. Seals fall at Z = 2, 28, 208, 1092;
+//! `vessel` returns (lower, upper): the last seal within `TOP_Z`, and the
+//! heaviest kind below it whose single-nucleon peel releases,
+//! u(z - 1) + 1 - u(z) < 0. Terms: seal, vessel (docs/glossary.md).
 
 use xyl_core::Q;
 

@@ -1,7 +1,19 @@
-//! A people in step with its universe: readings that show a people out of
-//! step (looping or frozen). Each
-//! is a share, re-read from its layers at every live step and never latched.
-//! A progenitor's audit reads them; nothing here acts.
+//! Step readings: per-people shares that show whether a people's knowledge
+//! is growing or stalled, and whether it is aware but not free to act.
+//!
+//! Inputs: a [`Universe`]'s peoples (`cosmic.peoples`), their knowledge
+//! stocks (`civ.knowledge`: last span's effort and forgetting share) and
+//! their gauges (`civ.gauges`).
+//!
+//! Output: [`living`] returns a [`Step`] for every people with numbers
+//! above zero: `z` = learn / (learn + forget) and `r` = (learn - forget) /
+//! (learn + forget), learn being the yearly thought (KU) and forget the
+//! forgetting share times the knowledge held; `frozen` = sentience x
+//! (1 - consciousness). A reading is `None` where its layer has no data.
+//!
+//! Invariants: read-only and recomputed on every call from the current
+//! state; nothing is stored, latched or checkpointed, and nothing here acts
+//! on the universe. Read by `xylarium observe sync`.
 
 use crate::universe::Universe;
 use xyl_core::dyadic::Dy;

@@ -1,24 +1,33 @@
-//! The field in play (xyl-cosmos field.rs): the bells' pulses reach the stars
-//! peoples live by; each star absorbs them and keeps books, and the absorbed
-//! energy sets the quantum radiation its worlds live in.
+//! The field in play: delivers the bells' pulses to the stars peoples live
+//! by, keeps each star's absorbed-energy books, moves its worlds and the
+//! star itself, and reads the radiation and environment of each people.
 //!
-//! - Only stars with peoples are reached each step: a pulse is delivered where
-//!   it is read, its arrivals counted in closed form rather than propagated
-//!   over the galaxy.
-//! - Books: everything a star has absorbed since its first pulse, as gravity,
-//!   light and burned-out energy; they balance exactly.
-//! - Quantum radiation: the star's absorbed energy per year over the world's
-//!   orbital radius; strongest where bells crowd, near cores and discs.
-//! - Orbits respond to the pulse: each reached star holds its worlds as
-//!   anchors from its G point, every ring is absorbed where the worlds stand,
-//!   and what the star cannot re-lock remains as shear. Each ring's
-//!   translation moves the star along its bell's axis, so the star drifts from
-//!   its galactic orbit and its next arrivals are timed from its new place.
-//! - Local gravity: the gravity a star gives out per year; stars where bells
-//!   crowd anchor their worlds hardest.
-//! - Repair: a people's repair is tuned to its home radiation. Radiation above
-//!   that wears it (`environment`: 1 at home, falling with the excess), and
-//!   the tuning follows the radiation it lives in over generations.
+//! Inputs: the [`Cosmic`] world (peoples' stars, witnessed systems, star
+//! places) and the bells from `xyl_cosmos::pulse` (the core and the holes
+//! among the first sample stars) with their laws in `xyl_cosmos::field`
+//! (`path`, `absorb`, `burning`).
+//!
+//! - Delivery ([`Field::step`]): only stars with peoples are reached. For
+//!   each bell the arrivals in (from, to] Gyr are counted in closed form;
+//!   each ring is absorbed where the worlds stand, and once a ring leaves
+//!   them unchanged the remaining rings are counted rather than repeated,
+//!   so the result does not depend on how the span is cut. Stars are
+//!   computed in parallel.
+//! - Books ([`Books`]): energy in = gravity + light + burned out, exact in
+//!   `Q` ([`Books::balances`]).
+//! - Anchors and drift: each star's worlds as anchors from its G point
+//!   (AU), and the star's offset from its galactic orbit (AU, summed per
+//!   axis), which times its next arrivals.
+//! - Radiation ([`Field::radiation`]): the star's absorbed energy per year
+//!   over the world's orbital radius.
+//! - Environment ([`Field::environment`]): 1 at or below the people's tuned
+//!   home radiation, home / radiation above it; the tuning follows the
+//!   current radiation at 1 - e^(-years / generation).
+//!
+//! Books, anchors and drift are regenerated from the seed; each people's
+//! tuned home radiation is held in the checkpoint.
+//!
+//! Terms: bell, books (docs/glossary.md).
 
 use crate::cosmic::Cosmic;
 use std::collections::BTreeMap;

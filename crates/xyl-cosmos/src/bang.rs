@@ -1,15 +1,24 @@
-//! The Big Bang: a universe's initial conditions, drawn from its seed, exact.
+//! The Big Bang: a universe's initial conditions, drawn from its seed and
+//! held as exact rationals.
 //!
-//! A universe begins as the white hole of a parent's black hole
-//! ([`crate::bounce`]). The seed records what fell, and the parent's spin is
-//! the bounce's: one uniform draw on the 2^-40 grid, fixed as an exact
-//! rational. The drawn spin is floored at the least that holds the firmament
-//! whole (`admit`: the torsion share must reach the furthest held kind's
-//! reach over the rim, swung by the inbound echo at its peak). Nothing else
-//! is drawn: the founding cascade sets the rim, the bell is the pulse's
-//! round trip to it (circuit::anchor), and the matter's lumpiness, its held
-//! share, its assembly and its star efficiency are read off the cascade
-//! (`BigBang::of`).
+//! Inputs: the seed, through a `xyl_core::Stream` on the path "big bang";
+//! `bounce::horizon_reach` and `Bounce::of` for the parent
+//! ([`crate::bounce`]); `cores::substrate_for` and `circuit::anchor` for the
+//! founding. Units are the parent's own (unit mass).
+//!
+//! One value is drawn: the parent's Kerr spin, uniform on (0, 1) and fixed
+//! on the 2^-40 grid ([`GRID_BITS`], [`clamp_spin`]). `cores::substrate_for`
+//! floors it at the least spin whose torsion share holds the firmament
+//! whole (the furthest held kind's reach over the rim, swung by the inbound
+//! echo's peak). Everything else is read off the founding: the rim, the bell
+//! (`circuit::anchor`), and the [`BigBang`]'s lumpiness, held share,
+//! assembly (bells until first light) and star efficiency (lit share).
+//!
+//! [`torsion_share`] is a = (H + J) / (2H + J) with H = 2M, J = a_Kerr M^2:
+//! 1/2 at zero spin, 3/5 at the extremal spin; [`spin_of_share`] inverts it
+//! onto the grid. [`BigBang::of`] returns None where the founding or the
+//! bounce cannot be built; the same seed gives the same Big Bang.
+//! Terms: torsion share, lumpiness (docs/glossary.md).
 
 use crate::bounce::Bounce;
 use xyl_core::certified::Encl;

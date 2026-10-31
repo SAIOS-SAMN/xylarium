@@ -1,6 +1,18 @@
-//! A people's history: turnings reported by the carry and the network, and
-//! the figures it remembers them by (docs/civilizations.md, History). A
-//! figure's role is read from the people at its turning, never from a table.
+//! A people's history: the turnings reported for it and the figures it
+//! remembers them by (docs/civilizations.md, History).
+//!
+//! Outputs: [`Turning`] (an act, its title and its time in standard years),
+//! [`Eminent`] (a figure: placeholder name, leading domain and its share of
+//! effort, how it is held, memory in [0, 1]), [`Held`] (person, colony or
+//! locus, from the people's mind shape) and [`forgotten`], the memory
+//! threshold exp(-3) below which a figure is dropped.
+//!
+//! This module holds only the types; `civ::Civilizations::turning` reports
+//! turnings and `civ::Civilizations::remember` names figures, reading each
+//! figure's role from the people at its turning rather than from a table.
+//! Figures are held in the checkpoint.
+//!
+//! Terms: eminent, turning (docs/glossary.md).
 
 use crate::knowledge::Domain;
 use xyl_core::dyadic::Dy;

@@ -1,36 +1,33 @@
-//! The bounce: a black hole on one side, a white hole on the other, exact.
+//! The bounce: a spinning black hole's horizon, its crossing point and the
+//! white-hole source on the far side, built exactly in conformal geometric
+//! algebra.
 //!
-//! Einstein–Cartan: matter's spin couples to spacetime torsion, and at the
-//! Cartan density torsion repels, so collapse halts and bounces. There is no
-//! singularity. What crosses a black hole's horizon emerges, on the far
-//! side, from a white hole: the Big Bang of a child universe. The simulated
-//! universe begins as such a white hole.
+//! Model (Einstein-Cartan): matter's spin couples to spacetime torsion, and
+//! at the Cartan density torsion repels, so collapse halts and bounces with
+//! no singularity. What crosses a black hole's horizon emerges from a white
+//! hole on the far side; the simulated universe begins as such a white hole.
 //!
-//! In the conformal algebra Cl(4,1) over ℚ (xyl_core::cga) every piece is exact:
+//! Reads `xyl_core::cga` (`point_at`, `sphere_through`, `keeping`, `Source`),
+//! `xyl_core::rotor::Half`, `circuit::axes` (the five isoclinic planes and
+//! their antipole) and `bang::torsion_share`. Units are natural, G = c = 1;
+//! points have `AXES` = 11 coordinates (the pole axis first), so the algebra
+//! is `Cl(12, 1)` over `Q`.
 //!
-//! - The horizon's reach is stated in the deficit grammar. The share the
-//!   hole holds at reach `R` is `δ = M / (R + M)`; the horizon is the reach
-//!   where the received share `1 − δ` is twice the held share, `δ_h = 1/3`,
-//!   so `R_h = M (1 − δ_h) / δ_h`, linear in `M` (natural units, G = c = 1)
-//!   and exact ([`horizon_reach`]). No square and no root is ever taken.
-//! - The horizon is a sphere, held as one vector `σ = C + (C·P) e∞`: the
-//!   sphere about the centre `C = X(c)` through the crossing point `P` at
-//!   the one-third reach (`xyl_core::cga::sphere_through`). A point lies on
-//!   it exactly when `P·σ = 0`.
-//! - The inversion that swaps near and far is reflection in that sphere,
-//!   `X ↦ σXσ⁻¹`. It carries a point at a share `d/R_h` of the reach to one
-//!   at the reciprocal share `R_h/d`, fixes the horizon, and is its own
-//!   inverse; it maps the sink to its source.
-//! - The spin of what falls is a turn about the centre, a bivector `K`
-//!   whose magnitude is the Kerr parameter `a = J/M² ∈ (0, 1)`. A turn about
-//!   the centre keeps the horizon, matching the Einstein–Cartan statement
-//!   that spin, not mass, drives the bounce.
-//! - The white hole at the crossing point `P` on the horizon is the null
-//!   generator `N = P ∧ (P·K)` (`xyl_core::cga::Source`): verified
-//!   null, fixing `P`, keeping the horizon, or refused. Its slivers `1 + tN`
-//!   compose by adding their parameters, the outflow.
+//! - `horizon_reach`: with held share `delta = M / (R + M)`, the horizon is
+//!   where the received share `1 - delta` is twice the held one, so
+//!   `delta_h = 1/3` and `R_h = M (1 - delta_h) / delta_h = 2M`, exact.
+//! - `curved_reach`: a reach `r` read on the S^360 enclosure of curvature
+//!   radius `rho` as `rho sin(r / rho)`, fixed on the 2^-64 grid.
+//! - `horizon`: the dual sphere `sigma = C + (C . P) e_inf` about the centre
+//!   through the crossing `P` (`crossing`, on the first plane at phase psi).
+//! - `spin_bivector`: the Kerr parameter `a = J / M^2` as the same turn in
+//!   all five planes.
+//! - `Bounce::of`: the source `N = P ^ (P . K)`, verified null, fixing `P`
+//!   and keeping the horizon, and the far face, `P` under the planes' half
+//!   turn. Returns None unless `M > 0`, `0 < a < 1`, the enclosure is
+//!   positive and every check on the source passes.
 //!
-//! Nothing here is approximated; every property is checked on the value.
+//! Terms: horizon, throat (docs/glossary.md).
 
 use xyl_core::certified::Encl;
 use xyl_core::cga::{self, keeping, Mv, Source};

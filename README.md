@@ -17,6 +17,10 @@ records its history in annals. Each [seat](docs/glossary.md) (a role such as
 sovereign or steward) is filled by the kernel's default rule or by an
 external AI agent.
 
+New to the project? Read [docs/concepts.md](docs/concepts.md) first: a
+plain-language tour of the model in ten minutes. AI coding agents start at
+[AGENTS.md](AGENTS.md).
+
 ## Features
 
 - **Exact arithmetic.** Held state is exact rationals; transcendental values
@@ -171,6 +175,7 @@ running universes with `xylarium observe`.
 
 | Document | Contents |
 |---|---|
+| [concepts.md](docs/concepts.md) | the model in plain language: start here |
 | [architecture.md](docs/architecture.md) | layers, data flow, the event engine, caching, state, readings |
 | [model.md](docs/model.md) | the physical model, from the founding to worlds |
 | [EQUATIONS.md](docs/EQUATIONS.md) | every formula with its source location |

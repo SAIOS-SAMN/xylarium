@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+"""Check that the documentation stays connected to itself and to the code.
+
+1. Every relative Markdown link resolves to a file, and every `#anchor`
+   to a heading in that file.
+2. Every code path written in backticks in the Markdown documentation
+   (`module::Item`, `Type::method`, `crate module::item`) names an item
+   that is declared somewhere in the workspace's Rust sources.
+3. Every glossary entry names at least one code item or document.
+
+Usage: scripts/check-docs        (from the repository root; exit 1 on failure)
+"""
+
+import glob
+import os
+import re
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.chdir(ROOT)
+
+DOCS = sorted(
+    glob.glob("*.md") + glob.glob("docs/*.md") + glob.glob(".github/**/*.md", recursive=True)
+)
+SOURCES = sorted(glob.glob("crates/*/src/**/*.rs", recursive=True) + glob.glob("crates/*/build.rs"))
+
+
+def slug(heading):
+    h = heading.strip().lower()
+    h = re.sub(r"[^\w\- ]", "", h)
+    return h.replace(" ", "-")
+
+
+def strip_fences(text):
+    return re.sub(r"```.*?```", "", text, flags=re.S)
+
+
+# --- declared names in the Rust sources -------------------------------------
+declared = set()
+decl = re.compile(
+    r"\b(?:fn|struct|enum|trait|const|static|type|mod|macro_rules!)\s+([A-Za-z_][A-Za-z0-9_]*)"
+)
+variant = re.compile(r"^\s*([A-Z][A-Za-z0-9_]*)\s*(?:[,({=]|$)")
+field = re.compile(r"^\s*(?:pub(?:\([a-z]+\))?\s+)?([a-z_][a-z0-9_]*)\s*:\s*[A-Za-z&(\[]")
+for path in SOURCES:
+    declared.add(os.path.splitext(os.path.basename(path))[0])
+    declared.add(os.path.basename(os.path.dirname(path)))
+    for line in open(path, encoding="utf-8"):
+        declared.update(decl.findall(line))
+        for rx in (variant, field):
+            m = rx.match(line)
+            if m:
+                declared.add(m.group(1))
+        declared.update(re.findall(r"\b(XYL_[A-Z_]+)\b", line))
+declared.update(os.path.basename(p) for p in glob.glob("crates/*"))
+declared.update(os.path.basename(p).replace("-", "_") for p in glob.glob("crates/*"))
+
+failures = []
+
+# --- 1. links and anchors -----------------------------------------------------
+anchors = {}
+for f in DOCS:
+    text = strip_fences(open(f, encoding="utf-8").read())
+    anchors[os.path.normpath(f)] = {
+        slug(l.lstrip("#")) for l in text.splitlines() if l.startswith("#")
+    }
+for f in DOCS:
+    text = strip_fences(open(f, encoding="utf-8").read())
+    for target in re.findall(r"\]\(([^)\s]+)\)", text):
+        if re.match(r"[a-z]+:", target):
+            continue
+        path, _, anchor = target.partition("#")
+        full = os.path.normpath(os.path.join(os.path.dirname(f), path)) if path else os.path.normpath(f)
+        if not os.path.exists(full):
+            failures.append(f"{f}: link to missing file {target}")
+        elif anchor and full.endswith(".md") and anchor not in anchors.get(full, set()):
+            failures.append(f"{f}: link to missing heading {target}")
+
+# --- 2. code paths in backticks ----------------------------------------------
+path_rx = re.compile(r"`([^`\n]+)`")
+item_rx = re.compile(r"^(?:[a-z][a-z0-9-]*\s+)?((?:[A-Za-z_][A-Za-z0-9_]*::)+[A-Za-z_][A-Za-z0-9_]*)(?:\(.*\))?$")
+for f in DOCS:
+    if f.startswith(".github") or f == "CHANGELOG.md":
+        continue
+    text = strip_fences(open(f, encoding="utf-8").read())
+    for span in path_rx.findall(text):
+        for part in re.split(r",\s*", span):
+            m = item_rx.match(part.strip())
+            if not m or m.group(1).startswith("clippy::"):
+                continue
+            for seg in m.group(1).split("::"):
+                if seg in ("crate", "self", "super", "std", "core", "Self"):
+                    continue
+                if seg not in declared:
+                    failures.append(f"{f}: `{m.group(1)}` names `{seg}`, not declared in crates/")
+                    break
+
+# --- 3. glossary entries ------------------------------------------------------
+for i, line in enumerate(open("docs/glossary.md", encoding="utf-8"), 1):
+    if not line.startswith("| ") or line.startswith("| Term") or line.startswith("|---"):
+        continue
+    cells = [c.strip() for c in line.strip().strip("|").split("|")]
+    if len(cells) < 3 or not any("`" in c or "](" in c for c in cells[2:]):
+        failures.append(f"docs/glossary.md:{i}: entry `{cells[0]}` names no code item or document")
+
+for msg in failures:
+    print(msg)
+print(f"check-docs: {len(DOCS)} documents, {len(failures)} problems")
+sys.exit(1 if failures else 0)

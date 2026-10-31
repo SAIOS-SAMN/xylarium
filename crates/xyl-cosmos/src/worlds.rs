@@ -1,51 +1,64 @@
-//! A world's air, seas and climate, and the chemistries they allow.
+//! A world's air, seas and climate at an age, and the chemistries (media)
+//! they allow.
 //!
-//! The atmosphere is built like the planet: what was gathered when the world
-//! formed (its ices, systems.rs), plus what its interior outgasses over time
-//! (bodies.rs), less what escapes to space. From that follow which volatiles
-//! are liquid at the surface pressure and temperature (solvents), how much
-//! chemistry those conditions allow, what energy reaches it, and its pace.
-//! No world's values are built in; the unit world is one possible input.
+//! Inputs: a `systems::World` and its `System`, the orbit and spin drawn by
+//! `bodies::orbits`, the interior heat, field and processed mantle from
+//! `bodies::interior`, radiolysis from `hydro`, metals from
+//! `chem::Chemistry`, and the universe's `laws::Scales` (temperatures and
+//! pressures scale with them). Distances are in AU, masses and radii in
+//! world units, temperatures in K, pressures in bar, ages in Gyr.
 //!
-//!   Temperature  absorbed light read linearly: flux falls as L / a (not
-//!                L / a^2), and warmth is the absorbed share times the unit
-//!                temperature (no T^4 law), with albedo from the surface
-//!                cover. The star brightens along its main sequence (Gough
-//!                1981); over an eccentric orbit the mean of 1 / r is 1 / a.
+//! The atmosphere is what the world gathered as ices (systems.rs) times the
+//! share its interior outgassed, less what escapes:
+//!
+//!   Temperature  absorbed light read linearly: flux `L / a` (not `L / a^2`,
+//!                the mean of 1 / r over an eccentric orbit is 1 / a),
+//!                warmth the absorbed share times the unit temperature (no
+//!                T^4 law), albedo from the surface's ice cover. `L` is the
+//!                star's mean luminosity as the caller supplies it.
 //!   Outgassing   a freezing magma ocean releases most of its volatiles (in
 //!                proportion to the mantle share accretion melted); the
-//!                convecting mantle releases what its heat has processed since.
+//!                convecting mantle releases what its heat has processed.
 //!   Escape       Jeans: a gas of molecular mass mu is held if lambda =
 //!                G M mu m_H / (k T_exo R) is large; the exosphere is hotter
-//!                under a young or small star's ultraviolet and with no field.
-//!                Ultraviolet photolysis converts NH3 to N2 and CH4 to CO2; the
-//!                stellar wind breaks molecules high in the air and fragments
-//!                escape with a few eV (photochemical escape), applied in four
-//!                passes with the climate re-solved between them.
+//!                under an active star and with no field. Ultraviolet above
+//!                a declared dose converts NH3 to N2 and CH4 and CO to CO2;
+//!                the stellar wind breaks molecules and fragments escape
+//!                with a few eV, applied in four passes with the climate
+//!                re-solved between them.
 //!   Greenhouse   surface warming 1 + 3/4 h with h = tau / (1 + tau); each gas
-//!                weighted by its cluster's hold on outgoing light (bond law,
-//!                in water's units; homonuclear pairs hold none). The scale
-//!                `greenhouse_tau` is provisional (one fit across three reference
-//!                worlds). Water vapour sits at saturation; the climate is
-//!                the warmest stable balance, and a steam atmosphere rains out
-//!                unless absorbed flux exceeds the runaway limit (Nakajima et
-//!                al. 1992). Weathering on open water draws CO2 into carbonate
-//!                until it balances outgassing. Cold poles trap condensables
-//!                (seasonal polar caps).
+//!                weighted by its cluster's hold (`atoms::hold`, in water's
+//!                units; homonuclear pairs hold none). `greenhouse_tau` is
+//!                provisional, calibrated so the unit world reads near 288 K.
+//!                Vapour sits at saturation; the climate is the warmest
+//!                stable balance on a temperature ladder, and a steam
+//!                atmosphere rains out unless absorbed flux exceeds the
+//!                runaway limit (Nakajima et al. 1992). Weathering on open
+//!                water draws CO2 down until it balances outgassing; cold
+//!                poles trap condensables; ice and water at a melting point
+//!                are solved for the ice share.
 //!   Solvents     liquid between the triple point and the boiling curve
 //!                (Clausius-Clapeyron) up to the critical point, supercritical
-//!                above both; a subsurface ocean where internal heat keeps the
-//!                ice shell thinner than the ice layer; silicate melt above
-//!                ~1400 K; a giant's deep plasma.
-//!   Chemistry    a solvent, the bonds it allows (strong bonds that outlast a
-//!                structure, weak bonds at the solvent's cohesion), the
-//!                available elements, the energy supply (chemically active
-//!                starlight, internal heat, radiolysis fuel) and the pace
-//!                (Eyring, activation scaled to the solvent's range).
+//!                above both; a subsurface H2O or NH3 ocean where internal
+//!                heat keeps the ice shell thinner than the ice layer;
+//!                silicate melt above 1400 K (scaled); a deep plasma in a
+//!                giant of at least ten world masses.
+//!   Chemistry    per medium: richness (available elements x strong bonds
+//!                near 40 kT x weak bonds near 10 kT of the solvent's
+//!                cohesion), energy (active starlight, free internal heat,
+//!                radiolysis), pace (Eyring, activation scaled to the
+//!                solvent's range) and its `Region`.
 //!
-//! Temperatures and pressures scale with the universe's laws (laws.rs
-//! `Scales`). Arithmetic is dyadic (xyl-core `dyadic`): exact and
-//! platform-independent.
+//! Outputs: `build` returns a world's `State` at an age; `media` and `best`
+//! its chemistries; `settings` the `Setting`s of a system's worlds (orbit
+//! draws keyed by the seed and `["orbits", path]`); `events` the solved
+//! spin-lock and dynamo-stop times (`xyl_core::event::crossing`); `unit` the
+//! reference world, a ruler; `star_degree_gyr` the degree of a star's life.
+//! Invariants: no world's values are built in; arithmetic is dyadic (`Dy`),
+//! deterministic and platform-independent; a giant's state is its cloud
+//! tops, with no surface air or seas.
+//!
+//! Terms: degree (of a star's life) (docs/glossary.md).
 
 use crate::bang::BigBang;
 use crate::bodies::{self, Orbit};

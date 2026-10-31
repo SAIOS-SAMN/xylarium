@@ -1,12 +1,26 @@
-//! A universe's laws: the four constants
-//! that set every scale, as ratios to the reference values, and the scales they set.
+//! A universe's laws: four dimensionless constants given as ratios to
+//! reference values, and the physical scales those ratios set.
 //!
-//! The reference values are exact rationals of the measured values: the fine-structure
-//! constant α, the electron-to-proton mass ratio β, the gravitational
-//! coupling α_G, and the nuclear efficiency ε. Another universe may run under
-//! other laws, given as ratios to these. Every derived scale is a product of
-//! the ratios' nominal powers, each read as an exact rational share (`pw`), so
-//! under the reference laws every scale is exactly 1.
+//! No inputs from other modules. The reference values (`reference`) are
+//! exact rationals of the measured fine-structure constant alpha
+//! (1/137.035999), electron-to-proton mass ratio beta (1/1836.15267),
+//! gravitational coupling alpha_G (5.906e-39) and nuclear efficiency epsilon
+//! (0.0071). `Laws` holds each constant over its reference (1 = reference)
+//! and `ftl`, whether space can be folded (read by xyl-kernel's
+//! `transit::Network::fold`).
+//!
+//! Outputs: `Laws::chemistry`, `pressure`, `density`, `atom`, `proton`,
+//! `star_mass`, `star_radius` (each an `Encl` over the reference), and
+//! `Laws::scales` -> `Scales`, their midpoints as `Dy` for the heavy models;
+//! `Scales::half_life` scales an alpha decay's half-life as
+//! `exp(gamow (alpha - 1))`.
+//!
+//! Each scale is a product of factors, one per constant and nominal power
+//! `x^(n/d)` (e.g. chemistry `alpha^2 beta alpha_G^(1/2)`). Powers 1 and -1
+//! are exact; any other power p = |n| / d is replaced by the share
+//! `(1 + p) x / (1 + p x)` (its reciprocal for negative n), which is 1 at
+//! x = 1 and positive for x > 0. No true powers or roots are taken, so under
+//! the reference laws every scale is exactly 1.
 
 use xyl_core::certified::Encl;
 use xyl_core::dyadic::Dy;

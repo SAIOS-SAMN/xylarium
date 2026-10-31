@@ -1,24 +1,35 @@
-//! A cosmic universe in play: the galaxy the Big Bang made, its deep time, and the peoples
-//! that wake in it.
+//! The cosmic world in play: the galaxy from the Big Bang, deep time from
+//! the first mind's dawn, the peoples the forecast wakes, and the annals.
 //!
-//! Galaxy: stars are bodies on orbits about the core (xyl-cosmos galaxy.rs),
-//! identified by their index in the galaxy's sample and placed where their
-//! orbit is at the deep-time instant. A system is built from physics
-//! (systems.rs, worlds.rs) only when witnessed: when a mind wakes in it or a
-//! people reaches it. A distance is the arc between two places on the
-//! universe's closed space.
+//! Inputs: a `xyl_cosmos::worlds::Galaxy` (seed, Big Bang, chemistry,
+//! elements) and the forecast of minds (`xyl_cosmos::minds::Schedule`).
+//! Stars come from `xyl_cosmos::galaxy`, systems from
+//! `xyl_cosmos::systems`, worlds and media from `xyl_cosmos::worlds`.
 //!
-//! Deep time begins when the first mind arises. The forecast (minds.rs) gives
-//! when each mind would wake in the undisturbed galaxy; each wakes on the
-//! world its lineage climbed on, in the chemistry that finished first.
-//! Selection sets its traits: strategy (a variable world, with a tilted axis
-//! or a small star, breeds r-strategists; a steady one K), size (life history
-//! and gravity), movement and senses (medium, gravity), sociality, and the
-//! shape of its mind. Its numbers are what its world can feed. Feedback from
-//! minds acting on worlds onto the forecast is not yet modelled.
+//! - Stars are identified by their index in the galaxy's sample and placed
+//!   on their orbits at the present ([`Cosmic::place`]); [`Cosmic::distance`]
+//!   is the arc between two stars on the universe's closed space (kpc).
+//! - Systems are built only when witnessed: when a mind wakes there or a
+//!   people reaches it ([`Cosmic::witness`]; [`Cosmic::prepare`] builds the
+//!   span's systems in parallel). Worlds are read per degree of the star's
+//!   life ([`Cosmic::world_at`], [`SystemReader`]) and cached; the caches
+//!   change no result.
+//! - Waking ([`Cosmic::wake`]): each forecast mind due by the target time
+//!   arises on its world, unless the world is held or cannot feed a viable
+//!   people (then it is counted `silent`). [`select`] reads its [`Traits`]
+//!   from its world: strategy (a tilted axis or a small star gives r),
+//!   sense, form, sociality, mind shape and size. Its numbers start at what
+//!   its world houses with nothing learned (civ/housing.rs).
+//! - Ancients: a mind born in a galactic core within one core assembly time
+//!   (`minds::ancient_window`) of that core's first core-born mind; each
+//!   [`People`] records whether it is one.
+//! - [`Cosmic::settle`] founds a daughter people; [`Annal`]s record events.
 //!
-//! Ancients are the minds the core raises first (minds.rs ancients()); each
-//! people records whether it is one.
+//! Peoples' numbers are carried by civ/mod.rs. Feedback from peoples'
+//! actions onto the forecast is not modelled. The cosmic world is
+//! regenerated from the seed; peoples' numbers are held in the checkpoint.
+//!
+//! Terms: ancient, annal, people, forecast (docs/glossary.md).
 
 use std::collections::BTreeMap;
 use xyl_core::dyadic::Dy;

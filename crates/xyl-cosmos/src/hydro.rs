@@ -1,25 +1,28 @@
-//! Hydromagnetics: a
-//! world's core dynamo, its field, and the particles that reach its surface.
+//! Hydromagnetics: a world's core dynamo, its dipole field, and the particle
+//! power and dose that reach its surface.
 //!
-//! A core convects when it loses heat faster than its iron conducts along its
-//! adiabat (bodies.rs). In a conductor that convection builds and holds a
-//! field, which shapes what reaches the world (its star's wind and the
-//! galaxy's cosmic rays) and so what its surface keeps.
+//! Reads `worlds::State` (core heat flow `q_cmb`, adiabatic flow `q_ad`, core
+//! radius, radius, gravity, surface pressure, stellar wind `sw`, cosmic-ray
+//! flux `cr`) and measures every field against `worlds::unit`, the unit world
+//! (a ruler). Quantities are `Dy`; field, standoff and dose are in the unit
+//! world's units, particle power in W/m^2 (SI rulers in the code).
 //!
-//!   Dynamo    runs while q_cmb > q_ad; the share of the core's heat flow
-//!             available to it is 1 - q_ad / q_cmb.
-//!   Field     the dipole moment is the share 2x / (1 + x) of the convective
-//!             power (excess flux x core radius) against the unit world's,
-//!             times the core radius ratio; units are the unit world's
-//!             (worlds::unit, a ruler).
-//!   Standoff  where the field's pressure meets the wind (Chapman-Ferraro):
-//!             10.1 R times the share of B against P, scaled to the unit
-//!             world's measured magnetopause.
-//!   Exposure  the share of the sky the wind reaches: R / r_mp, all of it
-//!             with no field.
-//!   Dose      the star's particles and the galaxy's cosmic rays above the
-//!             field's cutoff (Stormer; the spectrum falls as
-//!             rigidity^-1.7), both absorbed by the air's column.
+//!   Dynamo    runs while q_cmb > q_ad; convective power is
+//!             (q_cmb - q_ad) x core radius.
+//!   Field     `moment`: the share 2x / (1 + x) of the power against the
+//!             unit world's, times the core radius ratio; `surface_field`
+//!             divides by the world's radius.
+//!   Standoff  `standoff` (Chapman-Ferraro): 10.1 world radii times the
+//!             share 2x / (1 + x) of B against the wind pressure P.
+//!   Exposure  `exposure`: R / r_mp, the whole sky (1) with no field.
+//!   Dose      `particle_power`, `dose`: the star's wind through the exposed
+//!             sky plus cosmic rays above the field's cutoff (Stormer; the
+//!             integral spectrum falls as rigidity^-1.7), both attenuated by
+//!             the air's column (185 g/cm^2). `radiolysis` stores 3% of the
+//!             absorbed power as surface oxidants.
+//!
+//! Every function is total and deterministic: a world with no convective
+//! power has moment 0, standoff 0 and exposure 1; divisors are floored.
 
 use crate::worlds::{unit, State};
 use xyl_core::dyadic::Dy;

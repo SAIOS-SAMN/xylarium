@@ -1,29 +1,31 @@
-//! A galaxy's centre: an Einstein–Cartan black hole, with every unit of
-//! matter in exactly one place.
+//! A galaxy's centre: an Einstein-Cartan black hole and the exact books of
+//! the matter that falls to it, passes its throat, and returns as jets.
 //!
-//! What falls to the centre is split, and nothing is counted twice:
+//! Reads `bounce::Bounce` (rebuilt on every change of mass) and
+//! `circuit::echo_gyr` for the jet episode (`galaxy_episode_myr`, the echo in
+//! Myr; zero before a founding). Masses are suns and times Myr, all exact
+//! `Q`; exponentials are `xyl_core::certified` enclosures whose lower bound
+//! is fixed on a 2^-40 grid.
 //!
-//! - The share that crosses the horizon. A fraction of it (the accretion
-//!   efficiency) is radiated as light on the way in, a declared sink of
-//!   mass-energy. The rest is in the throat: the hole's mass beyond its
-//!   formation mass. A core is a larger wormhole with no open-ended
-//!   singularity. At the Cartan density the matter bounces into the far core,
-//!   the persistent central engine of the universe on the other side
-//!   ([`crate::bounce`]), which has its own clock. The far engine releases
-//!   what the throat holds into its universe over its own episodes, and the
-//!   hole's mass falls accordingly: matter passes through rather than being
-//!   stored. The far core also sends its own universe's matter back through
-//!   the same throat.
-//! - The rest stays outside, in the accretion reservoir, and returns to the
-//!   bulge as jets over an episode's e-folding time (the galaxy's own echo,
-//!   [`galaxy_episode_myr`]):
-//!   `returned = reservoir·(1 − exp(−Δt/τ))`, a certified enclosure, fixed on
-//!   the grid.
+//! What falls (`Core::capture`) is split:
 //!
-//! Matter arriving from a paired universe through a white hole is a separate
-//! declared source, booked only when that universe sends it (a handoff on the
-//! network). Crossed matter is never also kept on this side, so nothing is
-//! counted twice; [`Core::conserved`] holds exactly at all times.
+//! - `horizon_share` (1/10, a ruler) crosses the horizon; `efficiency`
+//!   (1/10 of that, a ruler) is radiated as light on the way in, and the
+//!   rest enters the throat, growing the hole beyond its formation mass.
+//!   Each capture's record is folded in order into a BLAKE3 digest that
+//!   seeds the far universe (`FarCore::seed`).
+//! - The rest enters the accretion reservoir; `Core::run` returns
+//!   `reservoir (1 - exp(-dt / tau))` to the bulge as jets, tau the episode.
+//! - `Core::far_run` advances the far core's clock and releases
+//!   `held (1 - exp(-dt / tau))` of the throat into the far universe; the
+//!   hole's mass falls by that amount, never below its formation mass.
+//! - `Core::arrive` books matter sent back from the paired universe into the
+//!   reservoir, only when that universe sends it.
+//!
+//! Invariant (`Core::conserved`, exact at all times): fallen + arrived =
+//! radiated + reservoir + returned + in throat + far released, and the
+//! amount in the throat equals the hole's mass beyond its formation mass.
+//! `Core::new` and `capture` return None where `Bounce::of` refuses.
 
 use crate::bounce::Bounce;
 use xyl_core::certified::{down, exp, Encl};

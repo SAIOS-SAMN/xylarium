@@ -1,12 +1,26 @@
-//! The coordinate (docs/network.md): TUniversal's lanes {S, G, T, H}, and
-//! on each lane an exact rational, the body's own reading on that lane
-//! (S its phase on its anchor's ring, G its holding as a share of its
-//! anchor's, T its own beat's ring and phase; H not yet modelled), written
-//! as the sector of a 60^6-mark protractor it lies in: six sexagesimal places,
-//! `XX:XX:XX:XX:XX:XX`, place 1 the coarsest. A prefix of places is a whole
-//! coarser sector. The places are decided by exact comparison - never a
-//! rounding: the value stays exact, the places only say which sector holds
-//! it. No index, no hash: a coordinate is read off the body's content.
+//! The coordinate (docs/network.md): a body's exact reading on one of the four
+//! lanes {S, G, T, H} of TUniversal, written as the sector of a 60^6-mark
+//! protractor that holds it.
+//!
+//! Inputs: an exact rational share of a turn ([`Q`]) on a [`Lane`]: S, the
+//! body's phase on its anchor's ring; G, its holding as a share of its
+//! anchor's; T, its own beat's ring and phase; H, not yet modelled. Reads
+//! `certified` for the enclosed cosine and sine in `direction`.
+//!
+//! Outputs: [`Reading`] (`of` keeps the fractional part of the value), with
+//! `mark` (the sector index `m`, `m / 60^6 <= share < (m + 1) / 60^6`),
+//! `places` (six sexagesimal places, coarsest first), `written`
+//! (`XX:XX:XX:XX:XX:XX`) and `within` (whether two readings share a prefix of
+//! places on the same lane); and `direction`, the sector of the in-plane
+//! direction (x, y), read with no arctangent.
+//!
+//! Invariants: the value stays exact; places are decided by exact comparison,
+//! never by rounding, and a prefix of places names a whole coarser sector.
+//! A coordinate is computed from the body's values, with no index or hash.
+//! `direction` returns `None` for the zero direction and where the 2^-60
+//! enclosures cannot decide the sector.
+//!
+//! Terms: TUniversal (docs/glossary.md).
 
 use crate::Q;
 

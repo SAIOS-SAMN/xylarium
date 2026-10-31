@@ -1,16 +1,32 @@
 //! Conformal geometric algebra `Cl(n+1, 1)` over exact rationals.
 //!
-//! A multivector is a sparse sum of blades, each a bit mask over the
-//! generators and a `Q` coefficient. The first three base axes are bits 0-2,
-//! `e+` bit 3 and `e-` bit 4 (`e+^2 = +1`, `e-^2 = -1`), and base axis `i`
-//! past the third is bit `i + 1`, so the null basis never moves as `n` grows.
+//! Inputs: [`Q`] coefficients and coordinates; no other module.
+//!
+//! Outputs: the multivector [`Mv`] (geometric product `geo`, `reverse`,
+//! `involute`, `grade`, `norm2`, `sandwich`, `twisted`, `parity`,
+//! `wedge_vector`, `projective_eq`); the null basis `e_o`, `e_inf`; points
+//! (`point_at`, `base_at`), dual spheres (`sphere_through`); the versors
+//! `translator_at`, `rotator_on_blade`, `dilator`; `projective_ratio`;
+//! `keeping` (the part of a generator that keeps a sphere); and [`Source`], a
+//! null-generator flow `1 + t N` on a sphere.
+//!
+//! Layout: a multivector is a sparse sum of blades, each a bit mask over the
+//! generators with a `Q` coefficient, ascending by mask. The first three base
+//! axes are bits 0-2, `e+` bit 3 and `e-` bit 4 (`e+^2 = +1`, `e-^2 = -1`), and
+//! base axis `i` past the third is bit `i + 1`, so the null basis keeps its
+//! bits as `n` grows (up to `MAX_N`).
 //!
 //! The conformal model: a point of `Q^n` is `X(x) = x + 1/2 |x|^2 e_inf + e_o`
-//! on the null cone, a dual sphere about `c` through `p` is `X(c) + (X(c) . X(p)) e_inf`
-//! (its radius enters only through the points' product), and rigid and
-//! conformal motions are versors acting by sandwich `V X V~`. Versors are
-//! kept unnormalised; every reading of what they carry is projective (by
-//! proportion), so no root or inverse is taken.
+//! on the null cone; a dual sphere about `c` through `p` is
+//! `X(c) + (X(c) . X(p)) e_inf` (its radius enters only through the points'
+//! product); rigid and conformal motions are versors acting by the sandwich
+//! `V X V~`.
+//!
+//! Invariants: all arithmetic is exact. Versors are kept unnormalised and
+//! every reading of them is projective (equality up to a non-zero rational
+//! factor), so no root or inverse is taken. Functions that can fail (a point
+//! at infinity, an axis past `MAX_N`, a non-proportional ratio, a null
+//! sphere) return `None`.
 //!
 //! ```
 //! use xyl_core::Q;

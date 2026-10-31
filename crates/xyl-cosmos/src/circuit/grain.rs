@@ -1,4 +1,15 @@
-// The grain: whole nuclei, the 64-bit grid, turns and a mix's sums
+// The grain: amounts cut into whole nuclei, the 2^-64 grid for reaches,
+// phases on the 60^-6 coordinate grid, and a mix's mass.
+//
+// Inputs: `formation::weight` (3Z - unpaired frames per nucleus) and
+// `formation::mass_weight` (Z + Q nucleons), `xyl_core::coordinate::MARKS`.
+//
+// Outputs (crate-private): `nuclei_of` (whole amount and count of a kind;
+// the nucleon unit is 2^-(bits + 8), 8 bits finer than one hydrogen of the
+// founding's count, fixed once `set_founding_bits` names it), `grid`,
+// `turn`, `weigh` and `mass_of` (held frames to mass), `add` (ignores
+// non-positive amounts) and `deficit` (h / (r + h), zero where undefined).
+// Exact throughout.
 
 use super::*;
 use crate::formation;

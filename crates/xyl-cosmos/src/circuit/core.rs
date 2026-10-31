@@ -1,4 +1,30 @@
-// The substrate's sections: the core's clock and reverberation, the ocean's shares, a galaxy's composition at t
+// The substrate's sections at time t (Gyr, as `Dy`): the core's clock, the
+// firmament's reverberation and outflow, the ocean's shares and waveform,
+// and each galaxy's intake, composition and push.
+//
+// Inputs: a founded `Substrate` (found.rs), the anchor's bell (anchor.rs),
+// `bounce::horizon_reach`, `compound::open` / `compound::hold` for a kind's
+// frames, `formation::emission`, `package::hole_mass`, and `pole_flux`
+// (poles.rs) with `electron_phase` (weights.rs). Reaches are core rings,
+// amounts held frames, rates per Gyr.
+//
+// - Deficit: `vacuum_share(r, h) = h / (r + h)`; `throat_push` is its value
+//   at r = h, 1/2; `echo_dilation` (1 + p) / (1 - p) = 3 there.
+// - Clock: `bell_gyr` (from the anchor), `echo_gyr` = two bells; a kind's
+//   `onset_echoes` is ln(hold / open) / ln 3 (None for a sealed kind).
+// - Core: `Reverberation` per firmament kind; `outflow` empties a kind as
+//   m0 (1 - exp(-rate (t - onset))); `rate`, `state_out`, `books` (held,
+//   left, taken, founded); `inbound`, `inbound_peak`, `least_share`,
+//   `margin`; `loop_flux` composes filament, vacuum and electron channels.
+// - Ocean: `ocean_shares` and `landing` (pull times `coherence`, over the
+//   sum, so each kind's shares sum to 1); `amplitude`, `tide`, `c_ocean`.
+// - Galaxies: `galaxies`, `intake`, `composition` (recipe plus intake),
+//   `push` (reach, recession, shift, drift, swing).
+//
+// Every reading is deterministic and closed-form in t; no state is stepped.
+// Terms: bell, echo, coherence, jet, jetstream, landing, inbound echo,
+// admission, books, vacuum's share, throat push, waveform, ocean,
+// reverberation (docs/glossary.md).
 
 use super::*;
 use xyl_core::dyadic::Dy;
@@ -306,7 +332,7 @@ impl Substrate {
     /// held kind's reach over the rim, swung by the inbound echo at its peak,
     /// `r_far / rim (1 + A_in)`. A parent whose spin gives less founds no
     /// stable firmament; the drawn spin is floored at the spin giving this
-    /// share (bang::admit).
+    /// share (`cores::substrate_for`).
     pub fn least_share(&self) -> Q {
         let rim = Dy::from_q(&self.rim).max(Dy::sci(1, -300));
         (Dy::from_q(&self.far_reach()) / rim * self.inbound_peak()).to_q()

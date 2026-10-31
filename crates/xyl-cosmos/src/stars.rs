@@ -1,28 +1,30 @@
-//! A star's life in closed form, fuelled by the pulse (docs/model.md), read
-//! at any age (no time stepping).
+//! A star's life in closed form: its burn, light, main-sequence life, giant
+//! phase and remnant, read at any age without time stepping (docs/model.md).
 //!
-//! - The burn: the share of its hold the pulse transduces per bell. A star
-//!   at reach `r` about the universal core (core rings, cluster units)
-//!   absorbs the ring the bell brings there, the ocean's waveform's
-//!   magnitude over one bell, `1 / pi` of the universal state falling as the
-//!   vacuum's share `1 / (r + 1)`, plus the vessel's drift `bell q(t)`; it
-//!   takes its own deficit of that, `delta_star = M r_g / (R + M r_g)`, the
-//!   turning law at its rim (its radius linear in its mass, so one share for
-//!   every star). The burn is `delta_star A(r, t)` per bell.
-//! - The light is that burn, transduced (the `3Z` hold conserved, light the
-//!   flux): in suns, `L = M / (r + 1) (1 + pi bell q(t))`, so a one-sun star
-//!   at the core's reach under a quiet vessel shines one sun, the unit. Its
-//!   swing within a bell (the ring itself) is a separate reading
-//!   ([`flicker`]), the radiation's, not the climate's.
-//! - The life: the share of the hold the hydrogen step transduces,
-//!   `1 - hold(He) / (4 hold(H))`, over the burn per bell, in bells; it
-//!   leaves the main sequence there, and its giant's helium is spent where
-//!   the further share of the helium step is transduced. No 10 Gyr, no fitted
-//!   brightening, no mass cut for the remnant: every star's fuel is its
-//!   kinds' hold and every ended star leaves the hold the pulse did not
-//!   transduce ([`remnant_share`]).
-//! - Not yet modelled: a star's own ejecta delivered to the galaxy's gas, and
-//!   a star's actual mix (every star is read as hydrogen burning to helium).
+//! Reads `circuit::anchor` (galaxy ring in kpc), `circuit::vacuum_share`,
+//! `circuit::bell_gyr` and `echo_gyr`, the substrate's firmament outflow rate
+//! (`cores::substrate_for`), `compound::hold`, `systems::luminosity` and the
+//! sun's radius from `package::Si`. Reach `r` is in galaxy rings
+//! (`reach_rings` converts from kpc); times are Gyr; mass and light in suns.
+//!
+//! - Burn (`burn_per_bell`): the share of a star's hold the pulse transduces
+//!   per bell, `delta_star x ring_per_bell(r)`. The ring per bell is
+//!   `1 / (pi (r + 1))`; `delta_star = M r_g / (R + M r_g)` is the turning
+//!   law's deficit at the star's rim, the same for every star because the
+//!   radius is taken linear in the mass.
+//! - Light (`light`): `L = M / (r + 1) (1 + pi bell q(t))`, where `q(t)` is
+//!   the firmament's leaving rate; a one-sun star at r = 0 with q = 0 shines
+//!   one sun. `flicker` is the swing within a bell,
+//!   `(pi / 2) |cos(2 pi t / echo)|`, a reading of the light only.
+//! - Life (`life`, `ends`, `burned`): the hydrogen step's transduced share
+//!   `1 - hold(He) / (4 hold(H))` over the burn, in bells; the giant ends
+//!   when the helium step's further share `1 - hold(C) / (3 hold(He))` is
+//!   transduced. `remnant_share` is the hold neither step transduced.
+//! - Not yet modelled: ejecta returned to the galaxy's gas, and stellar mixes
+//!   other than hydrogen burning to helium.
+//!
+//! Before a founding the burn, life and drift read zero; divisions use
+//! `checked_div` with explicit fallbacks. Terms: burn (docs/glossary.md).
 
 use crate::circuit::vacuum_share;
 use crate::compound::hold;

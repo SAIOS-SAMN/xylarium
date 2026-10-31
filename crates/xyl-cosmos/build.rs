@@ -1,8 +1,17 @@
-//! Source digest: every source file the forecast's laws are written in
-//! (xyl-cosmos's and xyl-core's code and the elements' table) is hashed at
-//! build time, so a cached forecast is never read under laws other than the
-//! ones that produced it. The watch (the program's observer) is excluded: it
-//! never enters a law.
+//! Build script: hashes the crate's sources with BLAKE3 and exports two
+//! digests as compile-time environment variables.
+//!
+//! - `XYL_SOURCE_DIGEST`: every `.rs` and `.tsv` file under `src/`, `data/`
+//!   and `../xyl-core/src/`, so a cached forecast is read only under the
+//!   laws that produced it.
+//! - `XYL_FOUNDING_DIGEST`: the subset the founding is derived from (bang,
+//!   bounce, elements, atoms, compound, fibres, formation, cores, chain,
+//!   package, `src/circuit/`, `data/` and xyl-core), which keys the founding
+//!   cache; a change to a layer above the founding leaves it unchanged.
+//!
+//! Each digest covers file names and contents in sorted path order and is
+//! cut to 16 hex digits. `watch.rs` and every line containing `watch::` are
+//! excluded: the process monitor does not enter any law.
 
 use std::path::{Path, PathBuf};
 

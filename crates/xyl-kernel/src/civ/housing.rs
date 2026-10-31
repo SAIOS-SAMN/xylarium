@@ -1,6 +1,22 @@
-//! What a world feeds a people: one housing law for waking, live play and
-//! readings (docs/civilizations.md, Housing). Every input is the people's
-//! world and its own masteries.
+//! The housing law: how many of a people's bodies its world feeds. The same
+//! law is used at waking, in the carry and in readings
+//! (docs/civilizations.md, Housing).
+//!
+//! Inputs: the people's `cosmic::Traits`, its world's `State` and media
+//! (`xyl_cosmos::worlds`), its `Body` (`xyl_cosmos::life`), the
+//! `growth::Rulers`, and its biology and energy masteries in [0, 1].
+//!
+//! Outputs, all `Dy`:
+//! - [`harvest_w`]: what its medium yields (W), from the forage one trophic
+//!   link up toward all its primary producers fix, by biology mastery;
+//! - [`feeds_w`]: harvest plus synthesis (W), the share of the world's
+//!   starlight and heat its energy mastery captures, fixed at the primary
+//!   producers' efficiency and eaten at the link biology mastery lifts;
+//! - [`housing`]: fed power over a body's metabolism (bodies);
+//! - [`houses`]: [`housing`] of [`feeds_w`] for the people's own solvent.
+//!
+//! Invariants: pure functions with no state; no harvest where the people's
+//! solvent is absent; masteries are clamped to [0, 1].
 
 use crate::cosmic::Traits;
 use crate::growth::{self, Rulers};

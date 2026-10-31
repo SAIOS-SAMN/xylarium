@@ -1,25 +1,32 @@
-//! `xylarium` - the universe's commands, on the engine in xyl-kernel
-//! universe.rs (event to event; the clock is the bell's count).
+//! The `genesis` and `run` commands and the shared universe builder, on
+//! the event engine in `xyl_kernel::universe` (the clock is the bell's
+//! count).
 //!
 //!   xylarium genesis --home DIR [--seed 7] [--stars 400]
 //!                    [--threads 2] [--sight census]
-//!       genesis 1-3 in a new home: the Big Bang, its galaxies, their systems
-//!       and the forecast of minds, written as `DIR/genesis`, with the first
-//!       checkpoint at the first mind's dawn. Refuses a home that has one.
-//!       Local files only: no domain is founded, nothing is posted.
+//!       Founds a new home: the Big Bang, its galaxies and systems and the
+//!       forecast of minds, written as `DIR/genesis`, with the first
+//!       checkpoint at the first mind's dawn. Returns `Err` for a home that
+//!       already holds a genesis. Local files only; nothing is posted.
 //!
 //!   xylarium run [--home DIR] [--for N] [--save-every K] [--velocity V]
 //!                \[same options\]
-//!       live play, one ring of the bell per advance, the checkpoint kept every
-//!       K rings at DIR/checkpoint. A network uplink runs the same loop with a
-//!       `Link` beside it (see `run_with`).
+//!       Live play, one ring of the bell per advance with every event inside
+//!       it at its own count, the checkpoint written every K rings (default
+//!       1) and on stop. `--velocity` caps rings per second (0: no cap).
+//!       An uplink runs the same loop with a [`Link`] beside it
+//!       ([`run_with`]).
 //!
-//!   xylarium observe [--home DIR] \[same options\] WHAT    (observe.rs)
+//! [`with`] builds the universe for every command: it regenerates the Big
+//! Bang, chemistry, elements and galaxy from the seed, reads or computes
+//! the forecast and the heavy-star list (caches in the home, keyed by the
+//! laws' digest), then either restores the checkpoint
+//! (`Checkpoint::restore`, [`Source::Checkpoint`]) or, with none, carries a
+//! fresh universe to 14 Gyr ([`Source::Fresh`]). The checkpoint is written
+//! whole or not at all (temporary file, then rename), after committing the
+//! keepers' chain with the link's last final clock height.
 //!
-//! The universe's state is a function of its laws: on every start it is
-//! regenerated from its seed and carried event to event to its checkpoint,
-//! where what the laws do not give (seats' holders, the civilizations'
-//! numbers and knowledge, the inputs) is laid back - never replayed.
+//! Terms: home, sight, uplink (docs/glossary.md).
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};

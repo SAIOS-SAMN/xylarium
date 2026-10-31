@@ -1,58 +1,70 @@
-//! `xylarium observe` - the universe seen from the observer's standpoint.
+//! `xylarium observe`: prints one reading of a universe, named by a word.
 //!
-//! It builds the universe from its seed and its checkpoint exactly as
-//! `xylarium run` does on a start (the laws regenerate what they give, the
-//! checkpoint lays back what they do not), then reads what is asked. It never
-//! changes the universe: it writes only caches and its own log into the home,
-//! so it can be run beside `run` at any time.
+//! A carried reading builds the universe from its seed and checkpoint
+//! exactly as `xylarium run` does on a start (`run::with`: the laws
+//! regenerate what they give, the checkpoint lays back the rest), then reads
+//! it. A law reading is computed from the seed without carrying the
+//! universe. Neither changes the universe's state: the command writes only
+//! caches and its own log into the home, so it can run beside `run`.
 //!
 //!   xylarium observe [--seed 7] [--stars 400] [--threads 2]
 //!                    [--home var/universe-7] [--sight census] WHAT
 //!
+//! Carried readings:
+//!
 //!   universe          the bell's count, the peoples, the seats, the bells,
-//!                     the books, the worlds formed, the cores
+//!                     the books, the worlds formed, the cores (also the
+//!                     reading when WHAT is empty)
 //!   peoples           every people, its role, home, numbers and housing
-//!   people N          one people: its body, numbers, power, knowledge,
-//!                     radiation, world and seats
+//!   people N \[Y\]      one people: its body, numbers, power, knowledge,
+//!                     radiation, world and seats; with Y, after Y years
+//!                     of live play carried in memory
 //!   star N            one reached star: its books, drift and worlds
 //!   house             the seats minds hold and the councils
 //!   world S W         world W of star S read across its life: its air,
 //!                     seas, surface, field, and what it houses its people
-//!   system S          star S's manifolds inside its own: each planet on its
+//!   system S \[S..\]    star S's manifolds inside its own: each planet on its
 //!                     star's sphere, each moon on its giant's, their caps
 //!                     in degrees and their shares of belonging, and
-//!                     relations read in the lowest tier holding both ends
+//!                     relations read in the lowest tier holding both ends;
+//!                     several stars give one line each below two planets
 //!   galaxy            the units from the white hole, the bells, and sample
 //!                     stars on their galactic manifolds: arc from the core,
 //!                     height over the plane, phase in degrees
 //!   chemistry         the galaxy's elements across the disc, then and now,
 //!                     and its books (everything made is somewhere)
-//!   core \[T\]          the substrate at T Gyr: the core's reverberation
-//!                     kind by kind, its outflow, the ocean's
-//!                     shares and every galaxy's intake, the books, Z Q R
 //!   ley \[K\]           the ley network: constellations, lines, passages,
 //!                     discord and quarantine, the star map by degree cells
 //!   annals \[K\]        the last K annals (default 20)
-//!   events \[K\]        the last K events logged, each at its count (default 20)
+//!   events \[K\]        the last K events logged, each at its count
+//!                     (default 20)
 //!   clock             the bell, the keepers epicenter to rims, the bridge
-//!   tiers S           star S and its worlds, each turn in its anchor's rings
-//!   formation         each galaxy's cut, gas, cooling and stars
-//!   cores             the cut one tier up: each candidate core's weight,
-//!                     reach, held or medium, ring phase and period
-//!   sync \[K\]          each people's sync: the forgetting share and the
-//!                     quarantine it feeds
+//!   sync \[K\] \[Y\]      each people's sync: the forgetting share and the
+//!                     quarantine it feeds (K default 10; Y as for people)
 //!
 //! Law readings, taken without carrying the universe:
 //!
+//!   core \[T\]          the substrate at T Gyr (default 14): the core's
+//!                     reverberation kind by kind, its outflow, the ocean's
+//!                     shares and every galaxy's intake, the books, Z Q R
+//!   cores             the cut one tier up: each candidate core's weight,
+//!                     reach, held or medium, ring phase and period
+//!   tiers S           star S and its worlds, each turn in its anchor's rings
+//!   formation         each galaxy's cut, gas, cooling and stars
 //!   seals \[Z\]         the sealed kinds, the seams and the vessel (the
 //!                     firmament's band) up to Z
 //!   founding          the founding's equitable cascade and its stacks
 //!   founding-reach    each kind's reach about the throat at the founding
-//!   worlds \[N\]        the planets of the first N stars, settled, with each
-//!                     star's chain (piece, cut, manifold, worlds) and why a
-//!                     star stands without worlds
-//!   push \[N\]          the throat's push in Z kind by kind
+//!   worlds \[N\]        the planets of the first N stars (default 200),
+//!                     settled, with each star's chain (piece, cut,
+//!                     manifold, worlds) and why a star stands without worlds
+//!   push \[N\]          the throat's push in Z kind by kind (default 150)
 //!   bonding \[N\]       the clusters the bond law closes kind by kind
+//!                     (default 150)
+//!
+//! An unknown word prints the list of readings.
+//!
+//! Terms: reading, books (docs/glossary.md).
 
 use crate::run::{roster, show, summary, with, Options, Source};
 use xyl_core::dyadic::Dy;

@@ -1,17 +1,27 @@
 //! Exact rationals that live on the stack until they cannot.
 //!
-//! `Q` is a ratio in lowest terms with a positive denominator. While its
-//! numerator and denominator fit in `i64` it is two machine words and no
-//! allocation; every operation is computed in `i128`, where a product or a
-//! cross-sum of two `i64` ratios cannot overflow, and the result is reduced
-//! and demoted back to `i64` when it fits. Only a result that does not fit
-//! is promoted to an arbitrary-precision `BigRational` on the heap, and a
-//! big result that later fits again is demoted. So the representation is
-//! canonical (one value, one form), equality and hashing are structural,
-//! and nothing ever wraps.
+//! Inputs: integers (`int`, `new`, `from_i128`) or big ratios (`from_big`,
+//! `from_reduced`); no other module.
 //!
-//! Division is never an operator: dividing by zero is a refusal the caller
-//! must handle ([`Q::checked_div`]), not a panic.
+//! Outputs: [`Q`], a ratio in lowest terms with a positive denominator, with
+//! `+ - *` and negation on references, ordering, `floor`, `frac`, `recip`,
+//! [`Q::checked_div`], `min`/`max`, and [`Q::put_bytes`], its canonical byte
+//! form for fingerprints and codecs.
+//!
+//! Representation: while numerator and denominator fit in `i64`, a `Q` is two
+//! machine words with no allocation, and every operation is computed in `i128`,
+//! where a product or cross-sum of two `i64` ratios cannot overflow; the
+//! result is reduced and demoted back to `i64` when it fits. Only a result
+//! that does not fit is promoted to a heap `BigRational`, and a big result that
+//! fits again is demoted. Dyadic big operands (power-of-two denominators) take
+//! a path with no gcd.
+//!
+//! Invariants: the form is canonical (one value, one representation), so
+//! equality and hashing are structural; no operation wraps. There is no
+//! division operator: dividing by zero is a `None` the caller handles
+//! (`checked_div`, `recip`, `new`), not a panic.
+//!
+//! Terms: `Q` (docs/glossary.md).
 
 use num_bigint::BigInt;
 use num_integer::Integer;

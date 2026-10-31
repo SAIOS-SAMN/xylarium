@@ -1,5 +1,16 @@
-// The poles as versors: the span between 3Z and 3Q on the conformal model,
-// rather than two scalar shares.
+// The poles as conformal points on the pole axis: Z at the origin e_o, Q at
+// the point at infinity, a carrier's state at t = U / W (open frames over
+// closed) and the throat at t = 1.
+//
+// Inputs: `xyl_core::cga` (points, dilators, projective comparison).
+//
+// Outputs: `pole_point` (X(t)) and `pole_flux`, which reads an echo's
+// observed dilation t1 / t0, composes each booked channel as a dilator on
+// the state it finds, and returns a `PoleFlux` with each channel's
+// dilation, the residual (observed over the product) and whether the
+// composed versor equals the observed one projectively. Exact; None where a
+// ratio is undefined.
+// Terms: filament (docs/glossary.md).
 
 use xyl_core::cga::{self, Mv};
 use xyl_core::Q;

@@ -1,13 +1,27 @@
-//! Half-angles and rotors. On a sphere the volume within an angle theta of
-//! an axis is sin^2(theta / 2): the half-angle is the coordinate in which a
-//! sphere's volume is rational. A [`Half`] is a half-angle held as its
-//! direction (c, s) at any scale - its tangent t = s / c, never a float, a
-//! right angle included (c = 0) - and a [`Rotor`] is a rational quaternion,
-//! the even part of Cl(3): turns about different axes compose by
-//! multiplying, exactly, with no pi and no root (the half-angle law
-//! (a + b) / (1 - ab) is its one-axis case). Frames are composed here; a
-//! turn's advance in time stays uniform in degrees and is read as an
-//! enclosure.
+//! Rational half-angles and rotors: frames composed exactly, with no pi and no
+//! root.
+//!
+//! Inputs: a half-angle's tangent ([`Q`]) or an angle in turns fixed on a
+//! grid of `2^-bits` (via `certified::cos_sin_turns`); vectors to turn as
+//! `certified::Encl` triples.
+//!
+//! Outputs:
+//! - [`Half`], a half-angle held as its direction `(c, s)` at any scale (its
+//!   tangent `s / c`, including `c = 0`, a half-angle of a quarter turn):
+//!   `compose` adds angles, `cos_sin` gives the whole angle's cosine and sine
+//!   exactly, and `share` gives `sin^2(theta / 2)`, the share of the
+//!   ordinary sphere (S^2) within the angle of an axis (other dimensions use
+//!   `measure`).
+//! - [`Rotor`], a rational quaternion `(w, x, y, z)` at any scale, the even
+//!   part of Cl(3): `about(k, h)` turns about axis `k`, `then_after` composes
+//!   by multiplication, `matrix` gives the exact rotation matrix, `apply`
+//!   turns an enclosed vector.
+//!
+//! Invariants: composition is exact for turns about any axes (the one-axis
+//! case is the tangent law `(a + b) / (1 - ab)`). `Half::of_turns` rounds the
+//! direction down to its grid once; after that every frame is exact. A turn's
+//! advance in time is uniform in degrees and is read as an enclosure by the
+//! caller.
 
 use crate::certified::{cos_sin_turns, down, Encl};
 use crate::Q;

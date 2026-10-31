@@ -1,6 +1,19 @@
-//! Events: an event is where one continuous quantity crosses another, and
-//! its time is solved, never found by stepping. Between events nothing is
-//! computed; a reading evaluates the orbits it needs at its time.
+//! Events: the time at which one continuous quantity crosses another, solved
+//! by certified bisection rather than by stepping through time.
+//!
+//! Inputs: a bracket `[lo, hi]` of times and a target `width` (all [`Q`]), and
+//! a function returning a `certified::Encl` of the difference at a time.
+//!
+//! Outputs: `crossing`, the enclosure of the zero of that function inside the
+//! bracket, narrowed to `width`.
+//!
+//! Invariants: `crossing` returns `None` unless the function's enclosures
+//! certainly differ in sign at the two ends. The bracket is halved on the side
+//! where the midpoint's sign is certain; if the midpoint's enclosure holds zero
+//! the current bracket is returned. The result is the event's time when the
+//! function crosses once inside the bracket, which the caller ensures (a
+//! monotone piece of its law). Between events nothing is computed: a reading
+//! evaluates the orbits it needs at its own time.
 
 use crate::certified::Encl;
 use crate::Q;

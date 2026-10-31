@@ -1,22 +1,26 @@
-//! The measure of a shape: the share of an n-sphere's volume within an
-//! angle theta of an axis,
+//! The measure of a shape: the share of an n-sphere's volume within an angle
+//! theta of an axis, and its inverse.
 //!
 //! ```text
-//! share_n(theta) = int_0^theta sin^(n-1) / int_0^pi sin^(n-1),
+//! share_n(theta) = int_0^theta sin^(n-1) / int_0^pi sin^(n-1)
 //! ```
 //!
-//! the shape's own dimension setting the curve - never an exponent chosen
-//! by hand. It is read from the angle, with no square or second-degree
-//! exponent: one sine for each of the sphere's n - 1 directions across its
-//! axis - never a cosine squared, a half-angle's tangent or a root.
-//! The integral is read once per dimension on a fine ladder of the half
-//! turn (Simpson's rule on each rung) and held: a cache of what the measure
-//! gives, never a table of chosen numbers.
+//! The dimension `n` sets the curve: one sine for each of the sphere's n - 1
+//! directions across its axis, with no squared cosine, half-angle tangent or
+//! root.
 //!
-//! A radius on a ball of scale `a` stands at the angle its deficit share
-//! gives, theta / (half a turn) = r / (r + a) - the turning law's own form
-//! (turning.rs, delta = M / (r + M)): the shell at r = a holds the equator,
-//! half the ball.
+//! Inputs: a dimension `n` (`UNIVERSE_N` = 360 for the universe's sphere,
+//! `BODY_N` = 60 for a body's) and an angle in turns or a share, as `Dy`.
+//!
+//! Outputs: `share_turns(n, theta)`, the share within `theta` turns (clamped
+//! to 0..1/2; for `n` = 1 the arc `2 theta`); `angle_holding(n, s)`, the angle
+//! in turns within which the sphere holds share `s` (the ladder's rung, then
+//! up to four Newton steps on the slope `sin^(n-1)`).
+//!
+//! Invariants: the integral is evaluated once per dimension on 2^14 rungs of
+//! the half turn (Simpson's rule on each rung), then cached for the process; it
+//! is computed from the measure, not a table of chosen values. Results are
+//! `Dy`, so they are deterministic across machines but not certified.
 //!
 //! In high dimension the measure crowds toward the equator: on S^360 almost
 //! all of it lies within about 3 degrees of 90.

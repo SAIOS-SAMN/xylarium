@@ -1,37 +1,33 @@
-//! The fibres: Z and Q converging on S^11. S^11 is the overlap where Z (via
-//! Z++) and Q (via Q++) converge into coherence; the process is a formula, not
-//! a table, and loses no state.
+//! Coherence on S^11: an end-by-end process that binds arriving Z and Q
+//! ends into fibres and yields the sealed charges 2, 28, 208, 1092.
 //!
-//! The two poles are bound rather than counted separately. Every arriving end,
-//! held (Z++) or open (Q++), stands on S^11, whose independent directions are
-//! its harmonics: degree l has
+//! No inputs beyond a count of ends; all arithmetic is exact `u64`. Each
+//! arriving end, held (Z++) or open (Q++), stands on S^11, whose independent
+//! directions at harmonic degree l number
 //!
 //! ```text
 //! d(l) = C(l + 11, 11) - C(l + 9, 11)      (1, 12, 77, 352, ...)
 //! ```
 //!
-//! of them, mutually orthogonal (atoms.rs `orientations`, the same formula).
+//! (`directions`; the same count as `atoms::orientations`).
 //!
-//! - An end first claims a direction alone: arriving ends spread over the
-//!   free orthogonal directions of the open degree, one end each (the open
-//!   frames, Q's share of the state).
-//! - Then it binds: once every direction of the degree is claimed, the next
-//!   end binds to a lone end, forming a fibre - one held and one open end on
-//!   one direction, counter-turning (the glue, G).
+//! - An end first claims a free direction of the open degree alone (a lone
+//!   end, counted in `free`).
+//! - Once every direction of the degree is claimed, the next end binds to a
+//!   lone end, forming a fibre: one held and one open end on one direction.
 //! - A degree closes when every direction holds a fibre, and the next degree
 //!   opens. Turning n holds degrees 0..n - 1.
 //!
-//! The books are exact: every arrived end is free or one end of a fibre,
-//! ends = 2 G + free, at every step. Coherence is the bound share,
-//! kappa = 2 G / ends (the bond law's 2 min / sum), 1 when every end is
-//! fibred. A body converges (seals) when kappa = 1 and its last degree is
-//! closed; by the telescoped harmonics this happens at
+//! Outputs: `Coherence` (with `arrive`, `kappa`, `sealed`, `whole`), `grow`
+//! and `sealed_fibres`. Invariant: ends = 2 G + free after every arrival
+//! (`whole`). Coherence is kappa = 2 G / ends; a body seals when kappa = 1
+//! and its last degree is closed, which happens at
 //!
 //! ```text
 //! G = C(N + 11, 12) + C(N + 10, 12)        (1, 14, 104, 546, ...)
 //! ```
 //!
-//! fibres (ends 2, 28, 208, 1092), produced by the process rather than listed.
+//! fibres (ends 2, 28, 208, 1092).
 
 /// C(n, k), exact; zero when k exceeds n.
 fn choose(n: u64, k: u64) -> u64 {

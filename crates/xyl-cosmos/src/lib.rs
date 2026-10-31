@@ -1,22 +1,29 @@
-//! The Xylarium physical model, in exact arithmetic.
+//! The Xylarium physical model in exact arithmetic: a universe's founding
+//! and the home galaxy's stars, worlds, life and minds, derived from a seed.
 //!
-//! The founding: a universe begins as the white hole of a parent's black
-//! hole ([`bounce`]); its Big Bang ([`bang`]) is drawn from the seed. The
-//! elements ([`elements`], [`atoms`], [`compound`], [`fibres`]) are thrown
-//! by the founding cascade ([`formation`], [`circuit`]): the throat holds
-//! the firmament, which carries the universal state, and the rest beads into
-//! galaxies ([`cores`]). [`package`] holds what the founding takes that the
-//! laws do not derive. Units are `G = c = M_core = 1`.
+//! The founding: a universe begins as the white hole of a parent black hole
+//! ([`bounce`]); its Big Bang ([`bang`]) draws the parent's spin from the
+//! seed. The elements ([`elements`], [`atoms`], [`compound`], [`fibres`])
+//! are thrown by the founding cascade ([`formation`], [`circuit`]): the
+//! throat holds the firmament, which carries the universal state, and the
+//! rest beads into galaxies ([`cores`]). [`package`] holds what the
+//! founding takes that the laws do not derive. [`laws`] holds the four
+//! dimensionless constants; [`turning`] the turning law.
 //!
-//! Above the founding: the home galaxy's stars ([`galaxy`], [`stars`],
-//! [`chem`], [`chain`]), the bells and their pulses ([`pulse`], [`field`]),
-//! each star's disc and worlds on its manifold ([`disc`], [`systems`],
-//! [`manifold`], [`bodies`], [`worlds`]), and life and the forecast of minds
-//! ([`life`], [`minds`]). A change above the founding leaves the founding's
-//! digest, and so a cached founding, unchanged.
+//! Above the founding: the home galaxy and its stars ([`galaxy`],
+//! [`stars`], [`chem`], [`chain`], [`centre`]), the bells and their pulses
+//! ([`pulse`], [`field`]), each star's disc and worlds on its manifold
+//! ([`disc`], [`systems`], [`manifold`], [`bodies`], [`worlds`],
+//! [`hydro`]), and life and the forecast of minds ([`life`], [`minds`]). A
+//! change above the founding leaves the founding digest, and so a cached
+//! founding, unchanged.
 //!
-//! Geometry uses the conformal algebra ([`xyl_core::cga`]) and certified
-//! enclosures ([`xyl_core::certified`]) wherever a law is transcendental.
+//! Units are `G = c = M_core = 1` (`xyl_core::units`); SI enters only
+//! through `package::Si`. Geometry uses the conformal algebra
+//! ([`xyl_core::cga`]) and certified enclosures ([`xyl_core::certified`])
+//! wherever a law is transcendental. [`Universe::create`] returns None
+//! where the Big Bang cannot be founded; the same seed gives the same
+//! universe on every machine.
 
 pub mod atoms;
 pub mod bang;

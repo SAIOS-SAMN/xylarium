@@ -60,7 +60,7 @@ core's units (`G = c = M_core = 1`), and worlds form on the manifold chain.
 - Space folding: peoples without lawful passage fold space when a passage
   is worth it at their own drive; folded energy is a breach share that
   raises discord toward quarantine.
-- Exoduses, settlements and steward decisions are recorded inputs, laid back
+- Exoduses, settlements and steward decisions are recorded inputs, applied again
   on restart.
 
 ### Changed

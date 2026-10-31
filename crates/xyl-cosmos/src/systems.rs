@@ -1,40 +1,47 @@
-//! A star's system, with every world's matter traced to the elements by mass.
+//! A star's system: its worlds, moons, belt and comet cloud, with every
+//! body's matter apportioned among the elements by mass.
 //!
-//! The star: its mass is drawn in the galaxy (galaxy.rs); its luminosity is the
-//! pulse it absorbs, L = M in suns.
+//! Inputs: a `galaxy::Star` and its manifold (`galaxy::disc_frame`), the
+//! regions `disc::manifold_worlds` cuts on it, the birth gas from
+//! `chem::Chemistry` weighted by its galactic core's recipe
+//! (`cores::weights_at`), the element table (`elements::Element`), and SI
+//! constants from `package::Si`. Reaches are in AU, masses in world masses,
+//! temperatures in K; the settling runs in core units (lengths in `r_g`).
 //!
-//! The orbits: reaches a are held in AU. A star's worlds stand on its
-//! manifold (galaxy::disc_frame): the arc of its circle about the core its
-//! own pull holds, its outer edge; the star holds its gathering, the inner
-//! share, and its solids are the star's mass over that share times the gas's
-//! metal mass fraction. Worlds are read degree by degree across the manifold
-//! (disc::manifold_worlds): a world forms where the matter gathered
-//! since the last one holds its own region against the core's twist at that
-//! degree, so the core-star-planet chain is one law, with no seed and no
-//! partition. Worlds whose kicks over the age still swing them across their
-//! gap merge until every neighbour stands (`settle`).
+//! - Star (`Spec`, `luminosity`): `L = M delta`, `delta = 1 / (r + 1)` the
+//!   vacuum's share at its reach about the universal core, in suns.
+//! - Orbits: each region at its share of the manifold's reach becomes an
+//!   embryo whose solids are the star's mass over its gathering share times
+//!   the gas's metal mass fraction, enriched past each ice line. Embryos
+//!   form only outside the rock line (Fe, Si, Mg condensation).
+//! - Settling (`settle_about`, closed form in ages): neighbours turning at
+//!   `omega = [M / (A + M)] / A` kick each other once per synodic period; a
+//!   pair merges at the first age its kick spans its gap (bisection to
+//!   life's horizon). Merges before `settled_gyr` (3 Gyr) are applied; later
+//!   ones are recorded as `World::merged_at` on the lighter body.
+//! - Worlds (Kokubo & Ida; Mizuno): disc temperature `t_form = 278 L / a`;
+//!   a core past ten world masses gathers an envelope in the share its
+//!   growth beats the disc's dispersal; inside the snow line ices arrive by
+//!   comet. Bodies that are not round (`is_world`) are dropped. Each world
+//!   gathers moons on its own manifold, `2 pi a m / (M + m)`, by the same
+//!   region and settling laws one tier down.
+//! - Matter (`Gas::apportion_layers`): an element is in the solids only
+//!   where the disc was cooler than its condensation temperature;
+//!   siderophile and chalcophile elements go to the core less the share the
+//!   mantle keeps (`mantle_kept`, a declared ruler); lithophiles and oxygen
+//!   (three per silicon, one per kept iron) to the mantle; C, N and the
+//!   remaining O as ices; an envelope is primordial H and He.
 //!
-//! The worlds (Kokubo & Ida; Mizuno): each orbit forms at disc temperature
-//! `t_form = 278 L / a`. Every ice whose line lies inside the orbit adds to the
-//! solids; inside the snow line, water arrives late by comet. A core past ten
-//! world masses takes gas in the share its growth beat the disc's dispersal. The
-//! radius follows from mass and layers. A body that is not round is rubble; a
-//! giant gathers regular moons. Solids no region gathered are the belt beyond
-//! the outermost world, out to the disc's edge, and the giants fling a comet
-//! cloud.
+//! Outputs: `system` returns a `System` (`Spec`, `World`s, `Belt`s, comets),
+//! or `None` where the birth gas cannot be read. Invariants: a body's
+//! element masses are exact `Q` and sum to its mass exactly; reaches and
+//! masses are held on a dyadic grid; draws come from the stream keyed by
+//! the seed and `["system", path]`, so a system is deterministic. Stellar
+//! encounters (`survival`, always 1) and the vertical exposure that thins
+//! comet clouds are not modelled; orbital elements and spins are in
+//! `bodies`.
 //!
-//! The matter: a world's solids are apportioned among all 150 elements by their
-//! chemistry. An element is in the solids only where the disc was cooler than
-//! its 50% condensation temperature; siderophile and chalcophile elements go to
-//! the metal core, lithophile to the silicate mantle (three oxygens per silicon); carbon, nitrogen and the remaining oxygen only as ices
-//! beyond their lines; an envelope is primordial hydrogen and helium. Each
-//! element's weight is its mass times its abundance in the gas at the star's
-//! birth (chem.rs), so ice-to-rock ratio, core share and trace elements follow
-//! the galaxy's history. Masses are exact, in world masses, and sum to the
-//! world exactly.
-//!
-//! Orbital elements and spins are computed in bodies.rs; the vertical exposure
-//! that thins comet clouds is not yet modelled.
+//! Terms: belt, merge age, settling, swing (docs/glossary.md).
 
 use crate::chem::Chemistry;
 use crate::elements::extent;

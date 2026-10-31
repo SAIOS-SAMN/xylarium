@@ -1,15 +1,25 @@
-//! What a seat perceives: the typed, exact record a seat's mind receives of
-//! its world, at its own local time. The ancients' house posts it to the
-//! seat's holder through the uplink (the seat surface); the universe's own mind
-//! reads the same record.
+//! Percepts: the typed record a seat seated on a people receives of its
+//! people and world at the universe's present. The uplink posts it to the
+//! seat's holder (encoded by lexicon.rs); the kernel's default rule reads
+//! the same record.
 //!
-//! - Heartbeat: a world absorbs the bells' echo by its rotation and orbit;
-//!   its day (its year if tidally locked) sets when percepts arrive.
-//! - Hearing (pulse.rs): the dominant bell's share and the coherence of the
-//!   wavefronts received; high near the core, low at the rim.
-//! - Neighbours: a people is heard once its dawn lies at least
-//!   distance / light speed in the past (word never outruns its fastest
-//!   physical carrier); what is heard is the distance and the light delay.
+//! Inputs: a [`Universe`] (peoples, their worlds via
+//! `cosmic::Cosmic::world_at`, power, heartbeat, annals), and the bells'
+//! nodes and relays at the present (`xyl_cosmos::pulse`).
+//!
+//! Output: [`perceive`] returns a [`Percept`]: the seat's role, the people's
+//! traits, numbers, capacity, growth rate and power; its world's surface
+//! temperature (K), pressure (bar), light and liquid media; its
+//! [`Heartbeat`] (day, year, lock), which the caller uses to pace percepts;
+//! the bells' [`Hearing`] at its star (`pulse::hear`); its neighbours; and
+//! the latest eight annals naming it. Times are deep time in Gyr.
+//!
+//! Neighbours ([`Heard`]): every other people at its current separation
+//! (`transit::separation_m`, in kpc) whose dawn lies at least the light
+//! delay in the past; a word does not outrun its fastest physical carrier.
+//!
+//! Returns `None` for a seat that does not exist, is not seated on a people,
+//! or whose people or world cannot be read now. Read-only.
 
 use crate::growth::Power;
 use crate::seats::{On, Role};

@@ -116,8 +116,10 @@ materials, biology and information. There is no technology tree.
 - Effort is allocated across domains by the people's needs (hunger to
   biology, a spent crust to materials, a power shortfall to energy, trade
   to information) over a floor (`knowledge::curiosity`, one quarter of a
-  domain's pull), plus any focus set by a seat (`Input::Focus`). The trade
-  term is zero until trade is implemented.
+  domain's pull), plus any focus set by a seat (`Input::Focus`). Hunger is
+  computed from the people's population over its world's capacity
+  (`knowledge::Needs::of`); the crust, power and trade pulls read zero until
+  their layers supply them.
 
 Masteries are inputs to housing (biology, energy), drive performance
 (energy) and the gauges (information mastery is the sentience gauge).
@@ -290,7 +292,7 @@ These are all the inputs the kernel applies (`universe::Input`):
 A seat holder has two decisions (`universe::Decision`): `Focus` and
 `Handle`. `Universe::decide` lands one now and records it as an input;
 `Universe::queue` places an input at a later count. Every applied input is
-held in the checkpoint and laid back on restart. `decide` checks the seat's
+held in the checkpoint and applied again on restart. `decide` checks the seat's
 subject (a people for `Focus`, a realm for `Handle`); confirming that the
 caller holds the seat is the uplink's part.
 

@@ -1,32 +1,31 @@
-//! Xylarium's elements: Z 1-150 read exactly from `data/elements.tsv`, and
-//! Z 151 up to [`TOP_Z`] predicted in code by the same rule (the S^11 burn
-//! forges kinds beyond Z 150).
+//! The element table, Z 1 to `TOP_Z` (1700), and the founding's nucleus
+//! counts built from it by the capture chain.
 //!
-//! Z 1-99 are measured elements (the standard references). Z 100-150 are
-//! predicted by the periodic law: each takes its melting and boiling points, condensation
-//! temperature and geochemical class from its homologue (the element above it
-//! in its column), and its density from the homologue's scaled by mass.
+//! Reads `data/elements.tsv` (Z 1-150, embedded as `TABLE`), `atoms` (each
+//! row's computed `Atom`, the vessel's upper edge) and
+//! `xyl_core::{certified, measure}`. Values are exact `Q`: temperatures in
+//! K, density in g/cm^3, measured abundance in atoms per 10^6 Si.
 //!
-//! The island of stability (114, 118, 120, 122, 126) is long-lived in this
-//! universe and made by neutron-star mergers. Its abundance follows the
-//! r-process's fall with Z, extended from platinum to uranium:
-//! `ab = ab_U · 10^(−d·(Z − 92))` with `d = log10(ab_Pt/ab_U)/(92 − 78)`,
-//! enclosed and fixed on a grid. Every other element past uranium decays away.
+//! - `table`: Z 1-99 are measured; Z 100-150 (marked predicted in the file)
+//!   and Z 151-1700 (systematic names generated in code, homologue U) take
+//!   melting and boiling points, condensation temperature and class from
+//!   their homologue, density scaled by mass. An element with no mass number
+//!   takes the nearest integer A on the valley of beta stability
+//!   (`valley_a`, Z = A / (1.98 + 0.334 e(A / 100)), certified bounds). The
+//!   island kinds (Z 114, 118, 120, 122, 126) take the r-process fall from
+//!   platinum to uranium, `ab_U 10^(-d (Z - 92))`,
+//!   `d = log10(ab_Pt / ab_U) / 14`, enclosed and fixed on a 2^-48 grid.
+//!   Built once per process; `Err` names the first row that fails to parse.
+//! - `founded(a)`: the table with each abundance replaced by a whole nucleus
+//!   count, `count_Z = floor(count_(Z-1) a h_Z)`, h_Z = (3Z - unpaired) / 3Z,
+//!   from 2^`founding_bits(a)` hydrogen: the fewest bits that found one whole
+//!   nucleus of the vessel's sealing kind. Depends on `a` alone.
+//! - `decimal`: a decimal literal as an exact rational, None if malformed.
 //!
-//! An element with no measured mass number takes the nearest integer A on
-//! the valley of beta stability ([`valley_a`]), decided by certified bounds.
-//!
-//! Each universe carries its own elemental table; only the laws' forms are
-//! shared.
-//!
-//! An element's atom is computed from the turning law (atoms.rs): its bands,
-//! what it bonds and how tightly it is held. Its tightness ordering replaces
-//! an electronegativity column for every row, predicted rows included. The
-//! columns still read from the file are provisional catalogue values not yet
-//! derived from law: melt, boil, rho and tc (to come from the thermal ruler
-//! T = k_T omega), the abundances and their channels (the Big Bang and
-//! stellar yields), the atomic weight (the nucleus's pairing; neutron excess
-//! not yet modelled) and Goldschmidt's class.
+//! The atom (bands, bonding, tightness) is computed for every row; the
+//! tightness ordering stands in for electronegativity. Melt, boil, rho, tc,
+//! abundances and channels, atomic weight and Goldschmidt class remain
+//! catalogue values not yet derived. Terms: capture chain (docs/glossary.md).
 
 use xyl_core::certified::{down, ln, Encl};
 use xyl_core::dyadic::Dy;

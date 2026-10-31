@@ -1,7 +1,11 @@
-//! The Xylarium kernel as a library: the commands [`run::genesis`],
-//! [`run::run`] and [`observe::observe`], shared by the `xylarium` binary
-//! and by any program that embeds the kernel. An uplink runs live play with
-//! [`run::run_with`] and a [`run::Link`] beside it.
+//! The Xylarium command library: [`run::genesis`], [`run::run`] and
+//! [`observe::observe`], shared by the `xylarium` binary and by any program
+//! that embeds the kernel, plus [`options`], which parses the command-line
+//! words into [`run::Options`] and the words left over.
+//!
+//! An uplink runs live play with [`run::run_with`] and a [`run::Link`]
+//! beside it. Every command returns `Ok(true)` on success and `Err` with a
+//! message otherwise.
 
 pub mod observe;
 pub mod run;

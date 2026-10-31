@@ -1,12 +1,19 @@
 //! Deterministic random streams.
 //!
-//! A stream is named by the universe's seed and a path of stable parts
-//! (`"season"`, a subsystem's name, the cycle; or a mind's id and its
-//! turn). The path is hashed with BLAKE3 into a 256-bit state for
-//! xoshiro256**. Streams never share state, so two subsystems, two minds or
-//! two threads draw independently, and a draw added to one stream never
-//! shifts another — which is what keeps a universe reproducible when the
-//! work is spread across threads.
+//! Inputs: the universe's seed (`u64`) and a path of [`Part`] labels
+//! (integers, text or bytes: e.g. `"season"`, a subsystem's name and the
+//! cycle, or a mind's id and its turn); no other module.
+//!
+//! Outputs: [`Stream`], a xoshiro256** generator whose 256-bit state is the
+//! BLAKE3 derive-key hash of the seed and the path (each part tagged by kind
+//! and length-prefixed); `next_u64`, `below(n)` (unbiased, Lemire's method)
+//! and `range(lo, hi)` (inclusive).
+//!
+//! Invariants: the same seed and path give the same draws on every machine.
+//! Streams share no state, so two subsystems, two minds or two threads draw
+//! independently, and a draw added to one stream does not shift another; this
+//! keeps a universe reproducible when work is spread across threads. `below(0)`
+//! and `range` with `lo > hi` return `None`.
 
 /// A deterministic xoshiro256** generator whose state is derived from a seed
 /// and a path of labels; the same seed and path always give the same draws.

@@ -1,4 +1,20 @@
-// The anchor: what the founding fixes for every tier above it
+// The anchor: the values the founding fixes for every tier above it, read
+// in the cluster tier (60^7 r_g of the core).
+//
+// Inputs: the founding's rim (cluster units), the rings until the home
+// galaxy's gas first lights (formation.rs `cools_in`), the parent's spin,
+// its torsion share and the firmament's margin; `chain::units` for r_g in
+// metres, `xyl_core::units::Tier` and `package::Si` (kpc, c, Gyr).
+//
+// Outputs: `Anchor` (rim, cluster and galaxy-tier units in kpc, bell in Gyr
+// = 2 rim_galaxy / c with the rim read in galaxy-tier units, home rim,
+// curvature radius rim / pi in kpc and in r_g, first stars = rings x bell,
+// at least one ring), `anchor`, `set` and `register_spin`.
+//
+// One universe per process: the first `set` wins. `anchor` founds the
+// substrate at the registered spin when no anchor is set; where that fails
+// every field is zero.
+// Terms: anchor (docs/glossary.md).
 
 use xyl_core::dyadic::Dy;
 use xyl_core::units::Tier;

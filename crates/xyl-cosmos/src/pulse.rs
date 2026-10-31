@@ -1,34 +1,32 @@
-//! The pulse field: time as the singularities' bounce ringing out and echoing
-//! back, and the network of bells that carries it.
+//! The pulse network: the holes that relay the core's bounce wavefront, the
+//! relay chain the wavefront follows, and what a place hears of it at `t`.
 //!
-//! Every singularity is a bell, and every bell is a triple manifold: its
-//! black-hole face, its throat, and its white-hole face (centre.rs: a paired
-//! throat). The core's bounce emits a single wavefront (not an oscillator or
-//! harmonics) as spheres from its epicentre at the speed of gravity, to the
-//! rim and back; its wavelength is light speed x the core's round trip, so no
-//! constant is set for it.
+//! Model: the core's bounce emits one wavefront (no oscillator, no
+//! harmonics) that runs out to the founding's rim and back once per bell.
+//! Its wavelength is light speed x the bell (`wavelength_kpc`), so no
+//! separate constant is set. Every hole (black face, throat, white face; see
+//! centre.rs) passes the wavefront on continuous in phase, with no period
+//! of its own.
 //!
-//! The singularities act as shock absorbers and relays: a wavefront reaching
-//! a bell passes through its three faces and continues, continuous in phase;
-//! a relay has no period of its own. Its far face continues in another
-//! universe, so a universe's bells join external networks through their
-//! throats. A place hears each live bell by its strength (mass) over its
-//! distance, at the phase of the wavefront's path (core, then that bell, then
-//! the place):
+//! Reads `bang::BigBang`, `cores::shapes` and `cores::held`, `galaxy::star`,
+//! `chain::Place` and `chain::radius`, `stars::life` and
+//! `stars::remnant_share`, `circuit::bell_gyr` and `package::Si` (light speed,
+//! year, kpc). Times are Gyr after the Big Bang, distances kpc, masses suns,
+//! all as `Dy`.
 //!
-//!   Dominance    the strongest bell's share of the total: 1 is one clear
-//!                bell (near the core), small is many faint ones (the rim)
-//!   Coherence    |sum_k I_k e^(i psi_k)| / sum_k I_k, psi_k the phase of bell
-//!                k's path: whether the wavefronts arrive in step
-//!   Continuity   for each relay, cos(2 pi x route detour / wavelength): 1
-//!                where the wavefront passes through unbroken, falling as the
-//!                route (core to relay along the relay chain) departs from the
-//!                direct ray
-//!
-//! The nodes: the core's hole, and every sample star once its life ends
-//! (stars::life, the pulse's burn of its hold), leaving the hold the pulse did
-//! not transduce (stars::remnant_share), standing for the remnants of the
-//! stars its sample represents.
+//! Outputs:
+//! - `nodes`, `nodes_among` -> `Vec<Node>`: every galactic core from its
+//!   formation, and each sample star's remnant from the end of its life,
+//!   of mass `stands_for x remnant_share`. A subset of candidates only omits
+//!   nodes.
+//! - `relays` -> one `Relay` per node: the nearest live node closer to the
+//!   core, the route along that chain, and continuity
+//!   `cos(2 pi detour / wavelength)`. `nodes[0]` is the universe core.
+//! - `hear` -> `Option<Hearing>` (None with no live node): each node weighs
+//!   mass / arc (first degree, suns per kpc) at the phase of its path; the
+//!   dominance is the loudest node's share of the sum, the coherence
+//!   `|sum I_k e^(i psi_k)| / sum I_k`, its length read by projecting on
+//!   its own angle so no square root is taken.
 
 use crate::bang::BigBang;
 use crate::chain::Place;

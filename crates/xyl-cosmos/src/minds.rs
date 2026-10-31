@@ -1,25 +1,37 @@
-//! The minds a galaxy is forecast to raise before the horizon, world by world,
-//! and the expectation of minds by each epoch.
+//! The forecast of minds: for every galaxy's sample stars, which worlds
+//! raise a mind, when, and the expected number of minds by each epoch.
 //!
-//! The Big Bang gives each world its trajectory; its life is drawn on that
-//! trajectory (life.rs). A mind is forecast where a complete ladder is climbed
-//! to its last rung within the world's window and the world at that epoch can
-//! feed a viable people (Franklin's 500). This is a forecast of the
-//! undisturbed galaxy: the running universe departs
-//! from it as minds act, and what happens is kept as the annals, not
-//! re-derived. Stars are worked out in batches on threads.
+//! Inputs: `galaxy::star` (the sample star, Gyr and kpc), `systems::system`
+//! (its worlds), and `life` (`system_life` for each world's chemistries and
+//! lineage, `climb`, `world_at`, `foragers`, `viable`), under the
+//! `worlds::Ctx` of the universe's `laws::Scales`. All quantities are `Dy`.
 //!
-//! The climb is the chemistry's own expectation, in closed form: each rung
-//! takes its mean, and an impact sends the lineage back to the rung's start,
-//! so a rung of mean m under impacts at rate mu completes in
-//! (e^(mu m) - 1) / mu, the memoryless restart's expectation. A sterilising
-//! pulse falls at its hazard's expected time. No draw enters, so a mind's
-//! epoch is a function of its world and its system alone, and the
-//! expectation curve steps to one at that epoch where the world then feeds
-//! a people.
+//! A world raises a mind where a complete ladder (`life::Ladder`) is climbed
+//! to its last rung before its window closes and the world at that epoch
+//! feeds at least `life::viable` foragers. The climb is the expectation in
+//! closed form: a rung of mean `m` under impacts at rate `mu` completes in
+//! `(e^(mu m) - 1) / mu`, and a sterilising pulse falls at the reciprocal of
+//! its hazard. No random draw enters, so a mind's epoch is a function of its
+//! world and system alone; the expectation curve steps from 0 to 1 at it.
 //!
-//! The first minds wake near the core, where the stars are oldest and
-//! richest: they are the ancients (roles, layer 8).
+//! - [`schedule`]: the [`Schedule`] (every [`Mind`] ordered by epoch, star
+//!   and world; the curve over [`curve_points`] steps of [`curve_step`] Gyr;
+//!   the [`Limits`] counting the first gate each world fails) and the
+//!   [`Kept`] cost. Stars outside the [`Sight`] stay compact. Work is spread
+//!   over threads; the merged result does not depend on the thread count.
+//!   With a cache folder, each star's share is stored under a key of its own
+//!   inputs and the source digest ([`life_digest`]) and reused while both
+//!   are unchanged.
+//! - [`ancients`]: the core-born minds (within `galaxy::core_kpc` of their
+//!   galactic core, [`in_core`]) that wake within [`ancient_window`] of that
+//!   core's first core-born mind ([`first_core_dawn`]).
+//! - [`Schedule::encode`] and [`Schedule::decode`]: exact bytes via
+//!   `xyl_core::codec`; decoding refuses damaged or trailing input (`None`).
+//!
+//! The forecast describes the undisturbed galaxy; the running universe
+//! records what minds do as annals in xyl-kernel and does not re-derive it.
+//!
+//! Terms: ancient, forecast (of minds), sight (docs/glossary.md).
 
 use crate::galaxy::{sample, star};
 use crate::life::{self, first_age, foragers, horizon_gyr, system_life, viable, world_at, Lineage};

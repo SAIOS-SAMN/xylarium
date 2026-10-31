@@ -1,23 +1,32 @@
-//! The system and inner manifolds (docs/model.md): a star is a zero point,
-//! the anchor of its planets' manifolds; a giant anchors its moons'. Each
-//! manifold lies inside its anchor's: a world's place is a vector from its
-//! anchor in its tier's unit (a planet in the system tier, 60 r_g; a moon in
-//! the planet tier, r_g / 60^2), and moving up a tier is a conformal dilation
-//! about the anchor by an exact power of sixty. A manifold's region is a cap
-//! on its anchor's sphere of directions, in degrees of volume: the share of
-//! the anchor's directions its reach fills, times 360. Its reach is where its
-//! own turning matches the change in its anchor's across it. Belonging is a
-//! share of directions: 1 at the centre, 1/2 at the reach, falling smoothly
-//! beyond. Its plane is an exact frame of half-angles (xyl-core rotor.rs).
+//! The system and inner manifolds: each planet's orbit about its star and
+//! each moon's about its giant, as closed-form motions read at any age, with
+//! their reaches, caps and the gaps between worlds (docs/model.md).
 //!
-//! Each manifold orbits by the turning law (turning.rs): its rate is the
-//! deficit inside its circle over its radius, an exact rational in degrees
-//! per Gyr, so its phase is exact at every age. Its stretch is its
-//! eccentricity relaxing (a boost); its twist is the deficit, so each orbit
-//! returns the periapsis turned by the anchor's deficit. A giant's moons sit
-//! on a captured 2:1 chain: each one's rate is the innermost's halved k times
-//! exactly, with k from the turning law at each, so their phases keep exact
-//! rational ratios.
+//! Reads `systems::System`, `galaxy::Star`, `bodies::orbits` (the same drawn
+//! orbits the worlds' settings use, keyed by `path`), `turning::turning_si`
+//! and `twist_per_turn`, `package::Si`, and `xyl_core::{measure, motion,
+//! rotor, units}`. A planet's vectors are in the system tier (60 r_g), a
+//! moon's in the planet tier (r_g / 60^2); `dilation` moves between tiers
+//! by an exact power of sixty. Ages are Gyr since the star's birth.
+//!
+//! Outputs:
+//! - `manifolds` -> one `Manifold` per world: rate in degrees per Gyr from
+//!   the turning law, eccentricity relaxing toward its forced value as a
+//!   boost (`Manifold::e`), plane as an exact half-angle frame, twist per
+//!   turn equal to the anchor's deficit. A giant's moons sit on a 2:1 chain:
+//!   each rate is the innermost's halved k times, k the nearest power of two
+//!   to the turning-law ratio.
+//! - `Manifold::stand` and `bearing`: the vector and the bearing
+//!   (direction, distance a (1 - e cos M)) at an age, as enclosures.
+//! - `reach`, `Manifold::reach`: the arc `2 pi a m / (M + m)`.
+//! - `cap_degrees`, `star_cap_degrees`: the share of the anchor's S^n a
+//!   reach fills (`measure::share_turns`), times 360. `share`: belonging, 1
+//!   at the centre, 1/2 at the reach, falling beyond.
+//! - `gap`, `out_to_star`, `galaxy_place`: distances composed up the chain;
+//!   turns between directions use a dyadic `acos`. `gap` and `out_to_star`
+//!   return None for a world not in the list.
+//!
+//! Terms: manifold (docs/glossary.md).
 
 use crate::bodies;
 use crate::galaxy::Star;

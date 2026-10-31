@@ -1,38 +1,40 @@
-//! The field: the singularities' pulse, carried to the stars and absorbed by
-//! them (the field law; docs/model.md).
+//! The field law: each hole's pulse as an exact versor, its arrivals at a
+//! star, and the star's exact energy books when it absorbs one
+//! (docs/model.md).
 //!
-//! Every bell (pulse.rs: the core, and the hole every heavy star leaves)
-//! emits a pulse that is a versor of Cl(4,1), exact over Q: bent (a
-//! translator), rotated (a rotor through a rational point of the circle, no
-//! float angle), twisted (a screw: a rotor with a translation along its axis
-//! whose pitch, the translation per full turn, is its wavelength), or flipped
-//! (a reflection, an odd versor). A loop of pulses that fails to close leaves
-//! a translation: torsion, as holonomy.
+//! Reads `pulse` (`Node`, `wavelength_kpc`, `c_kpc_yr`), `centre`
+//! (`horizon_share`, `efficiency`), `chain` (places, arcs, units),
+//! `stars::ends`, `circuit::anchor` (the core's spin), `package::Si` and
+//! `xyl_core::cga` in `Cl(4, 1)` over `Q`. Distances are kpc between bells
+//! and places, AU inside a system; times yr and Gyr; masses suns and world
+//! masses. Energy is in world mass x AU^2 x (2 pi / yr)^2 (5.29829e33 J),
+//! where an orbit's turning is M / a; `star_year` is a sun's year of light
+//! in that unit.
 //!
-//! Each bell has its own screw: its pitch is set by its bounce (the core's
-//! wavelength scaled by the extent of its mass over the core's; see
-//! [`pitch_kpc`]), its rotor turns about its hole's spin axis by its Kerr
-//! spin, it rings once a period (its pitch at light speed), and each ring
-//! carries one period of its light.
+//! - Versors: `bend` (translator), `rotate` (rotor `1 + t B`, a rational
+//!   point of the circle), `twist` (screw: rotor then translation along the
+//!   axis); `carry` moves a point by any versor, odd ones by the twisted
+//!   adjoint.
+//! - `Bell::of`, `bells`: each node's screw. Its pitch is the core's
+//!   wavelength times the extent of M / M_core (`pitch_kpc`), its period
+//!   the pitch at light speed, its axis the core's or the progenitor
+//!   orbit's normal, its spin the core's or a BLAKE3 draw in (0, 1), its
+//!   light `mass x 32000 x horizon_share x efficiency`.
+//! - `Bell::arrivals`: rings reaching a place in a span, in closed form
+//!   (ring k sounds at born + k periods, arrives one light time later).
+//!   `Bell::received` and `energy_at`: the versor and the energy
+//!   intercepted, light x period x a^2 / (4 d^2).
+//! - `absorb` -> `Option<Absorbed>`: the pulse shears each world's orbit;
+//!   the star pays up to the energy in to re-lock them, at
+//!   `1/2 m (M / a)^2 |dx|^2` each, leaving the unpaid share as shear; of
+//!   the rest, `burn_out_share` (the current `burning` step's mass defect)
+//!   burns out and the remainder leaves as light. The translation of the
+//!   star's G point is the drift and shears no orbit.
 //!
-//! A star absorbs each pulse that reaches it. The pulse shears its worlds'
-//! orbits (each world a 0D anchor held from the star's G point at its orbit's
-//! radius); the star spends energy as gravity to re-lock them (the work to
-//! undo each shear, 1/2 m (M/a)^2 |dx|^2, up to the energy received) and
-//! commits the rest to burning: the mass defect of its current fusion step
-//! burns out and the remainder leaves as light. The books balance exactly:
-//! in = gravity + light + burned out. Whatever cannot be re-locked stays
-//! sheared. The pulse's translation moves the whole system uniformly (its
-//! drift) and shears no orbit.
-//!
-//! Arrivals are in closed form: a bell's ring k reaches a place at its ring
-//! time plus the light time across the proper distance, so the pulses
-//! arriving in any span are counted directly.
-//!
-//! Energy is in the unit world-mass AU^2 (yr / 2 pi)^-2, in which an orbit's
-//! turning is M / a (suns over AU: the turning law, against a year at 1 AU
-//! about one sun) and its stiffness that turning squared, so every orbital
-//! quantity is an exact rational. Floats are never used for orbits.
+//! Invariant (`Absorbed::balances`): in = gravity + light + burned out
+//! exactly, every term held as a 62-bit dyadic and light the exact
+//! remainder. Derived lengths and rates are fixed on a 2^-60 grid before
+//! entering the algebra.
 
 use crate::centre::{efficiency, horizon_share};
 use crate::chain::Place;

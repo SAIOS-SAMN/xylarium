@@ -1,13 +1,26 @@
-//! Motion: every change in the universe is the orbit of a one-parameter
-//! motion, never a loop over time. A motion's phase at `t` is exact (`Q`);
-//! only its value, read when something observes it, is an enclosure.
+//! Motion: closed-form orbits of exponential modes, evaluated at any time `t`
+//! in one step, with no loop over time.
 //!
-//! Boosts (the hyperbolic motions: growth, decay, cooling, relaxation) are
-//! held here as modes `amp x base^(rate t)`: the rapidity `rate t` is exact,
-//! and the base is `e` or `2`, so a half-life is an exact rate in halvings
-//! (no `ln 2` inside the phase). A sum of modes is the orbit of a linear
-//! process; its value and its integral from 0 are each one evaluation,
-//! whatever `t`.
+//! Inputs: exact amplitudes, rates and times ([`Q`]) in the caller's units;
+//! reads `certified` for `ln 2` and the fixed-point `exp`.
+//!
+//! Outputs:
+//! - [`Boost`], one mode `amp x base^(rate t)` with [`Base`] `E` (e-folds) or
+//!   `Two` (halvings, so a half-life `h` is the exact rate `-1/h` with no
+//!   `ln 2` in the phase); `grown(t)` encloses `base^(rate t)`.
+//! - [`Modes`], a sum of boosts (the orbit of a linear process); `at(t)` gives
+//!   a [`Reading`] with `value`, `slope` and `integral` from 0, each one
+//!   evaluation whatever `t`.
+//! - [`ExpSum`], a sum of terms `coef t^power e^(-rate t)` ([`Term`]):
+//!   `relaxed(k)` is the closed-form solution of `y' = -k y + self`,
+//!   `y(0) = 0`, so chains of linear relaxations compose exactly; `at` and
+//!   `at_with` evaluate it, [`Grown`] sharing each rate's exponential between
+//!   orbits read at the same `t`.
+//!
+//! Invariants: phases (`rate t`) and rates are exact; only values are
+//! enclosures (`certified::Encl`). Whole halvings are exact powers of two and
+//! only the remainder goes through the series; a rapidity below -4096 is
+//! held as the bound `[0, 2^-4096]`.
 
 use crate::certified::{exp_fixed, exp_of, fixed_bounds, ln2, Encl, FIXED};
 use crate::Q;

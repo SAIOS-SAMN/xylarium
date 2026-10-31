@@ -1,49 +1,48 @@
-//! Formation from the bounce (computed, not yet wired into the game's
-//! stars): a galaxy's matter, sorted by the bounce, cooled and collapsed.
+//! Galaxy formation: the founding cascade that sorts the kinds into shells,
+//! and the home galaxy's gas cooled, collapsed and cut into stars and discs.
 //!
-//! In the galaxy's own units the core holds one ring as a state, its grains
-//! together hold one ring (each nucleus its weight's share), and the core's
-//! reach is the ring itself, d = 1 (the bounce on S^1, state spin 1 x 1).
-//! Every hold is gravitational, normalised by the manifest's total weight.
+//! Inputs: the founding's beads (`circuit::Bead`), the founding unit, the
+//! held share and the inbound echo's swing `1 + A_in` (`circuit::found`);
+//! nucleus holds and open frames from `compound` and masses from
+//! `circuit::nucleus_weights`; `measure::share_turns` for the infall's
+//! measure. Lengths are in galaxy rings, times in whole rings; in these units
+//! the core's reach is one ring and its hold `H = 1 + held`.
 //!
-//! - The cut: the galaxy's core regenerates the push at full amplitude in its
-//!   own units (s = 1, not a budget divided across tiers), p the throat's
-//!   push, the vacuum's share at the throat (circuit::throat_push). A nucleus
-//!   of weight w is carried to spin l = p (w_mean / w) and stands at
-//!   R = l / H; it is held where the deficit there, H / (R + H), reaches p.
-//!   Holding heavier nuclei raises H monotonically along the weight order, so
-//!   the held set is everything above one weight, found by bisection. Gas
-//!   inflow from the ocean is not yet modelled.
-//! - The gas: the home galaxy is the cascade one tier down, so its gas is
-//!   the beads, the pinches of the founding's runs: each bead's state over
-//!   the founding unit is a piece's holding, spread over its span, its kinds
-//!   at its pinch with the agitation a = (p - delta) / p the push leaves
-//!   there. Outside the core's reach (one galaxy ring) the gas lies in the
-//!   galaxy's plane, a circle; within it, the bulge's ball.
-//! - Cooling: what a grain cannot hold radiates - an atom by its open
-//!   frames, e = unpaired / weight per ring - held as halvings, the agitation
-//!   halving every ceil(1 / e) rings.
-//! - Collapse (`collapse`): an infall of extent w on a piece of hold
-//!   (lambda + mu) W at reach R gathers the piece's measure within its own
-//!   angle, m(w) = (lambda + mu) W share_n(theta), theta the deficit angle
-//!   w / (w + R) of the half turn in turns (measure.rs: the circle's arc in
-//!   the disc, the sphere's cap in the bulge; no exponent declared), and
-//!   grips it at its own rim by the deficit law,
-//!   m / (w + m). It holds where that grip exceeds its agitation (cooled,
-//!   plus the heat the pulse leaves: the ring the bell brings at R,
-//!   1 / (pi (R + 1)), swung by the inbound echo and taken by the piece's
-//!   grip, over what it sheds per ring by its open frames and the vacuum)
-//!   and the shear across it, H w / (R (R + w)). The extent is read on a
-//!   ladder of halvings of the piece's width: the piece cools until its
-//!   residue is under the best extent's spare, then fragments at the
-//!   largest extent that holds into as many infalls as fit. A piece whose
-//!   grip never exceeds the shear and the heat never collapses.
-//! - Ignition and the star tier's cut: an infall ignites at its throat
-//!   condition, its agitation the cooled residue plus the pulse's heat (no
-//!   ignition where that reaches the throat's push, 1/2). Its core, pushing by
-//!   electromagnetic repulsion on open frames, holds the star and carries the
-//!   open-frame matter into the disc (`hold_at_heat`); the disc, heated by
-//!   the tide the star leaves unlocked, fragments into worlds (`disc`).
+//! - Founding shells (`founding_shells`, `equitable_cascade`, `cascade`):
+//!   each kind's reach `R_z = (K + s_i) / w_z / H` and whether the throat
+//!   holds it, `R_z (1 + s_final) <= 1`; the latter two are diagnostics.
+//! - Gas (`lighting`, `of`): each bead is a piece of the home galaxy's gas,
+//!   its state over the unit spread over its span, its kinds at its pinch
+//!   with agitation `a = (p - delta) / p`, `p` the throat's push
+//!   (`circuit::throat_push`, 1/2) and `delta = H / (R + H)`. Outside one
+//!   galaxy ring the gas is a circle in the plane (n = 1), within it the
+//!   bulge's ball (n = 2). Gas inflow from the ocean is not modelled.
+//! - Cooling: two channels per ring, the open frames' emission
+//!   `e = open / weight` (one halving every `ceil(1 / e)` rings) and the
+//!   vacuum's halving (`(r / (r + h))^k <= 1/2`).
+//! - Collapse: an infall of extent `w` at reach `R` gathers
+//!   `m(w) = (lambda + mu) W share_n(theta)`, `theta` the deficit angle
+//!   `w / (w + R)` of the half turn, and grips it by `m / (w + m)`. It holds
+//!   where the grip exceeds its agitation, the shear `H w / (R (R + w))` and
+//!   the pulse's heat (`1 / (pi (R + 1))` times the swing and the grip, over
+//!   what the piece sheds per ring). Extents are read on a ladder of halvings
+//!   of the piece's width; the piece cools until its residue is under the
+//!   best extent's spare, then fragments at the largest extent that holds.
+//! - The star tier's cut (`hold_at_heat`): each kind carried to
+//!   `l_z = p P_0 (e_z / e_mean)(w_mean / m_z) + add` stands at
+//!   `R_z = l_z / h`; the held set is the largest fixed point of
+//!   `h / (R_z + h) >= p`, iterated from all held. The rest goes to the disc
+//!   (`disc::star_disc`).
+//!
+//! Outputs: `Lighting` (rings to first light, lit share, per-piece record;
+//! fed into the founding), `Formation` with one `Piece` per bead (read by
+//! `xylarium observe`), `Hold`, `Kind`, `Stack`, `EquitableReading`.
+//! Invariants: every value is an exact `Q`, rounded down to the 2^-64 grid
+//! where noted, with `pi` and `ln 2` as certified midpoints; empty beads,
+//! spans and mixes yield `None` or empty results; results are deterministic
+//! (the parallel meetings in `founding_shells` are collected in order).
+//!
+//! Terms: cascade, lighting, piece (docs/glossary.md).
 
 use crate::circuit::Bead;
 use crate::disc::{star_disc, World};

@@ -1,10 +1,18 @@
-//! The package: what a universe is founded from that its laws do not derive.
-//! A genesis is seeded from this and its seed (the genesis record names it
-//! with the founding's digest); everything else is derived from them. The
-//! core's mass is the one bridge to SI, and the SI constants are the seam
-//! where measured laws enter, converted once. The
-//! founding reads only this, never the layers built on top of it, so a
-//! change to a world, a disc or a life law keeps the genesis.
+//! The package: the inputs a universe is founded from that its laws do not
+//! derive.
+//!
+//! Outputs: [`hole_mass`], the universal core's mass in suns (4.3e6, a
+//! declared value), the one bridge to SI: its gravitational radius is the
+//! unit of length (`xyl_core::units`); [`Si`], the SI constants and rulers
+//! (unit world, sun, AU, G, c, kpc, Gyr, Boltzmann, Planck, eV, amu, gas and
+//! Faraday constants) as exact rationals, the seam where measured laws enter
+//! and are converted once; and [`founding_digest`], the build-time digest of
+//! the files the founding is derived from (build.rs), recorded in a genesis.
+//!
+//! A genesis is determined by this package and its seed. The founding reads
+//! only this module and the founding's own files, so a change to a world, a
+//! disc or a life law keeps the genesis and its cache.
+//! Terms: package, founding digest (docs/glossary.md).
 
 use crate::elements::decimal;
 use xyl_core::Q;

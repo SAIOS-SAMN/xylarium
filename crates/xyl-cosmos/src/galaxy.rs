@@ -1,46 +1,42 @@
-//! The home galaxy: its stars as bodies on orbits about the core.
+//! The home galaxy and its homologues: their structure read from the
+//! founding, and their sample stars as bodies on orbits about their cores.
 //!
-//! The core is the universal core itself (centre.rs): the home galaxy is the
-//! core's own matter, so its structure is the founding's cascade read one
-//! tier down ([`Structure`]). Each bead of the founding is a ring of the
-//! galaxy, its reach and span in the galaxy tier's unit (60^5 r_g) and its
-//! state the ring's share of the galaxy's holding; the rim is the
-//! founding's, where the galaxy's matter ends and the first bead's begins;
-//! the core's reach is one galaxy unit, where its deficit 1 / (r + 1) is one
-//! half; the nucleus is the innermost ring; the reference ring is the reach
-//! holding half the galaxy's holding, against which crowding ([`density`])
-//! and chemistry are read. In suns the profile hangs from the one declared
-//! bridge, the core's mass ([`hole_mass`]). Nothing of a bulge's or a disc's
-//! scale is declared.
+//! Inputs: `circuit::anchor` (rim, home galaxy rim in kpc, bell) and the
+//! founding's beads and lighting (`cores::substrate_for`), `cores::shape`
+//! for each galactic core, `chem::Chemistry::birth_along`, the turning law
+//! (`turning`), `manifold::reach`, `disc::star_cut`, and
+//! `xyl_core::measure`. Lengths are kpc, times Gyr after the Big Bang,
+//! masses suns via the one bridge `package::hole_mass`.
 //!
-//! Every ball fills by the universe's measure (xyl-core measure.rs): a galaxy
-//! sits in S^360, so the share of a ball within radius r is share_360 of the
-//! angle whose deficit share is r / (r + a), with no hand-chosen exponent.
-//! Stars are placed by magnetic repulsion rather than independent draws:
-//! equal moments settle as the golden-angle spiral (phyllotaxis, as in
-//! Douady and Couder's magnetised drops), each star pivoting the golden angle
-//! from the last, its share of its ball's measure pivoting by other
-//! irrational turns.
+//! - [`Structure`]: each bead is a ring of the galaxy, its span scaled so
+//!   the founding's rim is the home galaxy's rim, its state the ring's share
+//!   of the galaxy's holding. The core's reach ([`core_kpc`]) is one galaxy
+//!   unit, where its deficit `1 / (r + 1)` is one half; the nucleus
+//!   ([`nucleus_kpc`]) is the innermost ring; the reference ring ([`r0`])
+//!   holds half the holding. [`density`] (crowding against `r0`) and
+//!   [`inside_mass`] are read from it. Built once the universe is founded.
+//! - [`star`]: sample star `n`, at most [`SAMPLE_CAP`] per galaxy plus
+//!   [`NUCLEUS_SAMPLE`] from [`NUCLEUS_BASE`], the galactic core in the high
+//!   bits ([`core_of`], [`in_galaxy`]). Placement uses exact irrational
+//!   pivots of the index (golden, silver, plastic, sqrt 3 - 1 turns), as
+//!   magnetised drops settle (Douady and Couder): radius along the rings'
+//!   cumulative holding, phase, and for bulge and nucleus a tilt holding
+//!   that share of S^360's measure. Birth (first light, then along the
+//!   ring's star formation; `None` where the ring never lights), mass
+//!   ([`imf`], its break heavier where rings crowd), companion and vertical
+//!   swing come from the star's own `Stream`. The turning rate is the
+//!   turning law over the mass inside; a homologue's lengths scale by its
+//!   shape's scale and its masses by its hole ratio.
+//! - [`Star::bearing`] and [`Star::place`]: position at `t` from the exact
+//!   phase (turns) and half-angle plane frame; places are on the universe's
+//!   3-sphere (`chain::Place`). [`disc_frame`] gives the [`DiscFrame`] of a
+//!   star's disc; [`vertical`] its swing through the plane and exposure.
 //!
-//! The sample: a galaxy's stars are a population of sample stars, each
-//! standing for an equal share of its stellar mass: at most [`SAMPLE_CAP`]
-//! (65,536, a resolution choice) scaled by the Big Bang's star-forming
-//! share, with the nucleus sampled separately and more finely
-//! ([`NUCLEUS_SAMPLE`]). Component, position, orbital phases, birth time and
-//! mass all come from the star's own stream; a star is identified by its
-//! index. Its position is wherever its orbit has carried it at the requested
-//! time, and distances are arcs on the universe's closed 3-sphere (curvature
-//! radius the founding's rim over pi).
+//! Declared rulers: the IMF's bounds (0.08 to 60 suns) and break scale, the
+//! vertical pull at the reference ring (75.2 rad/Gyr), the 20 km/s spread at
+//! 10 Gyr and the crowded layer's half-thickness ([`layer_kpc`], 0.3 kpc).
 //!
-//! - A star is born when its ring's piece of the founding's gas lights
-//!   ([`birth_gyr`]); where it never lights, no star stands.
-//! - Its mass comes from the IMF ([`imf`]), whose break moves heavier in
-//!   crowded rings: the core makes heavy stars, many ending as black holes.
-//!
-//! Declared rulers that remain here: the IMF's bounds and break, and the
-//! vertical orbit's scales (the pull at the reference ring, the 20 km/s
-//! spread at 10 Gyr, and the crowded layer's half-thickness
-//! [`layer_kpc`]).
+//! Terms: galaxy ring, manifold (docs/glossary.md).
 
 use crate::bang::BigBang;
 use crate::chain::Place;

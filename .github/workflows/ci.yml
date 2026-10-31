@@ -28,6 +28,8 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Tests
         run: cargo test --workspace --profile fast
+      - name: Documentation links and code paths
+        run: scripts/check-docs
       - name: Documentation
         env:
           RUSTDOCFLAGS: -D warnings

@@ -1,23 +1,29 @@
-//! Seats (docs/civilizations.md): the places a player,
-//! human or AI, can take in the universe. All seats are bound by the same
-//! laws. One tiered hierarchy for every universe; each tier deals with the
+//! Seats: the roles a player, human or AI, can hold in a universe
+//! (docs/civilizations.md). Every holder acts through the same inputs and
+//! is bound by the same laws.
+//!
+//! Roles ([`Role`]), one tiered hierarchy in which each tier deals with the
 //! tiers adjacent to it:
 //!
-//!   Ancient      an ancient people near the galaxy's core (cosmic.rs): its
-//!                house holds the reserve, is the only seat facing the network,
-//!                folds space at the core and designs the inner wormholes. It
-//!                acts only through the progenitors it assigns.
-//!   Progenitor   assigned by the ancients: builds, keeps and runs passage,
-//!                takes its tolls, hears the realms. No traversal without one.
-//!   Steward      a realm (the shell a passage network reached): diplomacy,
-//!                trade and disputes between its sovereigns; settles their
-//!                currencies; reports up.
+//!   Ancient      an ancient people's house (cosmic.rs): holds the reserve
+//!                and is the only seat facing the network.
+//!   Progenitor   one per ancient house: builds, keeps and runs passage.
+//!   Steward      one per realm (transit.rs): diplomacy, trade and disputes
+//!                between its sovereigns, and its lines' handling.
 //!   Sovereign    one people's worlds.
 //!
-//! A seat acts through the same interfaces as the universe's own minds. An
-//! untaken seat is held by the universe's own mind (its built-in rule); a
-//! taken seat is held by a player or by a mind joined through the ancients'
-//! house.
+//! Inputs: the peoples of a [`Cosmic`] world and the realm count of the ley
+//! network. Outputs: [`Seats`], an append-only list in which a seat's index
+//! is its stable id; [`Seats::extend`] adds seats for peoples woken since,
+//! [`Seats::extend_realms`] adds stewards' seats, and [`Seats::take`]
+//! assigns a [`Holder`], returning `Err` when the seat does not exist or
+//! another holder has it. An untaken seat is held by `Holder::Universe`,
+//! the kernel's default rule for that role. Network minds (`Holder::Mind`)
+//! hold ancient seats only; the universe releases any other seat they hold.
+//! Holders other than the default are held in the checkpoint.
+//!
+//! Terms: seat, council, house, progenitor, steward, sovereign
+//! (docs/glossary.md).
 
 use crate::cosmic::Cosmic;
 

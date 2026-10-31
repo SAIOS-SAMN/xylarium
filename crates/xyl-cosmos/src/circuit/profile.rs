@@ -1,4 +1,6 @@
-// Wall-clock profiling per section.
+// Wall-clock timing per founding section, printed to stderr when
+// XYL_PROFILE is set. Diagnostic only: nothing it measures enters a law or
+// a reading.
 
 /// Wall-clock timing per section (enabled by XYL_PROFILE=1); a diagnostic
 /// only, never recorded on the ledger.

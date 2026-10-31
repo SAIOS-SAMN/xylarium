@@ -1,12 +1,20 @@
-//! The watch: a process monitor for the running universe on a loaded host.
-//! Every stage the universe passes (chemistry, forecast, begin, each hundred
-//! events of the carry, readings) is noted as it happens, and a heartbeat
-//! thread notes, every half minute, the current stage, elapsed time, CPU
-//! share, resident memory and host load. Notes go to stderr and, once a home
-//! is given, to `<home>/observer.log`.
+//! The watch: a process monitor for the running program on a loaded host.
 //!
-//! It observes the program, never the physics: nothing it notes enters a
-//! law or a reading of the universe.
+//! Inputs: notes, stage names and work labels from callers; the process's CPU
+//! time and resident memory (`/proc/self/stat`, `/proc/self/status`) and the
+//! host load (`/proc/loadavg`).
+//!
+//! Outputs: `note` (a line stamped with seconds since start), `stage` (sets
+//! the current stage and notes it), `busy` (registers work in flight; the
+//! returned [`Busy`] guard removes it on drop), `heartbeat(every, stop)` (a
+//! thread that notes, every `every`, the stage, CPU share of one core since the
+//! last beat, resident memory, host load, the count of work in flight and any
+//! piece running 30 seconds or more) and `into(home)`, after which notes are
+//! also appended to `<home>/observer.log`. Notes always go to stderr.
+//!
+//! Invariants: it observes the program, not the physics: nothing it notes
+//! enters a law or a reading of the universe. Failures to read `/proc` or to
+//! write the log are ignored.
 
 use std::io::Write;
 use std::sync::atomic::{AtomicBool, Ordering};

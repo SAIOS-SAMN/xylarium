@@ -1,10 +1,11 @@
-//! The one genesis the tests stand on. A universe is founded one way: its
-//! Big Bang (`BigBang::of`), the founding kept in a home's founding cache
-//! (`circuit::cache_in`), as `xylarium genesis` founds a game's home. The
-//! tests found seed 7 once, into one home in the workspace's target
-//! directory, and every test reads that genesis; no test founds its own.
-//! A second test binary, or a later run with the same laws, loads the
-//! founding from the cache instead of founding it again.
+//! Test-only: the one genesis every test reads (seed 7), founded once per
+//! process with `BigBang::of` and `Chemistry::of`.
+//!
+//! The founding is cached with `circuit::cache_in` in `target/genesis`
+//! (under `CARGO_TARGET_DIR` when set), so another test binary, or a later
+//! run under the same founding digest, loads it instead of founding again.
+//! Outputs: `SEED`, `universe`, `bang` and `chem`. No test founds its own
+//! universe.
 
 use crate::chem::Chemistry;
 use crate::BigBang;

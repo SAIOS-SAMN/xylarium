@@ -1,48 +1,41 @@
-//! Transit: how far places are, how long a voyage takes and what a passage
-//! costs (docs/civilizations.md).
+//! Transit: distances between places, voyage times, the ley network with
+//! its constellations, realms and quarantine, folding, and toll quotes
+//! (docs/civilizations.md).
 //!
-//! Places are the cosmic world's stars and worlds. Two worlds of one system
-//! are as far apart as their orbits place them now in the system's space
-//! (each by phase, plane and shape; a moon about its giant); two stars by
-//! `Cosmic::distance`, the arc on the universe's closed space between their
-//! current positions.
+//! Inputs: the [`Cosmic`] world (witnessed systems, star places), drives
+//! from propulsion.rs, stars from `xyl_cosmos::galaxy`, orbits from
+//! `xyl_cosmos::manifold`, the turning law (`xyl_cosmos::turning`) and the
+//! SI seam (`package::Si`). Distances are in m or kpc, speeds in m/s,
+//! energies in J, times in years or Gyr as each item states.
 //!
-//! Passage is orbital and by constellation. A constellation is the set of
-//! stars whose mutual turnings bind them tighter than the galaxy's shear
-//! across their span (the master equation's pair term against the galaxy's
-//! own); it is the unit of passage. Within a system a transfer waits for its
-//! window (the phases meeting at their synodic rate); within a constellation
-//! a drive carries along the arc; between constellations only ley lines
-//! carry. Ley lines are circulations built by the ancient houses, each
-//! crossing taking a mouth's light time. A constellation whose peoples are
-//! out of tune (reaching beyond it off the network while forgetting more
-//! than they learn) is held in quarantine by that share: its lines close
-//! proportionally and reopen as it returns to step.
+//! - Distance ([`separation_m`]): within a system, the gap between where
+//!   the two orbits stand now ([`orbit_gap_m`]); between systems, the arc
+//!   between the stars ([`Cosmic::distance`]).
+//! - Voyage ([`voyage`]): out of the well at [`escape_speed`], coasting at
+//!   half the speed change left ([`cruise_speed`]) and braking with the
+//!   other half; fuel is payload x (R - 1) at the fuel's energy per kg.
+//!   [`window_years`] is the wait for a transfer window within a system.
+//! - Constellations ([`constellations`]): stars bound by their mutual
+//!   turning tighter than the galaxy's shear across their span; the unit of
+//!   passage. Pairs are re-measured only when they could have crossed.
+//! - [`Network`]: ley lines ([`Ley`]) built by ancient houses and their
+//!   progenitors, each sited where a passage is worth most and opened at
+//!   its due time (an event of the universe); a crossing takes a mouth's
+//!   light time ([`crossing_years`]). Realms are connected sets of
+//!   constellations joined by open lines. A people's [`Discord`] (reaching
+//!   off its constellation while forgetting, plus its breach from folding
+//!   space) closes its constellation by the quarantine share.
+//! - Tolls ([`quote`]): floor = unrecovered cost over last year's traffic;
+//!   ceiling = what the lane saves the passer; toll = half way between,
+//!   never above the ceiling; an open line asks only its floor. [`tithe`]
+//!   is a passage's energy per lane length spanned. Tolls are quoted, not
+//!   collected: no traffic is carried yet.
 //!
-//! A voyage climbs out of its world's well, coasts at half the remaining
-//! speed its mass ratio buys and brakes with the other half (propulsion.rs):
-//! its time is distance over that speed; the fuel burned is
-//! payload x (R - 1) at the fuel's energy per kg.
+//! Lines built, stewards' handling and peoples' folds are held in the
+//! checkpoint; constellations and quarantine are re-read from the laws.
 //!
-//! The toll law, on any passage a network holds open, in
-//! energy (no money is kept here):
-//!   floor    unrecovered cost of holding it open, spread over last year's
-//!            traffic;
-//!   ceiling  what it saves the passer: the cheapest way round less the lane,
-//!            each hop priced at what the passer's drive burns, or, with no
-//!            way round, all it carries plus a hop;
-//!   toll     half way between them (the revenue-maximising price for a
-//!            willingness falling evenly from the ceiling to zero), never
-//!            above the ceiling; an open throat asks only its floor.
-//! A throat's tithe is a passage's energy for every lane's length it spans.
-//!
-//! Tolls are quoted, not yet accrued: nothing carries traffic over a lane
-//! and books its toll (docs/roadmap.md).
-//!
-//! Not ported: money, ports, captains and trade routes (tolls are read in
-//! the energy their callers hold); corridor security levels (no sectors
-//! here); wormhole mouths, forging, heirs and dormancy (the realms' and
-//! progenitors' networks, which will call `tithe` and `quote`).
+//! Terms: constellation, ley line, realm, quarantine, discord, fold,
+//! handling, tithe, worth law (docs/glossary.md).
 
 use crate::cosmic::Cosmic;
 use crate::propulsion::{delta_v, propellant_per_kg, Spec};

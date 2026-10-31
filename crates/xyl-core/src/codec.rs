@@ -1,9 +1,19 @@
 //! An exact, compact binary codec for snapshots.
 //!
-//! Fixed-width little-endian integers, length-prefixed strings and
-//! rationals in [`Q::put_bytes`]' canonical form. A decoder that runs out
-//! of bytes, meets an unknown tag or has bytes left over returns `None` —
-//! never a default — so a damaged snapshot is refused, not half-read.
+//! Inputs: values to write (integers, flags, strings, [`Q`]) or a byte slice
+//! to read; reads `q` for the rational byte form.
+//!
+//! Outputs: [`Enc`], which appends fixed-width little-endian integers,
+//! length-prefixed strings and rationals in [`Q::put_bytes`]' canonical form,
+//! each writer returning `&mut Self` so writes chain; and [`Dec`], which reads
+//! them back in the same order, with `rest` and `done` to inspect what remains.
+//!
+//! Invariants: every read returns `Option` and refuses, with `None` rather
+//! than a default, a buffer that runs out, a flag byte other than 0 or 1, an
+//! unknown rational tag, a small rational not in lowest terms with a positive
+//! denominator, or a length larger than the bytes that remain (so a hostile
+//! length cannot force a large allocation). Trailing bytes are not refused by
+//! the reader itself; a caller checks `done` after its last field.
 
 use crate::q::Q;
 use num_bigint::BigInt;

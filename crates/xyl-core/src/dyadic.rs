@@ -1,18 +1,31 @@
 //! Dyadic rationals for the heavy physical models: `m x 2^e` with a 62-bit
-//! integer mantissa, every operation done in integers and rounded toward
-//! zero.
+//! integer mantissa, every operation done in integers and rounded toward zero.
 //!
-//! Each value is an exact rational (a dyadic one), the same on every machine
-//! and thread count. It is not a hardware float: no platform rounding mode,
-//! no fused operations, no library `exp` whose last bit varies. It is what a
-//! float would be if it were exactly specified. A model whose quantities span
-//! 10^-12 to 10^30 (the heavy physical readings) keeps 62 bits of precision
-//! at every scale, at integer speed.
+//! Inputs: integers, ratios and [`Q`] values (`int`, `ratio`, `sci`,
+//! `from_q`); no other module.
+//!
+//! Outputs: [`Dy`], normalised (`m == 0` or `2^61 <= |m| < 2^62`), with
+//! arithmetic (also as `+ - * /` operators), `sqrt`, `ln`, `exp`, `pow`,
+//! `powi`, `sin_cos`, `atan`, `acos`, `cosh`, `grid` (rounding to `2^-bits`),
+//! `unit` (a uniform draw from 64 random bits), `to_q` (exact) and the codec
+//! pair `to_bits` / `from_bits`.
+//!
+//! Invariants: each value is an exact (dyadic) rational and the same on every
+//! machine and thread count. No hardware float is used: no platform rounding
+//! mode, no fused operations, no library `exp` whose last bit varies. A model
+//! whose quantities span 10^-12 to 10^30 keeps 62 bits of precision at every
+//! scale.
 //!
 //! Precision: + - x / round toward zero to 62 bits (relative error below
 //! 2^-61). `exp`, `ln`, `sqrt` and `pow` are evaluated in 62-bit fixed point
-//! after range reduction, accurate to within 2^-55 relative. Where a decision
-//! must be proven rather than computed, use `certified` enclosures instead.
+//! after range reduction, accurate to within 2^-55 relative. `div`, `sqrt`,
+//! `ln` and `pow` return `None` outside their domain; the `/` operator,
+//! `ratio`, `root` and `powf` return zero there, and `log` returns
+//! `-200 ln 2`. `from_bits` refuses a value not in normal form.
+//! Where a decision must be proven rather than computed, use `certified`
+//! enclosures instead.
+//!
+//! Terms: `Dy` (docs/glossary.md).
 
 use crate::Q;
 use num_bigint::BigInt;

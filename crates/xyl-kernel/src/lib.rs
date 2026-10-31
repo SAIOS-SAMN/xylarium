@@ -1,15 +1,27 @@
-//! The Xylarium kernel: a universe in play and the peoples that live in it.
+//! The Xylarium kernel: the game layer that carries a founded universe in
+//! play, with the peoples that wake in it and the seats players hold. It
+//! reads the founded galaxy, systems, worlds and forecast from `xyl_cosmos`
+//! and exact numbers from `xyl_core`.
 //!
-//! Layout: [`universe`] (the event engine, advancing from event to event on
-//! the bell's count), [`cosmic`] (the galaxy, its deep time, its peoples and
-//! annals), [`civ`] (housing, numbers, history and settlers, carried
-//! together), [`knowledge`] and [`growth`] (what peoples know and what their
-//! bodies need), [`field`] (the bells' pulses at the stars peoples live by),
-//! [`seats`], [`percept`] and [`lexicon`] (the seat surface for external
-//! agents), [`propulsion`] and [`transit`] (drives, ley lines, realms,
-//! stewards, quarantine and toll quotes), [`chronometry`] (the keepers'
-//! clocks), [`sync`] (step readings), and [`checkpoint`] (state the laws do
-//! not regenerate).
+//! Modules:
+//! - [`universe`]: the event engine, advancing from event to event on the
+//!   bell's count;
+//! - [`cosmic`]: the galaxy in play, deep time, peoples and annals;
+//! - [`civ`]: the carry of knowledge, housing, numbers, gauges, settlers
+//!   and history; [`knowledge`] and [`growth`] hold its laws;
+//! - [`field`]: the bells' pulses at the stars peoples live by, and
+//!   radiation;
+//! - [`seats`], [`percept`] and [`lexicon`]: the seat surface for players
+//!   and external minds;
+//! - [`propulsion`] and [`transit`]: drives, voyages, ley lines, realms,
+//!   quarantine and toll quotes;
+//! - [`chronometry`]: the keepers' clocks and their hashed chain;
+//! - [`sync`]: step readings;
+//! - [`checkpoint`]: the state the laws do not regenerate.
+//!
+//! Every state is a function of the seed and the recorded inputs: what the
+//! laws give is regenerated on each start, and the checkpoint lays back the
+//! rest.
 
 pub mod checkpoint;
 pub mod chronometry;

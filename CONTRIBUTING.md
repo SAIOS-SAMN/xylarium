@@ -25,6 +25,35 @@ is the recommended profile for iteration:
 cargo build --profile fast
 ```
 
+## Getting started
+
+A first session, from clone to a first change:
+
+1. Read [docs/concepts.md](docs/concepts.md) for the model's layers and
+   vocabulary, and keep [docs/glossary.md](docs/glossary.md) open.
+2. Build and run the fast tests of the numerics crate (seconds):
+
+   ```
+   cargo build --profile fast
+   cargo test --profile fast -p xyl-core
+   ```
+
+3. Found a universe and take a reading (minutes):
+
+   ```
+   target/fast/xylarium genesis --home var/universe-7 --seed 7
+   target/fast/xylarium observe --home var/universe-7 worlds 50
+   ```
+
+4. Pick a task from the [good first
+   issue](https://github.com/SAIOS-SAMN/xylarium/labels/good%20first%20issue)
+   label or the roadmap's Next lists, read the module's `//!` header, and follow
+   [Extending a tier](docs/development.md#extending-a-tier).
+
+The first `cargo test -p xyl-cosmos` founds the shared test genesis, which
+takes about 20 minutes in the `dev` profile; later runs reuse it while the
+founding's sources are unchanged.
+
 ## Verification
 
 Every change must pass all of the following:
@@ -34,6 +63,7 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace --profile fast
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+scripts/check-docs
 ```
 
 The same checks, and a coverage report from `cargo llvm-cov`, run in CI

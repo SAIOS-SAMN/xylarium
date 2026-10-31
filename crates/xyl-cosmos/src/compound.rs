@@ -1,24 +1,26 @@
-//! Chemistry: the meeting law at the atom tier. A kind of matter is an atom or
-//! a cluster of atoms, and every property of a cluster (charge, open frames,
-//! hold, grip) is computed from its parts, not from a table.
+//! Compounds at the atom tier: two-part clusters of atoms, their encoding as
+//! kind ids, and every cluster property computed from its parts.
 //!
-//! - Pairable frames at a place's heat: atoms::unpaired_hot (a stripped
-//!   winding has no frame to pair).
-//! - The smallest closing cluster of two kinds A, B with pairable u_A, u_B:
-//!   (u_B / g) A . (u_A / g) B, g = gcd(u_A, u_B), every frame paired
-//!   (atoms::closes); hydrides are the u_B = 1 case, water O . 4H.
-//! - Grip: the bond's (atoms::bond), the weaker hold tau_min; the share of a
-//!   meeting's contact held is min(1, tau_min / heat).
-//! - A cluster stands while the heat strips neither part's open winding;
-//!   otherwise the bond has no fibre to turn on and the cluster parts.
-//! - Properties: charge = sum n Z; bonds = frames the parts pair, the lesser
-//!   side's n u; open = sum n u - 2 bonds; hold = 3 charge - open.
+//! Reads `atoms` (`unpaired`, `unpaired_hot`, `atom`, `bond`); heat is in
+//! the units `atoms::unpaired_hot` takes. Counts are exact `u32`, shares `Q`.
 //!
-//! The key: parts joined by a middle dot, each "\[n\]Zddd" with the count first
-//! (1 omitted), parts by Z descending - water "Z008·4Z001". Internally a
-//! cluster is an integer id at or above CLUSTER: the two parts' Z (each below
-//! Z_LIM) and counts (each below N_LIM) in mixed radix, so every atom id equals
-//! its Z.
+//! - `closing`: the smallest closing cluster of two atoms with pairable
+//!   frames u_A, u_B at a heat is (u_B / g) A . (u_A / g) B,
+//!   g = gcd(u_A, u_B), every frame paired; hydrides are u_B = 1, water
+//!   O . 4H. Returns (id, counts, grip) or None if either pairs nothing.
+//! - Grip is `atoms::bond`'s tau_min, the weaker tightness; `held` gives the
+//!   share of a meeting's contact held, min(1, tau_min / heat).
+//! - `stands`: a cluster stands while the heat strips neither part's open
+//!   frames; an atom always stands.
+//! - Properties: `charge` = sum n Z; `bonds` = the lesser side's n u;
+//!   `open` = sum n u - 2 bonds; `hold` = 3 charge - open, so
+//!   hold + open = 3 charge for every kind.
+//!
+//! Encoding: an atom's id is its Z; a cluster's id is at or above `CLUSTER`
+//! (2^31), the parts' Z (each below 1024) and counts (each below 45) in mixed
+//! radix. `cluster` returns None outside those bounds. `key` writes parts by
+//! Z descending, each "\[n\]Zddd" (count 1 omitted), joined by U+00B7 (middle
+//! dot): water is "Z008", U+00B7, "4Z001".
 
 use xyl_core::Q;
 

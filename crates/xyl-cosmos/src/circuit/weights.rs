@@ -1,4 +1,17 @@
-// Z, Q and R: protons, neutrons and the electron's phase state at the bounce's pulse
+// Z, Q and R: a kind's protons (Z), neutrons (Q) and the electrons' phase
+// state (R) at the bounce's pulse p (turns).
+//
+// Inputs: `elements::table` (mass numbers), `compound::parts` and
+// `compound::charge`, `fibres::grow` (electron coherence kappa on S^11) and
+// `nuclei_of` (grain.rs); a `Substrate`'s outflow and intakes.
+//
+// Outputs: `TwoWeights` (protons, neutrons, `mass`, `neutron_share`);
+// `neutrons_of` (mass number rounded to the nearest nucleon, less the
+// charge, summed over a cluster's parts); `nucleus_weights`; `mix_weights`
+// (whole nuclei only); `electron_phase`, R = kappa (1 - 2 frac(p)) in
+// [-kappa, kappa], zero for a neutral kind; and `Substrate::two_weights`,
+// the universe's nuclides at t (firmament held, galaxies, matter in
+// flight). All counts are exact rationals.
 
 use super::*;
 use xyl_core::Q;

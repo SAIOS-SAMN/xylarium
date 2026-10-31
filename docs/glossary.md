@@ -1,93 +1,130 @@
 # Glossary
 
-Terms used across Xylarium's code and documentation. Formulas are in
-[EQUATIONS.md](EQUATIONS.md); module paths are relative to
-`crates/xyl-cosmos/src` unless prefixed with another crate.
+The project's lexicon: each term used in the documentation, what it means,
+the Rust item that defines it and the section that explains it. Rust paths
+are written as module::Item, relative to `crates/xyl-cosmos/src` unless
+prefixed with another crate (`xyl-core`, `xyl-kernel`, `xylarium`); a later
+path in the same cell without a prefix belongs to the same crate as the one
+before it. Formulas are in [EQUATIONS.md](EQUATIONS.md).
+`scripts/check-docs` verifies every link and every code path in this table.
 
-| Term | Meaning | Code |
-|---|---|---|
-| admission | the floor on the parent's drawn spin: its torsion share must reach the furthest held kind's reach over the rim, swung by the inbound echo's peak | `circuit::Substrate::least_share`, `cores::substrate_for` |
-| anchor | what the founding fixes for every tier: rim, bell, home galaxy's rim, universe radius, first stars, admitted spin, torsion share, firmament margin | `circuit::anchor` |
-| ancient | a mind born in a galactic core within one core assembly time of that core's first core-born mind; its house holds the reserve; ancient seats are the only seats a mind joined through the network can hold | `minds::ancients`, `xyl-kernel seats::Role::Ancient` |
-| annal | an entry of a universe's record: what happened and when | `xyl-kernel cosmic::Annal` |
-| bead | a pinch in a run of founding shells, with its reach, span, state, phase and recipe; a galaxy where its lit mass holds a sun | `circuit::Bead` |
-| bell | the unit of time: light's round trip to the home galaxy's rim, `2 rim_galaxy / c` | `circuit::bell_gyr` |
-| belt | a disc's matter that held no region of its own, beyond the outermost world | `disc::manifold_worlds`, `systems::Belt` |
-| books | a reading's conservation balances, which close when the parts sum to the total: a star's absorbed pulse energy as gravity + light + burned out, the firmament as held + left = founded, and the matter that has left as taken by galaxies + in flight | `xyl-kernel field::Books`, `circuit::Substrate::books` |
-| burn | the share of a star's hold the pulse transduces per bell at its reach | `stars::burn_per_bell` |
-| capture chain | the founding's nuclei built one capture at a time, `count_Z = floor(count_(Z-1) a h_Z)` | `elements::founded` |
-| carry | advancing every people's numbers, knowledge, housing and history over a span; live play and readings use the same carry | `xyl-kernel civ::Civilizations::carry` |
-| cascade | the founding's throw of every kind to its own reach about the throat | `formation::founding_shells` |
-| census (genesis) | the founding's founded kinds and their amounts, kind by kind, written into the genesis record | `circuit::Substrate::census` |
-| checkpoint | the home's file of path-dependent state and recorded inputs, written whole at each save | `xyl-kernel checkpoint::Checkpoint` |
-| coherence | the share of a kind a galaxy takes by phase, `1 - 2 min(d, 1 - d)` | `circuit::coherence` |
-| constellation | stars bound by their mutual turning tighter than the galaxy's shear across them; the unit of passage | `xyl-kernel transit` |
-| council | the ancient seats of an ancient house, where minds joined through the network sit | `xyl-kernel seats::Seats::council` |
-| deficit | the share a mass holds at a reach, `delta = M / (R + M)`; the form every holding law in the model takes | `circuit::vacuum_share`, `turning::deficit_share` |
-| degree (of a star's life) | its lifetime over 360, at least one bell; worlds in play are read per degree | `worlds::star_degree_gyr` |
-| discord | a people's pull against its constellation, `1 - (1 - o f (1 - J))(1 - breach)` | `xyl-kernel transit::Discord` |
-| `Dy` | a dyadic rational with a 62-bit mantissa, for readings at seams | `xyl-core dyadic` |
-| echo | two bells: the paired throat's near and far rings | `circuit::echo_gyr` |
-| eminent | a figure a people remembers a turning of its history by | `xyl-kernel civ::history::Eminent` |
-| `Encl` | a certified enclosure: an interval of `Q` proven to contain a value | `xyl-core certified` |
-| filament | the pole axis of the pulse, Z at the origin and Q at infinity, the throat at `t = 1` | `circuit::axes`, `circuit::poles` |
-| firmament | the throat's held kinds in the vessel band, scaled so their mass is the universal state, 1 | `circuit::Kind`, `Substrate::found` |
-| fold | a passage a people makes by folding space where its constellation holds no ley mouth; its energy counts toward its breach | `xyl-kernel transit::Network::fold` |
-| forecast (of minds) | for each candidate world, the time (if any) at which its lineage reaches the rung that holds a mind; worked out at genesis and cached | `minds::schedule`, `minds::Schedule` |
-| founding digest | a digest of the founding's own source files; it keys the founding cache | `package::founding_digest`, `XYL_FOUNDING_DIGEST` |
-| galactic core | a galaxy's central hole, of mass `hole_mass x state` | `cores::Shape` |
-| galaxy ring | a bead read one tier down: a ring of the home galaxy in galaxy units | `galaxy::Structure` |
-| gauges | a people's instinct, intelligence, sentience and consciousness, each a share in `[0, 1]`, and their combination | `xyl-kernel civ::Gauges` |
-| handling | how a ley line's holder handles passage: open, tolled, guarded or closed; set by the realm's steward | `xyl-kernel transit::Handling` |
-| held share | the firmament's mass over everything founded | `Substrate::held_share` |
-| home | a universe's directory: its genesis record, checkpoint and caches (`--home`) | `xylarium run::Options::home` |
-| horizon | the sphere about a core through the crossing at the one-third deficit, `R_h = 2M`, read along its enclosure | `bounce::horizon` |
-| house | an ancient people and the seats it holds; it builds ley lines and assigns progenitors | `xyl-kernel seats`, `transit` |
-| hypha | the network Mycelium runs; Xylarium reaches it through the uplink | `xylarium run::Link` |
-| inbound echo | the waveform at the throat per echo, `cos(2 pi t / echo) + echo q(t)`; every push swings by `1 + A_in` | `Substrate::inbound` |
-| jet | the firmament's outflow: a kind leaves once its pole state reaches the throat | `circuit::onset_echoes`, `Substrate::outflow` |
-| jetstream | the loop the pulse makes on a held kind over an echo: filament, vacuum and electron phase composed as dilators; one per held kind | `Substrate::loop_flux` |
-| landing | a galaxy's share of a kind the jet throws: pull times coherence over the sum | `Substrate::landing` |
-| ley line | a circulation held open between two constellations, built by an ancient house or its progenitors | `xyl-kernel transit::Ley` |
-| lighting | the home galaxy's gas cooled to collapse: rings to first light, the lit share, each piece's record | `formation::Lighting` |
-| lumpiness | the founding's contrast: the beads' states above the mean over every bead's state, in `[0, 1)` | `bang::BigBang::lumpiness` |
-| manifold | the region a body holds about its anchor: the arc of its circle its own pull holds, `2 pi r m / (M + m)` | `manifold::reach`, `galaxy::DiscFrame` |
-| merge age | the first age a pair's swing spans its gap; the lighter body ends then | `systems::World::merged_at` |
-| mu | the Mycelium network's unit of account; Xylarium quotes passage costs in energy | `xyl-kernel transit` |
-| ocean | the medium between galaxies, carrying the core's waveform and the jet | `circuit::core` |
-| package | what a universe is founded from that its laws do not derive: the core's mass, the SI seam, the founding digest | `package.rs` |
-| people | the population of one species with minds on one world | `xyl-kernel cosmic::People` |
-| piece | a bead read as a parcel of the home galaxy's gas | `formation::cooling` |
-| progenitor | a seat assigned by an ancient house: builds, keeps and runs passage | `xyl-kernel seats::Role::Progenitor` |
-| `Q` | an exact rational | `xyl-core q` |
-| quarantine | the share a constellation is held closed, `1 - prod(1 - discord)` | `xyl-kernel transit::Network` |
-| reading | one `xylarium observe` output, named by a word; a law reading or a carried one (see [architecture.md](architecture.md#readings)) | `xylarium observe` |
-| realm | the constellations a passage network joins; each has a steward | `xyl-kernel transit::Network::realms` |
-| reverberation | a firmament kind's band swinging about the throat: its reach, hold, deficit, share past the throat and leaving rate | `circuit::Reverberation` |
-| rim | the outermost founding shell's outer edge | `Substrate::rim` |
-| ring (of time) | one full bell; every count of time is in whole rings | `xyl-kernel universe::ring` |
-| ruler | a declared constant used until a law derives it | roadmap, Declared rulers |
-| rung | one step of a chemistry's ladder toward a mind: the information it holds, its copying error, its wait and the bodies it feeds | `life::Step`, `life::Ladder` |
-| seal | a kind whose every band and every shape of its outermost shell is full: Z 2, 28, 208, 1092 | `atoms::Atom::sealed` |
-| seat | a role in the universe: ancient, progenitor, steward, sovereign; filled by the kernel's default rule or taken by a keyed mind | `xyl-kernel seats::Role` |
-| settling | the closed-form merging of a disc's bodies by their kicks, carried as ages | `systems::settle_about` |
-| sight | which sample stars are unrolled for the forecast: `census` every sample star, `cores` the stars within the cores' reach (`--sight`) | `minds::Sight` |
-| sovereign | the seat over one people's worlds | `xyl-kernel seats::Role::Sovereign` |
-| state | a bead's mass from its recipe, in the universal core's units | `circuit::Bead` |
-| steward | the seat over a realm: diplomacy, trade and disputes between its sovereigns, and its lines' handling | `xyl-kernel seats::Role::Steward` |
-| substrate | the core, ocean and galaxies as functions of `t` | `circuit` |
-| swing | the greatest kick a body's neighbours give it at the settled age, as a share of its reach | `systems::settle_about` |
-| throat | a core's paired faces, near and far; every core is one face of a throat | `bounce::Bounce` |
-| throat push | the vacuum's share at the throat itself, `delta(H, H) = 1/2` | `circuit::throat_push` |
-| tier | a level of the containment chain, read in its own unit, a power of sixty of `r_g` | `xyl-core units::Tier` |
-| tithe | a passage's energy for every lane's length it spans | `xyl-kernel transit::tithe` |
-| torsion share | the share the jet carries through the throat at each crossing, `a = (H + J) / (2H + J)` | `bang::torsion_share` |
-| TUniversal | the Mycelium network's signed clock; Xylarium measures its pace in rings per final point | `xyl-kernel chronometry` |
-| turning (history) | an event of a people's history, remembered by an eminent figure | `xyl-kernel civ::history::Turning` |
-| turning law | a body at `r` turns at `omega = c delta(<r) / r` | `turning.rs` |
-| universal state | the core's own holding, 1 in its units; the firmament carries it | `Substrate::found` |
-| uplink | the program that connects a universe to the hypha; it attaches to live play through `run::Link` and is not part of this repository | `xylarium run::Link`, `run::run_with` |
-| vacuum's share | the push the pulse delivers at reach `R` about hold `H`, `H / (R + H)` | `circuit::vacuum_share` |
-| vessel | the band of kinds no light shell can grip, from the heaviest seam below the last seal to that seal (Z 568 to 1092) | `atoms::vessel` |
-| waveform | the ocean's non-tidal amplitude `A(r, t)` | `Substrate::amplitude` |
-| worth law | a ley line is sited where a passage is worth most: the passer's mass times what it saves against normal transit, less its tithe | `xyl-kernel transit` |
+| Term | Meaning | Defined in | Explained in |
+|---|---|---|---|
+| admission | The lower bound on the parent's drawn spin: its torsion share must reach the furthest held kind's reach over the rim, scaled by the inbound echo's peak, or the universe is refounded at a higher spin. | `circuit::Substrate::least_share`, `cores::substrate_for` | [model.md](model.md#the-big-bang-bangrs) |
+| anchor | The founding values every tier reads: the rim, the bell, the home galaxy's rim, the universe's radius, the first stars, the admitted spin, the torsion share and the firmament's margin. | `circuit::anchor::Anchor`, `circuit::anchor::of` | [model.md](model.md#2-units-and-the-master-frame) |
+| ancient | A mind born in a galactic core within one core assembly time of that core's first core-born mind; its people forms a house, and ancient seats are the only seats a mind joined through the network can hold. | `minds::ancients`, `minds::ancient_window`, `xyl-kernel seats::Role::Ancient` | [civilizations.md](civilizations.md#how-a-people-is-created) |
+| annal | One entry of a universe's stored history: an epoch, a kind (such as `EMERGENCE` or `FALL`) and a text, kept in the checkpoint. | `xyl-kernel cosmic::Annal` | [civilizations.md](civilizations.md#annals) |
+| bead | A pinch in a run of founding shells, with its reach, span, state, phase and recipe; a bead whose lit mass is at least one star mass is a galaxy (`circuit::holds_a_star`). | `circuit::Bead` | [model.md](model.md#the-cascade-shells-and-beads-formationfounding_shells-circuitsubstratefound) |
+| bell | The unit of time: light's round trip to the home galaxy's rim, `2 rim_galaxy / c`, held in Gyr. | `circuit::bell_gyr`, `circuit::anchor::Anchor::bell_gyr`, `xyl-kernel universe::Bell` | [model.md](model.md#2-units-and-the-master-frame) |
+| belt | The matter of a disc that no world or moon gathered, lying beyond the outermost world out to the manifold's reach. | `systems::Belt`, `systems::belts`, `disc::manifold_worlds` | [model.md](model.md#6-stars-and-systems) |
+| Big Bang | A universe's initial conditions derived from its seed: the parent's spin is the only drawn value, and the bounce, torsion share, lumpiness, held share and assembly time follow from it. | `bang::BigBang`, `bang::BigBang::of` | [model.md](model.md#the-big-bang-bangrs) |
+| books | A reading's conservation balances, which close when the parts sum to the total (for example, firmament held + left = founded); results are verified by the books closing. | `xyl-kernel field::Books`, `circuit::Substrate::books` | [architecture.md](architecture.md#readings) |
+| burn | The share of a star's hold that the pulse transduces into light per bell at the star's reach. | `stars::burn_per_bell` | [model.md](model.md#6-stars-and-systems) |
+| capacity (3Q) | Three times the number of electron places in every shell shape the atom reaches, `3 sum_n sum_(l < n) 2 d(l)`; its balance against `6Z` marks the seals. | `atoms::Band::room`, `atoms::orientations`, `xylarium observe::seals_read` | [roadmap.md](roadmap.md#nucleons-3z-3q-and-the-polarity-r) |
+| capture chain | The founding's nuclei built one capture at a time from hydrogen, `count_Z = floor(count_(Z-1) a h_Z)`, with `a` the torsion share and `h_Z` the new kind's closed share. | `elements::founded`, `elements::founding_bits` | [model.md](model.md#the-elements-elementsrs-atomsrs) |
+| carried reading | A reading that first rebuilds the universe from its seed and restores its checkpoint (or carries a fresh genesis to 14 Gyr) before it is taken. | `xylarium observe::observe` | [architecture.md](architecture.md#readings) |
+| carry | The procedure that advances every people's knowledge, numbers, housing, gauges and history over a span of time; live play and readings use the same carry. | `xyl-kernel civ::Civilizations::carry` | [civilizations.md](civilizations.md#the-carry) |
+| cascade | The founding step that throws every founded kind to its own reach about the throat and filters the shells into the firmament and the beads. | `formation::founding_shells` | [model.md](model.md#the-cascade-shells-and-beads-formationfounding_shells-circuitsubstratefound) |
+| census | The founding's founded kinds and their amounts, kind by kind, as written into the genesis record. | `circuit::Substrate::census` | [network.md](network.md#how-a-kernel-plugs-in) |
+| checkpoint | The file in a home that holds path-dependent state and recorded inputs, written whole at each save. | `xyl-kernel checkpoint::Checkpoint` | [architecture.md](architecture.md#state-management) |
+| coherence | The share of a kind a galaxy takes by phase, `1 - 2 min(d, 1 - d)`, with `d` the phase difference in turns. | `circuit::coherence` | [model.md](model.md#4-the-firmament-and-the-core) |
+| constellation | A group of stars bound to each other more tightly than the galaxy's shear across them; ley lines and quarantine act per constellation. | `xyl-kernel transit::Constellation`, `transit::constellations` | [civilizations.md](civilizations.md#constellations) |
+| council | The ancient seats of a house, the seats where minds joined through the network sit. | `xyl-kernel seats::Seats::council` | [civilizations.md](civilizations.md#roles) |
+| count (also: event count) | The universe's time coordinate, an exact rational number of bells since the Big Bang at which events and inputs are applied; its whole part is the ring. | `xyl-kernel universe::Bell::count`, `universe::Bell::gyr` | [architecture.md](architecture.md#the-event-engine) |
+| deficit | The share a mass `M` holds at reach `R`, `delta = M / (R + M)`; every holding law in the model takes this form. | `circuit::vacuum_share`, `turning::deficit_share` | [model.md](model.md#4-the-firmament-and-the-core) |
+| degree (of a star's life) | One 360th of a star's lifetime, at least one bell; world states in play are read per degree. | `worlds::star_degree_gyr` | [model.md](model.md#6-stars-and-systems) |
+| discord | A people's pull against its constellation, a share in `[0, 1]`, `1 - (1 - o f (1 - J))(1 - breach)`. | `xyl-kernel transit::Discord` | [civilizations.md](civilizations.md#discord-and-quarantine) |
+| drive | A people's propulsion, blended from its chemical drive toward the best drive its chemistry allows by its energy mastery; a people sails when its cruise speed after escaping its world is positive. | `xyl-kernel propulsion::Drive`, `transit::best_spec`, `transit::blended` | [civilizations.md](civilizations.md#drives) |
+| `Dy` | A dyadic rational `m 2^e` with a 62-bit mantissa, rounded toward zero, used for readings at seams and converted to `Q` before it is held. | `xyl-core dyadic::Dy` | [model.md](model.md#1-numbers) |
+| echo | Two bells: one ring for each face (near and far) of the paired throat. | `circuit::echo_gyr` | [model.md](model.md#2-units-and-the-master-frame) |
+| electron phase (also: polarity, R) | A kind's electron phase state, `R = kappa (1 - 2 frac(p))` in `[-kappa, kappa]`: its sign is the hemisphere of the bounce's pulse `p` (in turns), its magnitude the electrons' coherence, and it is zero for an uncharged kind. | `circuit::electron_phase`, `fibres::Coherence::kappa` | [roadmap.md](roadmap.md#nucleons-3z-3q-and-the-polarity-r) |
+| eminent | A figure a people remembers one turning of its history by, held in the checkpoint until its memory fades. | `xyl-kernel civ::history::Eminent` | [civilizations.md](civilizations.md#turnings-and-eminent-figures) |
+| `Encl` | A certified enclosure: an interval of `Q` proven to contain a value such as pi or an exponential. | `xyl-core certified::Encl` | [model.md](model.md#1-numbers) |
+| event engine | The loop that advances a universe from event to event (mind wakings, queued inputs, ley lines falling due), computing nothing between events. | `xyl-kernel universe::Universe::advance_to` | [architecture.md](architecture.md#the-event-engine) |
+| filament | The pole axis of the pulse, with the Z pole at the origin, the Q pole at infinity and the throat at `t = 1`. | `circuit::axes`, `circuit::poles` | [EQUATIONS.md](EQUATIONS.md#z-q-and-r-the-pole-model) |
+| firmament | The throat's held kinds in the vessel band, scaled so their total mass is the universal state, 1. | `circuit::Kind`, `circuit::Substrate::firmament`, `circuit::Substrate::found` | [model.md](model.md#4-the-firmament-and-the-core) |
+| fold | A passage a people makes by folding space where its constellation holds no ley mouth; its energy counts toward its breach. | `xyl-kernel transit::Network::fold` | [civilizations.md](civilizations.md#folding-space-and-breach) |
+| forecast (of minds) | For each candidate world, the time (if any) at which its lineage reaches the rung that holds a mind; computed at genesis and cached. | `minds::schedule`, `minds::Schedule` | [model.md](model.md#7-life-and-minds) |
+| founding | The derivation of a universe's matter from its package and its parent's spin: the capture chain, the cascade, the firmament, the beads and the anchor; it reads nothing built above it. | `circuit::Substrate::found`, `cores::founding`, `circuit::cache_in` | [architecture.md](architecture.md#the-founding-and-the-package) |
+| founding digest | A digest of the founding's own source files; it keys the founding cache. | `package::founding_digest`, `XYL_FOUNDING_DIGEST` | [architecture.md](architecture.md#determinism-and-caching) |
+| galactic core | A galaxy's central hole, of mass `hole_mass x state` in solar masses, with `state` its bead's state. | `cores::GalacticCore`, `cores::Shape` | [model.md](model.md#4-the-firmament-and-the-core) |
+| galaxy ring | A bead read one tier down: a ring of the home galaxy, with its reach and span in galaxy units. | `galaxy::Structure` | [model.md](model.md#5-the-galaxy) |
+| gauges | A people's instinct, intelligence, sentience and consciousness, each a share in `[0, 1]`, and their combination. | `xyl-kernel civ::Gauges`, `civ::Gauges::read` | [civilizations.md](civilizations.md#the-carry) |
+| genesis | The command that founds a new universe in a home: it derives the Big Bang, founds the substrate, runs the forecast of minds and writes the genesis record and a first checkpoint. | `xylarium run::genesis`, `xyl-kernel cosmic::Cosmic::genesis` | [architecture.md](architecture.md#data-flow) |
+| genesis record | The `genesis` file in a home (format `xylarium genesis v2`): the seed, the digests, the anchor, the package's values and the census by kind. | `xylarium run::genesis` | [network.md](network.md#how-a-kernel-plugs-in) |
+| grain (also: nucleus count) | The rule that amounts of a kind move in whole nuclei of `w` frames each (its hold), so fusion conserves 3Z; founded counts are whole nuclei out of `2^b` hydrogen. | `circuit::grain::nuclei_of`, `elements::founding_bits` | [roadmap.md](roadmap.md#nucleons-3z-3q-and-the-polarity-r) |
+| handling | How a ley line's holder treats passage: open, tolled, guarded or closed; set by the realm's steward. | `xyl-kernel transit::Handling` | [civilizations.md](civilizations.md#realms-and-stewards) |
+| held share | The firmament's mass over everything founded, a share in `[0, 1]`. | `circuit::Substrate::held_share`, `bang::BigBang::held_share` | [model.md](model.md#the-big-bang-bangrs) |
+| hold (also: weight) | A kind's held frames, `w = 3Z - u` with `u` its open frames; it sets the kind's closed share and the size of one nucleus in the grain. | `compound::hold`, `formation::weight` | [roadmap.md](roadmap.md#nucleons-3z-3q-and-the-polarity-r) |
+| home | A universe's directory: its genesis record, checkpoint and caches (`--home`). | `xylarium run::Options::home` | [architecture.md](architecture.md#state-management) |
+| home galaxy | The galaxy about the universal core, made of the core's founded matter: the founding's beads read in the galaxy tier's unit are its rings. | `galaxy::Structure`, `galaxy::rim_kpc` | [model.md](model.md#5-the-galaxy) |
+| horizon | The sphere about a core through the crossing at the one-third deficit, `R_h = 2M`, read along its enclosure. | `bounce::horizon`, `bounce::horizon_reach` | [model.md](model.md#the-bounce-bouncers) |
+| house | An ancient people and the seats it holds; it builds ley lines and assigns progenitors. | `xyl-kernel seats::Seats`, `transit::Network` | [civilizations.md](civilizations.md#roles) |
+| housing | The number of bodies a world can feed for a people: natural production plus synthesis over the people's metabolism, raised by its biology and energy masteries. | `xyl-kernel civ::housing::houses`, `civ::housing::housing` | [civilizations.md](civilizations.md#numbers) |
+| hypha | The network Mycelium runs; Xylarium reaches it only through an uplink attached at the Link seam. | `xylarium run::Link` | [network.md](network.md) |
+| inbound echo | The waveform at the throat per echo, `cos(2 pi t / echo) + echo q(t)`; every push is scaled by `1 + A_in`. | `circuit::Substrate::inbound` | [model.md](model.md#4-the-firmament-and-the-core) |
+| input (also: recorded input) | A change no law determines (a seat taken, a focus, a handling, an exodus, a settlement), applied at its count and recorded in the checkpoint so a restart applies it again. | `xyl-kernel universe::Input`, `universe::Universe::decide` | [civilizations.md](civilizations.md#acting) |
+| jet | The firmament's outflow: a kind leaves once its pole state reaches the throat. | `circuit::onset_echoes`, `circuit::Substrate::outflow` | [model.md](model.md#4-the-firmament-and-the-core) |
+| jetstream | The loop the pulse makes on one held kind over an echo, composing the filament, vacuum and electron phase channels; one per held kind. | `circuit::Substrate::loop_flux` | [model.md](model.md#4-the-firmament-and-the-core) |
+| kind (also: nuclide) | A nuclide `(Z, Q)`, or a cluster of nuclides, the unit in which the founding counts and moves matter; it weighs `Z + Q` nucleons. | `elements::Element`, `circuit::Kind`, `circuit::nucleus_weights` | [roadmap.md](roadmap.md#nucleons-3z-3q-and-the-polarity-r) |
+| knowledge (also: mastery) | A people's stock in each of four domains (energy, materials, biology, information), carried in closed form; its mastery of a domain is `1 - 1 / (1 + ln(1 + K / U))`, a share below one. | `xyl-kernel knowledge::Knowledge`, `knowledge::mastery`, `knowledge::Domain` | [civilizations.md](civilizations.md#knowledge) |
+| ladder | A chemistry's sequence of at most 12 rungs toward a mind, each holding more information than the one before. | `life::ladder`, `life::Ladder` | [model.md](model.md#7-life-and-minds) |
+| landing | A galaxy's share of a kind the jet throws: its pull times its coherence, over the sum for all galaxies. | `circuit::Substrate::landing` | [model.md](model.md#4-the-firmament-and-the-core) |
+| law reading | A reading evaluated from the seed and the laws alone, without carrying the universe (for example `formation` or `seals`). | `xylarium observe::observe` | [architecture.md](architecture.md#readings) |
+| Laws | A universe's four constants (fine-structure constant, electron-to-proton mass ratio, gravitational coupling, nuclear efficiency) as ratios to reference values, and whether space can be folded. | `laws::Laws` | [roadmap.md](roadmap.md#declared-rulers) |
+| ley line | A circulation held open between two constellations, built by a house or its progenitors. | `xyl-kernel transit::Ley` | [civilizations.md](civilizations.md#ley-lines-and-the-worth-law) |
+| lighting | The home galaxy's gas cooled to collapse: the rings to first light, the lit share and each piece's record. | `formation::Lighting` | [model.md](model.md#5-the-galaxy) |
+| Link | The trait an uplink implements to attach to live play: called after every ring and after each checkpoint, and asked for the last network clock height. | `xylarium run::Link`, `run::run_with` | [network.md](network.md#the-link-seam) |
+| lumpiness | The founding's contrast: the beads' states above the mean over every bead's state, in `[0, 1)`. | `bang::BigBang::lumpiness` | [model.md](model.md#the-big-bang-bangrs) |
+| manifold | The region a body holds about its anchor: the arc of its circle its own pull holds, `2 pi r m / (M + m)`. | `manifold::reach`, `galaxy::DiscFrame`, `galaxy::disc_frame` | [model.md](model.md#6-stars-and-systems) |
+| merge age | The first age (Gyr) at which a pair's swing spans its gap; the lighter body ends then. | `systems::World::merged_at`, `systems::settle_about` | [model.md](model.md#6-stars-and-systems) |
+| moon | A body that gathers on a world's own manifold by the same degree law as worlds on a star's, then settles about that world. | `systems::moons`, `systems::World::host` | [model.md](model.md#6-stars-and-systems) |
+| mu | The Mycelium network's unit of account; Xylarium holds no mu and quotes passage costs in energy. | `xyl-kernel transit::quote` | [network.md](network.md#mu) |
+| ocean | The medium between galaxies, carrying the core's waveform and the jet at `c_ocean = 3600 c`. | `circuit::core`, `circuit::Substrate::c_ocean` | [model.md](model.md#2-units-and-the-master-frame) |
+| open frames (also: unpaired) | A kind's unpaired frames `u`, the part of its 3Z span at the Q pole; pairing moves frames to the Z pole. | `compound::open`, `atoms::unpaired` | [roadmap.md](roadmap.md#nucleons-3z-3q-and-the-polarity-r) |
+| package | What a universe is founded from that its laws do not derive: the core's mass, the SI constants and the founding digest. | `package::hole_mass`, `package::Si`, `package::founding_digest` | [architecture.md](architecture.md#the-founding-and-the-package) |
+| people | The population of one species with minds on one world, with its traits, numbers and history. | `xyl-kernel cosmic::People`, `cosmic::Traits` | [civilizations.md](civilizations.md#what-a-people-is) |
+| percept | The record visible to a seat on a people at the current time: its traits, numbers, world, the bells received, its neighbours and recent annals. | `xyl-kernel percept::Percept`, `percept::perceive` | [civilizations.md](civilizations.md#perceiving) |
+| piece | A bead read as a parcel of the home galaxy's gas, which cools and lights as a star-forming cloud. | `formation::cooling` | [model.md](model.md#5-the-galaxy) |
+| pole point | A kind's pole state as a conformal point `X(t)` on the filament at `t = u / w` (open over held): the Z pole at the origin, the Q pole at infinity, the throat at `t = 1`. | `circuit::pole_point` | [EQUATIONS.md](EQUATIONS.md#z-q-and-r-the-pole-model) |
+| progenitor | A seat assigned by a house that builds, keeps and runs passage. | `xyl-kernel seats::Role::Progenitor` | [civilizations.md](civilizations.md#roles) |
+| `Q` (type) | An exact rational in lowest terms, promoted to big integers when a value outgrows `i64`; all held state is `Q`. | `xyl-core q::Q` | [model.md](model.md#1-numbers) |
+| Q (neutrons) | A kind's neutron count, its mass number less its charge; with Z it gives the kind's mass of `Z + Q` nucleons. | `circuit::nucleus_weights`, `formation::mass_weight` | [EQUATIONS.md](EQUATIONS.md#z-q-and-r-the-pole-model) |
+| quarantine | The share a constellation is held closed, `1 - prod(1 - discord)` over its peoples. | `xyl-kernel transit::Network::quarantine`, `transit::Network::shut_of` | [civilizations.md](civilizations.md#discord-and-quarantine) |
+| r_g (also: tier unit) | The base length unit, the universal core's gravitational radius `r_g = G M_core / c^2` with `G = c = M_core = 1`; every tier's unit is a power of sixty of it. | `xyl-core units::Units`, `xyl-core units::Units::r_g_m` | [model.md](model.md#2-units-and-the-master-frame) |
+| reading | One output of `xylarium observe`, named by a word; either a law reading or a carried reading. | `xylarium observe::observe` | [architecture.md](architecture.md#readings) |
+| realm | The constellations one passage network joins; each realm has a steward. | `xyl-kernel transit::Network::realms` | [civilizations.md](civilizations.md#realms-and-stewards) |
+| reverberation | A firmament kind's band swinging about the throat: its reach, hold, deficit, share past the throat and leaving rate. | `circuit::Reverberation`, `circuit::Substrate::reverberation_with` | [model.md](model.md#4-the-firmament-and-the-core) |
+| rim | The outer edge of the outermost founding shell, in cluster units; the pulse crosses it. | `circuit::Substrate::rim` | [model.md](model.md#the-cascade-shells-and-beads-formationfounding_shells-circuitsubstratefound) |
+| ring (of time) | One full bell; live play advances one ring per loop, and percepts and ledger entries cite whole rings. | `xyl-kernel universe::Universe::ring`, `circuit::bell_gyr` | [network.md](network.md#time-on-the-network) |
+| ruler | A declared constant used until a law derives it. | `chem::Rulers`, `xyl-kernel growth::Rulers` | [roadmap.md](roadmap.md#declared-rulers) |
+| rung | One step of a chemistry's ladder toward a mind: the information it holds, its copying error, its mean wait and the bodies it feeds. | `life::Step` | [model.md](model.md#7-life-and-minds) |
+| seal | A kind whose every band and every shape of its outermost shell is full: Z 2, 28, 208 and 1092. | `atoms::Atom::sealed` | [model.md](model.md#the-elements-elementsrs-atomsrs) |
+| seat | A role in the universe (ancient, progenitor, steward, sovereign), held by the kernel's built-in rule or by a mind joined by its key. | `xyl-kernel seats::Role`, `seats::Seat`, `seats::Holder` | [civilizations.md](civilizations.md#roles) |
+| settling | The closed-form merging of a disc's bodies by their neighbours' kicks, carried as ages. | `systems::settle_about` | [model.md](model.md#6-stars-and-systems) |
+| sight | Which sample stars the forecast reads: `census` every sample star, `cores` the stars within the cores' reach (`--sight`). | `minds::Sight` | [model.md](model.md#7-life-and-minds) |
+| sovereign | The seat over one non-ancient people's worlds. | `xyl-kernel seats::Role::Sovereign` | [civilizations.md](civilizations.md#roles) |
+| span (3Z) | The three frames each proton spans, `3Z` per kind, split between the hold and the open frames; pairing moves frames between them with the span fixed. | `compound::charge`, `compound::hold` | [roadmap.md](roadmap.md#nucleons-3z-3q-and-the-polarity-r) |
+| star share (also: star cut) | The share of a lit bead's infall that its star holds after collapse; the rest forms the disc its worlds gather from. | `disc::StarCut`, `disc::star_cut` | [model.md](model.md#6-stars-and-systems) |
+| state | A bead's mass from its recipe, in the universal core's units. | `circuit::Bead::state` | [model.md](model.md#the-cascade-shells-and-beads-formationfounding_shells-circuitsubstratefound) |
+| steward | The seat over a realm: diplomacy, trade and disputes between its sovereigns, and the handling of its lines. | `xyl-kernel seats::Role::Steward` | [civilizations.md](civilizations.md#realms-and-stewards) |
+| substrate | The core, the ocean and the galaxies as functions of time `t`. | `circuit::Substrate` | [model.md](model.md#4-the-firmament-and-the-core) |
+| swing | The greatest kick a body's neighbours give it by the settled age, as a share of its reach; it sets the body's starting eccentricity and tilt. | `systems::World::swing`, `systems::settle_about` | [model.md](model.md#6-stars-and-systems) |
+| throat | A core's paired faces, near and far; every core is one face of a throat. | `bounce::Bounce`, `circuit::plane_antipole` | [model.md](model.md#the-bounce-bouncers) |
+| throat push | The vacuum's share at the throat itself, `delta(H, H) = 1/2`. | `circuit::throat_push` | [model.md](model.md#4-the-firmament-and-the-core) |
+| tier | A level of the containment chain (universe, cluster, galaxy, system, planet), read in its own unit, a power of sixty of `r_g`. | `xyl-core units::Tier`, `xyl-core units::Tier::in_rg`, `manifold::dilation` | [model.md](model.md#2-units-and-the-master-frame) |
+| tithe | A passage's energy for every lane length it spans. | `xyl-kernel transit::tithe` | [civilizations.md](civilizations.md#ley-lines-and-the-worth-law) |
+| torsion share | The share the jet carries through the throat at each crossing, `a = (H + J) / (2H + J)`: 1/2 at zero spin, 3/5 at extremal spin. | `bang::torsion_share` | [model.md](model.md#the-big-bang-bangrs) |
+| transit (also: passage) | Movement between stars: a voyage under a drive at its cruise speed, or a passage along a ley line or through a fold, costed in energy (joules). | `xyl-kernel transit::Voyage`, `transit::voyage`, `transit::passage_j` | [civilizations.md](civilizations.md#grand-strategy) |
+| TUniversal | The Mycelium network's signed clock; Xylarium measures its pace in rings per final point. | `xyl-kernel chronometry::Chronometry::pace` | [network.md](network.md#time-on-the-network) |
+| turning (history) | An event of a people's history (an exodus, a settlement, a mastery passing one half, a first fold), named at the next carry by an eminent figure. | `xyl-kernel civ::history::Turning` | [civilizations.md](civilizations.md#turnings-and-eminent-figures) |
+| turning law | A body at reach `r` turns at `omega = c delta(<r) / r`, with `delta(<r)` the deficit of the mass inside `r`. | `turning::turning_kpc`, `galaxy::inside_mass` | [model.md](model.md#5-the-galaxy) |
+| universal core | The central hole the universe is founded about; its mass is the unit of mass (`M_core = 1`), and `package::hole_mass` converts it to 4.3e6 solar masses for display. | `package::hole_mass`, `circuit::core` | [model.md](model.md#2-units-and-the-master-frame) |
+| universal state | The universal core's own holding, 1 in its units; the firmament carries it. | `circuit::Substrate::found` | [architecture.md](architecture.md#the-founding-and-the-package) |
+| uplink | The program that connects a universe to the hypha; it attaches to live play through `run::Link` and is not part of this repository. | `xylarium run::Link`, `run::run_with` | [network.md](network.md#how-a-kernel-plugs-in) |
+| vacuum's share | The push the pulse delivers at reach `R` about hold `H`, `H / (R + H)`. | `circuit::vacuum_share` | [model.md](model.md#4-the-firmament-and-the-core) |
+| vessel | The band of kinds no light shell can grip, from the heaviest seam below the last seal to that seal (Z 568 to 1092). | `atoms::vessel` | [model.md](model.md#the-elements-elementsrs-atomsrs) |
+| waveform | The ocean's non-tidal amplitude `A(r, t)` at reach `r` and time `t`. | `circuit::Substrate::amplitude` | [model.md](model.md#4-the-firmament-and-the-core) |
+| world | A planet formed on a star's manifold where gathered matter holds its region against the core's tide, with its orbit, mass, radius and elements; its air, seas and temperature are read per degree of the star's life. | `systems::World`, `disc::manifold_worlds`, `worlds::build` | [model.md](model.md#6-stars-and-systems) |
+| worth law | A ley line is sited where a passage is worth most: the passer's mass times what it saves against normal transit, less its tithe. | `xyl-kernel transit::Network::step` | [civilizations.md](civilizations.md#ley-lines-and-the-worth-law) |
+| Z (protons) | A kind's proton count, its charge; each proton spans three frames, so a kind's span is 3Z. | `compound::charge`, `circuit::nucleus_weights` | [EQUATIONS.md](EQUATIONS.md#z-q-and-r-the-pole-model) |

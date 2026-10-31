@@ -1,14 +1,26 @@
-//! The anchor chain's galactic tier (docs/model.md): the core is the anchor
-//! of every star, a zero point at the pole of the universe's 3-sphere. A
-//! star's galactic manifold extends from the core: its stretch is its orbit's
-//! radius and its swing through the plane, its turn is its phase about the
-//! core, and its plane is tilted about a node. Its place at `t` is a bearing
-//! on the sphere (reach, direction, climb). Distances are arcs on the sphere,
-//! not straight lines.
+//! The anchor chain's galactic tier: places of stars and cores held as
+//! bearings on spheres, and arc lengths between them (docs/model.md).
 //!
-//! Places are in the galaxy tier's unit, 60^5 r_g of the core (xyl-core
-//! units.rs), exact rationals bounded by certified enclosures, computed on
-//! demand.
+//! Reads `package::Si` and `package::hole_mass` (for `units`, the core
+//! hole's `xyl_core::units::Units`), `galaxy::rim_kpc` and
+//! `galaxy::radius_kpc` (from `circuit::anchor`). Lengths are in the galaxy
+//! tier's unit, 60^5 r_g of the core (`Tier::Galaxy`); `kpc` gives one
+//! kiloparsec in that unit.
+//!
+//! A star's place is its arc `reach` from its galaxy's core along the
+//! galaxy's sphere (radius rim / pi, `galaxy_radius`), its unit direction
+//! `dir`, its `climb` off its orbit's plane and an extra offset `out`; a
+//! core's place is the same on the universe's sphere (radius `radius`).
+//!
+//! Outputs: `Place` (`core`, `in_galaxy`, `standing_off`, `to_anchor`,
+//! `arc`, `arc_kpc`, `arc_kpc_dy`, `cell`) and `Cell`. On a shared sphere
+//! the arc is the turn between directions times `R sin(inner / R)`, plus the
+//! absolute differences in reach and climb and both `out`s (summed, no
+//! squares or roots); between galaxies it is each place's path to its core
+//! plus the arc between the cores. The turn uses a dyadic `acos` and the
+//! midpoints of certified pi and sine, so `arc` returns an `Encl::exact` of
+//! that reading, not a proven bound. `cell` is a degree label computed in
+//! dyadics; no law reads it.
 
 use crate::package::Si;
 use xyl_core::certified::{cos_sin_turns, pi, Encl};

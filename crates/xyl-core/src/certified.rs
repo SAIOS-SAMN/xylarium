@@ -1,22 +1,31 @@
-//! Certified reals: transcendental values known by a proven rational
-//! enclosure, never by a float.
+//! Certified reals: exact rational intervals proven to contain a real value,
+//! for the roots and transcendentals (sqrt, exp, ln, pi, cos/sin, asin,
+//! rational powers) that a rational cannot hold.
 //!
-//! The cosmos needs √, exp and ln (a disc's density, the Big Bang's spread,
-//! light's travel). They are not rationals, so the universe holds each as an
-//! [`Encl`]: exact rationals `lo ≤ x ≤ hi`, with `x` the true value, proved
-//! by construction:
+//! Inputs: exact rationals ([`Q`]) and a precision in bits; no other module.
 //!
-//! - every series is summed with an explicit bound on the remainder;
-//! - every intermediate is rounded outward to a dyadic grid (`lo` down, `hi`
-//!   up), which keeps the numbers small and never loses the proof;
+//! Outputs: [`Encl`], an interval `lo <= x <= hi` of exact rationals, with
+//! interval arithmetic (`add`, `sub`, `mul`, `recip`, `outward`); the functions
+//! `sqrt`, `exp`, `exp_of`, `ln`, `ln2`, `pi`, `powq`, `cos_sin_turns` (angle
+//! in turns), `asin_small` and `asin_any`; the 128-bit fixed-point path
+//! `exp_fixed` / `fixed_bounds` in units of `2^-FIXED` (`FIXED` = 60); and
+//! `down` / `up`, rounding to the grid of `2^-bits`.
+//!
+//! Invariants:
+//! - every series is summed with an explicit bound on its remainder;
+//! - intermediates are rounded outward to a dyadic grid (`lo` down, `hi` up),
+//!   which bounds the size of the rationals without losing containment;
 //! - an operation on enclosures (sum, product, monotone map) encloses its
-//!   result.
+//!   result;
+//! - out-of-domain input is refused with `None`: `sqrt` of a negative, `ln`
+//!   and `powq` of a non-positive value, `recip` of an interval holding zero;
+//! - no floating point is used, so the same inputs give the same enclosure on
+//!   every machine.
 //!
-//! The kernel decides only what the bounds decide (two enclosures that
-//! overlap are not ordered), and asks for more bits when it must.
-//! Nothing here is approximate in the float sense: every value is exact, and
-//! the uncertainty is itself an exact, declared interval. The same inputs
-//! give the same enclosure on every machine.
+//! Two overlapping enclosures are not ordered: a caller decides only what the
+//! bounds decide, and asks for more bits when they do not.
+//!
+//! Terms: `Encl` (docs/glossary.md).
 
 use crate::Q;
 use num_bigint::BigInt;

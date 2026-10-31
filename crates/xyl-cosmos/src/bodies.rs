@@ -1,28 +1,36 @@
-//! A world's body: its orbit, its spin,
-//! and the heat it makes and loses.
+//! A world's body: its orbit and spin at any age, and its interior's heat
+//! budget, temperatures and dynamo.
 //!
-//! The orbit: each world keeps six elements and a spin. A young system stirs
-//! its planets toward the escape speed of its largest body (Safronov:
-//! e ~ v_esc / v_orb), passing stars stir them more in a crowded neighbourhood,
-//! and half the gap to a neighbour bounds each eccentricity so orbits never
-//! cross. A neighbour forces an eccentricity (Laplace-Lagrange, 5/4 x the axes'
-//! ratio x its own); the host's tides damp the rest (Goldreich & Soter).
-//! Inclination is stirred half as much. Directions (node, perihelion) are
-//! fractions of a turn. Obliquity is held as its cosine, uniform on [-1, 1]
-//! (isotropic giant impacts: 2u - 1). A world is born spinning at a share of
-//! break-up and its host's tides brake it to lock (Gladman et al.).
+//! Inputs: `systems::World` (mass and radius in world units, axis in AU,
+//! layers, element masses, and the settling's swing and phase from
+//! `systems::settle_about`), the host's mass in kg, `laws::Scales`, and SI
+//! constants from `package::Si`. Mean motion and break-up spin come from the
+//! turning law (`turning::turning_si`); the tidal stretch across a body is
+//! its host's deficit difference `delta(a - R) - delta(a + R)`.
 //!
-//! The interior: a world's heat comes from its own uranium, thorium and
-//! potassium (the elements it was built with, systems.rs), in isotopes as they
-//! stood at its star's birth relative to the Sun's. The mantle convects
-//! (boundary-layer theory, viscosity falling with temperature); the core passes
-//! heat to the mantle through their boundary layer, freezes as it cools, and
-//! runs a dynamo while it loses more than its adiabat conducts. Tides on an
-//! eccentric orbit add heat. `interior` evaluates any age in closed form: heat
-//! as boosts, the mantle on its thermostat.
+//! - [`orbits`]: per world an [`Orbit`]. Eccentricity is the settled swing,
+//!   capped at half the fractional gap to the nearest neighbour; inclination
+//!   is `swing / (1 + swing)` of a quarter turn; node and periapsis are the
+//!   settled phase; the forced eccentricity is the Laplace-Lagrange leading
+//!   term `5/4 x axis ratio x neighbour e0`. Obliquity cosine (`2u - 1`) and
+//!   birth spin (0.1 to 0.5 of break-up) are drawn from the caller's stream.
+//!   Tidal circularisation ([`circularise_gyr`]) and spin lock ([`lock_gyr`])
+//!   use Love number `k2` ([`love`]) and `Q = 100`.
+//! - [`Orbit::at`]: eccentricity relaxed toward the forced value, spin braked
+//!   linearly to lock, day and year lengths.
+//! - [`interior`]: the [`Interior`] at an age in closed form. Heat is a sum
+//!   of boosts (`xyl_core::motion::Modes`: U238, U235, Th232, K40 at
+//!   half-lives scaled by `Scales`, plus the tide's modes); the mantle sits
+//!   at the temperature where Arrhenius-viscosity convection carries the
+//!   heat made (a bracketed Newton root), plus its lag and formation
+//!   transient; the core follows the mantle's base; the dynamo's strength is
+//!   the core-boundary flux over the adiabatic flux, less one, clamped to
+//!   0..1. [`heat_sources`] and [`kept`] give each isotope's inventory at
+//!   the star's birth relative to the Sun's.
 //!
-//! Quantities are exact rationals rounded to a fixed grid; transcendentals are
-//! certified enclosures.
+//! Orbit quantities are `Q` rounded down to a 2^-32 grid, transcendentals
+//! read from certified enclosures; interior quantities are `Dy`. Laboratory
+//! rock and iron constants are declared rulers (`Rock`, the `Lab` table).
 
 use crate::elements::{decimal, Element};
 use crate::laws::Scales;

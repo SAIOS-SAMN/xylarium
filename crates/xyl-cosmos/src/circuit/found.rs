@@ -1,4 +1,25 @@
-// The founding: the cascade, the vessel, the beads, the galaxies' recipes
+// The founding: `Substrate::found` builds the substrate from the parent's
+// spin and the founded elements.
+//
+// Inputs: the spin, its torsion share (`bang::torsion_share`), the elements
+// (`elements::Element`), `formation::kinds` and `formation::founding_shells`
+// for the cascade, `atoms::vessel`, and `formation::lighting`. Reaches are
+// core rings; amounts are held frames, universe units.
+//
+// Steps: every kind is thrown to its reach, spread r (1 +/- s_final). Held
+// kinds inside the vessel band form the firmament (`Kind`), scaled so their
+// mass is 1, the universal state; each kind's capture phase is the share
+// turned Z times. The other shells link into runs where spreads overlap;
+// each run's superposed hold is cut at its local minima into beads (`Bead`),
+// and each kind goes whole to the bead whose span contains its reach. The
+// rim is the outermost shell's outer edge.
+//
+// Outputs: `Substrate` with the anchor (anchor.rs); `held_share`, `census`,
+// `unit` (sum of states), `holding` (everything founded, by mass) and
+// `mean_state`. A founding cached under the same founding digest and share
+// is loaded instead (cache.rs); the result is the same founding.
+// Terms: firmament, bead, state, rim, census, held share, universal state
+// (docs/glossary.md).
 
 use super::*;
 use crate::formation;

@@ -1,25 +1,30 @@
-//! The universe: one engine that advances from event to event, not cycle by
-//! cycle.
+//! The universe in play: one engine that advances from event to event on
+//! the bell's count, holding the cosmic world, the civilizations, the field,
+//! the seats, the ley network and the keepers' clocks.
 //!
-//! - Clock: time is the count of the core's rings (its period is the pulse's
-//!   round trip to the rim and back, pulse.rs), an exact rational count in
-//!   the universe's own units. Deep time in Gyr is derived from it at the seam
-//!   with the older layers (count x period).
-//! - Queue: an event at a known moment sits at its exact count: a mind waking
-//!   (the forecast's epochs) or an input landing (a seat taken, an inquiry
-//!   turned). A reading that crosses a level (a world that stops feeding its
-//!   people) is a certified crossing (xyl-core event.rs), solved inside its
-//!   span and logged at its exact moment.
-//! - Readings: every quantity is evaluated at the exact t: peoples' numbers by
-//!   the logistic in closed form from their last carry, the bells' rings in
-//!   closed form (field.rs), ruins buried by their own law. Nothing is
-//!   evaluated between events.
-//! - Stepping: the civilizations' layer (civ: knowledge, housing, numbers) is
-//!   the only stepped layer, carried in live play over spans no longer than
-//!   its own turning allows.
-//! - State: what the laws give is regenerated; what they do not (seat
-//!   holders, civilizations' numbers and knowledge, inputs) is held in a
-//!   checkpoint (checkpoint.rs) and laid over the regenerated universe.
+//! - Clock: `now` is an exact rational count of the core's rings. [`Bell`]
+//!   holds the ring's period in Gyr (`xyl_cosmos::pulse::core_period_yr`,
+//!   rounded down onto a 2^-60 grid); deep time in Gyr is count x period,
+//!   converted to `Dy` at the seam with the older layers.
+//! - Events: [`Universe::next_event`] is the soonest of the forecast's next
+//!   waking, the next pending [`Input`] and the next ley line falling due.
+//!   [`Universe::advance_to`] lands each at its own count, then takes every
+//!   reading at the target: the bells' rings delivered in closed form
+//!   (field.rs), each people carried once over its own span (civ.rs), the
+//!   ley network and quarantine carried, and fallen peoples' seats released.
+//! - Live play (`live`): the civilizations' layer is carried across each
+//!   span in pieces no longer than a tenth of the shortest turning (1 / rate
+//!   or one generation) of any living people.
+//! - Inputs: what no law determines (a seat taken, a focus, a steward's
+//!   handling, and the exoduses and settlements the carry decides) is
+//!   applied by the kernel ([`Universe::apply`]), logged and recorded with
+//!   its count. [`Universe::decide`] lands a seat's [`Decision`] now, or
+//!   returns `Err` with the reason it is refused.
+//! - State: what the laws give is regenerated from the seed; recorded
+//!   inputs and path-dependent state are held in the checkpoint
+//!   (checkpoint.rs) and laid back over the regenerated universe.
+//!
+//! Terms: ring (docs/glossary.md).
 
 use crate::civ::Civilizations;
 use crate::cosmic::Cosmic;

@@ -1,12 +1,30 @@
-//! The cores (docs/model.md): the universe core is the Big Bang's anchor, and
-//! its founding produces the galaxies. The home galaxy is index 0, at the
-//! universe core; its scale is the calibration until the home galaxy is
-//! derived from the core's reach. Every other galaxy is a bead of the
-//! founding cascade (circuit/found.rs) that holds a sun: its reach and phase
-//! about the universal throat, its state (share of the founding's matter),
-//! and its recipe (the kinds carried into it plus its intake from the core by
-//! t). Each metal's factor is its share of the composition over its share of
-//! the elements' founding, not a drawn preset.
+//! The galactic cores: the founding's galaxies as core shapes (bearing,
+//! plane, circulation, hole mass) and recipes, founded once per parent spin
+//! and cached for the process (docs/model.md).
+//!
+//! Reads `bang::BigBang` (the parent's spin, first-star time),
+//! `elements::founded`, `circuit::Substrate` (galaxies, intake,
+//! composition), `galaxy::tilt_of` and `node_of`, `manifold::dilation` and
+//! `package::hole_mass`. Reaches are in the cluster tier as founded (60^2
+//! galaxy units each, `Shape::anchor`), phases in turns, times Gyr, masses
+//! suns.
+//!
+//! - `substrate_for`: founds the substrate at the drawn spin; where the
+//!   firmament's margin is negative it refounds at the least admissible
+//!   spin (`bang::spin_of_share` of `least_share`), up to three times, then
+//!   sets `circuit::anchor`. None where the element table fails.
+//! - `shapes`, `shape`, `held`: the home galaxy is index 0 at the universe
+//!   core with mass `hole_mass` and a flat plane; every other galaxy is a
+//!   bead of the founding cascade, of mass `hole_mass x state`, its plane
+//!   from golden and plastic turns of its index, its circulation
+//!   `4 delta / echo` turns per Gyr. `Shape::place_at` gives its place at t;
+//!   `Shape::scale` its compressed length scale `2 r / (1 + r)`.
+//! - `weights_at`, `founding`: each metal's factor is its share of the
+//!   bead's metals over its share of the founded elements' (by mass); H and
+//!   He are 1, and the home galaxy with no intake is the calibration.
+//!
+//! The founding depends on the parent's spin only; the seed argument is not
+//! read. Terms: admission, galactic core (docs/glossary.md).
 
 use crate::bang::BigBang;
 use crate::elements::Element;

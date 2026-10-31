@@ -1,4 +1,13 @@
-// The founding's cache: the substrate as founded, kept in the home directory
+// The founding cache: the founded `Substrate` written to the home directory
+// with `xyl_core::codec`, keyed by the founding digest and the torsion share.
+//
+// Inputs: the directory named by `cache_in` (first call per process wins;
+// without one nothing is cached). Outputs: `cache_in`, and crate-private
+// `load` and `store`. A file of another format version, or one that does
+// not decode whole, is refused (None) and the founding is recomputed. The
+// reverberation and bell are not stored; they are recomputed on load. A
+// store writes a temporary file and renames it; failures are ignored,
+// since the cache only saves time and deleting it changes no reading.
 
 use super::*;
 use std::path::{Path, PathBuf};

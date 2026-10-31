@@ -1,29 +1,31 @@
-//! Knowledge: what a people knows, how it learns, and what that lets it do
-//! There is no tech tree.
+//! Knowledge: the stock a people holds in four domains, how it grows and
+//! decays over a span, and the mastery it yields. There is no tech tree.
 //!
-//! Knowledge is a stock per people in four domains (energy, materials,
-//! biology, information), in knowledge units (KU: the free thought of a
-//! thousand unit minds for a year). Mastery is the logarithmic form
-//! mastery = 1 - 1 / (1 + ln(1 + K / U)), U the experience of the first
-//! doubling (`wright`). Mastery depends on the
-//! power a people commands, not its headcount, and never reaches one.
+//! Inputs: a people's traits and numbers (`cosmic::People`), its bodies'
+//! power (W, `growth::Power` via `cosmic::Cosmic::power`), its consciousness
+//! gauge (`civ::Gauges`), and `xyl_cosmos::worlds` / `life` for temperature
+//! and copying fidelity.
 //!
-//! - Thought is power: a people thinks with the power it commands, its
-//!   bodies' metabolism (growth.rs, at its chemistry's pace) plus what its
-//!   works turn to thought. A watt at temperature T erases Landauer's
-//!   1 / (k T ln 2) bits; kinetic speed is already in the power, so only
-//!   Landauer's T_unit / T is applied. Free thought is the share of bodies
-//!   food no longer needs (1 - N / N_cap) plus the works' thought; every member
-//!   also adds a lived share.
-//! - Discovery: the frontier yields at the rate of the thought spent on it,
-//!   dK/dt = E - lam K, solved in closed form (`advance`).
-//! - Forgetting follows the people's own life: knowers die once a
-//!   generation (growth.rs), and what they knew goes with them; a collective
-//!   forgets less (`pooled_keep`).
+//! - Stock: per [`Domain`] (energy, materials, biology, information), in
+//!   knowledge units (KU: the free thought of [`KU_MINDS`] unit minds for a
+//!   year). [`mastery`] = 1 - 1 / (1 + ln(1 + K / U)), U =
+//!   [`knowledge_unit`]; it is 0 at K = 0 and rises toward 1 with K.
+//! - Thought ([`effort`]): power x Landauer's T_unit / T x (1 + g_C), over a
+//!   knowledge unit's power. Lived thought is a share of all bodies' power;
+//!   free thought is the bodies' power times 1 - N / N_cap, plus works
+//!   (`works_w`, zero until modelled).
+//! - Direction ([`directed`]): lived thought by the profile's affinity; free
+//!   thought by curiosity + the needs' pulls + a ruler's focus. Only hunger
+//!   is computed from a people's state ([`Needs::of`]); the other pulls are
+//!   zero until their layers exist.
+//! - Carry ([`advance`]): dK/dt = E - lam K in closed form, lam from
+//!   [`forgetting`] (knowers die once a generation, a collective pooling
+//!   [`pooled_keep`] of it), so the result does not depend on step size.
 //!
-//! Thought is directed by the people's needs (pulls): hunger to biology, a
-//! spent crust to materials, a power shortfall to energy, trade to
-//! information, over a floor of curiosity, plus any focus its rulers set.
+//! [`Knowledge`] holds every people's [`Stocks`], indexed like
+//! `cosmic.peoples`; stocks and focus are held in the checkpoint. Declared
+//! rulers: [`knowledge_unit`], [`lived_share`], [`curiosity`],
+//! [`pooled_keep`] and the sense weights.
 
 use crate::cosmic::{People, Shape, Strategy, Traits};
 use crate::growth::{self, Rulers};

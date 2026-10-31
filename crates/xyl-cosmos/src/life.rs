@@ -1,38 +1,43 @@
-//! Life: how far a chemistry can climb - information written against its
-//! decay.
+//! Life: how far a world's chemistry can climb toward a mind, written as
+//! information copied against its decay, and when each rung is reached.
 //!
-//! No parameter sets whether life is common or rare, quick or slow; those
-//! follow from the formulas for each world under its universe's laws.
+//! Inputs: `worlds` (a world's `Setting`, `State` and `Medium`s, bond
+//! energies, `Ctx` with `laws::Scales`), `galaxy::Star`, `systems::System`,
+//! `stars::life` for the star's lifetime, `turning::year_yr` for orbital
+//! periods, and SI constants from `package::Si`. Times are Gyr after the Big
+//! Bang, all quantities `Dy`. No per-world parameter sets how common or fast
+//! life is; it follows from these formulas under each universe's scales.
 //!
-//! - Fidelity: a copy goes wrong where thermal noise beats the energy that
-//!   tells a right partner from a wrong one (half a contact of the solvent's
-//!   cohesion), so each monomer is miscopied with probability
-//!   eps = exp(-dG / kT) (Boltzmann). Water at 300 K: ~1e-4, as an unchecked
-//!   polymerase. Plasma, with no bonds, does not copy.
-//! - Ceiling: (Eigen) a lineage holds at most b / eps bits. Each rung is error
-//!   correction built from the rung below (Hopfield's kinetic proofreading):
-//!   rung s holds b / eps^(s+1). A mind is the rung that holds a mind's
-//!   blueprint, I_MIND; the number of rungs is set by the chemistry.
-//! - Climb: selection writes what its cost allows (Haldane 1957: ln n
-//!   generations of selective deaths per substitution, from a lineage that can
-//!   lose half of each generation), never more than MacKay's one bit per
-//!   generation. A generation is a cell's while the genome fits one copier's
-//!   span (copied at kT/h e^-barrier by corresponding states) and a body's
-//!   beyond it, t_cell (1 + log2(body / cell)). Each step is an exponential
-//!   wait of its mean; a small population writes slower (N eps L mutations per
-//!   generation).
-//! - Decay: stored information breaks while it waits to be copied, by
-//!   microscopic reversibility and by thermal homolysis. Hot media copy fast
-//!   and forget fast; cold ones keep.
-//! - Setbacks: an impact large enough to end complex life resets a rung's
-//!   progress (life itself is never undone), so a rung completes in the
-//!   memoryless restart's expectation (`climb`); a dying star's pulse
-//!   sterilises an open surface at its expected time, the hazard's
-//!   reciprocal, more often where dying stars crowd; a sea under ice or in
-//!   the deep is shielded.
-//! - Transfer: rock thrown off one world reaches its neighbours in about a
-//!   million orbits (Gladman et al. 1996): microbes travel, minds do not.
-//!   Between stars no rock arrives in time.
+//! - Fidelity ([`fidelity`], [`field_fidelity`]): a monomer is miscopied
+//!   with `eps0 = exp(-d E / kT)`, `d = 1/2` of the solvent's weak bond
+//!   (Boltzmann). A plasma copies patterns held in its field, with `E` the
+//!   field energy per carrier. `eps0 >= 1/2` copies nothing.
+//! - Ladder ([`ladder`]): rung `s` holds `b / eps^(s+1)` bits (Eigen's
+//!   ceiling, raised a rung at a time by kinetic proofreading), with `eps`
+//!   the bare error plus decay ([`decay_rate`]) over one generation; the
+//!   ladder is complete where a rung reaches `I_MIND` ([`i_mind`]), at most
+//!   [`MAX_RUNGS`]. Each [`Step`]'s mean wait follows from Haldane's cost of
+//!   selection capped at one bit per generation ([`bits_per_generation`]),
+//!   the copy rate `kT/h e^-barrier` ([`copy_rate`]), a generation of
+//!   `t_cell (1 + log2(body / cell))`, and the population the medium's power
+//!   feeds.
+//! - Climb ([`climb`]): the expected completion of each rung under impacts
+//!   at rate `mu` ([`strikes_per_gyr`]), `(e^(mu m) - 1) / mu`; the first
+//!   rung is never undone. A surface is sterilised at `1 / hazard`
+//!   ([`sterilise_per_gyr`], scaled by cosmic rays and plane exposure); media
+//!   under ice or deep are shielded. A surface chemistry's window closes at
+//!   0.9 of the star's lifetime; every window closes when the world merges.
+//! - Transfer ([`system_life`]): life reaches a sibling world after
+//!   [`transfer_gyr`] (its year over the share `R / (2 pi a)` of its orbit
+//!   its body covers), divided by the dormant lineage's survival in transit.
+//!   Transfer is modelled within a system only.
+//! - Feeding ([`foragers`]): living area, growing season ([`growing_share`])
+//!   and energy through one trophic link, over each body's metabolism;
+//!   [`viable`] is the 500 of Franklin's 50/500 rule.
+//!
+//! Every function is deterministic: no random draw enters.
+//!
+//! Terms: rung (docs/glossary.md).
 
 use crate::galaxy::Star;
 use crate::systems::System;

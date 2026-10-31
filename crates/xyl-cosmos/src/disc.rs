@@ -1,8 +1,28 @@
-//! A star's disc, read on the chain: the star tier's cut of its piece's
-//! infall (`star_cut`), the worlds its manifold holds against the core's
-//! twist (`manifold_worlds`), and each fragment's planetary core. Built on
-//! the founding (formation.rs) and never part of it, so a change here keeps
-//! the genesis.
+//! A star's disc: the star tier's cut of a lit bead's infall, the worlds its
+//! manifold holds against the galaxy core's twist, and each world's
+//! planetary core.
+//!
+//! Reads `circuit::Bead` and the formation helpers (`cooling`, `lights`,
+//! `hold_at_heat`, `throat_push`, `vacuum_halving`). All quantities are exact
+//! `Q`: reaches and holdings are shares of the infall or of the star's
+//! manifold, extents are in galaxy rings, heat in hydrogen units.
+//!
+//! Outputs:
+//! - `star_cut` -> `Option<StarCut>`: the star's held share, the tide
+//!   `H / (R + H)`, the disc's agitation `a_disc`, the infall's shear
+//!   `H w / (R (R + w))` and the over-pressure `1 + burn`; None where the
+//!   bead does not light.
+//! - `manifold_worlds`: walks the manifold outside the star's share in 360
+//!   equal degrees, each adding `1 - a` of its line; a world closes where
+//!   the gathered matter's deficit `m / (star + m)` reaches the twist
+//!   `tide x`. Returns each world's (reach, holding) and the belt share.
+//! - `star_disc` -> worlds (`World`: reach, holding, heat, kept share,
+//!   lightest held kind) and belts. Every fragment takes the disc's mix; a
+//!   per-reach composition is not yet modelled.
+//!
+//! Invariant: worlds and belts together hold `1 - star`. This file is not
+//! among the founding digest's sources (build.rs), so editing it leaves the
+//! founding cache valid. Terms: belt (docs/glossary.md).
 
 use crate::circuit::Bead;
 use crate::formation::*;

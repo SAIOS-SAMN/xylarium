@@ -1,22 +1,23 @@
-//! The turning law, one law at every scale (docs/model.md): curvature is the
-//! law and the angle its reading. Units are the white hole's: G = c =
-//! M_core = 1, lengths in r_g, time in r_g / c.
+//! The turning law (docs/model.md): the rate at which a body turns about
+//! its anchor, from the deficit of the mass inside its radius.
 //!
-//! - The deficit inside a circle of radius r is the share of the turn the
-//!   enclosed mass withholds, the same share the well takes from the clock
-//!   (clocks run at r / (r + M)): delta(<r) = M(<r) / (r + M(<r)), M and r in
-//!   r_g, exact, at most 1.
-//! - The turning law: a body at r turns about its anchor at
-//!   omega = c delta(<r) / r, so its speed v = c delta stays below light. There
-//!   is no separate ruler per tier.
-//! - Twist is the deficit: once around, a carried direction returns turned by
-//!   delta of a turn.
-//! - Consequences: far from a point mass v / c goes as r_g / r, and a year as
-//!   r (r + M) / M.
+//! Units: G = c = M_core = 1, lengths in r_g of the core (`chain::units`);
+//! inputs at the interfaces are SI or kpc and suns (`package::Si`,
+//! `package::hole_mass`), outputs degrees per Gyr.
 //!
-//! At its interfaces the code uses SI and Gyr: the rate is converted to
-//! degrees per Gyr, pi enters only when converting a speed into a turn, and
-//! the rate is rounded once to a 2^-60 grid.
+//! - Deficit: `deficit_share` = M(<r) / (r + M(<r)), M and r in r_g, exact,
+//!   at most 1; the same share by which the well slows clocks.
+//! - Turning: omega = c delta(<r) / r, so v = c delta stays below light; the
+//!   same law at every tier. Far from a point mass v / c goes as r_g / r.
+//! - Twist: once around, a carried direction turns by delta of a turn
+//!   (`twist_per_turn`, degrees).
+//!
+//! Outputs: `turning_si`, `turning_kpc` (exact, rounded down once to the
+//! 2^-60 grid), `turning_kpc_dy` (the same law in `Dy`), `rad_s` (pi enters
+//! only in converting between turns and radians), `year_yr`, `home_mass`,
+//! and `roundness` / `rigidity` (provisional: measured rock and ice
+//! boundary bodies). Non-positive radii and zero denominators give zero.
+//! Terms: turning law, deficit (docs/glossary.md).
 
 use crate::package::Si;
 use xyl_core::dyadic::Dy;

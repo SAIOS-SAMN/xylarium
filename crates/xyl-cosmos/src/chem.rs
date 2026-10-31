@@ -1,47 +1,50 @@
-//! The galaxy's chemical evolution: where the elements come from, when, and
-//! where they go. The founding seeds the light nuclei (`elements::founded`,
-//! read as [`Light`]); everything heavier is made by stars forming from the
-//! galaxy's gas.
+//! The home galaxy's chemical evolution: each element's abundance in the
+//! disc's gas at any radius and time, relative to the Sun's birth gas.
 //!
-//! Each radius is its own closed form, read at any time. On each ring of the
-//! disc (a spatial grid, not a time step):
-//! - gas falls in as a boost at the ring's own infall time (inside-out, the
-//!   core first), toward the structure's own profile (galaxy::density);
-//! - stars form at the lit share of the gas each orbit, `efficiency x Omega / 2 pi`;
-//! - of what forms, `prompt` returns at once and `slow` returns later as the
-//!   giants' winds (half over 0.3 Gyr, half over 3 Gyr); the slow return is
-//!   driven by the star formation of the gas without it (one iterate of the
-//!   feedback), which keeps every rate exact;
-//! - each channel makes its elements from the stars that formed, after its
-//!   delay: core collapse and spallation at once, type Ia, AGB giants and
-//!   mergers on t^-1 delay laws, each held as four log-spaced boosts after
-//!   its minimum delay (rational e-folds, declared);
-//! - the fountain: each ring throws `loading` of what it forms, gas with its
-//!   own metals, out on orbits; it lands by the landing map (Archimedes'
-//!   hat-box over one epicycle, not a diffusion) at the gas's reach, so
-//!   metals ride with the gas that carries them;
-//! - the core recycles (the Einstein-Cartan bounce): what the fountain drops
-//!   inside the centre falls to the core and returns through its white hole
-//!   as jets landing from the bulge's edge over the episode's e-fold;
-//! - the fountain and the jets are fed once onto each ring (one iterate of
-//!   the exchange), keeping every rate exact;
-//! - metals leave the gas as stars lock them away, at the gas's own rate.
+//! Inputs: `bang::BigBang` (first stars, star efficiency, the founding's
+//! light nuclei via `elements::founded`, read as [`Light`]), `galaxy`
+//! (`birth_gyr` for each ring's first light, `density` for the disc profile,
+//! `core_kpc`), `centre::galaxy_episode_myr` for the core's echo, and the
+//! element table's channel shares (`elements::Channel`). Radii are kpc,
+//! times Gyr after the Big Bang, surface densities suns per pc^2.
 //!
-//! Each of these is a linear relaxation driven by boosts, so the gas, its
-//! star formation and every channel's metals are sums of
-//! `c t^m e^(-lambda t)` with exact rates (xyl-core motion.rs `ExpSum`),
-//! built once per ring and evaluated at any time.
+//! The disc is [`RINGS`] rings of 0.5 kpc (a spatial grid). On each ring:
+//! - gas falls in as a boost on the ring's first-light timescale, scaled to
+//!   the structure's profile; a ring whose gas never lights forms no stars;
+//! - stars form at `efficiency x Omega / 2 pi` of the gas, `Omega = v / r`;
+//! - `prompt` (0.2) of what forms returns at once and `slow` (0.2) later,
+//!   half over 0.3 Gyr and half over 3 Gyr, driven by one iterate of the
+//!   star formation without it;
+//! - core collapse and spallation make their elements at once; type Ia, AGB
+//!   and mergers follow `t^-1` delay laws held as four log-spaced boosts
+//!   after their minimum delay (e-folds rounded to 1/1024 Gyr);
+//! - the fountain throws `loading` of what forms, gas with its metals, and
+//!   lands it by a landing map (Archimedes' hat-box over one epicycle, not a
+//!   diffusion); what lands inside the centre goes to the core and returns
+//!   as jets from the core's reach over the galaxy's echo; fountain and jets
+//!   are fed once onto each ring;
+//! - metals leave the gas with the stars that lock them away.
 //!
-//! Simplifications: the inward drift of the gas and the winds to the halo
-//! and their return are not carried; the Toomre threshold (star formation
-//! below a critical density) is not yet modelled.
+//! Each is a linear relaxation driven by boosts, so every [`Ring`] holds
+//! sums of `c t^m e^(-lambda t)` with exact rates
+//! (`xyl_core::motion::ExpSum`), built once per ring (in parallel) and read
+//! at any time.
 //!
-//! Calibration: yields are set by the measured gas at the Sun's radius
-//! today, one scale per channel from the element it dominates (core
-//! collapse from O, Ia from Fe, AGB from N; mergers and spallation as
-//! solar), on the reference galaxy; any other universe runs the
-//! same yields through its own galaxy. A galactic core's recipe (cores.rs)
-//! tilts each element's share from there.
+//! Outputs: [`Model`] (the rings' closed forms), [`Chemistry`] with
+//! [`Chemistry::relative`], [`Chemistry::relatives`], [`Chemistry::metals`],
+//! [`Chemistry::lump`] (a birth cloud's merger share, Poisson by inverse
+//! CDF) and [`Chemistry::birth_along`] (a star's birth time along its ring's
+//! star formation). Constructors return `None` when the element table or the
+//! calibration cannot be built.
+//!
+//! Calibration: yield scales are fitted once per process, on the first
+//! history built, to the measured gas at `Rulers::r0` today: core collapse
+//! from O, type Ia from Fe, AGB from N; mergers and spallation at scale 1.
+//! Every later universe in the process uses the same scales. A galactic
+//! core's recipe (`cores`) is applied to these abundances in `systems`.
+//!
+//! Not modelled: radial gas drift, halo winds and their return, and the
+//! Toomre threshold.
 
 use crate::bang::BigBang;
 use crate::elements::{decimal, table, Channel, Element};

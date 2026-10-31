@@ -1,4 +1,18 @@
-// The multi-axial pulse: its antipoles and its antinodes, as versors
+// The multi-axial pulse as versors: one fixed pole axis and five planes
+// turning isoclinically (11 = 1 + 2 x 5 base axes), their antipoles and
+// antinodes.
+//
+// Inputs: `xyl_core::cga` (exact versors over `Q`) and the pole point
+// X(t), t = U / W (poles.rs).
+//
+// Outputs: `PLANES`, `plane_blade`, `plane_antipole` (the planes' half
+// turn), `axis_antipole` (unit-sphere inversion X(t) -> X(1 / t)),
+// `antipole` (both; they commute), `antipode` (psi + 1/2 on a phase),
+// `inverted`, `antinode(q)` (1/q for odd q, 0 for even), `light_of` (light
+// as shine's antipole, D(1 / rho)) and `antipoles_hold`, which checks both
+// antipoles projectively. All results are exact; out-of-domain input
+// (zero coordinate, missing axis) returns None.
+// Terms: filament (docs/glossary.md).
 
 use xyl_core::cga::{self, base_axis, Mv};
 use xyl_core::Q;

@@ -200,14 +200,22 @@ Landed:
 
 Next:
 
-1. Phase 1, time from the bell. The reference epoch `chem::Rulers::today_gyr`
-   (13.8 Gyr), the Sun's age (4.57 Gyr in `bodies/isotopes` and
-   `worlds/setting`) and the Earth day and year (`Si::day_s`, `Si::yr_s`)
-   are replaced by the founding's clock: counts of rings of the bell
-   (`circuit::anchor::Anchor::bell_gyr`, `xyl-kernel universe::Bell`), the
-   universe's current count (`Universe::now`) and each star's birth
-   (`galaxy::Star::born`). A world's day and year are the world's rotation and
-   orbit periods; a people's generation is counted in rings.
+1. Phase 1, time from the bell. The engine's unit of time is the ring (one
+   bell), not the Gyr, which is 10^9 Earth years (`Si::yr_s`). The bell in
+   core time is exact from the founding, `bell = 2 rim 60^5` in units of
+   `r_g / c` (`circuit::anchor::Anchor`). A time is a position on the
+   temporal coordinate (`xyl_core::coordinate`, the T lane): whole rings
+   plus the phase within the ring, written in degrees, minutes and seconds
+   of arc. A second is therefore a second of arc of phase, and local time
+   between orbital bodies is their relative phase: a world's year is one
+   turn of its orbit and its day one turn of its spin, each read against
+   the ring of its anchor. SI seconds exist only in the SI seam
+   (`package::Si`), which converts universal constants given in SI and
+   displays Gyr. The conversion runs bottom-up: founding and substrate,
+   galaxy and stars, systems and worlds, the kernel, then the display. The
+   calibration epochs 13.8 Gyr (`chem::Rulers::today_gyr`) and 4.57 Gyr
+   (`bodies/isotopes`) leave with the calibrations they belong to, in
+   phases 5 and 6.
 2. Phase 2, length from the tiers. Orbits in astronomical units (`a_au`,
    `Si::au`) and radii in Earth radii (`Si::world_radius_m`) are replaced
    by the system tier's unit (`60 r_g`) and the planet tier's unit

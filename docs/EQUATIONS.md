@@ -41,7 +41,7 @@ another crate. Laws are composed from shares (ratios of the form
   built.
 - Bell (`circuit::anchor::of`): `bell = 2 rim 60^5 r_g / c`, with the rim
   read in the galaxy tier. Status: built.
-- Ring and echo (`circuit::bell_gyr`, `circuit::echo_gyr`): one ring is one
+- Ring and echo (`circuit::bell`, `circuit::echo`): one ring is one
   bell, `echo = 2 bell`, and a one-way crossing to reach `r` takes
   `(r / rim) bell / 2`. Status: built.
 - Ocean speed (`Substrate::c_ocean`): `c_ocean = rim / (bell / 2) = 3600 c`.
@@ -149,7 +149,7 @@ another crate. Laws are composed from shares (ratios of the form
   built.
 - Echo dilation (`circuit::echo_dilation`): `rho = (1 + p) / (1 - p) = 3`.
   Status: built.
-- Reverberation (`Substrate::reverberation_with`): in order of spin,
+- Reverberation (`Substrate::reverberation`): in order of spin,
   `h = 1 + inside / unit`, `r = spin / h`, `delta = h / (r + h)`,
   `beyond = clamp((r (1 + delta) - h) / (2 delta r), 0, 1)` and
   `rate = beyond / bell`. Status: built.

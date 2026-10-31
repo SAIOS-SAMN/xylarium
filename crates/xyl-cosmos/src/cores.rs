@@ -6,8 +6,8 @@
 //! `elements::founded`, `circuit::Substrate` (galaxies, intake,
 //! composition), `galaxy::tilt_of` and `node_of`, `manifold::dilation` and
 //! `package::hole_mass`. Reaches are in the cluster tier as founded (60^2
-//! galaxy units each, `Shape::anchor`), phases in turns, times Gyr, masses
-//! suns.
+//! galaxy units each, `Shape::anchor`), phases in turns, times in rings
+//! (one ring one bell, `circuit::bell`), rates per ring, masses suns.
 //!
 //! - `substrate_for`: founds the substrate at the drawn spin; where the
 //!   firmament's margin is negative it refounds at the least admissible
@@ -17,7 +17,7 @@
 //!   core with mass `hole_mass` and a flat plane; every other galaxy is a
 //!   bead of the founding cascade, of mass `hole_mass x state`, its plane
 //!   from golden and plastic turns of its index, its circulation
-//!   `4 delta / echo` turns per Gyr. `Shape::place_at` gives its place at t;
+//!   `4 delta / echo` turns per ring. `Shape::place_at` gives its place at t;
 //!   `Shape::scale` its compressed length scale `2 r / (1 + r)`.
 //! - `weights_at`, `founding`: each metal's factor is its share of the
 //!   bead's metals over its share of the founded elements' (by mass); H and
@@ -47,8 +47,8 @@ pub struct Shape {
     pub reach: Q,
     /// Phase about the universe core at the founding (turns).
     pub phase: Q,
-    /// When the galaxy formed (Gyr after the Big Bang); every galaxy takes the
-    /// first-star time.
+    /// When the galaxy formed (rings after the Big Bang); every galaxy takes
+    /// the first-star time.
     pub born: Q,
     /// Tilt of the galaxy's plane on S^360, as a half-angle direction (c, s)
     /// set by magnetic repulsion among the galaxies; (1, 0), flat, for the home
@@ -57,13 +57,13 @@ pub struct Shape {
     /// Node of the galaxy's plane about the universe's axis, as a half-angle
     /// direction (c, s); (1, 0) for the home galaxy.
     pub node: (Dy, Dy),
-    /// Circulation rate about the throat, 4 delta per echo, in turns per Gyr;
+    /// Circulation rate about the throat, 4 delta per echo, in turns per ring;
     /// zero for the home galaxy at the core.
     pub rate: Dy,
 }
 
 impl Shape {
-    /// The core's place at `t` Gyr on the universe's sphere of radius `r`: its
+    /// The core's place at `t` rings on the universe's sphere of radius `r`: its
     /// plane's frame (node about the axis, then tilt) applied to its phase at
     /// t, at its reach.
     pub fn place_at(&self, t: Dy, r: &Q) -> crate::chain::Place {
@@ -253,7 +253,7 @@ fn founding_of(seed: u64, bang: &BigBang) -> Option<Arc<Founding>> {
         return Some(f.clone());
     }
     let substrate = substrate_for(&bang.parent.spin)?;
-    let first = bang.first_stars_gyr().mid();
+    let first = bang.first_stars().mid();
     // The home galaxy sits at the universe core.
     let flat = (Dy::ONE, Dy::ZERO);
     let mut shapes = vec![Shape {
@@ -287,7 +287,7 @@ fn founding_of(seed: u64, bang: &BigBang) -> Option<Arc<Founding>> {
         // The circulation is rate = 4 delta / echo, delta = inside / (reach + inside).
         let delta = Dy::from_q(&g.inside)
             / (Dy::from_q(&g.reach) + Dy::from_q(&g.inside)).max(Dy::sci(1, -300));
-        let rate = Dy::int(4) * delta / crate::circuit::echo_gyr();
+        let rate = Dy::int(4) * delta / crate::circuit::echo();
         // The place at t = 0 is kept for reference; readings use place_at.
         let dir0 = {
             use xyl_core::rotor::{Half, Rotor};
@@ -348,7 +348,7 @@ pub fn substrate(seed: u64, bang: &BigBang) -> Option<Arc<crate::circuit::Substr
     founding_of(seed, bang).map(|f| f.substrate.clone())
 }
 
-/// Galactic core `index`'s recipe at `t` Gyr: its composition on the
+/// Galactic core `index`'s recipe at `t` rings: its composition on the
 /// substrate (founding recipe plus intake from the core by t) relative to the
 /// elements' founding. The home galaxy with no intake is the calibration.
 pub fn weights_at(

@@ -5,7 +5,12 @@ use crate::run::show;
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 use xyl_cosmos::bang::BigBang;
-use xyl_cosmos::circuit::{PoleFlux, Substrate};
+use xyl_cosmos::circuit::{gyr_of_rings_dy, rings_of_gyr_dy, PoleFlux, Substrate};
+
+/// A rate per ring read per Gyr, for display only.
+fn per_gyr(x: Dy) -> Dy {
+    x / gyr_of_rings_dy(Dy::ONE).max(Dy::sci(1, -300))
+}
 
 /// The `core T` reading, the substrate at T Gyr after the bounce: the core's
 /// firmament kind by kind (its reach, the hold inside it, its deficit, the
@@ -20,17 +25,17 @@ pub(super) fn core_read(o: &Options, t_gyr: Q) -> Result<String, String> {
     let clock = std::time::Instant::now();
     let s = xyl_cosmos::cores::substrate(o.seed, &bang).ok_or("no founding")?;
     let founded_in = clock.elapsed();
-    let t = Dy::from_q(&t_gyr);
+    let t = rings_of_gyr_dy(Dy::from_q(&t_gyr));
     let mut out = format!(
         concat!(
             "The substrate at {} Gyr (seed {}): founded in {:.1?}; the bell {} Gyr, ",
             "an echo {} Gyr; {} firmament kinds, {} beads ({} hold a sun), rim {} rings\n"
         ),
-        t,
+        Dy::from_q(&t_gyr),
         o.seed,
         founded_in,
-        xyl_cosmos::circuit::bell_gyr(),
-        xyl_cosmos::circuit::echo_gyr(),
+        gyr_of_rings_dy(xyl_cosmos::circuit::bell()),
+        gyr_of_rings_dy(xyl_cosmos::circuit::echo()),
         s.firmament.len(),
         s.beads.len(),
         s.galaxies().len() - 1,
@@ -111,7 +116,7 @@ fn core_state(s: &Substrate, t: Dy) -> String {
             "its mean over the first echo {}; the push at the throat {} swung to {} at T\n"
         ),
         s.inbound(t),
-        s.inbound_mean(s.echo()),
+        s.inbound_mean(xyl_cosmos::circuit::echo()),
         xyl_cosmos::circuit::throat_push(),
         s.push_at(Dy::ONE, Dy::ONE, t)
     ));
@@ -211,7 +216,7 @@ fn fastest_kinds(s: &Substrate, t: Dy, at_mean: &[Option<PoleFlux>]) -> String {
             r.hold,
             r.deficit,
             r.beyond,
-            r.rate,
+            per_gyr(r.rate),
             m0 - outflow[i].1,
             m0,
             jet
@@ -246,6 +251,7 @@ fn ocean(s: &Substrate, t: Dy) -> String {
             .find(|x| x.0 == i)
             .map(|x| x.1.iter().fold(Dy::ZERO, |a, (_, v)| a + *v))
             .unwrap_or(Dy::ZERO);
+        let delay = gyr_of_rings_dy(delay);
         out.push_str(&format!(
             "    galaxy {i}: share {share}, delay {delay} Gyr, taken {took}\n"
         ));
@@ -256,10 +262,10 @@ fn ocean(s: &Substrate, t: Dy) -> String {
             "  The force: the rate leaving the core {} a Gyr in its whole state ",
             "({} by mass); the ocean's pulse {} rings a Gyr; the waveform at the rim {}\n"
         ),
-        q_state,
-        q_mass,
-        s.c_ocean(),
-        s.amplitude(Dy::from_q(&s.rim), t)
+        per_gyr(q_state),
+        per_gyr(q_mass),
+        per_gyr(s.c_ocean()),
+        per_gyr(s.amplitude(Dy::from_q(&s.rim), t))
     ));
     out
 }
@@ -280,8 +286,10 @@ fn galaxies(o: &Options, bang: &BigBang, s: &Substrate, t: Dy) -> String {
             let per_ring = sh.anchor().0.checked_div(&g.reach0.to_q())?;
             Some(Dy::from_q(&rim_gu.checked_div(&per_ring)?))
         });
-        let tide = extent.map(|x| s.tide(g.reach0, x, t)).unwrap_or(Dy::ZERO);
-        let rate = shape.map(|sh| sh.rate).unwrap_or(Dy::ZERO);
+        let tide = extent
+            .map(|x| per_gyr(s.tide(g.reach0, x, t)))
+            .unwrap_or(Dy::ZERO);
+        let rate = shape.map(|sh| per_gyr(sh.rate)).unwrap_or(Dy::ZERO);
         let cell = shape.map(|sh| sh.place_at(t, &xyl_cosmos::chain::radius()).cell());
         out.push_str(&format!(
             concat!(
@@ -292,8 +300,8 @@ fn galaxies(o: &Options, bang: &BigBang, s: &Substrate, t: Dy) -> String {
             g.index,
             g.reach0,
             g.reach,
-            g.recession,
-            g.drift,
+            per_gyr(g.recession),
+            per_gyr(g.drift),
             g.swing,
             g.shift,
             rate,

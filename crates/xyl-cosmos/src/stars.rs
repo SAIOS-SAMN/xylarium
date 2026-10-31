@@ -2,7 +2,8 @@
 //! phase and remnant, read at any age without time stepping (docs/model.md).
 //!
 //! Reads `circuit::anchor` (galaxy ring in kpc), `circuit::vacuum_share`,
-//! `circuit::bell_gyr` and `echo_gyr`, the substrate's firmament outflow rate
+//! `circuit::bell` and `echo` (rings; Gyr meet them at `circuit::rings_of_gyr_dy`
+//! and `gyr_of_rings_dy`), the substrate's firmament outflow rate
 //! (`cores::substrate_for`), `compound::hold`, `systems::luminosity` and the
 //! sun's radius from `package::Si`. Reach `r` is in galaxy rings
 //! (`reach_rings` converts from kpc); times are Gyr; mass and light in suns.
@@ -75,7 +76,8 @@ pub fn drift_per_bell(reach: Dy, t: Dy) -> Dy {
     let Some(s) = crate::cores::substrate_for(&anchor.spin) else {
         return Dy::ZERO;
     };
-    s.bell * s.rate(t.max(Dy::ZERO)).0 * vacuum_share(reach, Dy::ONE)
+    let t = crate::circuit::rings_of_gyr_dy(t.max(Dy::ZERO));
+    crate::circuit::bell() * s.rate(t).0 * vacuum_share(reach, Dy::ONE)
 }
 
 /// The share of a star's hold the pulse transduces per bell at reach `r`,
@@ -119,7 +121,8 @@ pub fn life(reach: Dy) -> Q {
     if burn.signum() <= 0 {
         return Q::ZERO;
     }
-    (Dy::from_q(&transduced_hydrogen()) / burn * crate::circuit::bell_gyr()).to_q()
+    let bells = Dy::from_q(&transduced_hydrogen()) / burn * crate::circuit::bell();
+    crate::circuit::gyr_of_rings_dy(bells).to_q()
 }
 
 /// A star's light (suns) at `age` Gyr after its birth at `born`, at reach
@@ -136,10 +139,11 @@ pub fn light(mass: &Q, reach: Dy, born: Dy, age: Dy) -> Q {
 /// It is a reading of the light only; a world's temperature uses the bell's
 /// mean (`worlds`). Returns 1 before a founding.
 pub fn flicker(t: Dy) -> Dy {
-    let echo = crate::circuit::echo_gyr();
-    if echo.signum() <= 0 {
+    let echo = crate::circuit::echo();
+    if crate::circuit::gyr_of_rings_dy(echo).signum() <= 0 {
         return Dy::ONE;
     }
+    let t = crate::circuit::rings_of_gyr_dy(t);
     Dy::PI / Dy::int(2) * (Dy::int(2) * Dy::PI * t / echo).cos().abs()
 }
 

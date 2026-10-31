@@ -108,7 +108,7 @@ fn piece_cut(
     r: &Q,
 ) -> Option<Option<crate::disc::StarCut>> {
     let bead = sub.beads.get(piece)?;
-    let swing = &Q::ONE + &sub.inbound_mean(sub.echo()).to_q();
+    let swing = &Q::ONE + &sub.inbound_mean(crate::circuit::echo()).to_q();
     // The pulse's turning and the star's burn (its over-pressure), per echo
     // (two bells) in hydrogen units, at the star's reach about the universal
     // core.

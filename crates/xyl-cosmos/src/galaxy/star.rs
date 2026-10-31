@@ -162,7 +162,7 @@ impl Star {
     /// the universe's sphere of radius `r`.
     pub fn place(&self, t: Dy, r: &Q) -> Place {
         let (reach, dir, climb) = self.bearing(t);
-        let core = self.galaxy.place_at(t, r);
+        let core = self.galaxy.place_at(crate::circuit::rings_of_gyr_dy(t), r);
         Place::in_galaxy(
             reach,
             dir,

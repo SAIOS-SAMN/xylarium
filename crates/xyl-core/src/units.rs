@@ -10,6 +10,14 @@
 //! 60^-2), with `in_rg` its unit in `r_g`; [`Units`], holding metres per `r_g`
 //! (`of`), with `in_tier` converting a length in metres to a tier's unit.
 //!
+//! Time: with `c = 1` the time unit is `r_g / c`, the time light takes to
+//! cross one `r_g`, so a reach of `n` units of a tier is crossed in
+//! `n` times that tier's [`Tier::in_rg`] units of `r_g / c`. The engine's
+//! clock is the bell, light's round trip to the home galaxy's rim: with the
+//! rim read in galaxy-tier units it is `2 rim 60^5` units of `r_g / c`,
+//! exact. One bell is one ring, the unit every time above the founding is
+//! counted in; its length in seconds is applied outside this crate.
+//!
 //! Invariants: every conversion is exact; moving between tiers multiplies by a
 //! power of sixty, so each tier's readings stay within a few powers of sixty
 //! of one. SI enters only through `Units::of`, converted once. A zero

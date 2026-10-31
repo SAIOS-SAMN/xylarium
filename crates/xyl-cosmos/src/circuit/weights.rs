@@ -111,7 +111,7 @@ pub fn electron_phase(k: u32, p: &Q) -> Q {
 }
 
 impl Substrate {
-    /// The universe's nuclides at `t` Gyr: the firmament still held, every
+    /// The universe's nuclides at `t` rings: the firmament still held, every
     /// galaxy's composition (recipe plus intake), and matter in flight.
     pub fn two_weights(
         &self,

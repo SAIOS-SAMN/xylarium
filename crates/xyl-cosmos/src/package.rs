@@ -59,6 +59,17 @@ impl Si {
     pub fn gyr_s() -> Q {
         &Si::yr_s() * &Q::int(1_000_000_000)
     }
+    /// SI seconds per ring: the bridge used only to apply universal
+    /// constants given in SI and to display Gyr. It is the anchor's exact
+    /// bell (units of r_g / c) times r_g in metres over c. In the engine a
+    /// second is a second of arc of phase on the temporal coordinate, not
+    /// this SI second. Zero until a universe is founded in the process.
+    pub fn seconds_per_ring() -> Q {
+        let r_g_m = crate::chain::units().r_g_m;
+        (&crate::circuit::anchor().bell * &r_g_m)
+            .checked_div(&Si::c())
+            .unwrap_or(Q::ZERO)
+    }
     /// The kiloparsec, 3.0857e19 m.
     pub fn kpc() -> Q {
         decimal("3.0857e19").unwrap_or(Q::ZERO)

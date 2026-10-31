@@ -2,10 +2,11 @@
 //! the matter that falls to it, passes its throat, and returns as jets.
 //!
 //! Reads `bounce::Bounce` (rebuilt on every change of mass) and
-//! `circuit::echo_gyr` for the jet episode (`galaxy_episode_myr`, the echo in
-//! Myr; zero before a founding). Masses are suns and times Myr, all exact
-//! `Q`; exponentials are `xyl_core::certified` enclosures whose lower bound
-//! is fixed on a 2^-40 grid.
+//! `circuit::echo` (in Gyr by `circuit::gyr_of_rings_dy`) for the jet
+//! episode (`galaxy_episode_myr`, the echo in Myr; zero before a
+//! founding). Masses are suns and times Myr, all exact `Q`; exponentials
+//! are `xyl_core::certified` enclosures whose lower bound is fixed on a
+//! 2^-40 grid.
 //!
 //! What falls (`Core::capture`) is split:
 //!
@@ -49,7 +50,8 @@ pub fn efficiency() -> Q {
 /// clock and no span is declared. Zero until a universe is founded in the process;
 /// a centre carries the episode it was made with.
 pub fn galaxy_episode_myr() -> Q {
-    (crate::circuit::echo_gyr() * xyl_core::dyadic::Dy::int(1000)).to_q()
+    (crate::circuit::gyr_of_rings_dy(crate::circuit::echo()) * xyl_core::dyadic::Dy::int(1000))
+        .to_q()
 }
 
 /// The throat's far face: the persistent central engine of the universe on

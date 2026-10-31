@@ -1,4 +1,4 @@
-// The substrate's sections at time t (Gyr, as `Dy`): the core's clock, the
+// The substrate's sections at time t (rings, as `Dy`): the core's clock, the
 // firmament's reverberation and outflow, the ocean's shares and waveform,
 // and each galaxy's intake, composition and push.
 //
@@ -6,12 +6,13 @@
 // `bounce::horizon_reach`, `compound::open` / `compound::hold` for a kind's
 // frames, `formation::emission`, `package::hole_mass`, and `pole_flux`
 // (poles.rs) with `electron_phase` (weights.rs). Reaches are core rings,
-// amounts held frames, rates per Gyr.
+// amounts held frames, times in rings (one ring one bell), rates per ring.
 //
 // - Deficit: `vacuum_share(r, h) = h / (r + h)`; `throat_push` is its value
 //   at r = h, 1/2; `echo_dilation` (1 + p) / (1 - p) = 3 there.
-// - Clock: `bell_gyr` (from the anchor), `echo_gyr` = two bells; a kind's
-//   `onset_echoes` is ln(hold / open) / ln 3 (None for a sealed kind).
+// - Clock: `bell` is one ring, `echo` two; a kind's `onset_echoes` is
+//   ln(hold / open) / ln 3 (None for a sealed kind), `onset` the same in
+//   rings.
 // - Core: `Reverberation` per firmament kind; `outflow` empties a kind as
 //   m0 (1 - exp(-rate (t - onset))); `rate`, `state_out`, `books` (held,
 //   left, taken, founded); `inbound`, `inbound_peak`, `least_share`,
@@ -56,17 +57,17 @@ pub fn echo_dilation() -> Dy {
     (Dy::ONE + p) / (Dy::ONE - p)
 }
 
-/// The jet's onset for kind `k` (Gyr): a kind's state sits on the pole axis
+/// The jet's onset for kind `k` (rings): a kind's state sits on the pole axis
 /// at t = U / W, its open frames over its closed (poles.rs), and reaches
 /// the throat (t = 1) after ln(1 / t) / ln rho echoes of the filament's
 /// dilation; a sealed kind (no open frames) never does. The band's `beyond`
 /// share sets how much passes once it has.
-pub fn onset_gyr(k: u32) -> Option<Dy> {
-    onset_echoes(k).map(|e| e * echo_gyr())
+pub fn onset(k: u32) -> Option<Dy> {
+    onset_echoes(k).map(|e| e * echo())
 }
 
 /// The jet's onset for kind `k` in echoes of the filament's dilation (see
-/// [`onset_gyr`]); None for a sealed kind, which never reaches the throat.
+/// [`onset`]); None for a sealed kind, which never reaches the throat.
 pub fn onset_echoes(k: u32) -> Option<Dy> {
     let (open, hold) = (crate::compound::open(k), crate::compound::hold(k));
     if open == 0 || hold == 0 {
@@ -89,26 +90,26 @@ pub fn coherence(psi: &Q, phi: &Q) -> Dy {
     (Dy::ONE - Dy::int(2) * Dy::from_q(&near)).clamp(Dy::ZERO, Dy::ONE)
 }
 
-/// One engine bell (Gyr): the core's period, light's round trip to the home
-/// galaxy's rim and back, 2 rim_galaxy / c (anchor.rs); the pulse crosses
-/// the universe's rim on the filament within it. Zero until a universe is
-/// founded in the process.
-pub fn bell_gyr() -> Dy {
-    super::anchor().bell_gyr
+/// One engine bell (rings): the core's period, light's round trip to the
+/// home galaxy's rim and back, 2 rim 60^5 in core time r_g / c (anchor.rs);
+/// the pulse crosses the universe's rim on the filament within it. The bell
+/// is the engine's unit of time, one ring.
+pub fn bell() -> Dy {
+    Dy::ONE
 }
 
-/// One echo (Gyr): the paired throat, the near face's ring and the far
+/// One echo (rings): the paired throat, the near face's ring and the far
 /// face's - two full bell rings. Time is counted in full rings: one ring is
 /// one bell, the pulse's whole round trip from the throat to the rim and
 /// back; a one-way crossing (a delay to a reach) is half a ring of travel,
 /// not a separate ring.
-pub fn echo_gyr() -> Dy {
-    bell_gyr() * Dy::int(2)
+pub fn echo() -> Dy {
+    bell() * Dy::int(2)
 }
 
 /// A firmament kind on the substrate: its reach about the throat, the hold
 /// enclosed inside it, its deficit there, the share of its band carried past
-/// the throat over one swing, and its rate of leaving (per Gyr).
+/// the throat over one swing, and its rate of leaving (per ring).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Reverberation {
     /// Reach about the throat (core rings): the kind's spin over its hold.
@@ -121,18 +122,18 @@ pub struct Reverberation {
     /// Share of the band carried past the throat, averaged over one swing, in
     /// [0, 1].
     pub beyond: Dy,
-    /// Rate of leaving (per Gyr): `beyond` over one engine bell.
+    /// Rate of leaving (per ring): `beyond` over one engine bell.
     pub rate: Dy,
-    /// The jet's onset (Gyr): when the kind's pole state reaches the throat
-    /// along the filament (`onset_gyr`); None for a kind that never does.
+    /// The jet's onset (rings): when the kind's pole state reaches the throat
+    /// along the filament (`onset`); None for a kind that never does.
     pub onset: Option<Dy>,
 }
 
 /// The push on a galaxy: its reach as founded and at t (rings), its recession
-/// (rings per Gyr) and its light's shift through the ocean, z = v / c_ocean
-/// (positive away: a redshift); its drift, the vessel's net push (rings per
-/// Gyr), and its swing, the reach the core's pulse moves it through each echo
-/// (rings, either way).
+/// (core rings of reach per ring of time) and its light's shift through the
+/// ocean, z = v / c_ocean (positive away: a redshift); its drift, the
+/// vessel's net push (reach per ring), and its swing, the reach the core's
+/// pulse moves it through each echo (core rings, either way).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Push {
     /// The galaxy's engine index (see [`Substrate::galaxies`]).
@@ -141,12 +142,13 @@ pub struct Push {
     pub reach0: Dy,
     /// Reach about the throat at t (core rings).
     pub reach: Dy,
-    /// Recession rate (core rings per Gyr), positive away from the core.
+    /// Recession rate (core rings of reach per ring), positive away from the
+    /// core.
     pub recession: Dy,
     /// Shift of the galaxy's light through the ocean, z = v / c_ocean
     /// (positive: a redshift).
     pub shift: Dy,
-    /// Drift: the vessel's net outflow push (core rings per Gyr).
+    /// Drift: the vessel's net outflow push (core rings of reach per ring).
     pub drift: Dy,
     /// Swing: the reach the core's pulse moves the galaxy through each echo
     /// (core rings, either way).
@@ -176,10 +178,8 @@ impl Substrate {
     /// r = spin / h, and the push at its reach the vacuum's share there,
     /// p = h / (r + h) (its deficit). The bell's torque swings the band
     /// between r (1 - p) and r (1 + p); s is the band's share past the throat
-    /// averaged over the swing, and the kind leaves at s / bell (per Gyr).
-    /// `bell` is the engine bell in Gyr (the anchor's, or the founding's
-    /// provisional one before the anchor is set).
-    pub(crate) fn reverberation_with(&self, bell: Dy) -> Vec<Reverberation> {
+    /// averaged over the swing, and the kind leaves at s / bell (per ring).
+    pub(crate) fn reverberation(&self) -> Vec<Reverberation> {
         let unit = Dy::from_q(&self.unit()).max(Dy::sci(1, -300));
         let mut order: Vec<usize> = (0..self.firmament.len()).collect();
         order.sort_by(|&a, &b| self.firmament[a].spin.cmp(&self.firmament[b].spin));
@@ -195,7 +195,7 @@ impl Substrate {
             self.firmament.len()
         ];
         let mut inside = Dy::ZERO;
-        let nu = Dy::ONE / bell.max(Dy::sci(1, -300));
+        let nu = Dy::ONE / bell();
         for i in order {
             let k = &self.firmament[i];
             let h = Dy::ONE + inside / unit;
@@ -208,48 +208,37 @@ impl Substrate {
                 deficit: delta,
                 beyond,
                 rate: nu * beyond,
-                onset: onset_echoes(k.z).map(|e| e * bell * Dy::int(2)),
+                onset: onset(k.z),
             };
             inside += Dy::from_q(&mass_of(k.z, &k.amount));
         }
         out
     }
 
-    /// The reverberation at the substrate's bell (see
-    /// [`Substrate::reverberation_with`]).
-    pub(crate) fn reverberation(&self) -> Vec<Reverberation> {
-        self.reverberation_with(self.bell)
-    }
-
-    /// One echo (Gyr): two of the substrate's bells.
-    pub fn echo(&self) -> Dy {
-        self.bell * Dy::int(2)
-    }
-
-    /// The inbound echo at the throat at `t` Gyr, dimensionless: the ocean's
+    /// The inbound echo at the throat at `t` rings, dimensionless: the ocean's
     /// waveform at reach 0 read per echo, `cos(2 pi t / echo) + echo q(t)`
     /// with q the core's whole-state rate ([`Substrate::rate`]): the core's
     /// ring (plus or minus one) and the vessel's drift. The perturbation every
     /// swing carries.
     pub fn inbound(&self, t: Dy) -> Dy {
-        self.echo() * self.amplitude(Dy::ZERO, t)
+        echo() * self.amplitude(Dy::ZERO, t)
     }
 
-    /// The inbound echo's mean over the first `t` Gyr: the ring's integral
+    /// The inbound echo's mean over the first `t` rings: the ring's integral
     /// over whole echoes is zero, so the mean is the drift, the state out
     /// by t over t in echoes, plus the ring's integral to t (`rung`).
     pub fn inbound_mean(&self, t: Dy) -> Dy {
         if t.signum() <= 0 {
             return Dy::ZERO;
         }
-        self.echo() * (self.rung(t) + self.state_out(t)) / t
+        echo() * (self.rung(t) + self.state_out(t)) / t
     }
 
     /// The inbound echo's peak: the ring at its crest (one) plus the vessel's
     /// greatest drift, which stands at one of the kinds' onsets (each term
     /// decays from the kind's onset).
     pub fn inbound_peak(&self) -> Dy {
-        let echo = self.echo();
+        let echo = echo();
         let drift = self
             .reverb
             .iter()
@@ -347,7 +336,7 @@ impl Substrate {
         &self.share - &self.least_share()
     }
 
-    /// The outflow from the core by `t` Gyr after the bounce, by kind (held
+    /// The outflow from the core by `t` rings after the bounce, by kind (held
     /// frames): each firmament kind has sent out m0 (1 - exp(-rate (t - onset)))
     /// once its state has reached the throat along the filament (its onset).
     pub fn outflow(&self, t: Dy) -> Vec<(u32, Dy)> {
@@ -392,7 +381,7 @@ impl Substrate {
         out
     }
 
-    /// The ocean's shares, by engine index: (share, delay in Gyr). A galaxy's
+    /// The ocean's shares, by engine index: (share, delay in rings). A galaxy's
     /// pull is its deficit seen from the core, hold / (reach + hold), with hold
     /// its state over the mean (the home galaxy: reach 0, pull 1); the share is
     /// its pull over the sum. The delay is half a bell scaled by reach / rim.
@@ -409,7 +398,7 @@ impl Substrate {
                         Dy::from_q(&b.reach),
                         Dy::from_q(&b.state) / mean.max(Dy::sci(1, -300)),
                     );
-                    (i, h / (r + h), self.bell / Dy::int(2) * r / rim)
+                    (i, h / (r + h), bell() / Dy::int(2) * r / rim)
                 }
             })
             .collect();
@@ -431,7 +420,7 @@ impl Substrate {
 
     /// The galaxies' pulls read once: by engine index, each galaxy's pull
     /// (its deficit seen from the core), its phase about the throat and its
-    /// delay (Gyr). The home galaxy pulls 1 at phase zero with no delay.
+    /// delay (rings). The home galaxy pulls 1 at phase zero with no delay.
     fn pulls(&self) -> Vec<(u32, Dy, Q, Dy)> {
         let mean = Dy::from_q(&self.mean_state()).max(Dy::sci(1, -300));
         let rim = Dy::from_q(&self.rim).max(Dy::sci(1, -30));
@@ -445,7 +434,7 @@ impl Substrate {
                         i,
                         h / (r + h),
                         b.phase.clone(),
-                        self.bell / Dy::int(2) * r / rim,
+                        bell() / Dy::int(2) * r / rim,
                     )
                 }
             })
@@ -483,7 +472,7 @@ impl Substrate {
             .collect()
     }
 
-    /// What galaxy `index` has taken from the core by `t` (Gyr), by kind (held
+    /// What galaxy `index` has taken from the core by `t` (rings), by kind (held
     /// frames): its landing share of each kind the jet threw one delay
     /// earlier.
     pub fn intake(&self, index: u32, t: Dy) -> Vec<(u32, Dy)> {
@@ -594,7 +583,7 @@ impl Substrate {
         (founded - left, left, taken, founded)
     }
 
-    /// The rate leaving the core at `t` Gyr, per Gyr: the derivative of the
+    /// The rate leaving the core at `t` rings, per ring: the derivative of the
     /// outflow, the sum over kinds past their onset of
     /// rate m0 exp(-rate (t - onset)). Returns (whole state, with each kind's
     /// magnetism m (1 + e); mass).
@@ -624,33 +613,34 @@ impl Substrate {
         })
     }
 
-    /// The pulse's speed along the filament through the ocean (rings per
-    /// Gyr): the universe's rim crossed in half a bell, light's speed times
-    /// the ladder step between the galaxy and cluster tiers (3600 c).
+    /// The pulse's speed along the filament through the ocean (core rings of
+    /// reach per ring): the universe's rim crossed in half a bell, light's
+    /// speed times the ladder step between the galaxy and cluster tiers
+    /// (3600 c).
     pub fn c_ocean(&self) -> Dy {
-        Dy::from_q(&self.rim) / (self.bell / Dy::int(2))
+        Dy::from_q(&self.rim) / (bell() / Dy::int(2))
     }
 
-    /// The core's pulse in the ocean, per Gyr, at `s` Gyr after reaching a
+    /// The core's pulse in the ocean, per ring, at `s` rings after reaching a
     /// place: the universal state 1, regenerated each echo and not drained,
     /// cos(2 pi s / echo) / echo. Its integral over an echo is zero (the
     /// echo's torque invariant), so it oscillates without drift.
     fn ringing(&self, s: Dy) -> Dy {
-        let echo = self.echo();
+        let echo = echo();
         (Dy::int(2) * Dy::PI * s / echo).cos() / echo
     }
 
-    /// The core's pulse integrated from its arrival to `s` Gyr after it:
+    /// The core's pulse integrated from its arrival to `s` rings after it:
     /// sin(2 pi s / echo) / (2 pi).
     fn rung(&self, s: Dy) -> Dy {
-        (Dy::int(2) * Dy::PI * s / self.echo()).sin() / (Dy::int(2) * Dy::PI)
+        (Dy::int(2) * Dy::PI * s / echo()).sin() / (Dy::int(2) * Dy::PI)
     }
 
     /// The ocean's non-tidal waveform at reach `r` (rings) and `t`: the core's
     /// ringing plus the vessel's rate, both taken one pulse delay earlier,
     /// falling as the vacuum's share about the universal state, 1 / (r + 1).
     pub fn amplitude(&self, r: Dy, t: Dy) -> Dy {
-        let delay = self.bell / Dy::int(2) * r / Dy::from_q(&self.rim).max(Dy::sci(1, -30));
+        let delay = bell() / Dy::int(2) * r / Dy::from_q(&self.rim).max(Dy::sci(1, -30));
         if t <= delay {
             return Dy::ZERO;
         }
@@ -721,10 +711,10 @@ impl Substrate {
         Q::int(i64::try_from(bubble.floor_i128().unwrap_or(59) + 1).unwrap_or(60))
     }
 
-    /// The bounce's pulse at `t` Gyr (turns): the echoes elapsed by t over the
+    /// The bounce's pulse at `t` rings (turns): the echoes elapsed by t over the
     /// universe's bell; the fractional part is the atoms' phase.
     pub fn pulse(&self, t: Dy) -> Q {
-        (t.max(Dy::ZERO) / self.echo())
+        (t.max(Dy::ZERO) / echo())
             .to_q()
             .checked_div(&self.t_u())
             .unwrap_or(Q::ZERO)

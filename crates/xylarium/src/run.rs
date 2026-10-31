@@ -581,8 +581,8 @@ pub fn genesis(o: Options) -> Result<bool, String> {
         xyl_cosmos::package::founding_digest(),
         xyl_cosmos::minds::laws_digest(),
         xyl_cosmos::minds::life_digest(),
-        bang.first_stars_gyr().mid(),
-        anchor.bell_gyr,
+        xyl_cosmos::circuit::gyr_of_rings(&bang.first_stars().mid()),
+        xyl_cosmos::circuit::gyr_of_rings_dy(xyl_cosmos::circuit::bell()),
         anchor.rim,
         anchor.home_rim_kpc,
         anchor.radius_kpc,
@@ -598,7 +598,7 @@ pub fn genesis(o: Options) -> Result<bool, String> {
             s.place[0],
             s.place[1],
             s.place[2],
-            s.born,
+            xyl_cosmos::circuit::gyr_of_rings(&s.born),
             c.weights.label(),
             o.stars
         ));

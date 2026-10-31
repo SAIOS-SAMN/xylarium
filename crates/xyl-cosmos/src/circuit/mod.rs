@@ -1,6 +1,7 @@
 //! The substrate (docs/model.md): the founding and the sections above it
-//! (core, ocean, galaxies) as closed-form functions of time `t` in Gyr,
-//! evaluated on demand rather than stored as frames.
+//! (core, ocean, galaxies) as closed-form functions of time `t` in rings
+//! (one ring one bell, the engine's unit of time; anchor.rs), evaluated on
+//! demand rather than stored as frames. Rates are per ring.
 //!
 //! Inputs: the parent's spin (through `bang::torsion_share`), the founded
 //! elements (`elements::Element`), `formation` for the cascade and the
@@ -14,8 +15,10 @@
 //!   vessel's kinds at the throat as the firmament (scaled to mass 1) and
 //!   beads the other shells at their pinches, each `Bead` with its reach,
 //!   span, state, phase and recipe. cache.rs keeps the result in the home.
-//! - anchor.rs: `Anchor`, the rim, bell, tier units, first stars and spin
-//!   the founding fixes for the process.
+//! - anchor.rs: `Anchor`, the rim, bell (in core time r_g / c), ring length
+//!   in seconds, tier units, first stars (rings) and spin the founding fixes
+//!   for the process; `rings_of_gyr` and `gyr_of_rings`, the temporary
+//!   boundary conversions where Gyr and rings meet.
 //! - core.rs: the bell's clock, each firmament kind's `Reverberation`, the
 //!   outflow `m0 (1 - exp(-rate (t - onset)))`, each kind's landing on the
 //!   galaxies by pull times coherence, a galaxy's composition at `t`
@@ -43,7 +46,10 @@ mod profile;
 mod weights;
 
 pub use self::core::*;
-pub use anchor::{anchor, register_spin, set as set_anchor, Anchor};
+pub use anchor::{
+    anchor, gyr_of_rings, gyr_of_rings_dy, register_spin, rings_of_gyr, rings_of_gyr_dy,
+    set as set_anchor, Anchor,
+};
 pub use axes::*;
 pub use cache::cache_in;
 pub use found::*;

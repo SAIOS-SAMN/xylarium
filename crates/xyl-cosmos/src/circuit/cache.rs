@@ -5,7 +5,7 @@
 // without one nothing is cached). Outputs: `cache_in`, and crate-private
 // `load` and `store`. A file of another format version, or one that does
 // not decode whole, is refused (None) and the founding is recomputed. The
-// reverberation and bell are not stored; they are recomputed on load. A
+// reverberation is not stored; it is recomputed on load. A
 // store writes a temporary file and renames it; failures are ignored,
 // since the cache only saves time and deleting it changes no reading.
 
@@ -17,8 +17,8 @@ use xyl_core::codec::{Dec, Enc};
 /// so it is kept in the home directory only as an accelerator, keyed by the
 /// founding digest and the torsion share: a change to either founds anew,
 /// and deleting the file changes nothing (docs/architecture.md, cached
-/// derived state). The bell and the reverberation are not kept; they are
-/// recomputed from the rim on load.
+/// derived state). The reverberation is not kept; it is recomputed on
+/// load.
 static DIR: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
 
 const VERSION: u32 = 8;
@@ -124,7 +124,6 @@ fn decode(buf: &[u8]) -> Option<Substrate> {
         nucleons_founded,
         reverb: Vec::new(),
         share,
-        bell: xyl_core::dyadic::Dy::ZERO,
         lighting: crate::formation::Lighting {
             cools_in: (cools_in >= 0).then_some(cools_in),
             lit,

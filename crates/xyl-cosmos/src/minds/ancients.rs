@@ -9,7 +9,7 @@ use super::*;
 pub fn ancient_window(gal: &Galaxy) -> Dy {
     Dy::from_q(
         &crate::galaxy::birth_gyr(&xyl_core::Q::ZERO)
-            .unwrap_or_else(|| gal.bang.first_stars_gyr().mid()),
+            .unwrap_or_else(|| crate::circuit::gyr_of_rings(&gal.bang.first_stars().mid())),
     )
 }
 

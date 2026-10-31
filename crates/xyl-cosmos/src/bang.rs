@@ -150,11 +150,11 @@ impl BigBang {
         })
     }
 
-    /// When the first stars shone (Gyr after the Big Bang): where the home
+    /// When the first stars shone (rings after the Big Bang): where the home
     /// galaxy's gas first cools to collapse, in rings of the bell
     /// (circuit::anchor), exact.
-    pub fn first_stars_gyr(&self) -> Encl {
-        Encl::exact(crate::circuit::anchor().first_stars_gyr)
+    pub fn first_stars(&self) -> Encl {
+        Encl::exact(crate::circuit::anchor().first_stars)
     }
 }
 

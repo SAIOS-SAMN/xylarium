@@ -23,7 +23,6 @@
 
 use super::*;
 use crate::formation;
-use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 
 /// A firmament kind: one of the vessel's kinds held by the throat, as
@@ -92,10 +91,6 @@ pub struct Substrate {
     /// The share the jet carries through the throat each crossing (the
     /// torsion share): every kind's capture phase is this share turned Z times.
     pub share: Q,
-    /// The engine bell (Gyr): light's round trip to the home galaxy's rim and
-    /// back, 2 rim_galaxy / c (anchor.rs); every clock on the substrate reads
-    /// from it, so the substrate needs no anchor to be read.
-    pub bell: Dy,
     /// The home galaxy's lighting (formation.rs, read on these beads one
     /// tier down): the rings until its gas first lights (None: no piece
     /// does), the lit share of its gas, and each piece of gas by reach
@@ -123,7 +118,6 @@ impl Substrate {
             super::anchor::of(&s.rim, s.lighting.cools_in, spin, &share, &s.margin())
         };
         if let Some(mut s) = super::cache::load(&key) {
-            s.bell = super::anchor::of(&s.rim, None, spin, &share, &Q::ZERO).bell_gyr;
             s.reverb = s.reverberation();
             let a = anchor_of(&s);
             prof.lap("founding: from the cache");
@@ -162,9 +156,6 @@ impl Substrate {
             .map(|(_, _, r, _)| outer_edge(r, &s_final))
             .max()
             .unwrap_or(Q::ONE);
-        // The bell depends on the rim alone (anchor.rs reads the rim in
-        // galaxy-tier units); the reverberation below needs it.
-        let bell = super::anchor::of(&rim, None, spin, &share, &Q::ZERO).bell_gyr;
         let mut s = Substrate {
             firmament,
             beads: found,
@@ -172,7 +163,6 @@ impl Substrate {
             nucleons_founded: Q::ZERO,
             reverb: Vec::new(),
             share: share.clone(),
-            bell,
             lighting: formation::Lighting::default(),
         };
         s.reverb = s.reverberation();
@@ -180,7 +170,7 @@ impl Substrate {
         // The home galaxy's gas is these beads read one tier down
         // (formation.rs); the swing is 1 + the inbound echo's mean over the
         // first echo.
-        let swing = &Q::ONE + &s.inbound_mean(s.echo()).to_q();
+        let swing = &Q::ONE + &s.inbound_mean(echo()).to_q();
         s.lighting = formation::lighting(&s.beads, &s.unit(), &s.held_share(), &swing);
         prof.lap("founding: first collapse");
         s.nucleons_founded = s.holding();

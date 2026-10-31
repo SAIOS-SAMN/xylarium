@@ -58,14 +58,20 @@ grid.
   (`manifold::dilation`) and is exact. The substrate's reaches (core rings)
   are in cluster units; the home galaxy's rings and every star's reach are
   in galaxy units.
-- The bell (`circuit::anchor`, `Anchor::bell_gyr`) is the round-trip time
-  of light to the home galaxy's rim, `bell = 2 rim_galaxy / c`, where
-  `rim_galaxy` is the founding's rim read in the galaxy tier's unit. The
-  bell is the unit of time.
+- The bell (`circuit::anchor`, `Anchor::bell`) is the round-trip time
+  of light to the home galaxy's rim, `bell = 2 rim 60^5` in core time
+  (`r_g / c`), with the founding's rim read in the galaxy tier's unit. The
+  bell is the unit of time: every time is a count of rings and every rate
+  is per ring. A time is a position on the temporal coordinate:
+  whole rings plus the phase within the ring, its seconds being seconds of
+  arc of that phase. SI seconds enter only at the SI seam
+  (`package::Si::seconds_per_ring`, `bell r_g / c`); `circuit::rings_of_gyr`
+  and `gyr_of_rings` convert at the boundaries of layers still counted in
+  Gyr and at display.
 - A ring of time is one bell; counts of time (cooling, first light, a
   star's burn and life) are whole numbers of rings. An echo is two bells,
   one ring for each face (near and far) of the paired throat
-  (`circuit::echo_gyr`). A one-way crossing to reach `r` takes
+  (`circuit::echo`). A one-way crossing to reach `r` takes
   `(r / rim) bell / 2`, a fraction of a ring.
 - The pulse along the filament (the pole axis; see
   [glossary.md](glossary.md)) crosses the universe's rim in the same half
@@ -226,12 +232,12 @@ pole axis and the five isoclinic planes).
   `p = delta(H, H) = 1/2` (`circuit::throat_push`). A band swinging over
   `r (1 +/- p)` scales the pole coordinate by `rho = (1 + p) / (1 - p) = 3`
   per echo (`circuit::echo_dilation`).
-- Reverberation (`Substrate::reverberation_with`) takes the firmament kinds
+- Reverberation (`Substrate::reverberation`) takes the firmament kinds
   in order of spin. For each kind the hold is
   `h = 1 + (firmament mass nearer) / unit`, the reach `r = spin / h`, the
   deficit `delta = h / (r + h)`, the share of its band past the throat
   `beyond = clamp((r (1 + delta) - h) / (2 delta r), 0, 1)`, and the leaving
-  rate `beyond / bell`.
+  rate `beyond / bell` (per ring).
 - In the jet, a kind's pole state sits at `t = open / hold` on the filament
   and reaches the throat after `ln(1 / t) / ln rho` echoes, which is its
   onset (`circuit::onset_echoes`); a sealed kind has no onset. The kind then

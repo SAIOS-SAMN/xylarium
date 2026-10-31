@@ -206,7 +206,7 @@ impl Params {
     /// The parameters read off the Big Bang `bang`'s founding.
     pub fn of(bang: &BigBang) -> Params {
         Params {
-            first_stars: bang.first_stars_gyr().mid(),
+            first_stars: crate::circuit::gyr_of_rings(&bang.first_stars().mid()),
             infall: (0..RINGS)
                 .map(|j| crate::galaxy::birth_gyr(&ring_mid(j)))
                 .collect(),
@@ -272,7 +272,9 @@ mod tests {
         let made = chem.metals(&Rulers::r0(), &today).unwrap();
         assert!(made.signum() >= 0, "metals {made}");
         // At half the first stars' epoch no channel has made uranium yet.
-        let before = bang.first_stars_gyr().lo.checked_div(&Q::int(2)).unwrap();
+        let before = crate::circuit::gyr_of_rings(&bang.first_stars().lo)
+            .checked_div(&Q::int(2))
+            .unwrap();
         assert_eq!(
             chem.relative("U", &Rulers::r0(), &before, &Q::ONE).unwrap(),
             Q::ZERO

@@ -111,6 +111,6 @@ fn imf_heavier_where_rings_crowd_births_after_first_stars() {
     assert!(mean(densest) >= mean(r0()));
     for s in (0..300).filter_map(|n| star(7, bang, n)) {
         assert!(s.mass.signum() > 0, "{}", s.mass);
-        assert!(s.born >= bang.first_stars_gyr().lo);
+        assert!(s.born >= crate::circuit::gyr_of_rings(&bang.first_stars().lo));
     }
 }

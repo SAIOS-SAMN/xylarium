@@ -4,12 +4,23 @@
 // Inputs: the founding's rim (cluster units), the rings until the home
 // galaxy's gas first lights (formation.rs `cools_in`), the parent's spin,
 // its torsion share and the firmament's margin; `chain::units` for r_g in
-// metres, `xyl_core::units::Tier` and `package::Si` (kpc, c, Gyr).
+// metres, `xyl_core::units::Tier` and `package::Si` (kpc, c; the Gyr only
+// in the boundary conversions).
 //
-// Outputs: `Anchor` (rim, cluster and galaxy-tier units in kpc, bell in Gyr
-// = 2 rim_galaxy / c with the rim read in galaxy-tier units, home rim,
-// curvature radius rim / pi in kpc and in r_g, first stars = rings x bell,
-// at least one ring), `anchor`, `set` and `register_spin`.
+// Outputs: `Anchor` (rim, cluster and galaxy-tier units in kpc, the bell
+// = 2 rim 60^5 in core time r_g / c with the rim read in galaxy-tier units,
+// home rim, curvature radius rim / pi in kpc
+// and in r_g, first stars in rings, at least one ring), `anchor`, `set`,
+// `register_spin`, and the boundary conversions `rings_of_gyr`,
+// `gyr_of_rings` (Q) and `rings_of_gyr_dy`, `gyr_of_rings_dy` (Dy).
+//
+// Time: the engine's unit of time is the ring, one bell. Every time on the
+// substrate is a count of rings and every rate is per ring; a time is a
+// position on the temporal coordinate (`xyl_core::coordinate`, the T lane),
+// whole rings plus the phase within the ring, and its seconds are seconds
+// of arc of that phase. SI seconds enter only at the SI seam,
+// `package::Si::seconds_per_ring`. The Gyr conversions here are temporary
+// boundary and display conversions for layers not yet counted in rings.
 //
 // One universe per process: the first `set` wins. `anchor` founds the
 // substrate at the registered spin when no anchor is set; where no spin is
@@ -39,6 +50,9 @@ use xyl_core::Q;
 ///   circle, so the radius is rim / pi.
 /// - The first stars: the home galaxy's gas collapses where its first piece
 ///   cools, in rings of the bell (formation.rs `cools_in`), at least one ring.
+/// - The ring: one bell is the engine's unit of time. In core time (G = c =
+///   M_core = 1, time unit r_g / c) the bell is exact, 2 rim 60^5. SI
+///   seconds enter only at the SI seam (`package::Si::seconds_per_ring`).
 ///
 /// One universe per process: the first founding sets the anchor and every
 /// later reading in the process is of that universe.
@@ -52,8 +66,10 @@ pub struct Anchor {
     /// the home galaxy is read in, the cascade read one tier down, so the
     /// deficit's hold of 1 means the same thing at a star as at its piece.
     pub galaxy_kpc: Q,
-    /// One bell (Gyr): 2 rim_galaxy / c.
-    pub bell_gyr: Dy,
+    /// One bell in core time (units of r_g / c, exact): 2 rim 60^5, light's
+    /// round trip to the home galaxy's rim, the rim read in galaxy-tier units.
+    /// One bell is one ring, the engine's unit of time.
+    pub bell: Q,
     /// The home galaxy's rim (kpc).
     pub home_rim_kpc: Q,
     /// The universe's curvature radius (kpc): rim / pi.
@@ -61,8 +77,9 @@ pub struct Anchor {
     /// The universe's curvature radius in r_g of the core: the S^360
     /// enclosure every horizon is read in.
     pub radius_rg: Q,
-    /// When the first stars shone (Gyr after the Big Bang).
-    pub first_stars_gyr: Q,
+    /// When the first stars shone (rings after the Big Bang): the rings until
+    /// the home galaxy's gas first collapses, at least one.
+    pub first_stars: Q,
     /// The parent's Kerr spin as admitted (drawn from the seed, floored by
     /// cores::substrate_for).
     pub spin: Q,
@@ -114,11 +131,11 @@ pub fn anchor() -> Anchor {
         rim: Q::ZERO,
         cluster_kpc: Q::ZERO,
         galaxy_kpc: Q::ZERO,
-        bell_gyr: Dy::ZERO,
+        bell: Q::ZERO,
         home_rim_kpc: Q::ZERO,
         radius_kpc: Q::ZERO,
         radius_rg: Q::ZERO,
-        first_stars_gyr: Q::ZERO,
+        first_stars: Q::ZERO,
         spin: Q::ZERO,
         share: Q::ZERO,
         margin: Q::ZERO,
@@ -136,32 +153,88 @@ pub(crate) fn of(rim: &Q, cools_in: Option<i64>, spin: &Q, share: &Q, margin: &Q
     let galaxy_kpc = (&Tier::Galaxy.in_rg() * &units.r_g_m)
         .checked_div(&kpc_m)
         .unwrap_or(Q::ZERO);
-    let c = crate::package::Si::c();
-    let gyr_s = crate::package::Si::gyr_s();
-    // The bell is 2 rim r_galaxy / (c Gyr): light's round trip to the home
-    // rim, the rim read in galaxy-tier units (60^5 r_g).
-    let galaxy_m = &Tier::Galaxy.in_rg() * &units.r_g_m;
-    let bell = (&(&Q::int(2) * rim) * &galaxy_m)
-        .checked_div(&(&c * &gyr_s))
-        .unwrap_or(Q::ZERO);
+    // The bell is 2 rim 60^5 in core time (r_g / c): light's round trip to
+    // the home rim, the rim read in galaxy-tier units (60^5 r_g).
+    let bell = &(&Q::int(2) * rim) * &Tier::Galaxy.in_rg();
     let pi = xyl_core::certified::pi(80).mid();
     let radius_kpc = (rim * &cluster_kpc).checked_div(&pi).unwrap_or(Q::ZERO);
     let radius_rg = (rim * &Tier::Cluster.in_rg())
         .checked_div(&pi)
         .unwrap_or(Q::ZERO);
-    // The first stars shine at rings x bell, with at least one ring.
+    // The first stars shine after the rings the gas takes to cool, with at
+    // least one ring.
     let rings = Q::int(cools_in.unwrap_or(1).max(1));
     Anchor {
         rim: rim.clone(),
         cluster_kpc: cluster_kpc.clone(),
         galaxy_kpc: galaxy_kpc.clone(),
-        bell_gyr: Dy::from_q(&bell),
+        bell,
         home_rim_kpc: rim * &galaxy_kpc,
         radius_kpc,
         radius_rg,
-        first_stars_gyr: &rings * &bell,
+        first_stars: rings,
         spin: spin.clone(),
         share: share.clone(),
         margin: margin.clone(),
     }
+}
+
+/// Gyr per ring (exact): SI seconds per ring (`package::Si::seconds_per_ring`)
+/// over the Gyr's (`package::Si::gyr_s`), read once per process after the founding. Zero
+/// until a universe is founded in the process.
+fn gyr_per_ring() -> Q {
+    static G: std::sync::OnceLock<Q> = std::sync::OnceLock::new();
+    if let Some(g) = G.get() {
+        return g.clone();
+    }
+    let g = crate::package::Si::seconds_per_ring()
+        .checked_div(&crate::package::Si::gyr_s())
+        .unwrap_or(Q::ZERO);
+    if g.signum() > 0 {
+        let _ = G.set(g.clone());
+    }
+    g
+}
+
+/// Gyr per ring as a `Dy` (see [`gyr_per_ring`]).
+fn gyr_per_ring_dy() -> Dy {
+    static G: std::sync::OnceLock<Dy> = std::sync::OnceLock::new();
+    if let Some(g) = G.get() {
+        return *g;
+    }
+    let g = Dy::from_q(&gyr_per_ring());
+    if g.signum() > 0 {
+        let _ = G.set(g);
+    }
+    g
+}
+
+/// A time in Gyr as a count of rings (exact). A temporary boundary and
+/// display conversion: the one place, with [`gyr_of_rings`], where Gyr and
+/// rings meet, used by layers not yet counted in rings. Zero until a universe
+/// is founded in the process.
+pub fn rings_of_gyr(gyr: &Q) -> Q {
+    gyr.checked_div(&gyr_per_ring()).unwrap_or(Q::ZERO)
+}
+
+/// A count of rings as a time in Gyr (exact). A temporary boundary and
+/// display conversion (see [`rings_of_gyr`]).
+pub fn gyr_of_rings(rings: &Q) -> Q {
+    rings * &gyr_per_ring()
+}
+
+/// A time in Gyr as a count of rings, as a `Dy` at a seam. A temporary
+/// boundary and display conversion (see [`rings_of_gyr`]).
+pub fn rings_of_gyr_dy(gyr: Dy) -> Dy {
+    let g = gyr_per_ring_dy();
+    if g.signum() <= 0 {
+        return Dy::ZERO;
+    }
+    gyr / g
+}
+
+/// A count of rings as a time in Gyr, as a `Dy` at a seam. A temporary
+/// boundary and display conversion (see [`rings_of_gyr`]).
+pub fn gyr_of_rings_dy(rings: Dy) -> Dy {
+    rings * gyr_per_ring_dy()
 }

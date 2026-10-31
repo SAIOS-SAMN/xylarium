@@ -33,11 +33,12 @@ pub fn settings<'a>(gal: &Galaxy, path: &[u64], sys: &'a System, star: &Star) ->
     let mut rng = xyl_core::Stream::derive(seed, &parts);
     let orbits = bodies::orbits(&star_kg, &planets, &mut rng);
     // The ring's star-formation time scale is its first-light time.
-    let tau_f = crate::galaxy::birth_gyr(&star.r).unwrap_or_else(|| bang.first_stars_gyr().mid());
+    let first = crate::circuit::gyr_of_rings(&bang.first_stars().mid());
+    let tau_f = crate::galaxy::birth_gyr(&star.r).unwrap_or_else(|| first.clone());
     // Isotope inventories are measured in the reference world's bulk
     // silicate; dividing by the model's solar birth gas makes that gas carry
     // exactly the measured inventory.
-    let mut kept = bodies::kept(&tau_f, &bang.first_stars_gyr().mid(), &star.born, sc);
+    let mut kept = bodies::kept(&tau_f, &first, &star.born, sc);
     for (k, (_, el, _, _, _)) in kept.iter_mut().zip(bodies::isotopes().iter()) {
         let sun = crate::chem::reference_birth_gas(el).unwrap_or(Q::ONE);
         *k = k.checked_div(&sun).unwrap_or_else(|| k.clone());

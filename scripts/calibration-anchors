@@ -23,6 +23,7 @@ CATEGORIES = [
     ("Earth and Sun as units", r"Si::(world_mass_kg|world_radius_m|star_mass_kg|star_radius_m|au)\b"),
     ("Earth day and year", r"Si::(day_s|yr_s)\b"),
     ("SI unit suffixes", r"\b[a-z][a-z0-9_]*_(au|kg|yr)\b"),
+    ("time in Earth years (Gyr, yr)", r"\b[a-z_]*gyr[a-z0-9_]*\b|\b[a-z_]*_yr\b|Si::(gyr_s|yr_s)\b"),
     ("Earth climate (278 K, 288 K, 340 W/m^2)", r"\b(int|ratio)\((278|288|340)\b|,\s*340\)"),
     ("Earth and Sun epochs (13.8, 4.57 Gyr)", r"\btoday_gyr\b|\bsolar_age\b|\b457, 100\b"),
     ("solar and Milky Way chemistry", r"\breference_metallicity\b|\bism_today_dex\b|\bv_flat\b"),

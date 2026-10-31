@@ -10,9 +10,10 @@
 //!
 //! Reads `bang::BigBang`, `cores::shapes` and `cores::held`, `galaxy::star`,
 //! `chain::Place` and `chain::radius`, `stars::life` and
-//! `stars::remnant_share`, `circuit::bell_gyr` and `package::Si` (light speed,
-//! year, kpc). Times are Gyr after the Big Bang, distances kpc, masses suns,
-//! all as `Dy`.
+//! `stars::remnant_share`, `circuit::bell` (in Gyr by
+//! `circuit::gyr_of_rings_dy`) and `package::Si` (light speed, year, kpc).
+//! Times are Gyr after the Big Bang, distances kpc, masses suns, all as
+//! `Dy`.
 //!
 //! Outputs:
 //! - `nodes`, `nodes_among` -> `Vec<Node>`: every galactic core from its
@@ -66,7 +67,7 @@ impl Node {
     /// progenitor star's manifold puts it.
     pub fn place(&self, t: Dy, r: &Q) -> Place {
         match &self.kind {
-            Kind::Core(sh) => sh.place_at(t, r),
+            Kind::Core(sh) => sh.place_at(crate::circuit::rings_of_gyr_dy(t), r),
             Kind::Stellar(s) => s.place(t, r),
         }
     }
@@ -97,7 +98,7 @@ pub fn nodes_among(seed: u64, bang: &BigBang, candidates: &[u64]) -> Vec<Node> {
         .into_iter()
         .map(|sh| Node {
             mass: Dy::from_q(&sh.hole_suns),
-            born: Dy::from_q(&sh.born),
+            born: Dy::from_q(&crate::circuit::gyr_of_rings(&sh.born)),
             kind: Kind::Core(Box::new(sh)),
         })
         .collect();
@@ -124,7 +125,7 @@ pub fn nodes_among(seed: u64, bang: &BigBang, candidates: &[u64]) -> Vec<Node> {
 /// The core's period (yr): the bell, the pulse's round trip to the
 /// founding's rim and back (`circuit::anchor`).
 pub fn core_period_yr() -> Dy {
-    crate::circuit::bell_gyr() * Dy::sci(1, 9)
+    crate::circuit::gyr_of_rings_dy(crate::circuit::bell()) * Dy::sci(1, 9)
 }
 
 /// The wavefront's wavelength (kpc): light speed x the core's period.

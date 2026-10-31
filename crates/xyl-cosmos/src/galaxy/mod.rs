@@ -285,7 +285,7 @@ pub fn birth_gyr(r: &Q) -> Option<Q> {
         .max(Q::ratio(1, 1_000_000_000));
     let rings = r.checked_div(&kpc_per_ring).unwrap_or(Q::ZERO);
     let bells = sub.lighting.cools_in_at(&rings)?;
-    Some(&Q::int(bells.max(1)) * &anchor.bell_gyr.to_q())
+    Some(crate::circuit::gyr_of_rings_dy(Dy::int(bells.max(1))).to_q())
 }
 
 /// The home galaxy's mass inside `r` kpc (suns): the hole plus the rings'

@@ -126,7 +126,7 @@ pub fn manifolds(
     parts.extend(path.iter().map(|&p| p.into()));
     let mut rng = Stream::derive(seed, &parts);
     let orbits = bodies::orbits(&star_kg, &planets, &mut rng);
-    let in_tier = |m: &Q, tier: Tier| units.in_tier(m, tier);
+    let in_tier = |m: &Q, tier: Tier| units.in_tier(m, tier).unwrap_or(Q::ZERO);
     let mut planet = 0usize;
     let mut out = Vec::with_capacity(sys.worlds.len());
     // The innermost moon of each giant, for its chain.

@@ -10,6 +10,7 @@
 //!   [`rotor`]: rational half-angles and quaternion rotors;
 //! - [`units`]: the unit ladder anchored at the universal core
 //!   (`G = c = M_core = 1`, tiers a power of sixty of `r_g` apart);
+//! - [`shares`]: the deficit share, the dilation and the flow law;
 //! - [`measure`]: the share of an n-sphere within an angle of an axis;
 //! - [`motion`]: closed-form orbits of exponential modes; [`event`]: the
 //!   certified crossing solver; [`coordinate`]: the sexagesimal coordinate;
@@ -31,6 +32,7 @@ pub mod motion;
 pub mod q;
 pub mod rng;
 pub mod rotor;
+pub mod shares;
 pub mod units;
 pub mod watch;
 

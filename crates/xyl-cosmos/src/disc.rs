@@ -46,7 +46,7 @@ pub fn rim_share(mass: &Q, rim: &Q) -> Q {
         return Q::ZERO;
     }
     let rim_rg = &rim.clone().max(Q::ZERO) * &xyl_core::units::Tier::System.in_rg();
-    mass.checked_div(&(&rim_rg + mass)).unwrap_or(Q::ONE)
+    xyl_core::shares::deficit(mass, &rim_rg).unwrap_or(Q::ONE)
 }
 
 /// A world of a star's disc: its reach and holding (shares of the star's

@@ -30,7 +30,11 @@ another crate. Laws are composed from shares (ratios of the form
 - `Dy`, the dyadic `m 2^e` with a 62-bit mantissa rounded toward zero
   (`xyl-core dyadic.rs`), holds readings at seams; they are converted to `Q`
   on a grid before being held. Status: built.
-- Phase grid (`circuit::turn`): a turn is rounded to `60^-6`. Status: built.
+- Phase grid (`circuit::turn`): a turn is rounded to 1/(360 60^5) of a turn, the fifth sexagesimal place of arc.
+  Status: built.
+- Coordinate (`xyl_core::coordinate::Reading`): whole turns and a share,
+  written `DDD:MM:SS:XX:XX:XX` in degrees of arc, `N/DDD:...` with the rings
+  on the T lane. Status: built.
 
 ## 2. Units and the master frame
 
@@ -60,9 +64,12 @@ another crate. Laws are composed from shares (ratios of the form
 
 ## 3. The bounce and the founding
 
-- Deficit law (`circuit::deficit`, `circuit::vacuum_share`,
-  `turning::deficit_share`): `delta(R, M) = M / (R + M)`, and the received
-  share is `1 - delta`. Status: built.
+- Deficit law (`xyl_core::shares::deficit`, `deficit_dy`):
+  `delta(R, M) = M / (R + M)`, and the received share is `1 - delta`.
+  Status: built.
+- Dilation and flow law (`xyl_core::shares::dilation`, `flow`, `opposed`):
+  `D(p) = (1 + p) / (1 - p)` for `-1 < p < 1`; `x (+) y = (x + y) / (1 + x
+  y)`; `D(x (+) y) = D(x) D(y)`. Status: built.
 - Horizon reach (`bounce::horizon_reach`): `delta_h = 1/3`, so
   `R_h = M (1 - delta_h) / delta_h = 2M`. Status: built.
 - Curved reach (`bounce::curved_reach`): the reach is `rho sin(r / rho)` on
@@ -555,8 +562,8 @@ the Xylarium function is the implementation. The ids are proposals.
 
 | Proposed id | Form | Shell proposed | Xylarium implementation |
 |---|---|---|---|
-| LAW-DEFICIT-SHARE | `delta = M / (r + M)` | core | `turning::deficit_share` |
-| LAW-DILATION | `D(p) = (1 + p) / (1 - p)`, `p` in `[0, 1)` | core | `circuit::dilation` |
+| LAW-DEFICIT-SHARE | `delta = M / (r + M)` | core | `xyl_core::shares::deficit` |
+| LAW-DILATION | `D(p) = (1 + p) / (1 - p)`, `p` in `(-1, 1)` | core | `xyl_core::shares::dilation` |
 | LAW-TORSION-SHARE | `s(H, J) = (H + J) / (2H + J)`, `H` the horizon reach and `J` the spin's share, both stated by the universe | core | `bounce::torsion_share` |
 | LAW-JET-MAP | `t -> a t + b`, `a = D(p_c) / (1 - p_v)`, `b = p_v / (1 - p_v)` | Xylarium | `circuit::jet_map` |
 | LAW-THROAT-CROSSING | `t_n = t* + (t0 - t*) a^n`, crossing at `n = ln((1 - t*) / (t0 - t*)) / ln a`; refused for `t0 <= 0` | Xylarium | `circuit::throat_crossing` |

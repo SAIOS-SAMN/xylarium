@@ -304,7 +304,8 @@ fn runs_of(out: &[(u32, Q, Q)], s_final: &Q) -> Vec<Vec<usize>> {
 /// contrast of the deficits at its two edges, |d_l - d_h| / (d_l + d_h).
 fn shell_density(z: u32, a: &Q, r: &Q, s_final: &Q) -> (Q, Q, Q) {
     let (l, h) = (inner_edge(r, s_final), outer_edge(r, s_final));
-    let (dl, dh) = (deficit(&l, &Q::ONE), deficit(&h, &Q::ONE));
+    let d = |r: &Q| xyl_core::shares::deficit(&Q::ONE, r).unwrap_or(Q::ZERO);
+    let (dl, dh) = (d(&l), d(&h));
     let t = (&dl - &dh)
         .abs()
         .checked_div(&(&dl + &dh))

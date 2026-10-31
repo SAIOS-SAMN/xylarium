@@ -30,8 +30,9 @@ its source location.
 | Rationals (QQ) | All held state: element counts, firmament and bead amounts, reaches, spans, phases, the anchor, star and world masses | `xyl_core::Q`, lowest terms, `i64` on the stack and promoted to big integers on overflow; division is checked |
 | Reals (RR) | Never held directly. A real value enters as a proven rational enclosure `lo <= x <= hi` (pi, roots, exp, ln, sin, cos), or as a dyadic reading `m 2^e` at a seam, rounded toward zero and gridded back to `Q` before it is held | `xyl_core::certified::Encl`; `xyl_core::dyadic::Dy` |
 
-Angles are exact turns, displayed in degrees of 360. Phases about a throat
-lie on the `60^-6` coordinate grid, and drawn values on the `2^-40` grid.
+Angles are exact turns, read in degrees, minutes and seconds of arc
+(`xyl_core::coordinate`). Phases about a throat lie on the coordinate grid of
+1/(360 60^5) of a turn, the fifth sexagesimal place of arc, and drawn values on the `2^-40` grid.
 
 ### Algebra and geometry
 

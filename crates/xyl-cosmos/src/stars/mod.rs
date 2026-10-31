@@ -1,7 +1,7 @@
 //! A star's life in closed form: its transduction, light, main-sequence life, giant
 //! phase and remnant, read at any age without time stepping (docs/model.md).
 //!
-//! Reads `circuit::anchor` (galaxy ring in kpc), `circuit::vacuum_share`,
+//! Reads `circuit::anchor` (galaxy ring in kpc), `xyl_core::shares::deficit_dy`,
 //! `circuit::bell` and `echo` (one and two rings), the substrate's firmament
 //! outflow rate (`cores::substrate_for`, per ring), the element table and
 //! `compound` (frames at heat, in `sequence.rs`).
@@ -51,8 +51,8 @@ pub use sequence::{
     fission_step, fusion_step, held_frames, nucleon_count, pole_point, Sequence, Step,
 };
 
-use crate::circuit::vacuum_share;
 use xyl_core::dyadic::Dy;
+use xyl_core::shares::deficit_dy;
 use xyl_core::Q;
 
 /// A home-galaxy star's reach about the universal core (galaxy rings) from
@@ -72,7 +72,7 @@ pub fn reach_rings(r_kpc: Dy) -> Dy {
 /// magnitude integrated over half an echo, `1 / pi`, times the vacuum's share
 /// `1 / (r + 1)`.
 pub fn ring_per_bell(reach: Dy) -> Dy {
-    vacuum_share(reach, Dy::ONE) / Dy::PI
+    deficit_dy(Dy::ONE, reach) / Dy::PI
 }
 
 /// The vessel's drift at reach `r` over one bell at `t` rings: `bell q(t)`
@@ -83,7 +83,7 @@ pub fn drift_per_bell(reach: Dy, t: Dy) -> Dy {
     let Some(s) = crate::cores::substrate_for(&anchor.spin) else {
         return Dy::ZERO;
     };
-    crate::circuit::bell() * s.rate(t.max(Dy::ZERO)).0 * vacuum_share(reach, Dy::ONE)
+    crate::circuit::bell() * s.rate(t.max(Dy::ZERO)).0 * deficit_dy(Dy::ONE, reach)
 }
 
 /// The share of a star's hold the pulse transduces per bell at reach `r`:

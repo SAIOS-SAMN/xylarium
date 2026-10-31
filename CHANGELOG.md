@@ -11,6 +11,14 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- `xyl_core::shares`: the deficit share, the dilation `D(p)` and the flow
+  law (`flow`, `opposed`), exact on `Q` with `Dy` forms; the duplicated
+  deficits in `circuit`, `turning`, `disc`, `formation` and `stars` read it
+  (#42, #43).
+- The coordinate in degrees of arc (`xyl_core::coordinate`): a protractor of
+  `360 x 60^5` marks, places `DDD:MM:SS:XX:XX:XX`, the whole turns kept
+  (`Reading::rings`, the rings on the T lane) (#40).
+
 - The founding as flow, specified (docs/model.md): parcels released at
   onset move by the reach rate `dr/dtau = [R_h(H) - R_h(m)] r / (r + R_h(m))`;
   angular state in degrees; perturbation on frames; meetings by contrast
@@ -51,6 +59,10 @@ may change public APIs and the model's laws.
   locally with the other checks (CONTRIBUTING.md, Verification).
 
 ### Changed
+
+- `Units::of` and `Units::in_tier` refuse a zero denominator (`None`)
+  instead of returning zero; a stellar hole's spin is drawn from
+  `Stream::derive` instead of a BLAKE3 hash (#44).
 
 - Roles: MAINTAINERS.md names the coordinator (mycelium's maintainer
   session) for contract review; CONTRIBUTING's workflow sends
@@ -113,6 +125,11 @@ may change public APIs and the model's laws.
   body that does not ignite forms no remnant node (`pulse::nodes_among`).
 
 ### Removed
+
+- `systems::survival`, which always returned 1: every world was kept
+  regardless of stellar encounters. The binding share against passing stars
+  is to be derived (#44). `circuit::vacuum_share`, `turning::deficit_share`
+  and the private `grain::deficit`, replaced by `xyl_core::shares`.
 
 - The fixed hydrogen-helium-carbon chain: `stars::transduced_hydrogen`,
   `stars::transduced_helium` and the measured binding energies of

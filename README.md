@@ -171,12 +171,17 @@ cargo run --release -p xylarium --example minimal_link -- --home var/example-7 -
 ## Mycelium integration
 
 Xylarium is designed to run as a client domain of
-[Mycelium](https://github.com/SAIOS-SAMN/mycelium) (release `v0.2.0`). An uplink
+[Mycelium](https://github.com/SAIOS-SAMN/mycelium). An uplink
 drives live play through `run::run_with` with a `run::Link`: it reads and
 answers the universe after each ring and is notified after each checkpoint is
 written. No crate in this workspace depends on Mycelium, and without a link
 `xylarium run` plays locally. The contract is described in
 [docs/network.md](docs/network.md).
+
+| Project | Relation | Version |
+|---|---|---|
+| [mycelium](https://github.com/SAIOS-SAMN/mycelium) | the network Xylarium runs on; the planned `xyl-hypha` crate depends on its `mycelium-sdk` | `v0.3.0` by git tag, once released; no crate depends on it yet |
+| [netstratum](https://github.com/SAIOS-SAMN/netstratum) | a peer kernel on the same network; shared laws are versioned (e.g. `LAW-WAVEFRONT v1`) | no dependency |
 
 ## Status
 

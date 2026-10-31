@@ -1,7 +1,10 @@
 # Mycelium integration
 
 [Mycelium](https://github.com/SAIOS-SAMN/mycelium) is a separate public project;
-Xylarium integrates against its tagged release `v0.2.0`. The network Mycelium
+Xylarium will integrate against its tagged release `v0.3.0`, the stable
+contract the projects on the network pin to (its `mycelium-sdk` crate, the
+wire version and act table, and the shared physics library's law ids). The
+network Mycelium
 runs is called the [hypha](glossary.md). This document describes Xylarium's side
 of the integration only. The design of Mycelium is documented in the Mycelium
 repository.
@@ -137,5 +140,6 @@ in-game costs (ley lines, tolls, folds) are kept in physical units.
    network, each mouth is to carry a freshness in final-point advances, and
    crossings are to be applied at an anchor so that their reconciliation
    closes.
-5. **A `xyl-hypha` crate.** A workspace crate pinned to Mycelium `v0.2.0`
-   that implements `run::Link` over the SDK client session is planned.
+5. **A `xyl-hypha` crate.** A workspace crate pinned to Mycelium `v0.3.0`
+   by git tag that implements `run::Link` over the `mycelium-sdk` session is
+   planned ([#21](https://github.com/SAIOS-SAMN/xylarium/issues/21)).

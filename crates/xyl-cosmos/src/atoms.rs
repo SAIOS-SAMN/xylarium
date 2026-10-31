@@ -83,7 +83,6 @@ impl Atom {
     /// Every occupied band and every shape of the outermost shell full: an
     /// inert gas.
     pub fn sealed(&self) -> bool {
-        // every occupied winding full, and every shape of its outermost shell full
         self.bands.iter().all(|b| b.electrons == b.room())
             && (0..self.outer_n).all(|l| {
                 self.bands
@@ -122,8 +121,8 @@ pub fn atom(z: u32) -> Option<Atom> {
     if z == 0 || crate::compound::is_cluster(z) {
         return None;
     }
-    // each Z is filled once and cached (fusion products 2Z may exceed any
-    // table; refilling on every call is expensive)
+    // each Z is filled once and cached: fusion products 2Z may lie past any
+    // table, and the fill is expensive to repeat
     static TABLE: std::sync::OnceLock<std::sync::Mutex<std::collections::BTreeMap<u32, Atom>>> =
         std::sync::OnceLock::new();
     let table = TABLE.get_or_init(|| std::sync::Mutex::new(std::collections::BTreeMap::new()));
@@ -142,9 +141,8 @@ pub fn unpaired_hot(z: u32, heat: &Q) -> u32 {
     if heat.signum() <= 0 {
         return unpaired(z);
     }
-    // the core's turning in whole turns of its bell, at most one: it strips
-    // windings held as loosely as hydrogen's lone electron or looser; deeper
-    // windings, held tighter than one turn, remain
+    // heat is the core's turning in whole turns of its bell, capped at one
+    // (hydrogen's lone electron); windings with tightness <= heat are stripped
     let heat = heat.clone().min(Q::ONE);
     let heat = &heat;
     let Some(a) = atom(z) else { return 0 };
@@ -159,7 +157,6 @@ pub fn unpaired_hot(z: u32, heat: &Q) -> u32 {
                 .sum();
             let tight =
                 Q::new(i64::from(z) - i64::from(shallower), i64::from(b.n)).unwrap_or(Q::ZERO);
-            // stripped at or below the heat (heat 1 strips hydrogen's 1)
             tight > *heat
         })
         .map(Band::unpaired)

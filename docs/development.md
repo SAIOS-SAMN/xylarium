@@ -20,6 +20,36 @@ Enforced by workspace lints (`Cargo.toml`, `clippy.toml`):
   physical quantities and the conditions under which it returns `None` or
   `Err`.
 
+## Code style
+
+Beyond `rustfmt` (run `cargo fmt --all`):
+
+- **Lines.** At most 100 columns, string literals included; split long
+  `format!` strings across `concat!` pieces or build output rows with small
+  helpers. `scripts/check-style` checks this.
+- **Modules.** A file over about 800 lines is split into a directory module
+  (`worlds/mod.rs` with `worlds/climate.rs`, ...) along its sections; the
+  public paths stay the same through `pub use`.
+- **Functions.** A function over about 100 lines is split into named steps.
+  A closure longer than a few lines becomes a named function.
+- **Names.** Items are named for what they compute (`stellar_mass`,
+  `manifold_worlds`), not by single letters. Numbers are built with the
+  shared constructors - `Q::int`, `Q::ratio`, `Q::new` (checked),
+  `Dy::int`, `Dy::ratio`, `Dy::sci`, `elements::decimal` - never with
+  private one-letter wrappers. Single-letter bindings are for the symbols of
+  a formula written in the comment above them (`m`, `r`, `delta`).
+- **Comments.** A `//` comment says why the code does what it does, or
+  which formula a block evaluates (with its symbols), in plain technical
+  prose. It does not narrate what the next line obviously does and does not
+  use figurative language. Model vocabulary is used as defined in
+  [glossary.md](glossary.md).
+- **Doc comments.** `///` on every public item: what it returns, its units,
+  and when it returns `None` or `Err`. Entry points carry an `# Examples`
+  section.
+- **Tests.** Test names state the property checked
+  (`outflow_conserves_founded_mass`), in snake case, at most about 60
+  characters.
+
 ## Modelling conventions
 
 - Express change as closed forms of `t` (orbits, rotations, circulation, the
@@ -115,7 +145,7 @@ overflow checks.
 
 ### 5. Read the change on a running universe
 
-Every tier has a reading in `crates/xylarium/src/observe.rs`, dispatched by
+Every tier has a reading in `crates/xylarium/src/observe/mod.rs`, dispatched by
 word in `observe::observe` and listed in the module header, the
 unknown-word message and [architecture.md, Readings](architecture.md#readings).
 Extend the tier's reading, or add a word, so the new quantity is printed.

@@ -44,13 +44,15 @@ const SAMPLE: u64 = 64;
 /// What a star has absorbed, all told.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Books {
-    /// Energy absorbed from all pulses since the first, in the field's energy units (xyl-cosmos field.rs).
+    /// Energy absorbed from all pulses since the first, in the field's energy units (xyl-cosmos
+    /// field.rs).
     pub energy_in: Q,
     /// Part of `energy_in` spent re-locking the star's worlds on their orbits.
     pub gravity: Q,
     /// Part of `energy_in` given out as light: the remainder after gravity and burn-out.
     pub light: Q,
-    /// Part of `energy_in` converted by the star's burning step (its mass defect share of what gravity left).
+    /// Part of `energy_in` converted by the star's burning step (its mass defect share of what
+    /// gravity left).
     pub burned_out: Q,
     /// Number of pulses absorbed.
     pub pulses: u64,
@@ -146,8 +148,8 @@ impl Field {
     /// of pulses delivered.
     pub fn step(&mut self, cosmic: &Cosmic<'_>, from: Dy, to: Dy) -> u64 {
         use rayon::prelude::*;
-        // each star's books, worlds and drift are independent: each star is
-        // computed on its own thread from its state, then stored back
+        // Stars' books, worlds and drift do not depend on each other, so each
+        // star's state is taken out, carried in parallel and stored back.
         let stars: std::collections::BTreeSet<u64> =
             cosmic.peoples.iter().map(|p| p.star).collect();
         let held: Vec<(u64, Option<Vec<Anchor>>, Option<[Q; 3]>, Option<Books>)> = stars
@@ -165,72 +167,7 @@ impl Field {
         let done: Vec<(u64, Option<Vec<Anchor>>, Option<[Q; 3]>, Option<Books>, u64)> = held
             .into_par_iter()
             .map(|(star, anchors, drift0, books0)| {
-                let _busy = xyl_core::watch::busy(format!("rings of star {star}"));
-                let Some(w) = systems.get(&star) else {
-                    return (star, anchors, drift0, books0, 0);
-                };
-                let mass = w.system.spec.mass.clone();
-                let mut worlds = anchors.unwrap_or_else(|| {
-                    w.system
-                        .worlds
-                        .iter()
-                        .map(|x| Anchor::on_orbit(&x.a, &x.mass))
-                        .collect()
-                });
-                let Some(a_out) = w.system.worlds.iter().map(|x| x.a.clone()).max() else {
-                    return (star, Some(worlds), drift0, books0, 0);
-                };
-                let step = burning(w.star.reach_rings(), to - Dy::from_q(&w.star.born));
-                let mut drift = drift0.unwrap_or([Q::ZERO, Q::ZERO, Q::ZERO]);
-                let mut books = books0;
-                let mut delivered = 0;
-                for (node, bell) in bells {
-                    if node.born >= to {
-                        continue;
-                    }
-                    // the star's place: its manifold position offset by its
-                    // drift (AU), summed per axis (L1), not as a hypotenuse
-                    let kpc = au_per_kpc();
-                    let off = drift
-                        .iter()
-                        .fold(Q::ZERO, |a, d| &a + &d.abs())
-                        .checked_div(&kpc)
-                        .unwrap_or(Q::ZERO);
-                    let place = w
-                        .star
-                        .place(to, &radius())
-                        .standing_off(&(&off * &xyl_cosmos::chain::kpc()));
-                    let (delay, d) = path(node, &place, to);
-                    let k = bell.arrivals(delay, from, to);
-                    if k == 0 {
-                        continue;
-                    }
-                    let v = bell.received(d);
-                    let e = bell.energy_at(d, &a_out);
-                    // absorb each ring exactly where the worlds stand. Once a
-                    // ring leaves the anchors unchanged (the star re-locked
-                    // them all), every later ring is identical, so the rest are
-                    // counted rather than repeated; the result is independent
-                    // of how the span is cut
-                    let b = books.get_or_insert_with(Books::default);
-                    let mut i = 0;
-                    while i < k {
-                        let Some(a) = absorb(&mass, step, &worlds, &v, &e) else {
-                            break;
-                        };
-                        let settled = a.anchors == worlds;
-                        let n = if settled { k - i } else { 1 };
-                        let times = Q::int(i64::try_from(n).unwrap_or(i64::MAX));
-                        for (x, dx) in drift.iter_mut().zip(&a.drift) {
-                            *x = &*x + &(dx * &times);
-                        }
-                        b.add(&a, n, to);
-                        worlds = a.anchors;
-                        i += n;
-                    }
-                    delivered += k;
-                }
-                (star, Some(worlds), Some(drift), books, delivered)
+                ring_star(star, (anchors, drift0, books0), systems, bells, from, to)
             })
             .collect();
         let mut delivered = 0;
@@ -293,12 +230,93 @@ impl Field {
     }
 }
 
+/// One star's state between deliveries: its worlds' anchors, its drift (AU
+/// per axis) and its books, each None until first reached.
+type StarState = (Option<Vec<Anchor>>, Option<[Q; 3]>, Option<Books>);
+
+/// Delivers every bell's pulses arriving in `(from, to]` Gyr to `star` from
+/// its held state. Returns the star's new state and the pulses delivered.
+fn ring_star(
+    star: u64,
+    (anchors, drift0, books0): StarState,
+    systems: &BTreeMap<u64, crate::cosmic::Witnessed>,
+    bells: &[(Node, Bell)],
+    from: Dy,
+    to: Dy,
+) -> (u64, Option<Vec<Anchor>>, Option<[Q; 3]>, Option<Books>, u64) {
+    let _busy = xyl_core::watch::busy(format!("rings of star {star}"));
+    let Some(w) = systems.get(&star) else {
+        return (star, anchors, drift0, books0, 0);
+    };
+    let mass = w.system.spec.mass.clone();
+    let mut worlds = anchors.unwrap_or_else(|| {
+        w.system
+            .worlds
+            .iter()
+            .map(|x| Anchor::on_orbit(&x.a, &x.mass))
+            .collect()
+    });
+    let Some(a_out) = w.system.worlds.iter().map(|x| x.a.clone()).max() else {
+        return (star, Some(worlds), drift0, books0, 0);
+    };
+    let step = burning(w.star.reach_rings(), to - Dy::from_q(&w.star.born));
+    let mut drift = drift0.unwrap_or([Q::ZERO, Q::ZERO, Q::ZERO]);
+    let mut books = books0;
+    let mut delivered = 0;
+    for (node, bell) in bells {
+        if node.born >= to {
+            continue;
+        }
+        // The star's place: its manifold position offset by its drift
+        // (AU), summed per axis (L1), not as a Euclidean length.
+        let kpc = au_per_kpc();
+        let off = drift
+            .iter()
+            .fold(Q::ZERO, |a, d| &a + &d.abs())
+            .checked_div(&kpc)
+            .unwrap_or(Q::ZERO);
+        let place = w
+            .star
+            .place(to, &radius())
+            .standing_off(&(&off * &xyl_cosmos::chain::kpc()));
+        let (delay, d) = path(node, &place, to);
+        let k = bell.arrivals(delay, from, to);
+        if k == 0 {
+            continue;
+        }
+        let v = bell.received(d);
+        let e = bell.energy_at(d, &a_out);
+        // Each ring is absorbed where the worlds stand. Once a ring
+        // leaves the anchors unchanged (the star re-locked them all),
+        // every later ring is identical, so the rest are counted rather
+        // than repeated; the result is independent of how the span is cut.
+        let b = books.get_or_insert_with(Books::default);
+        let mut i = 0;
+        while i < k {
+            let Some(a) = absorb(&mass, step, &worlds, &v, &e) else {
+                break;
+            };
+            let settled = a.anchors == worlds;
+            let n = if settled { k - i } else { 1 };
+            let times = Q::int(i64::try_from(n).unwrap_or(i64::MAX));
+            for (x, dx) in drift.iter_mut().zip(&a.drift) {
+                *x = &*x + &(dx * &times);
+            }
+            b.add(&a, n, to);
+            worlds = a.anchors;
+            i += n;
+        }
+        delivered += k;
+    }
+    (star, Some(worlds), Some(drift), books, delivered)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn repair_follows_its_home_and_an_excess_wears_it() {
+    fn environment_tunes_to_home_and_falls_above_it() {
         let mut f = Field::default();
         // nothing to tune to yet: a people is at home
         assert_eq!(f.environment(0, Dy::ZERO, Dy::ONE, Dy::int(25)), Dy::ONE);

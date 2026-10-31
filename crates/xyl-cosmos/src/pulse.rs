@@ -34,10 +34,6 @@ use crate::galaxy::{star, Star};
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 
-fn n(x: i64) -> Dy {
-    Dy::int(x)
-}
-
 /// Light speed in kpc per year, from the one SI seam (`package::Si`).
 pub fn c_kpc_yr() -> Dy {
     use crate::package::Si;
@@ -96,7 +92,7 @@ pub fn nodes(seed: u64, bang: &BigBang, limit: Option<u64>) -> Vec<Node> {
 /// candidate's remnant from the end of its life. Callers may pass a subset
 /// of the sample; an incomplete list omits bells but never adds one.
 pub fn nodes_among(seed: u64, bang: &BigBang, candidates: &[u64]) -> Vec<Node> {
-    // every galactic core rings from when it formed
+    // each galactic core is a node from its formation time
     let mut out: Vec<Node> = crate::cores::shapes(seed, bang)
         .into_iter()
         .map(|sh| Node {
@@ -109,12 +105,12 @@ pub fn nodes_among(seed: u64, bang: &BigBang, candidates: &[u64]) -> Vec<Node> {
         let Some(s) = star(seed, bang, k) else {
             continue;
         };
-        // lifetime: its hold over the pulse's burn at its reach
-        // (stars::life), then the remnant
+        // a stellar node forms when the star's main-sequence life ends
+        // (stars::life)
         let life = Dy::from_q(&crate::stars::life(s.reach_rings()));
         let born = Dy::from_q(&s.born) + life;
-        // the remnants of the stars this sample represents: stands_for suns
-        // of similar stars, each keeping the hold the pulse did not transduce
+        // remnant mass: the stellar mass the sample star stands for times
+        // the share of the hold not transduced (stars::remnant_share)
         let mass = s.stands_for * Dy::from_q(&crate::stars::remnant_share());
         out.push(Node {
             kind: Kind::Stellar(Box::new(s)),
@@ -201,7 +197,7 @@ pub fn relays(nodes: &[Node], t: Dy) -> Vec<Relay> {
             None => from_core[i],
         };
         let detour = route - from_core[i];
-        let continuity = (n(2) * Dy::PI * detour / lambda).cos();
+        let continuity = (Dy::int(2) * Dy::PI * detour / lambda).cos();
         out[i] = Relay {
             from,
             route,
@@ -222,11 +218,12 @@ pub fn hear(place: &Place, nodes: &[Node], relays: &[Relay], t: Dy) -> Option<He
             continue;
         }
         let d = place.arc_kpc(&node.place(t, &r), &r).max(Dy::sci(1, -6));
-        // a bell's weight here: its mass over the arc (first degree, not d^2)
+        // weight I = M / d (first degree, in place of M / d^2)
         let i = node.mass / d;
-        // the wavefront's path: along the relay chain to this bell, then here
+        // path: the route along the relay chain to this node, plus the arc
+        // from it to the place
         let path = relays.get(k).map(|r| r.route).unwrap_or(Dy::ZERO) + d;
-        let (s, c) = (n(2) * Dy::PI * path / lambda).sin_cos();
+        let (s, c) = (Dy::int(2) * Dy::PI * path / lambda).sin_cos();
         sum += i;
         re += i * c;
         im += i * s;
@@ -238,7 +235,7 @@ pub fn hear(place: &Place, nodes: &[Node], relays: &[Relay], t: Dy) -> Option<He
     // the phasor sum's length via its own phase: re cos(phi) + im sin(phi),
     // phi its angle (avoids the root of re^2 + im^2)
     let phi = if re.signum() == 0 {
-        Dy::PI * Dy::ratio(1, 2) * n(i64::from(im.signum()))
+        Dy::PI * Dy::ratio(1, 2) * Dy::int(i64::from(im.signum()))
     } else {
         (im / re).atan() + if re.signum() < 0 { Dy::PI } else { Dy::ZERO }
     };

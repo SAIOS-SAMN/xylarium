@@ -38,7 +38,10 @@ impl Args<'_> {
 /// number.
 ///
 /// ```
-/// let words: Vec<String> = ["--seed", "9", "--home", "x", "universe"].iter().map(|w| w.to_string()).collect();
+/// let words: Vec<String> = ["--seed", "9", "--home", "x", "universe"]
+///     .iter()
+///     .map(|w| w.to_string())
+///     .collect();
 /// let (o, what) = xylarium::options(&words)?;
 /// assert_eq!(o.seed, 9);
 /// assert_eq!(o.home, std::path::PathBuf::from("x"));

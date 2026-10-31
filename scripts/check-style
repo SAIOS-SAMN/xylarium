@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+"""Style checks rustfmt does not make (docs/development.md, Code style).
+
+1. No line of a Rust source exceeds 100 columns (string literals included).
+2. No private one-letter wrapper functions (`fn n(`, `fn r(`, ...) stand in
+   for the shared numeric constructors. Public items named for a physical
+   symbol (`Si::g`, `Si::c`) are allowed.
+
+Usage: scripts/check-style       (from the repository root; exit 1 on failure)
+"""
+
+import glob
+import os
+import re
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.chdir(ROOT)
+
+MAX = 100
+failures = []
+one_letter = re.compile(r"^\s*fn [a-z]\s*[(<]")
+for path in sorted(glob.glob("crates/*/src/**/*.rs", recursive=True) + glob.glob("crates/*/build.rs")):
+    for i, line in enumerate(open(path, encoding="utf-8"), 1):
+        line = line.rstrip("\n")
+        if len(line) > MAX:
+            failures.append(f"{path}:{i}: {len(line)} columns (max {MAX})")
+        if one_letter.match(line):
+            failures.append(f"{path}:{i}: one-letter function; use the shared constructors")
+
+for msg in failures:
+    print(msg)
+print(f"check-style: {len(failures)} problems")
+sys.exit(1 if failures else 0)

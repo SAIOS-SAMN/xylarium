@@ -26,19 +26,15 @@ use xyl_core::certified::Encl;
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 
-fn q(n: i64, d: i64) -> Q {
-    Q::new(n, d).unwrap_or(Q::ZERO)
-}
-
 /// The reference values, measured: α = 1/137.035999, β = 1/1836.15267, α_G = 5.906×10⁻³⁹,
 /// ε = 0.0071.
 pub fn reference() -> [Q; 4] {
     let alpha_g = Q::from_i128(5906, 10i128.pow(42)).unwrap_or(Q::ZERO);
     [
-        q(1_000_000, 137_035_999),
-        q(100_000, 183_615_267),
+        Q::ratio(1_000_000, 137_035_999),
+        Q::ratio(100_000, 183_615_267),
         alpha_g,
-        q(71, 10_000),
+        Q::ratio(71, 10_000),
     ]
 }
 
@@ -52,10 +48,11 @@ pub struct Laws {
     pub beta: Q,
     /// Gravitational coupling α_G as a ratio to the reference (1 = the reference).
     pub alpha_g: Q,
-    /// Nuclear efficiency ε (rest-mass share released by fusion) as a ratio to the reference (1 = the reference).
+    /// Nuclear efficiency ε (rest-mass share released by fusion) as a ratio
+    /// to the reference (1 = the reference).
     pub nuclear: Q,
     /// Whether space can be folded at all: where false, no people folds
-    /// (xyl-kernel transit.rs `Network::fold`).
+    /// (`xyl_kernel::transit::Network::fold`).
     pub ftl: bool,
 }
 
@@ -83,7 +80,7 @@ fn pw(x: &Q, n: i64, d: i64) -> Encl {
     if d == 1 && n == -1 {
         return Encl::exact(x.recip().unwrap_or(Q::ZERO));
     }
-    let p = q(n.abs(), d);
+    let p = Q::ratio(n.abs(), d);
     let share = (&(&Q::ONE + &p) * x)
         .checked_div(&(&Q::ONE + &(&p * x)))
         .unwrap_or(Q::ZERO);
@@ -226,9 +223,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_scales_agree_with_one_another_under_other_laws() {
-        // under laws far from the reference every scale stays positive (the scales are
-        // shares of the couplings, not their powers)
+    fn scales_stay_positive_under_other_laws() {
+        // under laws far from the reference every scale stays positive (the
+        // scales are shares of the couplings, not their powers)
         let l = Laws {
             alpha: Q::int(2),
             beta: Q::int(3),

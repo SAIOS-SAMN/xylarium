@@ -42,7 +42,7 @@ pub fn plane_antipole() -> Option<Mv> {
 
 /// The same half turn on a phase carried as a share of the turn: psi + 1/2.
 pub fn antipode(psi: &Q) -> Q {
-    (psi + &Q::new(1, 2).unwrap_or(Q::ZERO)).frac()
+    (psi + &Q::ratio(1, 2)).frac()
 }
 
 /// The axis's antipole, the throat's inversion: the sandwich by the unit

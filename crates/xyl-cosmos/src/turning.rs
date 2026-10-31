@@ -19,13 +19,10 @@
 //! boundary bodies). Non-positive radii and zero denominators give zero.
 //! Terms: turning law, deficit (docs/glossary.md).
 
+use crate::elements::decimal;
 use crate::package::Si;
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
-
-fn d(s: &str) -> Q {
-    crate::elements::decimal(s).unwrap_or(Q::ZERO)
-}
 
 /// The home galaxy's mass (suns): its stars (the founding's lit rings,
 /// galaxy::stellar_mass) and its hole.
@@ -143,7 +140,17 @@ pub fn roundness(mass_kg: &Q, radius_m: &Q, icy: bool) -> Q {
 pub fn rigidity(icy: bool) -> Q {
     static R: std::sync::OnceLock<[Q; 2]> = std::sync::OnceLock::new();
     let both = R.get_or_init(|| {
-        [(d("8.04e20"), d("4.0e5")), (d("3.35e19"), d("2.0e5"))].map(|(m, r)| turning_si(&m, &r))
+        [
+            (
+                decimal("8.04e20").unwrap_or(Q::ZERO),
+                decimal("4.0e5").unwrap_or(Q::ZERO),
+            ),
+            (
+                decimal("3.35e19").unwrap_or(Q::ZERO),
+                decimal("2.0e5").unwrap_or(Q::ZERO),
+            ),
+        ]
+        .map(|(m, r)| turning_si(&m, &r))
     });
     both[usize::from(icy)].clone()
 }

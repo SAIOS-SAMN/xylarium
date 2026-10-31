@@ -10,7 +10,7 @@
 //!   waking, the next pending [`Input`] and the next ley line falling due.
 //!   [`Universe::advance_to`] lands each at its own count, then takes every
 //!   reading at the target: the bells' rings delivered in closed form
-//!   (field.rs), each people carried once over its own span (civ.rs), the
+//!   (field.rs), each people carried once over its own span (civ/mod.rs), the
 //!   ley network and quarantine carried, and fallen peoples' seats released.
 //! - Live play (`live`): the civilizations' layer is carried across each
 //!   span in pieces no longer than a tenth of the shortest turning (1 / rate
@@ -313,29 +313,31 @@ impl<'g> Universe<'g> {
         [wake, input, ley].into_iter().flatten().min()
     }
 
+    /// Each people's standing on the network, None for a fallen people:
+    /// whether its constellation holds a ley mouth, and whether it is held
+    /// closed by half or more.
+    fn standing(&self) -> Vec<Option<(bool, bool)>> {
+        self.cosmic
+            .peoples
+            .iter()
+            .map(|p| {
+                (p.population.signum() > 0).then(|| {
+                    (
+                        self.network.holds_mouth(p.star),
+                        self.network.shut_of(p.star) >= Dy::ratio(1, 2),
+                    )
+                })
+            })
+            .collect()
+    }
+
     /// The ley network carried to now: the lines fallen due opened at
     /// their moments, the quarantine read from the peoples' discord.
     fn carry_network(&mut self) {
         let at = self.gyr();
-        // each living people's standing before: joined to the network, and
-        // its constellation held closed by half or more
-        let standing = |u: &Universe<'_>| -> Vec<Option<(bool, bool)>> {
-            u.cosmic
-                .peoples
-                .iter()
-                .map(|p| {
-                    (p.population.signum() > 0).then(|| {
-                        (
-                            u.network.holds_mouth(p.star),
-                            u.network.shut_of(p.star) >= Dy::ratio(1, 2),
-                        )
-                    })
-                })
-                .collect()
-        };
-        let before = standing(self);
+        let before = self.standing();
         // folding space: each living people that is no ancient house reads
-        // its folds since last read (transit.rs `Network::fold`)
+        // its folds since last read (transit/discord.rs `Network::fold`)
         let rulers = crate::growth::Rulers::default();
         for (i, parts) in &self.discord_parts() {
             let Some(p) = self.cosmic.peoples.get(*i) else {
@@ -356,7 +358,13 @@ impl<'g> Universe<'g> {
                 self.cosmic.annals.push(crate::cosmic::Annal {
                     epoch: at,
                     kind: "FOLD",
-                    text: format!("The {name} fold space without a lawful passage ({folded} J): they ring out of tune"),
+                    text: format!(
+                        concat!(
+                            "The {} fold space without a lawful passage ({} J): ",
+                            "they ring out of tune"
+                        ),
+                        name, folded
+                    ),
                 });
                 self.civ
                     .turning(*i, "fold", "the first fold of space".into(), at);
@@ -383,7 +391,7 @@ impl<'g> Universe<'g> {
         self.seats = self.seats.extend_realms(self.network.realm_keys.len());
         // the turnings of its history the network gave: joining it (network)
         // and its constellation closing or reopening (quarantine)
-        for (i, now) in standing(self).into_iter().enumerate() {
+        for (i, now) in self.standing().into_iter().enumerate() {
             let (Some(Some(was)), Some(now)) = (before.get(i).cloned(), now) else {
                 continue;
             };
@@ -478,7 +486,17 @@ impl<'g> Universe<'g> {
         // timing diagnostics: preparation, events (including seat and annal
         // bookkeeping), readings
         if events > 0 {
-            xyl_core::watch::note(&format!("carried {events} events - prepare {prepared:.1?}, wakings {:.1?} (seats and annals {seats:.1?}), readings {:.1?}", woke - prepared, clock.elapsed() - woke));
+            xyl_core::watch::note(&format!(
+                concat!(
+                    "carried {} events - prepare {:.1?}, wakings {:.1?} ",
+                    "(seats and annals {:.1?}), readings {:.1?}"
+                ),
+                events,
+                prepared,
+                woke - prepared,
+                seats,
+                clock.elapsed() - woke
+            ));
         }
         self.log[from_log..].to_vec()
     }
@@ -500,7 +518,7 @@ impl<'g> Universe<'g> {
         let t = std::time::Instant::now();
         if !live {
             // wake every mind due by now, then carry each people once over its
-            // own span (civ.rs carry), the same carry the live path uses
+            // own span (civ/mod.rs `carry`), the same carry the live path uses
             self.cosmic.wake(at);
             let environment = self.environment(at, None);
             let acts = self
@@ -536,7 +554,7 @@ impl<'g> Universe<'g> {
         self.log_annals();
     }
 
-    /// Carries the civilizations' layer (civ.rs) across a span in live play,
+    /// Carries the civilizations' layer (civ/mod.rs) across a span in live play,
     /// in pieces no longer than a tenth of the shortest turning of any living
     /// people.
     fn civilizations(&mut self, from: Dy, to: Dy) {
@@ -729,7 +747,10 @@ impl<'g> Universe<'g> {
                     return format!("realm {r} has not formed");
                 };
                 let n = self.network.handle(key, *a, *b, *handling);
-                format!("the steward of realm {r} sets the line {a} - {b} to {handling:?} ({n} changed)")
+                format!(
+                    "the steward of realm {r} sets the line {a} - {b} to {:?} ({n} changed)",
+                    handling
+                )
             }
             Input::Move { people, world } => {
                 let at = self.gyr();

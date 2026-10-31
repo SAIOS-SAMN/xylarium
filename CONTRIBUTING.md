@@ -64,10 +64,11 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace --profile fast
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
 scripts/check-docs
+scripts/check-style
 ```
 
-The same checks, and a coverage report from `cargo llvm-cov`, run in CI
-(`.github/workflows/ci.yml`) on every push and pull request.
+Run them locally before opening a pull request; the repository runs no
+hosted CI.
 
 While iterating, run the tests of the modules you change
 (`cargo test --profile fast -p <crate> <module>::`). Tests that need a

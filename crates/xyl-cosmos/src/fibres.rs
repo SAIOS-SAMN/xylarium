@@ -136,16 +136,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_seals_fall_out_of_the_fibres_and_nothing_is_lost() {
-        // the directions are S^11's harmonics, the formula atoms.rs fills by
+    fn fibre_seals_match_the_atom_and_lose_no_end() {
+        // directions(l) equals the S^11 harmonic count atoms::orientations
         for l in 0..8u32 {
             assert_eq!(
                 directions(u64::from(l)),
                 u64::from(crate::atoms::orientations(l))
             );
         }
-        // grown end by end to 1200: the books whole at every step, and the
-        // bodies that converge are exactly the telescoped harmonics' seals
+        // grown end by end to 1200: no end is lost at any step, and every
+        // seal carries the telescoped harmonics' fibre count
         let mut c = Coherence::new();
         let mut seals = Vec::new();
         for z in 1..=1200u64 {
@@ -162,8 +162,7 @@ mod tests {
             }
         }
         assert_eq!(seals, vec![2, 28, 208, 1092]);
-        // the atom's own reading agrees: its open frames are the lone ends
-        // wherever the atom fills in the same order, and its seals are these
+        // the atom fill seals at the same Z
         for z in [2u32, 28, 208, 1092] {
             assert!(
                 crate::atoms::atom(z).is_some_and(|a| a.sealed()),

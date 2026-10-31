@@ -119,18 +119,17 @@ impl BigBang {
     /// The Big Bang of `seed`'s universe.
     pub fn of(seed: u64) -> Option<BigBang> {
         let mut rng = Stream::derive(seed, &["big bang".into()]);
-        // the parent: unit mass in its own units, its Kerr spin the seed's own
-        // draw (what fell is the universe's initial condition), floored at
-        // the least that holds the firmament whole; its horizon read in the
-        // universe's own S^360 enclosure (the founding's radius in r_g,
-        // circuit::anchor). The founding depends on the spin alone, through
-        // the torsion share, so it comes first.
+        // The parent has unit mass in its own units and a Kerr spin drawn
+        // from the seed, floored at the least spin that keeps the firmament
+        // whole; its horizon is read in the S^360 enclosure (the founding's
+        // radius in r_g, circuit::anchor). The founding depends only on the
+        // spin, through the torsion share, so the spin is registered first.
         crate::circuit::register_spin(&open_unit(&mut rng));
         let anchor = crate::circuit::anchor();
         let substrate = crate::cores::substrate_for(&anchor.spin)?;
-        // crossed at the pulse's phase zero: the founding's own
+        // the founding bounce is read at pulse phase zero
         let parent = Bounce::of(&Q::ONE, &anchor.spin, &anchor.radius_rg, &Q::ZERO)?;
-        // the cascade's readings
+        // lumpiness: the beads' state above the mean over their whole state
         let mean = substrate.mean_state();
         let (above, all) = substrate
             .beads

@@ -159,7 +159,7 @@ never leaves a partial checkpoint.
 ## Readings
 
 `xylarium observe [options] WORD [ARGS]` prints one reading
-(`crates/xylarium/src/observe.rs`). A law reading is evaluated from the seed and
+(`crates/xylarium/src/observe/mod.rs`). A law reading is evaluated from the seed and
 the laws alone, without carrying the universe. A carried reading first builds
 the universe from its seed and restores its checkpoint (or carries a fresh
 genesis to 14 Gyr when the home has none), as a `run` start does. "The books" in

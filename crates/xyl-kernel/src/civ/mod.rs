@@ -72,7 +72,8 @@ pub struct Gauges {
     pub sentience: Dy,
     /// The share of its world's housing its numbers leave free, in [0, 1].
     pub consciousness: Dy,
-    /// Combined gauge in [0, 1]: \[(1 + instinct)(1 + intelligence)(1 + sentience)(1 + consciousness) - 1\] / 15.
+    /// Combined gauge in [0, 1]:
+    /// \[(1 + instinct)(1 + intelligence)(1 + sentience)(1 + consciousness) - 1\] / 15.
     pub gamma: Dy,
 }
 
@@ -157,8 +158,34 @@ impl Civilizations {
         self.sync(count);
         let rulers = Rulers::default();
         let viable = xyl_cosmos::life::viable();
-        // each living people's span (Gyr from, years)
-        let spans: Vec<Option<(Dy, Dy)>> = cosmic
+        let spans = self.spans(cosmic, to);
+        let masteries = self.think(cosmic, &spans, to);
+        let drives = drives(cosmic, &spans, &masteries);
+        let stands = stands(cosmic, &spans, &masteries, &drives, to, &rulers, viable);
+        let mut acts = Vec::new();
+        for i in 0..count {
+            let (Some(stand), Some((_, years))) = (&stands[i], spans[i]) else {
+                continue;
+            };
+            let env = environment.get(i).copied().unwrap_or(Dy::ONE);
+            let span = Carried {
+                years,
+                to,
+                masteries: masteries[i],
+                environment: env,
+                decide,
+                viable,
+            };
+            self.carry_numbers(cosmic, i, stand, &span, &rulers, &mut acts);
+        }
+        acts
+    }
+
+    /// Each people's span as (Gyr it is carried from, years), from where it
+    /// was last carried (never before its dawn) to `to`; None for a people
+    /// that is not alive or already carried to `to`.
+    fn spans(&self, cosmic: &Cosmic<'_>, to: Dy) -> Vec<Option<(Dy, Dy)>> {
+        cosmic
             .peoples
             .iter()
             .enumerate()
@@ -167,8 +194,15 @@ impl Civilizations {
                 (to > from && p.population.signum() > 0)
                     .then(|| (from, (to - from) * Dy::sci(1, 9)))
             })
-            .collect();
-        // masteries before the span, to read which pass one half within it
+            .collect()
+    }
+
+    /// Steps each carried people's knowledge over its span (with its
+    /// consciousness gauge from the last carry), and reports a turning
+    /// where its biology or information mastery passes one half. Returns
+    /// each people's (biology, energy) mastery after the span.
+    fn think(&mut self, cosmic: &Cosmic<'_>, spans: &[Option<(Dy, Dy)>], to: Dy) -> Vec<(Dy, Dy)> {
+        let count = cosmic.peoples.len();
         let before: Vec<(Dy, Dy)> = (0..count)
             .map(|i| {
                 (
@@ -177,7 +211,6 @@ impl Civilizations {
                 )
             })
             .collect();
-        // mind first: what each people knows going into its span
         for (i, p) in cosmic.peoples.iter().enumerate() {
             let Some((_, years)) = spans[i] else { continue };
             let bodies_w = cosmic.power(p).map(|pw| pw.bodies_w).unwrap_or(Dy::ZERO);
@@ -212,225 +245,160 @@ impl Civilizations {
                 );
             }
         }
-        // its drive: chemical and best drive blended by energy mastery
-        // (transit.rs); it sails where the drive escapes its home's well
-        let drives: Vec<Option<(crate::propulsion::Spec, Dy)>> = cosmic
-            .peoples
-            .iter()
-            .enumerate()
-            .map(|(i, p)| {
-                spans[i]?;
-                let first = crate::propulsion::Spec::of(
-                    crate::propulsion::Drive::Chemical,
-                    &p.traits,
-                    &cosmic.gal.sc,
-                    cosmic.gal.elements,
-                );
-                let spec = crate::transit::blended(
-                    &first,
-                    &crate::transit::best_spec(cosmic, p),
-                    masteries[i].1,
-                );
-                let escape = crate::transit::home_escape(cosmic, p);
-                let cruise = crate::transit::cruise_speed(
-                    &spec,
-                    Dy::int(crate::propulsion::MASS_RATIO),
-                    escape,
-                );
-                (cruise.signum() > 0).then_some((spec, escape))
-            })
-            .collect();
-        // worlds already held by a living people
-        let held: std::collections::BTreeSet<(u64, usize)> = cosmic
-            .peoples
-            .iter()
-            .filter(|p| p.population.signum() > 0)
-            .map(|p| (p.star, p.world))
-            .collect();
-        // the world at `to`, the reach, and any fall inside the span, in parallel
-        let stands: Vec<Option<Stand>> = {
-            use rayon::prelude::*;
-            let (gal, ctx, systems, peoples) =
-                (&cosmic.gal, &cosmic.ctx, &cosmic.systems, &cosmic.peoples);
-            let (rl, held) = (&rulers, &held);
-            (0..count)
-                .into_par_iter()
-                .map(|i| {
-                    let (from, _) = spans[i]?;
-                    let p = &peoples[i];
-                    let (bio, energy) = masteries[i];
-                    let Some(reader) = SystemReader::of(gal, ctx, systems, p.star) else {
-                        return Some(Stand::default());
-                    };
-                    let houses_at = |w: usize, d: i64| -> Dy {
-                        reader
-                            .read(w, d)
-                            .map(|(st, ms, body)| {
-                                houses(&p.traits, &st, &ms, &body, ctx, rl, bio, energy)
-                            })
-                            .unwrap_or(Dy::ZERO)
-                    };
-                    let (d0, d1) = (reader.degree(from), reader.degree(to));
-                    let failing = houses_at(p.world, d1) < Dy::ONE;
-                    // the reach is read for a sailing people whose world fails
-                    // or that has grown past the logistic's inflection (when
-                    // its fork may weigh expansion)
-                    let crowded = p.population * Dy::int(2) >= p.capacity;
-                    let reach: Vec<(usize, Dy)> = if drives[i].is_some() && (failing || crowded) {
-                        (p.world.saturating_sub(4)..(p.world + 5).min(reader.worlds()))
-                            .filter(|&w| w != p.world && !held.contains(&(p.star, w)))
-                            .map(|w| (w, houses_at(w, d1)))
-                            .filter(|(_, h)| *h >= viable)
-                            .collect()
-                    } else {
-                        Vec::new()
-                    };
-                    if !failing {
-                        return Some(Stand { fell: None, reach });
-                    }
-                    // bisect for the first degree of the star's life at which
-                    // the world houses less than one body (worlds are constant
-                    // within a degree)
-                    let (mut lo, mut hi) = (d0, d1);
-                    if houses_at(p.world, lo) < Dy::ONE {
-                        hi = lo;
-                    }
-                    while hi - lo > 1 {
-                        let mid = lo + (hi - lo) / 2;
-                        if houses_at(p.world, mid) >= Dy::ONE {
-                            lo = mid;
-                        } else {
-                            hi = mid;
-                        }
-                    }
-                    Some(Stand {
-                        fell: Some(reader.epoch(hi).clamp(from, to)),
-                        reach,
-                    })
-                })
-                .collect()
-        };
-        let mut acts = Vec::new();
-        // numbers on the world as it is at `to`
-        for i in 0..count {
-            let (Some(stand), Some((_, years))) = (&stands[i], spans[i]) else {
-                continue;
-            };
-            self.carried_to[i] = to;
-            let here = cosmic.peoples[i].world;
-            let nearest = stand
-                .reach
-                .iter()
-                .min_by_key(|(w, _)| w.abs_diff(here))
-                .copied();
-            if let Some(t) = stand.fell {
-                match nearest.filter(|_| decide) {
-                    Some((w, _)) => {
-                        self.move_people(cosmic, i, w, t);
-                        acts.push(Act::Move {
-                            people: i,
-                            world: w,
-                            at: t,
-                        });
-                    }
-                    None => {
-                        let name = cosmic.peoples[i].name.clone();
-                        let p = &mut cosmic.peoples[i];
-                        p.population = Dy::ZERO;
-                        p.capacity = Dy::ZERO;
-                        p.updated = to;
-                        p.fell = Some(t);
-                        cosmic.annals.push(Annal {
-                            epoch: t,
-                            kind: "FALL",
-                            text: format!("{name}'s world no longer feeds it; it falls"),
-                        });
-                        continue;
-                    }
-                }
-            }
-            let p = cosmic.peoples[i].clone();
-            let Some((state, media, body)) = cosmic.world_at(p.star, p.world, to) else {
-                continue;
-            };
-            let (bio, energy) = masteries[i];
-            // the open worlds of its reach
-            let open: Vec<(usize, Dy)> = stand
-                .reach
-                .iter()
-                .filter(|(w, _)| *w != p.world)
-                .copied()
-                .collect();
-            // its numbers: the logistic toward what its world houses, scaled
-            // by its radiation environment, at one e-fold per its generation
-            let housed = houses(
-                &p.traits,
-                &state,
-                &media,
-                &body,
-                &cosmic.ctx,
-                &rulers,
-                bio,
-                energy,
-            ) * environment
-                .get(i)
-                .copied()
-                .unwrap_or(Dy::ONE)
-                .clamp(Dy::ZERO, Dy::ONE);
-            let gen = crate::growth::generation_yr(&p.traits, &rulers);
-            let grown = crate::growth::grow(
-                p.population,
-                housed,
-                Dy::ONE / gen.max(Dy::sci(1, -9)),
-                years,
-            );
-            let q = &mut cosmic.peoples[i];
-            q.population = if housed >= Dy::ONE {
-                grown.max(Dy::ZERO)
-            } else {
-                Dy::ZERO
-            };
-            q.capacity = housed.max(Dy::ZERO);
-            q.updated = to;
-            if p.population.signum() > 0 && q.population.signum() <= 0 {
-                q.fell = Some(to);
-                cosmic.annals.push(Annal {
-                    epoch: to,
-                    kind: "FALL",
-                    text: format!("{}'s world no longer feeds it; it falls", p.name),
-                });
-            }
-            self.numbers[i].housing = housed;
-            self.gauges[i] =
-                Gauges::read(cosmic.peoples[i].population, housed, &self.knowledge.of[i]);
-            self.remember(cosmic, i, years, to);
-            // settlers: a people grown past its logistic's inflection (half
-            // of what its world houses, where each newcomer adds less than
-            // the last) founds a daughter on the nearest open world, with half
-            // of what that world feeds, at least a viable people, at most half
-            // its own numbers
-            let expands = cosmic.peoples[i].population * Dy::int(2) >= housed;
-            if let (true, true, Some(&(w, h))) = (
-                decide,
-                expands,
-                open.iter().min_by_key(|(w, _)| w.abs_diff(p.world)),
-            ) {
-                let numbers = cosmic.peoples[i].population;
-                let emigrants = (h / Dy::int(2)).max(viable).min(numbers / Dy::int(2));
-                if emigrants >= viable && numbers - emigrants >= viable {
-                    if let Some(d) = self.settle(cosmic, i, w, emigrants, to) {
-                        acts.push(Act::Settle {
-                            parent: i,
-                            world: w,
-                            emigrants,
-                            at: to,
-                            daughter: d,
-                        });
-                    }
-                }
+        masteries
+    }
+
+    /// Carries people `i`'s numbers over its span on the world as it stands
+    /// at the span's end: a fall or an exodus where its world failed, the
+    /// logistic toward what its world houses, its gauges and history, and
+    /// with `decide` a daughter people. Acts taken are pushed to `acts`.
+    fn carry_numbers(
+        &mut self,
+        cosmic: &mut Cosmic<'_>,
+        i: usize,
+        stand: &Stand,
+        span: &Carried,
+        rulers: &Rulers,
+        acts: &mut Vec<Act>,
+    ) {
+        let to = span.to;
+        self.carried_to[i] = to;
+        if let Some(t) = stand.fell {
+            if !self.fall_or_move(cosmic, i, stand, t, span, acts) {
+                return;
             }
         }
-        acts
+        let p = cosmic.peoples[i].clone();
+        let Some((state, media, body)) = cosmic.world_at(p.star, p.world, to) else {
+            return;
+        };
+        let (bio, energy) = span.masteries;
+        let open: Vec<(usize, Dy)> = stand
+            .reach
+            .iter()
+            .filter(|(w, _)| *w != p.world)
+            .copied()
+            .collect();
+        // Logistic toward what the world houses, scaled by the radiation
+        // environment, at one e-fold per generation (growth::grow).
+        let housed = houses(
+            &p.traits,
+            &state,
+            &media,
+            &body,
+            &cosmic.ctx,
+            rulers,
+            bio,
+            energy,
+        ) * span.environment.clamp(Dy::ZERO, Dy::ONE);
+        let gen = crate::growth::generation_yr(&p.traits, rulers);
+        let grown = crate::growth::grow(
+            p.population,
+            housed,
+            Dy::ONE / gen.max(Dy::sci(1, -9)),
+            span.years,
+        );
+        let q = &mut cosmic.peoples[i];
+        q.population = if housed >= Dy::ONE {
+            grown.max(Dy::ZERO)
+        } else {
+            Dy::ZERO
+        };
+        q.capacity = housed.max(Dy::ZERO);
+        q.updated = to;
+        if p.population.signum() > 0 && q.population.signum() <= 0 {
+            q.fell = Some(to);
+            cosmic.annals.push(Annal {
+                epoch: to,
+                kind: "FALL",
+                text: format!("{}'s world no longer feeds it; it falls", p.name),
+            });
+        }
+        self.numbers[i].housing = housed;
+        self.gauges[i] = Gauges::read(cosmic.peoples[i].population, housed, &self.knowledge.of[i]);
+        self.remember(cosmic, i, span.years, to);
+        if span.decide {
+            self.expand(cosmic, i, p.world, &open, housed, span, acts);
+        }
+    }
+
+    /// People `i`'s world failed at `t` Gyr: with `decide` and a world in
+    /// its reach it moves whole to the nearest such world (returns true and
+    /// pushes the act); otherwise it falls (returns false).
+    fn fall_or_move(
+        &mut self,
+        cosmic: &mut Cosmic<'_>,
+        i: usize,
+        stand: &Stand,
+        t: Dy,
+        span: &Carried,
+        acts: &mut Vec<Act>,
+    ) -> bool {
+        let here = cosmic.peoples[i].world;
+        let nearest = stand
+            .reach
+            .iter()
+            .min_by_key(|(w, _)| w.abs_diff(here))
+            .copied();
+        if let Some((w, _)) = nearest.filter(|_| span.decide) {
+            self.move_people(cosmic, i, w, t);
+            acts.push(Act::Move {
+                people: i,
+                world: w,
+                at: t,
+            });
+            return true;
+        }
+        let name = cosmic.peoples[i].name.clone();
+        let p = &mut cosmic.peoples[i];
+        p.population = Dy::ZERO;
+        p.capacity = Dy::ZERO;
+        p.updated = span.to;
+        p.fell = Some(t);
+        cosmic.annals.push(Annal {
+            epoch: t,
+            kind: "FALL",
+            text: format!("{name}'s world no longer feeds it; it falls"),
+        });
+        false
+    }
+
+    /// Settlers: a people grown past its logistic's inflection (half of what
+    /// its world houses, beyond which each newcomer adds less than the last)
+    /// founds a daughter on the nearest open world of its reach, with half
+    /// of what that world feeds, at least a viable people and at most half
+    /// its own numbers, leaving itself viable.
+    fn expand(
+        &mut self,
+        cosmic: &mut Cosmic<'_>,
+        i: usize,
+        home: usize,
+        open: &[(usize, Dy)],
+        housed: Dy,
+        span: &Carried,
+        acts: &mut Vec<Act>,
+    ) {
+        let viable = span.viable;
+        let expands = cosmic.peoples[i].population * Dy::int(2) >= housed;
+        let Some(&(w, h)) = open.iter().min_by_key(|(w, _)| w.abs_diff(home)) else {
+            return;
+        };
+        if !expands {
+            return;
+        }
+        let numbers = cosmic.peoples[i].population;
+        let emigrants = (h / Dy::int(2)).max(viable).min(numbers / Dy::int(2));
+        if emigrants >= viable && numbers - emigrants >= viable {
+            if let Some(d) = self.settle(cosmic, i, w, emigrants, span.to) {
+                acts.push(Act::Settle {
+                    parent: i,
+                    world: w,
+                    emigrants,
+                    at: span.to,
+                    daughter: d,
+                });
+            }
+        }
     }
 
     /// Grows every per-people table to `count` peoples.
@@ -502,7 +470,10 @@ impl Civilizations {
         cosmic.annals.push(Annal {
             epoch: at,
             kind: "SETTLE",
-            text: format!("The {pn} settle world {w} of star {star}: the {dn} are founded with {emigrants} bodies"),
+            text: format!(
+                "The {pn} settle world {w} of star {star}: the {dn} are founded with {} bodies",
+                emigrants
+            ),
         });
         Some(d)
     }
@@ -680,4 +651,157 @@ pub enum Act {
 struct Stand {
     fell: Option<Dy>,
     reach: Vec<(usize, Dy)>,
+}
+
+/// One people's span as [`Civilizations::carry`] reads it.
+struct Carried {
+    /// Its span in years.
+    years: Dy,
+    /// The span's end (Gyr).
+    to: Dy,
+    /// Its (biology, energy) mastery after the span.
+    masteries: (Dy, Dy),
+    /// Its radiation environment against its home's (1 where absent).
+    environment: Dy,
+    /// Whether exodus and settling are decided here.
+    decide: bool,
+    /// The fewest bodies of a viable people.
+    viable: Dy,
+}
+
+/// Each carried people's drive and home escape speed (m/s): the chemical
+/// drive blended toward the best its chemistry allows by energy mastery
+/// (`transit::blended`); None where it does not climb out of its home well.
+fn drives(
+    cosmic: &Cosmic<'_>,
+    spans: &[Option<(Dy, Dy)>],
+    masteries: &[(Dy, Dy)],
+) -> Vec<Option<(crate::propulsion::Spec, Dy)>> {
+    cosmic
+        .peoples
+        .iter()
+        .enumerate()
+        .map(|(i, p)| {
+            spans[i]?;
+            let first = crate::propulsion::Spec::of(
+                crate::propulsion::Drive::Chemical,
+                &p.traits,
+                &cosmic.gal.sc,
+                cosmic.gal.elements,
+            );
+            let spec = crate::transit::blended(
+                &first,
+                &crate::transit::best_spec(cosmic, p),
+                masteries[i].1,
+            );
+            let escape = crate::transit::home_escape(cosmic, p);
+            let cruise =
+                crate::transit::cruise_speed(&spec, Dy::int(crate::propulsion::MASS_RATIO), escape);
+            (cruise.signum() > 0).then_some((spec, escape))
+        })
+        .collect()
+}
+
+/// Each carried people's world at `to`, its reach and any fall inside its
+/// span, read in parallel ([`stand_of`]).
+fn stands(
+    cosmic: &Cosmic<'_>,
+    spans: &[Option<(Dy, Dy)>],
+    masteries: &[(Dy, Dy)],
+    drives: &[Option<(crate::propulsion::Spec, Dy)>],
+    to: Dy,
+    rulers: &Rulers,
+    viable: Dy,
+) -> Vec<Option<Stand>> {
+    use rayon::prelude::*;
+    let held: std::collections::BTreeSet<(u64, usize)> = cosmic
+        .peoples
+        .iter()
+        .filter(|p| p.population.signum() > 0)
+        .map(|p| (p.star, p.world))
+        .collect();
+    // The world reads run in parallel over the cosmic world's parts; the
+    // cosmic world itself holds unsynchronised caches.
+    let (gal, ctx, systems, peoples) = (&cosmic.gal, &cosmic.ctx, &cosmic.systems, &cosmic.peoples);
+    (0..peoples.len())
+        .into_par_iter()
+        .map(|i| {
+            let (from, _) = spans[i]?;
+            Some(stand_of(
+                gal,
+                ctx,
+                systems,
+                &peoples[i],
+                from,
+                to,
+                masteries[i],
+                drives[i].is_some(),
+                &held,
+                rulers,
+                viable,
+            ))
+        })
+        .collect()
+}
+
+/// People `i`'s stand over its span from `from` to `to` (Gyr). Its reach,
+/// the unheld worlds within four orbital places that house a viable people,
+/// is read only for a people that sails and whose world fails or has grown
+/// past the logistic's inflection. Where its world fails by `to`, the fall
+/// is the first degree of the star's life at which it houses less than one
+/// body, found by bisection (a world is constant within a degree).
+fn stand_of(
+    gal: &xyl_cosmos::worlds::Galaxy<'_>,
+    ctx: &xyl_cosmos::worlds::Ctx,
+    systems: &std::collections::BTreeMap<u64, crate::cosmic::Witnessed>,
+    p: &crate::cosmic::People,
+    from: Dy,
+    to: Dy,
+    masteries: (Dy, Dy),
+    sails: bool,
+    held: &std::collections::BTreeSet<(u64, usize)>,
+    rulers: &Rulers,
+    viable: Dy,
+) -> Stand {
+    let (bio, energy) = masteries;
+    let Some(reader) = SystemReader::of(gal, ctx, systems, p.star) else {
+        return Stand::default();
+    };
+    let houses_at = |w: usize, d: i64| -> Dy {
+        reader
+            .read(w, d)
+            .map(|(st, ms, body)| houses(&p.traits, &st, &ms, &body, ctx, rulers, bio, energy))
+            .unwrap_or(Dy::ZERO)
+    };
+    let (d0, d1) = (reader.degree(from), reader.degree(to));
+    let failing = houses_at(p.world, d1) < Dy::ONE;
+    let crowded = p.population * Dy::int(2) >= p.capacity;
+    let reach: Vec<(usize, Dy)> = if sails && (failing || crowded) {
+        (p.world.saturating_sub(4)..(p.world + 5).min(reader.worlds()))
+            .filter(|&w| w != p.world && !held.contains(&(p.star, w)))
+            .map(|w| (w, houses_at(w, d1)))
+            .filter(|(_, h)| *h >= viable)
+            .collect()
+    } else {
+        Vec::new()
+    };
+    if !failing {
+        return Stand { fell: None, reach };
+    }
+    let (mut lo, mut hi) = (d0, d1);
+    if houses_at(p.world, lo) < Dy::ONE {
+        hi = lo;
+    }
+    while hi - lo > 1 {
+        let mid = lo + (hi - lo) / 2;
+        if houses_at(p.world, mid) >= Dy::ONE {
+            lo = mid;
+        } else {
+            hi = mid;
+        }
+    }
+    Stand {
+        fell: Some(reader.epoch(hi).clamp(from, to)),
+        reach,
+    }
 }

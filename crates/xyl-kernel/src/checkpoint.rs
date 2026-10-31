@@ -42,7 +42,8 @@ pub struct Held {
     pub population: Q,
     /// How many of its bodies the people's world carries (count).
     pub capacity: Q,
-    /// Knowledge held in each of the four domains, in [`Domain`] index order; `None` when the people had no knowledge layer.
+    /// Knowledge held in each of the four domains, in [`Domain`] index order; `None` when the
+    /// people had no knowledge layer.
     pub stock: Option<[Q; 4]>,
     /// The domain the people's inquiry is turned to; `None` when unturned.
     pub focus: Option<Domain>,
@@ -324,15 +325,6 @@ impl Checkpoint {
         }
         let mut c = Checkpoint::default();
         let mut by: std::collections::BTreeMap<usize, Held> = std::collections::BTreeMap::new();
-        let blank = |i: usize, t: &str| Held {
-            index: i,
-            tag: t.to_string(),
-            population: Q::ZERO,
-            capacity: Q::ZERO,
-            stock: None,
-            focus: None,
-            home: None,
-        };
         for l in lines {
             let w: Vec<&str> = l.split_whitespace().collect();
             match w.as_slice() {
@@ -349,22 +341,9 @@ impl Checkpoint {
                     c.folds
                         .push((i.parse().ok()?, (*t).to_string(), q_of(e)?, q_of(at)?))
                 }
-                ["eminent", i, t, d, lead, held, born, dies, memory, dead, name, title @ ..] => {
-                    c.eminent.push((
-                        i.parse().ok()?,
-                        (*t).to_string(),
-                        crate::civ::history::Eminent {
-                            name: (*name).to_string(),
-                            domain: domain(d)?,
-                            lead: Dy::from_q(&q_of(lead)?),
-                            held: held_of(held)?,
-                            title: title.join(" "),
-                            born_yr: Dy::from_q(&q_of(born)?),
-                            dies_yr: Dy::from_q(&q_of(dies)?),
-                            memory: Dy::from_q(&q_of(memory)?),
-                            dead: *dead == "1",
-                        },
-                    ));
+                ["eminent", i, t, rest @ ..] if rest.len() >= 8 => {
+                    c.eminent
+                        .push((i.parse().ok()?, (*t).to_string(), eminent_of(rest)?));
                 }
                 ["people", i, t, p, cap] => {
                     let i: usize = i.parse().ok()?;
@@ -382,24 +361,12 @@ impl Checkpoint {
                     let i: usize = i.parse().ok()?;
                     by.entry(i).or_insert_with(|| blank(i, t)).home = Some(q_of(x)?);
                 }
-                ["ley", a, b, i, t, at, cost] => c.lines.push((
-                    a.parse().ok()?,
-                    b.parse().ok()?,
-                    i.parse().ok()?,
-                    (*t).to_string(),
-                    q_of(at)?,
-                    q_of(cost)?,
-                    false,
-                )),
-                ["ley", a, b, i, t, at, cost, "progenitor"] => c.lines.push((
-                    a.parse().ok()?,
-                    b.parse().ok()?,
-                    i.parse().ok()?,
-                    (*t).to_string(),
-                    q_of(at)?,
-                    q_of(cost)?,
-                    true,
-                )),
+                ["ley", a, b, i, t, at, cost] => {
+                    c.lines.push(ley_of([a, b, i, t, at, cost], false)?)
+                }
+                ["ley", a, b, i, t, at, cost, "progenitor"] => {
+                    c.lines.push(ley_of([a, b, i, t, at, cost], true)?)
+                }
                 ["commit", at] => c.commits.push((q_of(at)?, None)),
                 ["commit", at, h] => c.commits.push((q_of(at)?, Some(h.parse().ok()?))),
                 ["input", at, "take", seat, k] => c.inputs.push((
@@ -544,6 +511,53 @@ impl Checkpoint {
     }
 }
 
+/// A held people record with nothing yet read but its index and tag.
+fn blank(i: usize, t: &str) -> Held {
+    Held {
+        index: i,
+        tag: t.to_string(),
+        population: Q::ZERO,
+        capacity: Q::ZERO,
+        stock: None,
+        focus: None,
+        home: None,
+    }
+}
+
+/// An eminent figure from the words after an `eminent` line's index and
+/// tag: domain, lead, held, born, dies, memory, dead, name and title words.
+fn eminent_of(w: &[&str]) -> Option<crate::civ::history::Eminent> {
+    let [d, lead, held, born, dies, memory, dead, name, title @ ..] = w else {
+        return None;
+    };
+    Some(crate::civ::history::Eminent {
+        name: (*name).to_string(),
+        domain: domain(d)?,
+        lead: Dy::from_q(&q_of(lead)?),
+        held: held_of(held)?,
+        title: title.join(" "),
+        born_yr: Dy::from_q(&q_of(born)?),
+        dies_yr: Dy::from_q(&q_of(dies)?),
+        memory: Dy::from_q(&q_of(memory)?),
+        dead: *dead == "1",
+    })
+}
+
+/// A held ley line from a `ley` line's words: mouths, builder, tag, opening
+/// time and cost.
+fn ley_of(w: [&&str; 6], progenitor: bool) -> Option<(u64, u64, usize, String, Q, Q, bool)> {
+    let [a, b, i, t, at, cost] = w;
+    Some((
+        a.parse().ok()?,
+        b.parse().ok()?,
+        i.parse().ok()?,
+        (*t).to_string(),
+        q_of(at)?,
+        q_of(cost)?,
+        progenitor,
+    ))
+}
+
 fn held_ley(
     from: u64,
     to: u64,
@@ -610,44 +624,43 @@ mod tests {
     use super::*;
 
     #[test]
-    fn what_the_laws_do_not_give_reads_back_exactly() {
-        let q = |n: i64, d: i64| Q::new(n, d).unwrap();
+    fn checkpoint_text_round_trips_exactly() {
         let c = Checkpoint {
-            at: q(143_078_729_920, 1_000_000),
+            at: Q::ratio(143_078_729_920, 1_000_000),
             holders: vec![(3, Holder::Mind([7; 32])), (5, Holder::Player("x0".into()))],
             peoples: vec![Held {
                 index: 2,
                 tag: tag("Zimarol"),
-                population: q(108_971, 1),
-                capacity: q(3, 7),
-                stock: Some([q(1, 3), Q::ZERO, q(2, 9), Q::ONE]),
+                population: Q::ratio(108_971, 1),
+                capacity: Q::ratio(3, 7),
+                stock: Some([Q::ratio(1, 3), Q::ZERO, Q::ratio(2, 9), Q::ONE]),
                 focus: Some(Domain::Materials),
-                home: Some(q(5, 11)),
+                home: Some(Q::ratio(5, 11)),
             }],
             inputs: vec![
                 (
-                    q(1, 2),
+                    Q::ratio(1, 2),
                     Input::Take {
                         seat: 3,
                         mind: [7; 32],
                     },
                 ),
                 (
-                    q(2, 3),
+                    Q::ratio(2, 3),
                     Input::Focus {
                         seat: 3,
                         domain: None,
                     },
                 ),
                 (
-                    q(3, 4),
+                    Q::ratio(3, 4),
                     Input::Move {
                         people: 2,
                         world: 5,
                     },
                 ),
                 (
-                    q(7, 9),
+                    Q::ratio(7, 9),
                     Input::Handle {
                         seat: 4,
                         a: 9,
@@ -656,21 +669,37 @@ mod tests {
                     },
                 ),
                 (
-                    q(4, 5),
+                    Q::ratio(4, 5),
                     Input::Settle {
                         parent: 2,
                         world: 6,
-                        emigrants: q(1001, 2),
+                        emigrants: Q::ratio(1001, 2),
                     },
                 ),
             ],
-            commits: vec![(q(1, 2), None), (q(2, 3), Some(41))],
+            commits: vec![(Q::ratio(1, 2), None), (Q::ratio(2, 3), Some(41))],
             lines: vec![
-                (4, 9, 2, tag("Zimarol"), q(51, 4), q(7, 1), false),
-                (9, 11, 2, tag("Zimarol"), q(53, 4), q(3, 1), true),
+                (
+                    4,
+                    9,
+                    2,
+                    tag("Zimarol"),
+                    Q::ratio(51, 4),
+                    Q::ratio(7, 1),
+                    false,
+                ),
+                (
+                    9,
+                    11,
+                    2,
+                    tag("Zimarol"),
+                    Q::ratio(53, 4),
+                    Q::ratio(3, 1),
+                    true,
+                ),
             ],
             handling: vec![(9, 11, crate::transit::Handling::Guarded)],
-            folds: vec![(2, tag("Zimarol"), q(5_000_000, 1), q(13, 1))],
+            folds: vec![(2, tag("Zimarol"), Q::ratio(5_000_000, 1), Q::ratio(13, 1))],
             eminent: vec![(
                 2,
                 tag("Zimarol"),

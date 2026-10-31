@@ -104,9 +104,10 @@ pub fn star_cut(
     let p0 = &Q::ONE + burn;
     let cut = hold_at_heat(&c.mix, &throat_push(), &spin, turning, &p0);
     let star = cut.held;
-    // the disc's heat as the cooling reads a piece's: the ring per echo at
-    // the star, swung, taken by the disc's grip at its rim (its holding over
-    // its extent plus its holding), over what the disc sheds per ring
+    // a_disc = turning x swing x grip / shed, at most 1, as the cooling
+    // reads a piece's heat: grip = D / (1 + D) with D the disc's holding,
+    // shed = the released kinds' open frames plus ln 2 / k of the vacuum's
+    // halving
     let disc_holding = &Q::ONE - &star;
     let grip = disc_holding
         .checked_div(&(&Q::ONE + &disc_holding))
@@ -165,7 +166,7 @@ pub fn manifold_worlds(star: &Q, a: &Q, tide: &Q) -> (Vec<(Q, Q)>, Q) {
     for k in 0..360i64 {
         // the degree's outer edge and its middle, as shares of the reach
         let x = star + &(&step * &Q::int(k + 1));
-        let mid = star + &(&step * &Q::new(2 * k + 1, 2).unwrap_or(Q::ZERO));
+        let mid = star + &(&step * &Q::ratio(2 * k + 1, 2));
         m = &m + &dm;
         moment = &moment + &(&mid * &dm);
         let own = m.checked_div(&(star + &m)).unwrap_or(Q::ZERO);
@@ -187,7 +188,8 @@ pub fn manifold_worlds(star: &Q, a: &Q, tide: &Q) -> (Vec<(Q, Q)>, Q) {
 pub fn star_disc(star: &Q, tide: &Q, rest: &[(u32, Q)]) -> (Vec<World>, Q) {
     let mid_disc = half(&(star + &Q::ONE));
     let rate = mid_disc.checked_div(&(&mid_disc + star)).unwrap_or(Q::ZERO);
-    // the disc is heated by the face the galaxy leaves unlocked at the star
+    // a_disc = (1 - tide) x mid / (mid + star): the share the galaxy's tide
+    // leaves unlocked at the star
     let a_disc = &(&Q::ONE - tide) * &rate;
     let (frags, belts) = manifold_worlds(star, &a_disc, tide);
     let worlds = frags

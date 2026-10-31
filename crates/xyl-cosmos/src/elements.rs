@@ -213,7 +213,8 @@ pub fn founding_bits(a: &Q) -> u32 {
     let bits = {
         let a = a.clone();
         let top = crate::atoms::vessel().map(|(_, hi)| hi).unwrap_or(1);
-        // the unfloored chain from one hydrogen: the product of the shares
+        // the unfloored chain from one hydrogen: the product of a times the
+        // closed share of every kind up to the vessel's top
         let mut count = Q::ONE;
         for z in 2..=top {
             count = &(&count * &a) * &closed_share(z);
@@ -223,8 +224,8 @@ pub fn founding_bits(a: &Q) -> u32 {
             count = &count * &Q::int(2);
             bits += 1;
         }
-        // the floors along the chain lose less than one nucleus a step; raise
-        // the count until the sealing kind is founded whole
+        // each floor along the chain loses under one nucleus; double the
+        // hydrogen count until the sealing kind's count reaches one
         let mut hydrogen = (0..bits).fold(Q::ONE, |acc, _| &acc * &Q::int(2));
         while chain_to(&hydrogen, &a, top) < Q::ONE && bits < 1 << 14 {
             hydrogen = &hydrogen * &Q::int(2);
@@ -401,10 +402,10 @@ fn build_table() -> Result<Vec<Element>, String> {
         .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
         .map(row)
         .collect::<Result<_, _>>()?;
-    // rows past the file's last Z up to TOP_Z are predicted by the same rule
-    // as the file's predicted rows: systematic name, valley A, uranium as the
-    // homologue for the material columns. Their counts, like every kind's,
-    // come only from the founding chain and the burns.
+    // rows past the file's last Z up to TOP_Z use the rule of the file's
+    // predicted rows: systematic name, valley A, uranium as the homologue
+    // for the material columns. Their counts come from the founding chain
+    // and the burns, as for every kind.
     let top = rows.iter().map(|r| r.e.z).max().unwrap_or(0);
     for z in (top + 1)..=TOP_Z {
         rows.push(row(&systematic_row(z))?);
@@ -436,14 +437,15 @@ fn build_table() -> Result<Vec<Element>, String> {
             e.melt = e.melt.or(h.melt.clone());
             let own_boil = e.boil.is_some();
             e.boil = e.boil.or(h.boil.clone());
-            // density by mass from the homologue, unless measured or given
+            // rho = rho_h A / A_h from the homologue, unless measured or given
             if e.rho.is_none() {
                 e.rho = match (&h.rho, h.a.is_zero()) {
                     (Some(hr), false) => Some((hr * &e.a).checked_div(&h.a).ok_or("homologue A")?),
                     _ => None,
                 };
             }
-            // condensation scales with the boiling point (equal unless its own was given)
+            // T_c = T_c,h boil / boil_h when the row gives its own boiling
+            // point, else the homologue's T_c
             if e.tc.is_none() {
                 e.tc = match (&h.tc, &h.boil, &e.boil, own_boil) {
                     (Some(htc), Some(hb), Some(b), true) => {
@@ -484,10 +486,6 @@ pub(crate) fn extent(m: &Q) -> Q {
 mod tests {
     use super::*;
 
-    fn q(s: &str) -> Q {
-        decimal(s).unwrap()
-    }
-
     #[test]
     fn the_table_is_whole_and_consistent() {
         let t = table().unwrap();
@@ -511,7 +509,7 @@ mod tests {
     }
 
     #[test]
-    fn the_valley_of_stability_places_the_unmeasured() {
+    fn valley_of_stability_places_unmeasured_rows() {
         // the valley: every nucleus holds at least its protons, heavier kinds
         // hold more neutrons per proton, and the table's predicted rows lie
         // on it beyond the measured ones
@@ -528,9 +526,9 @@ mod tests {
 
     #[test]
     fn decimals_are_exact() {
-        assert_eq!(q("2.43e10"), Q::int(24_300_000_000));
-        assert_eq!(q("0.009"), Q::new(9, 1000).unwrap());
-        assert_eq!(q("-1.5e-3"), Q::new(-3, 2000).unwrap());
+        assert_eq!(decimal("2.43e10").unwrap(), Q::int(24_300_000_000));
+        assert_eq!(decimal("0.009").unwrap(), Q::new(9, 1000).unwrap());
+        assert_eq!(decimal("-1.5e-3").unwrap(), Q::new(-3, 2000).unwrap());
         assert!(decimal("1.2.3").is_none() && decimal("x").is_none());
     }
 }

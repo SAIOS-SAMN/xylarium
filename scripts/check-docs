@@ -6,7 +6,9 @@
 2. Every code path written in backticks in the Markdown documentation
    (`module::Item`, `Type::method`, `crate module::item`) names an item
    that is declared somewhere in the workspace's Rust sources.
-3. Every glossary entry names at least one code item or document.
+3. Every source file named in backticks (`circuit/poles.rs`, `minds.rs`)
+   exists.
+4. Every glossary entry names at least one code item or document.
 
 Usage: scripts/check-docs        (from the repository root; exit 1 on failure)
 """
@@ -94,6 +96,23 @@ for f in DOCS:
                 if seg not in declared:
                     failures.append(f"{f}: `{m.group(1)}` names `{seg}`, not declared in crates/")
                     break
+
+# --- 2b. source files named in backticks ------------------------------------
+rs_files = set(SOURCES) | {p[len('crates/'):] for p in SOURCES}
+rs_names = {os.path.basename(p) for p in SOURCES}
+for f in DOCS:
+    if f.startswith(".github") or f == "CHANGELOG.md":
+        continue
+    text = strip_fences(open(f, encoding="utf-8").read())
+    for span in path_rx.findall(text):
+        for name in re.findall(r"[A-Za-z0-9_./-]*\.rs\b", span):
+            if name == ".rs" or name.startswith("src/foo"):
+                continue
+            if "/" in name.strip("/"):
+                if not any(p == name or p.endswith("/" + name) for p in rs_files):
+                    failures.append(f"{f}: `{name}` is not a source file")
+            elif name not in rs_names:
+                failures.append(f"{f}: `{name}` names no source file")
 
 # --- 3. glossary entries ------------------------------------------------------
 for i, line in enumerate(open("docs/glossary.md", encoding="utf-8"), 1):

@@ -219,10 +219,10 @@ pub fn substrate_for(spin: &Q) -> Option<Arc<crate::circuit::Substrate>> {
     if let Some(s) = table.lock().ok()?.get(&drawn) {
         return Some(s.clone());
     }
-    // the admission: the founding at the drawn spin, refounded at the least
-    // admissible spin where its firmament is not whole (bang::spin_of_share
-    // of Substrate::least_share), until the margin closes or the spin is
-    // extremal; the anchor is the admitted founding's
+    // admission: while the firmament's margin is negative and the spin is
+    // below the least admissible one (bang::spin_of_share of
+    // Substrate::least_share), refound at that spin; at most three foundings.
+    // The anchor is the admitted founding's
     let mut spin = spin.clone();
     let mut found = None;
     for _ in 0..3 {
@@ -272,24 +272,21 @@ fn founding_of(seed: u64, bang: &BigBang) -> Option<Arc<Founding>> {
         let g = bead?;
         let out = g.reach.clone();
         let (cs, sn) = xyl_core::rotor::Half::of_turns(&g.phase, 60).cos_sin();
-        // a galactic core's mass in the universal core's units: the core
-        // holds the universal state, 1, so a bead's state is its mass over
-        // the core's; a galaxy is held where its core is no heavier than the
-        // universal core (the deficit law, M >= m)
+        // hole_suns = M_core x state: a bead's state is its mass in units of
+        // the universal core's state (1)
         let hole_suns = &crate::package::hole_mass() * &g.state;
-        // the plane, by magnetic repulsion among the galaxies (the stars' law
-        // one tier up): the golden turn sets the node, the plastic share of
-        // the sphere's measure sets the tilt
+        // the plane from the galaxies' magnetic-repulsion spacing (galaxy.rs):
+        // node from index x golden turn, tilt from index x plastic share
         let pivot = |by: &Q| Dy::from_q(&(&Q::int(i64::from(index)) * by).frac());
         let (tilt, node) = (
             crate::galaxy::tilt_of(pivot(&crate::galaxy::plastic_turns())),
             crate::galaxy::node_of(pivot(&crate::galaxy::golden_turns())),
         );
-        // circulation about the throat: 4 delta per echo at its reach
+        // rate = 4 delta / echo, delta = inside / (reach + inside)
         let delta = Dy::from_q(&g.inside)
             / (Dy::from_q(&g.reach) + Dy::from_q(&g.inside)).max(Dy::sci(1, -300));
         let rate = Dy::int(4) * delta / crate::circuit::echo_gyr();
-        // place at the founding, for reference (the bearing at t is place_at)
+        // place at t = 0, kept for reference; readings use place_at
         let dir0 = {
             use xyl_core::rotor::{Half, Rotor};
             let h = |p: (Dy, Dy)| Half {

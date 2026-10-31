@@ -152,10 +152,20 @@ pub fn heartbeat(every: Duration, stop: Arc<AtomicBool>) {
                 .unwrap_or_default();
             let in_flight = watch().busy.lock().map(|b| b.len()).unwrap_or(0);
             note(&format!(
-                "HEARTBEAT {stage}: cpu {cores}% of one core, rss {} MB, host load {}; {in_flight} in flight{}",
+                concat!(
+                    "HEARTBEAT {}: cpu {}% of one core, rss {} MB, host load {}; ",
+                    "{} in flight{}"
+                ),
+                stage,
+                cores,
                 rss_mb().unwrap_or(0),
                 load(),
-                if long.is_empty() { String::new() } else { format!(", long: {}", long.join(", ")) }
+                in_flight,
+                if long.is_empty() {
+                    String::new()
+                } else {
+                    format!(", long: {}", long.join(", "))
+                }
             ));
             last = (now, ticks);
         }

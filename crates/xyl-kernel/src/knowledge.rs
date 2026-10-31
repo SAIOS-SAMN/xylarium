@@ -32,14 +32,6 @@ use crate::growth::{self, Rulers};
 use xyl_core::dyadic::Dy;
 use xyl_cosmos::worlds::{t_unit, Ctx, Solvent, Where};
 
-fn n(x: i64) -> Dy {
-    Dy::int(x)
-}
-
-fn r(a: i64, b: i64) -> Dy {
-    Dy::ratio(a, b)
-}
-
 /// A domain of knowledge.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Domain {
@@ -62,7 +54,8 @@ impl Domain {
         Domain::Information,
     ];
 
-    /// Position of the domain in a [`ByDomain`] array (0 energy, 1 materials, 2 biology, 3 information).
+    /// Position of the domain in a [`ByDomain`] array (0 energy, 1 materials, 2 biology, 3
+    /// information).
     pub fn index(self) -> usize {
         match self {
             Domain::Energy => 0,
@@ -91,7 +84,7 @@ pub type ByDomain = [Dy; 4];
 /// The experience of the first doubling, in KU (KNOWLEDGE_UNIT =
 /// 10: ten thousand unit minds' year). Declared ruler.
 pub fn knowledge_unit() -> Dy {
-    n(10)
+    Dy::int(10)
 }
 
 /// Unit minds a knowledge unit is the year's free thought of
@@ -101,18 +94,18 @@ pub const KU_MINDS: i64 = 1000;
 /// The share of every member's thought its living adds to what its people
 /// knows. Declared ruler.
 pub fn lived_share() -> Dy {
-    r(1, 20)
+    Dy::ratio(1, 20)
 }
 
 /// The floor of undirected inquiry, as a share of one domain's pull
 /// (its curiosity). Declared ruler.
 pub fn curiosity() -> Dy {
-    r(1, 4)
+    Dy::ratio(1, 4)
 }
 
 /// How much of a collective's forgetting its pooling spares. Declared ruler.
 pub fn pooled_keep() -> Dy {
-    r(1, 2)
+    Dy::ratio(1, 2)
 }
 
 // ---------------------------------------------------------------------- the laws
@@ -145,7 +138,7 @@ pub fn unit_body_w(_rul: &Rulers) -> Dy {
 
 /// A knowledge unit's power (W): the free thought of KU_MINDS unit bodies.
 fn ku_body_w(rul: &Rulers) -> Dy {
-    n(KU_MINDS) * unit_body_w(rul)
+    Dy::int(KU_MINDS) * unit_body_w(rul)
 }
 
 // ---------------------------------------------------------------------- mind.profile
@@ -155,11 +148,16 @@ fn ku_body_w(rul: &Rulers) -> Dy {
 /// Declared rulers.
 fn sense_weights(sense: &str) -> ByDomain {
     match sense {
-        "chemistry" => [r(1, 8), r(3, 4), Dy::ONE, r(1, 8)],
-        "heat and pressure" => [r(3, 4), r(3, 4), r(3, 8), r(1, 8)],
-        "heat" => [Dy::ONE, r(3, 4), r(1, 8), r(1, 8)],
-        "fields" => [Dy::ONE, r(1, 8), r(1, 8), r(3, 4)],
-        _ => [r(1, 2), r(1, 4), r(1, 4), Dy::ONE],
+        "chemistry" => [Dy::ratio(1, 8), Dy::ratio(3, 4), Dy::ONE, Dy::ratio(1, 8)],
+        "heat and pressure" => [
+            Dy::ratio(3, 4),
+            Dy::ratio(3, 4),
+            Dy::ratio(3, 8),
+            Dy::ratio(1, 8),
+        ],
+        "heat" => [Dy::ONE, Dy::ratio(3, 4), Dy::ratio(1, 8), Dy::ratio(1, 8)],
+        "fields" => [Dy::ONE, Dy::ratio(1, 8), Dy::ratio(1, 8), Dy::ratio(3, 4)],
+        _ => [Dy::ratio(1, 2), Dy::ratio(1, 4), Dy::ratio(1, 4), Dy::ONE],
     }
 }
 
@@ -174,7 +172,8 @@ pub struct Profile {
     pub plastic: Dy,
     /// How readable its own heredity is.
     pub legible: Dy,
-    /// Whether it lives in water or the dark (swimming or drifting form, dark habitat, or under ice): no fire, so energy science comes late.
+    /// Whether it lives in water or the dark (swimming or drifting form, dark habitat, or under
+    /// ice): no fire, so energy science comes late.
     pub aquatic: bool,
     /// The sciences its life touches first, averaging 1.
     pub affinity: ByDomain,
@@ -189,26 +188,28 @@ pub struct Profile {
 pub fn profile(t: &Traits, ctx: &Ctx) -> Profile {
     let aquatic = matches!(t.form, "swimming" | "drifting") || t.dark || t.at == Where::UnderIce;
     let shape_w = match t.shape {
-        Shape::Superorganism => r(3, 2),
-        Shape::Distributed => r(3, 4),
-        Shape::Society => r(1, 2),
+        Shape::Superorganism => Dy::ratio(3, 2),
+        Shape::Distributed => Dy::ratio(3, 4),
+        Shape::Society => Dy::ratio(1, 2),
     };
     let collective = (t.social * shape_w).min(Dy::ONE);
     let mut distributed = Dy::ZERO;
     if matches!(t.shape, Shape::Distributed | Shape::Superorganism) {
-        distributed += r(3, 5);
+        distributed += Dy::ratio(3, 5);
     }
     if matches!(t.form, "swimming" | "drifting" | "low and many-limbed") {
-        distributed += r(2, 5);
+        distributed += Dy::ratio(2, 5);
     }
     let distributed = distributed.min(Dy::ONE);
-    let plastic = ((if aquatic { r(1, 2) } else { r(1, 10) })
-        + (if t.strategy == Strategy::R {
-            r(3, 10)
-        } else {
-            Dy::ZERO
-        })
-        + r(1, 5) * distributed)
+    let plastic = ((if aquatic {
+        Dy::ratio(1, 2)
+    } else {
+        Dy::ratio(1, 10)
+    }) + (if t.strategy == Strategy::R {
+        Dy::ratio(3, 10)
+    } else {
+        Dy::ZERO
+    }) + Dy::ratio(1, 5) * distributed)
         .min(Dy::ONE);
     let legible = if t.solvent == Solvent::Plasma {
         Dy::ZERO
@@ -220,7 +221,7 @@ pub fn profile(t: &Traits, ctx: &Ctx) -> Profile {
     };
     let w = sense_weights(t.sense);
     let total: Dy = w.iter().copied().sum();
-    let affinity = w.map(|x| n(4) * x / total.max(Dy::sci(1, -9)));
+    let affinity = w.map(|x| Dy::int(4) * x / total.max(Dy::sci(1, -9)));
     Profile {
         collective,
         distributed,
@@ -243,7 +244,7 @@ pub fn knower_life_yr(traits: &Traits, rul: &Rulers) -> Dy {
 /// (knowledge.forgetting): knowers dying at 1 / life, reduced for a
 /// collective.
 pub fn forgetting(life_yr: Dy, collective: Dy) -> Dy {
-    let keep = (-(Dy::ONE / life_yr.max(r(1, 1000)))).exp();
+    let keep = (-(Dy::ONE / life_yr.max(Dy::ratio(1, 1000)))).exp();
     let pooled = Dy::ONE - pooled_keep() * collective.clamp(Dy::ZERO, Dy::ONE);
     ((Dy::ONE - keep) * pooled).clamp(Dy::ZERO, Dy::ONE)
 }
@@ -316,14 +317,14 @@ pub struct Thinkers {
     pub life_yr: Dy,
     /// Its fluid intelligence, 0 .. 1 (not yet modelled, read as 0).
     pub fluid: Dy,
-    /// Its consciousness gauge as last read, 0 .. 1 (civ.rs `Gauges`): its
+    /// Its consciousness gauge as last read, 0 .. 1 (civ/mod.rs `Gauges`): its
     /// thought's factor F = 1 + g_C.
     pub consciousness: Dy,
 }
 
 impl Thinkers {
     /// A people's thinkers from its numbers and the power its bodies turn
-    /// (cosmic.rs Cosmic::power), with no works, no impedance and no fluid yet.
+    /// (cosmic/mod.rs `Cosmic::power`), with no works, no impedance and no fluid yet.
     pub fn of(p: &People, bodies_w: Dy, ctx: &Ctx) -> Thinkers {
         let rul = Rulers::default();
         Thinkers {
@@ -422,7 +423,7 @@ pub fn advance(stock_ku: Dy, e_ku: Dy, lam: Dy, years: Dy) -> Dy {
 
 /// The continuous rate of a yearly share lost.
 pub fn rate(share: Dy) -> Dy {
-    -(Dy::ONE - share.clamp(Dy::ZERO, r(999_999, 1_000_000))).log()
+    -(Dy::ONE - share.clamp(Dy::ZERO, Dy::ratio(999_999, 1_000_000))).log()
 }
 
 // ---------------------------------------------------------------------- the stocks
@@ -550,7 +551,7 @@ mod tests {
             sense: "light",
             form: "walking",
             hands: "grasping limbs",
-            social: r(1, 2),
+            social: Dy::ratio(1, 2),
             shape,
             size,
         }
@@ -584,47 +585,52 @@ mod tests {
     }
 
     #[test]
-    fn a_long_life_holds_what_it_learns_and_a_short_one_relearns() {
-        let short = forgetting(n(5), Dy::ZERO);
-        let long = forgetting(n(500), Dy::ZERO);
+    fn forgetting_falls_with_life_span_and_collectivity() {
+        let short = forgetting(Dy::int(5), Dy::ZERO);
+        let long = forgetting(Dy::int(500), Dy::ZERO);
         assert!(short > long);
         // a collective forgets less
-        assert!(forgetting(n(70), Dy::ONE) < forgetting(n(70), Dy::ZERO));
+        assert!(forgetting(Dy::int(70), Dy::ONE) < forgetting(Dy::int(70), Dy::ZERO));
         // bigger bodies live longer (their generations are longer)
         let rul = Rulers::default();
-        let small = traits(r(1, 10), Solvent::Volatile(Species::H2O), Shape::Society);
-        let big = traits(n(10), Solvent::Volatile(Species::H2O), Shape::Society);
+        let small = traits(
+            Dy::ratio(1, 10),
+            Solvent::Volatile(Species::H2O),
+            Shape::Society,
+        );
+        let big = traits(Dy::int(10), Solvent::Volatile(Species::H2O), Shape::Society);
         assert!(knower_life_yr(&big, &rul) > knower_life_yr(&small, &rul));
     }
 
     #[test]
-    fn thought_is_power_and_minds_think_where_their_world_frees_them() {
+    fn effort_grows_with_power_and_free_housing() {
         let rul = Rulers::default();
         let t = traits(Dy::ONE, Solvent::Volatile(Species::H2O), Shape::Society);
         // a full world: only the lived share
         let full = effort(&thinkers(Dy::sci(1, 9), &t, Dy::sci(1, 9)), &rul);
         assert_eq!(full.free, Dy::ZERO);
         assert!(full.lived.signum() > 0);
-        // a world feeding twice its numbers frees half its hands
+        // a world feeding twice its numbers frees half its bodies' power
+        // for free thought
         let half = effort(&thinkers(Dy::sci(1, 9), &t, Dy::sci(2, 9)), &rul);
-        assert!(half.free > full.lived * n(5));
-        // the same numbers of bigger bodies command more power and think more
-        let big = traits(n(8), Solvent::Volatile(Species::H2O), Shape::Society);
+        assert!(half.free > full.lived * Dy::int(5));
+        // the same numbers of bigger bodies turn more power and so more thought
+        let big = traits(Dy::int(8), Solvent::Volatile(Species::H2O), Shape::Society);
         assert!(effort(&thinkers(Dy::sci(1, 9), &big, Dy::sci(1, 9)), &rul).lived > full.lived);
-        // a cold chemistry: slower metabolism, more bits a joule - Landauer
-        // returns what the pace takes, so a cold people thinks as much per
+        // a cold chemistry: slower metabolism but more bits per joule
+        // (Landauer), which offsets the slower pace: the same thought per
         // body of its mass
         let cold = traits(Dy::ONE, Solvent::Volatile(Species::CH4), Shape::Society);
         let c = effort(&thinkers(Dy::sci(1, 9), &cold, Dy::sci(1, 9)), &rul).lived;
         assert!(
-            (c / full.lived - Dy::ONE).abs() < r(1, 100),
+            (c / full.lived - Dy::ONE).abs() < Dy::ratio(1, 100),
             "cold/warm {}",
             c / full.lived
         );
         // the closed form: one span and the same span in a hundred pieces
         // agree to the grid, and the stock settles at its fixed point
-        let lam = rate(r(15, 100));
-        let coarse = advance(Dy::ZERO, Dy::sci(1, 6), lam, n(100));
+        let lam = rate(Dy::ratio(15, 100));
+        let coarse = advance(Dy::ZERO, Dy::sci(1, 6), lam, Dy::int(100));
         let mut fine = Dy::ZERO;
         for _ in 0..100 {
             fine = advance(fine, Dy::sci(1, 6), lam, Dy::ONE);
@@ -633,24 +639,24 @@ mod tests {
             (coarse / fine - Dy::ONE).abs() < Dy::sci(1, -9),
             "coarse {coarse} fine {fine}"
         );
-        let far = advance(Dy::ZERO, Dy::sci(1, 6), lam, n(100_000));
+        let far = advance(Dy::ZERO, Dy::sci(1, 6), lam, Dy::int(100_000));
         assert!((far / settled(Dy::sci(1, 6), lam) - Dy::ONE).abs() < Dy::sci(1, -9));
     }
 
     #[test]
-    fn a_people_learns_where_its_troubles_are() {
+    fn learning_follows_needs_and_focus() {
         let t = traits(Dy::ONE, Solvent::Volatile(Species::H2O), Shape::Society);
         let mut th = thinkers(Dy::sci(1, 9), &t, Dy::sci(2, 9));
         th.needs.hunger = Dy::ONE;
         let mut k = Knowledge::default();
-        k.step(&[th.clone()], n(10));
+        k.step(&[th.clone()], Dy::int(10));
         let s = &k.of[0];
         assert!(s.stock[Domain::Biology.index()] > s.stock[Domain::Materials.index()]);
         // a focus moves it
         let mut k2 = Knowledge::default();
         k2.focus(0, Some(Domain::Materials));
         th.needs = Needs::default();
-        k2.step(&[th], n(10));
+        k2.step(&[th], Dy::int(10));
         assert!(
             k2.of[0].stock[Domain::Materials.index()] > k2.of[0].stock[Domain::Biology.index()]
         );

@@ -405,40 +405,45 @@ impl Source {
 mod tests {
     use super::*;
 
-    fn q(n: i64) -> Q {
-        Q::int(n)
-    }
-
     #[test]
     fn points_are_null_and_their_products_read_distance() {
-        let (a, b) = (point_at(&[q(1), q(2), q(3)]), point_at(&[q(4), q(6), q(3)]));
+        let (a, b) = (
+            point_at(&[Q::int(1), Q::int(2), Q::int(3)]),
+            point_at(&[Q::int(4), Q::int(6), Q::int(3)]),
+        );
         assert!(a.norm2().is_zero() && b.norm2().is_zero());
         // X(a) . X(b) = -1/2 |a - b|^2 = -12.5
         assert_eq!(a.geo(&b).scalar_part(), Q::new(-25, 2).unwrap());
-        assert_eq!(base_at(&a, 3).unwrap(), vec![q(1), q(2), q(3)]);
+        assert_eq!(
+            base_at(&a, 3).unwrap(),
+            vec![Q::int(1), Q::int(2), Q::int(3)]
+        );
     }
 
     #[test]
     fn motions_carry_points() {
-        let x = point_at(&[q(1), q(0), q(0)]);
-        let t = translator_at(&[q(2), q(-1), q(5)]);
+        let x = point_at(&[Q::int(1), Q::int(0), Q::int(0)]);
+        let t = translator_at(&[Q::int(2), Q::int(-1), Q::int(5)]);
         assert!(t
             .sandwich(&x)
-            .projective_eq(&point_at(&[q(3), q(-1), q(5)])));
+            .projective_eq(&point_at(&[Q::int(3), Q::int(-1), Q::int(5)])));
         // a half turn in e1e2
         let r = rotator_on_blade(&Q::ZERO, &Q::ONE, E1 | E2);
         assert!(r
             .sandwich(&x)
-            .projective_eq(&point_at(&[q(-1), q(0), q(0)])));
-        let d = dilator(&q(3));
+            .projective_eq(&point_at(&[Q::int(-1), Q::int(0), Q::int(0)])));
+        let d = dilator(&Q::int(3));
         assert!(d
-            .sandwich(&point_at(&[q(2)]))
-            .projective_eq(&point_at(&[q(6)])));
+            .sandwich(&point_at(&[Q::int(2)]))
+            .projective_eq(&point_at(&[Q::int(6)])));
         // a point lies on a sphere through it
-        let s = sphere_through(&[q(0), q(0), q(0)], &[q(1), q(0), q(0)]);
+        let s = sphere_through(
+            &[Q::int(0), Q::int(0), Q::int(0)],
+            &[Q::int(1), Q::int(0), Q::int(0)],
+        );
         assert!(x.geo(&s).scalar_part().is_zero());
         // and another point of the same reach lies on it too
-        let y = point_at(&[q(0), q(0), q(1)]);
+        let y = point_at(&[Q::int(0), Q::int(0), Q::int(1)]);
         assert!(y.geo(&s).scalar_part().is_zero());
     }
 }

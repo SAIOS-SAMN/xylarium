@@ -15,9 +15,9 @@
 //!   percent of light, annihilation light itself.
 //! - Voyage: [`delta_v`] = c tanh((v_e / c) ln R), the relativistic rocket
 //!   (Tsiolkovsky's v_e ln R while slow, below c always);
-//!   [`propellant_per_kg`] = R - 1. transit.rs spends the speed change.
+//!   [`propellant_per_kg`] = R - 1. transit/voyage.rs spends the speed change.
 //!
-//! Outputs are bundled as a [`Spec`] (`Spec::of`). civ/mod.rs and transit.rs
+//! Outputs are bundled as a [`Spec`] (`Spec::of`). civ/mod.rs and transit/voyage.rs
 //! build each people's chemical drive and blend it toward
 //! `transit::best_spec` by energy mastery. Declared rulers:
 //! [`FISSION_SHARE`], [`CHEM_EXHAUST_AMU`], [`MASS_RATIO`]. Fuel choice,
@@ -27,10 +27,6 @@ use crate::cosmic::Traits;
 use xyl_core::dyadic::Dy;
 use xyl_cosmos::laws::Scales;
 use xyl_cosmos::worlds::{covalent_ev, Solvent};
-
-fn n(x: i64) -> Dy {
-    Dy::int(x)
-}
 
 /// Light's speed (m/s).
 pub fn c_m_s() -> Dy {
@@ -104,7 +100,9 @@ pub fn fusion_share(elements: &[xyl_cosmos::elements::Element]) -> Dy {
             .map(|e| Dy::from_q(&e.a))
     };
     match (a("H"), a("He")) {
-        (Some(h), Some(he)) if h.signum() > 0 => ((n(4) * h - he) / (n(4) * h)).max(Dy::ZERO),
+        (Some(h), Some(he)) if h.signum() > 0 => {
+            ((Dy::int(4) * h - he) / (Dy::int(4) * h)).max(Dy::ZERO)
+        }
         _ => Dy::ZERO,
     }
 }
@@ -122,7 +120,7 @@ pub fn energy_per_kg(
         Drive::Chemical => {
             let amu = match solvent {
                 Solvent::Volatile(s) => s.mu(),
-                _ => n(CHEM_EXHAUST_AMU),
+                _ => Dy::int(CHEM_EXHAUST_AMU),
             };
             covalent_ev(sc) * ev_j() / (amu * amu_kg())
         }
@@ -140,7 +138,7 @@ pub fn exhaust_speed(e_per_kg: Dy) -> Dy {
 
 /// tanh x, exactly from exp.
 fn tanh(x: Dy) -> Dy {
-    let e = (n(-2) * x.max(Dy::ZERO)).exp();
+    let e = (Dy::int(-2) * x.max(Dy::ZERO)).exp();
     (Dy::ONE - e) / (Dy::ONE + e)
 }
 
@@ -192,7 +190,7 @@ mod tests {
     use xyl_cosmos::worlds::Species;
 
     #[test]
-    fn exhaust_follows_the_energy_its_fuel_releases_and_light_caps_it() {
+    fn exhaust_follows_fuel_energy_and_stays_below_c() {
         let sc = Scales::default();
         let el = xyl_cosmos::elements::table().unwrap();
         let water = Solvent::Volatile(Species::H2O);
@@ -215,13 +213,13 @@ mod tests {
         ));
         assert!(methane > chem);
         // Tsiolkovsky while slow, never past light when fast
-        let dv = delta_v(chem, n(MASS_RATIO));
-        let tsiolkovsky = chem * n(MASS_RATIO).log();
+        let dv = delta_v(chem, Dy::int(MASS_RATIO));
+        let tsiolkovsky = chem * Dy::int(MASS_RATIO).log();
         assert!(
-            (dv - tsiolkovsky).abs() < tsiolkovsky / n(1_000_000),
+            (dv - tsiolkovsky).abs() < tsiolkovsky / Dy::int(1_000_000),
             "{dv} vs {tsiolkovsky}"
         );
-        assert!(delta_v(anni, n(MASS_RATIO)) < c);
-        assert!(delta_v(anni, n(MASS_RATIO)) > fus);
+        assert!(delta_v(anni, Dy::int(MASS_RATIO)) < c);
+        assert!(delta_v(anni, Dy::int(MASS_RATIO)) > fus);
     }
 }

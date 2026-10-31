@@ -9,13 +9,36 @@ may change public APIs and the model's laws.
 
 ## Unreleased
 
+### Added
+
+- `Q::ratio`, the constant-ratio constructor (zero on a zero denominator).
+- `AGENTS.md`, `docs/concepts.md` and the glossary as a lexicon with code
+  paths.
+- Examples `found_and_observe` and `minimal_link` (`crates/xylarium/examples`)
+  and `# Examples` on `run::genesis`, `run::run`, `run::run_with` and
+  `observe::observe`.
+- `scripts/check-docs` and `scripts/check-style`, run locally with the other
+  checks (CONTRIBUTING.md, Verification).
+
 ### Changed
 
 - Minimum supported Rust is 1.85, the version the locked dependencies
   require.
+- Code style: modules over about 800 lines split into directory modules
+  (`observe`, `transit`, `cosmic`, `formation`, `galaxy`, `chem`, `worlds`,
+  `systems`, `life`, `bodies`, `minds`) with public paths unchanged; long
+  functions split into named steps; lines at most 100 columns; private
+  one-letter numeric wrappers replaced by the shared constructors; inline
+  comments state reasons and formulas.
+- `run::Options` derives `Clone` and `Debug`.
 - README restructured; the roadmap opens with the mathematics (number
   systems, algebra and geometry, and the nucleon model: the 3Z span, the
   3Q capacity and the polarity R).
+
+### Removed
+
+- Hosted CI (`.github/workflows/ci.yml`) and its README badge; the checks
+  are run locally.
 
 ## 0.3.0 - 2026-10-30
 

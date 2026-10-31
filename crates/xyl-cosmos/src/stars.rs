@@ -162,7 +162,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_holds_set_the_steps_and_the_rim_sets_the_share() {
+    fn transduced_shares_and_rim_deficit_in_bounds() {
         // hydrogen holds 2 (3 less its one open frame), helium 6: four
         // hydrogens' 8 to one helium's 6 transduces a quarter
         assert_eq!(transduced_hydrogen(), Q::new(1, 4).unwrap());

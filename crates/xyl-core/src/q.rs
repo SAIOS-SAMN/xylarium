@@ -92,6 +92,13 @@ impl Q {
         Q::from_i128(i128::from(n), i128::from(d))
     }
 
+    /// `n / d`, zero when `d` is zero (as [`crate::dyadic::Dy::ratio`]). For
+    /// constant ratios written in code; use [`Q::new`] where a zero
+    /// denominator must be refused.
+    pub fn ratio(n: i64, d: i64) -> Q {
+        Q::new(n, d).unwrap_or(Q::ZERO)
+    }
+
     /// `n / d` from wide parts, reduced; promoted only if it does not fit.
     pub fn from_i128(n: i128, d: i128) -> Option<Q> {
         if d == 0 {
@@ -328,7 +335,12 @@ fn dyadic_pair(a: &Q, b: &Q) -> Option<(BigInt, u64, BigInt, u64)> {
 }
 
 macro_rules! small_or_big {
-    ($a:expr, $b:expr, |$an:ident, $ad:ident, $bn:ident, $bd:ident| $small:expr, |$x:ident, $y:ident| $big:expr) => {
+    (
+        $a:expr,
+        $b:expr,
+        |$an:ident, $ad:ident, $bn:ident, $bd:ident| $small:expr,
+        |$x:ident, $y:ident| $big:expr
+    ) => {
         match ($a, $b) {
             (Q::Small { n: $an, d: $ad }, Q::Small { n: $bn, d: $bd }) => {
                 let ($an, $ad, $bn, $bd) = (

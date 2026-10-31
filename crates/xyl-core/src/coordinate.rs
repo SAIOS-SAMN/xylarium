@@ -101,8 +101,9 @@ impl Reading {
 /// 60^6 protractor the in-plane direction (x, y) lies in, decided exactly
 /// with no arctangent and no rounding. A rational direction's turn is
 /// irrational (Niven: its tangent is rational only at whole eighths), so its
-/// share here is its sector's mark, the value itself never needed. The quarter-turn is read from the
-/// signs, the eighth from |x| against |y|, both exact; inside, a turn lies
+/// share here is its sector's mark, the value itself never needed. The
+/// quarter-turn is read from the signs, the eighth from |x| against |y|,
+/// both exact; inside, a turn lies
 /// at or past mark m where the cross product of the mark's direction with
 /// (x, y), cos(m) y - sin(m) x, is not negative - read on certified
 /// enclosures of cos and sin (one crossing over the marks). None for the

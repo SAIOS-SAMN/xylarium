@@ -27,16 +27,19 @@ in [docs/glossary.md](docs/glossary.md), not by their everyday meaning.
 
 ## Map
 
+A module `foo` is `src/foo.rs` or, when split, the directory `src/foo/`
+(entry `mod.rs`).
+
 | Concern | Crate / module | Doc |
 |---|---|---|
 | Exact numbers: `Q`, `Encl`, `Dy`, CGA, rotors, units, streams | `crates/xyl-core/src` | [roadmap.md#mathematics](docs/roadmap.md#mathematics) |
-| Founding: Big Bang, bounce, elements, atoms, firmament, beads, galactic cores | `crates/xyl-cosmos/src/{bang,bounce,elements,atoms,compound,fibres,formation,cores,chain,package}.rs`, `circuit/` | [model.md](docs/model.md) sections 2-4 |
-| Galaxy, stars, chemistry | `galaxy.rs`, `stars.rs`, `chem.rs`, `turning.rs`, `pulse.rs`, `field.rs` | [model.md](docs/model.md) section 5 |
-| Discs, worlds, moons, world state | `disc.rs`, `systems.rs`, `manifold.rs`, `bodies.rs`, `worlds.rs`, `hydro.rs` | [model.md](docs/model.md) section 6 |
-| Life and the forecast of minds | `life.rs`, `minds.rs` | [model.md](docs/model.md) section 7 |
-| Universe in play, peoples, carry, annals | `crates/xyl-kernel/src/{universe,cosmic,civ/}` | [civilizations.md](docs/civilizations.md) |
-| Knowledge, growth, transit, seats, clocks | `knowledge.rs`, `growth.rs`, `transit.rs`, `propulsion.rs`, `seats.rs`, `percept.rs`, `chronometry.rs` | [civilizations.md](docs/civilizations.md), [network.md](docs/network.md) |
-| CLI and library: `genesis`, `run`, `observe`, `run::Link` | `crates/xylarium/src/{run,observe}.rs` | [architecture.md](docs/architecture.md) |
+| Founding: Big Bang, bounce, elements, atoms, firmament, beads, galactic cores | xyl-cosmos modules `bang`, `bounce`, `elements`, `atoms`, `compound`, `fibres`, `formation`, `cores`, `chain`, `package`, `circuit` | [model.md](docs/model.md) sections 2-4 |
+| Galaxy, stars, chemistry | xyl-cosmos `galaxy`, `stars`, `chem`, `turning`, `pulse`, `field` | [model.md](docs/model.md) section 5 |
+| Discs, worlds, moons, world state | xyl-cosmos `disc`, `systems`, `manifold`, `bodies`, `worlds`, `hydro` | [model.md](docs/model.md) section 6 |
+| Life and the forecast of minds | xyl-cosmos `life`, `minds` | [model.md](docs/model.md) section 7 |
+| Universe in play, peoples, carry, annals | xyl-kernel `universe`, `cosmic`, `civ` | [civilizations.md](docs/civilizations.md) |
+| Knowledge, growth, transit, seats, clocks | xyl-kernel `knowledge`, `growth`, `transit`, `propulsion`, `seats`, `percept`, `chronometry` | [civilizations.md](docs/civilizations.md), [network.md](docs/network.md) |
+| CLI and library: `genesis`, `run`, `observe`, `run::Link` | xylarium `run`, `observe` | [architecture.md](docs/architecture.md) |
 
 ## Rules that must hold
 
@@ -77,7 +80,7 @@ in [docs/glossary.md](docs/glossary.md), not by their everyday meaning.
   forces the next genesis or test run to found the universe again.
 - Before finishing: `cargo fmt --all`, `cargo clippy --workspace
   --all-targets -- -D warnings`, `RUSTDOCFLAGS="-D warnings" cargo doc
-  --workspace --no-deps`, and `scripts/check-docs`.
+  --workspace --no-deps`, `scripts/check-docs` and `scripts/check-style`.
 
 ## Documentation duties
 

@@ -17,10 +17,6 @@
 use crate::elements::decimal;
 use xyl_core::Q;
 
-fn d(s: &str) -> Q {
-    decimal(s).unwrap_or(Q::ZERO)
-}
-
 /// The universal core's mass (suns): the package's one bridge to SI, the
 /// mass whose gravitational radius is the unit of length (xyl-core
 /// units.rs). The home galaxy surrounds the core, so its hole is the core.
@@ -35,28 +31,28 @@ pub struct Si;
 impl Si {
     /// The unit world mass, 5.972e24 kg.
     pub fn world_mass_kg() -> Q {
-        d("5.972e24")
+        decimal("5.972e24").unwrap_or(Q::ZERO)
     }
     /// The unit world radius, 6.371e6 m.
     pub fn world_radius_m() -> Q {
-        d("6.371e6")
+        decimal("6.371e6").unwrap_or(Q::ZERO)
     }
     /// The solar mass, 1.989e30 kg.
     pub fn star_mass_kg() -> Q {
-        d("1.989e30")
+        decimal("1.989e30").unwrap_or(Q::ZERO)
     }
     /// The solar radius, 6.957e8 m: the one-sun star's rim, where its deficit
     /// share is read (stars::delta_star).
     pub fn star_radius_m() -> Q {
-        d("6.957e8")
+        decimal("6.957e8").unwrap_or(Q::ZERO)
     }
     /// The astronomical unit, 1.496e11 m.
     pub fn au() -> Q {
-        d("1.496e11")
+        decimal("1.496e11").unwrap_or(Q::ZERO)
     }
     /// The gravitational constant, 6.674e-11 m^3/(kg s^2).
     pub fn g() -> Q {
-        d("6.674e-11")
+        decimal("6.674e-11").unwrap_or(Q::ZERO)
     }
     /// Seconds in one Gyr: a thousand million years (`yr_s`).
     pub fn gyr_s() -> Q {
@@ -64,7 +60,7 @@ impl Si {
     }
     /// The kiloparsec, 3.0857e19 m.
     pub fn kpc() -> Q {
-        d("3.0857e19")
+        decimal("3.0857e19").unwrap_or(Q::ZERO)
     }
     /// The speed of light, 299 792 458 m/s.
     pub fn c() -> Q {
@@ -76,31 +72,31 @@ impl Si {
     }
     /// Seconds in one year, 3.15576e7 (the Julian year).
     pub fn yr_s() -> Q {
-        d("3.15576e7")
+        decimal("3.15576e7").unwrap_or(Q::ZERO)
     }
     /// The Boltzmann constant, 1.380649e-23 J/K.
     pub fn kb_j() -> Q {
-        d("1.380649e-23")
+        decimal("1.380649e-23").unwrap_or(Q::ZERO)
     }
     /// The Planck constant, 6.62607015e-34 J s.
     pub fn h_j() -> Q {
-        d("6.62607015e-34")
+        decimal("6.62607015e-34").unwrap_or(Q::ZERO)
     }
     /// The electronvolt, 1.602176634e-19 J.
     pub fn ev_j() -> Q {
-        d("1.602176634e-19")
+        decimal("1.602176634e-19").unwrap_or(Q::ZERO)
     }
     /// The atomic mass unit, 1.66053907e-27 kg.
     pub fn amu_kg() -> Q {
-        d("1.66053907e-27")
+        decimal("1.66053907e-27").unwrap_or(Q::ZERO)
     }
     /// The hydrogen atom's mass, 1.6726e-27 kg.
     pub fn m_h_kg() -> Q {
-        d("1.6726e-27")
+        decimal("1.6726e-27").unwrap_or(Q::ZERO)
     }
     /// The gas constant, 8.314 J/(mol K).
     pub fn r_gas() -> Q {
-        d("8.314")
+        decimal("8.314").unwrap_or(Q::ZERO)
     }
     /// The Faraday constant, 96 485 C/mol.
     pub fn faraday() -> Q {
@@ -108,7 +104,7 @@ impl Si {
     }
     /// The Boltzmann constant in electronvolts per kelvin, 8.617333e-5.
     pub fn kb_ev() -> Q {
-        d("8.617333e-5")
+        decimal("8.617333e-5").unwrap_or(Q::ZERO)
     }
 }
 

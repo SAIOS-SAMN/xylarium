@@ -13,9 +13,6 @@
 *.pem
 *.key
 
-# Coverage output
-lcov.info
-coverage-summary.txt
 
 # Tooling
 .claude/

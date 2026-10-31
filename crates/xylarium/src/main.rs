@@ -9,7 +9,7 @@
 //! The home defaults to var/universe-7. `--sight` defaults to `census`
 //! (every sample star unrolled); `--sight cores` unrolls only the stars
 //! within the cores' reach. The readings `observe` takes are listed in
-//! observe.rs. Exit status: 0 on success, 1 when a command returns
+//! observe/mod.rs. Exit status: 0 on success, 1 when a command returns
 //! `Ok(false)`, 2 on an error or an unknown command.
 
 use std::process::ExitCode;

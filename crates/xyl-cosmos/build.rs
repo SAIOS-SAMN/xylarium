@@ -5,8 +5,8 @@
 //!   and `../xyl-core/src/`, so a cached forecast is read only under the
 //!   laws that produced it.
 //! - `XYL_FOUNDING_DIGEST`: the subset the founding is derived from (bang,
-//!   bounce, elements, atoms, compound, fibres, formation, cores, chain,
-//!   package, `src/circuit/`, `data/` and xyl-core), which keys the founding
+//!   bounce, elements, atoms, compound, fibres, cores, chain, package,
+//!   `src/formation/`, `src/circuit/`, `data/` and xyl-core), which keys the founding
 //!   cache; a change to a layer above the founding leaves it unchanged.
 //!
 //! Each digest covers file names and contents in sorted path order and is
@@ -42,24 +42,23 @@ fn main() {
         files(d, &mut all);
     }
     all.sort();
-    // every law, and the founding's own: the files the founding (the
-    // genesis) is derived from - the Big Bang, the bounce, the elements and
-    // atoms, the cascade and lighting, the circuit, the package and the
-    // mathematics - so a change to any layer built on the founding keeps it
+    // the files the founding is derived from: the Big Bang, the bounce, the
+    // elements and atoms, the cascade and lighting, the circuit, the package
+    // and the mathematics; a change to a layer above them keeps the digest
     let founding = |name: &str| {
-        const FILES: [&str; 10] = [
+        const FILES: [&str; 9] = [
             "src/bang.rs",
             "src/bounce.rs",
             "src/elements.rs",
             "src/atoms.rs",
             "src/compound.rs",
             "src/fibres.rs",
-            "src/formation.rs",
             "src/cores.rs",
             "src/chain.rs",
             "src/package.rs",
         ];
         FILES.contains(&name)
+            || name.starts_with("src/formation/")
             || name.starts_with("src/circuit/")
             || name.starts_with("data/")
             || name.starts_with("../xyl-core/src/")
@@ -84,9 +83,9 @@ fn digest<'a>(root: &Path, paths: impl Iterator<Item = &'a PathBuf>, key: &str) 
             .unwrap_or(p)
             .to_string_lossy()
             .to_string();
-        // the watch observes the program, not the laws (xyl-core watch.rs):
-        // its file and every line naming it are excluded, so changing watch
-        // labels never invalidates a forecast produced by the same laws
+        // the watch (xyl-core watch.rs) monitors the process and enters no
+        // law: its file and every line naming it are excluded, so changing
+        // watch labels does not invalidate a forecast made under the same laws
         if name.ends_with("watch.rs") {
             continue;
         }

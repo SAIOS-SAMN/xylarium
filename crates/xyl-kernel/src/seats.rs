@@ -5,10 +5,10 @@
 //! Roles ([`Role`]), one tiered hierarchy in which each tier deals with the
 //! tiers adjacent to it:
 //!
-//!   Ancient      an ancient people's house (cosmic.rs): holds the reserve
+//!   Ancient      an ancient people's house (cosmic/): holds the reserve
 //!                and is the only seat facing the network.
 //!   Progenitor   one per ancient house: builds, keeps and runs passage.
-//!   Steward      one per realm (transit.rs): diplomacy, trade and disputes
+//!   Steward      one per realm (transit/realms.rs): diplomacy, trade and disputes
 //!                between its sovereigns, and its lines' handling.
 //!   Sovereign    one people's worlds.
 //!
@@ -123,7 +123,7 @@ impl Seats {
                 });
             }
             // an ancient house's progenitor seat: the builders of passage
-            // (transit.rs: they open ley lines to the peoples in tune)
+            // (transit/building.rs: they build to the peoples in tune)
             if p.ancient
                 && !out
                     .list
@@ -141,7 +141,7 @@ impl Seats {
     }
 
     /// The seats with a steward seat for every realm of the first `realms`
-    /// realm keys (transit.rs `Network::realm_keys`) not yet seated; a
+    /// realm keys (transit/ `Network::realm_keys`) not yet seated; a
     /// realm's seat is `On::Realm(index)`.
     pub fn extend_realms(&self, realms: usize) -> Seats {
         let mut out = self.clone();

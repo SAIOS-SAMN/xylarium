@@ -302,13 +302,13 @@ impl Substrate {
         // the filament opens frames by its dilation: (u + f) / (w - f) = rho u / w
         let rho = echo_dilation().to_q();
         let filament = (&(&(&rho - &Q::ONE) * &u) * &w).checked_div(&(&w + &(&rho * &u)))?;
-        // the vacuum takes its share of the hold, swung by the inbound echo
+        // vacuum channel: f_v = p w, p the vacuum's share swung by 1 + A_in
         let p = (vacuum_share(rv.reach, rv.hold) * swing).to_q();
         if p >= Q::ONE {
             return None;
         }
         let vacuum = &p * &w;
-        // the electrons' phase returns (or releases) open frames
+        // electron channel: R(pulse) u, the open frames' phase state
         let echo = &super::weights::electron_phase(k.z, &self.pulse(t)) * &u;
         pole_flux(
             &w,
@@ -353,8 +353,8 @@ impl Substrate {
             .iter()
             .zip(&self.reverb)
             .map(|(k, rv)| {
-                // a kind whose band never swings past the throat, or whose
-                // state never reaches it, never leaves
+                // no outflow before the onset, nor for a kind with no onset
+                // or a zero rate (its band never passes the throat)
                 let Some(onset) = rv.onset else {
                     return (k.z, Dy::ZERO);
                 };
@@ -370,12 +370,12 @@ impl Substrate {
     /// Whether bead `b` is a galaxy: its stellar share (the lit share of its
     /// state, read in the universal core's units) is at least one sun.
     pub fn holds_a_star(&self, b: &Bead) -> bool {
-        // its state is its mass in the universal core's units (the core
-        // holds the universal state, 1)
+        // the bead's state is its mass in units of the universal core's
+        // state (1)
         let ratio = b.state.clone();
-        // the galaxy's stellar mass read on this substrate itself (the lit
-        // share of the core's mass, galaxy::stellar_mass), never through the
-        // founding it is part of
+        // stellar mass = lit share x core mass (suns) x state, as in
+        // galaxy::stellar_mass but read on this substrate, so the founding
+        // does not depend on itself
         &(&self.lighting.lit * &crate::package::hole_mass()) * &ratio >= Q::ONE
     }
 
@@ -496,7 +496,7 @@ impl Substrate {
         let pulls = self.pulls();
         let mut took: Vec<(u32, Vec<(u32, Dy)>)> =
             pulls.iter().map(|p| (p.0, Vec::new())).collect();
-        // the outflow at each galaxy's delay, read once per distinct delay
+        // the outflow is evaluated once per distinct delay and reused
         let mut at_delay: std::collections::BTreeMap<Dy, Vec<(u32, Dy)>> =
             std::collections::BTreeMap::new();
         for (slot, p) in took.iter_mut().zip(pulls.iter()) {
@@ -670,8 +670,8 @@ impl Substrate {
                     Dy::from_q(&b.inside).max(Dy::sci(1, -300)),
                 );
                 let hold = Dy::from_q(&b.state) / mean;
-                // the push at the galaxy's reach: the vacuum's share there
-                // about the universal state, 1 / (r0 + 1)
+                // gain = delta(r0, 1) d / hold, delta(r0, 1) = 1 / (r0 + 1) the
+                // vacuum's share at the galaxy's reach about the universal state
                 let gain = vacuum_share(r0, Dy::ONE) * d / hold.max(Dy::sci(1, -300));
                 let reached = t > delay;
                 let sent = if reached { t - delay } else { Dy::ZERO };
@@ -730,19 +730,21 @@ impl Substrate {
 mod tests {
     use super::*;
 
-    fn q(n: i64, d: i64) -> Q {
-        Q::new(n, d).unwrap()
-    }
-
     #[test]
     fn the_jet_lands_by_phase_and_leaves_by_the_filaments_count() {
         // coherence: in phase 1, opposed 0, a quarter turn apart one half,
         // and the shorter way round either way
         assert_eq!(coherence(&Q::ZERO, &Q::ZERO), Dy::ONE);
-        assert_eq!(coherence(&Q::ZERO, &q(1, 2)), Dy::ZERO);
-        assert_eq!(coherence(&Q::ZERO, &q(1, 4)), Dy::ratio(1, 2));
-        assert_eq!(coherence(&q(9, 10), &q(1, 10)), Dy::ratio(3, 5));
-        assert_eq!(coherence(&q(1, 10), &q(9, 10)), Dy::ratio(3, 5));
+        assert_eq!(coherence(&Q::ZERO, &Q::ratio(1, 2)), Dy::ZERO);
+        assert_eq!(coherence(&Q::ZERO, &Q::ratio(1, 4)), Dy::ratio(1, 2));
+        assert_eq!(
+            coherence(&Q::ratio(9, 10), &Q::ratio(1, 10)),
+            Dy::ratio(3, 5)
+        );
+        assert_eq!(
+            coherence(&Q::ratio(1, 10), &Q::ratio(9, 10)),
+            Dy::ratio(3, 5)
+        );
         // the throat's push is the vacuum's share where reach and hold
         // coincide, one half; the dilation per echo there: three
         assert_eq!(throat_push(), Dy::ratio(1, 2));

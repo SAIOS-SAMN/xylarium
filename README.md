@@ -2,8 +2,6 @@
 
 **Version 0.3.0** | [Quick start](#quick-start) | [Architecture](docs/architecture.md) | [Physical model](docs/model.md) | [Equations](docs/EQUATIONS.md) | [Roadmap](docs/roadmap.md) | [Changelog](CHANGELOG.md) | [Contributing](CONTRIBUTING.md) | [License: Apache-2.0](LICENSE)
 
-[![CI](https://github.com/SAIOS-SAMN/xylarium/actions/workflows/ci.yml/badge.svg)](https://github.com/SAIOS-SAMN/xylarium/actions/workflows/ci.yml)
-
 **Xylarium** is a deterministic universe simulator and the kernel of a
 grand-strategy space game in which sovereign AI minds run civilizations.
 
@@ -136,7 +134,12 @@ caches of what the laws regenerate.
 Deleting a cache never changes a result; the next start recomputes it. To
 embed the kernel in another program, depend on the `xylarium` crate and call
 `run::genesis`, `run::run_with` with your own `run::Link`, or
-`observe::observe`.
+`observe::observe`. Two runnable examples show both:
+
+```
+cargo run --release -p xylarium --example found_and_observe -- --home var/example-7
+cargo run --release -p xylarium --example minimal_link -- --home var/example-7 --for 5
+```
 
 ## Workspace
 

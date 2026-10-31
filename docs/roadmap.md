@@ -317,7 +317,7 @@ Constants declared rather than derived, by layer, each with what derives it:
   to be stated in the universe's own units.
 - **Civilizations** (`xyl-kernel`): the mass ratio 10, the 18 amu exhaust
   and the fission share (`propulsion`); the knowledge unit's thousand minds
-  (`knowledge`); the trait thresholds (`cosmic.rs`); the memory threshold
+  (`knowledge`); the trait thresholds (`cosmic/emergence.rs`); the memory threshold
   `e^-3` (`history::forgotten`); to derive from each people's own senses
   and economy.
 - **Resolution** (choices, not laws): the galaxy sample (`SAMPLE_CAP`,

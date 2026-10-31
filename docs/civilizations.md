@@ -14,18 +14,18 @@ and readings), **Partial** (partly implemented), **Planned** (on the
 
 | Area | Status | Code |
 |---|---|---|
-| Peoples created from the forecast of minds | Built | `xyl-cosmos/src/minds.rs`, `xyl-kernel/src/cosmic.rs` |
+| Peoples created from the forecast of minds | Built | `xyl-cosmos/src/minds/mod.rs`, `xyl-kernel/src/cosmic/` |
 | Numbers, housing, growth | Built | `growth.rs`, `civ/housing.rs`, `civ/mod.rs` |
 | Knowledge in four domains | Built | `knowledge.rs` |
-| Annals, turnings, eminent figures | Built | `cosmic.rs`, `civ/history.rs`, `civ/mod.rs` |
+| Annals, turnings, eminent figures | Built | `cosmic/`, `civ/history.rs`, `civ/mod.rs` |
 | Seats, percepts, seat records | Built | `seats.rs`, `percept.rs`, `lexicon.rs` |
 | Decisions by seat holders | Partial (two decisions) | `universe.rs` |
-| Drives | Built | `propulsion.rs`, `transit.rs` |
-| Constellations, ley lines, realms, stewards | Built | `transit.rs`, `universe.rs` |
-| Discord, quarantine, folding space | Built | `transit.rs`, `universe.rs` |
+| Drives | Built | `propulsion.rs`, `transit/voyage.rs` |
+| Constellations, ley lines, realms, stewards | Built | `transit/`, `universe.rs` |
+| Discord, quarantine, folding space | Built | `transit/discord.rs`, `universe.rs` |
 | Exodus and settlement within a people's system | Built | `civ/mod.rs` |
 | Settlement beyond a people's system | Planned | - |
-| Tolls | Partial (quoted, not accrued) | `transit.rs` |
+| Tolls | Partial (quoted, not accrued) | `transit/tolls.rs` |
 | Markets, trade routes, currencies | Planned | - |
 | World building by peoples | Planned | - |
 | Mu | Through the uplink only | [network.md](network.md) |
@@ -36,7 +36,7 @@ Paths below are relative to `crates/xyl-kernel/src` unless stated.
 
 ### How a people is created
 
-The forecast of minds (`xyl-cosmos/src/minds.rs`) gives, for every world of
+The forecast of minds (`xyl-cosmos/src/minds/mod.rs`) gives, for every world of
 the galaxy's sample, the epoch at which its life would reach a mind-bearing
 rung (see [glossary](glossary.md)) if the galaxy were undisturbed. The epoch
 is computed as an expected value in closed form: each rung takes its mean
@@ -44,7 +44,7 @@ duration, and impacts at rate `mu` stretch a rung of mean `m` to
 `(e^(mu m) - 1) / mu`. No random draw is used, so a mind's epoch is a
 function of its world and its system only.
 
-`Cosmic::wake` (`cosmic.rs`) advances deep time to a target epoch and
+`Cosmic::wake` (`cosmic/emergence.rs`) advances deep time to a target epoch and
 processes each forecast mind whose epoch falls before it. A mind becomes a
 people only where its world, read at that epoch, feeds a viable population
 (`xyl_cosmos::life::viable`, 500 bodies); otherwise no people is created.
@@ -177,10 +177,10 @@ recomputed.
 
 | Kind | Written when | Code |
 |---|---|---|
-| `BIG_BANG` | genesis | `cosmic.rs` |
-| `DEEP_HISTORY` | a people emerges: its life's rungs | `cosmic.rs` |
-| `EMERGENCE` | a people emerges | `cosmic.rs` |
-| `FALL` | a world no longer feeds its people | `cosmic.rs`, `civ/mod.rs` |
+| `BIG_BANG` | genesis | `cosmic/mod.rs` |
+| `DEEP_HISTORY` | a people emerges: its life's rungs | `cosmic/emergence.rs` |
+| `EMERGENCE` | a people emerges | `cosmic/emergence.rs` |
+| `FALL` | a world no longer feeds its people | `cosmic/emergence.rs`, `civ/mod.rs` |
 | `EXODUS` | a people leaves its world | `civ/mod.rs` |
 | `SETTLE` | a daughter people is founded | `civ/mod.rs` |
 | `EMINENT` | a turning is named by a figure | `civ/mod.rs` |
@@ -433,6 +433,6 @@ derived; the roadmap states what is to derive each): the unit body's generation
 transfer 0.1 and the flux ruler 340 W/m^2 (`growth::Rulers`); the stage's mass
 ratio 10, the chemical exhaust's 18 amu and the fission share (`propulsion`);
 the thousand unit minds of the knowledge unit (`knowledge`); the trait
-thresholds in `cosmic.rs` (the r or K strategy and `select`); and the memory
+thresholds in `cosmic/emergence.rs` (the r or K strategy and `select`); and the memory
 threshold `e^-3` (`history::forgotten`). The full list is in
 [roadmap.md](roadmap.md#declared-rulers).

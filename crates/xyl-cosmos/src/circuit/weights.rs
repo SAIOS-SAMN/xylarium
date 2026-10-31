@@ -56,7 +56,7 @@ pub fn neutrons_of(k: u32) -> Q {
         else {
             return Q::ZERO;
         };
-        let a = &e.a + &Q::new(1, 2).unwrap_or(Q::ZERO);
+        let a = &e.a + &Q::ratio(1, 2);
         let whole = &a - &a.frac();
         (&whole - &Q::int(i64::from(z))).max(Q::ZERO)
     };
@@ -102,11 +102,10 @@ pub fn electron_phase(k: u32, p: &Q) -> Q {
     }
     let c = crate::fibres::grow(charge);
     let (num, den) = c.kappa();
-    let kappa = Q::new(
+    let kappa = Q::ratio(
         i64::try_from(num).unwrap_or(0),
         i64::try_from(den).unwrap_or(1),
-    )
-    .unwrap_or(Q::ZERO);
+    );
     &kappa * &(&Q::ONE - &(&Q::int(2) * &p.frac()))
 }
 
@@ -119,8 +118,9 @@ impl Substrate {
         elements: &[crate::elements::Element],
     ) -> TwoWeights {
         let mut all = Mix::new();
-        // the firmament still held, plus what has left it and is in flight
-        // until a galaxy takes it (galaxy compositions carry their intake)
+        // galaxies' compositions already include their intake, so the
+        // firmament adds its held part (amount - left) and the matter in
+        // flight (left - taken)
         let out = self.outflow(t);
         let mut taken: std::collections::BTreeMap<u32, Q> = std::collections::BTreeMap::new();
         for (i, took) in self.intakes(t) {

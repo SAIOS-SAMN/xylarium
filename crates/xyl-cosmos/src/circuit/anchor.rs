@@ -101,8 +101,8 @@ pub fn anchor() -> Anchor {
     if let Some(a) = ANCHOR.get() {
         return a.clone();
     }
-    // founds the substrate at the registered spin, which sets the anchor
-    // before its reverberation
+    // founding the substrate at the registered spin calls `set` before the
+    // reverberation is read, so the anchor is available below
     if let Some(spin) = SPIN.get() {
         let _ = crate::cores::substrate_for(spin);
     }
@@ -137,7 +137,8 @@ pub(crate) fn of(rim: &Q, cools_in: Option<i64>, spin: &Q, share: &Q, margin: &Q
         .unwrap_or(Q::ZERO);
     let c = crate::package::Si::c();
     let gyr_s = crate::package::Si::gyr_s();
-    // light out to the home galaxy's rim and back: the rim one tier down
+    // bell = 2 rim r_galaxy / (c Gyr): light's round trip to the home rim,
+    // the rim read in galaxy-tier units (60^5 r_g)
     let galaxy_m = &Tier::Galaxy.in_rg() * &units.r_g_m;
     let bell = (&(&Q::int(2) * rim) * &galaxy_m)
         .checked_div(&(&c * &gyr_s))
@@ -147,7 +148,7 @@ pub(crate) fn of(rim: &Q, cools_in: Option<i64>, spin: &Q, share: &Q, margin: &Q
     let radius_rg = (rim * &Tier::Cluster.in_rg())
         .checked_div(&pi)
         .unwrap_or(Q::ZERO);
-    // the first stars: the first piece's cooling, at least one ring
+    // first stars = rings x bell, with at least one ring
     let rings = Q::int(cools_in.unwrap_or(1).max(1));
     Anchor {
         rim: rim.clone(),

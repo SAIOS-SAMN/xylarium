@@ -38,7 +38,7 @@ use xyl_core::Q;
 /// the reach where the received share `1 − δ` is twice the held share, so
 /// `δ_h = 1/3` and `R_h = M (1 − δ_h) / δ_h`. Linear in `M`, exact.
 pub fn horizon_reach(mass: &Q) -> Q {
-    // one third: the received share 1 - delta is twice the held share delta
+    // delta_h = 1/3, where the received share 1 - delta is twice delta
     let held = Q::ONE.checked_div(&Q::int(3)).unwrap_or(Q::ONE);
     let received = &Q::ONE - &held;
     (mass * &received).checked_div(&held).unwrap_or(Q::ZERO)
@@ -165,10 +165,11 @@ impl Bounce {
             phase,
         );
         let p = point(&at);
-        // the spin: the five planes' isoclinic turn about the centre, of
-        // magnitude a in every plane
+        // the spin bivector: an isoclinic turn about the centre, magnitude a
+        // in each of the five planes
         let k = spin_bivector(spin);
-        // the part of it that keeps the horizon (all of it, for a turn about the centre)
+        // the component that preserves the horizon (all of it for a turn
+        // about the centre)
         let kept = keeping(&sigma, &k)?;
         let source = Source::of(&sigma, &p, &kept)?;
         let far = crate::circuit::plane_antipole()?.sandwich(&p);
@@ -189,24 +190,20 @@ impl Bounce {
 mod tests {
     use super::*;
 
-    fn q(n: i64, d: i64) -> Q {
-        Q::new(n, d).unwrap()
-    }
-
     #[test]
-    fn spin_makes_the_white_hole_a_verified_null_source() {
-        let b = Bounce::of(&q(1, 1), &q(9, 10), &q(1000, 1), &q(1, 5)).unwrap();
+    fn spin_makes_the_white_hole_a_null_source() {
+        let b = Bounce::of(&Q::int(1), &Q::ratio(9, 10), &Q::int(1000), &Q::ratio(1, 5)).unwrap();
         // the crossing point lies on the horizon, at the one-third reach
         assert!(point(&b.at).geo(&b.horizon).scalar_part().is_zero());
         // its far face, the antipode under the planes' half turn, lies on the
         // horizon too, and is not the crossing point
         assert!(b.far.geo(&b.horizon).scalar_part().is_zero());
         assert!(!b.far.projective_eq(&point(&b.at)));
-        assert_eq!(horizon_reach(&q(3, 2)), q(3, 1));
+        assert_eq!(horizon_reach(&Q::ratio(3, 2)), Q::int(3));
         let n = &b.source.generator;
         assert!(n.geo(n).is_zero() && !n.is_zero(), "null: N² = 0");
         let p = point(&b.at);
-        for t in [q(1, 7), q(2, 5)] {
+        for t in [Q::ratio(1, 7), Q::ratio(2, 5)] {
             let s = b.source.sliver(&t);
             assert!(
                 s.sandwich(&p).projective_eq(&p),
@@ -218,16 +215,16 @@ mod tests {
             );
         }
         // no spin, or a spin past the extremal bound, is no bounce
-        assert!(Bounce::of(&q(1, 1), &Q::ZERO, &q(1000, 1), &Q::ZERO).is_none());
-        assert!(Bounce::of(&q(1, 1), &Q::ONE, &q(1000, 1), &Q::ZERO).is_none());
+        assert!(Bounce::of(&Q::int(1), &Q::ZERO, &Q::int(1000), &Q::ZERO).is_none());
+        assert!(Bounce::of(&Q::int(1), &Q::ONE, &Q::int(1000), &Q::ZERO).is_none());
         // no enclosure, no horizon to read
-        assert!(Bounce::of(&q(1, 1), &q(9, 10), &Q::ZERO, &Q::ZERO).is_none());
+        assert!(Bounce::of(&Q::int(1), &Q::ratio(9, 10), &Q::ZERO, &Q::ZERO).is_none());
         // the enclosure's curvature shortens the reach: under the flat reach, and
         // nearer it the larger the enclosure
-        let flat = horizon_reach(&q(1, 1));
+        let flat = horizon_reach(&Q::int(1));
         let (near, far) = (
-            curved_reach(&flat, &q(10, 1)),
-            curved_reach(&flat, &q(1000, 1)),
+            curved_reach(&flat, &Q::int(10)),
+            curved_reach(&flat, &Q::int(1000)),
         );
         assert!(
             near < far && far < flat,

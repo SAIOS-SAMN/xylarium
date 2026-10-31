@@ -41,10 +41,6 @@ use xyl_core::{Stream, Q};
 
 const BITS: u32 = 80;
 
-fn e(q: Q) -> Encl {
-    Encl::exact(q)
-}
-
 /// 1 / (2 pi), enclosed once.
 fn per_turn() -> &'static Encl {
     static K: std::sync::OnceLock<Encl> = std::sync::OnceLock::new();
@@ -220,7 +216,7 @@ impl Manifold {
     /// Turn rate (turns per Gyr, exact): the turning over 360; on a captured
     /// chain, the innermost moon's halved `k` times.
     pub fn rate(&self, all: &[Manifold]) -> Encl {
-        let own = |m: &Manifold| e(m.rate.checked_div(&Q::int(360)).unwrap_or(Q::ZERO));
+        let own = |m: &Manifold| Encl::exact(m.rate.checked_div(&Q::int(360)).unwrap_or(Q::ZERO));
         match self.chain {
             Some((first, k)) if k > 0 => {
                 let inner = all
@@ -229,7 +225,7 @@ impl Manifold {
                     .map(own)
                     .unwrap_or_else(|| own(self));
                 let halves = (0..k).fold(Q::ONE, |acc, _| &acc * &Q::new(1, 2).unwrap_or(Q::ONE));
-                inner.mul(&e(halves))
+                inner.mul(&Encl::exact(halves))
             }
             _ => own(self),
         }
@@ -238,7 +234,7 @@ impl Manifold {
     /// Eccentricity at `age` Gyr: the relaxation as a boost.
     pub fn e(&self, age: &Q) -> Encl {
         if self.tau_e.is_zero() {
-            return e(self.e_forced.clone());
+            return Encl::exact(self.e_forced.clone());
         }
         let k = Q::ONE.checked_div(&self.tau_e).unwrap_or(Q::ZERO);
         Modes::of(vec![
@@ -251,7 +247,7 @@ impl Manifold {
     /// State at `age` Gyr (since the star's birth).
     pub fn stand(&self, age: &Q, all: &[Manifold]) -> Stand {
         let ecc = self.e(age);
-        let mean = e(self.m0.clone()).add(&self.rate(all).mul(&e(age.clone())));
+        let mean = Encl::exact(self.m0.clone()).add(&self.rate(all).mul(&Encl::exact(age.clone())));
         // the orbit as pivots: the main pivot at its turning rate, and the
         // stretch as a second pivot at twice the rate, radius a e / 2, about a
         // centre a 3e/2 behind the anchor - periapsis a (1 - e), apoapsis
@@ -259,17 +255,17 @@ impl Manifold {
         let (cm, sm) = cos_sin_turns(&mean);
         let (c2, s2) = (
             cm.mul(&cm).sub(&sm.mul(&sm)),
-            e(Q::int(2)).mul(&cm).mul(&sm),
+            Encl::exact(Q::int(2)).mul(&cm).mul(&sm),
         );
-        let a = e(self.a.clone());
-        let half_e = ecc.mul(&e(Q::new(1, 2).unwrap_or(Q::ZERO)));
-        let x = a.mul(&cm.add(&half_e.mul(&c2.sub(&e(Q::int(3))))));
+        let a = Encl::exact(self.a.clone());
+        let half_e = ecc.mul(&Encl::exact(Q::ratio(1, 2)));
+        let x = a.mul(&cm.add(&half_e.mul(&c2.sub(&Encl::exact(Q::int(3))))));
         let y = a.mul(&sm.add(&half_e.mul(&s2)));
         // the twist over time (uniform in degrees), then the plane's frame
         // (half-angles, exact)
-        let (cw, sw) = cos_sin_turns(&self.twist(&ecc, all).mul(&e(age.clone())));
+        let (cw, sw) = cos_sin_turns(&self.twist(&ecc, all).mul(&Encl::exact(age.clone())));
         let (xp, yp) = (x.mul(&cw).sub(&y.mul(&sw)), x.mul(&sw).add(&y.mul(&cw)));
-        let vector = self.frame.apply(&[xp, yp, e(Q::ZERO)]);
+        let vector = self.frame.apply(&[xp, yp, Encl::exact(Q::ZERO)]);
         Stand {
             e: ecc,
             mean,
@@ -280,17 +276,16 @@ impl Manifold {
     /// Periapsis twist (turns per Gyr): the anchor's deficit each turn,
     /// independent of the ellipse's shape.
     fn twist(&self, _ecc: &Encl, all: &[Manifold]) -> Encl {
-        self.rate(all).mul(&e(self
-            .twist_deg
-            .checked_div(&Q::int(360))
-            .unwrap_or(Q::ZERO)))
+        self.rate(all).mul(&Encl::exact(
+            self.twist_deg.checked_div(&Q::int(360)).unwrap_or(Q::ZERO),
+        ))
     }
 
     /// Reach (its tier's unit): the arc of the anchor's circle it holds, its
     /// deficit share of the pair m / (M + m) of a turn at its distance (the
     /// turning law's form, delta = M / (r + M)). No root.
     pub fn reach(&self) -> Encl {
-        reach(&e(self.a.clone()), &self.mass_ratio)
+        reach(&Encl::exact(self.a.clone()), &self.mass_ratio)
     }
 
     /// Bearing from the anchor at `age` Gyr: the unit direction the plane's
@@ -299,12 +294,15 @@ impl Manifold {
     /// linear in the elements.
     pub fn bearing(&self, age: &Q, all: &[Manifold]) -> Bearing {
         let ecc = self.e(age);
-        let mean = e(self.m0.clone()).add(&self.rate(all).mul(&e(age.clone())));
+        let mean = Encl::exact(self.m0.clone()).add(&self.rate(all).mul(&Encl::exact(age.clone())));
         let (cm, _) = cos_sin_turns(&mean);
-        let along = mean.add(&self.twist(&ecc, all).mul(&e(age.clone())));
+        let along = mean.add(&self.twist(&ecc, all).mul(&Encl::exact(age.clone())));
         let (c, s) = cos_sin_turns(&along);
         Bearing {
-            dir: self.frame.apply(&[c, s, e(Q::ZERO)]).map(|x| x.mid()),
+            dir: self
+                .frame
+                .apply(&[c, s, Encl::exact(Q::ZERO)])
+                .map(|x| x.mid()),
             r: &self.a * &(&Q::ONE - &(&ecc.mid() * &cm.mid())),
         }
     }
@@ -359,14 +357,15 @@ pub fn gap(all: &[Manifold], wa: usize, wb: usize, age: &Q) -> Option<Q> {
 /// 2 pi a ratio / (1 + ratio).
 pub fn reach(a: &Encl, ratio: &Q) -> Encl {
     let held = ratio.checked_div(&(&Q::ONE + ratio)).unwrap_or(Q::ZERO);
-    a.mul(&e(held)).mul(&pi(BITS).mul(&e(Q::int(2))))
+    a.mul(&Encl::exact(held))
+        .mul(&pi(BITS).mul(&Encl::exact(Q::int(2))))
 }
 
 /// A plane's frame from its drawn inclination (rad), node and periapsis
 /// (turns): each as a half-angle on the grid, composed exactly as node after
 /// inclination after periapsis.
 fn frame_of(inc: &Q, node: &Q, peri: &Q) -> Rotor {
-    let inc_turns = e(inc.clone()).mul(per_turn()).mid();
+    let inc_turns = Encl::exact(inc.clone()).mul(per_turn()).mid();
     let h = |t: &Q| Half::of_turns(t, 40);
     Rotor::about(2, &h(node))
         .then_after(&Rotor::about(0, &h(&inc_turns)))
@@ -378,7 +377,7 @@ fn frame_of(inc: &Q, node: &Q, peri: &Q) -> Rotor {
 /// holds share_n of the point's sphere of directions, n the dimension. Taken
 /// from the angle (measure.rs), without cosines or roots. Enclosed.
 fn cone_share(n: u32, x: &Encl) -> Encl {
-    let half = Q::new(1, 2).unwrap_or(Q::ZERO);
+    let half = Q::ratio(1, 2);
     let turns = |q: &Q, up: bool| {
         let t = x_turns(q, up).max(Q::ZERO).min(half.clone());
         xyl_core::dyadic::Dy::from_q(&t)
@@ -403,7 +402,7 @@ pub fn cap_degrees(n: u32, reach: &Encl, d: &Encl) -> Encl {
         lo: reach.lo.checked_div(&d.hi).unwrap_or(Q::ZERO),
         hi: reach.hi.checked_div(&d.lo).unwrap_or(Q::ONE),
     };
-    cone_share(n, &x).mul(&e(Q::int(360)))
+    cone_share(n, &x).mul(&Encl::exact(Q::int(360)))
 }
 
 /// A point's belonging to a child of `reach` at distance `d`, as a share of
@@ -419,12 +418,12 @@ pub fn share(n: u32, d: &Encl, reach: &Encl) -> Encl {
         cone_share(n, &out(reach, d))
     } else if d.hi <= reach.lo {
         let s = cone_share(n, &out(d, reach));
-        e(Q::ONE).sub(&s)
+        Encl::exact(Q::ONE).sub(&s)
     } else {
-        let half = Q::new(1, 2).unwrap_or(Q::ZERO);
+        let half = Q::ratio(1, 2);
         let (a, b) = (
             cone_share(n, &out(reach, d)),
-            e(Q::ONE).sub(&cone_share(n, &out(d, reach))),
+            Encl::exact(Q::ONE).sub(&cone_share(n, &out(d, reach))),
         );
         Encl {
             lo: a.lo.min(b.lo).min(half.clone()),
@@ -440,7 +439,11 @@ pub fn star_cap_degrees(star: &Star, star_suns: &Q) -> Encl {
     let inside =
         &crate::galaxy::inside_mass(&star.r) * &crate::cores::ratio_of_scale(&star.scale.to_q());
     let ratio = star_suns.checked_div(&inside).unwrap_or(Q::ZERO);
-    cap_degrees(measure::UNIVERSE_N, &reach(&e(Q::ONE), &ratio), &e(Q::ONE))
+    cap_degrees(
+        measure::UNIVERSE_N,
+        &reach(&Encl::exact(Q::ONE), &ratio),
+        &Encl::exact(Q::ONE),
+    )
 }
 
 /// A world's distance to its star at `age` (system tier units): a planet's

@@ -86,7 +86,8 @@ pub struct Percept {
     pub media: Vec<MediumSeen>,
     /// The world's day and year (and lock), which pace percepts; `None` when unread.
     pub heartbeat: Option<Heartbeat>,
-    /// The bells as heard at the people's star; `None` when the star has no place or nothing is heard.
+    /// The bells as heard at the people's star; `None` when the star has no place or nothing is
+    /// heard.
     pub hearing: Option<Hearing>,
     /// Every other people whose dawn's word has had time to arrive.
     pub neighbours: Vec<Heard>,

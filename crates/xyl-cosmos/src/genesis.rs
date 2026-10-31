@@ -19,8 +19,8 @@ pub const SEED: u64 = 7;
 pub fn universe() -> &'static (BigBang, Chemistry) {
     static G: OnceLock<(BigBang, Chemistry)> = OnceLock::new();
     G.get_or_init(|| {
-        // the build's target directory (CARGO_TARGET_DIR when set), so the
-        // genesis is kept beside the build and found again by a later run
+        // kept in the build's target directory (CARGO_TARGET_DIR when set)
+        // so a later run finds the cached genesis
         let target = std::env::var_os("CARGO_TARGET_DIR")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {

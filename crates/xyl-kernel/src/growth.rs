@@ -27,10 +27,6 @@ use xyl_core::dyadic::Dy;
 use xyl_cosmos::life::{growing_share, Body};
 use xyl_cosmos::worlds::{body_pace, Ctx, Medium};
 
-fn n(x: i64) -> Dy {
-    Dy::int(x)
-}
-
 /// The rulers growth is measured against. Declared rulers: each is a
 /// measured value kept as a ruler and listed in the emergence register.
 pub struct Rulers {
@@ -52,11 +48,11 @@ pub struct Rulers {
 impl Default for Rulers {
     fn default() -> Rulers {
         Rulers {
-            m_mind: n(10),
+            m_mind: Dy::int(10),
             generation_yr: Dy::ratio(142, 10),
             eta_primary: Dy::ratio(15, 1000),
             trophic: Dy::ratio(1, 10),
-            flux_w: n(340),
+            flux_w: Dy::int(340),
         }
     }
 }
@@ -114,7 +110,7 @@ pub fn grow(now: Dy, cap: Dy, rate: Dy, years: Dy) -> Dy {
     if cap.signum() <= 0 || now.signum() <= 0 {
         return Dy::ZERO;
     }
-    let x = (rate * years).min(n(200));
+    let x = (rate * years).min(Dy::int(200));
     // zero span: return unchanged (the closed form would round)
     if x.signum() <= 0 {
         return now;
@@ -140,10 +136,12 @@ fn surface_m2(body: &Body) -> Dy {
     let unit_r = Dy::from_q(&xyl_cosmos::package::Si::world_radius_m());
     let r_m = body.radius * unit_r;
     // linear area rule against the unit world: 4 pi r R_unit
-    n(4) * Dy::PI * r_m * unit_r
+    Dy::int(4) * Dy::PI * r_m * unit_r
 }
 
-/// The power available to a people of `numbers` bodies on world `body` in state `state` (W): its star's light over the whole surface, the world's heat flow over it, and its bodies' total metabolism under `traits`, `ctx` and rulers `r`.
+/// The power available to a people of `numbers` bodies on world `body` in state `state` (W): its
+/// star's light over the whole surface, the world's heat flow over it, and its bodies' total
+/// metabolism under `traits`, `ctx` and rulers `r`.
 pub fn power(
     state: &xyl_cosmos::worlds::State,
     body: &Body,
@@ -180,7 +178,7 @@ mod tests {
             solvent: Solvent::Volatile(Species::H2O),
             dark: false,
             at: Where::Surface,
-            body_t: n(310),
+            body_t: Dy::int(310),
             sense: "light",
             form: "walking",
             hands: "grasping limbs",
@@ -194,14 +192,14 @@ mod tests {
     fn growth_is_logistic_toward_what_a_world_houses() {
         let r = Rulers::default();
         let t = traits(Dy::ONE, Strategy::K);
-        let cap = n(1_000_000);
+        let cap = Dy::int(1_000_000);
         // the logistic: towards the capacity, never past it, from either side
         let rate = growth_per_yr(&t, &r);
-        let later = grow(n(500), cap, rate, n(1000));
-        assert!(later > n(500) && later <= cap);
-        assert!(grow(cap * n(2), cap, rate, n(1000)) < cap * n(2));
-        assert_eq!(grow(n(500), cap, rate, Dy::ZERO), n(500));
+        let later = grow(Dy::int(500), cap, rate, Dy::int(1000));
+        assert!(later > Dy::int(500) && later <= cap);
+        assert!(grow(cap * Dy::int(2), cap, rate, Dy::int(1000)) < cap * Dy::int(2));
+        assert_eq!(grow(Dy::int(500), cap, rate, Dy::ZERO), Dy::int(500));
         // one e-fold per its own generation: a larger body breeds slower
-        assert!(growth_per_yr(&traits(n(8), Strategy::K), &r) < rate);
+        assert!(growth_per_yr(&traits(Dy::int(8), Strategy::K), &r) < rate);
     }
 }

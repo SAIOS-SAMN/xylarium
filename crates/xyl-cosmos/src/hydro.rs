@@ -27,17 +27,9 @@
 use crate::worlds::{unit, State};
 use xyl_core::dyadic::Dy;
 
-fn n(x: i64) -> Dy {
-    Dy::int(x)
-}
-
-fn r(a: i64, b: i64) -> Dy {
-    Dy::ratio(a, b)
-}
-
 /// The unit world's magnetopause in its radii (subsolar, quiet wind).
 fn unit_world_standoff() -> Dy {
-    r(101, 10)
+    Dy::ratio(101, 10)
 }
 
 fn power(w: &State) -> Dy {
@@ -95,16 +87,16 @@ pub fn exposure(w: &State, pressure: Dy) -> Dy {
 /// the integral spectrum falling as rigidity^-1.7 about a 4 GV median.
 fn gcr_through_field(w: &State) -> Dy {
     let radius = w.radius.max(Dy::sci(1, -6));
-    let cutoff = n(6) * moment(w) / radius;
-    Dy::ONE / (Dy::ONE + r(17, 10) * cutoff / n(4))
+    let cutoff = Dy::int(6) * moment(w) / radius;
+    Dy::ONE / (Dy::ONE + Dy::ratio(17, 10) * cutoff / Dy::int(4))
 }
 
 /// What passes the air's column (1033 g/cm^2 per bar at unit gravity,
 /// attenuated over 185 g/cm^2 with its cascade).
 fn through_air(w: &State) -> Dy {
     let g = if w.g.signum() > 0 { w.g } else { Dy::ONE }.max(Dy::sci(1, -6));
-    let column = n(1033) * w.p_bar / g;
-    (-(column / n(185))).exp()
+    let column = Dy::int(1033) * w.p_bar / g;
+    (-(column / Dy::int(185))).exp()
 }
 
 /// The particles' power reaching a world's surface (W/m^2): its star's wind
@@ -125,7 +117,7 @@ pub fn particle_power(w: &State) -> Dy {
 /// (flux units): 3% of the absorbed energy stored as oxidants (G ~ 2 per
 /// 100 eV at ~1.5 eV each), over the 340 W/m^2 flux unit.
 pub fn radiolysis(w: &State) -> Dy {
-    r(3, 100) * particle_power(w) / n(340)
+    Dy::ratio(3, 100) * particle_power(w) / Dy::int(340)
 }
 
 fn dose_raw(w: &State, pressure: Dy, galactic: Dy) -> Dy {
@@ -150,14 +142,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_standoff_follows_chapman_ferraro_and_the_wind_reaches_a_sliver() {
+    fn standoff_falls_with_wind_pressure_and_bounds_exposure() {
         let u = unit();
-        // the standoff is the field's share against the wind's pressure: a harder
-        // wind holds it nearer (never (B^2 / P)^(1/6))
+        // the standoff falls as the wind's pressure rises (the model's linear
+        // share, not (B^2 / P)^(1/6))
         let (r1, r64) = (standoff(u, Dy::ONE), standoff(u, Dy::int(64)));
         assert!(r64 < r1 && r64.signum() > 0, "{r1} against {r64}");
-        // the exposure is R / r_mp, the share of its directions the wind
-        // reaches (never squared): a field holds most of the sky off
+        // the exposure is R / r_mp (not squared), the share of directions
+        // the wind reaches, below 1 for a magnetised world
         let e = exposure(u, Dy::ONE);
         assert!(
             (e - Dy::ONE / r1).abs() < e * Dy::sci(1, -9),

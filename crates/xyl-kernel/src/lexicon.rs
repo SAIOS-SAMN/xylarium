@@ -71,7 +71,7 @@ pub fn solvents() -> Vec<&'static str> {
         .collect()
 }
 
-fn q(x: Dy) -> Value {
+fn value_q(x: Dy) -> Value {
     Value::Q(x.to_q())
 }
 
@@ -93,21 +93,33 @@ pub fn records(domain: &[u8; 32], p: &Percept) -> Vec<Record> {
     let mut out = vec![
         Record {
             kind: PEOPLE,
-            values: vec![Value::Flag(p.ancient), q(p.dawn), q(p.gyr)],
+            values: vec![Value::Flag(p.ancient), value_q(p.dawn), value_q(p.gyr)],
         },
         Record {
             kind: NUMBERS,
-            values: vec![q(p.numbers), q(p.capacity), q(p.growth_per_yr)],
+            values: vec![
+                value_q(p.numbers),
+                value_q(p.capacity),
+                value_q(p.growth_per_yr),
+            ],
         },
         Record {
             kind: WORLD,
-            values: vec![q(p.surface_k), q(p.pressure_bar), q(p.light)],
+            values: vec![
+                value_q(p.surface_k),
+                value_q(p.pressure_bar),
+                value_q(p.light),
+            ],
         },
     ];
     if let Some(pw) = p.power {
         out.push(Record {
             kind: POWER,
-            values: vec![q(pw.bodies_w), q(pw.starlight_w), q(pw.heat_w)],
+            values: vec![
+                value_q(pw.bodies_w),
+                value_q(pw.starlight_w),
+                value_q(pw.heat_w),
+            ],
         });
     }
     for m in &p.media {
@@ -117,13 +129,17 @@ pub fn records(domain: &[u8; 32], p: &Percept) -> Vec<Record> {
             .map_or(u64::MAX, |i| i as u64);
         out.push(Record {
             kind: MEDIUM,
-            values: vec![Value::Count(id), q(m.t_k), q(m.energy)],
+            values: vec![Value::Count(id), value_q(m.t_k), value_q(m.energy)],
         });
     }
     if let Some(hb) = p.heartbeat {
         out.push(Record {
             kind: HEARTBEAT,
-            values: vec![q(hb.day_s), q(hb.year_s), Value::Flag(hb.locked)],
+            values: vec![
+                value_q(hb.day_s),
+                value_q(hb.year_s),
+                Value::Flag(hb.locked),
+            ],
         });
     }
     if let Some(h) = p.hearing {
@@ -131,8 +147,8 @@ pub fn records(domain: &[u8; 32], p: &Percept) -> Vec<Record> {
             kind: HEARING,
             values: vec![
                 Value::Count(h.dominant as u64),
-                q(h.dominance),
-                q(h.coherence),
+                value_q(h.dominance),
+                value_q(h.coherence),
             ],
         });
     }
@@ -141,8 +157,8 @@ pub fn records(domain: &[u8; 32], p: &Percept) -> Vec<Record> {
             kind: NEIGHBOUR,
             values: vec![
                 Value::Key(people_key(domain, &n.people)),
-                q(n.kpc),
-                q(n.light_yr),
+                value_q(n.kpc),
+                value_q(n.light_yr),
             ],
         });
     }
@@ -156,7 +172,7 @@ mod tests {
     use crate::seats::Role;
 
     #[test]
-    fn a_percept_becomes_exact_typed_records_with_no_names_but_its_own_keys() {
+    fn percept_records_are_exact_typed_and_self_keyed() {
         let p = Percept {
             seat: 0,
             role: Role::Sovereign,

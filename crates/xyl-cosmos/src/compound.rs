@@ -200,14 +200,16 @@ mod tests {
 
     #[test]
     fn water_closes_from_its_parts_and_parts_by_heat() {
-        // oxygen opens four on S^11, hydrogen one: the smallest closing cluster is O . 4H
+        // oxygen opens four frames on S^11, hydrogen one: the smallest
+        // closing cluster is O . 4H
         let (w, no, nh, grip) = closing(8, 1, &Q::ZERO).unwrap();
         assert_eq!((no, nh, key(w)), (1, 4, "Z008\u{b7}4Z001".to_string()));
         assert_eq!((charge(w), open(w), bonds(w)), (12, 0, 4));
-        // the 3Z span holds across the bond: hold + open = 3 charge, the parts' too
+        // hold + open = 3 charge holds for the cluster as for its parts
         assert_eq!(hold(w) + open(w), 3 * 12);
         assert_eq!(grip, Q::ONE);
-        // it stands cool; a ringing core strips hydrogen's winding and it parts
+        // it stands at heat 0; at heat 1 hydrogen's winding is stripped and
+        // the cluster parts
         assert!(stands(w, &Q::ZERO) && !stands(w, &Q::ONE));
         // sealed kinds pair nothing; any pair closes by the gcd
         assert!(closing(28, 1, &Q::ZERO).is_none());

@@ -53,7 +53,8 @@ pub enum Shell {
 }
 
 impl Shell {
-    /// Human-readable name of the shell, as used in reports ("epicenter", "galaxy hub", "deep core", "inner mantle", "outer rim").
+    /// Human-readable name of the shell, as used in reports ("epicenter", "galaxy hub", "deep
+    /// core", "inner mantle", "outer rim").
     pub fn name(self) -> &'static str {
         match self {
             Shell::Epicenter => "epicenter",
@@ -73,9 +74,11 @@ pub struct Keeper {
     pub galaxy: Option<u32>,
     /// Which shell of its galaxy (or the epicenter) the keeper stands at.
     pub shell: Shell,
-    /// Distance from the epicenter in kpc: the galaxy core's reach along its bearing plus the shell's radius.
+    /// Distance from the epicenter in kpc: the galaxy core's reach along its bearing plus the
+    /// shell's radius.
     pub from_epicenter_kpc: Q,
-    /// Clock rate relative to the epicenter, in (0, 1]: the product of the nested wells r / (r + M(<r)).
+    /// Clock rate relative to the epicenter, in (0, 1]: the product of the nested wells r / (r +
+    /// M(<r)).
     pub rate: Q,
     /// Travel time of the pulse from the epicenter to the keeper, in bells.
     pub delay: Q,
@@ -92,7 +95,8 @@ pub struct Reading {
     pub local: Q,
     /// Turns fallen behind the epicenter: (1 - rate) x (N - delay) / ring.
     pub slip: Q,
-    /// Phase agreement with the epicenter in [0, 1]: 1 - 2 |slip - round(slip)| (1 in phase, 0 half a turn out).
+    /// Phase agreement with the epicenter in [0, 1]: 1 - 2 |slip - round(slip)| (1 in phase, 0 half
+    /// a turn out).
     pub coherence: Q,
     /// Whole turns of slip (the floor of `slip`); 0 for a keeper at rate 1.
     pub rung: i128,
@@ -137,14 +141,16 @@ pub struct Entry {
     pub parent: [u8; 32],
     /// Head hash of the keeper inside it at commit time (all zeros for the epicenter).
     pub inner: [u8; 32],
-    /// BLAKE3 hash of this entry over the keeper index, count, reading, residual, parent and inner hashes (and, for the epicenter, the receipt height).
+    /// BLAKE3 hash of this entry over the keeper index, count, reading, residual, parent and inner
+    /// hashes (and, for the epicenter, the receipt height).
     pub hash: [u8; 32],
 }
 
 /// The universe's keepers and their chain.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Chronometry {
-    /// All keepers: the epicenter first, then for each galaxy its hub, deep core, inner mantle and outer rim.
+    /// All keepers: the epicenter first, then for each galaxy its hub, deep core, inner mantle and
+    /// outer rim.
     pub keepers: Vec<Keeper>,
     /// For each keeper, the keeper inside it (the epicenter has none).
     pub inside: Vec<Option<usize>>,

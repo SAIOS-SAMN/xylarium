@@ -129,7 +129,7 @@ Done when: `xylarium observe cores` lists every galactic core's hole and
 its mass ratio to the universal core, with each core no heavier than the
 universal core, and `observe core` shows the substrate's books closing.
 
-## 2. Worlds on the manifold chain (current)
+## 2. Worlds on the manifold chain
 
 Goal: Every mass is an anchor whose manifold is the arc that the anchor's
 pull holds against the tier above. Bodies gather on an anchor's manifold
@@ -170,34 +170,98 @@ Done when: `xylarium observe worlds` shows metal-rich stars holding several
 worlds, and `observe system S` reads each relation in the lowest tier
 holding both ends.
 
-## 3. Founding from the package manifest
+## 3. Rules from the founding and the galactic cores (current)
 
-Goal: A universe is founded from a manifest of nuclei per atomic number,
-and every calibration carried over from measured values is replaced by a
-quantity the founding derives.
+Goal: Every rule above the founding is a quantity derived from the
+universal core's founding and the galactic cores. No law reads a measured
+property of the Earth, the Sun or the Milky Way. SI units appear only at
+display, through `package::Si`, and the universal physical constants (c,
+G, k_B, h) are the only measured values the laws read.
 
-Why this order: The milestone builds on the founding's units (1) and feeds the
-chemistry the worlds (2) are made of.
+Why this order: The planet layer, the chemistry and the civilization
+rulers were ported from a prototype that ran in Earth masses, astronomical
+units, solar masses and Earth years, with the core's mass set to the
+measured 4.3e6 solar masses. Each phase below removes one of those units
+or calibrations and states the founding quantity that replaces it. Phases
+are ordered by dependency: time and length first, because every later
+phase is written in them; then mass; then light, which needs mass and
+length; then the chemistry, geochemistry and life rulers that read light.
+
+Measure: `scripts/calibration-anchors` counts the remaining anchors in
+code by category (441 at the start of the milestone). Each phase drives
+its categories to zero and is checked with one targeted reading on the
+cached test genesis.
+
+Landed:
+
+- Phase 0, builds: the founding and forecast digests hash code only
+  (`crates/xyl-cosmos/build.rs`), so documentation edits reuse the cached
+  founding, and the anchor counter reads code only by category.
 
 Next:
 
-1. The firmament-to-galaxies guard `M >= m`: A galaxy is held only where
-   its core is no heavier than the universal core. Galaxies are currently
-   selected by `Substrate::holds_a_star` alone.
-2. The founding from a manifest-shaped recipe: The recipe gives nuclei per
-   `Z`, as counts only, and the kernel converts them to core units
-   ([network.md](network.md)).
-3. The light-element founding: The lightest kinds are read from the same
+1. Phase 1, time from the bell. The reference epoch `chem::Rulers::today_gyr`
+   (13.8 Gyr), the Sun's age (4.57 Gyr in `bodies/isotopes` and
+   `worlds/setting`) and the Earth day and year (`Si::day_s`, `Si::yr_s`)
+   are replaced by the founding's clock: counts of rings of the bell
+   (`circuit::anchor::Anchor::bell_gyr`, `xyl-kernel universe::Bell`), the
+   universe's current count (`Universe::now`) and each star's birth
+   (`galaxy::Star::born`). A world's day and year are the world's rotation and
+   orbit periods; a people's generation is counted in rings.
+2. Phase 2, length from the tiers. Orbits in astronomical units (`a_au`,
+   `Si::au`) and radii in Earth radii (`Si::world_radius_m`) are replaced
+   by the system tier's unit (`60 r_g`) and the planet tier's unit
+   (`r_g / 60^2`) from `xyl_core::units::Tier`, with conversions between
+   tiers by `manifold::dilation`.
+3. Phase 3, mass down the founding's chain. The solar and Earth mass units
+   (`Si::star_mass_kg`, `Si::world_mass_kg`) and the core's mass in suns
+   (`package::hole_mass`) are replaced by shares of the chain: the
+   universal core is 1; a galactic core is its bead's state
+   (`circuit::Bead`); a star is the share of its piece's infall it holds
+   (`disc::star_cut`), which replaces the initial mass function's bounds of
+   0.08 and 60 suns (`galaxy::imf`); a world is its share of the star's
+   manifold (`disc::manifold_worlds`); a moon is its share of the world's.
+   A bead is a galaxy where its lit holding is at least one star's mass on
+   that chain, in place of "at least one sun" (`Substrate::holds_a_star`),
+   and only where its core is no heavier than the universal core
+   (`M >= m`).
+4. Phase 4, light and temperature from the burn. A star's luminosity is the
+   hold its burn transduces per bell (`stars::burn_per_bell`), in core
+   units. The flux at a world is that light times the world's received
+   share at its reach (`circuit::vacuum_share`, the deficit law), and its
+   temperature follows from the flux through the radiation law with the
+   universal constants. This replaces the Earth calibrations 278 K
+   (`Spec::t_form`, `worlds::t_unit`), 340 W/m^2 (`life`, `growth`,
+   `hydro`, `worlds`) and 288 K (`lexicon`, `percept`), and the greenhouse
+   fit `greenhouse_tau` is replaced by the atmosphere's clustering and
+   containment.
+5. Phase 5, chemistry from the census. The solar reference metallicity
+   (`chem::Rulers::reference_metallicity`, 0.0142), the Milky Way gas
+   pattern (`ism_today_dex`) and the flat rotation speed (`v_flat`,
+   220 km/s) are replaced by the founding's census
+   (`circuit::Substrate::census`), the home galaxy's enrichment along each
+   ring (`chem::Chemistry::birth_along`) and the turning law
+   `v = c delta(<r)` (`turning`). The light kinds are read from the same
    founding as the firmament.
-4. Chemistry from the census and the stars' burning: Enrichment is the hold
-   that a star's burn returns to its ring, in place of `chem::Rulers` and
-   the calibration against measured abundances.
-5. The planet layer in core units: Worlds' masses, radii and fluxes are
-   read in the core's units, with `package::Si` used for display only.
+6. Phase 6, geochemistry from the atoms. The bulk-silicate partition
+   (`systems::MANTLE_KEPT`, McDonough 2003), the measured heat-producing
+   isotopes (`bodies/isotopes`) and the unit world (`worlds/unit.rs`) are
+   replaced by each element's hold and open frames (`compound::hold`,
+   `compound::open`) against iron's, and by the isotopes of each star's
+   birth mixture. `worlds/unit.rs` is deleted.
+7. Phase 7, life and peoples from their worlds. The mind-bearing body of
+   10 kg, its 19.1 W metabolism and 14.2-year generation, the viable people
+   of 500, the 18 amu exhaust and the mass ratio of 10 (`life`,
+   `xyl-kernel growth`, `propulsion`) are derived from each world's
+   gravity, temperature and chemistry.
+8. Phase 8, the package at the seam. `package::hole_mass` is supplied by
+   the package and read only for display; the founding is read from a
+   manifest of nuclei per `Z` ([network.md](network.md)); `package::Si`
+   keeps only the universal constants and the display conversions.
 
-Done when: `xylarium observe founding` and `observe chemistry` read from a
-manifest-founded universe, and `scripts/calibration-anchors` counts no
-anchors in the founding and chemistry.
+Done when: `scripts/calibration-anchors` reports zero in every category,
+and `xylarium observe worlds` and `observe chemistry` print quantities in
+the founding's units with SI shown as a display conversion.
 
 ## 4. Seats for minds
 

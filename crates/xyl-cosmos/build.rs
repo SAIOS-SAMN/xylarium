@@ -11,7 +11,9 @@
 //!
 //! Each digest covers file names and contents in sorted path order and is
 //! cut to 16 hex digits. `watch.rs` and every line containing `watch::` are
-//! excluded: the process monitor does not enter any law.
+//! excluded, since the process monitor does not enter any law; comments and
+//! blank lines are excluded, so documentation edits leave both digests
+//! unchanged.
 
 use std::path::{Path, PathBuf};
 
@@ -92,9 +94,14 @@ fn digest<'a>(root: &Path, paths: impl Iterator<Item = &'a PathBuf>, key: &str) 
             continue;
         }
         let text = std::fs::read_to_string(p).unwrap_or_default();
+        // Comments and blank lines are excluded as well, so documentation
+        // edits do not invalidate a founding or a forecast; only code
+        // reaches the digest.
         let body: Vec<u8> = text
             .lines()
             .filter(|l| !l.contains("watch::"))
+            .map(code_of)
+            .filter(|l| !l.is_empty())
             .collect::<Vec<_>>()
             .join("\n")
             .into_bytes();
@@ -104,4 +111,23 @@ fn digest<'a>(root: &Path, paths: impl Iterator<Item = &'a PathBuf>, key: &str) 
         h.update(&body);
     }
     h.finalize().to_hex().as_str()[..16].to_string()
+}
+
+/// The code on a source line: the line with any `//` comment removed and
+/// surrounding whitespace trimmed. A `//` inside a string literal is kept:
+/// the scan tracks double quotes, skipping escaped ones.
+fn code_of(line: &str) -> &str {
+    let bytes = line.as_bytes();
+    let mut in_str = false;
+    let mut i = 0;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'\\' if in_str => i += 1,
+            b'"' => in_str = !in_str,
+            b'/' if !in_str && bytes.get(i + 1) == Some(&b'/') => return line[..i].trim(),
+            _ => {}
+        }
+        i += 1;
+    }
+    line.trim()
 }

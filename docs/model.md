@@ -81,14 +81,14 @@ grid.
   firmament's margin. The anchor is stored once per process
   (`circuit::anchor::set`, a `OnceLock`), so the first founding in a
   process sets it.
-- The SI bridge is `package.rs`. `package::hole_mass` (4.3e6 solar masses)
-  is the only conversion from core units to SI: it fixes `r_g` in metres and
-  thereby every reading displayed in kpc, Gyr, AU, solar masses or world
-  masses. The SI constants used at seams are in `package::Si`. Laws stated
-  in core units do not depend on the bridge; the chemistry and the world
-  states, which read SI-calibrated constants, do depend on it. Next: the
-  core's mass is to be supplied by the package (roadmap, Founding from the
-  package manifest).
+- The SI bridge is `package.rs`. `package::hole_mass` (4.3e6 solar masses) is
+  the only conversion from core units to SI: it fixes `r_g` in metres and
+  thereby every reading displayed in kpc, Gyr, AU, solar masses or world masses.
+  The SI constants used at seams are in `package::Si`. Laws stated in core units
+  do not depend on the bridge; the chemistry and the world states, which read
+  SI-calibrated constants, do depend on it. Next: the core's mass is to be
+  supplied by the package (roadmap, Rules from the founding and the galactic
+  cores).
 
 ## 3. The bounce and the founding
 
@@ -147,26 +147,24 @@ pole axis and the five isoclinic planes).
 
 ### The elements (`elements.rs`, `atoms.rs`)
 
-- In the capture chain (`elements::founded`), nuclei are built one capture
-  at a time from hydrogen, `count_Z = floor(count_(Z-1) a h_Z)`, where
-  `h_Z = (3Z - u_Z) / 3Z` is the closed share of the new nucleus and `u_Z`
-  is its number of unpaired windings (`atoms::unpaired`). Counts are whole
-  nuclei out of `2^b` hydrogen nuclei, where `b = founding_bits(a)` is the
-  smallest number of bits that carries one whole nucleus of the vessel's
-  sealing kind through the floored chain. A kind whose count floors to zero
-  is absent from the founding. Next: the shares of the light kinds are to be
-  read from the same founding as the firmament (roadmap, Founding from the
-  package manifest).
-- The table runs from Z = 1 to `TOP_Z` = 1700. `data/elements.tsv` holds Z 1
-  to 99 as measured rows and Z 100 to 150 as predicted rows, each predicted
-  from its homologue by the periodic law. Z 151 to 1700 are generated with
-  systematic names, the mass number of the valley of stability
-  (`elements::valley_a`) and uranium as the homologue for the material
-  columns. The founding replaces the abundance column with the chain's
-  counts; mass numbers, phase temperatures, densities and geochemical
-  classes remain catalogue values. Next: those columns are to be derived
-  from the atom (roadmap, Founding from the package manifest, chemistry from
-  the census).
+- In the capture chain (`elements::founded`), nuclei are built one capture at a
+  time from hydrogen, `count_Z = floor(count_(Z-1) a h_Z)`, where `h_Z = (3Z -
+  u_Z) / 3Z` is the closed share of the new nucleus and `u_Z` is its number of
+  unpaired windings (`atoms::unpaired`). Counts are whole nuclei out of `2^b`
+  hydrogen nuclei, where `b = founding_bits(a)` is the smallest number of bits
+  that carries one whole nucleus of the vessel's sealing kind through the
+  floored chain. A kind whose count floors to zero is absent from the founding.
+  Next: the shares of the light kinds are to be read from the same founding as
+  the firmament (roadmap, Rules from the founding and the galactic cores).
+- The table runs from Z = 1 to `TOP_Z` = 1700. `data/elements.tsv` holds Z 1 to
+  99 as measured rows and Z 100 to 150 as predicted rows, each predicted from
+  its homologue by the periodic law. Z 151 to 1700 are generated with systematic
+  names, the mass number of the valley of stability (`elements::valley_a`) and
+  uranium as the homologue for the material columns. The founding replaces the
+  abundance column with the chain's counts; mass numbers, phase temperatures,
+  densities and geochemical classes remain catalogue values. Next: those columns
+  are to be derived from the atom (roadmap, Rules from the founding and the
+  galactic cores, chemistry from the census).
 - The atom (`atoms::atom`) is computed on S^11. A subshell of shape `l`
   holds `2 (C(l + 11, 11) - C(l + 9, 11))` electrons (orientations 1, 12,
   77, 352, ...), so shells hold 2, 26, 180 and 884 electrons, and the seals
@@ -335,19 +333,18 @@ pole axis and the five isoclinic planes).
   `c p! / k^(p+1) (1 - e^(-kt) sum_(j<=p) (kt)^j / j!)`
   (`c t^(p+1) / (p + 1)` where `k = 0`), and the time is found by 48
   halvings.
-- Chemistry (`chem::Model`): each disc ring (30 rings of 0.5 kpc) is a sum
-  of closed forms `c t^m e^(-lambda t)`. Gas falls in on the timescale of
-  the ring's first light toward the structure's crowding profile, and stars
-  form at `efficiency x Omega / 2 pi`. Prompt and slow returns, the
-  fountain's landing map and the core's jets each feed every ring once, and
-  each nucleosynthetic channel makes its elements after its delay. Yields
-  are scaled per channel by `chem::Calibration` against the gas at the
-  reference ring and the solar-birth reference (`Rulers::ism_today_dex`,
-  `Rulers::reference_metallicity`, `Rulers::today_gyr`, `Rulers::v_flat`,
-  `Rulers::sigma_r0`); hydrogen and helium come from the founding's counts
-  (`chem::Light`). Status: partial. Next: the yields and ring scales are to
-  be derived from the founding (roadmap, Founding from the package manifest,
-  chemistry from the census).
+- Chemistry (`chem::Model`): each disc ring (30 rings of 0.5 kpc) is a sum of
+  closed forms `c t^m e^(-lambda t)`. Gas falls in on the timescale of the
+  ring's first light toward the structure's crowding profile, and stars form at
+  `efficiency x Omega / 2 pi`. Prompt and slow returns, the fountain's landing
+  map and the core's jets each feed every ring once, and each nucleosynthetic
+  channel makes its elements after its delay. Yields are scaled per channel by
+  `chem::Calibration` against the gas at the reference ring and the solar-birth
+  reference (`Rulers::ism_today_dex`, `Rulers::reference_metallicity`,
+  `Rulers::today_gyr`, `Rulers::v_flat`, `Rulers::sigma_r0`); hydrogen and
+  helium come from the founding's counts (`chem::Light`). Status: partial. Next:
+  the yields and ring scales are to be derived from the founding (roadmap, Rules
+  from the founding and the galactic cores, chemistry from the census).
 
 ## 6. Stars and systems
 

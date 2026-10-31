@@ -120,9 +120,10 @@ implementation per quantity.
 | `XYL_FOUNDING_DIGEST` | `bang`, `bounce`, `elements`, `atoms`, `compound`, `fibres`, `formation`, `cores`, `chain`, `package`, `circuit/`, `data/` and all of `xyl-core/src` | The founding cache (`founding-*` in a home, `target/genesis` for tests) |
 | `XYL_SOURCE_DIGEST` | Every `.rs` and `.tsv` file of `xyl-cosmos` and `xyl-core` | The forecast caches (`forecast-*`, `forecast-stars/`, `bells-*`) |
 
-Both digests hash file contents, comments included. An edit to any
-founding file invalidates every cached founding, and the next genesis or
-test run founds the universe again, which takes minutes. Keep changes above
+Both digests hash code only: comments and blank lines are excluded, so a
+documentation edit reuses every cache. A code edit to any founding file
+invalidates every cached founding, and the next genesis or test run founds
+the universe again, which takes minutes. Keep changes above
 the founding out of those files so homes and the test genesis are reused.
 
 ### 4. Test the law's invariants

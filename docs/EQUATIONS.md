@@ -50,11 +50,11 @@ another crate. Laws are composed from shares (ratios of the form
   in kpc and in `r_g`. Status: built.
 - First stars (`circuit::anchor::of`): the first stars form at
   `max(cools_in, 1) bell`. Status: built.
-- SI bridge (`package::hole_mass`): `M_core = 4.3e6` solar masses, which
-  fixes `r_g` in metres for display in kpc, Gyr, AU and solar or world
-  masses; the SI constants are in `package::Si`. Status: placeholder; the
-  next step is the core's mass from the package (roadmap, Founding from the
-  package manifest).
+- SI bridge (`package::hole_mass`): `M_core = 4.3e6` solar masses, which fixes
+  `r_g` in metres for display in kpc, Gyr, AU and solar or world masses; the SI
+  constants are in `package::Si`. Status: placeholder; the next step is the
+  core's mass from the package (roadmap, Rules from the founding and the
+  galactic cores).
 
 ## 3. The bounce and the founding
 
@@ -295,11 +295,11 @@ another crate. Laws are composed from shares (ratios of the form
   `v_flat`, `sigma_r0`, `prompt`, `slow`, `loading` and the ring width).
 - Yields (`chem::Calibration`): per-channel scales are set from
   `Rulers::ism_today_dex` at the reference ring at `Rulers::today_gyr`;
-  `relative` is 1 in the solar-birth reference gas; hydrogen and helium
-  follow from the founding's counts with `Rulers::dy_dz` and
-  `Rulers::reference_metallicity` (`chem::Light`). Status: placeholder; the
-  next step is yields from the founding (roadmap, Founding from the package
-  manifest).
+  `relative` is 1 in the solar-birth reference gas; hydrogen and helium follow
+  from the founding's counts with `Rulers::dy_dz` and
+  `Rulers::reference_metallicity` (`chem::Light`). Status: placeholder; the next
+  step is yields from the founding (roadmap, Rules from the founding and the
+  galactic cores).
 - Placement (`galaxy::star`): the reach is where the rings' cumulative
   holding reaches the silver-turn pivot; the disc phase follows the golden
   turn, the ball planes follow the plastic and golden turns, and the rate

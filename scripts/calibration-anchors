@@ -1,17 +1,76 @@
-#!/usr/bin/env bash
-# Count the Earth anchors left in the engine's source: measured constants,
-# SI and astronomical units, and calibrations to the measured Sun, Milky Way or observed universe.
-# The count per crate is the reading the matter-from-the-tube milestone
-# drives to zero. Usage: scripts/calibration-anchors [-v]
-cd "$(dirname "$0")/.." || exit 1
-pattern='star_mass_kg|M_SUN|kpc|Mpc|\bAU\b|_au\b|earth|Earth|299_?792|6\.674e-11|ours\(\)|\bours\b|Planck|measured|elements\.tsv|sun_|_sun\b|solar|Milky|Sgr|kb_ev|kb_j|h_j|ev_j|1\.602|1\.380|6\.626|Lodders|Mumma|bar\b'
-total=0
-for c in crates/*/; do
-  n=$(grep -rEo "$pattern" --include=*.rs "$c" | wc -l)
-  printf '%-14s %6d\n' "$(basename "$c")" "$n"
-  total=$((total + n))
-done
-printf '%-14s %6d\n' total "$total"
-if [ "${1:-}" = -v ]; then
-  grep -rEn "$pattern" --include=*.rs crates | awk -F: '{print $1}' | sort | uniq -c | sort -rn
-fi
+#!/usr/bin/env python3
+"""Count the Earth, Sun and Milky Way anchors left in the code.
+
+An anchor is a place where a law reads a measured property of the Earth, the
+Sun or the Milky Way instead of a quantity derived from the universal core's
+founding and the galactic cores. Comments are not counted; only code is.
+The count per category is the reading that roadmap milestone 3 ("Rules from
+the founding and the galactic cores") drives to zero.
+
+Usage: scripts/calibration-anchors [-v]     (-v lists every site)
+"""
+
+import glob
+import os
+import re
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.chdir(ROOT)
+
+CATEGORIES = [
+    ("core mass in suns (Sgr A*)", r"\bhole_mass\b"),
+    ("Earth and Sun as units", r"Si::(world_mass_kg|world_radius_m|star_mass_kg|star_radius_m|au)\b"),
+    ("Earth day and year", r"Si::(day_s|yr_s)\b"),
+    ("SI unit suffixes", r"\b[a-z][a-z0-9_]*_(au|kg|yr)\b"),
+    ("Earth climate (278 K, 288 K, 340 W/m^2)", r"\b(int|ratio)\((278|288|340)\b|,\s*340\)"),
+    ("Earth and Sun epochs (13.8, 4.57 Gyr)", r"\btoday_gyr\b|\bsolar_age\b|\b457, 100\b"),
+    ("solar and Milky Way chemistry", r"\breference_metallicity\b|\bism_today_dex\b|\bv_flat\b"),
+    ("Earth geochemistry", r"\bMANTLE_KEPT\b|bulk.silicate|\bbse_"),
+    ("fitted climate", r"\bgreenhouse_tau\b"),
+    ("unit world (Earth at 1 AU)", r"\bunit_world\w*|worlds::unit\b"),
+]
+
+
+def code(line):
+    """The line without its `//` comment (a `//` inside a string is kept)."""
+    in_str, i = False, 0
+    while i < len(line):
+        ch = line[i]
+        if ch == "\\" and in_str:
+            i += 2
+            continue
+        if ch == '"':
+            in_str = not in_str
+        elif not in_str and line.startswith("//", i):
+            return line[:i]
+        i += 1
+    return line
+
+
+def main():
+    verbose = "-v" in sys.argv[1:]
+    files = sorted(glob.glob("crates/*/src/**/*.rs", recursive=True))
+    total = 0
+    for name, pattern in CATEGORIES:
+        rx = re.compile(pattern)
+        sites = []
+        for path in files:
+            if "/tests" in path or path.endswith("tests.rs"):
+                continue
+            for i, line in enumerate(open(path, encoding="utf-8"), 1):
+                text = code(line)
+                n = len(rx.findall(text))
+                if n:
+                    sites.append((path, i, n))
+        count = sum(n for _, _, n in sites)
+        total += count
+        print(f"{count:6d}  {name}")
+        if verbose:
+            for path, i, n in sites:
+                print(f"          {path}:{i}")
+    print(f"{total:6d}  total")
+
+
+if __name__ == "__main__":
+    main()

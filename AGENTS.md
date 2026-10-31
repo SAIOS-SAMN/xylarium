@@ -76,9 +76,12 @@ A module `foo` is `src/foo.rs` or, when split, the directory `src/foo/`
 - The `fast` profile inherits `release`, which turns integer overflow checks
   off. Run changed modules' tests once in the `dev` profile before
   finishing.
-- Editing any founding file (`crates/xyl-cosmos/build.rs` lists them; all of
-  `xyl-core` is included), even a comment, changes `XYL_FOUNDING_DIGEST` and
-  forces the next genesis or test run to found the universe again.
+- A code edit to any founding file (`crates/xyl-cosmos/build.rs` lists
+  them; all of `xyl-core` is included) changes `XYL_FOUNDING_DIGEST` and
+  forces the next genesis or test run to found the universe again. Comment
+  edits do not: the digests hash code only. Test laws above the founding
+  against the cached test genesis by running only the changed modules'
+  tests.
 - Before finishing, run `cargo fmt --all`, `cargo clippy --workspace
   --all-targets -- -D warnings`, `RUSTDOCFLAGS="-D warnings" cargo doc
   --workspace --no-deps`, `scripts/check-docs` and `scripts/check-style`.

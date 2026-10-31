@@ -6,7 +6,8 @@
 //! Inputs: the [`Cosmic`] world (peoples' stars, witnessed systems, star
 //! places) and the bells from `xyl_cosmos::pulse` (the core and the holes
 //! among the first sample stars) with their laws in `xyl_cosmos::field`
-//! (`path`, `absorb`, `burning`).
+//! (`path`, `absorb`, `transduction`, `transduced_share`; the star's step on its transduction
+//! sequence, `galaxy::Star::sequence`).
 //!
 //! - Delivery ([`Field::step`]): only stars with peoples are reached. For
 //!   each bell the arrivals in (from, to] Gyr are counted in closed form;
@@ -14,7 +15,7 @@
 //!   them unchanged the remaining rings are counted rather than repeated,
 //!   so the result does not depend on how the span is cut. Stars are
 //!   computed in parallel.
-//! - Books ([`Books`]): energy in = gravity + light + burned out, exact in
+//! - Books ([`Books`]): energy in = gravity + light + transduced out, exact in
 //!   `Q` ([`Books::balances`]).
 //! - Anchors and drift: each star's worlds as anchors from its G point
 //!   (AU), and the star's offset from its galactic orbit (AU, summed per
@@ -35,7 +36,9 @@ use std::collections::BTreeMap;
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 use xyl_cosmos::chain::radius;
-use xyl_cosmos::field::{absorb, au_per_kpc, bells, burning, path, Absorbed, Anchor, Bell};
+use xyl_cosmos::field::{
+    absorb, au_per_kpc, bells, path, transduced_share, transduction, Absorbed, Anchor, Bell,
+};
 use xyl_cosmos::pulse::{nodes, nodes_among, Node};
 
 /// Number of sample stars searched for bells: the bells are the core plus the
@@ -52,11 +55,11 @@ pub struct Books {
     /// Part of `energy_in` spent re-locking the star's worlds on their orbits.
     pub gravity: Q,
     /// Part of `energy_in` given out as light: the remainder after gravity and
-    /// burn-out.
+    /// transduction-out.
     pub light: Q,
-    /// Part of `energy_in` converted by the star's burning step: the star's
-    /// mass-defect share of what gravity left.
-    pub burned_out: Q,
+    /// Part of `energy_in` converted by the star's transduction step: the step's
+    /// release (`field::transduced_share`) of what gravity left.
+    pub transduced_out: Q,
     /// Number of pulses absorbed.
     pub pulses: u64,
     /// Time of the first absorbed pulse, in Gyr; `None` before any.
@@ -69,14 +72,14 @@ impl Books {
         self.energy_in = &self.energy_in + &(&a.energy_in * &n);
         self.gravity = &self.gravity + &(&a.gravity * &n);
         self.light = &self.light + &(&a.light * &n);
-        self.burned_out = &self.burned_out + &(&a.burned_out * &n);
+        self.transduced_out = &self.transduced_out + &(&a.transduced_out * &n);
         self.pulses += k;
         self.since.get_or_insert(at);
     }
 
-    /// Returns whether `energy_in = gravity + light + burned_out` holds exactly.
+    /// Returns whether `energy_in = gravity + light + transduced_out` holds exactly.
     pub fn balances(&self) -> bool {
-        &(&self.gravity + &self.light) + &self.burned_out == self.energy_in
+        &(&self.gravity + &self.light) + &self.transduced_out == self.energy_in
     }
 
     /// Returns the absorbed energy per year since the first pulse, at `now`
@@ -276,11 +279,14 @@ fn ring_star(
         xyl_cosmos::circuit::rings_of_gyr_dy(from),
         xyl_cosmos::circuit::rings_of_gyr_dy(to),
     );
-    let step = burning(
+    let seq = w.star.sequence();
+    let step = transduction(
+        &seq,
         w.star.compactness(),
         w.star.reach_rings(),
         to_ring - Dy::from_q(&w.star.born),
     );
+    let transduced_out = transduced_share(&seq, step);
     let mut drift = drift0.unwrap_or([Q::ZERO, Q::ZERO, Q::ZERO]);
     let mut books = books0;
     let mut delivered = 0;
@@ -315,7 +321,7 @@ fn ring_star(
         let b = books.get_or_insert_with(Books::default);
         let mut i = 0;
         while i < k {
-            let Some(a) = absorb(&mass, step, &worlds, &v, &e) else {
+            let Some(a) = absorb(&mass, &transduced_out, &worlds, &v, &e) else {
                 break;
             };
             let settled = a.anchors == worlds;

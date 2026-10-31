@@ -37,7 +37,7 @@ Three number types, defined in `xyl-core`, carry every law:
   rounded toward zero in integer arithmetic and therefore identical on every
   machine. It is used for heavy readings at seams: the substrate's clock,
   reverberation, outflow, waveform and push (`circuit::core`); the settling
-  (`systems`); the stars' burn (`stars`); and life and minds (`life`,
+  (`systems`); the stars' transduction (`stars`); and life and minds (`life`,
   `minds`). A `Dy` value is converted to `Q`, often on a 2^-40 or 2^-64
   grid, before it is held.
 
@@ -68,11 +68,11 @@ grid.
   (`package::Si::seconds_per_ring`, `bell r_g / c`); `circuit::rings_of_gyr`
   and `gyr_of_rings` convert at the boundaries of layers still counted in
   Gyr and at display.
-- A ring of time is one bell; counts of time (cooling, first light, a
-  star's burn and life) are whole numbers of rings. An echo is two bells,
-  one ring for each face (near and far) of the paired throat
-  (`circuit::echo`). A one-way crossing to reach `r` takes
-  `(r / rim) bell / 2`, a fraction of a ring.
+- A ring of time is one bell; counts of time (cooling, first light, a star's
+  transduction and life) are whole numbers of rings. An echo is two bells, one
+  ring for each face (near and far) of the paired throat (`circuit::echo`). A
+  one-way crossing to reach `r` takes `(r / rim) bell / 2`, a fraction of a
+  ring.
 - The pulse along the filament (the pole axis; see
   [glossary.md](glossary.md)) crosses the universe's rim in the same half
   bell, so the speed in the ocean (the medium between galaxies) is
@@ -341,7 +341,7 @@ law, the same at a nucleus, a star and a world:
 
 - **Irradiation.** A body at reach `r` receives the perturbation's ring,
   `1 / (pi (r + 1))` per bell, plus the vessel's drift `bell q(t) / (r + 1)`
-  (`stars::ring_per_bell`, `stars::burn_per_bell`).
+  (`stars::ring_per_bell`, `stars::transduced_per_bell`).
 - **Held and passed.** The body holds its deficit share of what it
   receives at the body's rim, `delta = M / (R + M)`; the remainder,
   `1 - delta`, is passed: it continues past the body to what lies beyond.
@@ -349,9 +349,9 @@ law, the same at a nucleus, a star and a world:
 - **Heat.** The held share enters the body's hold, on its Z pole. A body
   that does not transduce keeps it as warmth.
 - **Light.** A transducing body converts its held share and returns it
-  outward. For a star the held share per bell is its burn,
-  `delta / (pi (r + 1))`; its power is the hold the burn converts per
-  ring, `P = m burn_per_bell(r) / bell` in core masses per ring (`c = 1`,
+  outward. For a star the held share per bell is its transduction,
+  `delta / (pi (r + 1))`; its power is the hold the transduction converts per
+  ring, `P = m transduced_per_bell(r) / bell` in core masses per ring (`c = 1`,
   `stars::power`), and its light is that power with the vessel's drift,
   `P (1 + pi bell q(t))` (`stars::light`). For a nucleus the radiated part
   is its open frames over its weight, the Q pole's share of its frames
@@ -464,7 +464,7 @@ law, the same at a nucleus, a star and a world:
 
 ## 6. Stars and systems
 
-- The burn (`stars.rs`): a star at reach `r` absorbs the ring that the bell
+- The transduction (`stars`): a star at reach `r` absorbs the ring that the bell
   brings there, `1 / (pi (r + 1))` per bell, plus the vessel's drift `bell q(t)
   / (r + 1)`, and holds its compactness `delta` of that absorption: its deficit
   at its rim, `delta = m / (R 60 + m)` (`disc::rim_share`), with `m` the star's
@@ -475,26 +475,27 @@ law, the same at a nucleus, a star and a world:
   (`formation::hold_at_heat`). The cut is read in three states. At collapse the
   dark cut (no over-pressure) gives the held share `s0` and rim `R0`, so the
   collapsed star's compactness is `delta0 = s0 c / (R0 60 + s0 c)`. At ignition
-  the star holds `delta0` of the turning it receives per echo; that is its burn,
-  which adds the over-pressure `p0 = 1 + burn`. Settled, the burning cut gives
-  the star's held share and rim (`disc::star_cut`). Every star of a cloud shares
-  the rim, so a heavier star is more compact, burns a larger share and lives
-  fewer rings. Its power is the hold that burn transduces per ring, `P = m
-  burn_per_bell(r) / bell` in core masses per ring (`c = 1`; `stars::power`),
-  and its light that power times the drift factor `1 + pi bell q(t)`
-  (`stars::light`). The system and world layers still read the luminosity in the
-  prototype's display unit through the boundary `stars::suns_of_power`, removed
-  when layer C is converted. Its main-sequence life is `(1 - hold(He) / (4
-  hold(H))) / burn` bells, one quarter over the burn (`stars::life`); its giant
-  phase ends at that life times `transduced_He / transduced_H` (`stars::ends`);
-  its remnant keeps `1 - transduced_He` of its hold (`stars::remnant_share`).
-  The radiation's swing within a bell is `(pi / 2) |cos(2 pi t / echo)|`
-  (`stars::flicker`).
+  the star holds `delta0` of the turning it receives per echo; that is its
+  transduction, which adds the over-pressure `p0 = 1 + transduced`. Settled, the
+  settled cut gives the star's held share and rim (`disc::star_cut`). Every
+  star of a cloud shares the rim, so a heavier star is more compact, transduces
+  a larger share and lives fewer rings. Its power is the hold that transduction
+  transduces per ring, `P = m transduced_per_bell(r) / bell` in core masses per
+  ring (`c = 1`; `stars::power`), and its light that power times the drift
+  factor `1 + pi bell q(t)` (`stars::light`). The system and world layers still
+  read the luminosity in the prototype's display unit through the boundary
+  `stars::suns_of_power`, removed when layer C is converted. Each step of its
+  transduction sequence (Polarity, fusion and fission; `galaxy::Star::sequence`)
+  lasts its transduced share over the transduction: its main-sequence life is
+  the first step's (`stars::life`), the later steps end one after another
+  (`stars::ends`), and its remnant keeps the hold no step transduced
+  (`stars::remnant_share`). The radiation's swing within a bell is `(pi / 2)
+  |cos(2 pi t / echo)|` (`stars::flicker`).
 - The star's cut (`disc::star_cut`): the infall of the star's lit piece
   collapses carrying the galaxy's shear across its extent,
   `h w / (R (R + w))`, as its turning. It is heated by the pulse's turning
-  per echo at the star and pushed by the star's burn per echo as an
-  over-pressure `p0 = 1 + burn`. Each kind is carried to
+  per echo at the star and pushed by the star's transduction per echo as an
+  over-pressure `p0 = 1 + transduced`. Each kind is carried to
   `l = p p0 (e / e_mean)(w_mean / w) + add` and is held where
   `h / (l / h + h) >= p` on the held hold (`formation::hold_at_heat`). The
   disc's agitation is `turning x swing x grip / shed`, with
@@ -564,7 +565,7 @@ law, the same at a nucleus, a star and a world:
 
 ### Polarity, fusion and fission
 
-A star burns by the polarity of the collective it holds: the inverse of
+A star transduces by the polarity of the collective it holds: the inverse of
 magnetism between its bonding nucleons over the quantum states its
 irradiation opens. Every quantity is read from the atoms:
 
@@ -590,45 +591,64 @@ irradiation opens. Every quantity is read from the atoms:
   throat, `t = 1`, after `n* = ln(1 / t0) / ln rho_s` echoes, in closed
   form; there the collective holds as much as it passes and takes no step.
   Past it, `t > 1`, the collective lies on the Q side and irradiation
-  splits nuclei: fission. Both `n*` and the burn's duration scale as
+  splits nuclei: fission. Both `n*` and the transduction's duration scale as
   `1 / delta`, so a star's fusion era and its fuel end on one timescale.
-- **A fusion step.** `k` nuclei of kind `z` become one nucleus of the kind
-  `z'` whose nucleon count is `A_z' = k A_z` (`A` the element table's mass
-  number), for the smallest `k >= 2` for which such a kind exists and the
-  step releases hold. The share transduced is the hold released,
-  `1 - w_z'(q) / (k w_z(q))`. This gives the steps the model already holds:
-  four hydrogens to helium, `1 - hold(He) / (4 hold(H))`, and three heliums
-  to carbon, `1 - hold(C) / (3 hold(He))`.
+- **A fusion step.** `k` nuclei of kind `z` become one nucleus of the kind `z'`
+  whose nucleon count is `A_z' = k A_z` (`A` the element table's mass number),
+  for the smallest `k >= 2` for which such a kind exists and the step releases
+  hold. The share transduced is the hold released, `1 - w_z'(q) / (k w_z(q))`.
+  For example, for a mixture of hydrogen alone the rule finds four hydrogens to
+  the kind of four nucleons; the products found depend on the element table and
+  the mixture, not on a list.
 - **A fission step.** One nucleus of kind `z` becomes two nuclei of kinds
   `z1` and `z2` with `A_z1 + A_z2 = A_z`, the split nearest to equal halves
   that releases hold. The share transduced is `1 - (w_z1(q) + w_z2(q)) /
   w_z(q)`.
-- **The sequence.** Before the throat the fusion steps follow the held kinds in
-  order, lightest first, each transducing its release times the kind's share of
-  the hold, and each step's products step in turn; after the throat the fission
-  steps follow, heaviest first. Each step's duration is its transduced share
-  over the star's burn per bell (`stars::burn_per_bell`); the first step is the
-  main sequence, later steps the giant phases, and the hold no step transduced
-  is the remnant.
+- **The sequence.** No kind, product or order is set: the sequence emerges from
+  the star's held mixture (`disc::StarCut::held`, the dark cut's held kinds). At
+  each stage the held kind whose step has the greatest release steps (ties by
+  the lesser nucleon count), transducing its release times its share of the
+  hold; its products join the held mixture, and the next stage is read again
+  from the updated mixture, until no held kind releases under the current
+  direction. Fusion stages come first; after the throat the fission stages
+  follow, read the same way, a split's products sharing the passed hold in
+  proportion to their held frames. Each step's duration is its transduced share
+  over the star's transduction per bell (`stars::transduced_per_bell`); the
+  first step is the main sequence, later steps the giant phases, and the hold no
+  step transduced is the remnant (`stars::Sequence::of`, `stars::fusion_step`,
+  `stars::fission_step`, `stars::pole_point`, `stars::throat_echoes`). Status:
+  built.
 - **A held body that does not ignite.** Where no step of the held mixture
-  releases hold under its polarity, the body holds its matter and burns
+  releases hold under its polarity, the body holds its matter and transduces
   nothing.
+
+Open, read from the emergent sequences (cold hydrogen gives four
+hydrogens to the kind of four nucleons, three of those to the kind of
+twelve, two to the kind of twenty-four, then eight to `Z 77` and ten to
+`Z 752`; 296 kinds of the table take no step in either direction):
+
+- The held frames per nucleon fall with the nucleon count across the whole
+  table, so every fusion step releases hold and the sequence runs to
+  superheavy kinds; the atoms give no peak at which fusion stops releasing.
+- Where the table holds no kind at `2 A_z`, the rule's least `k` can be
+  large (eight or ten nuclei in one step), while the atoms' bonding on
+  S^11 is pairwise (`fibres`); a pairwise rule alone would stop the
+  hydrogen step, since the table holds one nucleon count per kind.
 
 Grain: the steps move whole nuclei and conserve the nucleon count, so the
 founding's grain is kept (`circuit::grain::nuclei_of`).
 
 ### Star types
 
-Star types are not set. A star's class is the state its formulas give at a
-time (`galaxy::Star::class`): its burning step at its age
-(`field::burning`: hydrogen, helium or remnant), its compactness
-`delta = m / (R 60 + m)` (`galaxy::Star::compactness`), its mass as a share
-of its cloud's star mass, and its life in rings against the universe's age
-(`stars::life`). Two stars are of one class where these agree. The known
-types below are expectations, not limits: a known name is attached where
-its condition holds (`galaxy::Class::name`), and every other combination
-is reported by its quantities, so the universe can produce classes no
-observation has named.
+Star types are not set. A star's class is the state its formulas give at a time
+(`galaxy::Star::class`): its transduction step at its age
+(`field::transduction`: unlit, a step of its sequence, or remnant), its
+compactness `delta = m / (R 60 + m)` (`galaxy::Star::compactness`), its mass as
+a share of its cloud's star mass, and its life in rings against the universe's
+age (`stars::life`). Two stars are of one class where these agree. The known
+types below are expectations, not limits: a known name is attached where its
+condition holds (`galaxy::Class::name`), and every other combination is reported
+by its quantities, so the universe can produce classes no observation has named.
 
 `xylarium observe star-types [N] [R]` counts the classes over each
 galaxy's first `N` sample stars at the universe's age, then probes the home
@@ -640,14 +660,14 @@ reads the reference values and none is tuned to them.
 | Type | Condition in the model | Status |
 |---|---|---|
 | Collapsing cloud (protostar) | A lit piece's infall held by the dark cut, before ignition: held share `s0`, rim `R0`, compactness `delta0` (`disc::star_cut`). | Partial: computed as the collapse state of each cut; not yet a stage of a star's timeline. |
-| Main-sequence star | The first step of the star's sequence (Polarity, fusion and fission): age below that step's transduced share over the burn. | Built for the fixed hydrogen step; next: the first step its polarity selects. |
-| Mass ordering of the main sequence (the classes O to M) | Within a cloud every star shares the rim, so a heavier star is more compact, burns a larger share and lives fewer rings. | Built for mass, compactness and life. The surface temperature that the classes are named by needs a world-independent temperature of a star from its held share (layer C, radiation). |
+| Main-sequence star | The first step of the star's sequence (Polarity, fusion and fission): age below that step's transduced share over the transduction. | Built: the first step of the sequence its held mixture gives. |
+| Mass ordering of the main sequence (the classes O to M) | Within a cloud every star shares the rim, so a heavier star is more compact, transduces a larger share and lives fewer rings. | Built for mass, compactness and life. The surface temperature that the classes are named by needs a world-independent temperature of a star from its held share (layer C, radiation). |
 | Long-lived low-mass star (red dwarf) | A star whose life in rings exceeds the universe's current count, so it has not left the main sequence since any star was born. | Built as a reading of `stars::life` against the universe's count. |
-| Held body that does not ignite (brown dwarf) | No step of the held mixture releases hold under its polarity (Polarity, fusion and fission). | Next: implemented with the polarity sequence. |
-| Giant | The later steps of the star's sequence: age past the first step's end and before the last step's. | Built for the fixed helium step; next: the later steps its polarity selects. |
-| Fission star | A star whose held collective lies on the Q side of the throat (`t > 1`), so its steps split nuclei. No observed type is known to match; the model allows it. | Next: implemented with the polarity sequence. |
+| Held body that does not ignite (brown dwarf) | No step of the held mixture releases hold under its polarity (Polarity, fusion and fission). | Built: `field::Transduction::Unlit` where the sequence has no step. |
+| Giant | The later steps of the star's sequence: age past the first step's end and before the last step's. | Built: the later fusion steps of the sequence. |
+| Fission star | A star whose held collective lies on the Q side of the throat (`t > 1`), so its steps split nuclei. No observed type is known to match; the model allows it. | Built: a fission step of the sequence, after the throat; the step's start is read from the cumulative step ends, not yet from `n*`. |
 | Supergiant | A giant of a star in the upper share of its cloud's masses. | Next: needs a derived boundary in the cloud's mass shares. |
-| Remnant | Burning step remnant: the star keeps `1 - transduced_He` of its hold (`stars::remnant_share`) and becomes a hole in the pulse network (`pulse::nodes`). | Built. |
+| Remnant | Every step of the sequence has ended: the star keeps the hold no step transduced (`stars::remnant_share`) and becomes a hole in the pulse network (`pulse::nodes`); a held body that does not ignite forms none. | Built. |
 | Compact remnant (white dwarf), denser remnant (neutron star) | A remnant whose held core's rim, from the remnant's cut of its remaining mixture, gives compactness below one half; the two separated by where the remnant's held kinds lose their open frames. | Next: needs that cut of the remnant's mixture. |
 | Remnant at the throat (black hole) | A remnant whose compactness reaches `delta = 1/2`, the throat's equator: it holds as much as it passes and becomes a core with a throat. | Next: follows from the remnant's rim; whether such a remnant is an echo surface is under review with Netstratum. |
 | Binary companion | A second star drawn with a share of the primary's mass. | Placeholder: the share `0.1 + 0.9 u` is imposed; it is to come from the cloud's split. |

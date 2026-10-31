@@ -186,7 +186,7 @@ fn orbit_gaps_and_voyages_follow_drives_and_wells() {
         ..world(333_000, 1, None, None)
     };
     assert!(voyage(&fusion, r, escape_speed(&collapsed), pc).is_none());
-    // The fuel energy burned per kg carried is (R - 1) x the fuel's energy
+    // The fuel energy transduced per kg carried is (R - 1) x the fuel's energy
     // per kg.
     assert_eq!(near.energy_per_kg, Dy::int(9) * fusion.energy_per_kg);
     assert!(

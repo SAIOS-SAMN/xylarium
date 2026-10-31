@@ -209,6 +209,7 @@ fn star_life(
         let born = crate::circuit::gyr_of_rings_dy(Dy::from_q(&star.born));
         let t0 = born
             + first_age(
+                &star.sequence(),
                 star.compactness(),
                 crate::galaxy::kpc_of_rings_dy(Dy::from_q(&star.r)),
                 ctx,

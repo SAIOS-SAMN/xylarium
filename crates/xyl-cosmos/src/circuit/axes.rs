@@ -80,7 +80,7 @@ pub fn antinode(q: u32) -> Q {
 }
 
 /// Shine and light as one antipole pair. Shine is the efflux: the frames a
-/// source's burn closes, the dilator D(rho) moving its pole point toward Z.
+/// source's transduction closes, the dilator D(rho) moving its pole point toward Z.
 /// Light is the afflux, shine's antipole: the same flux through the axis's
 /// inversion, I D(rho) I = D(1 / rho), opening the receiver's frames (toward
 /// Q). The pair's books close where the two dilators compose to the identity.

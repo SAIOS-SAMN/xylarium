@@ -409,7 +409,7 @@ fn build_table() -> Result<Vec<Element>, String> {
     // Rows past the file's last Z up to TOP_Z follow the rule of the file's
     // predicted rows: systematic name, valley A, uranium as the homologue for
     // the material columns. Their counts come from the founding chain and
-    // stellar burning (chem), as for every kind.
+    // stellar transduction (chem), as for every kind.
     let top = rows.iter().map(|r| r.e.z).max().unwrap_or(0);
     for z in (top + 1)..=TOP_Z {
         rows.push(row(&systematic_row(z))?);

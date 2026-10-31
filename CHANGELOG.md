@@ -11,6 +11,16 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Stellar transduction by polarity (`stars::Sequence`): a star's held
+  collective's pole point `t0 = sum n u / sum n w`, dilated per echo by
+  `(1 + delta) / (1 - delta)`, selects fusion before the throat and fission
+  after it; each stage steps the held kind of greatest release, its
+  products join the mixture, and no kind, product or order is set. Field
+  `Transduction` states: unlit, step, remnant. Star classes name the held
+  body that does not ignite and the fission star.
+- The word "burn" is replaced by "transduction" throughout
+  (`stars::transduced_per_bell`, `field::Transduction`,
+  `field::transduced_share`).
 - `Q::ratio` is the constant-ratio constructor; it returns zero on a zero
   denominator.
 - `AGENTS.md` and `docs/concepts.md` are added, and the glossary is
@@ -62,9 +72,27 @@ may change public APIs and the model's laws.
 - Star light is the power the burn transduces, in core masses per ring
   (`stars::power`, `stars::light`); `systems::luminosity` is removed, and
   the system layer reads suns through the boundary `stars::suns_of_power`.
+- Stars burn by polarity (`stars::Sequence`, `stars/sequence.rs`): each
+  cloud's dark cut records its held mixture (`disc::StarCut::held`), and the
+  star's sequence of fusion and fission steps emerges from that mixture at
+  the cut's heat, each stage the held kind of greatest release, with the
+  throat after `n* = ln(1 / t0) / ln rho_s` echoes (`stars::throat_echoes`).
+  `stars::life`, `stars::ends`, `stars::burned` and `stars::remnant_share`
+  take the star's sequence (`galaxy::Star::sequence`,
+  `galaxy::piece_sequence`, `galaxy::first_star_sequence`);
+  `field::Burning` is `Unlit`, `Step(i)` or `Remnant`; `field::burning` and
+  `field::burn_out_share` read the sequence, and `field::absorb` takes the
+  step's burn-out share. `galaxy::Class::name` names held bodies that do not
+  ignite, fission stars and giants from the sequence. `life::lifetime`,
+  `life::first_age` and `worlds::star_degree_gyr` take the star's sequence,
+  carried in `life::Home::sequence` and `worlds::Setting::sequence`. A held
+  body that does not ignite forms no remnant node (`pulse::nodes_among`).
 
 ### Removed
 
+- The fixed hydrogen-helium-carbon chain: `stars::transduced_hydrogen`,
+  `stars::transduced_helium` and the measured binding energies of
+  `field::burn_out_share` (`binding_mev`, `nucleon_mev`, `weak_mev`).
 - Hosted CI (`.github/workflows/ci.yml`) and its README badge are removed;
   the checks are run locally.
 

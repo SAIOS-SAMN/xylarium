@@ -38,7 +38,7 @@ pub fn is_cluster(k: u32) -> bool {
     k >= CLUSTER
 }
 
-/// A plain atom's Z (None for a cluster or for 0): the kinds that may burn, ionize or
+/// A plain atom's Z (None for a cluster or for 0): the kinds that may transduction, ionize or
 /// be cut by their windings.
 pub fn atom_z(k: u32) -> Option<u32> {
     (!is_cluster(k) && k > 0).then_some(k)

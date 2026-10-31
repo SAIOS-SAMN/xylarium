@@ -67,7 +67,7 @@ founding and the light read the frames instead.
   the span fixed. The closed share `h_Z = (3Z - u_Z) / 3Z` drives the capture
   chain (`elements::closed_share`). Amounts move in whole nuclei of `w`
   frames, so fusion conserves 3Z (`circuit::grain::nuclei_of`), and the
-  stars' burn produces light with the 3Z hold conserved.
+  stars' transduction produces light with the 3Z hold conserved.
 - **3Q, the capacity.** 3Q is three times the number of states in every
   shell the atom reaches: `cap = sum_n sum_(l < n) 2 d(l)` and
   `3Q = 3 cap`. The balance `R_Q = 6Z - 3Q` and its share
@@ -239,39 +239,42 @@ Landed:
   measured initial mass function's bounds. A bead is a galaxy where `lit x state
   >= m_p` of the first piece to light and `state <= 1`
   (`Substrate::holds_a_star`, `Substrate::galaxies`). Star light is the power
-  the burn transduces, `P = m burn_per_bell(r) / bell` core masses per ring
-  (`stars::power`, `stars::light`); the life stays the hydrogen step over the
-  burn, in rings. The system layer reads the prototype's stellar-mass unit
-  through the boundaries `galaxy::suns_of_core_masses` and
+  the transduction transduces, `P = m transduced_per_bell(r) / bell` core masses
+  per ring (`stars::power`, `stars::light`); the life is the first step over the
+  transduction, in rings. The system layer reads the prototype's stellar-mass
+  unit through the boundaries `galaxy::suns_of_core_masses` and
   `stars::suns_of_power`.
 - Layer B part 3, star compactness from the atoms: each star's deficit at its
   rim, `delta = m / (R 60 + m)`, with `R` the rim of its cloud's cut
   (`disc::rim_share`, `galaxy::Star::compactness`). The cut is read at collapse
-  (dark), ignition (burn = `delta0` of the received turning) and settled
-  (burning). Burn, power, light, life and the giant's end take the star's
-  compactness; the measured stellar radius and the rim share built on it are
-  deleted.
+  (dark), ignition (the transduced share is `delta0` of the received turning)
+  and settled (the cut at that transduction's over-pressure). Transduction,
+  power, light, life and the giant's end take the star's compactness; the
+  measured stellar radius and the rim share built on it are deleted.
+- Layer B, stellar transduction by polarity: each cloud's dark cut records its
+  held mixture (`disc::StarCut::held`); the star's sequence emerges from it at
+  the cut's heat (`stars::Sequence`): the pole point `t0 = sum n u / sum n w`,
+  the throat after `ln(1 / t0) / ln rho_s` echoes, fusion steps to the kind at
+  `k A` and fission steps to two kinds of equal total, each stage the held kind
+  of greatest release, re-read from the updated mixture. Life, step ends,
+  remnant, `field::Transduction` (`Unlit`, `Step`, `Remnant`) and the
+  transduction-out share read the sequence; the fixed hydrogen and helium
+  shares and the measured binding energies are deleted.
 
 Next:
 
 1. Layer B, the galaxy tier (`galaxy`, `stars`, `chem`, `pulse`, `field`,
    `turning`, `centre`, `manifold`). The interim conversions of Gyr-valued
    rulers made in this layer are replaced:
-   - Stellar burning by polarity (model.md, Polarity, fusion and fission): the
-     held collective's pole point `t = sum n u / sum n w`, dilated by the star's
-     irradiation `(1 + delta) / (1 - delta)` per echo, selects fusion (`t < 1`),
-     the throat (`t = 1`, in closed form) and fission (`t > 1`); fusion combines
-     `k` nuclei into the kind of `k` times the nucleon count, fission splits
-     into two kinds of equal total, and the sequence of steps sets the main
-     sequence, the giant phases, the remnant and the bodies that never ignite.
-     Replaces the fixed hydrogen-helium-carbon chain
-     (`stars::transduced_hydrogen`, `stars::transduced_helium`).
-   - Chemistry from the founding: enrichment is the hold each star's burn
-     returns to its ring, from the census (`circuit::Substrate::census`)
-     and the births along each ring (`chem::Chemistry::birth_along`), in
-     place of the Milky Way model's rulers, the reference
-     metallicity, the gas pattern `ism_today_dex`, the flat speed `v_flat`
-     and the calibration epoch `Rulers::today`.
+   - Stellar transduction by polarity, timing: the fission steps start at the
+     throat, `n*` echoes after ignition, rather than at the end of the fusion
+     steps' cumulative transduced share.
+   - Chemistry from the founding: enrichment is the hold each star's
+     transduction returns to its ring, from the census
+     (`circuit::Substrate::census`) and the births along each ring
+     (`chem::Chemistry::birth_along`), in place of the Milky Way model's rulers,
+     the reference metallicity, the gas pattern `ism_today_dex`, the flat speed
+     `v_flat` and the calibration epoch `Rulers::today`.
    - The pulse, the field's energy unit and the galactic-core episodes in
      core units.
 2. Layer C, systems and worlds (`disc`, `systems`, `bodies`, `worlds`,

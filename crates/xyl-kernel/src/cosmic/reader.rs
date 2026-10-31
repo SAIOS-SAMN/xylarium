@@ -117,6 +117,7 @@ pub(super) fn world_key(
     let wit = systems.get(&star_n)?;
     let born = xyl_cosmos::circuit::gyr_of_rings_dy(Dy::from_q(&wit.star.born));
     let deg = star_degree_gyr(
+        &wit.star.sequence(),
         wit.star.compactness(),
         xyl_cosmos::galaxy::kpc_of_rings_dy(Dy::from_q(&wit.star.r)),
         ctx,
@@ -146,6 +147,7 @@ impl<'a> SystemReader<'a> {
     ) -> Option<SystemReader<'a>> {
         let wit = systems.get(&star_n)?;
         let deg = star_degree_gyr(
+            &wit.star.sequence(),
             wit.star.compactness(),
             xyl_cosmos::galaxy::kpc_of_rings_dy(Dy::from_q(&wit.star.r)),
             ctx,

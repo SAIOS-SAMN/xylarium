@@ -42,7 +42,7 @@ pub struct Hold {
 /// passes heat 0), so the push grips only what stays open. The core's light
 /// adds over-pressure `p0` = P_0 = 1 + PHI / H (1 for a dark core), carrying
 /// every kind out by P_0 times its push while the held threshold stays p: a
-/// dark core holds its whole infall and a burning one releases kinds, the
+/// dark core holds its whole infall and a transduction one releases kinds, the
 /// lightest first.
 pub fn hold_at_heat(mix: &[(u32, Q)], p: &Q, add: &Q, heat: &Q, p0: &Q) -> Hold {
     hold_about(mix, p, add, &Q::ZERO, heat, p0)

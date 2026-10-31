@@ -128,9 +128,10 @@ pub fn horizon_gyr() -> Dy {
 
 /// The earliest age at which a world is read (Gyr after its star's birth):
 /// one degree of the star's lifetime (`worlds::star_degree_gyr`) at the
-/// star's distance `r_kpc` from the core, for a star of compactness `delta`.
-pub fn first_age(delta: Dy, r_kpc: Dy, ctx: &Ctx) -> Dy {
-    worlds::star_degree_gyr(delta, r_kpc, ctx)
+/// star's distance `r_kpc` from the core, for a star of transduction sequence
+/// `seq` and compactness `delta`.
+pub fn first_age(seq: &crate::stars::Sequence, delta: Dy, r_kpc: Dy, ctx: &Ctx) -> Dy {
+    worlds::star_degree_gyr(seq, delta, r_kpc, ctx)
 }
 
 /// The ages at which a world's media are probed (Gyr after its star's
@@ -138,7 +139,7 @@ pub fn first_age(delta: Dy, r_kpc: Dy, ctx: &Ctx) -> Dy {
 /// the star's birth plus the age lies within the horizon, at most 64 ages.
 pub fn probe_ages(home: &Home, ctx: &Ctx) -> Vec<Dy> {
     let mut out = Vec::new();
-    let mut a = first_age(home.compactness, home.r_kpc, ctx);
+    let mut a = first_age(&home.sequence, home.compactness, home.r_kpc, ctx);
     while home.born + a < horizon_gyr() && out.len() < 64 {
         out.push(a);
         a = a * Dy::int(2);

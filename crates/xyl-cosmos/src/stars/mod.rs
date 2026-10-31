@@ -1,9 +1,10 @@
-//! A star's life in closed form: its burn, light, main-sequence life, giant
+//! A star's life in closed form: its transduction, light, main-sequence life, giant
 //! phase and remnant, read at any age without time stepping (docs/model.md).
 //!
 //! Reads `circuit::anchor` (galaxy ring in kpc), `circuit::vacuum_share`,
 //! `circuit::bell` and `echo` (one and two rings), the substrate's firmament
-//! outflow rate (`cores::substrate_for`, per ring) and `compound::hold`.
+//! outflow rate (`cores::substrate_for`, per ring), the element table and
+//! `compound` (frames at heat, in `sequence.rs`).
 //! Reach `r` is in galaxy rings (`reach_rings` converts from kpc); times are
 //! rings of time after the Big Bang (one ring one bell); masses are core
 //! masses and light is power in core units, core masses (times `c^2`,
@@ -14,11 +15,11 @@
 //!   gives (`galaxy::piece_rim`, from the atoms' open frames and masses in
 //!   `formation::hold_at_heat`). Every star of a cloud shares the rim, so a
 //!   heavier star is more compact (`galaxy::Star::compactness`).
-//! - Burn (`burn_per_bell`): the share of the ring it receives that a star
+//! - Transduction (`transduced_per_bell`): the share of the ring it receives that a star
 //!   holds and transduces per bell, `delta x ring_per_bell(r)`, with the
 //!   ring per bell `1 / (pi (r + 1))`.
-//! - Power (`power`): the hold the burn transduces per ring,
-//!   `P = m burn_per_bell(r) / bell`, the mass `m` (core masses) times `c^2`
+//! - Power (`power`): the hold the transduction transduces per ring,
+//!   `P = m transduced_per_bell(r) / bell`, the mass `m` (core masses) times `c^2`
 //!   (`c = 1`) times the share transduced per bell, one ring.
 //! - Light (`light`): `P (1 + pi bell q(t))`, where `q(t)` is the
 //!   firmament's leaving rate (the vessel's drift over the ring per bell).
@@ -28,27 +29,30 @@
 //!   power as the luminosity in suns the system and world layers still use,
 //!   the power over that of a one-sun star (`galaxy::core_masses_of_suns`)
 //!   at `r = 0`, so a star of `M` suns at reach `r` reads `M / (r + 1)`.
-//! - Life (`life`, `ends`, `burned`): the hydrogen step's transduced share
-//!   `1 - hold(He) / (4 hold(H))` over the burn, counted in rings (one bell
-//!   per ring), the same for every mass at a reach because the burn is a
-//!   share of the hold; the giant ends
-//!   when the helium step's further share `1 - hold(C) / (3 hold(He))` is
-//!   transduced. `remnant_share` is the hold neither step transduced.
-//! - Not yet modelled: ejecta returned to the galaxy's gas, and stellar mixes
-//!   other than hydrogen burning to helium.
+//! - Life (`life`, `ends`, `transduced`): each step of the star's transduction
+//!   sequence (`Sequence`, from its cloud's held mixture and heat,
+//!   `galaxy::Star::sequence`) lasts its transduced share over the transduction,
+//!   counted in rings (one bell per ring). The main-sequence life is the
+//!   first step's; the steps end one after another (`ends`), the same for
+//!   every mass at a reach because the transduction is a share of the hold.
+//!   `remnant_share` is the hold no step transduced.
+//! - Sequence (`sequence.rs`): the held collective's pole point, its
+//!   dilation to the throat, and the fusion and fission steps by polarity.
+//! - Not yet modelled: ejecta returned to the galaxy's gas.
 //!
-//! Before a founding the burn, life and drift read zero; divisions use
-//! `checked_div` with explicit fallbacks. Terms: burn (docs/glossary.md).
+//! Before a founding the transduction, life and drift read zero; divisions use
+//! `checked_div` with explicit fallbacks. Terms: transduction (docs/glossary.md).
+
+mod sequence;
+
+pub use sequence::{
+    fission_step, fusion_step, held_frames, nucleon_count, pole_point, throat_echoes, Sequence,
+    Step,
+};
 
 use crate::circuit::vacuum_share;
-use crate::compound::hold;
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
-
-/// The hold of a kind as a rational.
-fn hold_q(k: u32) -> Q {
-    Q::int(i64::from(hold(k)))
-}
 
 /// A home-galaxy star's reach about the universal core (galaxy rings) from
 /// its distance from the core (kpc), in the galaxy tier's ring, the unit in
@@ -84,55 +88,46 @@ pub fn drift_per_bell(reach: Dy, t: Dy) -> Dy {
 /// The share of a star's hold the pulse transduces per bell at reach `r`:
 /// the star holds its compactness `delta` (its deficit at its rim,
 /// `disc::rim_share`) of the ring it receives, `delta / (pi (r + 1))`.
-pub fn burn_per_bell(delta: Dy, reach: Dy) -> Dy {
+pub fn transduced_per_bell(delta: Dy, reach: Dy) -> Dy {
     delta.max(Dy::ZERO) * ring_per_bell(reach)
 }
 
-/// The share of the hold the hydrogen step transduces: four hydrogens'
-/// hold less the helium's, over the four, `1 - hold(He) / (4 hold(H))`.
-pub fn transduced_hydrogen() -> Q {
-    &Q::ONE
-        - &hold_q(2)
-            .checked_div(&(&Q::int(4) * &hold_q(1)))
-            .unwrap_or(Q::ZERO)
+/// The share of the hold a star's sequence leaves as its remnant: what no
+/// step transduced (`Sequence::remnant`).
+pub fn remnant_share(seq: &Sequence) -> Q {
+    seq.remnant.clone()
 }
 
-/// The share of the hold transduced by the end of the helium step: the
-/// hydrogen step's share h plus the helium step's share of the remainder,
-/// `h + (1 - h) (1 - hold(C) / (3 hold(He)))`.
-pub fn transduced_helium() -> Q {
-    let h = transduced_hydrogen();
-    let he = &Q::ONE
-        - &hold_q(6)
-            .checked_div(&(&Q::int(3) * &hold_q(2)))
-            .unwrap_or(Q::ZERO);
-    &h + &(&(&Q::ONE - &h) * &he)
-}
-
-/// The share of the hold an ended star keeps as its remnant: what the pulse
-/// did not transduce in either step.
-pub fn remnant_share() -> Q {
-    &Q::ONE - &transduced_helium()
+/// The rings over which a star of compactness `delta` at reach `r`
+/// transduces `share` of its hold: the share over the transduction per bell, a
+/// count of bells, each one ring. Zero before a founding or for a star that
+/// holds nothing.
+fn rings_to_transduce(share: &Q, delta: Dy, reach: Dy) -> Q {
+    let transduced = transduced_per_bell(delta, reach);
+    if transduced.signum() <= 0 || crate::circuit::anchor().rim.signum() <= 0 {
+        return Q::ZERO;
+    }
+    (Dy::from_q(share) / transduced * crate::circuit::bell()).to_q()
 }
 
 /// A star's main-sequence life (rings) at reach `r` for compactness `delta`:
-/// the hydrogen step's share over the burn per bell, a count of bells, each
-/// one ring. A more compact star burns a larger share and lives fewer rings.
-/// Zero before a founding or for a star that holds nothing.
-pub fn life(delta: Dy, reach: Dy) -> Q {
-    let burn = burn_per_bell(delta, reach);
-    if burn.signum() <= 0 || crate::circuit::anchor().rim.signum() <= 0 {
-        return Q::ZERO;
-    }
-    (Dy::from_q(&transduced_hydrogen()) / burn * crate::circuit::bell()).to_q()
+/// its sequence's first step's transduced share over the transduction per bell. A
+/// more compact star transduces a larger share and lives fewer rings. Zero before
+/// a founding, for a star that holds nothing or for a sequence with no step
+/// (the held body that does not ignite).
+pub fn life(seq: &Sequence, delta: Dy, reach: Dy) -> Q {
+    seq.steps
+        .first()
+        .map(|s| rings_to_transduce(&s.transduced, delta, reach))
+        .unwrap_or(Q::ZERO)
 }
 
 /// A star's mean power at reach `r` (core masses per ring, `c = 1`): the
-/// hold the burn transduces per ring, `P = m burn_per_bell(delta, r) / bell`,
+/// hold the transduction transduces per ring, `P = m transduced_per_bell(delta, r) / bell`,
 /// with `m` the star's mass (core masses) and `delta` its compactness. Zero
 /// for a non-positive mass.
 pub fn power(mass: &Q, delta: Dy, reach: Dy) -> Q {
-    let share = burn_per_bell(delta, reach) / crate::circuit::bell();
+    let share = transduced_per_bell(delta, reach) / crate::circuit::bell();
     (&mass.clone().max(Q::ZERO) * &share.to_q()).max(Q::ZERO)
 }
 
@@ -172,23 +167,22 @@ pub fn flicker(t: Dy) -> Dy {
     Dy::PI / Dy::int(2) * (Dy::int(2) * Dy::PI * t / echo).cos().abs()
 }
 
-/// The share of a star's hydrogen step transduced by `age` rings at reach `r`
+/// The share of a star's first step transduced by `age` rings at reach `r`
 /// for compactness `delta`, exact: `age / life`; zero when the life is zero.
-pub fn burned(delta: Dy, reach: Dy, age: &Q) -> Q {
-    age.checked_div(&life(delta, reach)).unwrap_or(Q::ZERO)
+pub fn transduced(seq: &Sequence, delta: Dy, reach: Dy, age: &Q) -> Q {
+    age.checked_div(&life(seq, delta, reach)).unwrap_or(Q::ZERO)
 }
 
-/// When a star of compactness `delta` leaves the main sequence and when its
-/// giant's helium is spent (rings) at reach `r`: the main-sequence life, and
-/// that life times the ratio of the helium step's cumulative share to the
-/// hydrogen step's.
-pub fn ends(delta: Dy, reach: Dy) -> (Q, Q) {
-    let main = life(delta, reach);
-    let giant = &main
-        * &transduced_helium()
-            .checked_div(&transduced_hydrogen())
-            .unwrap_or(Q::ONE);
-    (main, giant)
+/// When each step of a star's sequence ends (rings after its birth) at reach
+/// `r` for compactness `delta`: the cumulative transduced share at each
+/// step's end over the transduction per bell. The first is the main-sequence life;
+/// the last is when the star becomes a remnant. Empty for a sequence with no
+/// step.
+pub fn ends(seq: &Sequence, delta: Dy, reach: Dy) -> Vec<Q> {
+    seq.cumulative()
+        .iter()
+        .map(|share| rings_to_transduce(share, delta, reach))
+        .collect()
 }
 
 #[cfg(test)]
@@ -196,13 +190,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn transduced_shares_and_rim_deficit_in_bounds() {
-        // Hydrogen holds 2 (3 less its one open frame), helium 6: four
-        // hydrogens' 8 to one helium's 6 transduces a quarter.
-        assert_eq!(transduced_hydrogen(), Q::new(1, 4).unwrap());
-        let he = transduced_helium();
-        assert!(he > transduced_hydrogen() && he < Q::ONE, "{he}");
-        assert_eq!(&remnant_share() + &he, Q::ONE);
+    fn ring_per_bell_and_flicker_in_bounds() {
         // The ring per bell falls with the vacuum's share and is 1 / pi at
         // r = 0.
         assert!(ring_per_bell(Dy::ZERO) > ring_per_bell(Dy::int(10)));
@@ -212,7 +200,7 @@ mod tests {
     }
 
     #[test]
-    fn power_is_the_burn_of_the_hold_and_life_counts_rings() {
+    fn power_is_the_transduced_hold_and_life_counts_rings() {
         let _ = crate::genesis::bang();
         let (m, r) = (Q::ratio(1, 1_000_000), Dy::int(3));
         let rim = Q::ONE;
@@ -231,15 +219,18 @@ mod tests {
         assert_eq!(power(&Q::ZERO, delta, r), Q::ZERO);
         // The light starts from the power and only adds the drift.
         assert!(light(&m, delta, r, Dy::int(10), Dy::ZERO) >= p);
-        // The life is the hydrogen step's share over the burn, in rings; the
-        // giant ends after the main sequence; a more compact star lives
-        // fewer rings.
-        let (main, giant) = ends(delta, r);
-        assert!(main.signum() > 0 && giant >= main);
-        assert!(life(heavier, r) < main);
-        let burned_by = &main * &burn_per_bell(delta, r).to_q();
-        let gap = (&burned_by - &transduced_hydrogen()).abs();
-        assert!(gap < Q::ratio(1, 1_000_000), "{burned_by}");
+        // The life is the first step's transduced share over the transduction, in
+        // rings; each later step ends after the one before; a more compact
+        // star lives fewer rings.
+        let seq = Sequence::of(&[(1, Q::ONE)], &Q::ZERO);
+        let ends = ends(&seq, delta, r);
+        let main = ends[0].clone();
+        assert_eq!(life(&seq, delta, r), main);
+        assert!(main.signum() > 0 && ends.windows(2).all(|w| w[1] >= w[0]));
+        assert!(life(&seq, heavier, r) < main);
+        let transduced_by = &main * &transduced_per_bell(delta, r).to_q();
+        let gap = (&transduced_by - &seq.steps[0].transduced).abs();
+        assert!(gap < Q::ratio(1, 1_000_000), "{transduced_by}");
         // The boundary reads a one-sun mass at reach 0 as one sun.
         let sun = crate::galaxy::core_masses_of_suns(&Q::ONE);
         let one = suns_of_power(&power(&sun, delta, Dy::ZERO), delta);

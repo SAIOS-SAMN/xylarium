@@ -4,7 +4,7 @@
 //!
 //! Reads `pulse` (`Node`, `wavelength_kpc`, `c_kpc_per_ring`), `centre`
 //! (`horizon_share`, `efficiency`), `chain` (places, arcs, units),
-//! `stars::ends`, `circuit::anchor` (the core's spin), `package::Si` and
+//! `stars::ends` and `stars::Sequence`, `circuit::anchor` (the core's spin), `package::Si` and
 //! `xyl_core::cga` in `Cl(4, 1)` over `Q`. Distances are kpc between bells
 //! and places, AU inside a system; times and periods rings (one ring one
 //! bell); masses suns and world masses. Energy is in world mass x AU^2 x
@@ -28,11 +28,12 @@
 //! - `absorb` -> `Option<Absorbed>`: the pulse shears each world's orbit;
 //!   the star pays up to the energy in to re-lock them, at
 //!   `1/2 m (M / a)^2 |dx|^2` each, leaving the unpaid share as shear; of
-//!   the rest, `burn_out_share` (the current `burning` step's mass defect)
-//!   burns out and the remainder leaves as light. The translation of the
-//!   star's G point is the drift and shears no orbit.
+//!   the rest, `transduced_share` (the current `transduction` step's release
+//!   in the star's sequence, `stars::Step::release`) transduces out and the
+//!   remainder leaves as light. The translation of the star's G point is the
+//!   drift and shears no orbit.
 //!
-//! Invariant (`Absorbed::balances`): in = gravity + light + burned out
+//! Invariant (`Absorbed::balances`): in = gravity + light + transduced out
 //! exactly, every term held as a 62-bit dyadic and light the exact
 //! remainder. Derived lengths and rates are fixed on a 2^-60 grid before
 //! entering the algebra.
@@ -299,71 +300,51 @@ pub fn path(node: &Node, place: &Place, t: Dy) -> (Dy, Dy) {
     (d / c, d)
 }
 
-// ------------------------------------------------------------ The star burns.
+// ------------------------------------------------------------ The star transduces.
 
-/// Measured binding energies (MeV) of the nuclei a star burns through (He-4,
-/// C-12, O-16).
-fn binding_mev(a: u32) -> Q {
-    match a {
-        4 => decimal("28.29566").unwrap_or(Q::ZERO),
-        12 => decimal("92.16173").unwrap_or(Q::ZERO),
-        16 => decimal("127.61927").unwrap_or(Q::ZERO),
-        _ => Q::ZERO,
-    }
-}
-/// A nucleon's rest energy (MeV).
-fn nucleon_mev() -> Q {
-    decimal("938.272").unwrap_or(Q::ZERO)
-}
-/// The cost of converting a proton to a neutron in a fusion step:
-/// m_n - m_p + m_e, less the 2 m_e returned by positron annihilation.
-fn weak_mev() -> Q {
-    &decimal("1.29333").unwrap_or(Q::ZERO) - &decimal("0.51100").unwrap_or(Q::ZERO)
-}
-
-/// The fusion step a star is on, by its age against its life.
+/// The step a star is on, by its age against the ends of its sequence's
+/// steps (`stars::ends`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Burning {
-    /// Hydrogen to helium (main sequence).
-    Hydrogen,
-    /// Helium to carbon (giant core).
-    Helium,
-    /// Fuel spent: a remnant burns nothing.
+pub enum Transduction {
+    /// No step of the held mixture releases hold: the held body that does
+    /// not ignite transduces nothing.
+    Unlit,
+    /// Step `i` of the star's sequence (`stars::Sequence::steps`): the first
+    /// is the main sequence, later fusion steps the giant phases, fission
+    /// steps follow the throat.
+    Step(usize),
+    /// Every step has ended: a remnant transduces nothing.
     Remnant,
 }
 
-/// The step a star at reach `r` (galaxy rings) is on at `age` rings: hydrogen
-/// until it leaves the main sequence, helium until its giant core's helium
-/// is spent, then remnant; both ends from the pulse's burn of its hold
-/// (`stars::ends`), for a star of compactness `delta`
-/// (`galaxy::Star::compactness`).
-pub fn burning(delta: Dy, reach: Dy, age: Dy) -> Burning {
-    let (main, giant) = crate::stars::ends(delta, reach);
-    let age = age.to_q();
-    if age < main {
-        Burning::Hydrogen
-    } else if age < giant {
-        Burning::Helium
-    } else {
-        Burning::Remnant
+/// The step a star of sequence `seq` and compactness `delta`
+/// (`galaxy::Star::compactness`) at reach `r` (galaxy rings) is on at `age`
+/// rings: the first step whose end (`stars::ends`, from the pulse's transduction of
+/// its hold) lies after the age, `Remnant` once every step has ended, and
+/// `Unlit` where the sequence has no step.
+pub fn transduction(seq: &crate::stars::Sequence, delta: Dy, reach: Dy, age: Dy) -> Transduction {
+    if !seq.ignites() {
+        return Transduction::Unlit;
     }
+    let age = age.to_q();
+    crate::stars::ends(seq, delta, reach)
+        .iter()
+        .position(|end| age < *end)
+        .map_or(Transduction::Remnant, Transduction::Step)
 }
 
-/// The share of burned mass converted to energy: the current step's mass
-/// defect, the binding released over the inputs' rest energy.
-pub fn burn_out_share(b: Burning) -> Q {
+/// The share of transduced mass converted to energy on step `b` of `seq`: the
+/// step's release, the hold transduced per hold it transduces
+/// (`stars::Step::release`). Zero for a body that does not ignite and for a
+/// remnant.
+pub fn transduced_share(seq: &crate::stars::Sequence, b: Transduction) -> Q {
     match b {
-        // 4 H -> He-4: two protons are converted to neutrons.
-        Burning::Hydrogen => qd(
-            &(&binding_mev(4) - &(&Q::int(2) * &weak_mev())),
-            &(&Q::int(4) * &nucleon_mev()),
-        ),
-        // 3 He-4 -> C-12.
-        Burning::Helium => qd(
-            &(&binding_mev(12) - &(&Q::int(3) * &binding_mev(4))),
-            &(&Q::int(12) * &nucleon_mev()),
-        ),
-        Burning::Remnant => Q::ZERO,
+        Transduction::Step(i) => seq
+            .steps
+            .get(i)
+            .map(|s| s.release.clone())
+            .unwrap_or(Q::ZERO),
+        Transduction::Unlit | Transduction::Remnant => Q::ZERO,
     }
 }
 
@@ -403,7 +384,7 @@ impl Anchor {
 }
 
 /// The result of one absorption: energy in, spent as gravity (re-locking
-/// orbits), light and burn-out; each world's place afterwards (with any shear
+/// orbits), light and transduction-out; each world's place afterwards (with any shear
 /// not re-locked), and the system's drift along the pulse (AU).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Absorbed {
@@ -414,11 +395,11 @@ pub struct Absorbed {
     /// Energy spent re-locking orbits (field energy units), at most `energy_in`.
     pub gravity: Q,
     /// Energy left as light (field energy units): the remainder after gravity
-    /// and burn-out.
+    /// and transduction-out.
     pub light: Q,
-    /// Energy converted by the current burning step's mass defect (field
+    /// Energy converted by the current transduction step's mass defect (field
     /// energy units).
-    pub burned_out: Q,
+    pub transduced_out: Q,
     /// Each world's anchor after the absorption, in the input order.
     pub anchors: Vec<Anchor>,
     /// The star's G point's drift along the pulse (AU).
@@ -426,14 +407,15 @@ pub struct Absorbed {
 }
 
 impl Absorbed {
-    /// The field law's books: energy in = gravity + light + burned out,
+    /// The field law's books: energy in = gravity + light + transduced out,
     /// exactly.
     pub fn balances(&self) -> bool {
-        &(&self.gravity + &self.light) + &self.burned_out == self.energy_in
+        &(&self.gravity + &self.light) + &self.transduced_out == self.energy_in
     }
 }
 
-/// A star of `mass` suns on `step` absorbs a pulse `v` bringing `energy_in`.
+/// A star of `mass` suns absorbs a pulse `v` bringing `energy_in`, its
+/// current step converting `transduced_out` of what it transduces (`transduced_share`).
 /// The pulse moves each world relative to the star's G point (which also
 /// moves: the drift). The star's gravity returns each world toward its
 /// native place by the share of the work the energy pays for: fully
@@ -443,7 +425,7 @@ impl Absorbed {
 /// read back.
 pub fn absorb(
     mass: &Q,
-    step: Burning,
+    transduced_out: &Q,
     worlds: &[Anchor],
     v: &Mv,
     energy_in: &Q,
@@ -492,13 +474,13 @@ pub fn absorb(
         })
         .collect();
     let rest = energy_in - &gravity;
-    let burned_out = dyadic(&(&rest * &burn_out_share(step))).min(rest.clone());
-    let light = &rest - &burned_out;
+    let transduced_out = dyadic(&(&rest * transduced_out)).min(rest.clone());
+    let light = &rest - &transduced_out;
     Some(Absorbed {
         energy_in: energy_in.clone(),
         gravity,
         light,
-        burned_out,
+        transduced_out,
         anchors,
         drift,
     })
@@ -614,21 +596,21 @@ mod tests {
         ];
         let e = core.energy_at(d, &Q::ratio(52, 10));
         assert!(e.signum() > 0);
-        let a = absorb(&Q::ONE, Burning::Hydrogen, &worlds, &v, &e).unwrap();
+        let a = absorb(&Q::ONE, &h_release(), &worlds, &v, &e).unwrap();
         assert!(
             a.balances(),
-            "in = gravity + light + burned out, exactly: {a:?}"
+            "in = gravity + light + transduced out, exactly: {a:?}"
         );
         // Every term is dyadic (power-of-two denominator), so books summed
         // over a life stay bounded.
-        for x in [&a.energy_in, &a.gravity, &a.burned_out] {
+        for x in [&a.energy_in, &a.gravity, &a.transduced_out] {
             assert_eq!(dyadic(x), *x, "{x} is not held to 62 bits");
         }
         assert!(a.gravity.signum() > 0, "the star re-locks its worlds");
-        assert!(a.burned_out.signum() > 0 && a.light > a.burned_out);
+        assert!(a.transduced_out.signum() > 0 && a.light > a.transduced_out);
         // A pulse too weak to pay for the re-locking leaves the orbits sheared.
         let weak = qd(&a.gravity, &Q::int(2));
-        let b = absorb(&Q::ONE, Burning::Hydrogen, &worlds, &v, &weak).unwrap();
+        let b = absorb(&Q::ONE, &h_release(), &worlds, &v, &weak).unwrap();
         assert!(b.balances());
         assert_eq!(b.light, Q::ZERO);
         assert!(
@@ -642,7 +624,7 @@ mod tests {
         );
         // The next pulse acts on the sheared worlds where they are: shear
         // accumulates while the energy does not pay for the re-lock.
-        let c = absorb(&Q::ONE, Burning::Hydrogen, &b.anchors, &v, &weak).unwrap();
+        let c = absorb(&Q::ONE, &h_release(), &b.anchors, &v, &weak).unwrap();
         assert!(c.balances());
         let (s1, s2): (Q, Q) = (
             b.anchors
@@ -659,28 +641,56 @@ mod tests {
         assert!(a.drift[2].signum() != 0 && a.drift[0] == Q::ZERO && a.drift[1] == Q::ZERO);
     }
 
+    /// A pure-hydrogen held mixture at heat 0.
+    fn hydrogen() -> crate::stars::Sequence {
+        crate::stars::Sequence::of(&[(1, Q::ONE)], &Q::ZERO)
+    }
+
+    /// The first step's release of the pure-hydrogen sequence.
+    fn h_release() -> Q {
+        transduced_share(&hydrogen(), Transduction::Step(0))
+    }
+
     #[test]
-    fn burn_out_share_follows_each_steps_mass_defect() {
-        // Each step converts a share of what it burns, the helium step less
-        // per nucleon than the hydrogen step, a remnant nothing.
-        let h = burn_out_share(Burning::Hydrogen);
-        let he = burn_out_share(Burning::Helium);
-        assert!(h > Q::ZERO && h < Q::ONE, "H -> He: {h}");
-        assert!(he > Q::ZERO && he < h, "He -> C: {he}");
-        assert_eq!(burn_out_share(Burning::Remnant), Q::ZERO);
-        // The step by age at r = 0: hydrogen, helium, then remnant (the
-        // universe is founded first because the bell sets the life).
+    fn transduced_share_reads_each_steps_release() {
+        // Each step converts its release of what it transduces; a body that does
+        // not ignite and a remnant convert nothing.
+        let seq = hydrogen();
+        for (i, step) in seq.steps.iter().enumerate() {
+            let share = transduced_share(&seq, Transduction::Step(i));
+            assert_eq!(share, step.release);
+            assert!(share > Q::ZERO && share < Q::ONE, "step {i}: {share}");
+        }
+        assert_eq!(transduced_share(&seq, Transduction::Remnant), Q::ZERO);
+        assert_eq!(transduced_share(&seq, Transduction::Unlit), Q::ZERO);
+        // The step by age at r = 0 follows the ends in order, then the
+        // remnant (the universe is founded first because the bell sets the
+        // life).
         let _ = crate::genesis::bang();
         let delta = crate::galaxy::first_star_compactness();
-        let (main, giant) = crate::stars::ends(delta, Dy::ZERO);
-        assert!(main.signum() > 0 && giant > main, "{main} {giant}");
-        let half = Dy::from_q(&main) / Dy::int(2);
-        assert_eq!(burning(delta, Dy::ZERO, half), Burning::Hydrogen);
-        let mid = Dy::from_q(&(&main + &giant)) / Dy::int(2);
-        assert_eq!(burning(delta, Dy::ZERO, mid), Burning::Helium);
+        let ends = crate::stars::ends(&seq, delta, Dy::ZERO);
+        assert!(ends[0].signum() > 0);
+        let mut start = Q::ZERO;
+        for (i, end) in ends.iter().enumerate() {
+            if *end > start {
+                let mid = Dy::from_q(&(&start + end)) / Dy::int(2);
+                assert_eq!(
+                    transduction(&seq, delta, Dy::ZERO, mid),
+                    Transduction::Step(i)
+                );
+            }
+            start = end.clone();
+        }
+        let late = Dy::from_q(&start) * Dy::int(2);
         assert_eq!(
-            burning(delta, Dy::ZERO, Dy::from_q(&giant) * Dy::int(2)),
-            Burning::Remnant
+            transduction(&seq, delta, Dy::ZERO, late),
+            Transduction::Remnant
+        );
+        // A mixture with no releasing step does not ignite.
+        let unlit = crate::stars::Sequence::default();
+        assert_eq!(
+            transduction(&unlit, delta, Dy::ZERO, Dy::ONE),
+            Transduction::Unlit
         );
     }
 }

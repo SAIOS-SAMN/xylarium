@@ -134,6 +134,8 @@ pub struct Setting<'a> {
     /// Its star's compactness, the star's deficit at its rim
     /// (`galaxy::Star::compactness`).
     pub compactness: Dy,
+    /// Its star's transduction sequence (`galaxy::Star::sequence`).
+    pub sequence: crate::stars::Sequence,
     /// Its isotopes (kg in the mantle at the star's birth, from
     /// `bodies::heat_sources`).
     pub sources: [Q; 4],

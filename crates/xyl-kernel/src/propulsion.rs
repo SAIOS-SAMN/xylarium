@@ -58,7 +58,7 @@ pub const CHEM_EXHAUST_AMU: i64 = 18;
 /// a stage whose propellant is nine tenths of its fuelled mass.
 pub const MASS_RATIO: i64 = 10;
 
-/// The kind of fuel a drive burns, which sets the energy released per kg.
+/// The kind of fuel a drive transduces, which sets the energy released per kg.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Drive {
     /// The covalent bonds of the people's chemistry.
@@ -154,7 +154,7 @@ pub fn delta_v(v_e: Dy, ratio: Dy) -> Dy {
     c * tanh(v_e / c * ratio.max(Dy::ONE).log())
 }
 
-/// The propellant burned per kg of dry mass at this mass ratio (kg per kg):
+/// The propellant transduced per kg of dry mass at this mass ratio (kg per kg):
 /// R - 1, never below zero.
 pub fn propellant_per_kg(ratio: Dy) -> Dy {
     (ratio - Dy::ONE).max(Dy::ZERO)

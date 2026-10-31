@@ -127,13 +127,13 @@ pub(super) fn star(u: &Universe<'_>, n: Option<u64>) -> String {
     match u.field.books.get(&n) {
         Some(b) => out.push_str(&format!(
             concat!(
-                "  books: in {} = gravity {} + light {} + burned out {} ({}); ",
+                "  books: in {} = gravity {} + light {} + transduced out {} ({}); ",
                 "pulses {}; since {}\n"
             ),
             b.energy_in,
             b.gravity,
             b.light,
-            b.burned_out,
+            b.transduced_out,
             if b.balances() {
                 "balanced"
             } else {

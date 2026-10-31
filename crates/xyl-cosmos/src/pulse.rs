@@ -10,8 +10,8 @@
 //! period.
 //!
 //! Reads `bang::BigBang`, `cores::shapes` and `cores::held`, `galaxy::star`,
-//! `chain::Place` and `chain::radius`, `stars::life` and
-//! `stars::remnant_share`, `circuit::bell` and `circuit::anchor` (the bell
+//! `chain::Place` and `chain::radius`, `galaxy::Star::sequence`,
+//! `stars::life` and `stars::remnant_share`, `circuit::bell` and `circuit::anchor` (the bell
 //! in core time), `chain::units` (r_g) and `package::Si` (kpc). Times are
 //! rings after the Big Bang (one ring one bell), distances kpc, masses suns,
 //! all as `Dy`.
@@ -19,7 +19,8 @@
 //! Outputs:
 //! - `nodes`, `nodes_among` -> `Vec<Node>`: every galactic core from its
 //!   formation, and each sample star's remnant from the end of its life,
-//!   of mass `stands_for x remnant_share`. A subset of candidates only omits
+//!   of mass `stands_for x remnant_share` of its sequence; a held body that
+//!   does not ignite never ends and is no node. A subset of candidates only omits
 //!   nodes.
 //! - `relays` -> one `Relay` per node: the nearest live node closer to the
 //!   core, the route along that chain, and continuity
@@ -113,15 +114,21 @@ pub fn nodes_among(seed: u64, bang: &BigBang, candidates: &[u64]) -> Vec<Node> {
             continue;
         };
         // A stellar node forms when the star's main-sequence life ends
-        // (`stars::life`).
-        let life = Dy::from_q(&crate::stars::life(s.compactness(), s.reach_rings()));
+        // (`stars::life`); a held body whose sequence has no step never ends
+        // and forms none.
+        let seq = s.sequence();
+        if !seq.ignites() {
+            continue;
+        }
+        let life = Dy::from_q(&crate::stars::life(&seq, s.compactness(), s.reach_rings()));
         let born = Dy::from_q(&s.born) + life;
         // Remnant mass: the stellar mass the sample star stands for times
-        // the share of the hold not transduced (`stars::remnant_share`),
+        // the share of the hold no step of its sequence transduced
+        // (`stars::remnant_share`),
         // read in suns as the cores' masses are (boundary
         // `galaxy::suns_of_core_masses`).
         let stands_for = crate::galaxy::suns_of_core_masses(&s.stands_for.to_q());
-        let mass = Dy::from_q(&stands_for) * Dy::from_q(&crate::stars::remnant_share());
+        let mass = Dy::from_q(&stands_for) * Dy::from_q(&crate::stars::remnant_share(&seq));
         out.push(Node {
             kind: Kind::Stellar(Box::new(s)),
             mass,

@@ -12,11 +12,13 @@
 //!   Collapse: the dark cut holds `s0` within the rim `R0` (system-tier
 //!   units), and the star's compactness is `delta0 = s0 c / (R0 60 + s0 c)`
 //!   (`rim_share`). Ignition: the star holds `delta0` of the turning it
-//!   receives per echo, its burn, which adds the over-pressure
-//!   `p0 = 1 + burn`. Settled: the burning cut gives the star's held share
-//!   and rim. Also the tide `H / (R + H)`, the disc's agitation `a_disc` and
-//!   the infall's shear `H w / (R (R + w))`; `None` where the bead does not
-//!   light.
+//!   receives per echo, its transduction, which adds the over-pressure
+//!   `p0 = 1 + transduced`. Settled: the transduction cut gives the star's held share
+//!   and rim. The dark cut's held kinds, renormalised, are the star's held
+//!   mixture (`StarCut::held`), read with the cut's heat for the star's
+//!   transduction sequence (`stars::Sequence`). Also the tide `H / (R + H)`, the
+//!   disc's agitation `a_disc` and the infall's shear `H w / (R (R + w))`;
+//!   `None` where the bead does not light.
 //! - `rim_share`: a held body's deficit at its rim, `m / (R 60 + m)`.
 //! - `manifold_worlds`: reads the manifold outside the star's share in 360
 //!   equal degrees, each adding `1 - a` of its line; a world closes where
@@ -91,27 +93,33 @@ pub struct StarCut {
     /// The heat the cut was read at: the pulse's turning at the star per
     /// echo, in hydrogen units (`atoms::unpaired_hot`).
     pub heat: Q,
-    /// The over-pressure the star's burn adds, `1 + burn per echo`.
+    /// The over-pressure the star's transduction adds, `1 + transduced per echo`.
     pub p0: Q,
     /// The held core's rim (system-tier units, `60 r_g`): the reach of the
-    /// loosest kind the burning star still holds (`formation::Hold::reach`).
+    /// loosest kind the transduction star still holds (`formation::Hold::reach`).
     /// The cut reads reaches one tier below the piece's, as the founding
     /// reads the cluster tier and the pieces the galaxy tier.
     pub rim: Q,
-    /// The collapsed star's compactness before it burns: its deficit at the
+    /// The collapsed star's compactness before it transduces: its deficit at the
     /// dark cut's rim, `m0 / (R0 + m0)` with `m0 = s0 c` (core masses, equal
-    /// to `r_g`) and `R0` the dark rim in `r_g`. Its burn per echo is this
+    /// to `r_g`) and `R0` the dark rim in `r_g`. Its transduction per echo is this
     /// share of the received turning.
     pub compactness: Q,
+    /// The collapsed star's held mixture: the kinds of the infall's mix the
+    /// dark cut holds (those not in its released part, `Hold::rest`), each
+    /// with its share of the mix renormalised over the held kinds. The
+    /// star's transduction sequence is read from it at `heat`
+    /// (`stars::Sequence::of`).
+    pub held: Vec<(u32, Q)>,
 }
 
 /// The star tier's cut of a lit bead's infall (`hold_at_heat` on the bead's
 /// kinds at the throat's push). The infall collapses carrying the galaxy's
 /// shear across its extent as turning (`add`), is heated by the pulse's
 /// turning at the star per echo (`heat`, hydrogen units) and is pushed by the
-/// star's burn as over-pressure (`p0 = 1 + burn per echo`); the star holds
+/// star's transduction as over-pressure (`p0 = 1 + transduced per echo`); the star holds
 /// what remains held. `turning` is the pulse's turning per echo at the star's
-/// reach about the universal core and `burn` the star's burn per echo
+/// reach about the universal core and `transduced` the star's transduction per echo
 /// (`stars`). `None` where the bead does not light.
 pub fn star_cut(bead: &Bead, unit: &Q, held: &Q, swing: &Q, turning: &Q) -> Option<StarCut> {
     let h = &Q::ONE + held;
@@ -132,9 +140,10 @@ pub fn star_cut(bead: &Bead, unit: &Q, held: &Q, swing: &Q, turning: &Q) -> Opti
     // compactness is `delta0 = m0 / (R0 60 + m0)`.
     let dark = hold_at_heat(&c.mix, &throat_push(), &spin, turning, &Q::ONE);
     let compactness = rim_share(&(&dark.held * &c.cloud), &dark.reach);
+    let held = held_mixture(&c.mix, &dark.rest);
     // Ignition: the star holds `delta0` of the turning it receives per echo;
-    // that held share is its burn, which adds the over-pressure
-    // `p0 = 1 + burn` and releases the loosest kinds.
+    // that held share is its transduction, which adds the over-pressure
+    // `p0 = 1 + transduced` and releases the loosest kinds.
     let p0 = &Q::ONE + &(&compactness * turning);
     let cut = hold_at_heat(&c.mix, &throat_push(), &spin, turning, &p0);
     let star = cut.held;
@@ -171,7 +180,23 @@ pub fn star_cut(bead: &Bead, unit: &Q, held: &Q, swing: &Q, turning: &Q) -> Opti
         p0,
         rim,
         compactness,
+        held,
     })
+}
+
+/// The kinds of `mix` (kind, share) that a cut holds, those absent from its
+/// released part `rest`, with their shares renormalised to sum to one. Empty
+/// where the cut holds nothing.
+fn held_mixture(mix: &[(u32, Q)], rest: &[(u32, Q)]) -> Vec<(u32, Q)> {
+    let kept: Vec<(u32, Q)> = mix
+        .iter()
+        .filter(|(z, s)| s.signum() > 0 && !rest.iter().any(|(r, _)| r == z))
+        .cloned()
+        .collect();
+    let total = kept.iter().fold(Q::ZERO, |a, (_, s)| &a + s);
+    kept.into_iter()
+        .filter_map(|(z, s)| Some((z, s.checked_div(&total)?)))
+        .collect()
 }
 
 /// A star's worlds on its manifold (the anchor chain: the star is a zero

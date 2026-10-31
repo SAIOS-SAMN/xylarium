@@ -1,7 +1,9 @@
 //! A star's disc frame: the founding piece at its reach, the infall's cut
 //! there (`disc::star_cut`, held per piece) and the star's manifold reach;
-//! and the star mass a piece's cut gives ([`piece_star_mass`],
-//! [`first_star_mass`]). Reaches are galaxy rings, masses core masses (the
+//! the star mass a piece's cut gives ([`piece_star_mass`],
+//! [`first_star_mass`]); and the transduction sequence of the piece's held
+//! mixture at the cut's heat ([`piece_sequence`], `stars::Sequence`, cached
+//! with the cut). Reaches are galaxy rings, masses core masses (the
 //! home galaxy's rings hold one core mass together, as in `inside_mass`).
 
 use super::inside_mass;
@@ -41,14 +43,19 @@ pub struct DiscFrame {
     pub a_disc: Q,
 }
 
+/// A lit piece's cut and the transduction sequence of its held mixture at the
+/// cut's heat.
+type Lit = std::sync::Arc<(crate::disc::StarCut, crate::stars::Sequence)>;
+
 /// The cuts read so far, by piece index (`None`: the piece does not light).
-type HeldCuts = std::sync::Mutex<std::collections::BTreeMap<usize, Option<crate::disc::StarCut>>>;
+type HeldCuts = std::sync::Mutex<std::collections::BTreeMap<usize, Option<Lit>>>;
 
 /// The cut of the home galaxy's piece at reach `r` (galaxy rings), read once
 /// per piece and cached: the piece's index, its infall's extent (galaxy
-/// rings) and the cut. `None` where the founding is absent, no piece lies at `r` or the
-/// piece does not light.
-fn held_cut(r: &Q) -> Option<(usize, Q, crate::disc::StarCut)> {
+/// rings), and the cut with its transduction sequence (`stars::Sequence::of` of
+/// the cut's held mixture at its heat). `None` where the founding is absent,
+/// no piece lies at `r` or the piece does not light.
+fn held_cut(r: &Q) -> Option<(usize, Q, Lit)> {
     static HELD: std::sync::OnceLock<HeldCuts> = std::sync::OnceLock::new();
     let anchor = crate::circuit::anchor();
     let sub = crate::cores::substrate_for(&anchor.spin)?;
@@ -58,7 +65,10 @@ fn held_cut(r: &Q) -> Option<(usize, Q, crate::disc::StarCut)> {
     let cut = match map.lock().ok().and_then(|m| m.get(&piece).cloned()) {
         Some(c) => c,
         None => {
-            let c = piece_cut(&sub, record);
+            let c = piece_cut(&sub, record).map(|cut| {
+                let seq = crate::stars::Sequence::of(&cut.held, &cut.heat);
+                std::sync::Arc::new((cut, seq))
+            });
             if let Ok(mut m) = map.lock() {
                 m.insert(piece, c.clone());
             }
@@ -77,18 +87,29 @@ fn held_cut(r: &Q) -> Option<(usize, Q, crate::disc::StarCut)> {
 /// it. `None` where the founding is absent, no piece lies at `r` or the
 /// piece does not light.
 pub fn piece_star_mass(r: &Q) -> Option<Q> {
-    let (_, _, cut) = held_cut(r)?;
-    Some(&cut.star * &cut.cloud)
+    let (_, _, lit) = held_cut(r)?;
+    Some(&lit.0.star * &lit.0.cloud)
+}
+
+/// The transduction sequence of the home galaxy's piece at reach `r` (galaxy
+/// rings): the steps its held mixture (`disc::StarCut::held`) takes at the
+/// cut's heat (`stars::Sequence::of`), shared by every star of the piece;
+/// `throat_echoes` is unset, since it depends on each star's compactness
+/// (`Star::sequence`). Cached with the cut. `None` where no piece lights at
+/// `r`.
+pub fn piece_sequence(r: &Q) -> Option<crate::stars::Sequence> {
+    let (_, _, lit) = held_cut(r)?;
+    Some(lit.1.clone())
 }
 
 /// The held core's rim of the piece at reach `r` (galaxy rings): the reach,
-/// in system-tier units (`60 r_g`), of the loosest kind the piece's burning
+/// in system-tier units (`60 r_g`), of the loosest kind the piece's transduction
 /// star still holds (`disc::StarCut::rim`). Every star of the piece shares
 /// it, so a heavier star of the piece is more compact. `None` where no piece
 /// lights at `r`.
 pub fn piece_rim(r: &Q) -> Option<Q> {
-    let (_, _, cut) = held_cut(r)?;
-    Some(cut.rim)
+    let (_, _, lit) = held_cut(r)?;
+    Some(lit.0.rim.clone())
 }
 
 /// The star mass of the first piece of `sub`'s lighting (core masses): the
@@ -127,21 +148,36 @@ pub fn first_star_mass(sub: &crate::circuit::Substrate) -> Option<Q> {
 /// founding's own reference star, for readings that name no particular
 /// star. Zero before a founding or where no piece lights.
 pub fn first_star_compactness() -> Dy {
+    first_cut()
+        .map(|cut| Dy::from_q(&crate::disc::rim_share(&(&cut.star * &cut.cloud), &cut.rim)))
+        .unwrap_or(Dy::ZERO)
+}
+
+/// The transduction sequence of the first lit piece's star: its held mixture's
+/// steps at the cut's heat (`stars::Sequence::of`), with the throat read at
+/// [`first_star_compactness`]. Empty (no step) before a founding or where no
+/// piece lights.
+pub fn first_star_sequence() -> crate::stars::Sequence {
+    first_cut()
+        .map(|cut| crate::stars::Sequence::of(&cut.held, &cut.heat))
+        .unwrap_or_default()
+        .at(first_star_compactness())
+}
+
+/// The cut of the founded universe's first lit piece (the least rings to
+/// light; on a tie the innermost). `None` before a founding or where no
+/// piece lights.
+fn first_cut() -> Option<crate::disc::StarCut> {
     let anchor = crate::circuit::anchor();
-    let Some(sub) = crate::cores::substrate_for(&anchor.spin) else {
-        return Dy::ZERO;
-    };
+    let sub = crate::cores::substrate_for(&anchor.spin)?;
     let first = sub
         .lighting
         .pieces
         .iter()
         .filter_map(|p| p.2.map(|rings| (rings, p)))
         .min_by(|x, y| x.0.cmp(&y.0).then_with(|| x.1 .0.cmp(&y.1 .0)))
-        .map(|(_, p)| p);
-    first
-        .and_then(|p| piece_cut(&sub, p))
-        .map(|cut| Dy::from_q(&crate::disc::rim_share(&(&cut.star * &cut.cloud), &cut.rim)))
-        .unwrap_or(Dy::ZERO)
+        .map(|(_, p)| p)?;
+    piece_cut(&sub, first)
 }
 
 /// The disc's frame at reach `r` (galaxy rings) of the home galaxy for a
@@ -150,7 +186,8 @@ pub fn first_star_compactness() -> Dy {
 /// star's mass. `None` where the founding is absent, no piece lies at `r` or
 /// the piece does not light.
 pub fn disc_frame(r: &Q, mass: &Q) -> Option<DiscFrame> {
-    let (piece, infall, cut) = held_cut(r)?;
+    let (piece, infall, lit) = held_cut(r)?;
+    let cut = lit.0.clone();
     // `extent = m / (c / w)`, at most the infall's extent `w`: the star's
     // mass (core masses) over the infall's holding per galaxy ring, `c` the
     // infall's holding in core masses. A star holding the whole held share
@@ -198,7 +235,7 @@ fn piece_cut(
     let swing = &Q::ONE + &sub.inbound_mean(crate::circuit::echo()).to_q();
     // The pulse's turning per echo (two bells) in hydrogen units at the
     // piece's reach about the universal core; the cut derives the star's
-    // burn from it and the collapsed star's compactness.
+    // transduction from it and the collapsed star's compactness.
     let reach = Dy::from_q(&bead.reach).max(Dy::ZERO);
     let turning = (crate::stars::ring_per_bell(reach) * Dy::int(2)).to_q();
     crate::disc::star_cut(bead, &sub.unit(), &sub.held_share(), &swing, &turning)

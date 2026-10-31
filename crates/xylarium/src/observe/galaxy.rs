@@ -28,27 +28,34 @@ pub(super) fn galaxy(u: &Universe<'_>) -> String {
     ));
     out.push_str(&format!("Bells: {}\n", u.field.bells()));
     let t = xyl_cosmos::circuit::rings_of_gyr_dy(u.cosmic.now);
-    // The main-sequence and giant end times of the founding's first lit star
-    // at reach 0, the core's reach, counted in rings and printed in Gyr.
+    // The end of the first and of the last step of the founding's first lit
+    // star's sequence at reach 0, the core's reach, counted in rings and
+    // printed in Gyr.
     let delta = xyl_cosmos::galaxy::first_star_compactness();
-    let (main, giant) = xyl_cosmos::stars::ends(delta, Dy::ZERO);
-    let (main, giant) = (
-        xyl_cosmos::circuit::gyr_of_rings(&main),
-        xyl_cosmos::circuit::gyr_of_rings(&giant),
+    let seq = xyl_cosmos::galaxy::first_star_sequence();
+    let ends = xyl_cosmos::stars::ends(&seq, delta, Dy::ZERO);
+    let (main, last) = (
+        xyl_cosmos::circuit::gyr_of_rings(&ends.first().cloned().unwrap_or(Q::ZERO)),
+        xyl_cosmos::circuit::gyr_of_rings(&ends.last().cloned().unwrap_or(Q::ZERO)),
     );
     out.push_str(&format!(
         concat!(
             "Stars fuelled by the pulse: the first lit star's compactness {} ",
             "of the ring per bell {} ",
-            "at the core's reach; main sequence {} Gyr, giant's end {} Gyr there; ",
+            "at the core's reach; pole point {}, {} steps, throat after {} echoes; ",
+            "main sequence {} Gyr, last step's end {} Gyr there; ",
             "remnant keeps {} of its hold; ",
             "the radiation's swing within a bell now {} of its mean\n"
         ),
         delta,
         xyl_cosmos::stars::ring_per_bell(Dy::ZERO),
+        show(&seq.pole_point),
+        seq.steps.len(),
+        seq.throat_echoes
+            .map_or_else(|| "no".to_string(), |n| n.to_string()),
         show(&main),
-        show(&giant),
-        show(&xyl_cosmos::stars::remnant_share()),
+        show(&last),
+        show(&xyl_cosmos::stars::remnant_share(&seq)),
         xyl_cosmos::stars::flicker(t)
     ));
     out.push_str(concat!(
@@ -83,11 +90,12 @@ fn star_on_manifold(
     let frac = s.orbit.turns_at(t).to_q().frac();
     let reach = s.reach_rings();
     let age = t - Dy::from_q(&s.born);
+    let seq = s.sequence();
     let radius_kpc = xyl_cosmos::galaxy::kpc_of_rings_dy(s.orbit.radius);
     format!(
         concat!(
             "  star {:>4} of core {} ({} {}): from its core {}, height {}, phase {} deg, ",
-            "radius {} kpc; reach {} rings, life {} Gyr, burning {:?} at age {} Gyr, ",
+            "radius {} kpc; reach {} rings, life {} Gyr, transduction {:?} at age {} Gyr, ",
             "light {} core masses per ring\n"
         ),
         s.n & ((1u64 << xyl_cosmos::galaxy::CORE_SHIFT) - 1),
@@ -100,9 +108,9 @@ fn star_on_manifold(
         radius_kpc,
         reach,
         show(&xyl_cosmos::circuit::gyr_of_rings(
-            &xyl_cosmos::stars::life(s.compactness(), reach)
+            &xyl_cosmos::stars::life(&seq, s.compactness(), reach)
         )),
-        xyl_cosmos::field::burning(s.compactness(), reach, age),
+        xyl_cosmos::field::transduction(&seq, s.compactness(), reach, age),
         xyl_cosmos::circuit::gyr_of_rings_dy(age),
         show(&xyl_cosmos::stars::light(
             &s.mass,
@@ -379,7 +387,7 @@ fn reference_probe(u: &Universe<'_>, n: usize, share: &Q, t: Dy) -> String {
         let at = st.r.checked_div(&rim).unwrap_or(Q::ZERO);
         let class = st.class(t);
         if (&at - share).abs() > Q::ratio(1, 20)
-            || class.step != xyl_cosmos::field::Burning::Hydrogen
+            || class.step != xyl_cosmos::field::Transduction::Step(0)
         {
             continue;
         }

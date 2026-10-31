@@ -97,7 +97,7 @@ pub fn tithe(passage: Dy, span: Dy, lane_len: Dy) -> Dy {
 }
 
 /// Returns what a hop costs a passer (J): the energy of the fuel the drive
-/// burns carrying `payload_kg`, `payload_kg * (R - 1) * energy_per_kg`.
+/// transduces carrying `payload_kg`, `payload_kg * (R - 1) * energy_per_kg`.
 pub fn hop_value(spec: &Spec, ratio: Dy, payload_kg: Dy) -> Dy {
     payload_kg * propellant_per_kg(ratio) * spec.energy_per_kg
 }

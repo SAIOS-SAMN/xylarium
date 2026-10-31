@@ -116,7 +116,7 @@ impl Body {
 /// The number of foragers a world feeds once a people has evolved there:
 /// living area x growing season x energy reaching the best medium's
 /// chemistry, through one link of a food chain (Lindeman's tenth), divided
-/// among bodies by what each burns at the chemistry's body temperature. A
+/// among bodies by what each transduces at the chemistry's body temperature. A
 /// locked world grows for half the year. A variable world (tilt above 23
 /// degrees, or a star below half a solar mass) supports small r-strategists,
 /// a steady one large K-strategists; outside plasma, body mass scales as
@@ -154,10 +154,11 @@ pub fn foragers(ms: &[Medium], region: Region, body: &Body, ctx: &Ctx) -> Dy {
 }
 
 /// A star's main-sequence lifetime (Gyr) at `r_kpc` from the core for a
-/// star of compactness `delta`: `stars::life` at the star's reach in rings,
-/// times the universe's nuclear scale.
-pub fn lifetime(delta: Dy, r_kpc: Dy, ctx: &Ctx) -> Dy {
+/// star of transduction sequence `seq` and compactness `delta`: `stars::life`
+/// (its first step) at the star's reach in rings, times the universe's
+/// nuclear scale. Zero for a star that does not ignite.
+pub fn lifetime(seq: &crate::stars::Sequence, delta: Dy, r_kpc: Dy, ctx: &Ctx) -> Dy {
     // The star's life is counted in rings; it converts here to Gyr.
-    let life = crate::stars::life(delta, crate::stars::reach_rings(r_kpc));
+    let life = crate::stars::life(seq, delta, crate::stars::reach_rings(r_kpc));
     Dy::from_q(&crate::circuit::gyr_of_rings(&life)) * ctx.sc.nuclear
 }

@@ -26,7 +26,7 @@ use xyl_cosmos::life::Body;
 use xyl_cosmos::worlds::{Ctx, Medium, State};
 
 /// The number of bodies housed: the power fed, `capacity_w` (W), over the
-/// power one body burns, `metabolism_w` (W, floored at 1e-12).
+/// power one body transduces, `metabolism_w` (W, floored at 1e-12).
 pub fn housing(capacity_w: Dy, metabolism_w: Dy) -> Dy {
     capacity_w / metabolism_w.max(Dy::sci(1, -12))
 }

@@ -194,9 +194,10 @@ impl Chemistry {
     fn light(&self, sym: &str, z: &Q) -> Option<Q> {
         let z = z * &Rulers::reference_metallicity();
         let xp = &self.light.x;
-        let burn = &Q::ONE + &Rulers::dy_dz();
+        let transduced = &Q::ONE + &Rulers::dy_dz();
         if sym == "H" {
-            (xp - &(&burn * &z)).checked_div(&(xp - &(&burn * &Rulers::reference_metallicity())))
+            (xp - &(&transduced * &z))
+                .checked_div(&(xp - &(&transduced * &Rulers::reference_metallicity())))
         } else {
             let y0 = &self.light.y;
             (y0 + &(&Rulers::dy_dz() * &z))

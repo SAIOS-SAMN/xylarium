@@ -238,9 +238,9 @@ another crate. Laws are composed from shares (ratios of the form
 - Irradiation, held and passed: received `1 / (pi (r + 1))` per bell
   (`stars::ring_per_bell`); held `delta = M / (R + M)` of it; passed
   `1 - delta`; received = held + passed. Status: built for stars
-  (`stars::burn_per_bell`); next for worlds (layer C).
+  (`stars::transduced_per_bell`); next for worlds (layer C).
 - Emission: a transducing body returns its held share outward; a star's
-  power is `P = m burn_per_bell(r) / bell` (`stars::power`); a nucleus
+  power is `P = m transduced_per_bell(r) / bell` (`stars::power`); a nucleus
   radiates `open / weight` (`formation::emission`). Status: built.
 - World heat (next, layer C): a world holds its deficit share of its star's
   light at its reach; its temperature follows from the held share; its
@@ -358,22 +358,41 @@ another crate. Laws are composed from shares (ratios of the form
 
 - Star's compactness (`disc::rim_share`, `galaxy::Star::compactness`):
   `delta = m / (R 60 + m)`, `m` in core masses, `R` the rim of the cloud's
-  burning cut in system-tier units (`galaxy::piece_rim`). Status: built.
+  settled cut in system-tier units (`galaxy::piece_rim`). Status: built.
 - Collapse and ignition (`disc::star_cut`): dark cut `s0`, `R0`;
-  `delta0 = s0 c / (R0 60 + s0 c)`; burn per echo `delta0 x turning`;
-  burning cut at `p0 = 1 + burn`. Status: built.
+  `delta0 = s0 c / (R0 60 + s0 c)`; transduction per echo `delta0 x turning`;
+  settled cut at `p0 = 1 + transduced`. Status: built.
 - Ring per bell (`stars::ring_per_bell`): `1 / (pi (r + 1))`. Status: built.
-- Burn per bell (`stars::burn_per_bell`): `delta / (pi (r + 1))`.
+- Transduction per bell (`stars::transduced_per_bell`): `delta / (pi (r + 1))`.
   Status: built.
-- Hydrogen step (`stars::transduced_hydrogen`):
-  `1 - hold(He) / (4 hold(H)) = 1/4`. Status: built.
-- Helium step (`stars::transduced_helium`):
-  `h + (1 - h)(1 - hold(C) / (3 hold(He)))`. Status: built.
-- Life (`stars::life`): a star lives `(1/4) / burn` bells. The giant end
-  (`stars::ends`) falls at `life x transduced_He / transduced_H`, and the
-  remnant share (`stars::remnant_share`) is `1 - transduced_He`. Status:
+- Frames at heat (`stars::held_frames`): `u_z(q)` open frames
+  (`compound::open_hot`), `w_z(q) = 3 Z - u_z(q)` held; `A_z` the element
+  table's `a` rounded to the nearest whole (`stars::nucleon_count`). Status:
   built.
-- Power (`stars::power`): `P = m burn_per_bell(r) / bell` core masses per
+- Pole point of a star (`stars::pole_point`): `t0 = sum n_z u_z / sum n_z
+  w_z` over the held mixture (`disc::StarCut::held`), `n_z = share_z / w_z`;
+  `t0 <= 1/2`. Status: built.
+- Throat (`stars::throat_echoes`): `n* = ln(1 / t0) / ln rho_s`, `rho_s =
+  (1 + delta) / (1 - delta)`, echoes from ignition; none where `t0 = 0`.
+  Status: built.
+- Fusion step (`stars::fusion_step`): the least `k >= 2` with a kind at `A'
+  = k A_z` releasing `1 - w' / (k w) > 0`, the greatest release there.
+  Status: built.
+- Fission step (`stars::fission_step`): kinds with `A1 + A2 = A_z` nearest
+  equal halves releasing `1 - (w1 + w2) / w > 0`, the greatest release
+  there. Status: built.
+- Sequence (`stars::Sequence::of`): at each stage the held kind of greatest
+  release steps (ties by the lesser `A`), transducing `share x release` and
+  passing `share x (1 - release)` to its products (fission: in proportion to
+  their held frames), until no held kind releases; fusion stages, then
+  fission stages where `t0 > 0`. Remnant `1 - sum transduced`
+  (`stars::remnant_share`). Status: built.
+- Life (`stars::life`, `stars::ends`): step `i` ends at `sum_{j <= i}
+  transduced_j / transduction` bells; the life is the first step's end. The step
+  at an age (`field::transduction`) is `Unlit` (no step), `Step(i)` or
+  `Remnant`; the transduction-out share (`field::transduced_share`) is the
+  step's release. Status: built.
+- Power (`stars::power`): `P = m transduced_per_bell(r) / bell` core masses per
   ring (`c = 1`). Status: built.
 - Light (`stars::light`): `P (1 + pi bell q(t))`. Status: built. Boundary
   (`stars::suns_of_power`): `P` read in the prototype's display unit of
@@ -382,7 +401,7 @@ another crate. Laws are composed from shares (ratios of the form
   built.
 - Star's cut (`disc::star_cut`, `formation::hold_at_heat`): the spin is
   `h w / (R (R + w))`, the heat is `2 ring_per_bell(r)` and
-  `p0 = 1 + 2 burn_per_bell(r)`; each kind is carried to
+  `p0 = 1 + 2 transduced_per_bell(r)`; each kind is carried to
   `l = p p0 (e / e_mean)(w_mean / w) + spin` and is held where
   `h* / (l / h* + h*) >= p`, at the largest fixed point `h*` of the held
   hold. Status: built.

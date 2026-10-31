@@ -28,7 +28,7 @@ pub struct Chemistry {
 
 /// The setting of a star's worlds: the star's birth, place, exposure to the
 /// crowded plane, mass and luminosity, and the system's debris share.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Home {
     /// The star's birth (Gyr after the Big Bang).
     pub born: Dy,
@@ -42,6 +42,8 @@ pub struct Home {
     /// The star's compactness, its deficit at its rim
     /// (`galaxy::Star::compactness`).
     pub compactness: Dy,
+    /// The star's transduction sequence (`galaxy::Star::sequence`).
+    pub sequence: crate::stars::Sequence,
     /// The star's luminosity (suns).
     pub lum: Dy,
     /// The share of the system's solids left as debris: belts and comet
@@ -60,6 +62,7 @@ impl Home {
             exposure: star.exposure(crate::circuit::rings_of_gyr_dy(settled_gyr())),
             star_mass: Dy::from_q(&sys.spec.mass),
             compactness: star.compactness(),
+            sequence: star.sequence(),
             lum: Dy::from_q(&sys.spec.lum),
             debris: debris_share(sys),
         }
@@ -110,7 +113,8 @@ pub fn chemistries(ms: &[Medium], body: &Body, home: &Home, ctx: &Ctx) -> Vec<Ch
         .collect();
     // A lit medium's window closes at 0.9 of the star's lifetime, as the
     // star's rising luminosity on the giant branch evaporates the seas.
-    let star_end = home.born + lifetime(home.compactness, home.r_kpc, ctx) * Dy::ratio(9, 10);
+    let star_end =
+        home.born + lifetime(&home.sequence, home.compactness, home.r_kpc, ctx) * Dy::ratio(9, 10);
     let crowd = worlds::cosmic_rays(home.r_kpc) * home.exposure;
     let area = body.area_m2();
     let mut out = Vec::new();
@@ -397,7 +401,12 @@ fn arrivals(living: &[Living], first: &[Option<Lineage>]) -> Vec<Vec<(Region, Dy
 /// what a mind arising at that epoch can live on.
 pub fn world_at(set: &Setting, born: Dy, epoch: Dy, ctx: &Ctx) -> Vec<Medium> {
     let quarters = ((epoch - born) * Dy::int(4) + Dy::ratio(1, 2)).trunc_i64();
-    let age = (Dy::int(quarters) / Dy::int(4)).max(first_age(set.compactness, set.r_kpc, ctx));
+    let age = (Dy::int(quarters) / Dy::int(4)).max(first_age(
+        &set.sequence,
+        set.compactness,
+        set.r_kpc,
+        ctx,
+    ));
     let state = build(set, age, ctx);
     media(&state, set.z, ctx)
 }

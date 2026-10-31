@@ -69,7 +69,7 @@ pub struct Voyage {
     pub years: Dy,
     /// The coasting speed (m/s).
     pub cruise: Dy,
-    /// The fuel energy burned per kg carried (J/kg): (R - 1) x the fuel's
+    /// The fuel energy transduced per kg carried (J/kg): (R - 1) x the fuel's
     /// energy per kg.
     pub energy_per_kg: Dy,
 }

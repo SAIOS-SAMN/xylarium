@@ -116,6 +116,17 @@ impl Star {
             .unwrap_or(Dy::ZERO)
     }
 
+    /// The star's transduction sequence: the steps its cloud's held mixture takes
+    /// at the cut's heat (`galaxy::piece_sequence`), with the throat read at
+    /// the star's compactness (`stars::Sequence::at`). Empty (no step, the
+    /// held body that does not ignite) where its cloud's piece does not
+    /// light.
+    pub fn sequence(&self) -> crate::stars::Sequence {
+        super::piece_sequence(&self.r)
+            .unwrap_or_default()
+            .at(self.compactness())
+    }
+
     /// The star's reach about its galactic core (galaxy rings). A star relates
     /// to the core it is anchored on, in the lowest common tier (the
     /// containment chain), so its reach is the orbit radius in its galaxy
@@ -203,17 +214,24 @@ impl Star {
     }
 
     /// The star's class at `t` rings after the Big Bang (see [`Class`]): its
-    /// burning step at its age, its compactness, its mass as a share of its
+    /// transduction step at its age, its compactness, its mass as a share of its
     /// cloud's star mass, its life in rings, and whether that life outlasts
     /// the universe's age `t`.
     pub fn class(&self, t: Dy) -> Class {
         let delta = self.compactness();
         let reach = self.reach_rings();
         let age = (t - Dy::from_q(&self.born)).max(Dy::ZERO);
-        let life = crate::stars::life(delta, reach);
+        let seq = self.sequence();
+        let life = crate::stars::life(&seq, delta, reach);
         let top = super::piece_star_mass(&self.r).unwrap_or(Q::ZERO);
+        let step = crate::field::transduction(&seq, delta, reach, age);
+        let fission = match step {
+            crate::field::Transduction::Step(i) => seq.steps.get(i).is_some_and(|s| s.fission),
+            _ => false,
+        };
         Class {
-            step: crate::field::burning(delta, reach, age),
+            step,
+            fission,
             compactness: delta,
             mass_share: Dy::from_q(&self.mass.checked_div(&top).unwrap_or(Q::ZERO)),
             outlives: Dy::from_q(&life) > t,
@@ -228,14 +246,17 @@ impl Star {
 /// and every other combination is reported by its quantities.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Class {
-    /// The burning step at the star's age (`field::burning`).
-    pub step: crate::field::Burning,
+    /// The transduction step at the star's age (`field::transduction`).
+    pub step: crate::field::Transduction,
+    /// Whether that step splits nuclei (`stars::Step::fission`).
+    pub fission: bool,
     /// The star's deficit at its rim (`Star::compactness`).
     pub compactness: Dy,
     /// The star's mass over its cloud's star mass (`galaxy::piece_star_mass`),
     /// in \[0, 1\].
     pub mass_share: Dy,
-    /// The star's main-sequence life (rings, `stars::life`).
+    /// The star's main-sequence life (rings, `stars::life`): its sequence's
+    /// first step; zero for a star that does not ignite.
     pub life: Q,
     /// Whether that life is longer than the universe's age at the reading.
     pub outlives: bool,
@@ -243,15 +264,20 @@ pub struct Class {
 
 impl Class {
     /// The known type whose condition holds (docs/model.md, Star types), or
-    /// `None`: a long-lived main-sequence star (its life outlasts the
-    /// universe's age), a main-sequence star, a giant or a remnant.
+    /// `None`: a held body that does not ignite (no step of its sequence
+    /// releases hold), a fission star (its current step splits nuclei), a
+    /// long-lived main-sequence star (its first step's life outlasts the
+    /// universe's age), a main-sequence star (its first step), a giant (a
+    /// later fusion step) or a remnant.
     pub fn name(&self) -> Option<&'static str> {
-        use crate::field::Burning;
+        use crate::field::Transduction;
         match self.step {
-            Burning::Hydrogen if self.outlives => Some("long-lived main sequence (red dwarf)"),
-            Burning::Hydrogen => Some("main sequence"),
-            Burning::Helium => Some("giant"),
-            Burning::Remnant => Some("remnant"),
+            Transduction::Unlit => Some("held body that does not ignite (brown dwarf)"),
+            Transduction::Step(_) if self.fission => Some("fission star"),
+            Transduction::Step(0) if self.outlives => Some("long-lived main sequence (red dwarf)"),
+            Transduction::Step(0) => Some("main sequence"),
+            Transduction::Step(_) => Some("giant"),
+            Transduction::Remnant => Some("remnant"),
         }
     }
 

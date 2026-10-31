@@ -120,6 +120,7 @@ fn surface_temperature_falls_with_distance() {
             z: Dy::ONE,
             r_kpc: Dy::int(8),
             compactness: Dy::sci(1, -6),
+            sequence: crate::stars::Sequence::of(&[(1, Q::ONE)], &Q::ZERO),
             sources: sources.clone(),
             path: None,
         };
@@ -150,6 +151,7 @@ fn surface_temperature_falls_with_distance() {
         z: Dy::ONE,
         r_kpc: Dy::int(8),
         compactness: Dy::sci(1, -6),
+        sequence: crate::stars::Sequence::of(&[(1, Q::ONE)], &Q::ZERO),
         sources,
         path: None,
     };

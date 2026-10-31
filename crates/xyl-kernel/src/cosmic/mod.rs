@@ -344,6 +344,7 @@ impl<'g> Cosmic<'g> {
         // The heartbeat changes over Gyr; it is cached per degree of the
         // star's life, as world states are.
         let deg = star_degree_gyr(
+            &wit.star.sequence(),
             wit.star.compactness(),
             xyl_cosmos::galaxy::kpc_of_rings_dy(Dy::from_q(&wit.star.r)),
             &self.ctx,

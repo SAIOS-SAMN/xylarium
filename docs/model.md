@@ -273,20 +273,104 @@ pole axis and the five isoclinic planes).
   Recession is `dl/dt / inside`, the shift is `z = v / c_ocean`, and the
   tide across an extent `x` is `A(R - x) - A(R + x)`.
 - Galactic cores (`cores::founding_of`, `Substrate::holds_a_star`): a bead's
-  state is its mass in the universal core's units, so the mass of its core
-  reads `hole_suns = hole_mass x state`. A bead is a galaxy where the lit
-  share of that mass is at least the mass of one star on the chain,
-  `lit x state >= m_p` in core masses, with `m_p` the star mass of the piece
-  that lights first (`galaxy::first_star_mass`), and where its core is no
-  heavier than the universal core, `state <= 1` (`Substrate::galaxies`): a
-  heavier core would hold the universal core rather than circle it. Each galaxy circulates about the throat at
-  `4 delta` turns per echo, with `delta = inside / (reach + inside)`. Its
-  plane is set by the repulsion pivots one tier up (the node by the golden
-  turn, the tilt by the plastic turn's share of the S^360 measure), and its
-  place at `t` is its plane's rotor applied to its phase
-  (`Shape::place_at`). The stars of another galaxy are the home galaxy's
-  stars read through that galaxy's length scale `2 m / (1 + m)`, where `m`
-  is its hole mass ratio (`Shape::scale`, placeholder).
+  state is its mass in the universal core's units, so the mass of its core reads
+  `hole_suns = hole_mass x state`. A bead is a galaxy where the lit share of
+  that mass is at least the mass of one star on the chain, `lit x state >= m_p`
+  in core masses, with `m_p` the star mass of the piece that lights first
+  (`galaxy::first_star_mass`), and where its core is no heavier than the
+  universal core, `state <= 1` (`Substrate::galaxies`): a heavier core would
+  hold the universal core rather than circle it. Each galaxy circulates about
+  the throat at `4 delta` turns per echo, with `delta = inside / (reach +
+  inside)`. Its plane is set by the repulsion pivots one tier up (the node by
+  the golden turn, the tilt by the plastic turn's share of the S^360 measure),
+  and its place at `t` is its plane's rotor applied to its phase
+  (`Shape::place_at`). The stars of another galaxy are the home galaxy's stars
+  read through that galaxy's length scale `2 m / (1 + m)`, where `m` is its hole
+  mass ratio (`Shape::scale`, placeholder).
+
+### Perturbations, throats and reverberation
+
+Every core is one face of a throat: the universal core's white face is
+paired with the parent's black face, and each galactic core is one face of
+a throat between its galaxy and the enclosure beyond (`bounce::Bounce`,
+`centre`). A core's bounce is a perturbation
+of its enclosure, and the construction is spherical:
+
+- **The perturbation is a sphere.** A bounce emits one perturbation that
+  grows from the core (S^0) across the enclosure that contains it, the
+  sphere of curvature radius `rho` on which every reach is taken
+  (`bounce::curved_reach`, S^360 at the universe's scale). Its front at a
+  given time is the sphere of points at equal light-time from the core.
+  There is no oscillator: the bell is the time the front takes to the home
+  galaxy's rim and back (`Anchor::bell`, `2 rim 60^5` in `r_g / c`).
+- **Throats separate the cores.** Between two cores the perturbation meets
+  a throat, the sphere through the crossing at the one-third deficit,
+  `R_h = 2M` (`bounce::horizon`). A throat's two faces are a near face and
+  a far face, so a perturbation that reaches a throat continues on the
+  far face.
+- **Reverberation is the perturbation held between faces.** One ring is
+  the front's round trip on the near face; the echo is two rings, the near
+  face's ring and the far face's return (`circuit::echo`). What the throat
+  holds of each pass swings with it: each firmament kind's band swings over
+  `r (1 +/- p)` about the throat with `p = 1/2`, and the share carried past
+  the throat leaves as the jet (`Substrate::reverberation`,
+  `circuit::onset_echoes`). The inbound echo at the throat,
+  `A_in(t) = cos(2 pi t / echo) + echo q(t)`, is the reverberation read at
+  the core (`Substrate::inbound`).
+- **The throat is the equator.** The deficit law splits every exchange
+  into a held share `delta = M / (R + M)` and a passed share `1 - delta`.
+  At the throat itself `delta(H, H) = 1/2` (`circuit::throat_push`): the
+  held and passed shares are equal, the fixed point of the inversion
+  `delta -> 1 - delta`. The same inversion on the pole axis,
+  `X(t) -> X(1 / t)`, swaps the Z pole (held) and the Q pole (open) and
+  fixes the throat at `t = 1` (`circuit::axis_antipole`).
+- **Arrival at a reach.** The front's arrival at reach `r` is
+  `(r / rim) bell / 2` after the bounce, and its amplitude falls with the
+  vacuum's share about the universal state, `1 / (r + 1)`
+  (`Substrate::amplitude`). In the galaxy tier the front is carried
+  between holes by the relay network (`pulse::relays`): every galactic core
+  and stellar remnant passes it on continuous in phase. Next: the relay is
+  under review against a single front echoed only at surfaces (cores,
+  the firmament, the rim) with the held medium's delay `r + H(<r)`, shared
+  with Netstratum (roadmap, milestone 3).
+
+### Radiation: irradiation held, transduced and passed on
+
+Light, heat and their dispersal are one exchange read through the deficit
+law, the same at a nucleus, a star and a world:
+
+- **Irradiation.** A body at reach `r` receives the perturbation's ring,
+  `1 / (pi (r + 1))` per bell, plus the vessel's drift `bell q(t) / (r + 1)`
+  (`stars::ring_per_bell`, `stars::burn_per_bell`).
+- **Held and passed.** The body holds its deficit share of what it
+  receives at the body's rim, `delta = M / (R + M)`; the remainder,
+  `1 - delta`, is passed: it continues past the body to what lies beyond.
+  Received equals held plus passed, so the exchange conserves energy.
+- **Heat.** The held share enters the body's hold, on its Z pole. A body
+  that does not transduce keeps it as warmth.
+- **Light.** A transducing body converts its held share and returns it
+  outward. For a star the held share per bell is its burn,
+  `delta_star / (pi (r + 1))`; its power is the hold the burn converts per
+  ring, `P = m burn_per_bell(r) / bell` in core masses per ring (`c = 1`,
+  `stars::power`), and its light is that power with the vessel's drift,
+  `P (1 + pi bell q(t))` (`stars::light`). For a nucleus the radiated part
+  is its open frames over its weight, the Q pole's share of its frames
+  (`formation::emission`).
+- **The inversion.** Emission is irradiation turned outward: what a body
+  held becomes what it gives to the bodies beyond it, so at each exchange
+  the held share of one body is the received share of the next. The
+  inversion `delta -> 1 - delta`, fixed at the throat's `delta = 1/2`, and
+  the pole axis's `X(t) -> X(1 / t)`, which swaps the Z (held) and Q (open)
+  poles, are the two readings of the same exchange.
+- **Dispersal.** The emitted light spreads on the emitter's sphere and is
+  received at reach `r` through the receiver's deficit there; about the
+  universal state the waveform falls as `1 / (r + 1)`
+  (`Substrate::amplitude`).
+- **At a world (next).** A world receives its star's light at its reach and
+  holds its deficit share of it; that held share is its heat, from which
+  its temperature follows, and what it re-emits is that heat turned
+  outward. This replaces the Earth calibrations of the climate (278 K,
+  340 W/m^2, 288 K and `greenhouse_tau`) in layer C of roadmap milestone 3.
 
 ## 5. The galaxy
 
@@ -381,20 +465,19 @@ pole axis and the five isoclinic planes).
 ## 6. Stars and systems
 
 - The burn (`stars.rs`): a star at reach `r` absorbs the ring that the bell
-  brings there, `1 / (pi (r + 1))` per bell, plus the vessel's drift
-  `bell q(t) / (r + 1)`, and takes its deficit share of that absorption,
-  `delta_star`, read on the solar rim (`stars::delta_star`,
-  `package::Si::star_radius_m`; open). Its power is the hold that burn
-  transduces per ring, `P = m burn_per_bell(r) / bell` in core masses per
-  ring (`c = 1`; `stars::power`), and its light that power times the drift
-  factor `1 + pi bell q(t)` (`stars::light`). The system and world layers
-  still read the luminosity in suns through the boundary
-  `stars::suns_of_power`, the power over a one-sun star's at reach 0. Its main-sequence life is
-  `(1 - hold(He) / (4 hold(H))) / burn` bells, one quarter over the burn
-  (`stars::life`); its giant phase ends at that life times
-  `transduced_He / transduced_H` (`stars::ends`); its remnant keeps
-  `1 - transduced_He` of its hold (`stars::remnant_share`). The radiation's
-  swing within a bell is `(pi / 2) |cos(2 pi t / echo)|` (`stars::flicker`).
+  brings there, `1 / (pi (r + 1))` per bell, plus the vessel's drift `bell q(t)
+  / (r + 1)`, and takes its deficit share of that absorption, `delta_star`, read
+  on the solar rim (`stars::delta_star`, `package::Si::star_radius_m`; open).
+  Its power is the hold that burn transduces per ring, `P = m burn_per_bell(r) /
+  bell` in core masses per ring (`c = 1`; `stars::power`), and its light that
+  power times the drift factor `1 + pi bell q(t)` (`stars::light`). The system
+  and world layers still read the luminosity in suns through the boundary
+  `stars::suns_of_power`, the power over a one-sun star's at reach 0. Its
+  main-sequence life is `(1 - hold(He) / (4 hold(H))) / burn` bells, one quarter
+  over the burn (`stars::life`); its giant phase ends at that life times
+  `transduced_He / transduced_H` (`stars::ends`); its remnant keeps `1 -
+  transduced_He` of its hold (`stars::remnant_share`). The radiation's swing
+  within a bell is `(pi / 2) |cos(2 pi t / echo)|` (`stars::flicker`).
 - The star's cut (`disc::star_cut`): the infall of the star's lit piece
   collapses carrying the galaxy's shear across its extent,
   `h w / (R (R + w))`, as its turning. It is heated by the pulse's turning

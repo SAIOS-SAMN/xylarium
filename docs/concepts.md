@@ -116,6 +116,23 @@ Atoms in the model are described by three numbers: protons (Z), neutrons
 slots an atom fills and leaves open; gravity reads only its mass, Z + Q.
 The details are in [roadmap.md, Mathematics](roadmap.md#mathematics).
 
+## Perturbations, light and heat
+
+Each core's bounce sends out one perturbation, a sphere growing from the
+core across the space that contains it. Cores are separated by throats,
+spheres with a near face and a far face; the perturbation that reaches a
+throat continues on the far face, and its round trip between the faces is
+the echo, two rings of the bell. What a throat holds of each pass swings
+with it: that is the reverberation that drives the firmament's outflow.
+
+Every body the perturbation reaches splits what it receives by the deficit
+share: it holds `delta = M / (R + M)` and passes on the rest. The held
+share is heat. A star converts its held share and sends it outward again:
+that is light. Light reaching the next body is split the same way, so
+emission is irradiation turned outward, and the throat, where the held and
+passed shares are equal (`delta = 1/2`), is the equator between the two.
+See [model.md](model.md#perturbations-throats-and-reverberation).
+
 ## Galaxies, stars and worlds
 
 The home galaxy surrounds the universal core. Its rings are the founding's

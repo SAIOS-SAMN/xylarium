@@ -265,10 +265,11 @@ Next:
 2. Layer C, systems and worlds (`disc`, `systems`, `bodies`, `worlds`,
    `hydro`): orbits in the system tier's unit and radii in the planet
    tier's; world masses as shares of the star's manifold; a world's day and
-   year as turns of its spin and orbit per ring of its star; flux as the
-   star's light times the world's deficit share at its reach, and
-   temperature from the flux through the radiation law with the universal
-   constants, in place of 278 K, 340 W/m^2, 288 K and `greenhouse_tau`;
+   year as turns of its spin and orbit per ring of its star; the world's heat as
+   the deficit share it holds of its star's light at its reach, its
+   temperature from that held share and its re-emission as that heat turned
+   outward (model.md, Radiation: irradiation held, transduced and passed
+   on), in place of 278 K, 340 W/m^2, 288 K and `greenhouse_tau`;
    the mantle and the heat-producing isotopes from each element's hold and
    open frames and the star's birth mixture, in place of the bulk-silicate
    Earth tables and the 4.57 Gyr epoch; `worlds/unit.rs` deleted.

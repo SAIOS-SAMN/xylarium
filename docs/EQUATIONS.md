@@ -217,6 +217,36 @@ another crate. Laws are composed from shares (ratios of the form
 - Galaxy scale (`cores::Shape::scale`): `2 m / (1 + m)`, with
   `m = hole_suns / hole_mass`. Status: placeholder.
 
+### Perturbations, throats and radiation
+
+- Perturbation front (`bounce::curved_reach`, `Anchor::bell`): one sphere
+  per bounce, grown from the core across its enclosure of curvature radius
+  `rho`; reaches are `rho sin(R / rho)`; the bell is the front's round trip
+  to the home galaxy's rim, `2 rim 60^5` in `r_g / c`. Status: built.
+- Throat (`bounce::horizon`): the sphere through the crossing at the
+  one-third deficit, `R_h = 2M`, with a near and a far face. Status: built.
+- Echo (`circuit::echo`): two rings, the near face's ring and the far
+  face's return. Status: built.
+- Equator (`circuit::throat_push`, `circuit::axis_antipole`):
+  `delta(H, H) = 1/2`, the fixed point of `delta -> 1 - delta`; on the pole
+  axis the inversion `X(t) -> X(1 / t)` fixes `t = 1`. Status: built.
+- Arrival (`Substrate::amplitude`): `(r / rim) bell / 2` after the bounce,
+  amplitude falling as `1 / (r + 1)`. Relay between holes
+  (`pulse::relays`): continuity `cos(2 pi detour / wavelength)`. Status:
+  built; the single front echoed at surfaces with delay `r + H(<r)` is
+  under review (roadmap, milestone 3).
+- Irradiation, held and passed: received `1 / (pi (r + 1))` per bell
+  (`stars::ring_per_bell`); held `delta = M / (R + M)` of it; passed
+  `1 - delta`; received = held + passed. Status: built for stars
+  (`stars::burn_per_bell`); next for worlds (layer C).
+- Emission: a transducing body returns its held share outward; a star's
+  power is `P = m burn_per_bell(r) / bell` (`stars::power`); a nucleus
+  radiates `open / weight` (`formation::emission`). Status: built.
+- World heat (next, layer C): a world holds its deficit share of its star's
+  light at its reach; its temperature follows from the held share; its
+  re-emission is that heat turned outward. Replaces `278 L / a`,
+  340 W/m^2, 288 K and `greenhouse_tau`. Status: placeholder.
+
 ### Z, Q and R (the pole model)
 
 - Weights (`circuit::nucleus_weights`, `circuit::mix_weights`): `Z` is the

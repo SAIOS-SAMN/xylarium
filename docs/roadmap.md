@@ -261,6 +261,15 @@ Landed:
   transduction-out share read the sequence; the fixed hydrogen and helium
   shares and the measured binding energies are deleted.
 
+- One law per formula: the torsion share `(H + J) / (2H + J)` for every
+  throat (`bounce::torsion_share`), the dilation `(1 + p) / (1 - p)` for
+  every holder (`circuit::dilation`), and the throat crossing of the echo
+  map `t -> a t + b` in closed form (`circuit::throat_crossing`).
+- The jetstream for every holder: out through the continuum, back through
+  the vacuum (`circuit::jet_map`). The firmament's onsets and each star's
+  collective cross the throat by the same law; a star's timeline runs its
+  fusion steps until the crossing and its fission steps from it
+  (`stars::timeline`, `stars::remnant`).
 Next:
 
 1. Layer B, the galaxy tier (`galaxy`, `stars`, `chem`, `pulse`, `field`,

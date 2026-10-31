@@ -98,6 +98,43 @@ pub fn point(x: &[Q]) -> Mv {
     cga::point_at(x)
 }
 
+/// The share a throat's jet carries at each crossing, from the hole's spin
+/// by torsion. In the Einstein-Cartan bounce torsion is not an independent
+/// field: it is the spin density of what fell, so the spin's share enters the
+/// hold directly. The throat `H = 2M` (`horizon_reach`) holds one face
+/// against the other, `delta(H, H) = 1/2`, and the jet carries the unlocked
+/// face `1 - delta`; the spin's angular momentum `J = a M^2` (`a` the Kerr
+/// parameter, `spin`) is a further share the throat cannot hold, so the held
+/// face is `delta(H, H + J) = H / (2H + J)` and the jet carries
+/// `(H + J) / (2H + J)`: one half for a spinless hole, which does not bounce,
+/// and `(2 + M) / (4 + M)` at the extremal spin (three fifths for the
+/// universal core, `M = 1`). One law for every throat; linear in the shares
+/// and exact. Zero for a non-positive mass.
+pub fn torsion_share(mass: &Q, spin: &Q) -> Q {
+    if mass.signum() <= 0 {
+        return Q::ZERO;
+    }
+    let h = horizon_reach(mass);
+    let j = &spin.clone().max(Q::ZERO) * &(mass * mass);
+    (&h + &j)
+        .checked_div(&(&(&Q::int(2) * &h) + &j))
+        .unwrap_or(Q::ZERO)
+}
+
+/// The Kerr spin whose torsion share at `mass` is `a`: `J = H (2a - 1) /
+/// (1 - a)`, the share law inverted, over `M^2`. `None` for a share at or
+/// above one or a non-positive mass.
+pub fn spin_of_share(mass: &Q, a: &Q) -> Option<Q> {
+    let one_less = &Q::ONE - a;
+    if one_less.signum() <= 0 || mass.signum() <= 0 {
+        return None;
+    }
+    let h = horizon_reach(mass);
+    (&h * &(&(&Q::int(2) * a) - &Q::ONE))
+        .checked_div(&one_less)?
+        .checked_div(&(mass * mass))
+}
+
 /// The spin as the multi-axial bivector: the five isoclinic planes' blades,
 /// every plane sharing the one turn of magnitude `spin` (the Kerr
 /// parameter), so the white hole's generator carries all five planes'
@@ -145,9 +182,9 @@ pub struct Bounce {
 
 impl Bounce {
     /// The share the bounce's jet carries through the throat at each crossing,
-    /// from its spin by torsion (origin::torsion_share).
+    /// from its mass and spin by torsion ([`torsion_share`]).
     pub fn share(&self) -> Q {
-        crate::origin::torsion_share(&self.spin)
+        torsion_share(&self.mass, &self.spin)
     }
 
     /// The bounce of a black hole of `mass` and Kerr parameter `spin`, read in

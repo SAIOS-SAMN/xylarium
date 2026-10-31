@@ -35,7 +35,9 @@
 //!   counted in rings (one bell per ring). The main-sequence life is the
 //!   first step's; the steps end one after another (`ends`), the same for
 //!   every mass at a reach because the transduction is a share of the hold.
-//!   `remnant_share` is the hold no step transduced.
+//!   The [`timeline`] runs fusion steps until the collective's throat
+//!   crossing and fission steps from it; [`remnant`] is the hold the steps
+//!   that ran did not transduce.
 //! - Sequence (`sequence.rs`): the held collective's pole point, its
 //!   dilation to the throat, and the fusion and fission steps by polarity.
 //! - Not yet modelled: ejecta returned to the galaxy's gas.
@@ -46,8 +48,7 @@
 mod sequence;
 
 pub use sequence::{
-    fission_step, fusion_step, held_frames, nucleon_count, pole_point, throat_echoes, Sequence,
-    Step,
+    fission_step, fusion_step, held_frames, nucleon_count, pole_point, Sequence, Step,
 };
 
 use crate::circuit::vacuum_share;
@@ -92,10 +93,79 @@ pub fn transduced_per_bell(delta: Dy, reach: Dy) -> Dy {
     delta.max(Dy::ZERO) * ring_per_bell(reach)
 }
 
-/// The share of the hold a star's sequence leaves as its remnant: what no
-/// step transduced (`Sequence::remnant`).
-pub fn remnant_share(seq: &Sequence) -> Q {
-    seq.remnant.clone()
+/// One step of a star's timeline (rings after its birth): when it starts and
+/// ends and the share of the hold it transduces in that time.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Span {
+    /// When the step starts (rings after the star's birth).
+    pub start: Q,
+    /// When it ends; equal to `start` for a step that does not run.
+    pub end: Q,
+    /// The share of the hold it transduces while it runs.
+    pub transduced: Q,
+}
+
+/// A star's timeline at reach `r` for compactness `delta`: each step of its
+/// sequence runs for its transduced share over the transduction per bell,
+/// fusion steps until the collective reaches the throat
+/// (`Sequence::throat_echoes`, two rings per echo) and fission steps from
+/// it. A fusion step still running at the throat is cut there and
+/// transduces the share of its hold it reached; later fusion steps and, where
+/// the throat is never reached, the fission steps do not run.
+pub fn timeline(seq: &Sequence, delta: Dy, reach: Dy) -> Vec<Span> {
+    let throat = seq
+        .throat_echoes
+        .map(|n| (n * crate::circuit::echo()).to_q());
+    let mut t = Q::ZERO;
+    let mut out = Vec::with_capacity(seq.steps.len());
+    for step in &seq.steps {
+        let dur = rings_to_transduce(&step.transduced, delta, reach);
+        let span = match (&throat, step.fission) {
+            (Some(th), false) if t >= *th => Span {
+                start: t.clone(),
+                end: t.clone(),
+                transduced: Q::ZERO,
+            },
+            (Some(th), false) if &(&t + &dur) > th => {
+                let reached = (th - &t).checked_div(&dur).unwrap_or(Q::ZERO);
+                Span {
+                    start: t.clone(),
+                    end: th.clone(),
+                    transduced: &step.transduced * &reached,
+                }
+            }
+            (_, false) => Span {
+                start: t.clone(),
+                end: &t + &dur,
+                transduced: step.transduced.clone(),
+            },
+            (None, true) => Span {
+                start: t.clone(),
+                end: t.clone(),
+                transduced: Q::ZERO,
+            },
+            (Some(th), true) => {
+                let start = t.clone().max(th.clone());
+                Span {
+                    end: &start + &dur,
+                    start,
+                    transduced: step.transduced.clone(),
+                }
+            }
+        };
+        t = span.end.clone();
+        out.push(span);
+    }
+    out
+}
+
+/// The share of the hold a star leaves as its remnant at reach `r` for
+/// compactness `delta`: one less what the steps of its timeline transduced.
+pub fn remnant(seq: &Sequence, delta: Dy, reach: Dy) -> Q {
+    let done = timeline(seq, delta, reach)
+        .iter()
+        .fold(Q::ZERO, |a, s| &a + &s.transduced);
+    &Q::ONE - &done
 }
 
 /// The rings over which a star of compactness `delta` at reach `r`
@@ -174,14 +244,13 @@ pub fn transduced(seq: &Sequence, delta: Dy, reach: Dy, age: &Q) -> Q {
 }
 
 /// When each step of a star's sequence ends (rings after its birth) at reach
-/// `r` for compactness `delta`: the cumulative transduced share at each
-/// step's end over the transduction per bell. The first is the main-sequence life;
+/// `r` for compactness `delta`, read from its [`timeline`]. The first is the main-sequence life;
 /// the last is when the star becomes a remnant. Empty for a sequence with no
 /// step.
 pub fn ends(seq: &Sequence, delta: Dy, reach: Dy) -> Vec<Q> {
-    seq.cumulative()
-        .iter()
-        .map(|share| rings_to_transduce(share, delta, reach))
+    timeline(seq, delta, reach)
+        .into_iter()
+        .map(|s| s.end)
         .collect()
 }
 

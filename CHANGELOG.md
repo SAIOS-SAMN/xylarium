@@ -11,6 +11,16 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The jetstream for every holder (`circuit::jet_map`,
+  `circuit::throat_crossing`): out through the continuum, back through the
+  vacuum; the firmament's onsets take the vacuum leg (the founding
+  changes: onsets come earlier) and a star's collective crosses the throat
+  by the same law. `stars::timeline` runs fusion steps until the crossing
+  and fission steps from it; `stars::remnant` is what the steps that ran
+  did not transduce.
+- One law per formula: `bounce::torsion_share(mass, spin)`,
+  `circuit::dilation`, `circuit::echoes_to_throat` (the duplicates in
+  `origin` and `stars` are removed).
 - Stellar transduction by polarity (`stars::Sequence`): a star's held
   collective's pole point `t0 = sum n u / sum n w`, dilated per echo by
   `(1 + delta) / (1 - delta)`, selects fusion before the throat and fission

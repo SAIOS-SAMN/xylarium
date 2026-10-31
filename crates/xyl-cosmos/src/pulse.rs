@@ -128,7 +128,12 @@ pub fn nodes_among(seed: u64, origin: &Origin, candidates: &[u64]) -> Vec<Node> 
         // read in suns as the cores' masses are (boundary
         // `galaxy::suns_of_core_masses`).
         let stands_for = crate::galaxy::suns_of_core_masses(&s.stands_for.to_q());
-        let mass = Dy::from_q(&stands_for) * Dy::from_q(&crate::stars::remnant_share(&seq));
+        let mass = Dy::from_q(&stands_for)
+            * Dy::from_q(&crate::stars::remnant(
+                &seq,
+                s.compactness(),
+                s.reach_rings(),
+            ));
         out.push(Node {
             kind: Kind::Stellar(Box::new(s)),
             mass,

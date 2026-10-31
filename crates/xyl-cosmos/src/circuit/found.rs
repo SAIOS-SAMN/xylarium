@@ -111,7 +111,7 @@ impl Substrate {
         let mut prof = Prof::new(usize::MAX);
         // The founding depends only on the laws and the torsion share, so the
         // cache key is the founding digest and the share.
-        let share = crate::origin::torsion_share(spin);
+        let share = crate::bounce::torsion_share(&Q::ONE, spin);
         super::grain::set_founding_bits(crate::elements::founding_bits(&share));
         let key = format!("{}-{}", &env!("XYL_FOUNDING_DIGEST")[..12], share).replace('/', "-");
         let anchor_of = |s: &Substrate| {

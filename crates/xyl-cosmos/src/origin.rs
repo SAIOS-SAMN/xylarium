@@ -14,8 +14,9 @@
 //! (`circuit::anchor`), and the [`Origin`]'s lumpiness, held share,
 //! assembly (bells until first light) and star efficiency (lit share).
 //!
-//! [`torsion_share`] is a = (H + J) / (2H + J) with H = 2M, J = a_Kerr M^2:
-//! 1/2 at zero spin, 3/5 at the extremal spin; [`spin_of_share`] inverts it
+//! `bounce::torsion_share` at the universal core (`M = 1`) is
+//! a = (H + J) / (2H + J) with H = 2M, J = a_Kerr M^2: 1/2 at zero spin, 3/5
+//! at the extremal spin; [`spin_of_share`] inverts it
 //! onto the grid. [`Origin::of`] returns None where the founding or the
 //! bounce cannot be built; the same seed gives the same origin.
 //! Terms: torsion share, lumpiness (docs/glossary.md).
@@ -73,37 +74,11 @@ pub struct Origin {
     pub efficiency: Q,
 }
 
-/// The share the outbound jet carries through the throat at each crossing,
-/// from the parent's spin by torsion. In the Einstein-Cartan bounce torsion
-/// is not an independent field: it is the spin density of what fell, so the
-/// spin's share enters the hold directly. The throat `H = 2M` holds one
-/// face against the other, `delta(H, H) = 1/2`, and the jet carries the
-/// unlocked face `1 - delta`; the parent's spin `J = a_Kerr M^2` is a
-/// further share the throat cannot hold, so the held face is
-/// `delta(H, H + J) = H / (2H + J)` and the jet carries
-/// `a = (H + J) / (2H + J)`: one half for a spinless hole (which does not
-/// bounce), three fifths at the extremal spin. Linear in the shares, exact.
-pub fn torsion_share(spin: &Q) -> Q {
-    let h = crate::bounce::horizon_reach(&Q::ONE);
-    let j = spin.clone().max(Q::ZERO);
-    (&h + &j)
-        .checked_div(&(&(&Q::int(2) * &h) + &j))
-        .unwrap_or(Q::ZERO)
-}
-
-/// The spin whose torsion share is `a`: J = H (2a - 1) / (1 - a), the share
-/// law inverted; clamped to the open grid. A share at or above three fifths
-/// (the extremal spin's) gives the extremal spin.
+/// The parent's spin whose torsion share is `a` (`bounce::spin_of_share` at
+/// the universal core's mass, 1), clamped to the open grid. A share at or
+/// above three fifths (the extremal spin's) gives the extremal spin.
 pub fn spin_of_share(a: &Q) -> Q {
-    let h = crate::bounce::horizon_reach(&Q::ONE);
-    let one_less = &Q::ONE - a;
-    if one_less.signum() <= 0 {
-        return clamp_spin(&Q::ONE);
-    }
-    let j = (&h * &(&(&Q::int(2) * a) - &Q::ONE))
-        .checked_div(&one_less)
-        .unwrap_or(Q::ZERO);
-    clamp_spin(&j)
+    crate::bounce::spin_of_share(&Q::ONE, a).map_or_else(|| clamp_spin(&Q::ONE), |j| clamp_spin(&j))
 }
 
 /// A uniform rational strictly inside (0, 1) on the 2^-40 grid.
@@ -166,6 +141,7 @@ mod tests {
     fn the_share_law_inverts_on_the_grid() {
         // A spinless hole carries one half and does not bounce; the extremal
         // spin carries three fifths; the inversion lands within a grid step.
+        let torsion_share = |spin: &Q| crate::bounce::torsion_share(&Q::ONE, spin);
         assert_eq!(torsion_share(&Q::ZERO), Q::new(1, 2).unwrap());
         assert_eq!(torsion_share(&Q::ONE), Q::new(3, 5).unwrap());
         for n in [1i64, 7, 50, 99] {

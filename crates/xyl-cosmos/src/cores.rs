@@ -227,7 +227,8 @@ pub fn substrate_for(spin: &Q) -> Option<Arc<crate::circuit::Substrate>> {
     let mut spin = spin.clone();
     let mut found = None;
     for _ in 0..3 {
-        let elements = crate::elements::founded(&crate::origin::torsion_share(&spin)).ok()?;
+        let elements =
+            crate::elements::founded(&crate::bounce::torsion_share(&Q::ONE, &spin)).ok()?;
         let (s, anchor) = crate::circuit::Substrate::found(&spin, &elements);
         let least = crate::origin::spin_of_share(&s.least_share());
         let whole = s.margin().signum() >= 0 || spin >= least;

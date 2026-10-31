@@ -76,9 +76,12 @@ another crate. Laws are composed from shares (ratios of the form
   Status: built.
 - Spin draw (`origin::Origin::of`): the spin is drawn uniformly on the 2^-40
   grid, strictly inside `(0, 1)` (`origin::clamp_spin`). Status: built.
-- Torsion share (`origin::torsion_share`): `a = (H + J) / (2H + J)` with
-  `H = 2`, so `a = 1/2` at `J = 0` and `a = 3/5` at `J = 1`. The inverse
-  (`origin::spin_of_share`) is `J = H (2a - 1) / (1 - a)`. Status: built.
+- Torsion share (`bounce::torsion_share`), one law for every throat:
+  `a = (H + J) / (2H + J)` with `H = 2M` and `J = a_Kerr M^2`; at the
+  universal core (`M = 1`) `a = 1/2` at zero spin and `a = 3/5` at the
+  extremal spin. The inverse (`bounce::spin_of_share`) is
+  `J = H (2a - 1) / (1 - a)`, read on the origin's grid by
+  `origin::spin_of_share`. Status: built.
 - Admission (`Substrate::least_share`, `cores::substrate_for`): the founding
   requires `a >= (r_far / rim) (1 + A_in_peak)`; otherwise the universe is
   refounded at `spin_of_share(least_share)`, with at most three foundings.
@@ -147,15 +150,22 @@ another crate. Laws are composed from shares (ratios of the form
   `firmament mass / (firmament mass + sum bead masses)`. Status: built.
 - Throat push (`circuit::throat_push`): `p = delta(H, H) = 1/2`. Status:
   built.
-- Echo dilation (`circuit::echo_dilation`): `rho = (1 + p) / (1 - p) = 3`.
-  Status: built.
+- Dilation per echo (`circuit::dilation`), one law for every holder:
+  `rho = (1 + p) / (1 - p)`, `p` the push the holder receives; at the
+  throat's push `p = 1/2`, `rho = 3` (`circuit::echo_dilation`). Status:
+  built.
+- Echoes to the throat (`circuit::echoes_to_throat`), one law for the
+  firmament's kinds and a star's collective: `n = ln(1 / t) / ln rho`, zero
+  where `t >= 1`, none where `t <= 0` or `rho <= 1`. Status: built.
 - Reverberation (`Substrate::reverberation`): in order of spin,
   `h = 1 + inside / unit`, `r = spin / h`, `delta = h / (r + h)`,
   `beyond = clamp((r (1 + delta) - h) / (2 delta r), 0, 1)` and
   `rate = beyond / bell`. Status: built.
-- Jet onset (`circuit::onset_echoes`): the onset falls after
-  `ln(1 / t) / ln rho` echoes, with `t = open / hold`; a sealed kind has no
-  onset, and the onset is zero where `t >= 1`. Status: built.
+- Jet onset (`circuit::onset_echoes`): `circuit::throat_crossing` of
+  `t = open / hold` under the kind's jetstream map at the throat's push and
+  the kind's vacuum share `delta` (`circuit::jet_map`); a sealed kind has
+  no pole state and no onset, and the onset is zero where `t >= 1`.
+  Status: built.
 - Outflow (`Substrate::outflow`): `m(t) = m0 (1 - exp(-rate (t - onset)))`
   for `t > onset`. Status: built.
 - Outflow rate (`Substrate::rate`):
@@ -182,6 +192,26 @@ another crate. Laws are composed from shares (ratios of the form
   state left by the previous channel; the residual is the observed dilation
   over the channels' product and equals 1 where the loop closes. Status:
   partial (read by the observer).
+- Jetstream law (`circuit::jetstream`), one law for every holder of hold `w` and
+  open frames `u`: continuum (outflow) at push `p_c`, `rho = (1 + p_c) / (1 -
+  p_c)`, moves `(rho - 1) u w / (w + rho u)` frames Z to Q; vacuum (inflow) at
+  `p_v = H / (R + H)` moves `p_v w` frames Z to Q; electron phase moves `R u`
+  frames Q to Z (mean zero over an echo). `rho_net` is the product of the
+  channels' dilations, the torsion the echo leaves. Firmament kinds: `p_c = 1/2`
+  at the throat's reach. A star's collective: `p_c = p_v = delta`, the vacuum's
+  share at the star's rim about the star's mass, as a firmament kind's is read
+  at its reach about the kind's hold. Mean echo map (`circuit::jet_map`): `t ->
+  a t + b`, `a = rho / (1 - p_v)`, `b = p_v / (1 - p_v)`. Firmament kinds: `p_c
+  = 1/2`, `p_v` the kind's vacuum share at its reach about its hold. Status:
+  built for both.
+- Throat crossing (`circuit::throat_crossing`): iterating `t -> a t + b`,
+  `t_n = t* + (t0 - t*) a^n` with `t* = b / (1 - a)`, so the throat falls
+  after `ln((1 - t*) / (t0 - t*)) / ln a` echoes; `circuit::echoes_to_throat`
+  is the case `b = 0`. Status: built.
+- Timeline (`stars::timeline`, `stars::remnant`): fusion steps run their
+  transduced share over the transduction per bell until the throat
+  crossing (a step running there is cut), fission steps from it; the
+  remnant is one less what ran. Status: built.
 - Waveform (`Substrate::amplitude`):
   `A(r, t) = [cos(2 pi (t - tau) / echo) / echo + q(t - tau)] / (r + 1)`,
   with `tau = (r / rim) bell / 2`. Status: built.
@@ -372,9 +402,10 @@ another crate. Laws are composed from shares (ratios of the form
 - Pole point of a star (`stars::pole_point`): `t0 = sum n_z u_z / sum n_z
   w_z` over the held mixture (`disc::StarHold::held`), `n_z = share_z / w_z`;
   `t0 <= 1/2`. Status: built.
-- Throat (`stars::throat_echoes`): `n* = ln(1 / t0) / ln rho_s`, `rho_s =
-  (1 + delta) / (1 - delta)`, echoes from ignition; none where `t0 = 0`.
-  Status: built.
+- A star's throat (`stars::Sequence::throat_echoes`):
+  `circuit::echoes_to_throat` of its pole point under
+  `circuit::dilation(delta)`, `n* = ln(1 / t0) / ln((1 + delta) / (1 - delta))`,
+  echoes from ignition; none where `t0 = 0`. Status: built.
 - Fusion step (`stars::fusion_step`): the least `k >= 2` with a kind at `A'
   = k A_z` releasing `1 - w' / (k w) > 0`, the greatest release there.
   Status: built.
@@ -386,7 +417,7 @@ another crate. Laws are composed from shares (ratios of the form
   passing `share x (1 - release)` to its products (fission: in proportion to
   their held frames), until no held kind releases; fusion stages, then
   fission stages where `t0 > 0`. Remnant `1 - sum transduced`
-  (`stars::remnant_share`). Status: built.
+  (`stars::remnant`). Status: built.
 - Life (`stars::life`, `stars::ends`): step `i` ends at `sum_{j <= i}
   transduced_j / transduction` bells; the life is the first step's end. The step
   at an age (`field::transduction`) is `Unlit` (no step), `Step(i)` or

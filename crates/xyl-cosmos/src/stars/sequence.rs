@@ -14,7 +14,11 @@
 //!   holds `w_z(q) = 3 Z - u_z(q)` (its Z pole).
 //! - Pole point (`pole_point`): over the held mixture, with `n_z = share_z /
 //!   w_z` nuclei of each kind, `t0 = sum n_z u_z / sum n_z w_z`, at most 1/2.
-//! - Throat (`throat_echoes`): each echo dilates the pole point by
+//! - Throat (`Sequence::throat_echoes`): the star's jetstream carries the
+//!   pole point out through the continuum and back through the vacuum, both
+//!   at the compactness `delta`, the echo map `t -> a t + b`
+//!   (`circuit::jet_map`), crossing the throat in closed form
+//!   (`circuit::throat_crossing`); the axial part dilates the pole point by
 //!   `rho_s = (1 + delta) / (1 - delta)`, so it reaches the throat after
 //!   `n* = ln(1 / t0) / ln rho_s` echoes.
 //! - Fusion step (`fusion_step`): `k` nuclei of `z` become one of the kind
@@ -29,8 +33,10 @@
 //!   whose step has the greatest release steps (ties by the lesser nucleon
 //!   count), its products join the mixture, and the next stage is read from
 //!   the updated mixture, until no held kind releases. Fusion stages come
-//!   first (the collective starts on the Z side, `t0 <= 1/2`); where the
-//!   pole point can reach the throat (`t0 > 0`) the fission stages follow.
+//!   first (the collective starts on the Z side, `t0 <= 1/2`), then the
+//!   fission stages; the star's timeline (`stars::timeline`) runs the fusion
+//!   stages until the collective's throat crossing and the fission stages
+//!   from it.
 //!   Each step transduces its share times its release; the remnant is one
 //!   less the steps' cumulative transduced share.
 //!
@@ -108,25 +114,6 @@ pub fn pole_point(held: &[(u32, Q)], heat: &Q) -> Q {
     open.checked_div(&closed).unwrap_or(Q::ZERO)
 }
 
-/// The echoes from ignition until a pole point `t0` reaches the throat under
-/// compactness `delta`: `n* = ln(1 / t0) / ln rho_s`, `rho_s = (1 + delta) /
-/// (1 - delta)`, in closed form. Zero where `t0 >= 1`; `None` where `t0 = 0`
-/// (the collective never dilates) or `delta` lies outside `(0, 1)`.
-pub fn throat_echoes(t0: &Q, delta: Dy) -> Option<Dy> {
-    if t0.signum() <= 0 || delta.signum() <= 0 || delta >= Dy::ONE {
-        return None;
-    }
-    let t0 = Dy::from_q(t0);
-    if t0 >= Dy::ONE {
-        return Some(Dy::ZERO);
-    }
-    let rho = ((Dy::ONE + delta) / (Dy::ONE - delta)).ln()?;
-    if rho.signum() <= 0 {
-        return None;
-    }
-    Some((Dy::ONE / t0).ln()? / rho)
-}
-
 /// One step of a star's sequence: the kind that steps, the nuclei it takes,
 /// the kinds it makes, and the shares it holds and transduces.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -159,7 +146,7 @@ pub struct Sequence {
     /// stage the held kind of greatest release.
     pub steps: Vec<Step>,
     /// Echoes from ignition to the throat for the star's compactness
-    /// ([`throat_echoes`]); `None` until set by [`Sequence::at`] or where the
+    /// (`circuit::echoes_to_throat`); `None` until set by [`Sequence::at`] or where the
     /// collective never reaches the throat.
     pub throat_echoes: Option<Dy>,
     /// The share of the hold no step transduces: one less the steps'
@@ -268,10 +255,11 @@ impl Sequence {
             add_hold(&mut holds, *z, s);
         }
         let mut steps = Vec::new();
+        // Fusion stages, then the fission stages; the timeline runs the
+        // fission stages only from the collective's throat crossing
+        // (`Sequence::at`), which a collective with nothing open never makes.
         transduce(&mut holds, heat, false, &mut steps);
-        if pole.signum() > 0 {
-            transduce(&mut holds, heat, true, &mut steps);
-        }
+        transduce(&mut holds, heat, true, &mut steps);
         let cumulative = steps.iter().fold(Q::ZERO, |a, s| &a + &s.transduced);
         Sequence {
             pole_point: pole,
@@ -282,9 +270,16 @@ impl Sequence {
     }
 
     /// The sequence for a star of compactness `delta`: `throat_echoes` set to
-    /// [`throat_echoes`] of the pole point.
+    /// the echoes its pole point takes to the throat under the star's
+    /// jetstream, out through the continuum and back through the vacuum, both
+    /// at `delta` (`circuit::jet_map`, `circuit::throat_crossing`).
     pub fn at(mut self, delta: Dy) -> Sequence {
-        self.throat_echoes = throat_echoes(&self.pole_point, delta);
+        // The star's jetstream: the continuum and the vacuum both carry the
+        // push the star holds, its compactness `delta` (its deficit at its
+        // rim about the star's mass, as a firmament kind's vacuum share is read
+        // at its reach about the kind's hold).
+        self.throat_echoes = crate::circuit::jet_map(delta, delta)
+            .and_then(|(a, b)| crate::circuit::throat_crossing(Dy::from_q(&self.pole_point), a, b));
         self
     }
 
@@ -467,6 +462,10 @@ mod tests {
 
     #[test]
     fn throat_echoes_fall_as_compactness_grows() {
+        let throat = |t: &Q, d: Dy| {
+            crate::circuit::jet_map(d, d)
+                .and_then(|(a, b)| crate::circuit::throat_crossing(Dy::from_q(t), a, b))
+        };
         let t0 = pole_point(&hydrogen(), &Q::ZERO);
         let deltas = [
             Dy::sci(1, -6),
@@ -474,14 +473,12 @@ mod tests {
             Dy::ratio(1, 10),
             Dy::ratio(1, 2),
         ];
-        let n: Vec<Dy> = deltas
-            .iter()
-            .map(|d| throat_echoes(&t0, *d).unwrap())
-            .collect();
+        let n: Vec<Dy> = deltas.iter().map(|d| throat(&t0, *d).unwrap()).collect();
         assert!(n.windows(2).all(|w| w[1] < w[0]), "{n:?}");
-        assert!(throat_echoes(&Q::ZERO, Dy::ratio(1, 10)).is_none());
-        assert!(throat_echoes(&t0, Dy::ZERO).is_none());
-        assert_eq!(throat_echoes(&Q::ONE, Dy::ratio(1, 10)), Some(Dy::ZERO));
+        // A collective with nothing open has no pole state and no crossing.
+        assert!(throat(&Q::ZERO, Dy::ratio(1, 10)).is_none());
+        assert!(throat(&t0, Dy::ZERO).is_none());
+        assert_eq!(throat(&Q::ONE, Dy::ratio(1, 10)), Some(Dy::ZERO));
     }
 
     #[test]

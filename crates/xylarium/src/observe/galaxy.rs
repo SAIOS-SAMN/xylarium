@@ -55,7 +55,7 @@ pub(super) fn galaxy(u: &Universe<'_>) -> String {
             .map_or_else(|| "no".to_string(), |n| n.to_string()),
         show(&main),
         show(&last),
-        show(&xyl_cosmos::stars::remnant_share(&seq)),
+        show(&xyl_cosmos::stars::remnant(&seq, delta, Dy::ZERO)),
         xyl_cosmos::stars::flicker(t)
     ));
     out.push_str(concat!(

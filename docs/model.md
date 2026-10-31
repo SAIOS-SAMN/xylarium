@@ -131,13 +131,13 @@ pole axis and the five isoclinic planes).
   `clamp_spin`). The founding depends on the spin alone, so the substrate is
   founded first and the parent bounce is read in the substrate's enclosure:
   `Bounce::of(1, spin, radius_rg, 0)`.
-- The torsion share (`torsion_share`) is the share that the outbound jet
-  carries through the throat. At the throat reach `H = 2M` the deficit of
-  one face against the other is `delta(H, H) = 1/2`; the spin `J` is a
-  further share that the throat does not hold, so the held face is
-  `H / (2H + J)` and the jet carries `a = (H + J) / (2H + J)`. The share is
-  1/2 at zero spin and 3/5 at extremal spin. The inverse is
-  `J = H (2a - 1) / (1 - a)` (`spin_of_share`).
+- The torsion share (`bounce::torsion_share`, one law for every throat) is the
+  share that the outbound jet carries through the throat. At the throat reach `H
+  = 2M` the deficit of one face against the other is `delta(H, H) = 1/2`; the
+  spin `J` is a further share that the throat does not hold, so the held face is
+  `H / (2H + J)` and the jet carries `a = (H + J) / (2H + J)`. The share is 1/2
+  at zero spin and 3/5 at extremal spin. The inverse is `J = H (2a - 1) / (1 -
+  a)` (`spin_of_share`).
 - Admission (`cores::substrate_for`) requires the torsion share to be at
   least the furthest held kind's reach over the rim, scaled by the peak of
   the inbound echo, `a >= r_far / rim (1 + A_in_peak)`
@@ -239,8 +239,12 @@ pole axis and the five isoclinic planes).
   `beyond = clamp((r (1 + delta) - h) / (2 delta r), 0, 1)`, and the leaving
   rate `beyond / bell` (per ring).
 - In the jet, a kind's pole state sits at `t = open / hold` on the filament
-  and reaches the throat after `ln(1 / t) / ln rho` echoes, which is its
-  onset (`circuit::onset_echoes`); a sealed kind has no onset. The kind then
+  and its jetstream carries it out through the continuum at the throat's
+  push and back through the vacuum at the kind's vacuum share `delta`
+  (`circuit::jet_map`); it reaches the throat after
+  `ln((1 - t*) / (t0 - t*)) / ln a` echoes, which is its onset
+  (`circuit::onset_echoes`, `circuit::throat_crossing`); a sealed kind has
+  no pole state and no onset. The kind then
   empties as `m(t) = m0 (1 - exp(-rate (t - onset)))` (`Substrate::outflow`).
 - The inbound echo (`Substrate::inbound`) is the waveform at the throat per
   echo, `A_in(t) = cos(2 pi t / echo) + echo q(t)`, where `q(t)` is the
@@ -489,7 +493,7 @@ law, the same at a nucleus, a star and a world:
   lasts its transduced share over the transduction: its main-sequence life is
   the first step's (`stars::life`), the later steps end one after another
   (`stars::ends`), and its remnant keeps the hold no step transduced
-  (`stars::remnant_share`). The radiation's swing within a bell is `(pi / 2)
+  (`stars::remnant`). The radiation's swing within a bell is `(pi / 2)
   |cos(2 pi t / echo)|` (`stars::flicker`).
 - The star's cut (`disc::star_hold`): the infall of the star's lit piece
   collapses carrying the galaxy's shear across its extent,
@@ -578,14 +582,12 @@ irradiation opens. Every quantity is read from the atoms:
   count of nuclei of each kind (its share of the hold over `w_z`),
   `t = sum n_z u_z(q) / sum n_z w_z(q)` (`circuit::pole_point`). The star's
   polarity is the inversion `1 / t`: bonding over irradiated states.
-- **Irradiation dilates the pole point.** A held kind's open share is at
+- **Irradiation carries the pole point.** A held kind's open share is at
   most `Z` of its `3Z` frames, so `t <= 1/2` at ignition: every collective
-  starts on the Z side. Irradiation carries the pole point outward echo by
-  echo, as it carries a firmament kind's to the throat
-  (`circuit::onset_echoes`): the star receives the push it holds, its
-  compactness `delta`, so each echo dilates `t` by
-  `rho_s = (1 + delta) / (1 - delta)`, and after `n` echoes since ignition
-  `t(n) = t0 rho_s^n`.
+  starts on the Z side. Each echo carries the pole point outward by the
+  residual of its loop through the continuum and the vacuum, `rho_net`
+  (next subsection), and after `n` echoes since ignition
+  `t(n) = t0 rho_net^n`.
 - **Direction.** While `t < 1` the collective lies on the Z side of the
   throat and bonding combines nuclei: fusion. The pole point reaches the
   throat, `t = 1`, after `n* = ln(1 / t0) / ln rho_s` echoes, in closed
@@ -605,8 +607,8 @@ irradiation opens. Every quantity is read from the atoms:
   that releases hold. The share transduced is `1 - (w_z1(q) + w_z2(q)) /
   w_z(q)`.
 - **The sequence.** No kind, product or order is set: the sequence emerges from
-  the star's held mixture (`disc::StarHold::held`, the dark cut's held kinds). At
-  each stage the held kind whose step has the greatest release steps (ties by
+  the star's held mixture (`disc::StarHold::held`, the dark cut's held kinds).
+  At each stage the held kind whose step has the greatest release steps (ties by
   the lesser nucleon count), transducing its release times its share of the
   hold; its products join the held mixture, and the next stage is read again
   from the updated mixture, until no held kind releases under the current
@@ -616,8 +618,8 @@ irradiation opens. Every quantity is read from the atoms:
   over the star's transduction per bell (`stars::transduced_per_bell`); the
   first step is the main sequence, later steps the giant phases, and the hold no
   step transduced is the remnant (`stars::Sequence::of`, `stars::fusion_step`,
-  `stars::fission_step`, `stars::pole_point`, `stars::throat_echoes`). Status:
-  built.
+  `stars::fission_step`, `stars::pole_point`, `circuit::echoes_to_throat`).
+  Status: built.
 - **A held body that does not ignite.** Where no step of the held mixture
   releases hold under its polarity, the body holds its matter and transduces
   nothing.
@@ -637,6 +639,52 @@ twelve, two to the kind of twenty-four, then eight to `Z 77` and ten to
 
 Grain: the steps move whole nuclei and conserve the nucleon count, so the
 founding's grain is kept (`circuit::grain::nuclei_of`).
+
+### The transduction's path: the continuum and the vacuum
+
+The collective's state moves on the founding's loop, the jetstream, not
+along one axis (`circuit::jetstream`, the law `Substrate::loop_flux` reads
+for each firmament kind). Each echo carries the state out through the
+continuum and back through the vacuum:
+
+- **Continuum (outflow).** The filament dilates the state by the push the
+  holder holds, `rho = (1 + p) / (1 - p)` (`circuit::dilation`): `p = 1/2`
+  for a firmament kind at the throat, the compactness `delta` for a star's
+  collective. It moves `(rho - 1) u w / (w + rho u)` frames from the Z pole
+  to the Q pole.
+- **Vacuum (inflow).** The return is through the vacuum's share at the
+  holder's reach about the universal state, `p_v = H / (R + H)`
+  (`circuit::vacuum_share`), swung by the inbound echo; it moves `p_v w`
+  frames from Z to Q.
+- **Electron phase.** The electrons' phase state `R = kappa (1 - 2 frac(p))`
+  moves `R u` frames from Q to Z (`circuit::electron_phase`); over a whole
+  echo its mean is zero, so the echo's mean motion is the continuum's and
+  the vacuum's.
+- **Why the loop does not close.** Composed in one medium, an outbound
+  dilation and its return through the throat's antipole cancel: dilation
+  about the origin commutes with rotation in the five planes, a point on
+  the pole axis is fixed by that rotation, and conjugation by the antipole
+  inverts the dilation, so a full echo would be the rotation alone. The
+  continuum and the vacuum are different media with different pushes, so
+  the return does not undo the outflow. The residual dilation per echo,
+  `rho_net`, is the torsion the echo leaves on the holder: the product of
+  the channels' dilations.
+- **The star's legs.** Both legs carry the push the star holds, its
+  compactness `delta`: the continuum dilates by `(1 + delta) / (1 - delta)`
+  and the vacuum's share at the star's rim about the star's mass is `delta`,
+  as a firmament kind's vacuum share is read at its reach about the
+  kind's hold. One echo is then the map `t -> a t + b` with
+  `a = rho / (1 - delta)` and `b = delta / (1 - delta)` (`circuit::jet_map`).
+- **Transduction.** Iterated, `t_n = t* + (t0 - t*) a^n` with the fixed
+  point `t* = b / (1 - a)`, so the collective reaches the throat after
+  `ln((1 - t*) / (t0 - t*)) / ln a` echoes, in closed form
+  (`circuit::throat_crossing`); a collective with nothing open has no pole
+  state and, as a sealed kind, no crossing. The star's
+  timeline runs the fusion steps until that crossing, cutting a step still
+  running there, and the fission steps from it (`stars::timeline`); the
+  remnant is the hold the steps that ran did not transduce
+  (`stars::remnant`). Status: built, for the firmament's kinds
+  and for stars alike.
 
 ### Star types
 
@@ -667,7 +715,7 @@ reads the reference values and none is tuned to them.
 | Giant | The later steps of the star's sequence: age past the first step's end and before the last step's. | Built: the later fusion steps of the sequence. |
 | Fission star | A star whose held collective lies on the Q side of the throat (`t > 1`), so its steps split nuclei. No observed type is known to match; the model allows it. | Built: a fission step of the sequence, after the throat; the step's start is read from the cumulative step ends, not yet from `n*`. |
 | Supergiant | A giant of a star in the upper share of its cloud's masses. | Next: needs a derived boundary in the cloud's mass shares. |
-| Remnant | Every step of the sequence has ended: the star keeps the hold no step transduced (`stars::remnant_share`) and becomes a hole in the pulse network (`pulse::nodes`); a held body that does not ignite forms none. | Built. |
+| Remnant | Every step of the sequence has ended: the star keeps the hold no step transduced (`stars::remnant`) and becomes a hole in the pulse network (`pulse::nodes`); a held body that does not ignite forms none. | Built. |
 | Compact remnant (white dwarf), denser remnant (neutron star) | A remnant whose held core's rim, from the remnant's cut of its remaining mixture, gives compactness below one half; the two separated by where the remnant's held kinds lose their open frames. | Next: needs that cut of the remnant's mixture. |
 | Remnant at the throat (black hole) | A remnant whose compactness reaches `delta = 1/2`, the throat's equator: it holds as much as it passes and becomes a core with a throat. | Next: follows from the remnant's rim; whether such a remnant is an echo surface is under review with Netstratum. |
 | Binary companion | A second star drawn with a share of the primary's mass. | Placeholder: the share `0.1 + 0.9 u` is imposed; it is to come from the cloud's split. |

@@ -51,36 +51,101 @@ pub fn throat_push() -> Dy {
     vacuum_share(h, h)
 }
 
-/// The echo's dilation along the filament: a band swings between
-/// r (1 - p) and r (1 + p) each echo, so the pole coordinate of what it
-/// carries is dilated by (1 + p) / (1 - p) per echo (poles.rs), three at
-/// the throat's push.
+/// The dilation per echo of what a band carries: a band swinging between
+/// `r (1 - p)` and `r (1 + p)` dilates the pole coordinate of what it
+/// carries by `(1 + p) / (1 - p)` per echo (poles.rs). One law for every
+/// holder: `p` is the push the holder receives, the throat's `1/2` for the
+/// firmament and a star's compactness for its collective. `None` for `p`
+/// outside `[0, 1)`.
+pub fn dilation(p: Dy) -> Option<Dy> {
+    if p.signum() < 0 || p >= Dy::ONE {
+        return None;
+    }
+    Some((Dy::ONE + p) / (Dy::ONE - p))
+}
+
+/// The echo's dilation along the filament at the throat's push, three
+/// ([`dilation`] of `throat_push`).
 pub fn echo_dilation() -> Dy {
-    let p = throat_push();
-    (Dy::ONE + p) / (Dy::ONE - p)
+    dilation(throat_push()).unwrap_or(Dy::ONE)
 }
 
-/// The jet's onset for kind `k` (rings): a kind's state sits on the pole axis
-/// at t = U / W, its open frames over its closed (poles.rs), and reaches
-/// the throat (t = 1) after ln(1 / t) / ln rho echoes of the filament's
-/// dilation; a sealed kind (no open frames) never does. The band's `beyond`
-/// share sets how much passes once it has.
-pub fn onset(k: u32) -> Option<Dy> {
-    onset_echoes(k).map(|e| e * echo())
+/// The echoes a pole point `t` takes to reach the throat (`t = 1`) under the
+/// dilation `rho` per echo: `ln(1 / t) / ln rho`, in closed form
+/// ([`throat_crossing`] with no added frames). Zero where `t >= 1`; `None`
+/// where `t <= 0` (nothing open dilates) or `rho <= 1` (no dilation).
+pub fn echoes_to_throat(t: Dy, rho: Dy) -> Option<Dy> {
+    if t.signum() <= 0 {
+        return None;
+    }
+    throat_crossing(t, rho, Dy::ZERO)
 }
 
-/// The jet's onset for kind `k` in echoes of the filament's dilation (see
-/// [`onset`]); None for a sealed kind, which never reaches the throat.
-pub fn onset_echoes(k: u32) -> Option<Dy> {
+/// The echoes a pole point `t0` takes to reach the throat under the echo map
+/// `t -> a t + b`, the mean of a jetstream's loop ([`jet_map`]): iterated,
+/// `t_n = t* + (t0 - t*) a^n` with the fixed point `t* = b / (1 - a)`, so the
+/// throat `t_n = 1` falls after `n = ln((1 - t*) / (t0 - t*)) / ln a` echoes,
+/// in closed form. Zero where `t0 >= 1`; `None` where `a <= 1` (the map does
+/// not carry the state outward), where `t0 <= 0` (a holder with nothing open
+/// has no pole state, as a sealed kind has none) or `t0 - t*` is not
+/// positive.
+pub fn throat_crossing(t0: Dy, a: Dy, b: Dy) -> Option<Dy> {
+    if t0.signum() <= 0 {
+        return None;
+    }
+    if t0 >= Dy::ONE {
+        return Some(Dy::ZERO);
+    }
+    if a <= Dy::ONE {
+        return None;
+    }
+    let fixed = b / (Dy::ONE - a);
+    let (far, near) = (Dy::ONE - fixed, t0 - fixed);
+    if near.signum() <= 0 || far.signum() <= 0 {
+        return None;
+    }
+    Some(((far / near).log() / a.log()).max(Dy::ZERO))
+}
+
+/// The jetstream's mean echo map for a holder that holds the push `p_c` on
+/// the continuum and receives `p_v` from the vacuum: the continuum dilates the
+/// pole point by `rho = (1 + p_c) / (1 - p_c)` ([`dilation`]), and the vacuum
+/// moves `p_v` of the held frames to the open ones, `t -> (t + p_v) / (1 -
+/// p_v)`; the electrons' phase state has mean zero over an echo. Composed,
+/// `t -> a t + b` with `a = rho / (1 - p_v)` and `b = p_v / (1 - p_v)`.
+/// `None` for a push outside `[0, 1)`.
+pub fn jet_map(p_c: Dy, p_v: Dy) -> Option<(Dy, Dy)> {
+    let rho = dilation(p_c)?;
+    if p_v.signum() < 0 || p_v >= Dy::ONE {
+        return None;
+    }
+    let keep = Dy::ONE - p_v;
+    Some((rho / keep, p_v / keep))
+}
+
+/// The jet's onset for kind `k` (rings) under the vacuum share `p_v` its band
+/// receives: the kind's state sits on the pole axis at `t = U / W`, its open
+/// frames over its closed (poles.rs), and its jetstream carries it out
+/// through the continuum at the throat's push and back through the vacuum
+/// at `p_v` ([`jet_map`]); it reaches the throat after
+/// [`throat_crossing`] echoes. A sealed kind (no open frames) has no pole
+/// state and never does. The band's `beyond` share sets how much passes once
+/// it has.
+pub fn onset(k: u32, p_v: Dy) -> Option<Dy> {
+    onset_echoes(k, p_v).map(|e| e * echo())
+}
+
+/// The jet's onset for kind `k` in echoes of its jetstream at vacuum share
+/// `p_v` (see [`onset`]); None for a sealed kind, which never reaches the
+/// throat.
+pub fn onset_echoes(k: u32, p_v: Dy) -> Option<Dy> {
     let (open, hold) = (crate::compound::open(k), crate::compound::hold(k));
     if open == 0 || hold == 0 {
         return None;
     }
     let t = Dy::int(i64::from(open)) / Dy::int(i64::from(hold));
-    if t >= Dy::ONE {
-        return Some(Dy::ZERO);
-    }
-    Some(((Dy::ONE / t).log() / echo_dilation().log()).max(Dy::ZERO))
+    let (a, b) = jet_map(throat_push(), p_v)?;
+    throat_crossing(t, a, b)
 }
 
 /// The coherence of a galaxy at phase `psi` with a kind thrown at phase
@@ -211,7 +276,7 @@ impl Substrate {
                 deficit: delta,
                 beyond,
                 rate: nu * beyond,
-                onset: onset(k.z),
+                onset: onset(k.z, delta),
             };
             inside += Dy::from_q(&mass_of(k.z, &k.amount));
         }
@@ -767,13 +832,19 @@ mod tests {
             Dy::ratio(1, 2)
         );
         // A sealed kind (helium) never reaches the throat; hydrogen, one open
-        // frame over two closed, reaches it after ln 2 / ln 3 echoes; the
-        // smaller a kind's open share, the later its onset.
-        assert!(onset_echoes(2).is_none());
-        let h = onset_echoes(1).unwrap();
+        // frame over two closed, reaches it after ln 2 / ln 3 echoes on the
+        // continuum alone; the smaller a kind's open share, the later its
+        // onset.
+        assert!(onset_echoes(2, Dy::ZERO).is_none());
+        let h = onset_echoes(1, Dy::ZERO).unwrap();
         let expect = Dy::int(2).log() / Dy::int(3).log();
         assert!((h - expect).abs() < Dy::sci(1, -9), "{h} vs {expect}");
-        let (li, o) = (onset_echoes(3).unwrap(), onset_echoes(8).unwrap());
+        // The vacuum leg brings the onset earlier.
+        assert!(onset_echoes(1, Dy::ratio(1, 10)).unwrap() < h);
+        let (li, o) = (
+            onset_echoes(3, Dy::ZERO).unwrap(),
+            onset_echoes(8, Dy::ZERO).unwrap(),
+        );
         assert!(li >= Dy::ZERO && o >= Dy::ZERO);
         let share = |k: u32| {
             Dy::int(i64::from(crate::compound::open(k)))

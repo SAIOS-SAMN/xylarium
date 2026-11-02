@@ -13,7 +13,7 @@
 //! Carried readings:
 //!
 //!   universe          the bell's count, the peoples, the seats, the bells,
-//!                     the books, the worlds formed, the cores (also the
+//!                     the books, the worlds formed, the galactic cores (also the
 //!                     reading when WHAT is empty)
 //!   peoples           every people, its role, home, numbers and housing
 //!   people N \[Y\]      one people: its body, numbers, power, knowledge,
@@ -53,12 +53,14 @@
 //!
 //! Law readings, taken without carrying the universe:
 //!
-//!   core \[T\]          the substrate at T Gyr (default 14): the core's
-//!                     reverberation kind by kind, its outflow, the ocean's
-//!                     shares and every galaxy's intake, the books, Z Q R
-//!   cores             the founding's galaxies: the home core and each bead
-//!                     of the cascade: hole mass in suns, its ratio to the
-//!                     home hole's, and place
+//!   universal-core \[T\]
+//!                     the universal core's substrate at T Gyr (default 14):
+//!                     its reverberation kind by kind, its outflow, the
+//!                     ocean's shares and every galaxy's intake, the books,
+//!                     Z Q R
+//!   galactic-core N   galactic core N of the founding (0 is the home
+//!                     galaxy's, at the universal core): its hole's mass in
+//!                     suns, its ratio to the home hole's, and its place
 //!   tiers S           star S and its worlds, each turn in its anchor's rings
 //!   formation         each galaxy's cut, gas, cooling and stars
 //!   seals \[Z\]         the sealed kinds, the seams and the vessel (the
@@ -74,11 +76,11 @@
 //!
 //! An unknown word prints the list of readings.
 //!
-//! The readings are grouped by file: `universe` (universe, cores, star,
+//! The readings are grouped by file: `universe` (universe, galactic-core, star,
 //! house, annals, events), `peoples` (people, sync), `network` (ley),
 //! `worlds` (world, system, worlds), `galaxy` (galaxy, chemistry, tiers),
 //! `clock`, `atoms` (seals, push, bonding), `founding` (founding,
-//! founding-reach, formation) and `substrate` (core).
+//! founding-reach, formation) and `substrate` (universal-core).
 //!
 //! Terms: reading, books (docs/glossary.md).
 
@@ -100,9 +102,11 @@ use xyl_kernel::universe::Universe;
 /// The list of readings printed for an unknown word.
 const READINGS: &str = concat!(
     "universe, peoples, people N, star N, house, world S W, system S, galaxy, ",
-    "chemistry, star-types [N] [R], core [T], ley [K], annals [K], events [K], clock, ",
+    "chemistry, star-types [N] [R], universal-core [T], ley [K], annals [K], events [K], ",
+    "clock, ",
     "tiers S, sync [K]; ",
-    "law readings: formation, cores, seals [Z], founding, founding-reach, worlds [N], ",
+    "law readings: formation, galactic-core N, seals [Z], founding, founding-reach, ",
+    "worlds [N], ",
     "push [N], bonding [N]"
 );
 
@@ -156,8 +160,9 @@ fn law_reading(o: &Options, what: &[String]) -> Result<Option<String>, String> {
         Some("worlds") => worlds::worlds_read(o, count(what, 200))?,
         Some("push") => atoms::push_reading(count(what, 150)),
         Some("bonding") => atoms::bonding(count(what, 150)),
-        Some("core") => {
-            // The substrate at T Gyr, every value a closed form of T.
+        Some("universal-core") => {
+            // The universal core's substrate at T Gyr, every value a closed
+            // form of T.
             let t = what
                 .get(1)
                 .and_then(|v| xyl_cosmos::elements::decimal(v))
@@ -166,9 +171,10 @@ fn law_reading(o: &Options, what: &[String]) -> Result<Option<String>, String> {
         }
         // The cascade report already ends each line with a newline.
         Some("founding") => return founding::founding_cascade(o).map(Some),
-        Some("cores") => {
+        Some("galactic-core") => {
             let origin = Origin::of(o.seed).ok_or("no origin")?;
-            universe::cores(o.seed, &origin)
+            let n = what.get(1).and_then(|s| s.parse::<u32>().ok());
+            universe::galactic_core(o.seed, &origin, n)?
         }
         Some("tiers") => {
             let n = what

@@ -60,6 +60,10 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Observer readings renamed for what they read: `core` is
+  `universal-core [T]`, and `cores` is `galactic-core N`, one galactic core
+  per reading (the universe reading still lists them all).
+
 - `Units::of` and `Units::in_tier` refuse a zero denominator (`None`)
   instead of returning zero; a stellar hole's spin is drawn from
   `Stream::derive` instead of a BLAKE3 hash (#44).

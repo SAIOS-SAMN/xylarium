@@ -179,9 +179,12 @@ another crate. Laws are composed from shares (ratios of the form
 - Throat push (`circuit::throat_push`): `p = delta(H, H) = 1/2`. Status:
   built.
 - Dilation per echo (`circuit::dilation`), one law for every holder:
-  `rho = (1 + p) / (1 - p)`, `p` the push the holder receives; at the
-  throat's push `p = 1/2`, `rho = 3` (`circuit::echo_dilation`). Status:
+  `rho = (1 + p) / (1 - p)`, `p` the push the holder receives. Status:
   built.
+- Jet dilation (`circuit::jet_dilation`): the continuum carries the
+  throat's torsion share `s = (H + J) / (2H + J)` at each crossing, so
+  `rho = D(s) = (1 + s) / (1 - s)`: 3 at `s = 1/2` (no spin), 4 at
+  `s = 3/5` (the universal core's extremal spin). Status: built.
 - Echoes to the throat (`circuit::echoes_to_throat`), one law for the
   firmament's kinds and a star's collective: `n = ln(1 / t) / ln rho`, zero
   where `t >= 1`, none where `t <= 0` or `rho <= 1`. Status: built.
@@ -190,8 +193,9 @@ another crate. Laws are composed from shares (ratios of the form
   `beyond = clamp((r (1 + delta) - h) / (2 delta r), 0, 1)` and
   `rate = beyond / bell`. Status: built.
 - Jet onset (`circuit::onset_echoes`): `circuit::throat_crossing` of
-  `t = open / hold` under the kind's jetstream map at the throat's push and
-  the kind's vacuum share `delta` (`circuit::jet_map`); a sealed kind has
+  `t = open / hold` under the kind's jetstream map at the torsion share `s`
+  and the kind's vacuum share `delta`, `a = D(s) / (1 - delta)`,
+  `b = delta / (1 - delta)` (`circuit::jet_map`); a sealed kind has
   no pole state and no onset, and the onset is zero where `t >= 1`.
   Status: built.
 - Outflow (`Substrate::outflow`): `m(t) = m0 (1 - exp(-rate (t - onset)))`

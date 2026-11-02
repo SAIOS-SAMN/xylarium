@@ -11,7 +11,8 @@
 //
 // - Deficit: `xyl_core::shares::deficit_dy(h, r) = h / (r + h)`, the vacuum's
 //   share at reach `r` about a hold `h`; `throat_push` is its value
-//   at r = h, 1/2; `echo_dilation` (1 + p) / (1 - p) = 3 there.
+//   at r = h, 1/2; `jet_dilation` D(s) = (1 + s) / (1 - s) at the torsion
+//   share s, 3 at s = 1/2 and 4 at s = 3/5.
 // - Clock: `bell` is one ring, `echo` two; a kind's `onset_echoes` is
 //   ln(hold / open) / ln 3 (None for a sealed kind), `onset` the same in
 //   rings.
@@ -57,10 +58,14 @@ pub fn dilation(p: Dy) -> Option<Dy> {
     dilation_dy(p)
 }
 
-/// The echo's dilation along the filament at the throat's push, three
-/// ([`dilation`] of `throat_push`).
-pub fn echo_dilation() -> Dy {
-    dilation(throat_push()).unwrap_or(Dy::ONE)
+/// The jet's dilation per echo along the filament: the continuum carries the
+/// torsion share `s` of the throat at each crossing
+/// (`bounce::torsion_share`), so the dilation is `D(s) = (1 + s) / (1 - s)`:
+/// three for a spinless hole (`s = 1/2`, the throat's push), four at the
+/// extremal spin of the universal core (`s = 3/5`). One for a share outside
+/// `[0, 1)`.
+pub fn jet_dilation(s: Dy) -> Dy {
+    dilation(s).unwrap_or(Dy::ONE)
 }
 
 /// The echoes a pole point `t` takes to reach the throat (`t = 1`) under the
@@ -117,27 +122,27 @@ pub fn jet_map(p_c: Dy, p_v: Dy) -> Option<(Dy, Dy)> {
 }
 
 /// The jet's onset for kind `k` (rings) under the vacuum share `p_v` its band
-/// receives: the kind's state sits on the pole axis at `t = U / W`, its open
-/// frames over its closed (poles.rs), and its jetstream carries it out
-/// through the continuum at the throat's push and back through the vacuum
-/// at `p_v` ([`jet_map`]); it reaches the throat after
+/// receives, at the throat's torsion share `s`: the kind's state sits on the
+/// pole axis at `t = U / W`, its open frames over its closed (poles.rs), and
+/// its jetstream carries it out through the continuum at the torsion share
+/// and back through the vacuum at `p_v` ([`jet_map`]); it reaches the throat after
 /// [`throat_crossing`] echoes. A sealed kind (no open frames) has no pole
 /// state and never does. The band's `beyond` share sets how much passes once
 /// it has.
-pub fn onset(k: u32, p_v: Dy) -> Option<Dy> {
-    onset_echoes(k, p_v).map(|e| e * echo())
+pub fn onset(k: u32, p_v: Dy, s: Dy) -> Option<Dy> {
+    onset_echoes(k, p_v, s).map(|e| e * echo())
 }
 
 /// The jet's onset for kind `k` in echoes of its jetstream at vacuum share
-/// `p_v` (see [`onset`]); None for a sealed kind, which never reaches the
-/// throat.
-pub fn onset_echoes(k: u32, p_v: Dy) -> Option<Dy> {
+/// `p_v` and torsion share `s` (see [`onset`]); None for a sealed kind, which
+/// never reaches the throat.
+pub fn onset_echoes(k: u32, p_v: Dy, s: Dy) -> Option<Dy> {
     let (open, hold) = (crate::compound::open(k), crate::compound::hold(k));
     if open == 0 || hold == 0 {
         return None;
     }
     let t = Dy::int(i64::from(open)) / Dy::int(i64::from(hold));
-    let (a, b) = jet_map(throat_push(), p_v)?;
+    let (a, b) = jet_map(s, p_v)?;
     throat_crossing(t, a, b)
 }
 
@@ -269,7 +274,7 @@ impl Substrate {
                 deficit: delta,
                 beyond,
                 rate: nu * beyond,
-                onset: onset(k.z, delta),
+                onset: onset(k.z, delta, Dy::from_q(&self.share)),
             };
             inside += Dy::from_q(&mass_of(k.z, &k.amount));
         }
@@ -353,7 +358,7 @@ impl Substrate {
             return None;
         }
         // The filament opens frames by its dilation: (u + f) / (w - f) = rho u / w.
-        let rho = echo_dilation().to_q();
+        let rho = jet_dilation(Dy::from_q(&self.share)).to_q();
         let filament = (&(&(&rho - &Q::ONE) * &u) * &w).checked_div(&(&w + &(&rho * &u)))?;
         // Vacuum channel: f_v = p w, p the vacuum's share swung by 1 + A_in.
         let p = (deficit_dy(rv.hold, rv.reach) * swing).to_q();
@@ -810,9 +815,12 @@ mod tests {
             Dy::ratio(3, 5)
         );
         // The throat's push is the vacuum's share where reach and hold
-        // coincide, one half; the dilation per echo there is three.
+        // coincide, one half; the jet's dilation is three for a spinless
+        // throat and four at the extremal spin's torsion share, three fifths.
         assert_eq!(throat_push(), Dy::ratio(1, 2));
-        assert_eq!(echo_dilation(), Dy::int(3));
+        assert_eq!(jet_dilation(Dy::ratio(1, 2)), Dy::int(3));
+        assert_eq!(xyl_core::shares::dilation(&Q::ratio(3, 5)), Some(Q::int(4)));
+        assert!((jet_dilation(Dy::ratio(3, 5)) - Dy::int(4)).abs() < Dy::sci(1, -15));
         // A band inside the throat stays, one outside leaves, and between them
         // the share is linear.
         assert_eq!(
@@ -825,18 +833,20 @@ mod tests {
             Dy::ratio(1, 2)
         );
         // A sealed kind (helium) never reaches the throat; hydrogen, one open
-        // frame over two closed, reaches it after ln 2 / ln 3 echoes on the
+        // frame over two closed, reaches it after ln 2 / ln D(s) echoes on the
         // continuum alone; the smaller a kind's open share, the later its
         // onset.
-        assert!(onset_echoes(2, Dy::ZERO).is_none());
-        let h = onset_echoes(1, Dy::ZERO).unwrap();
+        let s = Dy::ratio(1, 2);
+        assert!(onset_echoes(2, Dy::ZERO, s).is_none());
+        let h = onset_echoes(1, Dy::ZERO, s).unwrap();
         let expect = Dy::int(2).log() / Dy::int(3).log();
         assert!((h - expect).abs() < Dy::sci(1, -9), "{h} vs {expect}");
-        // The vacuum leg brings the onset earlier.
-        assert!(onset_echoes(1, Dy::ratio(1, 10)).unwrap() < h);
+        // The vacuum leg and a greater torsion share both bring it earlier.
+        assert!(onset_echoes(1, Dy::ratio(1, 10), s).unwrap() < h);
+        assert!(onset_echoes(1, Dy::ZERO, Dy::ratio(3, 5)).unwrap() < h);
         let (li, o) = (
-            onset_echoes(3, Dy::ZERO).unwrap(),
-            onset_echoes(8, Dy::ZERO).unwrap(),
+            onset_echoes(3, Dy::ZERO, s).unwrap(),
+            onset_echoes(8, Dy::ZERO, s).unwrap(),
         );
         assert!(li >= Dy::ZERO && o >= Dy::ZERO);
         let share = |k: u32| {

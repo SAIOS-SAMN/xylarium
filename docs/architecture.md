@@ -174,9 +174,9 @@ and may run beside `run`. Bracketed arguments are optional, with their defaults.
 | `worlds` | `[N=200]` | Law | The planets of the first N sample stars as settling leaves them: orbits, masses, neighbour ratios, and the stars without worlds by cause |
 | `push` | `[N=150]` | Law | Each kind's push with Z in both poles against the built and linear pushes, Z 1 to N |
 | `bonding` | `[N=150]` | Law | Each kind's contacts, grip and conduction in a body of like atoms, Z 1 to N |
-| `core` | `[T=14]` | Law | The substrate at T Gyr: the core's reverberation kind by kind, its outflow, the ocean's shares, every galaxy's intake, the books, Z Q R |
+| `universal-core` | `[T=14]` | Law | The universal core's substrate at T Gyr: its reverberation kind by kind, its outflow, the ocean's shares, every galaxy's intake, the books, Z Q R |
 | `founding` | | Law | The equitable cascade and the founding cascade: stacks, spins, reaches and the settled bell |
-| `cores` | | Law | The founding's galaxies: each galactic core's hole, its mass ratio to the universal core, its reach, phase and place |
+| `galactic-core` | `N` | Law | Galactic core N of the founding (0 is the home galaxy's, at the universal core): its hole, its mass ratio to the home hole, its place |
 | `tiers` | `S` | Law | Star S and its worlds, each turn counted in its anchor's rings |
 | `universe` | | Carried | The default: the bell's count, the peoples, the seats, the bells, the books, the worlds formed and the cores |
 | `peoples` | | Carried | Every people: its role, home, numbers and housing |

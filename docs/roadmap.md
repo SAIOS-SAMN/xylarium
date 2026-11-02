@@ -124,7 +124,7 @@ where it belongs to one.
 
 26. **Readings take their time argument in Gyr**
     ([#29](https://github.com/SAIOS-SAMN/xylarium/issues/29), `defect`).
-    `observe core T` and the years of `people N [Y]` and `sync [K] [Y]` are
+    `observe universal-core T` and the years of `people N [Y]` and `sync [K] [Y]` are
     Earth units; they are to take rings, with Gyr shown only as a display
     conversion.
 
@@ -339,9 +339,10 @@ Landed:
   `Substrate::holds_a_star` reads the bead's state directly; neither
   divides by the mean bead state.
 
-Done when: `xylarium observe cores` lists every galactic core's hole and
-its mass ratio to the universal core, with each core no heavier than the
-universal core, and `observe core` shows the substrate's books closing.
+Done when: `xylarium observe galactic-core N` reads each galactic core's
+hole and its mass ratio to the universal core, with each core no heavier
+than the universal core, and `observe universal-core` shows the substrate's
+books closing.
 
 ## 2. Worlds on the manifold chain
 

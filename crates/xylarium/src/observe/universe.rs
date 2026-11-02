@@ -78,33 +78,54 @@ pub(super) fn universe(u: &Universe<'_>) -> String {
         l.unfed,
         l.minds
     ));
-    out.push_str(&cores(u.cosmic.gal.seed, u.cosmic.gal.origin));
+    out.push_str(&galactic_cores(u.cosmic.gal.seed, u.cosmic.gal.origin));
     out
 }
 
-/// The founding's galaxies: the home at the universe core, then every bead
-/// of the cascade, each with its hole's mass in suns, the ratio of that mass
-/// to the home hole's, and its place.
-pub(super) fn cores(seed: u64, origin: &Origin) -> String {
+/// One galactic core's line: its index, its hole's mass in suns, the ratio
+/// of that mass to the home hole's, and its place; core 0 is the home
+/// galaxy's, at the universal core.
+fn galactic_core_line(s: &xyl_cosmos::cores::Shape) -> String {
+    format!(
+        "  galactic core {:>2}: hole {} suns, mass ratio {}, place {} {} {}{}\n",
+        s.index,
+        show(&s.hole_suns),
+        show(&s.mass_ratio()),
+        show(&s.place[0]),
+        show(&s.place[1]),
+        show(&s.place[2]),
+        if s.index == 0 {
+            " (home, at the universal core)"
+        } else {
+            ""
+        }
+    )
+}
+
+/// Every galactic core of the founding, one line each, for the universe
+/// reading.
+pub(super) fn galactic_cores(seed: u64, origin: &Origin) -> String {
     let all = xyl_cosmos::cores::shapes(seed, origin);
-    let mut out = format!(
-        "The founding's galaxies: {} (the home and {} beads of the cascade)\n",
-        all.len(),
-        all.len().saturating_sub(1)
-    );
+    let mut out = format!("Galactic cores of the founding: {}\n", all.len());
     for s in &all {
-        out.push_str(&format!(
-            "  core {:>2}: hole {} suns, mass ratio {}, place {} {} {}{}\n",
-            s.index,
-            show(&s.hole_suns),
-            show(&s.mass_ratio()),
-            show(&s.place[0]),
-            show(&s.place[1]),
-            show(&s.place[2]),
-            if s.index == 0 { " (home)" } else { "" }
-        ));
+        out.push_str(&galactic_core_line(s));
     }
     out
+}
+
+/// The `galactic-core N` reading: galactic core `n` of the founding. `Err`
+/// naming the valid indices when `n` is missing or names no core.
+pub(super) fn galactic_core(seed: u64, origin: &Origin, n: Option<u32>) -> Result<String, String> {
+    let all = xyl_cosmos::cores::shapes(seed, origin);
+    let usage = || {
+        format!(
+            "observe galactic-core N: N from 0 to {}",
+            all.len().saturating_sub(1)
+        )
+    };
+    let n = n.ok_or_else(usage)?;
+    let s = all.iter().find(|s| s.index == n).ok_or_else(usage)?;
+    Ok(galactic_core_line(s))
 }
 
 /// A seat's holder as printed: the universe, a player, or a mind by the

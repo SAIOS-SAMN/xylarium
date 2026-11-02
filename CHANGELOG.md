@@ -64,6 +64,12 @@ may change public APIs and the model's laws.
   `universal-core [T]`, and `cores` is `galactic-core N`, one galactic core
   per reading (the universe reading still lists them all).
 
+- The jet's continuum dilation reads the throat's torsion share `s`,
+  `D(s) = (1 + s) / (1 - s)` (`circuit::jet_dilation`), in place of the
+  spinless push 1/2 (`echo_dilation`, deleted): the jet onsets
+  (`circuit::onset`, `onset_echoes`) and the filament channel of
+  `Substrate::loop_flux` follow the spin.
+
 - `Units::of` and `Units::in_tier` refuse a zero denominator (`None`)
   instead of returning zero; a stellar hole's spin is drawn from
   `Stream::derive` instead of a BLAKE3 hash (#44).

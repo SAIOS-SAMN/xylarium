@@ -294,9 +294,11 @@ longer holds.
   received share `1 - delta`. The vacuum's share at reach `R` about a hold
   `H` is that deficit, the push that the pulse delivers there
   (`xyl_core::shares::deficit_dy`); read at the throat, it is the throat's push,
-  `p = delta(H, H) = 1/2` (`circuit::throat_push`). A band swinging over
-  `r (1 +/- p)` scales the pole coordinate by `rho = (1 + p) / (1 - p) = 3`
-  per echo (`circuit::echo_dilation`).
+  `p = delta(H, H) = 1/2` (`circuit::throat_push`). The jet carries the
+  throat's torsion share `s = (H + J) / (2H + J)` at each crossing
+  (`bounce::torsion_share`), so the continuum dilates the pole coordinate
+  by `rho = D(s) = (1 + s) / (1 - s)` per echo (`circuit::jet_dilation`):
+  3 for a spinless throat, rising to 4 at the extremal spin.
 - Reverberation (`Substrate::reverberation`) takes the firmament kinds
   in order of spin. For each kind the hold is
   `h = 1 + (firmament mass nearer) / unit`, the reach `r = spin / h`, the
@@ -304,8 +306,8 @@ longer holds.
   `beyond = clamp((r (1 + delta) - h) / (2 delta r), 0, 1)`, and the leaving
   rate `beyond / bell` (per ring).
 - In the jet, a kind's pole state sits at `t = open / hold` on the filament
-  and its jetstream carries it out through the continuum at the throat's
-  push and back through the vacuum at the kind's vacuum share `delta`
+  and its jetstream carries it out through the continuum at the torsion
+  share `s` and back through the vacuum at the kind's vacuum share `delta`
   (`circuit::jet_map`); it reaches the throat after
   `ln((1 - t*) / (t0 - t*)) / ln a` echoes, which is its onset
   (`circuit::onset_echoes`, `circuit::throat_crossing`); a sealed kind has

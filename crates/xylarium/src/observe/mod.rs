@@ -16,8 +16,8 @@
 //!                     the books, the worlds formed, the galactic cores (also the
 //!                     reading when WHAT is empty)
 //!   peoples           every people, its role, home, numbers and housing
-//!   people N \[Y\]      one people: its body, numbers, power, knowledge,
-//!                     radiation, world and seats; with Y, after Y years
+//!   people N \[R\]      one people: its body, numbers, power, knowledge,
+//!                     radiation, world and seats; with R, after R rings
 //!                     of live play carried in memory
 //!   star N            one reached star: its books, drift and worlds
 //!   house             the seats minds hold and the councils
@@ -48,13 +48,14 @@
 //!   events \[K\]        the last K events logged, each at its count
 //!                     (default 20)
 //!   clock             the bell, the keepers epicenter to rims, the bridge
-//!   sync \[K\] \[Y\]      each people's sync: the forgetting share and the
-//!                     quarantine it feeds (K default 10; Y as for people)
+//!   sync \[K\] \[R\]      each people's sync: the forgetting share and the
+//!                     quarantine it feeds (K default 10; R as for people)
 //!
 //! Law readings, taken without carrying the universe:
 //!
-//!   universal-core \[T\]
-//!                     the universal core's substrate at T Gyr (default 14):
+//!   universal-core \[R\]
+//!                     the universal core's substrate R rings after the
+//!                     bounce (default: the first stars):
 //!                     its reverberation kind by kind, its outflow, the
 //!                     ocean's shares and every galaxy's intake, the books,
 //!                     Z Q R
@@ -95,14 +96,13 @@ mod universe;
 mod worlds;
 
 use crate::run::{roster, with, Options, Source};
-use xyl_core::Q;
 use xyl_cosmos::origin::Origin;
 use xyl_kernel::universe::Universe;
 
 /// The list of readings printed for an unknown word.
 const READINGS: &str = concat!(
-    "universe, peoples, people N, star N, house, world S W, system S, galaxy, ",
-    "chemistry, star-types [N] [R], universal-core [T], ley [K], annals [K], events [K], ",
+    "universe, peoples, people N [R], star N, house, world S W, system S, galaxy, ",
+    "chemistry, star-types [N] [R], universal-core [R], ley [K], annals [K], events [K], ",
     "clock, ",
     "tiers S, sync [K]; ",
     "law readings: formation, galactic-core N, seals [Z], founding, founding-reach, ",
@@ -161,13 +161,16 @@ fn law_reading(o: &Options, what: &[String]) -> Result<Option<String>, String> {
         Some("push") => atoms::push_reading(count(what, 150)),
         Some("bonding") => atoms::bonding(count(what, 150)),
         Some("universal-core") => {
-            // The universal core's substrate at T Gyr, every value a closed
-            // form of T.
-            let t = what
-                .get(1)
-                .and_then(|v| xyl_cosmos::elements::decimal(v))
-                .unwrap_or_else(|| Q::int(14));
-            substrate::core_read(o, t)?
+            // The universal core's substrate R rings after the bounce (at the
+            // first stars by default), every value a closed form of R.
+            let r = match what.get(1) {
+                Some(v) => Some(
+                    xyl_kernel::checkpoint::q_of(v)
+                        .ok_or("observe universal-core [R]: R in rings")?,
+                ),
+                None => None,
+            };
+            substrate::core_read(o, r)?
         }
         // The cascade report already ends each line with a newline.
         Some("founding") => return founding::founding_cascade(o).map(Some),
@@ -196,16 +199,13 @@ fn carried(
     source: Source,
     what: &[String],
 ) -> Result<bool, String> {
-    // `people N Y` and `sync K Y` carry live play Y years in memory first,
+    // `people N R` and `sync K R` carry live play R rings in memory first,
     // since the gauges are set only by a live step; nothing is written, so
     // the home on disk is unchanged.
-    if let (Some("people" | "sync"), Some(years)) = (
-        what.first().map(String::as_str),
-        what.get(2).and_then(|s| s.parse::<i64>().ok()),
-    ) {
-        let to = &u.now
-            + &u.bell
-                .count(&Q::new(years, 1_000_000_000).ok_or("observe people N Y: years")?);
+    if let (Some("people" | "sync"), Some(rings)) = (what.first().map(String::as_str), what.get(2))
+    {
+        let rings = xyl_kernel::checkpoint::q_of(rings).ok_or("observe people N R: R in rings")?;
+        let to = &u.now + &rings;
         let _ = u.advance_to(&to, true);
     }
     // `witness` unrolls a star's system from the seed, so `system` can read

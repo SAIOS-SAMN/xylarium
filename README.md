@@ -73,7 +73,7 @@ target/release/xylarium genesis --home var/universe-7 --seed 7
 # read it: the universe, its peoples, the core at 14 Gyr, the ley network
 target/release/xylarium observe --home var/universe-7 universe
 target/release/xylarium observe --home var/universe-7 peoples
-target/release/xylarium observe --home var/universe-7 universal-core 14
+target/release/xylarium observe --home var/universe-7 universal-core 2
 target/release/xylarium observe --home var/universe-7 ley 8
 
 # advance 1000 rings (bell periods), checkpointing every 100

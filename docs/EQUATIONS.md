@@ -183,6 +183,9 @@ another crate. Laws are composed from shares (ratios of the form
     (`2 pi M / s` per traversal, in `r_g / c`) are display through a
     certified pi. Turning in turns per traversal: `(delta(r) / r) (M / s)`,
     exact.
+  - Local ring at reach `r`: one traversal of the orbit at `r`, lasting
+    `s r (r + M) / M^2` core traversals (exact; pi cancels); every law step
+    at a reach counts local traversals.
   - Twist and dipole, spin `a = m / N`, lowest common denominator
     `L = 4N + m`:
 

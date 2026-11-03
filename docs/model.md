@@ -472,6 +472,20 @@ display, never stored.
   the network's height per segment, never fixed. With no spin the planes
   advance half a turn per traversal and return after two: the echo is the
   throat orbit's return.
+- **The local ring.** At reach `r` about a hold `M`, the local ring is one
+  traversal of the orbit at `r`, and every law step at that reach (a turn,
+  the vacuum's halving of an agitation, a cooling) counts local
+  traversals. Two orbits' traversals compare exactly, since pi cancels in
+  the ratio of their angular rates: one local traversal at `r` lasts
+
+  ```text
+  (r / delta(r)) (s / M) = s r (r + M) / M^2   core traversals
+  ```
+
+  The engine counts core traversals; each tier reads the orbits of its own
+  reaches and converts by this ratio. The turning law is then one turn per
+  local traversal, `(delta(r) / r) (M / s)` turns per core traversal; no
+  light-time and no SI enters a law.
 - **The twist and the dipole.** With spin `a`, the throat carries the
   torsion share `s = (2 + a) / (4 + a)` on the open side and holds `1 - s`
   on the held side. Each echo twists the open pole Q up and the held pole Z

@@ -174,14 +174,14 @@ and may run beside `run`. Bracketed arguments are optional, with their defaults.
 | `worlds` | `[N=200]` | Law | The planets of the first N sample stars as settling leaves them: orbits, masses, neighbour ratios, and the stars without worlds by cause |
 | `push` | `[N=150]` | Law | Each kind's push with Z in both poles against the built and linear pushes, Z 1 to N |
 | `bonding` | `[N=150]` | Law | Each kind's contacts, grip and conduction in a body of like atoms, Z 1 to N |
-| `universal-core` | `[T=14]` | Law | The universal core's substrate at T Gyr: its reverberation kind by kind, its outflow, the ocean's shares, every galaxy's intake, the books, Z Q R |
+| `universal-core` | `[R]` | Law | The universal core's substrate R rings after the bounce (default: the first stars), on the T lane with Gyr as a display conversion: its reverberation kind by kind, its outflow, the ocean's shares, every galaxy's intake, the books, Z Q R |
 | `founding` | | Law | The equitable cascade and the founding cascade: stacks, spins, reaches and the settled bell |
 | `galactic-core` | `N` | Law | Galactic core N of the founding (0 is the home galaxy's, at the universal core): its hole, its mass ratio to the home hole, its place |
 | `tiers` | `S` | Law | Star S and its worlds, each turn counted in its anchor's rings |
 | `universe` | | Carried | The default: the bell's count, the peoples, the seats, the bells, the books, the worlds formed and the cores |
 | `peoples` | | Carried | Every people: its role, home, numbers and housing |
-| `people` | `N [Y]` | Carried | One people: its body, numbers, power, knowledge, radiation, world and seats; with Y, the civilization layer is carried Y more years in memory first |
-| `sync` | `[K=10] [Y]` | Carried | Every living people's step readings as quartiles, and the K most out of step per reading; Y as for `people` |
+| `people` | `N [R]` | Carried | One people: its body, numbers, power, knowledge, radiation, world and seats; with Y, the civilization layer is carried R more rings in memory first |
+| `sync` | `[K=10] [R]` | Carried | Every living people's step readings as quartiles, and the K most out of step per reading; R as for `people` |
 | `ley` | `[K=10]` | Carried | The ley network: constellations, lines, passages, discord and quarantine, the star map; K bounds each list |
 | `star` | `N` | Carried | One reached star: its books, drift and worlds |
 | `house` | | Carried | The seats held by minds, and the ancient seats |

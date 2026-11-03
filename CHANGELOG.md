@@ -60,6 +60,11 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Readings take their time in rings (#29): `universal-core [R]` reads the
+  substrate R rings after the bounce (default: the first stars) and writes
+  it on the T lane, and `people N [R]` and `sync [K] [R]` carry R rings;
+  Gyr is shown only as a display conversion.
+
 - The universe's clock is anchored on TUniversal (#52): ring 0 is the final
   point heard with the origin receipt (`Chronometry::anchor`,
   `run::Link::origin`); each commit keeps the whole heard point, height,

@@ -236,8 +236,8 @@ read histories.
 
 - `annals [K]` prints the last K annals.
 - `events [K]` prints the last K entries of the event log, at their counts.
-- `peoples` prints the roster; `people N [Y]` prints one people, optionally
-  after carrying live play Y years in memory.
+- `peoples` prints the roster; `people N [R]` prints one people, optionally
+  after carrying live play R rings in memory.
 - `house`, `ley [K]`, `sync [K]` and `clock` print, in order, the seats and
   their holders, the ley network, discord and quarantine, and the bell, the
   current count and the clock keepers (`Universe::clocks`).

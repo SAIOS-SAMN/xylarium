@@ -1,10 +1,10 @@
-//! The substrate law reading: `core T`.
+//! The substrate law reading: `universal-core [R]`.
 
 use super::Options;
 use crate::run::show;
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
-use xyl_cosmos::circuit::{gyr_of_rings_dy, rings_of_gyr_dy, PoleFlux, Substrate};
+use xyl_cosmos::circuit::{gyr_of_rings_dy, PoleFlux, Substrate};
 use xyl_cosmos::origin::Origin;
 
 /// A rate per ring read per Gyr, for display only.
@@ -12,26 +12,33 @@ fn per_gyr(x: Dy) -> Dy {
     x / gyr_of_rings_dy(Dy::ONE).max(Dy::sci(1, -300))
 }
 
-/// The `core T` reading, the substrate at T Gyr after the bounce: the core's
+/// The `universal-core [R]` reading, the substrate `t_rings` rings of the
+/// bell after the bounce (None: at the first stars): the core's
 /// firmament kind by kind (its reach, the hold inside it, its deficit, the
 /// share of its band the reverberation carries past the throat, its rate of
 /// leaving and what it still holds), the jetstream, the lighting, the
 /// outflow, the ocean's share and delay for every galaxy and what each has
 /// taken, the books, and Z, Q and R. Every value is a closed form at T; no
-/// echo is stepped and no parcel counted.
-pub(super) fn core_read(o: &Options, t_gyr: Q) -> Result<String, String> {
+/// echo is stepped and no parcel counted. The time is read in rings and
+/// written on the T lane; Gyr is shown beside it as a display conversion.
+pub(super) fn core_read(o: &Options, t_rings: Option<Q>) -> Result<String, String> {
     let origin = Origin::of(o.seed).ok_or("no origin")?;
     let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
     let clock = std::time::Instant::now();
     let s = xyl_cosmos::cores::substrate(&origin).ok_or("no founding")?;
     let founded_in = clock.elapsed();
-    let t = rings_of_gyr_dy(Dy::from_q(&t_gyr));
+    let t_rings = t_rings.unwrap_or_else(|| xyl_cosmos::circuit::anchor().first_stars);
+    let t = Dy::from_q(&t_rings);
+    let at = xyl_core::coordinate::Reading::of(xyl_core::coordinate::Lane::T, &t_rings)
+        .written()
+        .unwrap_or_else(|| show(&t_rings));
     let mut out = format!(
         concat!(
-            "The substrate at {} Gyr (seed {}): founded in {:.1?}; the bell {} Gyr, ",
+            "The substrate at T {} ({} Gyr) (seed {}): founded in {:.1?}; the bell {} Gyr, ",
             "an echo {} Gyr; {} firmament kinds, {} beads ({} hold a sun), rim {} rings\n"
         ),
-        Dy::from_q(&t_gyr),
+        at,
+        gyr_of_rings_dy(t),
         o.seed,
         founded_in,
         gyr_of_rings_dy(xyl_cosmos::circuit::bell()),

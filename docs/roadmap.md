@@ -122,10 +122,10 @@ where it belongs to one.
    checkpoint is read at the first mind's dawn, where genesis writes its first
    checkpoint.
 
-26. **Readings take their time argument in Gyr**
-    ([#29](https://github.com/SAIOS-SAMN/xylarium/issues/29), `defect`).
-    `observe universal-core T` and the years of `people N [Y]` and `sync [K] [Y]` are
-    Earth units; they are to take rings, with Gyr shown only as a display
+26. **Readings take their time argument in rings**
+    ([#29](https://github.com/SAIOS-SAMN/xylarium/issues/29), `defect`). Done:
+    `observe universal-core [R]` and the R of `people N [R]` and
+    `sync [K] [R]` are rings of the bell, with Gyr shown only as a display
     conversion.
 
 ### Foundations (milestone 3, layer 0)

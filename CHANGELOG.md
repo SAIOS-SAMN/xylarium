@@ -11,6 +11,14 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The antipoles, the shear and the pinch (docs/model.md, EQUATIONS.md,
+  #60), each checked exactly: the antipole group keeps multiplicity; the
+  flip `c -> -c` keeps every state; the antipode's deviation
+  `p_pair = n (+) n/3`, the dipole reconciling `n` and the residual `n/3`
+  folding forward on the near face and back on the far; `Lk = Tw + Wr`
+  conserved; the pinch where the folds meet, after `3 (4 + a) / (2a)`
+  echoes at half a turn (seed 7: ring 37 at 222 deg 52').
+
 - Throat holding refined by the axis moment (docs/model.md, EQUATIONS.md):
   an open kind dilates by `D(s) D(n)^A` per echo and is held where that is
   at most `1 - 2 delta`; for seed 7, 461 open kinds with `A <= -8` are held

@@ -210,8 +210,16 @@ pole state crosses the throat under the jet map (`circuit::onset`,
 filament: the locus of the parcels released along it.
 
 **What the throat holds.** A kind with no open frames has no pole state,
-so the jet never acts on it and the throat holds it; every kind with open
-frames reaches the throat within `ln(W / U) / ln D(s)` echoes and leaves.
+so the jet never acts on it and the throat holds it. An open kind's pole
+point `t = U / W` is its position on the axis plane, and its net axis
+weight `A` (Weights on the six planes) is its moment there; the flow law
+adds their hyperbolic angles, so the kind dilates by `D(s) D(n)^A` per
+echo on the continuum. It is held where that is at most one (with the
+vacuum leg, at most `1 - 2 delta`), that is `A <= -log_D(n) D(s)`; for seed
+7, `A <= -8` exactly, which holds 461 open kinds (Z 65 to 124, 279 to 338,
+422 to 762) beside the 20 closed ones, with no change to the held mass at
+twelve digits (they are sparse). Every other open kind reaches the throat
+and leaves.
 The firmament is therefore the closed kinds (for seed 7, 20 kinds with
 43.5% of the founded mass, from Z 2 to the seal at Z 1092), not the
 vessel's band; the present `beyond_share` test, which holds the vessel by

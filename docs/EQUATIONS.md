@@ -273,9 +273,14 @@ another crate. Laws are composed from shares (ratios of the form
   - Axis polarity: `sum m0` over the unpaired electrons; founded Z 1 to
     1092: 535 Z side, 517 Q side, 40 neutral. Status: planned.
 
-- Throat holding (`circuit::onset_echoes`; derived): a kind is held by
-  the throat exactly when it has no open frames (`compound::open = 0`): it
-  has no pole state, and the jet never acts on it. A kind with `U` open and
+- Throat holding (`circuit::onset_echoes`; derived): with no internal
+  moment, a kind is held by the throat exactly when it has no open frames
+  (`compound::open = 0`): it has no pole state, and the jet never acts on
+  it. With its net axis weight `A`, an open kind dilates by
+  `D(s) D(n)^A` per echo and is held where `D(s) D(n)^A <= 1 - 2 delta`;
+  on the continuum alone, `A <= -log_D(n) D(s)`, for seed 7 `A <= -8`
+  (`D(n)^8 >= D(s) > D(n)^7`, exact): 461 open kinds held, Z 65-124,
+  279-338, 422-762 (planned; the test below covers the moment-free map). A kind with `U` open and
   `W` held frames crosses within `ln(W / U) / ln D(s)` echoes on the
   continuum alone, since the map `t -> a t + b` has `a >= D(s) >= 3` and
   `b >= 0`. Over the founded kinds (seed 7) 20 are held, Z 2, 4, 28, 30, 32,

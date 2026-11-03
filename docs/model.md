@@ -482,8 +482,8 @@ display, never stored.
   (r / delta(r)) (s / M) = s r (r + M) / M^2   core traversals
   ```
 
-  The engine counts core traversals; each tier reads the orbits of its own
-  reaches and converts by this ratio. The turning law is then one turn per
+  The engine counts core traversals; each tier reads the orbits at the reaches
+  within it and converts by this ratio. The turning law is then one turn per
   local traversal, `(delta(r) / r) (M / s)` turns per core traversal; no
   light-time and no SI enters a law.
 - **The twist and the dipole.** With spin `a`, the throat carries the

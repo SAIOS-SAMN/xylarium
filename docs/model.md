@@ -521,6 +521,52 @@ the flow law, the conservation of counts and the inversion.
   `p_pair / 2` positrons on the open face per echo. A spinless throat
   makes none (`1/2 (+) (-1/2) = 0`); the extremal spin makes `5 / 19`.
 
+### Weights on the six planes
+
+Derived ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)); the counts are built and tested
+(`atoms::tests::a_bands_harmonics_split_by_weight_on_the_six_planes`), the
+rest is not yet built. The algebra's twelve base axes are six planes: the
+axis plane (axes 0 and 1), where the Z-Q stretch acts, and the five
+isoclinic planes (axes 2 to 11), which the spin turns together; together
+they are C^6, where the bands' Hopf fibres lie. Turning each plane on its
+own splits a band's harmonics by their weight `m = (m0, m1, ..., m5)` in
+Z^6, each plane's reading kept, never summed into one number.
+
+- **Multiplicity.** A degree-`l` harmonic of weight `m` occurs
+  `C(q + 4, 4)` times, `q = (l - sum |mi|) / 2` (none where it is not a
+  whole number). By axis weight alone a band holds `C(l - |m0| + 9, 9)`
+  harmonics at `m0`; both distributions are symmetric under `m0 -> -m0`
+  and under the twist charge `c = m1 + ... + m5 -> -c`.
+- **Flow.** One bivector generates a state's motion: a dilation in the
+  axis plane (hyperbolic; the dipole's `D(n)`, the flow law being the
+  addition of its hyperbolic angle) and the spin's turn `s` in the five
+  planes. The parts lie in orthogonal planes and commute, so a state's
+  reading at a count `t` is a closed form: on the axis the dilation
+  `D(n)^(m0 t)`, exact in Q at whole `t`; on the planes the phase
+  `t s (m1 + ... + m5) mod 1`, exact in Q/Z. The state moves on a flat line
+  of the six-torus inside S^11, curved by the embedding; in each plane a
+  circle stretched by the axis's dilation is an ellipse with apsis ratio
+  `D`; each plane's rate is the hold's deficit share there.
+- **Filling within a band.** The axis's dilation holds Z-side states
+  (`m0 < 0`) tighter and stretches Q-side states (`m0 > 0`), so a band's
+  electrons take the Z side first, singly before pairing. A band less than
+  half full keeps its unpaired electrons on the Z side; one more than half
+  full has paired the Z side and keeps them on the Q side. The atom's rest
+  fill, which bands hold how many electrons, is unchanged.
+- **Axis polarity.** A kind's net axis weight is the sum of `m0` over its
+  unpaired electrons: Z side (negative), Q side (positive) or neutral. Of
+  the founded kinds Z 1 to 1092, 535 are Z side, 517 Q side and 40 neutral
+  (the 20 closed kinds and 20 open ones of net weight zero); for example
+  carbon, nitrogen, oxygen and silicon are Z side (-1), iron is Q side
+  (+1), hydrogen is neutral (its s-state has `m = 0`).
+- **Open.** At rest every kind's net twist charge is zero (the `c`
+  distribution is symmetric), so the twist's direction needs the spin to
+  break the symmetry. The jet map moves hydrogen first, from
+  `t = U / W = 1/2`, while its only state has weight zero: the pole
+  coordinate counts frames (`3Z` per kind) and the weights count electron
+  states (`Z`), and the two are not yet one account. The planes share one
+  rate while the spin is isoclinic.
+
 ### Radiation: irradiation held, transduced and passed on
 
 Light, heat and their dispersal are one exchange read through the deficit

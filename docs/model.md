@@ -474,6 +474,53 @@ display, never stored.
   The dipole's ratio is linear in the spin; the twist's influence falls as
   `(4 + a)^-2`; an orbit's eccentricity and apsis ratio fall with reach.
 
+### The equator: inflow, viscosity and pairs
+
+Derived ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)); not yet built. Theorems are composed by the flow law
+before anything is added, and reduced to its axioms: the deficit share,
+the flow law, the conservation of counts and the inversion.
+
+- **The equatorial inflow.** The jet stretches the medium along the pole
+  by `D(s) = (1 + s) / (1 - s) = 3 + a` per echo. Since `s (+) (-s) = 0`,
+  `D(s) D(-s) = 1`: the stretch composed with its opposed push is the
+  identity, which is continuity. The equatorial span therefore shrinks by
+  `D(-s)`, and the equator draws in the share `1 - 1 / D(s) =
+  (2 + a) / (3 + a)` per echo. Read from the equator, the dipole is
+  `Z / Q = (1 - n) / (1 + n) = 1 / D(n)`.
+- **The swirl.** The turning law's circulation, `Gamma(r) = 2 pi r v =
+  2 pi M r / (r + M)`, is the passed share: full outside the core,
+  suppressed inside it, the core's hold the throat. It is the swirl of a
+  stretched vortex in deficit form.
+- **Viscosity.** A medium is viscous where its frames grip their
+  neighbours and fluid where they do not: closed kinds and bonds heat has
+  broken slide. In the pole coordinate `t = U / W` the viscosity is the
+  open share, `nu(t) = t / (1 + t)`, the deficit form `delta(t, 1)`; heat
+  enters through `compound::open_hot`. The inversion reverts its polarity:
+  `nu(1 / t) = 1 / (1 + t) = 1 - nu(t)`, so what grips on the fusion side
+  (`t < 1`) slides on the fission side (`t > 1`), and at the throat
+  (`t = 1`) both faces read one half.
+- **Positrons.** The electrons' phase state is `R = kappa (1 - 2x)`,
+  `x = frac(p)` in Q/Z (`circuit::weights::electron_phase`). The reversion
+  runs the echo backwards, `x -> -x`, and `R(-x) = -R(x)`: the positron is
+  the electron's phase read through the reversion, with the same
+  coherence and the opposite sign. A pair arises at the echo's turn
+  (`x = 1/2`, `R = 0`) and separates, the electron toward the held face
+  and the positron toward the open face; meeting in phase, `R + (-R) = 0`
+  returns to the dipole.
+- **The pair share.** The echo's near face carries the open share `s` out
+  and its far face returns the held share `1 - s` through the reversion,
+  opposed. Composed:
+
+  ```text
+  p_pair = s (+) (-(1 - s)) = 4n / (3 + n^2) = a (4 + a) / (12 + 6a + a^2)
+  D(p_pair) = D(s) D(-(1 - s)) = (3 + a)(2 + a) / (6 + a)
+  ```
+
+  `p_pair` is the share of the electrons' phase the far face does not
+  return; it separates as `p_pair / 2` electrons on the held face and
+  `p_pair / 2` positrons on the open face per echo. A spinless throat
+  makes none (`1/2 (+) (-1/2) = 0`); the extremal spin makes `5 / 19`.
+
 ### Radiation: irradiation held, transduced and passed on
 
 Light, heat and their dispersal are one exchange read through the deficit

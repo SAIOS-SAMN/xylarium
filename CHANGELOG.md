@@ -11,6 +11,13 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The equator, derived (docs/model.md, EQUATIONS.md, #60): the equatorial
+  inflow `D(-s)` per echo by continuity (`s (+) (-s) = 0`), the swirl as the
+  passed share, viscosity `nu(t) = t / (1 + t)` reverting to `1 - nu`
+  across the throat, the positron as the electron's phase under `x -> -x`,
+  and the pair share `p_pair = s (+) (-(1 - s)) = a (4 + a) / (12 + 6a + a^2)`
+  per echo, with exact values for seed 7.
+
 - Throat holding, derived and tested: a kind is held exactly when it has
   no open frames; every open kind crosses within `ln(W / U) / ln D(s)`
   echoes (`a_kind_is_held_exactly_when_it_has_no_open_frames`, Z 1 to

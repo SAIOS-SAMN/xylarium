@@ -216,7 +216,7 @@ impl<'g> Universe<'g> {
             annals_seen: 0,
             rung_to: Dy::ZERO,
         };
-        u.clocks = crate::chronometry::Chronometry::of(u.cosmic.gal.seed, u.cosmic.gal.origin);
+        u.clocks = crate::chronometry::Chronometry::of(u.cosmic.gal.origin);
         u.civ.knowledge.sync(u.cosmic.peoples.len());
         u.log_annals();
         u

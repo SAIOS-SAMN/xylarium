@@ -131,14 +131,14 @@ pub(super) fn founding_read(o: &Options) -> Result<String, String> {
 pub(super) fn formation(o: &Options) -> Result<String, String> {
     let origin = Origin::of(o.seed).ok_or("no origin")?;
     let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
-    let shapes = xyl_cosmos::cores::shapes(o.seed, &origin);
+    let shapes = xyl_cosmos::cores::shapes(&origin);
     let mut out = founding_matter(&origin, &elements);
     // Units are the universe's: time in rings, reach as a deficit share
     // of its enclosure, mass as a holding share (never years, kpc or suns).
     // The pieces are the founding's beads one tier down, heated by the pulse
     // at swing = 1 + the inbound echo's mean over the first echo, as at the
     // founding; every galaxy is read as the home galaxy's homologue.
-    let sub = xyl_cosmos::cores::substrate(o.seed, &origin).ok_or("no founding")?;
+    let sub = xyl_cosmos::cores::substrate(&origin).ok_or("no founding")?;
     let swing = &Q::ONE + &sub.inbound_mean(xyl_cosmos::circuit::echo()).to_q();
     let f = xyl_cosmos::formation::of(&sub.beads, &sub.unit(), &sub.held_share(), &swing);
     out.push_str(&galaxies(&shapes, &f, &sub));

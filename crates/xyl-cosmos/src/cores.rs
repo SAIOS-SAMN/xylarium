@@ -23,8 +23,8 @@
 //!   bead's metals over its share of the founded elements' (by mass); H and
 //!   He are 1, and the home galaxy with no intake is the calibration.
 //!
-//! The founding depends on the parent's spin only; the seed argument is not
-//! read. Terms: admission, galactic core (docs/glossary.md).
+//! The founding depends on the parent's spin only, so it takes no seed.
+//! Terms: admission, galactic core (docs/glossary.md).
 
 use crate::elements::Element;
 use crate::origin::Origin;
@@ -247,8 +247,7 @@ pub fn substrate_for(spin: &Q) -> Option<Arc<crate::circuit::Substrate>> {
     Some(s)
 }
 
-fn founding_of(seed: u64, origin: &Origin) -> Option<Arc<Founding>> {
-    let _ = seed;
+fn founding_of(origin: &Origin) -> Option<Arc<Founding>> {
     let key = (0u64, format!("{}", origin.parent.spin));
     if let Some(f) = cache().lock().ok()?.get(&key) {
         return Some(f.clone());
@@ -323,13 +322,13 @@ fn founding_of(seed: u64, origin: &Origin) -> Option<Arc<Founding>> {
 }
 
 /// The galaxies' indices, home first.
-pub fn held(seed: u64, origin: &Origin) -> Vec<u32> {
-    shapes(seed, origin).into_iter().map(|s| s.index).collect()
+pub fn held(origin: &Origin) -> Vec<u32> {
+    shapes(origin).into_iter().map(|s| s.index).collect()
 }
 
 /// Galactic core `index`'s shape (None: no such galaxy).
-pub fn shape(seed: u64, origin: &Origin, index: u32) -> Option<Shape> {
-    founding_of(seed, origin)?
+pub fn shape(origin: &Origin, index: u32) -> Option<Shape> {
+    founding_of(origin)?
         .shapes
         .iter()
         .find(|s| s.index == index)
@@ -337,29 +336,23 @@ pub fn shape(seed: u64, origin: &Origin, index: u32) -> Option<Shape> {
 }
 
 /// The founding's galaxies' shapes, home first.
-pub fn shapes(seed: u64, origin: &Origin) -> Vec<Shape> {
-    founding_of(seed, origin)
+pub fn shapes(origin: &Origin) -> Vec<Shape> {
+    founding_of(origin)
         .map(|f| f.shapes.clone())
         .unwrap_or_default()
 }
 
 /// The substrate of a universe's founding, founded once per process and
 /// shared (None if the founding fails).
-pub fn substrate(seed: u64, origin: &Origin) -> Option<Arc<crate::circuit::Substrate>> {
-    founding_of(seed, origin).map(|f| f.substrate.clone())
+pub fn substrate(origin: &Origin) -> Option<Arc<crate::circuit::Substrate>> {
+    founding_of(origin).map(|f| f.substrate.clone())
 }
 
 /// Galactic core `index`'s recipe at `t` rings: its composition on the
 /// substrate (founding recipe plus intake from the core by t) relative to the
 /// elements' founding. The home galaxy with no intake is the calibration.
-pub fn weights_at(
-    seed: u64,
-    origin: &Origin,
-    index: u32,
-    t: &Q,
-    elements: &[Element],
-) -> Option<Weights> {
-    let f = founding_of(seed, origin)?;
+pub fn weights_at(origin: &Origin, index: u32, t: &Q, elements: &[Element]) -> Option<Weights> {
+    let f = founding_of(origin)?;
     let t = Dy::from_q(t);
     if index == 0 && f.substrate.intake(0, t).is_empty() {
         return Some(Weights::home());
@@ -373,15 +366,15 @@ pub fn weights_at(
 }
 
 /// The founding: every galaxy with its recipe as founded (t = 0).
-pub fn founding(seed: u64, origin: &Origin, elements: &[Element]) -> Vec<GalacticCore> {
-    let Some(f) = founding_of(seed, origin) else {
+pub fn founding(origin: &Origin, elements: &[Element]) -> Vec<GalacticCore> {
+    let Some(f) = founding_of(origin) else {
         return Vec::new();
     };
     f.shapes
         .iter()
         .filter_map(|shape| {
             Some(GalacticCore {
-                weights: weights_at(seed, origin, shape.index, &Q::ZERO, elements)?,
+                weights: weights_at(origin, shape.index, &Q::ZERO, elements)?,
                 shape: shape.clone(),
             })
         })

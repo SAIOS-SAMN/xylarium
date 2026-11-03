@@ -23,7 +23,7 @@ pub(super) fn core_read(o: &Options, t_gyr: Q) -> Result<String, String> {
     let origin = Origin::of(o.seed).ok_or("no origin")?;
     let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
     let clock = std::time::Instant::now();
-    let s = xyl_cosmos::cores::substrate(o.seed, &origin).ok_or("no founding")?;
+    let s = xyl_cosmos::cores::substrate(&origin).ok_or("no founding")?;
     let founded_in = clock.elapsed();
     let t = rings_of_gyr_dy(Dy::from_q(&t_gyr));
     let mut out = format!(
@@ -61,7 +61,7 @@ pub(super) fn core_read(o: &Options, t_gyr: Q) -> Result<String, String> {
     ));
     out.push_str(&fastest_kinds(&s, t, &at_mean));
     out.push_str(&ocean(&s, t));
-    out.push_str(&galaxies(o, &origin, &s, t));
+    out.push_str(&galaxies(&origin, &s, t));
     let w = s.two_weights(t, &elements);
     let p = s.pulse(t);
     out.push_str(&format!(
@@ -272,11 +272,11 @@ fn ocean(s: &Substrate, t: Dy) -> String {
 
 /// Each galaxy in the ocean at T: its reach then and now, recession, drift,
 /// swing, shift, circulation, place, and the tide across its extent.
-fn galaxies(o: &Options, origin: &Origin, s: &Substrate, t: Dy) -> String {
+fn galaxies(origin: &Origin, s: &Substrate, t: Dy) -> String {
     // A galaxy's extent in the ocean's rings: its rim (r_max x its scale,
     // converted to galaxy units) over the length one ring of its reach spans
     // (its anchor distance over its reach in rings).
-    let shapes = xyl_cosmos::cores::shapes(o.seed, origin);
+    let shapes = xyl_cosmos::cores::shapes(origin);
     let kpc = xyl_cosmos::chain::kpc();
     let mut out = String::new();
     for g in s.push(t) {

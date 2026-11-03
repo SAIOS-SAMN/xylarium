@@ -183,7 +183,7 @@ pub fn in_play(seed: u64, origin: &xyl_cosmos::origin::Origin, limit: u64) -> Ve
     let sample = xyl_cosmos::galaxy::sample(origin);
     let total = limit.min(sample);
     let mut out = Vec::new();
-    for c in xyl_cosmos::cores::held(seed, origin) {
+    for c in xyl_cosmos::cores::held(origin) {
         let stars: Vec<Star> = (0..total)
             .filter_map(|l| {
                 xyl_cosmos::galaxy::star(seed, origin, xyl_cosmos::galaxy::in_galaxy(c, l))

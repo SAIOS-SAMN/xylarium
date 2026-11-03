@@ -11,6 +11,10 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The local ring (#60): at reach `r` one traversal of the orbit there,
+  `s r (r + M) / M^2` core traversals exactly; every law step at a reach
+  (turning, the vacuum's halving, cooling) counts local traversals.
+
 - The ring is specified as the throat orbit's reading, never one scalar
   (#60): the axis dilation by its exponent and each of the five planes'
   phases in Q/Z, with durations in `r_g / c` or seconds as display only;

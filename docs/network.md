@@ -64,10 +64,14 @@ The seam carries the following today.
   [civilizations.md](civilizations.md#seats).
 - **Checkpoints.** `saved` is called after each checkpoint is written to the
   home, so the uplink can ship what it records.
-- **Clock height.** Before each checkpoint the universe commits its keepers'
-  chain with `height()`, the last final clock height the uplink heard
-  (`Universe::commit_clocks`); local play passes `None`. The checkpoint
-  keeps each commit as a count and that height (`Checkpoint::commits`).
+- **Clock points.** Before each checkpoint the universe commits its
+  keepers' chain with `point()`, the last final TUniversal point the uplink
+  heard, whole: its height, its lanes S G T H and K
+  (`xyl_kernel::chronometry::Point`, `Universe::commit_clocks`); local play
+  passes `None`. `origin()` gives the point heard with the universe's
+  origin receipt, which anchors ring 0 (`Universe::anchor_clock`). The
+  checkpoint keeps each commit as a count and its point
+  (`Checkpoint::commits`) and the anchor (`Checkpoint::anchor`).
 
 ## Time on the network
 
@@ -88,6 +92,12 @@ The seam carries the following today.
   its slip against that keeper kept as a residual. Only the epicenter's entry
   carries the network's clock height, so only the epicenter's entry reaches the
   network.
+- **Ring 0 on TUniversal.** The universe's ring 0 is anchored at the final
+  point heard with its origin receipt (`Chronometry::anchor`), so every
+  count of the bell has a place on the network: the anchor plus its rings.
+  The present is read on the T lane as whole rings and the ring's phase in
+  degrees (`Universe::t_coordinate`); `xylarium observe clock` prints the
+  anchor.
 - **Measured pace.** The kernel does not configure a ratio between rings and
   network time. `Chronometry::pace` computes rings per final-point advance from
   the first and last commits that heard a height; a faster machine computes more

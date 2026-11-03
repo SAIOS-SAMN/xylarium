@@ -1,9 +1,9 @@
 //! A minimal `run::Link`: the seam an uplink uses to drive live play.
 //!
-//! After every ring it prints the ring number, the time in Gyr and the
-//! numbers of peoples and bells; after every checkpoint it prints the home
-//! and the ring. An uplink to the
-//! Mycelium network implements the same three methods.
+//! After every ring it prints the time on the T lane (rings and the ring's
+//! phase in degrees) and the numbers of peoples and bells; after every
+//! checkpoint it prints the home and the time. An uplink to the Mycelium
+//! network implements the same methods and also `origin`.
 //!
 //! ```text
 //! cargo run --release -p xylarium --example minimal_link -- --home var/example-7 --for 5
@@ -25,9 +25,8 @@ impl run::Link for Printer {
         _relays: &[xyl_cosmos::pulse::Relay],
     ) {
         println!(
-            "ring {} at {} Gyr: {} peoples, {} bells",
-            u.ring(),
-            u.gyr(),
+            "T {}: {} peoples, {} bells",
+            u.t_coordinate().written().unwrap_or_default(),
             u.cosmic.peoples.len(),
             bells.len()
         );
@@ -35,15 +34,15 @@ impl run::Link for Printer {
 
     fn saved(&mut self, home: &Path, u: &Universe<'_>) -> Result<(), String> {
         println!(
-            "checkpoint written to {} at ring {}",
+            "checkpoint written to {} at T {}",
             home.display(),
-            u.ring()
+            u.t_coordinate().written().unwrap_or_default()
         );
         Ok(())
     }
 
-    // A local link has heard no network clock height.
-    fn height(&self) -> Option<u64> {
+    // A local link has heard no TUniversal point.
+    fn point(&self) -> Option<xyl_kernel::chronometry::Point> {
         None
     }
 }

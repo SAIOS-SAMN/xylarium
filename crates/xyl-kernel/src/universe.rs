@@ -222,11 +222,23 @@ impl<'g> Universe<'g> {
         u
     }
 
-    /// Commits the present to the keepers' chain, with the last final point's
-    /// receipt height received (None when unlinked).
-    pub fn commit_clocks(&mut self, point: Option<u64>) {
+    /// Commits the present to the keepers' chain, with the last final point
+    /// heard (None when unlinked).
+    pub fn commit_clocks(&mut self, point: Option<crate::chronometry::Point>) {
         let now = self.now.clone();
         self.clocks.commit(&now, point);
+    }
+
+    /// Anchors ring 0 at `point`, the final point heard with the universe's
+    /// origin receipt; the first anchor stands.
+    pub fn anchor_clock(&mut self, point: crate::chronometry::Point) {
+        self.clocks.anchor_at(point);
+    }
+
+    /// The present on the T lane: whole rings of the bell and the phase of
+    /// the ring in degrees of arc (`xyl_core::coordinate`).
+    pub fn t_coordinate(&self) -> xyl_core::coordinate::Reading {
+        xyl_core::coordinate::Reading::of(xyl_core::coordinate::Lane::T, &self.now)
     }
 
     /// Deep time now (Gyr), as the older layers' `Dy`.

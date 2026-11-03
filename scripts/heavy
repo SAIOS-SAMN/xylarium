@@ -2,6 +2,13 @@
 # Run a heavy command (a build, a test suite) under a machine-wide lock at low
 # priority: one heavy job at a time on a shared host. `-o` closes the lock's
 # descriptor before the command runs, so nothing the command starts can
-# inherit and keep holding the lock after the job ends.
+# inherit and keep holding the lock after the job ends. The command runs in a
+# user scope capped at 6 GB with no swap, and cargo at three jobs unless the
+# caller sets CARGO_BUILD_JOBS, so the shared host stays within its memory.
 # Usage: scripts/heavy cargo build --release
+export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-3}"
+if command -v systemd-run >/dev/null 2>&1 && systemd-run --user --scope -q -p MemoryMax=6G -p MemorySwapMax=0 -- true 2>/dev/null; then
+    exec nice -n 10 flock -o -w 3600 "${XDG_RUNTIME_DIR:-/tmp}/xyl-heavy.lock" \
+        systemd-run --user --scope -q -p MemoryMax=6G -p MemorySwapMax=0 -- "$@"
+fi
 exec nice -n 10 flock -o -w 3600 "${XDG_RUNTIME_DIR:-/tmp}/xyl-heavy.lock" "$@"

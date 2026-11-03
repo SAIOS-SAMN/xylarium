@@ -228,7 +228,7 @@ command works without them.
 
 | Script | Use |
 |---|---|
-| `scripts/heavy CMD...` | Runs a build or test suite under a machine-wide lock at low priority |
+| `scripts/heavy CMD...` | Runs a build or test suite under a machine-wide lock at low priority, in a user scope capped at 6 GB with no swap, cargo at three jobs unless `CARGO_BUILD_JOBS` is set |
 | `scripts/long CMD...` | Runs a long job (genesis, a deep-time reading) under a separate lock, with at most 3 worker threads |
 
 ```

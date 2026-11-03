@@ -143,7 +143,8 @@ where it belongs to one.
 
 ### Founding (milestone 3)
 
-32. **The founding as flow** (depends on item 38; [#35](https://github.com/SAIOS-SAMN/xylarium/issues/35), `track`, `law`). Parcels leave their
+32. **The founding as flow** (depends on item 38; the firmament is the
+    closed kinds, proved in EQUATIONS.md, Throat holding; [#35](https://github.com/SAIOS-SAMN/xylarium/issues/35), `track`, `law`). Parcels leave their
     throat at onset and move by the reach rate
     ([model.md](model.md#the-founding-as-flow)); angular state in degrees with
     the swing as torsion and twist; perturbation on frames; meetings by

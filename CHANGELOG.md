@@ -11,6 +11,12 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Throat holding, derived and tested: a kind is held exactly when it has
+  no open frames; every open kind crosses within `ln(W / U) / ln D(s)`
+  echoes (`a_kind_is_held_exactly_when_it_has_no_open_frames`, Z 1 to
+  1700). The founded firmament under this law is 20 closed kinds (seed 7);
+  22 closed kinds between Z 1093 and Z 1700 are unfounded.
+
 - The ring as the throat orbit, specified (docs/model.md, EQUATIONS.md
   section 4, #60): one traversal of the core's sheared elliptic orbit
   (`e = delta`, apsis ratio `D(delta) = 1 + 2M / r`); resonances

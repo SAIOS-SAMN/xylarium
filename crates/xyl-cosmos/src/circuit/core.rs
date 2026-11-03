@@ -855,4 +855,33 @@ mod tests {
         };
         assert_eq!(li > o, share(3) < share(8));
     }
+
+    #[test]
+    fn a_kind_is_held_exactly_when_it_has_no_open_frames() {
+        // Every kind of the table, at the extremal and the spinless torsion
+        // share, on the continuum alone (no vacuum leg, b = 0): a kind with
+        // no open frames has no onset; every other kind crosses the throat
+        // within ln(W / U) / ln D(s) echoes, the bound of the jet map
+        // t -> a t with a = D(s).
+        for s in [Dy::ratio(1, 2), Dy::ratio(3, 5)] {
+            let ln_d = jet_dilation(s).log();
+            for z in 1..=crate::elements::TOP_Z {
+                if crate::compound::is_cluster(z) {
+                    continue;
+                }
+                let (u, w) = (crate::compound::open(z), crate::compound::hold(z));
+                let onset = onset_echoes(z, Dy::ZERO, s);
+                if u == 0 || w == 0 {
+                    assert!(onset.is_none(), "Z{z} has no open frames and no onset");
+                    continue;
+                }
+                let n = onset.unwrap_or_else(|| panic!("Z{z} has open frames and an onset"));
+                let bound = (Dy::int(i64::from(w)) / Dy::int(i64::from(u)))
+                    .log()
+                    .max(Dy::ZERO)
+                    / ln_d;
+                assert!(n <= bound + Dy::sci(1, -9), "Z{z}: {n} within {bound}");
+            }
+        }
+    }
 }

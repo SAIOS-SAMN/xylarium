@@ -238,6 +238,19 @@ another crate. Laws are composed from shares (ratios of the form
   `h = 1 + inside / unit`, `r = spin / h`, `delta = h / (r + h)`,
   `beyond = clamp((r (1 + delta) - h) / (2 delta r), 0, 1)` and
   `rate = beyond / bell`. Status: built.
+- Throat holding (`circuit::onset_echoes`; derived): a kind is held by
+  the throat exactly when it has no open frames (`compound::open = 0`): it
+  has no pole state, and the jet never acts on it. A kind with `U` open and
+  `W` held frames crosses within `ln(W / U) / ln D(s)` echoes on the
+  continuum alone, since the map `t -> a t + b` has `a >= D(s) >= 3` and
+  `b >= 0`. Over the founded kinds (seed 7) 20 are held, Z 2, 4, 28, 30, 32,
+  34, 58, 208, 210, 234, 236, 260, 262, 264, 266, 268, 270, 272, 418, 1092,
+  with 43.5% of the founded mass; 524 of the vessel's 525 kinds are open.
+  Z 1093 to 1700 hold 22 closed kinds (Z 1094, 1118, 1272-1276, 1298-1302,
+  1326, 1328, 1352, 1354, 1378-1396, even), unfounded: the founding stops
+  at the vessel's seal, Z 1092. Status: built (the test
+  `a_kind_is_held_exactly_when_it_has_no_open_frames`); the firmament's
+  `beyond_share` test does not yet read it.
 - Jet onset (`circuit::onset_echoes`): `circuit::throat_crossing` of
   `t = open / hold` under the kind's jetstream map at the torsion share `s`
   and the kind's vacuum share `delta`, `a = D(s) / (1 - delta)`,

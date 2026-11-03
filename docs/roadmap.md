@@ -162,9 +162,11 @@ where it belongs to one.
 37. **Closed forms, not steps** ([#41](https://github.com/SAIOS-SAMN/xylarium/issues/41), `defect`). Each loop over time or
     sampled age replaced by a closed form or an event as its module is
     rebuilt.
-38. **The ring as the throat orbit** ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60), `law`). A ring is one
-    traversal of the core's sheared elliptic orbit at the throat; the echo's
-    twist `n = a / (4 + a)` moves Q up and Z down about the equator and is
+38. **The ring as the throat orbit**
+    ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60), `law`). A ring
+    is the reading of the core's sheared elliptic orbit at the throat (the
+    axis dilation by its exponent, each plane's phase in Q/Z, never one
+    scalar); the echo's twist `n = a / (4 + a)` moves Q up and Z down about the equator and is
     held by the dipole as torsion, `Q / Z = 1 + a / 2`
     ([model.md](model.md#the-ring-the-throat-orbit-and-the-echos-torsion)).
     Replaces the bell as light's round trip to the rim, which the founding

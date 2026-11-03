@@ -11,6 +11,12 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The ring is specified as the throat orbit's reading, never one scalar
+  (#60): the axis dilation by its exponent and each of the five planes'
+  phases in Q/Z, with durations in `r_g / c` or seconds as display only;
+  an epoch is a position in the nested reading, and play's advance per loop
+  is read per network segment.
+
 - The antipoles, the shear and the pinch (docs/model.md, EQUATIONS.md,
   #60), each checked exactly: the antipole group keeps multiplicity; the
   flip `c -> -c` keeps every state; the antipode's deviation

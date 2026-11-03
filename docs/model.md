@@ -451,9 +451,26 @@ display, never stored.
   apsis ratio 3, the throat push's dilation), the horizon (`k = 3`, apsis
   ratio 2), and so on; the inversion `r -> M^2 / r` maps each to
   `M / (k - 1)` on the far face, the throat to itself.
-- **The ring.** A ring is one traversal of the core's orbit at the throat
-  (`r = M`, `delta = 1/2`), counted in Z, its phase in Q/Z. With no spin it
-  advances half a turn and returns after two traversals: the echo is the
+- **The ring.** A ring is the reading of the core's orbit at the throat
+  (`r = M`, `delta = 1/2`), never one scalar. At a count `t` (exact in Q) it
+  is
+
+  ```text
+  R(t) = ( the axis:    D(n)^t, held by its exponent t
+           the planes:  phi_i(t) = t theta_i mod 1, i = 1..5, each in Q/Z
+           the returns: the whole traversals k in Z and each plane's order )
+  ```
+
+  each plane with a rate `theta_i` of that plane, the hold's deficit share there
+  (all equal to `s` while the spin is isoclinic), and the readings are never
+  summed. Every stored value is rational: a duration in `r_g / c` or in
+  seconds (one traversal lasts `2 pi M / s` in `r_g / c`) is a display
+  conversion through a certified enclosure of pi, never a quantity. An epoch
+  is a position in this reading, nested through the tiers (each tier read on the
+  throat orbit of that tier), not a count of a scalar unit; a reading moves to any count
+  in closed form, and the count live play advances per loop is read against
+  the network's height per segment, never fixed. With no spin the planes
+  advance half a turn per traversal and return after two: the echo is the
   throat orbit's return.
 - **The twist and the dipole.** With spin `a`, the throat carries the
   torsion share `s = (2 + a) / (4 + a)` on the open side and holds `1 - s`

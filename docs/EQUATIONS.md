@@ -177,8 +177,12 @@ another crate. Laws are composed from shares (ratios of the form
   - Shear: periapsis advance `delta` of a turn per traversal; return after
     `q` traversals, `q` the denominator of the advance; resonances
     `r_k = (k - 1) M` return after `k`; far-face images `M / (k - 1)`.
-  - Ring: one traversal of the throat orbit (`r = M`); counts in Z, phase
-    in Q/Z.
+  - Ring: the throat orbit's reading at count `t`, `R(t) = (D(n)^t by its
+    exponent; phi_i(t) = t theta_i mod 1 in Q/Z, i = 1..5; whole
+    traversals in Z and each plane's order)`, never one scalar; durations
+    (`2 pi M / s` per traversal, in `r_g / c`) are display through a
+    certified pi. Turning in turns per traversal: `(delta(r) / r) (M / s)`,
+    exact.
   - Twist and dipole, spin `a = m / N`, lowest common denominator
     `L = 4N + m`:
 

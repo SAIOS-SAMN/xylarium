@@ -11,6 +11,12 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Weights on the six planes (docs/model.md, EQUATIONS.md, #60): a band's
+  harmonics split by weight in Z^6, `C((l - sum |mi|) / 2 + 4, 4)` each and
+  `C(l - |m0| + 9, 9)` by axis weight (tested); a state's flow as a closed
+  form, axis dilation and plane phase; filling Z side first; each kind's
+  emergent axis polarity.
+
 - The equator, derived (docs/model.md, EQUATIONS.md, #60): the equatorial
   inflow `D(-s)` per echo by continuity (`s (+) (-s) = 0`), the swirl as the
   passed share, viscosity `nu(t) = t / (1 + t)` reverting to `1 - nu`

@@ -435,4 +435,47 @@ mod tests {
         assert_eq!(hold(&[7, 7]), Q::ZERO);
         assert!(hold(&[8, 1, 1, 1, 1]) > Q::ZERO);
     }
+
+    /// `C(n, k)`, exact on `u64` for the band sizes here.
+    fn choose(n: u64, k: u64) -> u64 {
+        if k > n {
+            return 0;
+        }
+        (1..=k).fold(1u64, |a, i| a * (n - k + i) / i)
+    }
+
+    #[test]
+    fn a_bands_harmonics_split_by_weight_on_the_six_planes() {
+        // R^12 = C^6: the axis plane and the five isoclinic planes. A
+        // degree-l harmonic of weight m = (m0, ..., m5) occurs C(q + 4, 4)
+        // times, q = (l - sum |mi|) / 2; summed over every weight it is the
+        // band's orientations. Enumerated over the weights for l <= 6.
+        for l in 0..=6u32 {
+            let mut total = 0u64;
+            let mut stack = vec![(0usize, 0u32)];
+            while let Some((plane, used)) = stack.pop() {
+                if plane == 6 {
+                    if (l - used) % 2 == 0 {
+                        total += choose(u64::from((l - used) / 2) + 4, 4);
+                    }
+                    continue;
+                }
+                for a in 0..=(l - used) {
+                    // |mi| = a: one weight for a = 0, two (+a, -a) otherwise.
+                    for _ in 0..(if a == 0 { 1 } else { 2 }) {
+                        stack.push((plane + 1, used + a));
+                    }
+                }
+            }
+            assert_eq!(total, u64::from(orientations(l)), "l = {l}");
+        }
+        // By axis weight alone, M_l(m0) = C(l - |m0| + 9, 9), summing to the
+        // orientations for every band of the table.
+        for l in 0..=18u32 {
+            let by_axis: u64 = (0..=l)
+                .map(|a| choose(u64::from(l - a) + 9, 9) * if a == 0 { 1 } else { 2 })
+                .sum();
+            assert_eq!(by_axis, u64::from(orientations(l)), "l = {l}");
+        }
+    }
 }

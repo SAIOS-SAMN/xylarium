@@ -260,6 +260,19 @@ another crate. Laws are composed from shares (ratios of the form
     `p_pair = 607150518027107086308579 / 5722219928715645461402851`;
     `D(p_pair) = 3164685223371376273855715 / 2557534705344269187547136`.
 
+- Weights on the six planes
+  ([model.md](model.md#weights-on-the-six-planes), [#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)).
+  - Multiplicity: `mult_l(m) = C(q + 4, 4)`, `q = (l - sum |mi|) / 2`;
+    `M_l(m0) = C(l - |m0| + 9, 9)`; `sum_m mult_l(m) =
+    sum_m0 M_l(m0) = orientations(l)`. Status: built (test).
+  - Flow at count `t`: axis `D(n)^(m0 t)`; phase
+    `t s (m1 + ... + m5) mod 1`. Status: planned.
+  - Filling within a band: `m0` ascending (Z side first), singly before
+    pairing; unpaired on the Z side below half filling, on the Q side
+    above. Status: planned.
+  - Axis polarity: `sum m0` over the unpaired electrons; founded Z 1 to
+    1092: 535 Z side, 517 Q side, 40 neutral. Status: planned.
+
 - Throat holding (`circuit::onset_echoes`; derived): a kind is held by
   the throat exactly when it has no open frames (`compound::open = 0`): it
   has no pole state, and the jet never acts on it. A kind with `U` open and

@@ -11,6 +11,11 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Throat holding refined by the axis moment (docs/model.md, EQUATIONS.md):
+  an open kind dilates by `D(s) D(n)^A` per echo and is held where that is
+  at most `1 - 2 delta`; for seed 7, 461 open kinds with `A <= -8` are held
+  beside the 20 closed ones.
+
 - Weights on the six planes (docs/model.md, EQUATIONS.md, #60): a band's
   harmonics split by weight in Z^6, `C((l - sum |mi|) / 2 + 4, 4)` each and
   `C(l - |m0| + 9, 9)` by axis weight (tested); a state's flow as a closed

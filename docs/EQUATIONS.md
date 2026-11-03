@@ -238,6 +238,28 @@ another crate. Laws are composed from shares (ratios of the form
   `h = 1 + inside / unit`, `r = spin / h`, `delta = h / (r + h)`,
   `beyond = clamp((r (1 + delta) - h) / (2 delta r), 0, 1)` and
   `rate = beyond / bell`. Status: built.
+- The equator: inflow, viscosity and pairs
+  ([model.md](model.md#the-equator-inflow-viscosity-and-pairs), [#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)).
+  Status: planned (derived).
+  - Continuity: `s (+) (-s) = 0`, so `D(s) D(-s) = 1`; `D(s) = 3 + a`;
+    equatorial inflow per echo `1 - 1 / D(s) = (2 + a) / (3 + a)`;
+    `Z / Q = 1 / D(n)`.
+  - Swirl: `Gamma(r) = 2 pi M r / (r + M)`, the passed share.
+  - Viscosity: `nu(t) = t / (1 + t)`, `t = U / W`; reverted
+    `nu(1 / t) = 1 - nu(t)`; `nu(1) = 1/2`.
+  - Positron: `R(-x) = -R(x)`, `R = kappa (1 - 2x)`, `x` in Q/Z.
+  - Pair share per echo: `p_pair = s (+) (-(1 - s)) = 4n / (3 + n^2) =
+    a (4 + a) / (12 + 6a + a^2)`; `D(p_pair) = (3 + a)(2 + a) / (6 + a)`;
+    `p_pair / 2` electrons (held face) and `p_pair / 2` positrons (open
+    face); 0 spinless, `5/19` at `a = 1`.
+  - Over `a = m / N`: `D(s) = (3N + m) / N`; inflow `(2N + m) / (3N + m)`;
+    `p_pair = m (4N + m) / (12N^2 + 6Nm + m^2)`;
+    `D(p_pair) = (3N + m)(2N + m) / (N (6N + m))`.
+  - Seed 7 (`N = 2^40`, `m = 381123025677`): `D(s) = 3679657909005 / 2^40`;
+    inflow `2580146281229 / 3679657909005`;
+    `p_pair = 607150518027107086308579 / 5722219928715645461402851`;
+    `D(p_pair) = 3164685223371376273855715 / 2557534705344269187547136`.
+
 - Throat holding (`circuit::onset_echoes`; derived): a kind is held by
   the throat exactly when it has no open frames (`compound::open = 0`): it
   has no pole state, and the jet never acts on it. A kind with `U` open and

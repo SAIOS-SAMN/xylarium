@@ -168,7 +168,10 @@ where it belongs to one.
     held by the dipole as torsion, `Q / Z = 1 + a / 2`
     ([model.md](model.md#the-ring-the-throat-orbit-and-the-echos-torsion)).
     Replaces the bell as light's round trip to the rim, which the founding
-    as flow cannot define.
+    as flow cannot define. With it, the equator: the inflow `D(-s)` by
+    continuity, viscosity `t / (1 + t)` reverting across the throat, the
+    positron as the reverted phase and the pair share `s (+) (-(1 - s))`
+    ([model.md](model.md#the-equator-inflow-viscosity-and-pairs)).
 
 
 3. **Elements attached to the filament's released pressure**

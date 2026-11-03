@@ -209,7 +209,7 @@ fn fastest_kinds(s: &Substrate, t: Dy, at_mean: &[Option<PoleFlux>]) -> String {
         out.push_str(&format!(
             concat!(
                 "    Z{}: reach {} hold {} deficit {} beyond {} rate {} /Gyr; ",
-                "holds {} of {} at T{}\n"
+                "onset {} rings; holds {} of {} at T{}\n"
             ),
             k.z,
             r.reach,
@@ -217,6 +217,8 @@ fn fastest_kinds(s: &Substrate, t: Dy, at_mean: &[Option<PoleFlux>]) -> String {
             r.deficit,
             r.beyond,
             per_gyr(r.rate),
+            r.onset
+                .map_or_else(|| "none".to_string(), |o| o.to_string()),
             m0 - outflow[i].1,
             m0,
             jet

@@ -273,6 +273,27 @@ another crate. Laws are composed from shares (ratios of the form
   - Axis polarity: `sum m0` over the unpaired electrons; founded Z 1 to
     1092: 535 Z side, 517 Q side, 40 neutral. Status: planned.
 
+- The antipoles, the shear and the pinch
+  ([model.md](model.md#the-antipoles-the-shear-and-the-pinch), [#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)).
+  Status: planned (derived; checked exactly).
+  - Antipole group: `m`, `(-m0, m1..m5)`, `(m0, -m1..-m5)`, `-m`; each
+    keeps `sum |mi|` and the multiplicity.
+  - Flip `c -> -c`: multiplicity equal on `(m0, c)` and `(m0, -c)` for
+    `l <= 18`; axis levels `C(l - |m0| + 9, 9)` kept; 1092 of 1092 founded
+    kinds keep `U` and `A`.
+  - Antipode deviation: planes `c n` per traversal; axis
+    `D(s)^m0 D(1 - s)^-m0 = D(p_pair)^m0`.
+  - Reconciliation: `p_pair = n (+) (n / 3)`; `D(p_pair) = D(n) D(n / 3)`;
+    `D(n / 3) = (6 + 2a) / (6 + a)`; flip share per pair per echo
+    `n / 3 = a / (3 (4 + a))`, over `a = m / N`: `m / (3 (4N + m))`.
+  - Linking: per echo `dTw = n/2 - n/2`, `dWr = n/3 - n/3`; relative
+    writhe `2 N n / 3`, first whole at `N*`.
+  - Pinch: `N* = 3 / (2n) = 3 (4 + a) / (2a)` echoes, phase 1/2 turn.
+  - Seed 7: `n / 3 = 127041008559 / 4779169536781`;
+    `N* = 4779169536781 / 254082017118` echoes;
+    `2 N* = 4779169536781 / 127041008559` rings, ring 37 at
+    `222 deg 52' 1911753317040/42347002853"` on the T lane; spinless: none.
+
 - Throat holding (`circuit::onset_echoes`; derived): with no internal
   moment, a kind is held by the throat exactly when it has no open frames
   (`compound::open = 0`): it has no pole state, and the jet never acts on

@@ -575,6 +575,44 @@ Z^6, each plane's reading kept, never summed into one number.
   states (`Z`), and the two are not yet one account. The planes share one
   rate while the spin is isoclinic.
 
+### The antipoles, the shear and the pinch
+
+Derived ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)); not yet built. Each check below is exact.
+
+- **The antipole group.** A state of weight `m` has three images: its
+  axis antipode `(-m0, m1, ..., m5)` (the throat's inversion, Z and Q
+  exchanged), its plane antipode `(m0, -m1, ..., -m5)` (the phase reversal
+  `x -> -x` that gives the positron, twist charge `c -> -c`), and both,
+  `-m`. All four keep `sum |mi|` and so the multiplicity.
+- **The flip keeps the states.** The twist unwinds by the plane antipode:
+  a state moves from `c` to `-c` within its axis level. For every band to
+  `l = 18`, every `(m0, c)` and its image `(m0, -c)` hold the same number
+  of harmonics, every axis level keeps `C(l - |m0| + 9, 9)`, and the
+  filling reads the levels only, so each band keeps its electrons and
+  pairing and every founded kind keeps its open frames and axis polarity.
+- **The shear on the antipode.** A state and its antipode lie on opposite
+  faces, which advance `s` and `1 - s` per traversal, so the pair does not
+  cancel: on the planes it drifts `c n` of a turn per traversal, and on the
+  axis it dilates by `D(s)^m0 D(1 - s)^-m0 = D(p_pair)^m0`.
+- **The dipole's reconciliation.** The pair's push splits exactly,
+  `p_pair = n (+) (n / 3)`, `D(p_pair) = D(n) D(n / 3)`, per state
+  `D(p_pair)^m0 = D(n)^m0 D(n / 3)^m0`. The dipole reconciles `n`, the
+  twist it holds as torsion; the residual `n / 3 = a / (3 (4 + a))`, with
+  `D(n / 3) = (6 + 2a) / (6 + a)`, is the shear it cannot hold, and it
+  flips into writhe: the fold's rotation.
+- **Fold forward and back.** The residual folds the near face forward,
+  `+n / 3` of a turn per echo in the spin's direction, and the antipode
+  back, `-n / 3`. Per echo the faces cancel, so `Lk = Tw + Wr` is
+  conserved: the twist moves `+n / 2` and `-n / 2`, the writhe `+n / 3`
+  and `-n / 3`.
+- **The pinch.** The two folds meet where `N n / 3 = -N n / 3 (mod 1)`,
+  first at the antipodal point, half a turn: after
+  `N* = 3 / (2n) = 3 (4 + a) / (2a)` echoes, where the folds' relative
+  writhe first reaches a whole turn and the linking number may change by
+  one. The count is exact in Q; the fold's axis dilation there,
+  `D(n / 3)^N*`, is held by its exponent, never as a value. A spinless
+  core has no residual and never pinches.
+
 ### Radiation: irradiation held, transduced and passed on
 
 Light, heat and their dispersal are one exchange read through the deficit

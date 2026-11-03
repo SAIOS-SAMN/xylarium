@@ -171,7 +171,10 @@ where it belongs to one.
     as flow cannot define. With it, the equator: the inflow `D(-s)` by
     continuity, viscosity `t / (1 + t)` reverting across the throat, the
     positron as the reverted phase and the pair share `s (+) (-(1 - s))`
-    ([model.md](model.md#the-equator-inflow-viscosity-and-pairs)).
+    ([model.md](model.md#the-equator-inflow-viscosity-and-pairs)); the
+    antipole group, the shear the dipole reconciles, `p_pair = n (+) n/3`,
+    and the pinch where the folds meet
+    ([model.md](model.md#the-antipoles-the-shear-and-the-pinch)).
 
 
 3. **Elements attached to the filament's released pressure**

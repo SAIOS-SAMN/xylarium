@@ -405,6 +405,65 @@ of its enclosure, and the construction is spherical:
   the firmament, the rim) with the held medium's delay `r + H(<r)`, shared
   with Netstratum (roadmap, milestone 3).
 
+### The ring: the throat orbit and the echo's torsion
+
+Planned ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)); it replaces the bell as light's round trip to the
+rim. Units: `G = c = M = 1`, reaches in `r_g`; counts are in Z and turns in
+Q/Z (exact shares of a turn, never decimals); an irrational value (pi, a
+cosine at a general turn) is read only as a certified enclosure for
+display, never stored.
+
+- **The orbit.** About a hold `M`, a body at reach `r` moves at the deficit
+  share of light's speed, `v = delta = M / (r + M)` (the turning law), and
+  the reverberation's swing `r (1 +/- delta)` is its radial excursion. The
+  orbit is an ellipse with semi-major axis `r` and eccentricity
+  `e = delta`, periapsis `r_p = r (1 - delta)` on the held (Z) side and
+  apoapsis `r_a = r (1 + delta)` on the open (Q) side. Its apsis ratio is
+  the dilation: `r_a / r_p = (1 + delta) / (1 - delta) = D(delta) =
+  1 + R_h(M) / r`.
+- **The shear.** The orbit does not close. Each traversal advances its
+  periapsis by `delta` of a turn (`turning::twist_per_turn`, `360 delta`
+  degrees), and the spin moves the orbit across the five isoclinic planes
+  (`bounce::spin_bivector`): every direction turns on a great circle of
+  S^9 in the ten dimensions the planes span, and the shear carries the
+  orbit from one circle to the next.
+- **Resonance.** An orbit returns exactly after `q` traversals, `q` the
+  denominator of its advance in lowest terms. The reaches `r_k = (k - 1) M`
+  advance `1 / k` of a turn and return after `k`: the throat (`k = 2`,
+  apsis ratio 3, the throat push's dilation), the horizon (`k = 3`, apsis
+  ratio 2), and so on; the inversion `r -> M^2 / r` maps each to
+  `M / (k - 1)` on the far face, the throat to itself.
+- **The ring.** A ring is one traversal of the core's orbit at the throat
+  (`r = M`, `delta = 1/2`), counted in Z, its phase in Q/Z. With no spin it
+  advances half a turn and returns after two traversals: the echo is the
+  throat orbit's return.
+- **The twist and the dipole.** With spin `a`, the throat carries the
+  torsion share `s = (2 + a) / (4 + a)` on the open side and holds `1 - s`
+  on the held side. Each echo twists the open pole Q up and the held pole Z
+  down about the equator `1/2` by half the twist `n`:
+
+  ```text
+  n = 2s - 1 = a / (4 + a)        the twist per echo, in Q/Z
+  Q = (1 + n) / 2,  Z = (1 - n) / 2
+  Q / Z = (1 + n) / (1 - n) = D(n) = 1 + a / 2
+  ```
+
+  Q moves as the antipole of Z (the inversion `t -> 1 / t` exchanges
+  them), and the dipole keeps the twist as torsion: `Q / Z` depends on the
+  spin alone and does not drift into a phase. The twist is the echo's
+  residual, held per echo, never summed into the count.
+- **Influence.** The derivatives of the readings in the spin and in the
+  reach are exact:
+
+  ```text
+  dn/da = 4 / (4 + a)^2,   dQ/da = 2 / (4 + a)^2 = -dZ/da,   d(Q/Z)/da = 1/2
+  dD(n)/dn = 2 / (1 - n)^2
+  d delta/dr = -M / (r + M)^2,   dD(delta)/dr = -2M / r^2
+  ```
+
+  The dipole's ratio is linear in the spin; the twist's influence falls as
+  `(4 + a)^-2`; an orbit's eccentricity and apsis ratio fall with reach.
+
 ### Radiation: irradiation held, transduced and passed on
 
 Light, heat and their dispersal are one exchange read through the deficit

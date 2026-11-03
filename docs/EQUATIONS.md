@@ -168,6 +168,52 @@ another crate. Laws are composed from shares (ratios of the form
 
 ## 4. The firmament and the core
 
+- The ring: the throat orbit and the echo's torsion
+  ([model.md](model.md#the-ring-the-throat-orbit-and-the-echos-torsion),
+  [#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)). Status: planned.
+  - Orbit about `M` at reach `r`: `v = delta = M / (r + M)`; ellipse with
+    `a = r`, `e = delta`, `r_p = r (1 - delta)`, `r_a = r (1 + delta)`;
+    `r_a / r_p = (1 + delta) / (1 - delta) = 1 + 2M / r`.
+  - Shear: periapsis advance `delta` of a turn per traversal; return after
+    `q` traversals, `q` the denominator of the advance; resonances
+    `r_k = (k - 1) M` return after `k`; far-face images `M / (k - 1)`.
+  - Ring: one traversal of the throat orbit (`r = M`); counts in Z, phase
+    in Q/Z.
+  - Twist and dipole, spin `a = m / N`, lowest common denominator
+    `L = 4N + m`:
+
+    ```text
+    s   = (2N + m) / L            torsion share (open, Q)
+    n   = m / L                   twist per echo, 2s - 1 = a / (4 + a)
+    Q   = (2N + m) / L            (1 + n) / 2
+    Z   = 2N / L                  (1 - n) / 2
+    Q/Z = (2N + m) / 2N           (1 + n) / (1 - n) = 1 + a / 2
+    ```
+
+  - Influence, over `L^2` and powers of two:
+
+    ```text
+    dn/da    =  4N^2 / L^2
+    dQ/da    =  2N^2 / L^2  = -dZ/da
+    d(Q/Z)/da = 1/2
+    dD(n)/dn =  L^2 / 8N^2
+    d delta/dr = -M / (r + M)^2,   dD(delta)/dr = -2M / r^2
+    ```
+
+  - Seed 7 (`N = 2^40`, `m = 381123025677`,
+    `L = 4779169536781`, the denominator of the founding's torsion share):
+
+    | Reading | Numerator over `L` |
+    |---|---|
+    | `n` | `381123025677` |
+    | `Q` | `2580146281229` |
+    | `Z` | `2199023255552` (`2^41`) |
+
+    `Q/Z = 2580146281229 / 2^41`; the core's full return is `L` rings;
+    over `L^2 = 22840461461295518111841961`: `dn/da = 2^82 / L^2`,
+    `dQ/da = 2^81 / L^2`; `dD(n)/dn = L^2 / 2^83`.
+
+
 - Firmament (`Substrate::found`): the firmament holds the held kinds inside
   the vessel, with spin equal to reach on the 2^-64 grid and phase
   `turn(a Z)`; amounts are scaled by `1 / sum mass_of(z, amount)` so that the

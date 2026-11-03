@@ -11,6 +11,13 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The ring as the throat orbit, specified (docs/model.md, EQUATIONS.md
+  section 4, #60): one traversal of the core's sheared elliptic orbit
+  (`e = delta`, apsis ratio `D(delta) = 1 + 2M / r`); resonances
+  `r_k = (k - 1) M`; the echo's twist `n = a / (4 + a)` held by the dipole
+  as torsion, `Q / Z = 1 + a / 2`; readings over the lowest common
+  denominator `L = 4N + m` and their exact derivatives in spin and reach.
+
 - `xyl_core::shares`: the deficit share, the dilation `D(p)` and the flow
   law (`flow`, `opposed`), exact on `Q` with `Dy` forms; the duplicated
   deficits in `circuit`, `turning`, `disc`, `formation` and `stars` read it

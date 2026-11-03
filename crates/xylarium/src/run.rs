@@ -572,7 +572,7 @@ pub fn genesis(o: Options) -> Result<bool, String> {
     };
     std::fs::create_dir_all(&o.home).map_err(|e| e.to_string())?;
     let schedule = forecast(&gal, &ctx, &o.home, o.stars, o.threads, o.census);
-    let founding = xyl_cosmos::cores::founding(o.seed, &origin, &elements);
+    let founding = xyl_cosmos::cores::founding(&origin, &elements);
     let anchor = xyl_cosmos::circuit::anchor();
     let mut out = format!(
         concat!(

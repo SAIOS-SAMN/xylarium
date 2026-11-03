@@ -174,7 +174,7 @@ fn law_reading(o: &Options, what: &[String]) -> Result<Option<String>, String> {
         Some("galactic-core") => {
             let origin = Origin::of(o.seed).ok_or("no origin")?;
             let n = what.get(1).and_then(|s| s.parse::<u32>().ok());
-            universe::galactic_core(o.seed, &origin, n)?
+            universe::galactic_core(&origin, n)?
         }
         Some("tiers") => {
             let n = what

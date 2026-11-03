@@ -85,7 +85,7 @@ impl Node {
 /// sample if given, and all of the nucleus's).
 pub fn nodes(seed: u64, origin: &Origin, limit: Option<u64>) -> Vec<Node> {
     let cap = limit.unwrap_or(u64::MAX);
-    let candidates: Vec<u64> = crate::cores::held(seed, origin)
+    let candidates: Vec<u64> = crate::cores::held(origin)
         .into_iter()
         .flat_map(|c| crate::galaxy::indices_of(origin, c))
         .filter(|&k| {
@@ -101,7 +101,7 @@ pub fn nodes(seed: u64, origin: &Origin, limit: Option<u64>) -> Vec<Node> {
 /// of the sample; an incomplete list omits bells but never adds one.
 pub fn nodes_among(seed: u64, origin: &Origin, candidates: &[u64]) -> Vec<Node> {
     // Each galactic core is a node from its formation time.
-    let mut out: Vec<Node> = crate::cores::shapes(seed, origin)
+    let mut out: Vec<Node> = crate::cores::shapes(origin)
         .into_iter()
         .map(|sh| Node {
             mass: Dy::from_q(&sh.hole_suns),

@@ -78,7 +78,7 @@ pub(super) fn universe(u: &Universe<'_>) -> String {
         l.unfed,
         l.minds
     ));
-    out.push_str(&galactic_cores(u.cosmic.gal.seed, u.cosmic.gal.origin));
+    out.push_str(&galactic_cores(u.cosmic.gal.origin));
     out
 }
 
@@ -104,8 +104,8 @@ fn galactic_core_line(s: &xyl_cosmos::cores::Shape) -> String {
 
 /// Every galactic core of the founding, one line each, for the universe
 /// reading.
-pub(super) fn galactic_cores(seed: u64, origin: &Origin) -> String {
-    let all = xyl_cosmos::cores::shapes(seed, origin);
+pub(super) fn galactic_cores(origin: &Origin) -> String {
+    let all = xyl_cosmos::cores::shapes(origin);
     let mut out = format!("Galactic cores of the founding: {}\n", all.len());
     for s in &all {
         out.push_str(&galactic_core_line(s));
@@ -115,8 +115,8 @@ pub(super) fn galactic_cores(seed: u64, origin: &Origin) -> String {
 
 /// The `galactic-core N` reading: galactic core `n` of the founding. `Err`
 /// naming the valid indices when `n` is missing or names no core.
-pub(super) fn galactic_core(seed: u64, origin: &Origin, n: Option<u32>) -> Result<String, String> {
-    let all = xyl_cosmos::cores::shapes(seed, origin);
+pub(super) fn galactic_core(origin: &Origin, n: Option<u32>) -> Result<String, String> {
+    let all = xyl_cosmos::cores::shapes(origin);
     let usage = || {
         format!(
             "observe galactic-core N: N from 0 to {}",

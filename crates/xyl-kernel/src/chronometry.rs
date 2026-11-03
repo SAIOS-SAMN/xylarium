@@ -206,7 +206,7 @@ fn well(r_rg: &Q, inside_rg: &Q) -> Q {
 impl Chronometry {
     /// The keepers of a founding: the epicenter, then for each galactic core
     /// its hub, deep core, inner mantle and outer rim. The chain starts empty.
-    pub fn of(seed: u64, origin: &Origin) -> Chronometry {
+    pub fn of(origin: &Origin) -> Chronometry {
         let units = xyl_cosmos::chain::units();
         let kpc_m = xyl_cosmos::package::Si::kpc();
         let kpc_rg = kpc_m.checked_div(&units.r_g_m).unwrap_or(Q::ONE);
@@ -215,7 +215,7 @@ impl Chronometry {
             .unwrap_or(Q::ONE);
         let lambda = xyl_cosmos::pulse::wavelength_kpc().to_q();
         let bells = |kpc: &Q| kpc.checked_div(&lambda).unwrap_or(Q::ZERO);
-        let shapes = xyl_cosmos::cores::shapes(seed, origin);
+        let shapes = xyl_cosmos::cores::shapes(origin);
         let mass =
             |s: &xyl_cosmos::cores::Shape| &xyl_cosmos::turning::home_mass() * &s.mass_ratio();
         // A core's distance from the universe core is its reach along the

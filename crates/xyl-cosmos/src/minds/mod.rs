@@ -445,7 +445,7 @@ pub fn schedule(
     // nucleus sample is placed within it.
     let nucleus = crate::galaxy::NUCLEUS_BASE
         ..crate::galaxy::NUCLEUS_BASE + total.min(crate::galaxy::NUCLEUS_SAMPLE);
-    let stars: Vec<u64> = crate::cores::held(gal.seed, gal.origin)
+    let stars: Vec<u64> = crate::cores::held(gal.origin)
         .into_iter()
         .flat_map(|c| {
             (0..total)

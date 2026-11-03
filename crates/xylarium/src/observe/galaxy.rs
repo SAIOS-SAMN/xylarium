@@ -189,11 +189,7 @@ pub(super) fn chemistry(u: &Universe<'_>) -> String {
     out.push_str(
         "Weight dials by galactic core, at 8 kpc today (relative to the Sun's birth gas)\n",
     );
-    for c in xyl_cosmos::cores::founding(
-        u.cosmic.gal.seed,
-        u.cosmic.gal.origin,
-        u.cosmic.gal.elements,
-    ) {
+    for c in xyl_cosmos::cores::founding(u.cosmic.gal.origin, u.cosmic.gal.elements) {
         let line: Vec<String> = ["C", "N", "O", "Si", "Mg", "Fe", "Ni", "Eu"]
             .iter()
             .map(|sym| {
@@ -328,11 +324,7 @@ pub(super) fn star_types(u: &Universe<'_>, n: usize, share: Q) -> String {
     let t = xyl_cosmos::circuit::rings_of_gyr_dy(u.cosmic.now);
     let (seed, origin) = (u.cosmic.gal.seed, u.cosmic.gal.origin);
     let mut cores: Vec<u32> = vec![0];
-    cores.extend(
-        xyl_cosmos::cores::shapes(seed, origin)
-            .iter()
-            .map(|s| s.index),
-    );
+    cores.extend(xyl_cosmos::cores::shapes(origin).iter().map(|s| s.index));
     cores.sort_unstable();
     cores.dedup();
     let mut census: std::collections::BTreeMap<(String, Option<i64>), usize> = Default::default();

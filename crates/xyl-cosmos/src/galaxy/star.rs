@@ -386,7 +386,7 @@ pub fn star(seed: u64, origin: &Origin, n: u64) -> Option<Star> {
     // homologue, its lengths scaled by `scale` and its masses by the hole
     // ratio (`cores`).
     let core = core_of(n);
-    let shape = crate::cores::shape(seed, origin, core)?;
+    let shape = crate::cores::shape(origin, core)?;
     let (scale, mass_ratio) = (shape.scale(), Dy::from_q(&shape.mass_ratio()));
     let nucleus = (n & ((1u64 << CORE_SHIFT) - 1)) >= NUCLEUS_BASE;
     let mut rng = Stream::derive(

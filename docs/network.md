@@ -98,11 +98,14 @@ The seam carries the following today.
   The present is read on the T lane as whole rings and the ring's phase in
   degrees (`Universe::t_coordinate`); `xylarium observe clock` prints the
   anchor.
-- **Measured pace.** The kernel does not configure a ratio between rings and
-  network time. `Chronometry::pace` computes rings per final-point advance from
-  the first and last commits that heard a height; a faster machine computes more
-  rings between two final points. Until two commits have heard different heights
-  it returns `Pace::Unlinked`. `xylarium observe clock` prints the pace.
+- **Dilation per segment.** The binding to the network is on the height
+  `h` (MU-CHRONOMETRY 3.3). The kernel does not configure a ratio between
+  rings and network time: `Chronometry::dilations` reads, for each segment
+  between consecutive commits that heard a point under one origin with the
+  height advanced, the rings over the heights there, exact. It is never one
+  ratio for the whole chain and never computed across a change of origin;
+  a faster machine computes more rings between two heights, and the
+  segment shows it. `xylarium observe clock` prints the last segments.
 
 ## The algebra and pole states
 

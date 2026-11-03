@@ -24,12 +24,15 @@
 //!   inside it (kept, not averaged), its previous entry and the inner
 //!   keeper's head (rim -> mantle -> core -> hub -> epicenter).
 //! - Network points ([`Point`]): the epicenter's entry records the whole
-//!   last TUniversal final point heard (its height, its lanes S G T H and
-//!   K); [`Chronometry::anchor`] is ring 0's point, the point heard with the
-//!   origin receipt, so every count of the bell has a place on TUniversal:
-//!   the anchor plus its rings.
-//! - Pace ([`Chronometry::pace`]): rings per final-point advance, measured
-//!   from the commit pairs by height, not declared.
+//!   last TUniversal final point heard (its origin, its height, its lanes
+//!   S G T H as exact shares and K); [`Chronometry::anchor`] is ring 0's
+//!   point, the point heard with the origin receipt, so every count of the
+//!   bell has a place on TUniversal: the anchor plus its rings.
+//! - Dilations ([`Chronometry::dilations`]): the binding to the network is
+//!   on the height `h`; for each segment between consecutive commits under
+//!   one origin the dilation is the rings over the heights there, read,
+//!   never fixed and never computed across a change of origin
+//!   (MU-CHRONOMETRY 3.3).
 //!
 //! Every quantity is an exact `Q`. Keepers and entries are recomputed from
 //! the seed; the commit counts, their points and the anchor are held in the
@@ -41,39 +44,59 @@ use xyl_core::units::Tier;
 use xyl_core::Q;
 use xyl_cosmos::origin::Origin;
 
-/// A TUniversal final point as heard from the network: its height `h`, its
-/// four lanes `[S, G, T, H]` and `K`. Carried unchanged; the kernel reads
-/// none of it but `h` (for [`Chronometry::pace`]).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+/// A TUniversal final point as heard from the network: its origin (the
+/// network's genesis and epoch), its height `h`, its four lanes
+/// `[S, G, T, H]` as exact shares and `K`. Carried unchanged; the kernel
+/// reads only the origin and `h` (for [`Chronometry::dilations`]).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Point {
+    /// The network's genesis.
+    pub genesis: [u8; 32],
+    /// The network's epoch.
+    pub epoch: u32,
     /// The final point's height.
     pub h: u64,
-    /// The lanes S, G, T and H.
-    pub lanes: [u64; 4],
+    /// The lanes S, G, T and H, exact.
+    pub lanes: [Q; 4],
     /// The point's K.
     pub k: u64,
 }
 
 impl Point {
-    /// The point's bytes as hashed in the chain: `h`, the lanes and `K`,
-    /// little-endian.
-    pub fn bytes(&self) -> [u8; 48] {
-        let mut out = [0u8; 48];
-        for (i, v) in [
-            self.h,
-            self.lanes[0],
-            self.lanes[1],
-            self.lanes[2],
-            self.lanes[3],
-            self.k,
-        ]
-        .iter()
-        .enumerate()
-        {
-            out[i * 8..(i + 1) * 8].copy_from_slice(&v.to_le_bytes());
+    /// The point's bytes as hashed in the chain: the genesis, the epoch, `h`
+    /// and `K` little-endian, then each lane's exact text with a zero after
+    /// it.
+    pub fn bytes(&self) -> Vec<u8> {
+        let mut out = self.genesis.to_vec();
+        out.extend_from_slice(&self.epoch.to_le_bytes());
+        out.extend_from_slice(&self.h.to_le_bytes());
+        out.extend_from_slice(&self.k.to_le_bytes());
+        for l in &self.lanes {
+            out.extend_from_slice(l.to_string().as_bytes());
+            out.push(0);
         }
         out
     }
+
+    /// Whether two points share an origin: the same genesis and epoch.
+    pub fn same_origin(&self, other: &Point) -> bool {
+        self.genesis == other.genesis && self.epoch == other.epoch
+    }
+}
+
+/// One segment of the binding between two consecutive commits that heard a
+/// point under one origin, with the height advanced: the universe's rings
+/// over the network's heights there, read, never fixed (MU-CHRONOMETRY 3.3).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Segment {
+    /// The heights at the segment's two ends.
+    pub from_h: u64,
+    /// The later height.
+    pub to_h: u64,
+    /// Epicenter count advance (bells) over the segment.
+    pub rings: Q,
+    /// The dilation `rings / (to_h - from_h)`, exact.
+    pub dilation: Q,
 }
 
 /// Where a keeper stands.
@@ -208,35 +231,11 @@ pub struct Chronometry {
     /// are held in the checkpoint.
     pub commits: Vec<Q>,
     /// For each commit, the last final point heard (None when unlinked): the
-    /// pairs `pace` is measured from.
+    /// pairs the dilations are read from.
     pub points: Vec<Option<Point>>,
     /// Ring 0's point: the final point heard with the universe's origin
     /// receipt (None until the universe is originated on the network).
     pub anchor: Option<Point>,
-}
-
-/// The pace measured from the commit/receipt pairs.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum Pace {
-    /// Rings advanced per final-point advance, between the first and last
-    /// commits that recorded a final point.
-    Measured {
-        /// Epicenter count advance (bells) per receipt-height advance.
-        rings_per_point: Q,
-        /// Epicenter count advance (bells) between those two commits.
-        rings: Q,
-        /// Receipt-height advance between those two commits.
-        points: u64,
-    },
-    /// No pace is measurable, because no two commits recorded receipt
-    /// heights that advanced: only the span of the commits is known.
-    Unlinked {
-        /// Epicenter count advance (bells) between the first and last
-        /// commits; 0 with none.
-        rings: Q,
-        /// Number of commits made.
-        commits: usize,
-    },
 }
 
 /// The rate of a well of mass `inside_rg` at radius `r_rg` (both in r_g):
@@ -345,7 +344,7 @@ impl Chronometry {
             let residual = inner.map(|i| &reading.slip - &slips[i]).unwrap_or(Q::ZERO);
             let parent = self.heads[k];
             let inner_hash = inner.map(|i| self.heads[i]).unwrap_or([0; 32]);
-            let mut h = blake3::Hasher::new_derive_key("xylarium chronometry entry v2");
+            let mut h = blake3::Hasher::new_derive_key("xylarium chronometry entry v3");
             h.update(&(k as u64).to_le_bytes());
             for part in [
                 n.to_string(),
@@ -359,7 +358,10 @@ impl Chronometry {
             h.update(&parent);
             h.update(&inner_hash);
             if k == 0 {
-                h.update(&point.map(|p| p.bytes()).unwrap_or([0xff; 48]));
+                match &point {
+                    Some(p) => h.update(&p.bytes()),
+                    None => h.update(&[0xff; 8]),
+                };
             }
             let hash: [u8; 32] = *h.finalize().as_bytes();
             slips.push(reading.slip.clone());
@@ -386,36 +388,33 @@ impl Chronometry {
         }
     }
 
-    /// Pace: rings per final-point advance, measured between the first and
-    /// last commits that recorded a final point, by its height. Returns
-    /// `Pace::Unlinked` when the height did not advance between them.
-    pub fn pace(&self) -> Pace {
-        let paired: Vec<(&Q, u64)> = self
+    /// The binding's segments: for each pair of consecutive commits that
+    /// heard a point under one origin, with the height advanced, the rings
+    /// over the heights there. Never computed across a change of origin, and
+    /// never one ratio for the whole chain: the dilation is read per segment.
+    pub fn dilations(&self) -> Vec<Segment> {
+        let heard: Vec<(&Q, &Point)> = self
             .commits
             .iter()
             .zip(&self.points)
-            .filter_map(|(n, p)| p.map(|p| (n, p.h)))
+            .filter_map(|(n, p)| p.as_ref().map(|p| (n, p)))
             .collect();
-        let rings = match (self.commits.first(), self.commits.last()) {
-            (Some(a), Some(b)) => b - a,
-            _ => Q::ZERO,
-        };
-        match (paired.first(), paired.last()) {
-            (Some(&(n0, h0)), Some(&(n1, h1))) if h1 > h0 => {
-                let points = h1 - h0;
-                let span = n1 - n0;
-                Pace::Measured {
-                    rings_per_point: span
-                        .checked_div(&Q::int(i64::try_from(points).unwrap_or(i64::MAX)))
-                        .unwrap_or(Q::ZERO),
-                    rings: span,
-                    points,
+        heard
+            .windows(2)
+            .filter_map(|w| {
+                let ((n0, p0), (n1, p1)) = (w[0], w[1]);
+                if !p0.same_origin(p1) || p1.h <= p0.h {
+                    return None;
                 }
-            }
-            _ => Pace::Unlinked {
-                rings,
-                commits: self.commits.len(),
-            },
-        }
+                let rings = n1 - n0;
+                let dilation = rings.checked_div(&Q::int(i64::try_from(p1.h - p0.h).ok()?))?;
+                Some(Segment {
+                    from_h: p0.h,
+                    to_h: p1.h,
+                    rings,
+                    dilation,
+                })
+            })
+            .collect()
     }
 }

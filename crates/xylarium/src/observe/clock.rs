@@ -3,12 +3,13 @@
 use crate::run::show;
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
-use xyl_kernel::chronometry::Pace;
+use xyl_kernel::chronometry::Chronometry;
 use xyl_kernel::universe::Universe;
 
 /// The `clock` reading: the bell and the next event, each keeper from the
-/// epicenter to the rims read now, the keepers' chain, and the bridge (this
-/// machine's pace against the network's clock).
+/// epicenter to the rims read now, the keepers' chain, the bridge (the
+/// dilation of the universe's rings against the network's heights, segment
+/// by segment) and ring 0's point.
 pub(super) fn clock(u: &Universe<'_>) -> String {
     let next = u
         .next_event()
@@ -75,14 +76,19 @@ pub(super) fn clock(u: &Universe<'_>) -> String {
         c.commits.len(),
         c.entries.len()
     ));
-    out.push_str(&bridge(c.pace()));
-    out.push_str(&match c.anchor {
+    out.push_str(&bridge(c));
+    out.push_str(&match &c.anchor {
         Some(p) => format!(
             concat!(
                 "Ring 0 on TUniversal: the origin receipt's point, height {}, ",
                 "lanes S {} G {} T {} H {}, K {}\n"
             ),
-            p.h, p.lanes[0], p.lanes[1], p.lanes[2], p.lanes[3], p.k
+            p.h,
+            show(&p.lanes[0]),
+            show(&p.lanes[1]),
+            show(&p.lanes[2]),
+            show(&p.lanes[3]),
+            p.k
         ),
         None => concat!(
             "Ring 0 on TUniversal: not anchored ",
@@ -93,30 +99,32 @@ pub(super) fn clock(u: &Universe<'_>) -> String {
     out
 }
 
-/// The bridge line: the rings per TUniversal final-point advance once
-/// measured, or the rings over commits while no final point has been heard.
-fn bridge(pace: Pace) -> String {
-    match pace {
-        Pace::Measured {
-            rings_per_point,
-            rings,
-            points,
-        } => format!(
+/// The bridge: the binding to the network on the height, read per segment
+/// between consecutive commits that heard a point under one origin, each
+/// segment's rings over its heights; the last few segments are printed.
+fn bridge(c: &Chronometry) -> String {
+    let segments = c.dilations();
+    if segments.is_empty() {
+        return format!(
             concat!(
-                "The bridge: {} rings per TUniversal final-point advance ",
-                "({} rings over {} points): this machine's pace\n"
+                "The bridge: no segment yet ({} commits; a segment needs two commits ",
+                "that heard points under one origin with the height advanced)\n"
             ),
-            show(&rings_per_point),
-            show(&rings),
-            points
-        ),
-        Pace::Unlinked { rings, commits } => format!(
-            concat!(
-                "The bridge: unlinked (no final point heard): {} rings over {} commits; ",
-                "the pace is measured once the house hears TUniversal\n"
-            ),
-            show(&rings),
-            commits
-        ),
+            c.commits.len()
+        );
     }
+    let mut out = format!(
+        "The bridge: {} segments, each the rings over the heights between two anchors\n",
+        segments.len()
+    );
+    for s in segments.iter().rev().take(5).rev() {
+        out.push_str(&format!(
+            "  heights {} to {}: {} rings, dilation {} rings per height\n",
+            s.from_h,
+            s.to_h,
+            show(&s.rings),
+            show(&s.dilation)
+        ));
+    }
+    out
 }

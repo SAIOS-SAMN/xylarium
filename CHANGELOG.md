@@ -60,6 +60,13 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The binding to TUniversal is read per segment (#56, MU-CHRONOMETRY 3.3):
+  `Chronometry::dilations` gives each segment's rings over its heights
+  between consecutive anchors under one origin, never one ratio and never
+  across a change of origin, in place of `Chronometry::pace`. A heard point
+  carries its origin (genesis and epoch) and exact lanes; checkpoint and
+  chain entries follow (entry hash v3).
+
 - Readings take their time in rings (#29): `universal-core [R]` reads the
   substrate R rings after the bounce (default: the first stars) and writes
   it on the T lane, and `people N [R]` and `sync [K] [R]` carry R rings;

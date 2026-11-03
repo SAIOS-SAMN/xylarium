@@ -192,4 +192,4 @@ and may run beside `run`. Bracketed arguments are optional, with their defaults.
 | `world` | `S W` | Carried | World W of star S across its star's life: air, seas, surface, field and what it houses |
 | `annals` | `[K=20]` | Carried | The last K annals |
 | `events` | `[K=20]` | Carried | The last K events logged, each at its count |
-| `clock` | | Carried | The bell, the keepers from the core outward, and the measured pace in rings per network final point (`Chronometry::pace`) |
+| `clock` | | Carried | The bell, the keepers from the core outward, the dilation of the universe's rings per network height segment by segment (`Chronometry::dilations`), and ring 0's point on TUniversal |

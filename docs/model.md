@@ -209,6 +209,16 @@ pole state crosses the throat under the jet map (`circuit::onset`,
 `H_0(t) = 1 - sum_k outflow_k(t)`. A kind released over an interval is a
 filament: the locus of the parcels released along it.
 
+**What the throat holds.** A kind with no open frames has no pole state,
+so the jet never acts on it and the throat holds it; every kind with open
+frames reaches the throat within `ln(W / U) / ln D(s)` echoes and leaves.
+The firmament is therefore the closed kinds (for seed 7, 20 kinds with
+43.5% of the founded mass, from Z 2 to the seal at Z 1092), not the
+vessel's band; the present `beyond_share` test, which holds the vessel by
+its assigned reaches, goes with the cascade. Heavier closed kinds exist
+(22 between Z 1093 and Z 1700) but are not founded, because the founding's
+budget stops at the vessel's seal.
+
 **Reach.** Two pushes act on a parcel at reach `r` with the hold `H` inside
 it (the throat's remaining state plus every parcel nearer the throat):
 

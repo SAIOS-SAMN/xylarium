@@ -60,6 +60,14 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The universe's clock is anchored on TUniversal (#52): ring 0 is the final
+  point heard with the origin receipt (`Chronometry::anchor`,
+  `run::Link::origin`); each commit keeps the whole heard point, height,
+  lanes and K (`chronometry::Point`, `run::Link::point` in place of
+  `height`); the present is read on the T lane
+  (`Universe::t_coordinate`). Checkpoint v4 holds the points and the anchor
+  and still reads v3 homes whose commits heard no point (#53, #54).
+
 - Observer readings renamed for what they read: `core` is
   `universal-core [T]`, and `cores` is `galactic-core N`, one galactic core
   per reading (the universe reading still lists them all).

@@ -76,6 +76,20 @@ pub(super) fn clock(u: &Universe<'_>) -> String {
         c.entries.len()
     ));
     out.push_str(&bridge(c.pace()));
+    out.push_str(&match c.anchor {
+        Some(p) => format!(
+            concat!(
+                "Ring 0 on TUniversal: the origin receipt's point, height {}, ",
+                "lanes S {} G {} T {} H {}, K {}\n"
+            ),
+            p.h, p.lanes[0], p.lanes[1], p.lanes[2], p.lanes[3], p.k
+        ),
+        None => concat!(
+            "Ring 0 on TUniversal: not anchored ",
+            "(the universe is not originated on the network)\n"
+        )
+        .into(),
+    });
     out
 }
 

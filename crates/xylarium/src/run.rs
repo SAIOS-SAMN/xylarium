@@ -38,6 +38,7 @@ use xyl_cosmos::origin::Origin;
 use xyl_cosmos::worlds::{Ctx, Galaxy};
 use xyl_cosmos::Laws;
 use xyl_kernel::checkpoint::Checkpoint;
+use xyl_kernel::chronometry::Point;
 use xyl_kernel::cosmic::Cosmic;
 use xyl_kernel::universe::Universe;
 
@@ -90,10 +91,10 @@ fn checkpoint_path(home: &Path) -> PathBuf {
 }
 
 /// Writes the checkpoint whole or not at all (a temporary file, then a
-/// rename), after committing the keepers' chain with the last final clock
-/// height a link heard (`None` when running locally).
-fn keep(u: &mut Universe<'_>, home: &Path, height: Option<u64>) -> Result<(), String> {
-    u.commit_clocks(height);
+/// rename), after committing the keepers' chain with the last final point a
+/// link heard (`None` when running locally).
+fn keep(u: &mut Universe<'_>, home: &Path, point: Option<Point>) -> Result<(), String> {
+    u.commit_clocks(point);
     let path = checkpoint_path(home);
     let tmp = path.with_extension("tmp");
     std::fs::create_dir_all(home).map_err(|e| e.to_string())?;
@@ -402,8 +403,13 @@ pub trait Link {
     );
     /// Called at each checkpoint, after the checkpoint is written.
     fn saved(&mut self, home: &Path, u: &Universe<'_>) -> Result<(), String>;
-    /// The last final clock height the link has heard, if any.
-    fn height(&self) -> Option<u64>;
+    /// The last final TUniversal point the link has heard, if any.
+    fn point(&self) -> Option<Point>;
+    /// The final point heard with the universe's origin receipt, ring 0's
+    /// place on TUniversal, if the universe has been originated.
+    fn origin(&self) -> Option<Point> {
+        None
+    }
 }
 
 /// Live play with no link: the universe plays locally until `o.until` rings
@@ -464,7 +470,10 @@ pub fn run_with(
 
 /// Writes the checkpoint and tells the link, if any, that it was written.
 fn save(o: &Options, u: &mut Universe<'_>, link: &mut Option<Box<dyn Link>>) -> Result<(), String> {
-    keep(u, &o.home, link.as_ref().and_then(|l| l.height()))?;
+    if let Some(p) = link.as_ref().and_then(|l| l.origin()) {
+        u.anchor_clock(p);
+    }
+    keep(u, &o.home, link.as_ref().and_then(|l| l.point()))?;
     match link {
         Some(l) => l.saved(&o.home, u),
         None => Ok(()),

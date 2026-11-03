@@ -23,12 +23,16 @@
 //!   hashed (BLAKE3) over its reading, its residual slip against the keeper
 //!   inside it (kept, not averaged), its previous entry and the inner
 //!   keeper's head (rim -> mantle -> core -> hub -> epicenter).
-//! - Pace ([`Chronometry::pace`]): the epicenter's entry records the last
-//!   TUniversal final point's receipt height, so rings per final-point
-//!   advance is measured from the commit pairs, not declared.
+//! - Network points ([`Point`]): the epicenter's entry records the whole
+//!   last TUniversal final point heard (its height, its lanes S G T H and
+//!   K); [`Chronometry::anchor`] is ring 0's point, the point heard with the
+//!   origin receipt, so every count of the bell has a place on TUniversal:
+//!   the anchor plus its rings.
+//! - Pace ([`Chronometry::pace`]): rings per final-point advance, measured
+//!   from the commit pairs by height, not declared.
 //!
 //! Every quantity is an exact `Q`. Keepers and entries are recomputed from
-//! the seed; only the commit counts and receipt heights are held in the
+//! the seed; the commit counts, their points and the anchor are held in the
 //! checkpoint.
 //!
 //! Terms: TUniversal (docs/glossary.md).
@@ -36,6 +40,41 @@
 use xyl_core::units::Tier;
 use xyl_core::Q;
 use xyl_cosmos::origin::Origin;
+
+/// A TUniversal final point as heard from the network: its height `h`, its
+/// four lanes `[S, G, T, H]` and `K`. Carried unchanged; the kernel reads
+/// none of it but `h` (for [`Chronometry::pace`]).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Point {
+    /// The final point's height.
+    pub h: u64,
+    /// The lanes S, G, T and H.
+    pub lanes: [u64; 4],
+    /// The point's K.
+    pub k: u64,
+}
+
+impl Point {
+    /// The point's bytes as hashed in the chain: `h`, the lanes and `K`,
+    /// little-endian.
+    pub fn bytes(&self) -> [u8; 48] {
+        let mut out = [0u8; 48];
+        for (i, v) in [
+            self.h,
+            self.lanes[0],
+            self.lanes[1],
+            self.lanes[2],
+            self.lanes[3],
+            self.k,
+        ]
+        .iter()
+        .enumerate()
+        {
+            out[i * 8..(i + 1) * 8].copy_from_slice(&v.to_le_bytes());
+        }
+        out
+    }
+}
 
 /// Where a keeper stands.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -148,7 +187,7 @@ pub struct Entry {
     pub inner: [u8; 32],
     /// BLAKE3 hash of this entry over the keeper index, the count, the local
     /// count and slip, the residual, the parent and inner hashes and, for the
-    /// epicenter, the receipt height.
+    /// epicenter, the final point heard.
     pub hash: [u8; 32],
 }
 
@@ -168,16 +207,19 @@ pub struct Chronometry {
     /// The counts committed at, in order; they depend on the run's history and
     /// are held in the checkpoint.
     pub commits: Vec<Q>,
-    /// For each commit, the last final point's receipt height received (None
-    /// when unlinked): the pairs `pace` is measured from.
-    pub points: Vec<Option<u64>>,
+    /// For each commit, the last final point heard (None when unlinked): the
+    /// pairs `pace` is measured from.
+    pub points: Vec<Option<Point>>,
+    /// Ring 0's point: the final point heard with the universe's origin
+    /// receipt (None until the universe is originated on the network).
+    pub anchor: Option<Point>,
 }
 
 /// The pace measured from the commit/receipt pairs.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Pace {
     /// Rings advanced per final-point advance, between the first and last
-    /// commits that recorded a receipt height.
+    /// commits that recorded a final point.
     Measured {
         /// Epicenter count advance (bells) per receipt-height advance.
         rings_per_point: Q,
@@ -293,9 +335,9 @@ impl Chronometry {
 
     /// Commits the readings at count `n`: every keeper appends an entry,
     /// epicenter first, each hashing its parent and the head of the keeper
-    /// inside it. `point` is the receipt height of the last final point
-    /// received (None when unlinked), recorded in the epicenter's entry.
-    pub fn commit(&mut self, n: &Q, point: Option<u64>) {
+    /// inside it. `point` is the last final point heard (None when
+    /// unlinked), recorded whole in the epicenter's entry.
+    pub fn commit(&mut self, n: &Q, point: Option<Point>) {
         let mut slips: Vec<Q> = Vec::with_capacity(self.keepers.len());
         for (k, keeper) in self.keepers.iter().enumerate() {
             let reading = keeper.read(n);
@@ -303,7 +345,7 @@ impl Chronometry {
             let residual = inner.map(|i| &reading.slip - &slips[i]).unwrap_or(Q::ZERO);
             let parent = self.heads[k];
             let inner_hash = inner.map(|i| self.heads[i]).unwrap_or([0; 32]);
-            let mut h = blake3::Hasher::new_derive_key("xylarium chronometry entry v1");
+            let mut h = blake3::Hasher::new_derive_key("xylarium chronometry entry v2");
             h.update(&(k as u64).to_le_bytes());
             for part in [
                 n.to_string(),
@@ -317,7 +359,7 @@ impl Chronometry {
             h.update(&parent);
             h.update(&inner_hash);
             if k == 0 {
-                h.update(&point.map(|p| p.to_le_bytes()).unwrap_or([0xff; 8]));
+                h.update(&point.map(|p| p.bytes()).unwrap_or([0xff; 48]));
             }
             let hash: [u8; 32] = *h.finalize().as_bytes();
             slips.push(reading.slip.clone());
@@ -336,15 +378,23 @@ impl Chronometry {
         self.points.push(point);
     }
 
+    /// Sets ring 0's point, once: the final point heard with the universe's
+    /// origin receipt. A second anchor is ignored; the first stands.
+    pub fn anchor_at(&mut self, p: Point) {
+        if self.anchor.is_none() {
+            self.anchor = Some(p);
+        }
+    }
+
     /// Pace: rings per final-point advance, measured between the first and
-    /// last commits that recorded a receipt height. Returns
+    /// last commits that recorded a final point, by its height. Returns
     /// `Pace::Unlinked` when the height did not advance between them.
     pub fn pace(&self) -> Pace {
         let paired: Vec<(&Q, u64)> = self
             .commits
             .iter()
             .zip(&self.points)
-            .filter_map(|(n, p)| p.map(|h| (n, h)))
+            .filter_map(|(n, p)| p.map(|p| (n, p.h)))
             .collect();
         let rings = match (self.commits.first(), self.commits.last()) {
             (Some(a), Some(b)) => b - a,

@@ -11,6 +11,11 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- What a pinch carries (docs/model.md, EQUATIONS.md, #60, #35): the next
+  throat's spin `a_g = 2a / (6 + a)` (tier twist `n / 3^k`), its place, its
+  hold as a reading of the flow, and the stretching pressure a throat's
+  spin puts on each state, `(D(n)^m0 - 1) / (D(n)^m0 + 1)`.
+
 - `xyl_core::orbit`: an orbit's exact reading (axis dilation by exponent,
   each plane's periapsis and anomaly in Q/Z), its sheared return
   `k / (1 - theta)`, its return to the form against facets and its

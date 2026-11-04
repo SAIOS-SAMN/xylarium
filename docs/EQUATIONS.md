@@ -313,9 +313,10 @@ another crate. Laws are composed from shares (ratios of the form
 - What a pinch carries
   ([model.md](model.md#what-a-pinch-carries-the-next-throat-and-its-pressure),
   [#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)). Status: planned (derived; checked exactly).
-  - Spin of the pinched throat: `a_g = a_p M_p / H_g` (angular momentum
-    per unit mass `a_p M_p` carried, Kerr `J = a M^2`); no throat where
-    `a_g > 1`; twist `n_g = a_g / (4 + a_g)`.
+  - Spin of the pinched throat: `a_g = a_p M_p / H_g` (degrees of
+    turning per unit hold `360 a_p M_p` carried, Kerr `J = 360 a M^2`
+    degrees); no throat where `a_g > 1`, that is `j > 360 H_g`; seed 7:
+    `j = 360 a_0 = 17150536155465 / 137438953472` degrees per unit hold; twist `n_g = a_g / (4 + a_g)`.
   - Pressure on a state: `p(m0) = (D(n)^m0 - 1) / (D(n)^m0 + 1)`; held by
     pressure where `D(s) D(n)^A <= 1 - 2 delta`.
   - Seed 7 (over `L = 4779169536781`): tier 0 `n = 381123025677 / L`, held

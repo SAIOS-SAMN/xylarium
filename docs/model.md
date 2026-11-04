@@ -650,13 +650,17 @@ Derived ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)); not yet built
 Derived ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60), [#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)); not yet built; each identity checked
 exactly.
 
-- **The spin.** Angular momentum is conserved (axiom 11 below), so matter
-  leaving a throat of spin `a_p` and hold `M_p` carries its angular momentum
-  per unit mass, `j = J_p / M_p = a_p M_p`. A pinched loop of hold `H_g`
-  closes with `J_g = j H_g`, and by the Kerr relation its spin is
-  `a_g = J_g / H_g^2 = a_p M_p / H_g`. A cohort too light to close
-  (`H_g < a_p M_p`, so `a_g > 1`) stays in the flow as medium; a heavy one
-  makes a slowly spinning throat. The new throat's twist and pinch follow
+- **The spin.** Degrees of turning are conserved (axiom 11 below): a
+  throat of spin `a` and hold `M` turns `J = 360 a M^2` degrees, and matter
+  leaving it carries `j = 360 a_p M_p` degrees of turning per unit hold.
+  A pinched loop of hold `H_g` closes with `j H_g` degrees of turning, and
+  by the Kerr relation its spin is `a_g = j / (360 H_g) = a_p M_p / H_g`.
+  The degrees per unit hold are therefore the same at every tier, the
+  universal core's `360 a_0 M_0` (for seed 7, `124 deg 47' 11"` and
+  `5728280873/8589934592"`). A cohort closes only where its turning does
+  not exceed a whole turn per unit hold, `j <= 360 H_g` (`a_g <= 1`); a
+  lighter one stays in the flow as medium, and a heavy one makes a slowly
+  spinning throat. The new throat's twist and pinch follow
   from its spin, `n_g = a_g / (4 + a_g)` and `3 (4 + a_g) / (2 a_g)`
   echoes; a spinless throat makes no pinch and no tier.
 - **The place.** The pinch's coordinates (The antipoles, the shear and the
@@ -702,8 +706,9 @@ Axioms:
    electrons), held `W = 3Z - U`; the pole state `t = U / W`.
 10. **Shear.** Every cycle is a sheared orbit read in closed form; nothing
     repeats closed and nothing is stepped.
-11. **Angular momentum.** Angular momentum is conserved; the linking
-    number's conservation is its topological reading.
+11. **Degrees of turning.** The degrees a body turns, its hold times its
+    degrees per unit hold, are conserved; the linking number's
+    conservation is their topological reading.
 
 Theorems:
 
@@ -719,7 +724,7 @@ Theorems:
 | T8 | held where closed, or where `D(s) D(n)^A <= 1 - 2 delta` | 3, 9 |
 | T9 | pair share `p_pair = s (+) -(1 - s) = n (+) n / 3`; positron `R -> -R` | 3, 5 |
 | T10 | the flip keeps every state; residual `n / 3`; `Lk` conserved; pinch after `3 (4 + a) / (2a)` echoes at half a turn | 5, 8 |
-| T11 | pinched throat's spin `a_g = a_p M_p / H_g` (Kerr, with the parent's angular momentum per unit mass); a cohort with `a_g > 1` does not close and stays as medium | 7, 11 |
+| T11 | pinched throat's spin `a_g = a_p M_p / H_g` (Kerr, with the parent's degrees of turning per unit hold, `360 a_p M_p`); a cohort with `a_g > 1` does not close and stays as medium | 7, 11 |
 | T12 | stretching pressure `(D(n)^m0 - 1) / (D(n)^m0 + 1)` | 3, T2 |
 | T13 | a pinch encloses the whole cohort released since the last, in every direction | 8, T10 |
 | T14 | enclosed matter starts on the new throat's orbit; in plane `j` it is pushed out at `J_j / (6 H_j + J_j)` per echo, `H_j` the cohort's hold in the plane and `J_j = J / 5` (none on the axis plane) | 2, 3, 7 |

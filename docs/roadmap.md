@@ -147,8 +147,10 @@ where it belongs to one.
     in [model.md](model.md#axioms-and-theorems-of-the-founding); the state
     at the pinch per layer and circuit
     ([model.md](model.md#the-state-at-the-pinch-the-fold-and-its-circuits));
-    the galactic cores' multiplicity is still to be derived, from the
-    bounce acting on that state; the firmament is the
+    the bounce at a pinched throat
+    ([model.md](model.md#the-bounce-at-a-pinched-throat)); the galactic
+    cores' multiplicity is still to be derived (#79): the gate gives one
+    chain; the firmament is the
     closed kinds, proved in EQUATIONS.md, Throat holding; [#35](https://github.com/SAIOS-SAMN/xylarium/issues/35), `track`, `law`). Parcels leave their
     throat at onset and move by the reach rate
     ([model.md](model.md#the-founding-as-flow)); angular state in degrees with

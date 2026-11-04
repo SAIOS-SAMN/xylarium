@@ -11,6 +11,12 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The bounce at a pinched throat (docs/model.md, EQUATIONS.md, #78): the
+  far face inverts each layer's pole state and axis polarity and turns its
+  phases half a turn; the new throat's own jet releases it; for seed 7 the
+  gate gives eleven throats in one chain, the bulk's climb over the pinch
+  interval about 0.67.
+
 - The state at the pinch (docs/model.md, EQUATIONS.md, #35): the fold as a
   thick, layered roll whose least radius its grip sets; the neutral surface
   from the layers' strains composing to the identity,

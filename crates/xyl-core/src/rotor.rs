@@ -138,6 +138,18 @@ impl Rotor {
         r
     }
 
+    /// The inverse turn: the conjugate `(w, -x, -y, -z)`. A rotor is held at
+    /// any scale, so the conjugate composed with the rotor is the scalar
+    /// `w^2 + x^2 + y^2 + z^2`, the identity up to that scale, exactly.
+    pub fn inverse(&self) -> Rotor {
+        Rotor {
+            w: self.w.clone(),
+            x: -self.x.clone(),
+            y: -self.y.clone(),
+            z: -self.z.clone(),
+        }
+    }
+
     /// `self` after `o`: the product rotates by `o` first, then by `self`.
     pub fn then_after(&self, o: &Rotor) -> Rotor {
         let (a, b) = (self, o);
@@ -188,6 +200,30 @@ impl Rotor {
     }
 }
 
+/// The angle between two directions `a` and `b` (any lengths, exact), in
+/// radians as a certified enclosure: its cosine is `a . b / |a| |b|` (the
+/// lengths' product a certified root of `|a|^2 |b|^2`), and the angle is
+/// `pi / 2 - asin(cos)` for a non-negative cosine and `pi / 2 + asin(-cos)`
+/// otherwise. The directions stay exact; only the angle, which has no
+/// rational form in general, is an enclosure. `None` for a zero direction.
+pub fn angle_between(a: &[Q; 3], b: &[Q; 3], bits: u32) -> Option<crate::certified::Encl> {
+    use crate::certified::{asin_any, pi, sqrt, Encl};
+    let dot = a.iter().zip(b).fold(Q::ZERO, |acc, (x, y)| &acc + &(x * y));
+    let norm2 = |v: &[Q; 3]| v.iter().fold(Q::ZERO, |acc, x| &acc + &(x * x));
+    let (na, nb) = (norm2(a), norm2(b));
+    if na.is_zero() || nb.is_zero() {
+        return None;
+    }
+    let len = sqrt(&(&na * &nb), bits)?;
+    let cos = Encl::exact(dot.clone()).mul(&len.recip()?);
+    let quarter = pi(bits).mul(&Encl::exact(Q::ratio(1, 2)));
+    Some(if dot.signum() >= 0 {
+        quarter.sub(&asin_any(&cos))
+    } else {
+        quarter.add(&asin_any(&cos.neg()))
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -209,5 +245,40 @@ mod tests {
             (m[0][0].clone(), m[1][0].clone(), m[2][0].clone()),
             (Q::ZERO, Q::ZERO, Q::ONE)
         );
+    }
+
+    #[test]
+    fn a_rotor_and_its_inverse_compose_to_its_scale() {
+        let r = Rotor {
+            w: Q::int(2),
+            x: Q::int(1),
+            y: Q::ratio(-1, 3),
+            z: Q::int(5),
+        };
+        let n = &(&(&r.w * &r.w) + &(&r.x * &r.x)) + &(&(&r.y * &r.y) + &(&r.z * &r.z));
+        for p in [r.then_after(&r.inverse()), r.inverse().then_after(&r)] {
+            assert_eq!((p.w, p.x, p.y, p.z), (n.clone(), Q::ZERO, Q::ZERO, Q::ZERO));
+        }
+    }
+
+    #[test]
+    fn the_angle_between_directions_is_enclosed() {
+        let q = |a: i64, b: i64, c: i64| [Q::int(a), Q::int(b), Q::int(c)];
+        let pi = crate::certified::pi(64);
+        let half = pi.mul(&crate::certified::Encl::exact(Q::ratio(1, 2)));
+        // Parallel, perpendicular and opposed, at any lengths.
+        let same = angle_between(&q(2, 0, 0), &q(5, 0, 0), 64).unwrap();
+        assert!(same.contains(&Q::ZERO) || same.hi < Q::ratio(1, 1_000_000));
+        let right = angle_between(&q(1, 0, 0), &q(0, 3, 0), 64).unwrap();
+        assert!(right.lo <= half.hi && half.lo <= right.hi);
+        let back = angle_between(&q(1, 0, 0), &q(-4, 0, 0), 64).unwrap();
+        assert!(back.lo <= pi.hi && pi.lo <= back.hi);
+        // The same pair either way round, and a zero direction refused.
+        let (ab, ba) = (
+            angle_between(&q(3, 4, 0), &q(0, 1, 1), 64).unwrap(),
+            angle_between(&q(0, 1, 1), &q(3, 4, 0), 64).unwrap(),
+        );
+        assert!(ab.lo <= ba.hi && ba.lo <= ab.hi);
+        assert!(angle_between(&q(0, 0, 0), &q(1, 0, 0), 64).is_none());
     }
 }

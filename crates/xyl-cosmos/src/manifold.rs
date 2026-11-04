@@ -325,11 +325,12 @@ pub struct Bearing {
     pub r: Q,
 }
 
-/// The turn between two unit directions (radians): acos of their dot
-/// product.
+/// The turn between two directions (radians), read from the certified
+/// angle between them (`xyl_core::rotor::angle_between`) at its midpoint.
 pub fn turn_between(a: &[Q; 3], b: &[Q; 3]) -> Q {
-    let agree = a.iter().zip(b).fold(Q::ZERO, |acc, (x, y)| &acc + &(x * y));
-    xyl_core::dyadic::Dy::from_q(&agree).acos().to_q()
+    xyl_core::rotor::angle_between(a, b, 64)
+        .map(|e| e.mid())
+        .unwrap_or(Q::ZERO)
 }
 
 /// The gap between two worlds of one system at `age` (system tier units).

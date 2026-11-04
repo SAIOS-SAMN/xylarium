@@ -1031,10 +1031,9 @@ law, the same at a nucleus, a star and a world:
 - Exponentials below the working resolution are enclosed by `[0, 2^-bits]`
   rather than computed (`systems::exp`).
 - Angles between bodies: `manifold::turn_between` and `chain::Place::arc`
-  read the turn between two directions as the arccosine of their dot
-  product. Next: the turn is to be read from the versor between the two
-  bodies' frames, which requires the inverse of `Rotor` and the versor's
-  angle (roadmap, Worlds on the manifold chain, cross-ties).
+  read the turn between two directions as the certified angle between them
+  (`xyl_core::rotor::angle_between`): the directions stay exact and only the
+  angle, which has no rational form in general, is an enclosure.
 - Next: the manifold's disc-mass scale, the share of the manifold's matter
   that the star keeps, is to be revised. With the current scale, the
   settling merges the worlds of a metal-rich star into one heavy world; the

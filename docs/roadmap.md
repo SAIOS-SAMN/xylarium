@@ -89,9 +89,9 @@ founding and the light read the frames instead.
 
 Next, in order:
 
-1. A rotor inverse and the versor angle are to be added to
-   `xyl_core::rotor`, so that relations are read through the versor between
-   frames (milestone 2, phase 4) rather than by `acos` in
+1. Done ([#26](https://github.com/SAIOS-SAMN/xylarium/issues/26)): the
+   rotor's inverse (`Rotor::inverse`) and the certified angle between two
+   directions (`rotor::angle_between`) replace the `acos` readings in
    `manifold::turn_between` and `chain::Place::arc`.
 2. The atom's catalogue columns (mass number, phase temperatures, density)
    are to be derived from 3Z, 3Q and R rather than read from
@@ -331,10 +331,9 @@ where it belongs to one.
 
 25. **Rotor inverse and the versor angle**
     ([#26](https://github.com/SAIOS-SAMN/xylarium/issues/26), `proposal`, `good
-    first issue`). The exact algebra milestone 2's cross-ties need in
-    `xyl_core::rotor`: a rotor's inverse and the angle read from the relating
-    versor's action, replacing the `acos` readings in `manifold::turn_between`
-    and `chain::Place::arc`.
+    first issue`). Done: `Rotor::inverse` and the certified
+    `rotor::angle_between` replace the `acos` readings in
+    `manifold::turn_between` and `chain::Place::arc`.
 
 ## 1. Founding in the core's units (done)
 
@@ -401,11 +400,8 @@ Next:
 2. Phase 4, cross-ties: A relation between two bodies is read once, in the
    lowest tier holding both, through the versor between their frames. Each
    manifold already holds its frame as an exact rotor. This first needs a
-   rotor inverse and the angle read from the relating versor's action in
-   `xyl_core::rotor`, a self-contained piece of exact algebra suitable as a
-   first contribution. The versor then replaces the `acos` readings in
-   `manifold::turn_between` and `chain::Place::arc`, and `manifold::gap` is
-   read in the lowest common tier.
+   rotor inverse and the certified angle in `xyl_core::rotor` (done, #26);
+   `manifold::gap` is next to be read in the lowest common tier.
 
 Done when: `xylarium observe worlds` shows metal-rich stars holding several
 worlds, and `observe system S` reads each relation in the lowest tier

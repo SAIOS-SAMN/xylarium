@@ -650,13 +650,15 @@ Derived ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)); not yet built
 Derived ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60), [#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)); not yet built; each identity checked
 exactly.
 
-- **The spin.** The pinched loop closes carrying the residual shear the
-  parent's dipole could not hold, `n / 3` per echo, as the twist of the new
-  throat. A throat's twist and spin are `n = a / (4 + a)`, so the new
-  throat's spin is `a_g = 2a / (6 + a)`, and its dipole is
-  `D(n / 3) = (6 + 2a) / (6 + a) = 1 + a_g / 2`. Tier by tier the twist is
-  `n_k = n / 3^k` over the same denominator; a spinless throat makes no
-  pinch and no tier.
+- **The spin.** Angular momentum is conserved (axiom 11 below), so matter
+  leaving a throat of spin `a_p` and hold `M_p` carries its angular momentum
+  per unit mass, `j = J_p / M_p = a_p M_p`. A pinched loop of hold `H_g`
+  closes with `J_g = j H_g`, and by the Kerr relation its spin is
+  `a_g = J_g / H_g^2 = a_p M_p / H_g`. A cohort too light to close
+  (`H_g < a_p M_p`, so `a_g > 1`) stays in the flow as medium; a heavy one
+  makes a slowly spinning throat. The new throat's twist and pinch follow
+  from its spin, `n_g = a_g / (4 + a_g)` and `3 (4 + a_g) / (2 a_g)`
+  echoes; a spinless throat makes no pinch and no tier.
 - **The place.** The pinch's coordinates (The antipoles, the shear and the
   pinch): half a turn, after `3 (4 + a) / (2a)` echoes.
 - **The hold.** The matter the flow has in the fold when it closes, summed
@@ -671,8 +673,8 @@ exactly.
   pushed out, Z-side states pressed in; a kind of net axis weight `A` feels
   `p(A)`, and is held where it balances the jet,
   `D(s) D(n)^A <= 1 - 2 delta`. Each throat holds an orbit, a stretch
-  `D(n_k)` and a held set of that throat; the pressure weakens a third per
-  tier.
+  `D(n_k)` and a held set of that throat; the pressure follows each
+  throat's spin.
 
 ### Axioms and theorems of the founding
 
@@ -700,6 +702,8 @@ Axioms:
    electrons), held `W = 3Z - U`; the pole state `t = U / W`.
 10. **Shear.** Every cycle is a sheared orbit read in closed form; nothing
     repeats closed and nothing is stepped.
+11. **Angular momentum.** Angular momentum is conserved; the linking
+    number's conservation is its topological reading.
 
 Theorems:
 
@@ -715,7 +719,7 @@ Theorems:
 | T8 | held where closed, or where `D(s) D(n)^A <= 1 - 2 delta` | 3, 9 |
 | T9 | pair share `p_pair = s (+) -(1 - s) = n (+) n / 3`; positron `R -> -R` | 3, 5 |
 | T10 | the flip keeps every state; residual `n / 3`; `Lk` conserved; pinch after `3 (4 + a) / (2a)` echoes at half a turn | 5, 8 |
-| T11 | pinched throat's spin `2a / (6 + a)`; tier twist `n / 3^k` | 7, T10 |
+| T11 | pinched throat's spin `a_g = a_p M_p / H_g` (Kerr, with the parent's angular momentum per unit mass); a cohort with `a_g > 1` does not close and stays as medium | 7, 11 |
 | T12 | stretching pressure `(D(n)^m0 - 1) / (D(n)^m0 + 1)` | 3, T2 |
 | T13 | a pinch encloses the whole cohort released since the last, in every direction | 8, T10 |
 | T14 | enclosed matter starts on the new throat's orbit; in plane `j` it is pushed out at `J_j / (6 H_j + J_j)` per echo, `H_j` the cohort's hold in the plane and `J_j = J / 5` (none on the axis plane) | 2, 3, 7 |
@@ -723,11 +727,11 @@ Theorems:
 
 Reading (seed 7, the gate of roadmap item 32, a screen with float
 logarithms and exact held sets): the universal core holds 0.4352 of the
-founded mass; its first pinched throat holds 0.4569 and that throat's pinch
-0.1078; below the third tier nothing is held, and 5 x 10^-5 is still in
-transit past the eighth. Each throat makes one pinch that carries matter,
-so the chain is three nested throats, not a population of galactic cores:
-under these laws multiplicity does not come from the nested pinching.
+founded mass and its first pinched throat 0.4569; what that throat
+releases (0.108) and the core's three later cohorts (1.7 x 10^-18) are too
+light to close (`a_g > 1`) and stay in the flow as medium. One galactic
+core, not a population: under these laws multiplicity does not come from
+pinching, and the medium is where it is to be derived.
 
 ### Radiation: irradiation held, transduced and passed on
 

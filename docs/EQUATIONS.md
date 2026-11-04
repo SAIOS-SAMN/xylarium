@@ -313,15 +313,14 @@ another crate. Laws are composed from shares (ratios of the form
 - What a pinch carries
   ([model.md](model.md#what-a-pinch-carries-the-next-throat-and-its-pressure),
   [#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)). Status: planned (derived; checked exactly).
-  - Spin of the pinched throat: `a_g = 2a / (6 + a)`; its dipole
-    `D(n / 3) = 1 + a_g / 2`; tier twist `n_k = n / 3^k`.
+  - Spin of the pinched throat: `a_g = a_p M_p / H_g` (angular momentum
+    per unit mass `a_p M_p` carried, Kerr `J = a M^2`); no throat where
+    `a_g > 1`; twist `n_g = a_g / (4 + a_g)`.
   - Pressure on a state: `p(m0) = (D(n)^m0 - 1) / (D(n)^m0 + 1)`; held by
     pressure where `D(s) D(n)^A <= 1 - 2 delta`.
   - Seed 7 (over `L = 4779169536781`): tier 0 `n = 381123025677 / L`, held
-    `A <= -8`; tier 1 `a_1 = 254082017118 / 2326064264111`,
-    `n_1 = 127041008559 / L`, held `A <= -22`; tier 2
-    `a_2 = 42347002853 / 1184205633482`, `n_2 = 42347002853 / L`, held
-    `A <= -63`.
+    `A <= -8`; tier 1 (Kerr): `a_1 = a_0 M_0 / H_1` with `H_1` the first
+    cohort's hold, 1.2976 core units.
 
 - Holding in a pinched throat
   ([model.md](model.md#axioms-and-theorems-of-the-founding), [#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)).
@@ -333,7 +332,8 @@ another crate. Laws are composed from shares (ratios of the form
     echo; none on the axis plane.
   - A nucleus: `D_k = D(p_plane)^w_k D(n)^A`; held where `D_k <= 1`; else
     leaves after `ln 2 / ln D_k` echoes.
-  - Seed 7 gate: held 0.4352 (core), 0.4569 (tier 1), 0.1078 (tier 2).
+  - Seed 7 gate: held 0.4352 (core), 0.4569 (tier 1); 0.108 too light to
+    close, medium.
 
 - Throat holding (`circuit::onset_echoes`; derived): with no internal
   moment, a kind is held by the throat exactly when it has no open frames

@@ -180,7 +180,7 @@ where it belongs to one.
     antipole group, the shear the dipole reconciles, `p_pair = n (+) n/3`,
     and the pinch where the folds meet
     ([model.md](model.md#the-antipoles-the-shear-and-the-pinch)); what a
-    pinch carries, the next throat's spin `2a / (6 + a)` and the stretching
+    pinch carries, the next throat's spin `a_p M_p / H_g` (Kerr) and the stretching
     pressure on its states
     ([model.md](model.md#what-a-pinch-carries-the-next-throat-and-its-pressure)).
 

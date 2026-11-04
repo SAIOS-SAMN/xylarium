@@ -348,6 +348,17 @@ another crate. Laws are composed from shares (ratios of the form
   - Seed 7: 605 layers, 0.5648 of the founded mass; `ln r_0 = 17.966`;
     inside 0.1783, outside 0.3865, without grip 0.4569.
 
+- The bounce at a pinched throat
+  ([model.md](model.md#the-bounce-at-a-pinched-throat), [#78](https://github.com/SAIOS-SAMN/xylarium/issues/78)).
+  Status: planned (derived).
+  - Far face: `t -> 1 / t` per layer; axis polarity `A -> -A`; phases half
+    a turn on the five planes.
+  - New throat's jet: `a = D(s_g) D(n_g)^(-A) / (1 - delta)`,
+    `b = delta / (1 - delta)`, `delta = m / (2 H_g + m)`; held where
+    `D(s_g) D(n_g)^(-A) <= 1 - 2 delta`.
+  - Seed 7 gate: eleven throats in a chain; the bulk's climb over the
+    pinch interval about 0.67, so one pinch carries each tier's matter.
+
 - Throat holding (`circuit::onset_echoes`; derived): with no internal
   moment, a kind is held by the throat exactly when it has no open frames
   (`compound::open = 0`): it has no pole state, and the jet never acts on

@@ -788,6 +788,36 @@ Derived ([#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)); not yet built
   runs from `ln r = 0.22` to `255`, the flipped share from 0.065 to 0.395,
   and the phase on the isoclinic planes over the whole turn.
 
+### The bounce at a pinched throat
+
+Derived ([#78](https://github.com/SAIOS-SAMN/xylarium/issues/78)); not yet built.
+
+- **The far face.** A pinched throat bounces: its matter passes to its far
+  face, which is both antipoles at once (`bounce::Bounce::of`,
+  `circuit::axes`). The axis antipole, the inversion `t -> 1 / t`, carries a
+  layer at pole state `t` relative to the parent to `1 / t` in the new
+  throat, and turns every state's axis weight `m0 -> -m0`, so the kind's
+  axis polarity becomes `-A`; the plane antipole turns its phases half a
+  turn on the five planes.
+- **The new throat's jet.** From there the layer climbs back to the new
+  throat by that throat's own jet, `t -> a t + b` with
+  `a = D(s_g) D(n_g)^(-A) / (1 - delta)` and `b = delta / (1 - delta)`,
+  `delta = m / (2 H_g + m)` the kind's own deficit at the new throat's
+  horizon; it is held there by pressure where `D(s_g) D(n_g)^(-A) <= 1 - 2 delta`,
+  and a layer carried far out by the parent arrives deep and climbs late.
+  The new throat's pinches enclose what it releases, and a pinch's cohort
+  closes where `a = j' / H <= 1`.
+- **Reading** (seed 7, a screen with float logarithms): eleven throats in
+  a chain, the universal core alone holding more than `10^-6` of the
+  founded mass. The inversion spreads the tail, layers carried far out,
+  over several pinches of the new throat, but those cohorts are too light
+  to close and stay as trace medium; the bulk, at mass-weighted
+  `ln r = 19.8`, climbs back in about 16 echoes, within the new throat's
+  first pinch interval of about 24, so each tier passes it on whole. The
+  ratio of the bulk's climb to the pinch interval, about 0.67, decides it:
+  below one a throat's matter goes into a single pinch, so these laws give
+  one chain, not a population (#79).
+
 ### Radiation: irradiation held, transduced and passed on
 
 Light, heat and their dispersal are one exchange read through the deficit

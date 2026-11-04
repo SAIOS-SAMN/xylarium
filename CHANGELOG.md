@@ -11,6 +11,13 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The founding's axioms (ten) and theorems (T1 to T15), with holding in a
+  pinched throat per plane (T14: push `J_j / (6 H_j + J_j)`, none on the
+  axis plane) and per nucleus (T15: planes composed by turning share), and
+  the gate's reading for seed 7: three nested throats holding 0.4352,
+  0.4569 and 0.1078 of the founded mass (docs/model.md, EQUATIONS.md,
+  #35).
+
 - What a pinch carries (docs/model.md, EQUATIONS.md, #60, #35): the next
   throat's spin `a_g = 2a / (6 + a)` (tier twist `n / 3^k`), its place, its
   hold as a reading of the flow, and the stretching pressure a throat's

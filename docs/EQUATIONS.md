@@ -323,6 +323,18 @@ another crate. Laws are composed from shares (ratios of the form
     `a_2 = 42347002853 / 1184205633482`, `n_2 = 42347002853 / L`, held
     `A <= -63`.
 
+- Holding in a pinched throat
+  ([model.md](model.md#axioms-and-theorems-of-the-founding), [#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)).
+  Status: planned (derived).
+  - Per plane: cohort hold `H_j = sum_k M_k w_kj`, `w_kj` the kind's share
+    of turning in plane `j`; `s_j = (2 H_j + J_j) / (4 H_j + J_j)`,
+    `J_j = J / 5`, `J_0 = 0`.
+  - Enclosed matter on the throat orbit: push `J_j / (6 H_j + J_j)` per
+    echo; none on the axis plane.
+  - A nucleus: `D_k = D(p_plane)^w_k D(n)^A`; held where `D_k <= 1`; else
+    leaves after `ln 2 / ln D_k` echoes.
+  - Seed 7 gate: held 0.4352 (core), 0.4569 (tier 1), 0.1078 (tier 2).
+
 - Throat holding (`circuit::onset_echoes`; derived): with no internal
   moment, a kind is held by the throat exactly when it has no open frames
   (`compound::open = 0`): it has no pole state, and the jet never acts on

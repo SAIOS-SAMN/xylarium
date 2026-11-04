@@ -1,23 +1,19 @@
-// The grain: amounts cut into whole nuclei, the 2^-64 grid for reaches,
-// phases on the 60^-6 coordinate grid, and a mix's mass.
+// The grain: amounts cut into whole nuclei, and a mix's mass. Reaches and
+// phases are exact; nothing rational is rounded.
 //
 // Inputs: `formation::weight` (3Z - unpaired frames per nucleus) and
-// `formation::mass_weight` (Z + Q nucleons), `xyl_core::coordinate::MARKS`.
+// `formation::mass_weight` (Z + Q nucleons).
 //
 // Outputs (crate-private): `nuclei_of` (whole amount and count of a kind;
 // the nucleon unit is 2^-(bits + 8), 8 bits finer than one hydrogen of the
-// founding's count, fixed once `set_founding_bits` names it), `grid`,
-// `turn`, `weigh` and `mass_of` (held frames to mass), `add` (ignores
+// founding's count, fixed once `set_founding_bits` names it),
+// `weigh` and `mass_of` (held frames to mass), `add` (ignores
 // non-positive amounts) and `deficit` (h / (r + h), zero where undefined).
 // Exact throughout.
 
 use super::*;
 use crate::formation;
 use xyl_core::Q;
-
-pub(crate) fn grid(x: &Q) -> Q {
-    xyl_core::certified::down(x, 64).max(Q::ZERO)
-}
 
 /// Splits an amount of kind z into whole nuclei: returns (whole amount, count).
 /// One nucleus of z holds w_z (its weight, 3Z - unpaired) nucleon units, so
@@ -62,18 +58,6 @@ pub(crate) fn nucleon_unit() -> Q {
         let _ = U.set(u.clone());
     }
     u
-}
-
-/// A turn rounded to the coordinate grid (1/(360 60^5) of a turn, the fifth
-/// sexagesimal place of arc), so phases carry no growing
-/// denominators (a resolution choice, not a law).
-pub(crate) fn turn(x: &Q) -> Q {
-    let marks = Q::int(xyl_core::coordinate::MARKS);
-    (&x.frac() * &marks)
-        .floor_i128()
-        .and_then(|m| i64::try_from(m).ok())
-        .and_then(|m| Q::new(m, xyl_core::coordinate::MARKS))
-        .unwrap_or(Q::ZERO)
 }
 
 /// A mix's mass: the sum of `mass_of` over its kinds (Z + Q nucleons per

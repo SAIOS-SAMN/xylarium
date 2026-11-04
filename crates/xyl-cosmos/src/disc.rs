@@ -220,7 +220,6 @@ pub fn manifold_worlds(star: &Q, a: &Q, tide: &Q) -> (Vec<(Q, Q)>, Q) {
     if star.signum() <= 0 || left_all.signum() <= 0 {
         return (Vec::new(), left_all.max(Q::ZERO));
     }
-    let grid = |x: &Q| xyl_core::certified::down(x, 64);
     let held = (&Q::ONE - a).max(Q::ZERO).min(Q::ONE);
     let step = left_all.checked_div(&Q::int(360)).unwrap_or(Q::ZERO);
     let dm = &step * &held;
@@ -234,7 +233,7 @@ pub fn manifold_worlds(star: &Q, a: &Q, tide: &Q) -> (Vec<(Q, Q)>, Q) {
         moment = &moment + &(&mid * &dm);
         let own = m.checked_div(&(star + &m)).unwrap_or(Q::ZERO);
         if m.signum() > 0 && own >= tide * &x {
-            let reach = grid(&moment.checked_div(&m).unwrap_or(mid));
+            let reach = moment.checked_div(&m).unwrap_or(mid);
             taken = &taken + &m;
             worlds.push((reach, m));
             m = Q::ZERO;

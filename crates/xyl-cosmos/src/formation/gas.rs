@@ -32,12 +32,11 @@ pub(crate) struct Cooling {
 /// emissions. `h` is the core's hold, 1 plus the held share; `swing` is
 /// 1 + A_in. None for an empty bead or span, or a unit that is not positive.
 pub(crate) fn cooling(bead: &Bead, unit: &Q, h: &Q, swing: &Q) -> Option<Cooling> {
-    let grid = |x: &Q| xyl_core::certified::down(x, 64);
     let width = &bead.span.1 - &bead.span.0;
     if width.signum() <= 0 || unit.signum() <= 0 {
         return None;
     }
-    let reach = grid(&bead.reach);
+    let reach = bead.reach.clone();
     let total = bead.recipe.iter().fold(Q::ZERO, |a, (_, x)| &a + x);
     if total.signum() <= 0 {
         return None;
@@ -48,20 +47,17 @@ pub(crate) fn cooling(bead: &Bead, unit: &Q, h: &Q, swing: &Q) -> Option<Cooling
         .map(|(z, a)| (*z, a.checked_div(&total).unwrap_or(Q::ZERO)))
         .collect();
     let holding = bead.state.checked_div(unit).unwrap_or(Q::ZERO);
-    let lambda = grid(&holding.checked_div(&width).unwrap_or(Q::ZERO));
+    let lambda = holding.checked_div(&width).unwrap_or(Q::ZERO);
     let push = throat_push();
     let deficit = xyl_core::shares::deficit(h, &reach).unwrap_or(Q::ZERO);
-    let agitation = grid(
-        &(&push - &deficit)
-            .checked_div(&push)
-            .unwrap_or(Q::ZERO)
-            .max(Q::ZERO),
-    );
-    let emission = grid(
-        &mix.iter()
-            .fold(Q::ZERO, |a, (z, s)| &a + &(s * &emission(*z))),
-    );
-    let mu = grid(&(&lambda * &emission));
+    let agitation = (&push - &deficit)
+        .checked_div(&push)
+        .unwrap_or(Q::ZERO)
+        .max(Q::ZERO);
+    let emission = mix
+        .iter()
+        .fold(Q::ZERO, |a, (z, s)| &a + &(s * &emission(*z)));
+    let mu = &lambda * &emission;
     // The measure's dimension is n = 1 (a circle in the galaxy's plane)
     // outside the core's reach of one galaxy ring and n = 2 (the bulge's ball)
     // within it.
@@ -215,7 +211,6 @@ pub(crate) fn collapse(
     swing: &Q,
     n: u32,
 ) -> (Option<i64>, Q, Q, i64, Q, Q) {
-    let grid = |x: &Q| xyl_core::certified::down(x, 64);
     // The piece's hold is (lambda + mu) W, and an infall's grip at its rim is
     // m / (w + m) with m = (lambda + mu) W share_n(theta).
     let shell = &(lambda + mu) * width;
@@ -237,11 +232,11 @@ pub(crate) fn collapse(
         .checked_div(&(&xyl_core::certified::pi(64).mid() * &(reach + &Q::ONE)))
         .unwrap_or(Q::ZERO);
     let taken = &(&ring * swing) * &grip(width);
-    let heat = grid(&if shed.signum() > 0 {
+    let heat = if shed.signum() > 0 {
         taken.checked_div(&shed).unwrap_or(Q::ONE).min(Q::ONE)
     } else {
         Q::ONE
-    });
+    };
     let none = (None, Q::ZERO, Q::ZERO, 0, Q::ZERO, heat.clone());
     // The spare, spare(w) = grip(w) - H w / (R (R + w)) - heat, is the
     // agitation an infall of extent w can still hold against.

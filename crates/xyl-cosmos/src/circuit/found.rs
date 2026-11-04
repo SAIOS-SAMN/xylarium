@@ -37,8 +37,8 @@ pub struct Kind {
     /// Spin about the throat: the kind's reach at the founding, on the 2^-64
     /// grid.
     pub spin: Q,
-    /// Capture phase about the throat (turns in [0, 1), on the 60^-6
-    /// coordinate grid).
+    /// Capture phase about the throat (turns in [0, 1), exact; its
+    /// denominator divides the torsion share's).
     pub phase: Q,
 }
 
@@ -237,10 +237,10 @@ impl Substrate {
     }
 }
 
-/// The capture phase of kind `z`: the torsion `share` turned Z times, on
-/// the coordinate grid.
+/// The capture phase of kind `z`: the torsion `share` turned Z times, exact
+/// (its denominator divides the share's).
 fn captured_phase(share: &Q, z: u32) -> Q {
-    turn(&(share * &Q::int(i64::from(z))))
+    (share * &Q::int(i64::from(z))).frac()
 }
 
 /// The inner edge of a shell at reach `r`, spread by the final share:
@@ -263,7 +263,7 @@ fn firmament_of(shells: &[(u32, Q, Q, bool)], share: &Q) -> Vec<Kind> {
         .map(|(z, a, r, _)| Kind {
             z: *z,
             amount: a.clone(),
-            spin: grid(r),
+            spin: r.clone(),
             phase: captured_phase(share, *z),
         })
         .collect();

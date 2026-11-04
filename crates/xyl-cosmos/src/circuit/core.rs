@@ -488,7 +488,7 @@ impl Substrate {
     /// The phase a kind is carried at (turns): its capture phase about the
     /// throat, the bounce's share turned Z times (found.rs).
     pub fn kind_phase(&self, k: u32) -> Q {
-        turn(&(&self.share * &Q::int(i64::from(k))))
+        (&self.share * &Q::int(i64::from(k))).frac()
     }
 
     /// The galaxies' pulls read once: by engine index, each galaxy's pull

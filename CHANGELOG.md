@@ -15,7 +15,7 @@ may change public APIs and the model's laws.
   pinched throat per plane (T14: push `J_j / (6 H_j + J_j)`, none on the
   axis plane) and per nucleus (T15: planes composed by turning share); the
   pinched throat's spin from the Kerr relation, `a_g = a_p M_p / H_g`, with
-  angular momentum conserved (axiom 11), a cohort with `a_g > 1` staying as
+  degrees of turning conserved (axiom 11), a cohort with `a_g > 1` staying as
   medium; the gate's reading for seed 7: the core holds 0.4352, one
   pinched throat 0.4569, 0.108 stays as medium (docs/model.md,
   EQUATIONS.md, #35).

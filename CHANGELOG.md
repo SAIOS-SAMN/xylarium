@@ -11,6 +11,13 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- `xyl_core::orbit`: an orbit's exact reading (axis dilation by exponent,
+  each plane's periapsis and anomaly in Q/Z), its sheared return
+  `k / (1 - theta)`, its return to the form against facets and its
+  capacity (#60). `coordinate::Reading::within` compares exact shares
+  against exact sector bounds, and `arc` writes degrees, minutes and
+  seconds with an exact remainder; the written places are display only.
+
 - The local ring (#60): at reach `r` one traversal of the orbit there,
   `s r (r + M) / M^2` core traversals exactly; every law step at a reach
   (turning, the vacuum's halving, cooling) counts local traversals.

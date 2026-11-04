@@ -33,8 +33,17 @@ another crate. Laws are composed from shares (ratios of the form
 - Phase grid (`circuit::turn`): a turn is rounded to 1/(360 60^5) of a turn, the fifth sexagesimal place of arc.
   Status: built.
 - Coordinate (`xyl_core::coordinate::Reading`): whole turns and a share,
-  written `DDD:MM:SS:XX:XX:XX` in degrees of arc, `N/DDD:...` with the rings
-  on the T lane. Status: built.
+  exact; `arc` is whole degrees, minutes and seconds with the seconds' exact
+  remainder; `within` compares exact shares against a sector's exact bounds;
+  `DDD:MM:SS:XX:XX:XX` (`N/DDD:...` with the rings on the T lane) is display
+  only. Status: built.
+- Orbit (`xyl_core::orbit::Orbit`): per plane the periapsis advance
+  `theta_i` per traversal; periapsis `t theta_i mod 1`, anomaly
+  `t (1 - theta_i) mod 1`; sheared return `k / (1 - theta_i)`; return to the
+  form against facets `lambda_i` (1, or 1/2 for the antipode): the least
+  common multiple of `lambda_i / (1 - theta_i)`; capacity the least whole
+  `k` with `k (1 - theta_i) / lambda_i` whole on every plane. Spinless
+  throat: return 2 (the echo); `a = 1`: `5/2`. Status: built.
 
 ## 2. Units and the master frame
 

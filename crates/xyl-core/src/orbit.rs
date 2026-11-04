@@ -9,11 +9,22 @@
 //! `s = (2 + a) / (4 + a)` on every plane (the spin is isoclinic) and the
 //! dipole's dilation `D(n) = 1 + a / 2`, `n = 2s - 1 = a / (4 + a)`.
 //!
+//! Each plane's rate is its periapsis advance per traversal, the shear: at
+//! the throat `s`, the deficit's half turn `delta = 1/2` and the spin's
+//! shear `s - 1/2`. The orbit never closes on itself: a traversal returns to
+//! its periapsis only after `1 / (1 - rate)` traversals, its sheared return
+//! (two, the echo, for a spinless throat).
+//!
 //! Outputs: [`Orbit::at`], the [`Reading`] at a count `t` (exact in Q): the
-//! axis exponent `t`, each plane's phase `t theta_i mod 1`, and the whole
-//! traversals; [`Orbit::order`], the traversals after which a plane's phase
-//! returns (the denominator of its rate); [`Orbit::twist`], the dipole's
-//! twist `n`.
+//! axis exponent `t`, each plane's periapsis `t theta_i mod 1` and anomaly
+//! `t (1 - theta_i) mod 1`, and the whole traversals; [`Orbit::order`], the
+//! traversals after which a plane's periapsis returns (the denominator of
+//! its rate); [`Orbit::sheared_return`], the count of a plane's `k`-th
+//! return to periapsis; [`Orbit::return_to`] and [`Orbit::capacity`], the
+//! orbit's return to its form and the positions it takes before it, against
+//! the facet each plane counts as the same form (a whole turn, or half for
+//! the antipode); [`Orbit::twist`], the dipole's twist `n`; [`degrees`], a
+//! share of a turn read in degrees.
 //!
 //! Invariants: every value is exact; the axis dilation is never evaluated at
 //! a count that is not whole (it is held by its exponent, [`Reading::axis`]
@@ -45,8 +56,23 @@ pub struct Reading {
     pub count: Q,
     /// The whole traversals made by the count.
     pub traversals: Q,
-    /// Each isoclinic plane's phase, a share of a turn in `[0, 1)`.
+    /// Each isoclinic plane's periapsis, a share of a turn in `[0, 1)`.
     pub phases: [Q; PLANES],
+    /// Each isoclinic plane's anomaly, the body's place past its periapsis,
+    /// a share of a turn in `[0, 1)`.
+    pub anomalies: [Q; PLANES],
+}
+
+/// A share of a turn read in degrees of modulation, exact: `360 x`.
+pub fn degrees(x: &Q) -> Q {
+    x * &Q::int(360)
+}
+
+/// The least common multiple of two whole numbers held as `Q`.
+fn lcm(a: &Q, b: &Q) -> Q {
+    let (x, y) = (a.numer(), b.numer());
+    let g = num_integer::Integer::gcd(&x, &y);
+    Q::from_big(num_rational::BigRational::from_integer(&x / &g * &y))
 }
 
 impl Orbit {
@@ -72,13 +98,72 @@ impl Orbit {
     }
 
     /// The reading at the count `t` (exact): the whole traversals, and each
-    /// plane's phase `t theta_i mod 1`.
+    /// plane's periapsis `t theta_i mod 1` and anomaly `t (1 - theta_i) mod 1`.
     pub fn at(&self, t: &Q) -> Reading {
         Reading {
             count: t.clone(),
             traversals: t - &t.frac(),
             phases: std::array::from_fn(|i| (t * &self.rates[i]).frac()),
+            anomalies: std::array::from_fn(|i| (t * &(&Q::ONE - &self.rates[i])).frac()),
         }
+    }
+
+    /// The count of plane `i`'s `k`-th return to its periapsis,
+    /// `k / (1 - theta_i)`: the orbit's sheared return. `None` for a plane
+    /// outside the five or one whose periapsis keeps pace with the body
+    /// (`theta_i >= 1`).
+    pub fn sheared_return(&self, i: usize, k: &Q) -> Option<Q> {
+        let gain = &Q::ONE - self.rates.get(i)?;
+        if gain.signum() <= 0 {
+            return None;
+        }
+        k.checked_div(&gain)
+    }
+
+    /// The orbit's return to its form: the least count `t > 0` at which
+    /// every plane's anomaly is a whole multiple of the plane's facet
+    /// (`facets[i]`, a share of a turn: 1 for the same place, 1/2 for the
+    /// antipode). Per plane the count is `facet / (1 - theta_i)` in lowest
+    /// terms; jointly the least common multiple of those, the multiple of
+    /// the numerators over the divisor of the denominators. `None` for a
+    /// facet that is not positive or a plane that never gains on its
+    /// periapsis.
+    pub fn return_to(&self, facets: &[Q; PLANES]) -> Option<Q> {
+        let mut num = Q::ONE;
+        let mut den: Option<num_bigint::BigInt> = None;
+        for (i, facet) in facets.iter().enumerate() {
+            if facet.signum() <= 0 {
+                return None;
+            }
+            let t = self.sheared_return(i, facet)?;
+            num = lcm(
+                &num,
+                &Q::from_big(num_rational::BigRational::from_integer(t.numer())),
+            );
+            den = Some(match den {
+                None => t.denom(),
+                Some(d) => num_integer::Integer::gcd(&d, &t.denom()),
+            });
+        }
+        num.checked_div(&Q::from_big(num_rational::BigRational::from_integer(den?)))
+    }
+
+    /// The orbit's capacity against its facets: the distinct positions its
+    /// whole traversals take before every plane's anomaly returns to a
+    /// facet, the least whole `k` with `k (1 - theta_i)` a multiple of
+    /// `facets[i]` on every plane, the multiple of the denominators of
+    /// `(1 - theta_i) / facets[i]`. `None` for a facet that is not positive.
+    pub fn capacity(&self, facets: &[Q; PLANES]) -> Option<Q> {
+        (0..PLANES).try_fold(Q::ONE, |acc, i| {
+            if facets[i].signum() <= 0 {
+                return None;
+            }
+            let step = (&Q::ONE - &self.rates[i]).checked_div(&facets[i])?;
+            Some(lcm(
+                &acc,
+                &Q::from_big(num_rational::BigRational::from_integer(step.denom())),
+            ))
+        })
     }
 
     /// The traversals after which plane `i`'s phase returns: the
@@ -144,5 +229,36 @@ mod tests {
         let (up, down) = (o.at(&Q::int(3)), o.at(&Q::int(-3)));
         assert_eq!(&up.axis(&o).unwrap() * &down.axis(&o).unwrap(), Q::ONE);
         assert_eq!(up.traversals, Q::int(3));
+    }
+
+    #[test]
+    fn the_orbit_is_sheared_and_its_echo_is_its_first_return() {
+        let half = || std::array::from_fn::<Q, PLANES, _>(|_| Q::ratio(1, 2));
+        let whole = || std::array::from_fn::<Q, PLANES, _>(|_| Q::ONE);
+        // Spinless: the periapsis advances half a turn, the body returns to it
+        // after two traversals (the echo), and never at one.
+        let o = Orbit::throat(&Q::ZERO).unwrap();
+        assert_eq!(o.sheared_return(0, &Q::ONE), Some(Q::int(2)));
+        assert_ne!(o.at(&Q::ONE).anomalies[0], Q::ZERO);
+        assert_eq!(o.at(&Q::int(2)).anomalies[0], Q::ZERO);
+        assert_eq!(o.return_to(&whole()), Some(Q::int(2)));
+        assert_eq!(o.capacity(&whole()), Some(Q::int(2)));
+        // The antipode as a facet halves the spinless return.
+        assert_eq!(o.return_to(&half()), Some(Q::ONE));
+        // With spin the return is sheared off the whole traversals: at a = 1,
+        // 1 - s = 2/5, so the body regains its periapsis after 5/2.
+        let x = Orbit::throat(&Q::ONE).unwrap();
+        assert_eq!(x.sheared_return(0, &Q::ONE), Some(Q::ratio(5, 2)));
+        assert_eq!(x.return_to(&whole()), Some(Q::ratio(5, 2)));
+        assert_eq!(x.capacity(&whole()), Some(Q::int(5)));
+        // Every anomaly at the return is a whole turn; one plane's own
+        // shear decides, and unequal planes return at their common multiple.
+        let r = x.return_to(&whole()).unwrap();
+        assert!(x.at(&r).anomalies.iter().all(|a| a.is_zero()));
+        let mut mixed = x.clone();
+        mixed.rates[1] = Q::ratio(2, 3);
+        assert_eq!(mixed.return_to(&whole()), Some(Q::int(15)));
+        assert_eq!(degrees(&Q::ratio(1, 2)), Q::int(180));
+        assert!(o.return_to(&std::array::from_fn(|_| Q::ZERO)).is_none());
     }
 }

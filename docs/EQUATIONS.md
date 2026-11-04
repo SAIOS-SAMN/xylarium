@@ -705,8 +705,11 @@ another crate. Laws are composed from shares (ratios of the form
 - Resolution guard (`systems::exp`): `exp(x)` is enclosed by
   `[0, 2^-bits]` for `x <= -(bits + 1)`. Status: built.
 - Angle between bodies (`manifold::turn_between`, `chain::Place::arc`):
-  `acos(a . b)`. Status: partial; the next step is the versor between frames
-  (roadmap, Worlds on the manifold chain).
+  the certified angle `pi / 2 -/+ asin(|a . b| / |a| |b|)`
+  (`xyl_core::rotor::angle_between`), the directions exact, read at its
+  midpoint; the rotor's inverse is its conjugate (`Rotor::inverse`).
+  Status: built. The galaxy network's fast path (`chain::Place::arc_kpc_dy`)
+  still reads a `Dy` arccosine.
 - Disc-mass scale of the manifold: this scale is not yet built; it is the
   next step (roadmap, Worlds on the manifold chain).
 - Degree of a star's life (`worlds::star_degree_gyr`):

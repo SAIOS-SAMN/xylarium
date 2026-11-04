@@ -144,6 +144,11 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- `manifold::turn_between` and `chain::Place::arc` read the certified angle
+  between two directions (`xyl_core::rotor::angle_between`) in place of an
+  uncertified `Dy` arccosine; `Rotor::inverse` is the rotor's conjugate
+  (#26).
+
 - The binding to TUniversal is read per segment (#56, MU-CHRONOMETRY 3.3):
   `Chronometry::dilations` gives each segment's rings over its heights
   between consecutive anchors under one origin, never one ratio and never

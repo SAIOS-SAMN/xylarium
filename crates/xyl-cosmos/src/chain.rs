@@ -155,12 +155,9 @@ impl Place {
             } else {
                 r.clone()
             };
-            let agree = self
-                .dir
-                .iter()
-                .zip(&other.dir)
-                .fold(Q::ZERO, |a, (x, y)| &a + &(x * y));
-            let turn = Dy::from_q(&agree).acos().to_q();
+            let turn = xyl_core::rotor::angle_between(&self.dir, &other.dir, 64)
+                .map(|e| e.mid())
+                .unwrap_or(Q::ZERO);
             let inner = self.reach.clone().min(other.reach.clone()).max(Q::ZERO);
             let full = &(&Q::int(2) * &pi(80).mid()) * &sphere;
             let around = if full.signum() > 0 {

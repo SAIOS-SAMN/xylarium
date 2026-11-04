@@ -13,15 +13,19 @@
 //! `m / MARKS <= share < (m + 1) / MARKS`), `places` (degrees 0-359, then
 //! minutes, seconds and three finer places 0-59), `written`
 //! (`DDD:MM:SS:XX:XX:XX`, prefixed `N/` with the whole turns on the T lane),
-//! `value` (rings plus share) and `within` (whether two readings share their
-//! whole turns and a prefix of places on the same lane); and `direction`, the
-//! sector of the in-plane direction (x, y), read with no arctangent.
+//! `value` (rings plus share), `arc` (whole degrees, minutes and seconds and
+//! the seconds' exact remainder) and `within` (whether a reading lies in the
+//! sector of a given depth that holds another, on the same lane and turns,
+//! decided on the exact shares); and `direction`, the sector of the in-plane
+//! direction (x, y), read with no arctangent. The places and their written
+//! form are display: nothing is compared or stored by them.
 //!
 //! Invariants: the value stays exact; places are decided by exact comparison,
 //! never by rounding, and a prefix of places names a whole coarser sector.
 //! A coordinate is computed from the body's values, with no index or hash.
 //! `direction` returns `None` for the zero direction and where the 2^-60
-//! enclosures cannot decide the sector.
+//! enclosures cannot decide the sector; its sector is the reading of an
+//! irrational turn, which has no exact share.
 //!
 //! Terms: TUniversal (docs/glossary.md).
 
@@ -112,16 +116,42 @@ impl Reading {
     }
 
     /// Whether the reading lies on the lane of `other`, in the same whole
-    /// turns and in the sector named by the first `depth` places of `other`
-    /// (a coarser sector holds every finer one it contains).
+    /// turns and in the sector of `depth` places that holds `other`: decided
+    /// on the exact shares against the sector's exact bounds, never on
+    /// written places (a coarser sector holds every finer one it contains).
     pub fn within(&self, other: &Reading, depth: usize) -> Option<bool> {
-        let (a, b) = (self.places()?, other.places()?);
-        Some(
-            self.lane == other.lane
-                && self.rings == other.rings
-                && a[..depth.min(PLACES)] == b[..depth.min(PLACES)],
-        )
+        if self.lane != other.lane || self.rings != other.rings {
+            return Some(false);
+        }
+        let width = sector(depth.min(PLACES))?;
+        let q = other.share.checked_div(&width)?;
+        let lo = &(&(&q - &q.frac()) * &width);
+        Some(&self.share >= lo && self.share < lo + &width)
     }
+
+    /// The reading's arc, exact: whole degrees, minutes and seconds, and the
+    /// remainder of the seconds as an exact share. Nothing is truncated; the
+    /// places of [`Reading::places`] are its display.
+    pub fn arc(&self) -> (Q, Q, Q, Q) {
+        let deg = &self.share * &Q::int(DEGREES);
+        let d = &deg - &deg.frac();
+        let min = &(&deg - &d) * &Q::int(60);
+        let m = &min - &min.frac();
+        let sec = &(&min - &m) * &Q::int(60);
+        let s = &sec - &sec.frac();
+        let rest = &sec - &s;
+        (d, m, s, rest)
+    }
+}
+
+/// A sector's width in turns at `depth` places: a whole turn at 0, then a
+/// degree, a minute, a second and three finer places.
+fn sector(depth: usize) -> Option<Q> {
+    let mut w = Q::ONE;
+    for p in 0..depth {
+        w = w.checked_div(&Q::int(if p == 0 { DEGREES } else { 60 }))?;
+    }
+    Some(w)
 }
 
 /// The turn of a direction (the flows' phase reading): the sector of the
@@ -244,5 +274,31 @@ mod tests {
         let past = direction(Lane::S, &q(1_000_000, 1), &q(1_000_001, 1)).unwrap();
         assert!(past.mark().unwrap() >= MARKS / 8);
         assert!(direction(Lane::S, &q(0, 1), &q(0, 1)).is_none());
+    }
+
+    #[test]
+    fn readings_inside_one_mark_stay_distinct_and_the_arc_is_exact() {
+        // Two shares 1/(3 MARKS) apart lie in one mark: the written places
+        // agree, the exact comparison at full depth does not merge them.
+        let a = Reading::of(Lane::S, &Q::new(1, 3).unwrap());
+        let b = Reading::of(
+            Lane::S,
+            &(&Q::new(1, 3).unwrap() + &Q::new(1, 3 * MARKS).unwrap()),
+        );
+        assert_eq!(a.written(), b.written());
+        assert_eq!(b.within(&a, PLACES), Some(true));
+        assert_ne!(a.share, b.share);
+        // The arc keeps the remainder: 1/7 of a turn is 51 deg 25' 42" and 6/7".
+        let r = Reading::of(Lane::S, &Q::new(1, 7).unwrap());
+        assert_eq!(
+            r.arc(),
+            (Q::int(51), Q::int(25), Q::int(42), Q::new(6, 7).unwrap())
+        );
+        let (d, m, sec, rest) = r.arc();
+        let q = |n: i64| Q::int(n);
+        let minutes = &(&sec + &rest).checked_div(&q(60)).unwrap() + &m;
+        let degrees = &minutes.checked_div(&q(60)).unwrap() + &d;
+        let back = degrees.checked_div(&q(360)).unwrap();
+        assert_eq!(back, r.share);
     }
 }

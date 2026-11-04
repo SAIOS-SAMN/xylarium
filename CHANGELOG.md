@@ -212,6 +212,12 @@ may change public APIs and the model's laws.
 
 ### Removed
 
+- The founding's rounding of rationals: `circuit::turn` (capture phases
+  floored to the coordinate grid) and `circuit::grain::grid` (reaches,
+  cooling's lambda, agitation, emission, mu and heat, the disc's reach and
+  the firmament's spin floored to 2^-64). Each is now exact; a capture
+  phase's denominator divides the torsion share's.
+
 - `systems::survival`, which always returned 1: every world was kept
   regardless of stellar encounters. The binding share against passing stars
   is to be derived (#44). `circuit::vacuum_share`, `turning::deficit_share`

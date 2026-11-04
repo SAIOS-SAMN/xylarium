@@ -31,8 +31,8 @@ its source location.
 | Reals (RR) | Never held directly. A real value enters as a proven rational enclosure `lo <= x <= hi` (pi, roots, exp, ln, sin, cos), or as a dyadic reading `m 2^e` at a seam, rounded toward zero and gridded back to `Q` before it is held | `xyl_core::certified::Encl`; `xyl_core::dyadic::Dy` |
 
 Angles are exact turns, read in degrees, minutes and seconds of arc
-(`xyl_core::coordinate`). Phases about a throat lie on the coordinate grid of
-1/(360 60^5) of a turn, the fifth sexagesimal place of arc, and drawn values on the `2^-40` grid.
+(`xyl_core::coordinate`). Phases about a throat are exact; drawn values
+carry the `2^-40` resolution of the draw.
 
 ### Algebra and geometry
 

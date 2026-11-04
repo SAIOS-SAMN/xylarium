@@ -44,9 +44,10 @@ Three number types, defined in `xyl-core`, carry every law:
 Angles are held as exact turns where the rate is rational and are read in
 degrees: the coordinate (`xyl_core::coordinate`) writes a value as degrees,
 minutes, seconds and three finer sexagesimal places of arc, with the whole
-turns kept (on the T lane, the rings). Phases about a throat are rounded to
-the coordinate grid of 1/(360 60^5) of a turn, the fifth sexagesimal place of arc (`circuit::turn`); drawn values are
-rounded to the 2^-40 grid.
+turns kept (on the T lane, the rings). Phases about a throat are exact: a
+kind's capture phase is the torsion share turned Z times, whose denominator
+divides the share's, so it never grows. Only drawn values carry a grid,
+the 2^-40 resolution of the draw.
 
 ## 2. Units and the master frame
 

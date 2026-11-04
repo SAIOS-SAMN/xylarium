@@ -30,8 +30,8 @@ another crate. Laws are composed from shares (ratios of the form
 - `Dy`, the dyadic `m 2^e` with a 62-bit mantissa rounded toward zero
   (`xyl-core dyadic.rs`), holds readings at seams; they are converted to `Q`
   on a grid before being held. Status: built.
-- Phase grid (`circuit::turn`): a turn is rounded to 1/(360 60^5) of a turn, the fifth sexagesimal place of arc.
-  Status: built.
+- Capture phase (`circuit::found`): `(share Z) mod 1`, exact; its
+  denominator divides the torsion share's. Status: built.
 - Coordinate (`xyl_core::coordinate::Reading`): whole turns and a share,
   exact; `arc` is whole degrees, minutes and seconds with the seconds' exact
   remainder; `within` compares exact shares against a sector's exact bounds;

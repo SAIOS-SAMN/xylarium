@@ -674,6 +674,61 @@ exactly.
   `D(n_k)` and a held set of that throat; the pressure weakens a third per
   tier.
 
+### Axioms and theorems of the founding
+
+Status: derived ([#35](https://github.com/SAIOS-SAMN/xylarium/issues/35), [#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)); the sections above give each derivation.
+
+Axioms:
+
+1. **Exactness.** Counts are in Z, turns in Q/Z, everything else exact in
+   Q; an irrational is a certified enclosure, never stored; no rational is
+   rounded.
+2. **Deficit.** A hold `M` at reach `r` keeps `M / (r + M)` of what reaches
+   it.
+3. **Flow.** Pushes compose as `x (+) y = (x + y) / (1 + x y)`;
+   `D(p) = (1 + p) / (1 - p)`.
+4. **Conservation.** Nuclei and frames are conserved; mass is a reading of
+   the counts.
+5. **Inversion.** `t -> 1 / t` exchanges the Z and Q poles; `x -> -x`
+   reverses a phase.
+6. **Horizon.** `R_h(M) = 2M`, the held share one third.
+7. **Torsion.** `s = (R_h + J) / (2 R_h + J)`, `J = a M^2`.
+8. **Six planes.** R^12 = C^6: the axis plane and five isoclinic planes,
+   which the spin turns together; a state is a harmonic on S^11 with a
+   weight `m` in Z^6.
+9. **Frames.** Each proton spans three frames: open `U` (the unpaired
+   electrons), held `W = 3Z - U`; the pole state `t = U / W`.
+10. **Shear.** Every cycle is a sheared orbit read in closed form; nothing
+    repeats closed and nothing is stepped.
+
+Theorems:
+
+| | Statement | From |
+|---|---|---|
+| T1 | `D(x (+) y) = D(x) D(y)`; continuity `s (+) (-s) = 0`, equatorial inflow `(2 + a) / (3 + a)` | 3, 4 |
+| T2 | `D(s) = 3 + a`; twist `n = a / (4 + a)`; dipole `Q / Z = D(n) = 1 + a / 2` | 3, 7 |
+| T3 | orbit about `M`: speed and eccentricity `delta`, apsis ratio `1 + 2M / r`; resonances `(k - 1) M` returning after `k` | 2, 6 |
+| T4 | sheared return `k / (1 - theta)`; the echo the throat orbit's return | 10 |
+| T5 | local ring `s r (r + M) / M^2` core traversals | 10 |
+| T6 | multiplicity `C(q + 4, 4)`; axis level `C(l - |m0| + 9, 9)` | 8 |
+| T7 | filling Z side first; axis polarity `A` | 8, 3 |
+| T8 | held where closed, or where `D(s) D(n)^A <= 1 - 2 delta` | 3, 9 |
+| T9 | pair share `p_pair = s (+) -(1 - s) = n (+) n / 3`; positron `R -> -R` | 3, 5 |
+| T10 | the flip keeps every state; residual `n / 3`; `Lk` conserved; pinch after `3 (4 + a) / (2a)` echoes at half a turn | 5, 8 |
+| T11 | pinched throat's spin `2a / (6 + a)`; tier twist `n / 3^k` | 7, T10 |
+| T12 | stretching pressure `(D(n)^m0 - 1) / (D(n)^m0 + 1)` | 3, T2 |
+| T13 | a pinch encloses the whole cohort released since the last, in every direction | 8, T10 |
+| T14 | enclosed matter starts on the new throat's orbit; in plane `j` it is pushed out at `J_j / (6 H_j + J_j)` per echo, `H_j` the cohort's hold in the plane and `J_j = J / 5` (none on the axis plane) | 2, 3, 7 |
+| T15 | a whole nucleus feels its planes composed, `D_k = D(p_plane)^w_k D(n)^A`, `w_k` its share of turning in the isoclinic planes; held where `D_k <= 1`, else it leaves after `ln 2 / ln D_k` echoes | 3, T14 |
+
+Reading (seed 7, the gate of roadmap item 32, a screen with float
+logarithms and exact held sets): the universal core holds 0.4352 of the
+founded mass; its first pinched throat holds 0.4569 and that throat's pinch
+0.1078; below the third tier nothing is held, and 5 x 10^-5 is still in
+transit past the eighth. Each throat makes one pinch that carries matter,
+so the chain is three nested throats, not a population of galactic cores:
+under these laws multiplicity does not come from the nested pinching.
+
 ### Radiation: irradiation held, transduced and passed on
 
 Light, heat and their dispersal are one exchange read through the deficit

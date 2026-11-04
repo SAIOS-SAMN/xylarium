@@ -11,6 +11,14 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The state at the pinch (docs/model.md, EQUATIONS.md, #35): the fold as a
+  thick, layered roll whose least radius its grip sets; the neutral surface
+  from the layers' strains composing to the identity,
+  `sum m nu ln(r / r_0) = 0`; seven circuits read per layer and plane
+  (pole state, heat, twist, place, pressure, pairs, fold); for seed 7 the
+  first pinch encloses 605 layers, 0.1783 of the founded mass inside the
+  neutral surface, 0.3865 outside, 0.4569 without grip.
+
 - The founding's axioms (eleven) and theorems (T1 to T15), with holding in a
   pinched throat per plane (T14: push `J_j / (6 H_j + J_j)`, none on the
   axis plane) and per nucleus (T15: planes composed by turning share); the

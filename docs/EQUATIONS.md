@@ -336,6 +336,18 @@ another crate. Laws are composed from shares (ratios of the form
   - Seed 7 gate: held 0.4352 (core), 0.4569 (tier 1); 0.108 too light to
     close, medium.
 
+- The state at the pinch
+  ([model.md](model.md#the-state-at-the-pinch-the-fold-and-its-circuits),
+  [#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)). Status: planned (derived).
+  - Neutral surface: `sum_l m_l nu_l ln(r_l / r_0) = 0`; none where
+    `sum m_l nu_l = 0` (the cohort flows).
+  - Circuits per layer `k` since its onset `n_k`, `N = N* - n_k` echoes:
+    reach `ln r = N ln(D(s) D(n)^A)`; flipped share `1 - (1 - n / 3)^N`;
+    pressure `D(n)^(A N)`; pairs `D(p_pair)^N`; heat composed per echo
+    from held `s W / 3Z` net of emission `(U / 3Z)` of it.
+  - Seed 7: 605 layers, 0.5648 of the founded mass; `ln r_0 = 17.966`;
+    inside 0.1783, outside 0.3865, without grip 0.4569.
+
 - Throat holding (`circuit::onset_echoes`; derived): with no internal
   moment, a kind is held by the throat exactly when it has no open frames
   (`compound::open = 0`): it has no pole state, and the jet never acts on

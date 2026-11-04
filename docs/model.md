@@ -727,7 +727,7 @@ Theorems:
 | T11 | pinched throat's spin `a_g = a_p M_p / H_g` (Kerr, with the parent's degrees of turning per unit hold, `360 a_p M_p`); a cohort with `a_g > 1` does not close and stays as medium | 7, 11 |
 | T12 | stretching pressure `(D(n)^m0 - 1) / (D(n)^m0 + 1)` | 3, T2 |
 | T13 | a pinch encloses the whole cohort released since the last, in every direction | 8, T10 |
-| T14 | enclosed matter starts on the new throat's orbit; in plane `j` it is pushed out at `J_j / (6 H_j + J_j)` per echo, `H_j` the cohort's hold in the plane and `J_j = J / 5` (none on the axis plane) | 2, 3, 7 |
+| T14 | enclosed matter, from the reach its layer has at the pinch (The state at the pinch); in plane `j` it is pushed out at `J_j / (6 H_j + J_j)` per echo, `H_j` the cohort's hold in the plane and `J_j = J / 5` (none on the axis plane) | 2, 3, 7 |
 | T15 | a whole nucleus feels its planes composed, `D_k = D(p_plane)^w_k D(n)^A`, `w_k` its share of turning in the isoclinic planes; held where `D_k <= 1`, else it leaves after `ln 2 / ln D_k` echoes | 3, T14 |
 
 Reading (seed 7, the gate of roadmap item 32, a screen with float
@@ -737,6 +737,56 @@ releases (0.108) and the core's three later cohorts (1.7 x 10^-18) are too
 light to close (`a_g > 1`) and stay in the flow as medium. One galactic
 core, not a population: under these laws multiplicity does not come from
 pinching, and the medium is where it is to be derived.
+
+### The state at the pinch: the fold and its circuits
+
+Derived ([#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)); not yet built.
+
+- **The fold has thickness.** It is not a crease in a sheet but a roll of
+  the cohort's matter, layer by layer and on every plane: each layer folds
+  at the residual of the deficit at its reach, so the fold shears through its
+  thickness; counts are conserved, so what the inner layers lose in span
+  the medium carries by continuity, and the roll's interior circulates.
+  A fold cannot bend tighter than its matter's grip allows, so its least
+  radius is set by its viscosity, not by a crease.
+- **The neutral surface.** A layer `l` of the cohort, at reach `r_l` with
+  hold `m_l` and grip `nu_l`, is dilated by `r_l / r_0` about the neutral
+  reach `r_0`, defined by the layers' strains, each weighted by its
+  resistance, composing to the identity:
+
+  ```text
+  prod_l (r_l / r_0)^(m_l nu_l) = 1    <=>    sum_l m_l nu_l ln(r_l / r_0) = 0
+  ```
+
+  No share is fixed: `r_0` comes from the cohort's layers, held by this relation
+  (generally irrational, never as a value). Inside it the layers are
+  compressed toward the Z pole, outside it stretched toward the Q pole: the
+  dipole across the fold's thickness. A cohort with no grip
+  (`sum m_l nu_l = 0`) has no neutral surface: it does not bend but flows.
+- **The circuits.** Each quantity a layer carries turns on a circuit of
+  that quantity, with the axes and the pivot of that circuit, and is read at the pinch
+  plane by plane, never summed:
+
+  | Circuit | Axes | Pivot | Read at the pinch |
+  |---|---|---|---|
+  | Pole state | each plane's open and held frames | the throat, `t = 1` | the reach on the axis plane, `ln r = (N* - n_k) ln(D(s) D(n)^A)` since the kind's onset `n_k` |
+  | Heat | each plane's deficit | the balance of held and emitted | held irradiation net of emission, composed over the echoes since onset |
+  | Twist | each plane's weight | the antipode on each plane | the share of antipodal pairs flipped, `1 - (1 - n / 3)^N` |
+  | Place | each plane's phase and anomaly | the periapsis | phase and anomaly per plane, and returns made |
+  | Pressure | the axis plane, per state | the dipole's Z and Q sides | `D(n)^(A N)` |
+  | Pairs | each plane's electron phase | the echo's turn | `D(p_pair)^N` |
+  | Fold | each layer's writhe | the meeting of the folds | each layer's strain `r / r_0` about the neutral surface |
+
+  The enclosed matter starts at the reach its layer has when the fold
+  closes (this replaces T14's starting reach on the throat orbit).
+- **Reading** (seed 7, a screen with float logarithms; the relations are
+  exact): the first pinch encloses 605 layers, 0.5648 of the founded mass;
+  the neutral surface lies at `ln r_0 = 17.966` on the axis plane, set by
+  the gripping layers (their grip-weighted hold 0.0096 of the founded
+  mass); 0.1783 of the founded mass lies inside it, compressed, and 0.3865
+  outside, stretched; 0.4569 has no grip and flows. Per layer the reach
+  runs from `ln r = 0.22` to `255`, the flipped share from 0.065 to 0.395,
+  and the phase on the isoclinic planes over the whole turn.
 
 ### Radiation: irradiation held, transduced and passed on
 

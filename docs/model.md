@@ -645,6 +645,35 @@ Derived ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)); not yet built
   `D(n / 3)^N*`, is held by its exponent, never as a value. A spinless
   core has no residual and never pinches.
 
+### What a pinch carries: the next throat and its pressure
+
+Derived ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60), [#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)); not yet built; each identity checked
+exactly.
+
+- **The spin.** The pinched loop closes carrying the residual shear the
+  parent's dipole could not hold, `n / 3` per echo, as the twist of the new
+  throat. A throat's twist and spin are `n = a / (4 + a)`, so the new
+  throat's spin is `a_g = 2a / (6 + a)`, and its dipole is
+  `D(n / 3) = (6 + 2a) / (6 + a) = 1 + a_g / 2`. Tier by tier the twist is
+  `n_k = n / 3^k` over the same denominator; a spinless throat makes no
+  pinch and no tier.
+- **The place.** The pinch's coordinates (The antipoles, the shear and the
+  pinch): half a turn, after `3 (4 + a) / (2a)` echoes.
+- **The hold.** The matter the flow has in the fold when it closes, summed
+  from the parcels' counts: a reading of the founding as flow, not a
+  formula. Until the flow is built, the galactic cores' present mass
+  ratios stand in for it.
+- **Pressure on the states.** A throat's spin stretches its axis by
+  `D(n) = 1 + a / 2` per echo, and a state of axis weight `m0` takes the
+  stretch `m0` times, composed by the flow law: its push along the axis is
+  `p(m0) = (D(n)^m0 - 1) / (D(n)^m0 + 1)`, exact at every whole `m0`
+  (`p(1) = n`, `p(-1) = -n`, `p(2) = 2n / (1 + n^2)`). Q-side states are
+  pushed out, Z-side states pressed in; a kind of net axis weight `A` feels
+  `p(A)`, and is held where it balances the jet,
+  `D(s) D(n)^A <= 1 - 2 delta`. Each throat holds an orbit, a stretch
+  `D(n_k)` and a held set of that throat; the pressure weakens a third per
+  tier.
+
 ### Radiation: irradiation held, transduced and passed on
 
 Light, heat and their dispersal are one exchange read through the deficit

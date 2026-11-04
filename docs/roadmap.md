@@ -176,7 +176,10 @@ where it belongs to one.
     ([model.md](model.md#the-equator-inflow-viscosity-and-pairs)); the
     antipole group, the shear the dipole reconciles, `p_pair = n (+) n/3`,
     and the pinch where the folds meet
-    ([model.md](model.md#the-antipoles-the-shear-and-the-pinch)).
+    ([model.md](model.md#the-antipoles-the-shear-and-the-pinch)); what a
+    pinch carries, the next throat's spin `2a / (6 + a)` and the stretching
+    pressure on its states
+    ([model.md](model.md#what-a-pinch-carries-the-next-throat-and-its-pressure)).
 
 
 3. **Elements attached to the filament's released pressure**

@@ -310,6 +310,19 @@ another crate. Laws are composed from shares (ratios of the form
     `2 N* = 4779169536781 / 127041008559` rings, ring 37 at
     `222 deg 52' 1911753317040/42347002853"` on the T lane; spinless: none.
 
+- What a pinch carries
+  ([model.md](model.md#what-a-pinch-carries-the-next-throat-and-its-pressure),
+  [#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)). Status: planned (derived; checked exactly).
+  - Spin of the pinched throat: `a_g = 2a / (6 + a)`; its dipole
+    `D(n / 3) = 1 + a_g / 2`; tier twist `n_k = n / 3^k`.
+  - Pressure on a state: `p(m0) = (D(n)^m0 - 1) / (D(n)^m0 + 1)`; held by
+    pressure where `D(s) D(n)^A <= 1 - 2 delta`.
+  - Seed 7 (over `L = 4779169536781`): tier 0 `n = 381123025677 / L`, held
+    `A <= -8`; tier 1 `a_1 = 254082017118 / 2326064264111`,
+    `n_1 = 127041008559 / L`, held `A <= -22`; tier 2
+    `a_2 = 42347002853 / 1184205633482`, `n_2 = 42347002853 / L`, held
+    `A <= -63`.
+
 - Throat holding (`circuit::onset_echoes`; derived): with no internal
   moment, a kind is held by the throat exactly when it has no open frames
   (`compound::open = 0`): it has no pole state, and the jet never acts on

@@ -1148,6 +1148,68 @@ answer, the code it builds on and what that code lacks today.
   keeps a physical record of its formation for archaeology and the annals
   to read.
 
+### Scalar collapses: the register and the order of opening
+
+Planned ([#107](https://github.com/SAIOS-SAMN/xylarium/issues/107), roadmap
+item 43); scanned 2026-11-05 across the five crates, 50 sites, 44 of them
+load-bearing. Each is a quantity the model carries with more structure
+reduced to one number, a graded reading reduced to a boolean, or several
+candidates reduced to one by a scalar. Mu and the TUniversal points are
+clean: their lanes are never summed, ordered or compared as one number.
+
+- **The atom and the bond.**
+  - Stripping is all or nothing per band (`atoms::unpaired_hot`), so
+    `compound::stands` is a boolean.
+  - A bond is one tightness and a ratio (`atoms::Bond`), losing both faces
+    and their separation.
+  - The atom's hold sums its modes into one number (`atoms::hold`).
+- **The founding and the stars.**
+  - The spin orbit folds each kind's separation into one spread
+    (`circuit::Substrate::spin_orbit`).
+  - A bead is read from its most abundant kind.
+  - A star's sequence steps one kind per stage, the greatest release
+    (`stars::fusion_step`, `stars::fission_step`), on one pole point for
+    the mixture (`stars::mixture_pole`).
+  - `stars::Sequence::ignites` is a boolean that decides whether a pulse
+    node exists.
+- **Galaxy, systems and worlds.**
+  - Booleans decide what exists: `galaxy::Star::in_core`, and the ancient
+    flag it sets; a world's being a world; `systems::World::icy`; a
+    giant; tidal locking with an equal-split season.
+  - Mass-weighted means stand for merged bodies and for a world's reach.
+  - `chain::Place::arc` folds a relation across tiers into one distance.
+  - `pulse::hear` sums every bell into one phasor.
+- **Life.** A world keeps its single best lineage, its best medium decides
+  its chemistries, and sterilisation and a mind's completion are booleans
+  where graded survival shares exist.
+- **The kernel.**
+  - **Peoples:** they move to the world nearest by array index; a fall is a
+    boolean; turning points, figures and the lead domain are picked by a
+    scalar; focus is one domain, and knowledge growth sums the four
+    domains.
+  - **Transit:** the fastest drive is picked; the change of velocity is
+    split equally; the ley network grows by one winner at a time; binding
+    and quarantine are booleans at one half.
+  - **Percepts and clocks:** a neighbour is heard or not by one distance,
+    and a world has one temperature; chronometry assumes a closed repeat
+    and sums distances across tiers.
+- **xyl-core.** `Encl::mid` stands for an enclosure in load-bearing places,
+  and the coordinate's H lane is described as one plane.
+- **The uplink.**
+  - The T reading is floored to a whole ring.
+  - A mind's act is one count.
+  - Every act is framed on the S lane.
+- **Order of opening.**
+  1. The bond and stripping as graded shares, read by both faces and their
+     separation.
+  2. Candidates held together, never picked: steps, cohorts, beads,
+     lineages, media, drives, the ley network.
+  3. Booleans to shares where they gate existence.
+  4. Relations held by tier, the pulse as the per-bell list.
+  5. Lanes and planes kept whole: a four-share focus, knowledge growth per
+     domain, the H lane per plane, the uplink's exact T and per-kind lanes.
+  6. Enclosures kept where a midpoint is stored or decides.
+
 ### Chemistry from the elements
 
 Planned ([#103](https://github.com/SAIOS-SAMN/xylarium/issues/103), roadmap

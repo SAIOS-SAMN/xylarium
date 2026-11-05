@@ -92,6 +92,21 @@ hypha, held by the private uplink's session.
 - Both faces name a body by one coordinate (LAW-COORDINATE v1), so a
   percept and a ledger entry can refer to the same body without either
   reading the other's state.
+- **Joined and embedded minds** (#108). A mind joins today as a separate
+  process: the hypha (`mycelium-server`), the uplink's live play with the
+  house (`xyl-uplink run`), and the mind (`mycelium-client --seat
+  <domain> <seat-ids>`), which takes ancient seats, reads its percepts,
+  calls `FOCUS` and answers the court's tasks. Planned: the uplink hosts
+  minds in the uplink's process, the client's cognition loaded as a library, one
+  per ancient seat. Each still takes its seat, reads its percepts and
+  calls its seat's functions through the house's seat-surface path and
+  signs under the mind's key, so the kernel sees the same recorded inputs as
+  from a joined mind and the court reconstructs what it claims; the kernel
+  takes no mycelium dependency.
+- **What the uplink is to fix first** (#107): it is to send the exact T
+  reading (today floored to a whole ring), frame each act on the lane of
+  its kind (today all on S), and take a mind's focus as a four-share
+  vector (today one count).
 
 ## Time on the network
 

@@ -179,7 +179,7 @@ and may run beside `run`. Bracketed arguments are optional, with their defaults.
 | `universal-core` | `[R]` | Law | The universal core's substrate R rings after the bounce (default: the first stars), on the T lane with Gyr as a display conversion: its reverberation kind by kind, its outflow, the ocean's shares, every galaxy's intake, the books, Z Q R |
 | `founding` | | Law | The founding shells (`formation::founding_shells`) on the founding's mix: the final share, the held kinds, and each shell's kinds, amount and reach |
 | `galactic-core` | `N` | Law | Galactic core N of the founding (0 is the home galaxy's, at the universal core): its hole, its mass ratio to the home hole, its place |
-| `tiers` | `S` | Law | Star S and its worlds, each turn counted in its anchor's rings |
+| `tiers` | `S` | Law | Star S and its worlds, each turning on its plane counted in its anchor's rings |
 | `universe` | | Carried | The default: the bell's count, the peoples, the seats, the bells, the books, the worlds formed and the cores |
 | `peoples` | | Carried | Every people: its role, home, numbers and housing |
 | `people` | `N [R]` | Carried | One people: its body, numbers, power, knowledge, radiation, world and seats; with Y, the civilization layer is carried R more rings in memory first |

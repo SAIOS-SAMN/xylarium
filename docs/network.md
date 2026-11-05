@@ -106,7 +106,7 @@ hypha, held by the private uplink's session.
   inner mantle and an outer rim. Each keeper runs at the well rate
   `r / (r + M(<r))` of the keeper inside it, nested wells multiplying, with
   the pulse's light delay from the epicenter. The slip of a slower keeper,
-  its coherence and its whole-turn rungs are read in closed form.
+  its coherence and its rungs of 360 degrees are read in closed form.
 - **The chain.** At each commit every keeper appends a BLAKE3 entry citing the
   previous entry of the same keeper and the head of the keeper inside it, with
   its slip against that keeper kept as a residual. Only the epicenter's entry

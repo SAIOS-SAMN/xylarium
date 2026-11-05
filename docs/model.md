@@ -41,8 +41,25 @@ Three number types, defined in `xyl-core`, carry every law:
   `minds`). A `Dy` value is converted to `Q`, often on a 2^-40 or 2^-64
   grid, before it is held.
 
-Angles are held as exact turns where the rate is rational and are read in
-degrees: the coordinate (`xyl_core::coordinate`, LAW-COORDINATE v1) reads
+### Turns: axis, degrees and the return
+
+Every turn names its axis: the
+plane it turns, by the generators that span it (the axis plane, base axes
+0 and 1; the isoclinic planes, base axes 2-3, 4-5, 6-7, 8-9 and 10-11; a
+turning between planes, by the axes it mixes). A turn on one plane never
+stands for the others, so the dimensional capacity is kept. Its physics is
+torsion, stated as degrees of modification (a change of phase or of kind),
+of structure (a turning held as form, such as the twist held as torsion)
+or of perturbation (the echo's swing on frames). Its inverse, the return
+trip, is stated with it and is read from the gravitational density the
+return passes through, the deficit `M / (r + M)` at the return's reach
+(axiom 2), across the attractor pair of the faces (T17): never assumed
+equal to the outbound turn. Where the code still holds an angle as a
+share of a whole turn, the text gives it in degrees on its plane, and the
+code's change is roadmap item 28.
+
+Angles are held as exact degrees on a named plane where the rate is
+rational and are read in degrees: the coordinate (`xyl_core::coordinate`, LAW-COORDINATE v1) reads
 a value in sectors of base 60 to any depth, exactly, and writes degrees and
 their sexagesimal places as display; on the T lane the whole rings are
 kept (`coordinate::beat`). Phases about a throat are exact: a
@@ -122,8 +139,9 @@ pole axis and the five isoclinic planes).
   planes (`spin_bivector`). The white hole is the null generator
   `N = P ^ (P . K)` at the crossing point (`xyl-core cga::Source`); it is
   verified to be null, fixes `P` and preserves the horizon. The throat's far
-  face is the crossing point's antipode under the planes' half turn
-  (`circuit::plane_antipole`).
+  face is the crossing point's antipode under 180 degrees on each of the five isoclinic planes
+  (`circuit::plane_antipole`), a degree of structure; its return is the
+  next bounce's, read at the horizon's deficit, one third (axiom 6).
 - `Bounce::of` returns `None` for a spin outside the open interval `(0, 1)`
   and for a non-positive mass or enclosure, so a spinless hole yields no
   bounce.
@@ -270,10 +288,13 @@ inside a reach acts as one hold.
 
 **Angular state.** A parcel's phase about its throat advances by the turning
 law, `dphi/dt = delta(r, H) bell / r`, in degrees. The echo's swing is
-torsion and twist: it turns the parcel's phase and plane by the torsion
-share of the throat's spin, and never moves its reach. Parcels interact by
+torsion and twist, a degree of perturbation: it turns the parcel's phase on
+the isoclinic planes, and its plane toward the axis plane, by the torsion
+share of the throat's spin, and never moves its reach; the return through
+the vacuum is read at the parcel's own deficit at its reach. Parcels interact by
 the degrees between them, the coherence `c = 1 - 2d` (`circuit::coherence`,
-`d` the shorter way round as a share of a turn, so `c` is in `[0, 1]`): 1 in
+`d` the shorter way round on the plane the two phases share, read as
+`c = 1 - d / 180` with `d` in degrees, so `c` is in `[0, 1]`): 1 in
 phase, 0 opposed. Opposed parcels do not exchange.
 
 **Perturbation.** The part of the echo a parcel's elements cannot pass, its
@@ -371,9 +392,11 @@ longer holds.
   (`galaxy::first_star_mass`), and where its core is no heavier than the
   universal core, `state <= 1` (`Substrate::galaxies`): a heavier core would
   hold the universal core rather than circle it. Each galaxy circulates about
-  the throat at `4 delta` turns per echo, with `delta = inside / (reach +
-  inside)`. Its plane is set by the repulsion pivots one tier up (the node by
-  the golden turn, the tilt by the plastic turn's share of the S^360 measure),
+  the throat at `1440 delta` degrees per echo on its orbital plane, with
+  `delta = inside / (reach + inside)`. Its plane is set by the repulsion
+  pivots one tier up (the node by the golden angle about the throat's axis,
+  the tilt toward it by the plastic angle's share of the S^360 measure; a
+  placement by index, to be replaced, roadmap item 40),
   and its place at `t` is its plane's rotor applied to its phase
   (`Shape::place_at`). The stars of another galaxy are the home galaxy's stars
   read through that galaxy's length scale `2 m / (1 + m)`, where `m` is its hole
@@ -428,9 +451,9 @@ of its enclosure, and the construction is spherical:
 ### The ring: the throat orbit and the echo's torsion
 
 Planned ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)); it replaces the bell as light's round trip to the
-rim. Units: `G = c = M = 1`, reaches in `r_g`; counts are in Z and turns in
-Q/Z (exact shares of a turn, never decimals); an irrational value (pi, a
-cosine at a general turn) is read only as a certified enclosure for
+rim. Units: `G = c = M = 1`, reaches in `r_g`; counts are in Z and angles in
+degrees, exact rationals modulo 360 on a named plane (never decimals); an
+irrational value (pi, a cosine at a general angle) is read only as a certified enclosure for
 display, never stored.
 
 - **The orbit.** About a hold `M`, a body at reach `r` moves at the deficit
@@ -442,14 +465,16 @@ display, never stored.
   the dilation: `r_a / r_p = (1 + delta) / (1 - delta) = D(delta) =
   1 + R_h(M) / r`.
 - **The shear.** The orbit does not close. Each traversal advances its
-  periapsis by `delta` of a turn (`turning::twist_per_turn`, `360 delta`
-  degrees), and the spin moves the orbit across the five isoclinic planes
+  periapsis by `360 delta` degrees in its orbital plane
+  (`turning::twist_per_turn`), a degree of structure returned after
+  `1 / (1 - delta)` traversals (T4), and the spin moves the orbit across the five isoclinic planes
   (`bounce::spin_bivector`): every direction turns on a great circle of
-  S^9 in the ten dimensions the planes span, and the shear carries the
+  S^9 in the ten dimensions the planes span, by the same degrees on each
+  isoclinic plane (T18), and the shear carries the
   orbit from one circle to the next.
 - **Resonance.** An orbit returns exactly after `q` traversals, `q` the
   denominator of its advance in lowest terms. The reaches `r_k = (k - 1) M`
-  advance `1 / k` of a turn and return after `k`: the throat (`k = 2`,
+  advance `360 / k` degrees in their orbital plane and return after `k`: the throat (`k = 2`,
   apsis ratio 3, the throat push's dilation), the horizon (`k = 3`, apsis
   ratio 2), and so on; the inversion `r -> M^2 / r` maps each to
   `M / (k - 1)` on the far face, the throat to itself.
@@ -471,12 +496,13 @@ display, never stored.
   is a position in this reading, nested through the tiers (each tier read on the
   throat orbit of that tier), not a count of a scalar unit; a reading moves to any count
   in closed form, and the count live play advances per loop is read against
-  the network's height per segment, never fixed. With no spin the planes
-  advance half a turn per traversal and return after two: the echo is the
+  the network's height per segment, never fixed. With no spin each isoclinic
+  plane advances 180 degrees per traversal and returns after two, the two
+  faces of the attractor pair then reading the same density (`s = 1 - s`): the echo is the
   throat orbit's return.
 - **The local ring.** At reach `r` about a hold `M`, the local ring is one
-  traversal of the orbit at `r`, and every law step at that reach (a turn,
-  the vacuum's halving of an agitation, a cooling) counts local
+  traversal of the orbit at `r`, and every law step at that reach (a turning
+  on the orbit's plane, the vacuum's halving of an agitation, a cooling) counts local
   traversals. Two orbits' traversals compare exactly, since pi cancels in
   the ratio of their angular rates: one local traversal at `r` lasts
 
@@ -485,8 +511,9 @@ display, never stored.
   ```
 
   The engine counts core traversals; each tier reads the orbits at the reaches
-  within it and converts by this ratio. The turning law is then one turn per
-  local traversal, `(delta(r) / r) (M / s)` turns per core traversal; no
+  within it and converts by this ratio. The turning law is then 360 degrees on the
+  orbit's plane per local traversal, `360 (delta(r) / r) (M / s)` degrees
+  per core traversal; no
   light-time and no SI enters a law.
 - **The twist and the dipole.** With spin `a`, the throat carries the
   torsion share `s = (2 + a) / (4 + a)` on the open side and holds `1 - s`
@@ -544,8 +571,8 @@ the flow law, the conservation of counts and the inversion.
   `x = frac(p)` in Q/Z (`circuit::weights::electron_phase`). The reversion
   runs the echo backwards, `x -> -x`, and `R(-x) = -R(x)`: the positron is
   the electron's phase read through the reversion, with the same
-  coherence and the opposite sign. A pair arises at the echo's turn
-  (`x = 1/2`, `R = 0`) and separates, the electron toward the held face
+  coherence and the opposite sign. A pair arises at the echo's reversal,
+  180 degrees on the isoclinic planes (`x = 1/2`, `R = 0`), and separates, the electron toward the held face
   and the positron toward the open face; meeting in phase, `R + (-R) = 0`
   returns to the dipole.
 - **The pair share.** The echo's near face carries the open share `s` out
@@ -580,8 +607,8 @@ Z^6, each plane's reading kept, never summed into one number.
   and under the twist charge `c = m1 + ... + m5 -> -c`.
 - **Flow.** One bivector generates a state's motion: a dilation in the
   axis plane (hyperbolic; the dipole's `D(n)`, the flow law being the
-  addition of its hyperbolic angle) and the spin's turn `s` in the five
-  planes. The parts lie in orthogonal planes and commute, so a state's
+  addition of its hyperbolic angle) and the spin's turning, `360 s` degrees on
+  each of the five isoclinic planes. The parts lie in orthogonal planes and commute, so a state's
   reading at a count `t` is a closed form: on the axis the dilation
   `D(n)^(m0 t)`, exact in Q at whole `t`; on the planes the phase
   `t s (m1 + ... + m5) mod 1`, exact in Q/Z. The state moves on a flat line
@@ -625,7 +652,9 @@ Derived ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)); not yet built
   pairing and every founded kind keeps its open frames and axis polarity.
 - **The shear on the antipode.** A state and its antipode lie on opposite
   faces, which advance `s` and `1 - s` per traversal, so the pair does not
-  cancel: on the planes it drifts `c n` of a turn per traversal, and on the
+  cancel: on the isoclinic planes it drifts `360 c n` degrees per traversal,
+  a degree of perturbation returned on the antipode's face at its density
+  `1 - s`, and on the
   axis it dilates by `D(s)^m0 D(1 - s)^-m0 = D(p_pair)^m0`.
 - **The dipole's reconciliation.** The pair's push splits exactly,
   `p_pair = n (+) (n / 3)`, `D(p_pair) = D(n) D(n / 3)`, per state
@@ -634,14 +663,16 @@ Derived ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)); not yet built
   `D(n / 3) = (6 + 2a) / (6 + a)`, is the shear it cannot hold, and it
   flips into writhe: the fold's rotation.
 - **Fold forward and back.** The residual folds the near face forward,
-  `+n / 3` of a turn per echo in the spin's direction, and the antipode
-  back, `-n / 3`. Per echo the faces cancel, so `Lk = Tw + Wr` is
-  conserved: the twist moves `+n / 2` and `-n / 2`, the writhe `+n / 3`
-  and `-n / 3`.
+  `120 n` degrees per echo on the isoclinic planes in the spin's direction,
+  and the antipode back, `-120 n` degrees. Per echo the faces cancel, so
+  `Lk = Tw + Wr` is conserved: the twist moves the two faces by their
+  separations across the attractor pair (T17; never equal halves), and the
+  writhe by `+120 n` and `-120 n` degrees.
 - **The pinch.** The two folds meet where `N n / 3 = -N n / 3 (mod 1)`,
-  first at the antipodal point, half a turn: after
+  first at the antipodal point, 180 degrees apart on the isoclinic
+  planes: after
   `N* = 3 / (2n) = 3 (4 + a) / (2a)` echoes, where the folds' relative
-  writhe first reaches a whole turn and the linking number may change by
+  writhe first reaches 360 degrees and the linking number may change by
   one. The count is exact in Q; the fold's axis dilation there,
   `D(n / 3)^N*`, is held by its exponent, never as a value. A spinless
   core has no residual and never pinches.
@@ -659,13 +690,14 @@ exactly.
   The degrees per unit hold are therefore the same at every tier, the
   universal core's `360 a_0 M_0` (for seed 7, `124 deg 47' 11"` and
   `5728280873/8589934592"`). A cohort closes only where its turning does
-  not exceed a whole turn per unit hold, `j <= 360 H_g` (`a_g <= 1`); a
+  not exceed 360 degrees per unit hold on its planes, `j <= 360 H_g` (`a_g <= 1`); a
   lighter one stays in the flow as medium, and a heavy one makes a slowly
   spinning throat. The new throat's twist and pinch follow
   from its spin, `n_g = a_g / (4 + a_g)` and `3 (4 + a_g) / (2 a_g)`
   echoes; a spinless throat makes no pinch and no tier.
 - **The place.** The pinch's coordinates (The antipoles, the shear and the
-  pinch): half a turn, after `3 (4 + a) / (2a)` echoes.
+  pinch): 180 degrees on the isoclinic planes, after `3 (4 + a) / (2a)`
+  echoes.
 - **The hold.** The matter the flow has in the fold when it closes, summed
   from the parcels' counts: a reading of the founding as flow, not a
   formula. Until the flow is built, the galactic cores' present mass
@@ -687,8 +719,8 @@ Status: derived ([#35](https://github.com/SAIOS-SAMN/xylarium/issues/35), [#60](
 
 Axioms:
 
-1. **Exactness.** Counts are in Z, turns in Q/Z, everything else exact in
-   Q; an irrational is a certified enclosure, never stored; no rational is
+1. **Exactness.** Counts are in Z, angles in degrees modulo 360 on a named
+   plane, everything else exact in Q; an irrational is a certified enclosure, never stored; no rational is
    rounded.
 2. **Deficit.** A hold `M` at reach `r` keeps `M / (r + M)` of what reaches
    it.
@@ -724,7 +756,7 @@ Theorems:
 | T7 | filling Z side first; axis polarity `A` | 8, 3 |
 | T8 | held where closed, or where `D(s) D(n)^A <= 1 - 2 delta` | 3, 9 |
 | T9 | pair share `p_pair = s (+) -(1 - s) = n (+) n / 3`; positron `R -> -R` | 3, 5 |
-| T10 | the flip keeps every state; residual `n / 3`; `Lk` conserved; pinch after `3 (4 + a) / (2a)` echoes at half a turn | 5, 8 |
+| T10 | the flip keeps every state; residual `n / 3`; `Lk` conserved; pinch after `3 (4 + a) / (2a)` echoes at 180 degrees on the isoclinic planes | 5, 8 |
 | T11 | pinched throat's spin `a_g = a_p M_p / H_g` (Kerr, with the parent's degrees of turning per unit hold, `360 a_p M_p`); a cohort with `a_g > 1` does not close and stays as medium | 7, 11 |
 | T12 | stretching pressure `(D(n)^m0 - 1) / (D(n)^m0 + 1)` | 3, T2 |
 | T13 | a pinch encloses the whole cohort released since the last, in every direction | 8, T10 |
@@ -778,7 +810,7 @@ Derived ([#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)); not yet built
   | Twist | each plane's weight | the antipode on each plane | the share of antipodal pairs flipped, `1 - (1 - n / 3)^N` |
   | Place | each plane's phase and anomaly | the periapsis | phase and anomaly per plane, and returns made |
   | Pressure | the axis plane, per state | the dipole's Z and Q sides | `D(n)^(A N)` |
-  | Pairs | each plane's electron phase | the echo's turn | `D(p_pair)^N` |
+  | Pairs | each plane's electron phase | the echo's reversal, 180 degrees | `D(p_pair)^N` |
   | Fold | each layer's writhe | the meeting of the folds | each layer's strain `r / r_0` about the neutral surface |
 
   The enclosed matter starts at the reach its layer has when the fold
@@ -790,7 +822,7 @@ Derived ([#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)); not yet built
   mass); 0.1783 of the founded mass lies inside it, compressed, and 0.3865
   outside, stretched; 0.4569 has no grip and flows. Per layer the reach
   runs from `ln r = 0.22` to `255`, the flipped share from 0.065 to 0.395,
-  and the phase on the isoclinic planes over the whole turn.
+  and the phase on the isoclinic planes over all 360 degrees.
 
 ### The bounce at a pinched throat
 
@@ -801,8 +833,8 @@ Derived ([#78](https://github.com/SAIOS-SAMN/xylarium/issues/78)); not yet built
   `circuit::axes`). The axis antipole, the inversion `t -> 1 / t`, carries a
   layer at pole state `t` relative to the parent to `1 / t` in the new
   throat, and turns every state's axis weight `m0 -> -m0`, so the kind's
-  axis polarity becomes `-A`; the plane antipole turns its phases half a
-  turn on the five planes.
+  axis polarity becomes `-A`; the plane antipole turns its phases 180
+  degrees on each of the five isoclinic planes.
 - **The new throat's jet.** From there the layer climbs back to the new
   throat by that throat's own jet, `t -> a t + b` with
   `a = D(s_g) D(n_g)^(-A) / (1 - delta)` and `b = delta / (1 - delta)`,
@@ -868,7 +900,7 @@ and theorems T2, T8 and T11. Every identity below is exact.
     exchange twist and writhe at constant `Lk` (T10), and the spin holds at
     `a*`.
   - The pair closes on both faces while `a <= 1` along the orbit, so a
-    core can open or close as its release turns it.
+    core can open or close as its release turns its spin.
 - **T11 read with the conserved turning.** The parent's degrees per unit
   hold are those of its founded hold, so a pinched cohort of hold `H_g`
   carries `H_g M_0 (a_0 + (n / 2) p)` and spins at
@@ -979,7 +1011,7 @@ and the order in which that is to be opened up.
      at the inlet, and relations in the lowest common tier.
   3. Separation and containment by caps in degrees.
   4. Shear, stretch, torque and twist on every link.
-  5. Exact enclosures and exact turns.
+  5. Exact enclosures and exact degrees on named planes.
   6. The dimension of the disc, the bulge and a body.
   7. Placement from the founding's coordinate, not the sample index (#36,
      #79).
@@ -1084,8 +1116,8 @@ law, the same at a nucleus, a star and a world:
   emission is `e = sum s_z open_z / hold_z`, and its magnetism is
   `mu = lambda e`. Outside the core's reach the gas is a circle (`n = 1`);
   within it, a ball (`n = 2`). An infall of extent `w` gathers
-  `m(w) = (lambda + mu) W share_n(theta)`, with `theta = w / (w + R)` of a
-  half turn (`xyl-core measure::share_turns`), and grips it as
+  `m(w) = (lambda + mu) W share_n(theta)`, with `theta = w / (w + R)` of
+  180 degrees on the infall's plane (`xyl-core measure::share_turns`), and grips it as
   `m / (w + m)`. The pulse heats the piece by `ring x swing x grip(W) / shed`
   (capped at 1), where `ring = 1 / (pi (R + 1))`, `swing = 1 + A_in` at the
   first echo's mean, and `shed = e + ln 2 / k_v`. On a ladder of halvings of
@@ -1102,7 +1134,8 @@ law, the same at a nucleus, a star and a world:
   converted (`galaxy::kpc_of_rings`).
 - Placement (`galaxy::star`): sample stars stand for equal shares of the
   stellar mass and are placed along the rings' cumulative holding by
-  irrational pivots (golden, silver, plastic and `sqrt 3 - 1` turns), which
+  irrational pivots (the golden, silver, plastic and `sqrt 3 - 1` angles;
+  a placement by index, to be replaced, roadmap item 40), which
   is the repulsion law. Disc stars orbit in the plane; core and nucleus
   stars orbit on tilted planes. The orbit's rate is the turning law at the
   star's reach, in radians per ring. The binary share is a declared ruler.
@@ -1208,7 +1241,7 @@ law, the same at a nucleus, a star and a world:
   `Rulers::reference_metallicity`). A region inside the rock line (the
   lowest condensation temperature of Fe, Si and Mg) holds no solids. Each
   region's mass is its holding times the solids, enriched beyond the water
-  line; its phase is its index times the golden turn. A core of ten world
+  line; its phase is its index times the golden angle on the disc's plane. A core of ten world
   masses or more acquires an envelope by the declared gathering law.
 - Settling (`systems::settle_about`): about an anchor of mass `M` in core
   units, each body turns by the turning law, `omega(A) = bell [M / (A + M)] / A`
@@ -1222,7 +1255,8 @@ law, the same at a nucleus, a star and a world:
   before the settled age (3 Gyr) combine the pair, mass-weighted; later
   meetings are recorded on the lighter body as its merge age
   (`World::merged_at`). A body's starting eccentricity is its swing, and its
-  tilt is `swing / (1 + swing)` of a quarter turn (`bodies::orbits`).
+  tilt is `swing / (1 + swing)` of 90 degrees toward the axis of its
+  star's plane (`bodies::orbits`).
 - Moons (`systems::moons`): each world anchors a manifold of reach
   `2 pi a m / (M + m)`, measured outward from five of the world's radii. The
   manifold's budget is the disc's agitation times the world's width on the
@@ -1236,7 +1270,7 @@ law, the same at a nucleus, a star and a world:
 - Exponentials below the working resolution are enclosed by `[0, 2^-bits]`
   rather than computed (`systems::exp`).
 - Angles between bodies: `manifold::gap` and `chain::Place::arc`
-  read the turn between two directions as the certified angle between them
+  read the angle between two directions as the certified angle between them
   (`xyl_core::rotor::angle_between`): the directions stay exact and only the
   angle, which has no rational form in general, is an enclosure.
 - Next: the manifold's disc-mass scale, the share of the manifold's matter

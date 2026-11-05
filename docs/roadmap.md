@@ -30,7 +30,7 @@ its source location.
 | Rationals (QQ) | All held state: element counts, firmament and bead amounts, reaches, spans, phases, the anchor, star and world masses | `xyl_core::Q`, lowest terms, `i64` on the stack and promoted to big integers on overflow; division is checked |
 | Reals (RR) | Never held directly. A real value enters as a proven rational enclosure `lo <= x <= hi` (pi, roots, exp, ln, sin, cos), or as a dyadic reading `m 2^e` at a seam, rounded toward zero and gridded back to `Q` before it is held | `xyl_core::certified::Encl`; `xyl_core::dyadic::Dy` |
 
-Angles are exact turns, read in sectors of base 60 and written in degrees
+Angles are exact degrees on a named plane, read in sectors of base 60 and written in degrees
 and their places (`xyl_core::coordinate`, LAW-COORDINATE v1). Phases about a throat are exact; drawn values
 carry the `2^-40` resolution of the draw.
 
@@ -79,7 +79,8 @@ founding and the light read the frames instead.
   208 and 1092 (`xylarium observe seals`).
 - **R, the polarity.** The electron phase state
   `R = kappa (1 - 2 frac(p))` lies in `[-kappa, kappa]`. Its sign is the
-  hemisphere of the bounce's pulse `p` (in turns), and its magnitude is the
+  hemisphere of the bounce's pulse `p` (a share of 360 degrees on the
+  isoclinic planes), and its magnitude is the
   electrons' coherence on S^11, `kappa = 2 G / ends` (`fibres`). It is zero
   for a kind with no charge (`circuit::electron_phase`).
 - **The pole point.** A carrier's pole state is the conformal point `X(t)`
@@ -222,7 +223,7 @@ where it belongs to one.
     composed along the anchor chain, replacing `xyl_core::rotor::Rotor` and
     the three coordinates of `chain::Place`; tier maps by
     `manifold::dilation` only; separation and containment by caps in
-    degrees; shear, stretch, torque and twist on every link; exact turns.
+    degrees; shear, stretch, torque and twist on every link; exact degrees on named planes.
     Its shape is settled by T18 (founded matter turns its five planes
     together): an axis-plane phase, one isoclinic phase and the turning
     between planes that carries a body into its parent; that turning is
@@ -297,7 +298,7 @@ where it belongs to one.
     the clusters the disc's atoms bond at the heat a world holds.
 15. **World units** ([#16](https://github.com/SAIOS-SAMN/xylarium/issues/16),
     `track`). Orbits in the system tier, radii in the planet tier, masses as
-    shares of the star's manifold, the day and year as turns; SI only through
+    shares of the star's manifold, the day and year as degrees of spin and orbit on their planes; SI only through
     `package::Si` for universal constants.
 16. **Geochemistry from the atoms**
     ([#17](https://github.com/SAIOS-SAMN/xylarium/issues/17), `track`). Replace
@@ -577,7 +578,7 @@ Next:
 2. Layer C, systems and worlds (`disc`, `systems`, `bodies`, `worlds`,
    `hydro`): orbits in the system tier's unit and radii in the planet
    tier's; world masses as shares of the star's manifold; a world's day and
-   year as turns of its spin and orbit per ring of its star; the world's heat as
+   year as degrees of its spin and orbit, each on its plane, per ring of its star; the world's heat as
    the deficit share it holds of its star's light at its reach, its
    temperature from that held share and its re-emission as that heat turned
    outward (model.md, Radiation: irradiation held, transduced and passed

@@ -93,7 +93,9 @@ another crate. Laws are composed from shares (ratios of the form
   built.
 - White hole (`bounce::Bounce::of`, `xyl-core cga::Source`):
   `N = P ^ (P . K)` is null, fixes `P` and keeps `sigma`; the far face is the
-  antipode of `P` under the planes' half turn (`circuit::plane_antipole`).
+  antipode of `P` under 180 degrees on each isoclinic plane
+  (`circuit::plane_antipole`); its return is the next bounce's, at the
+  horizon's deficit, one third.
   Status: built.
 - Spin draw (`origin::Origin::of`): the spin is drawn uniformly on the 2^-40
   grid, strictly inside `(0, 1)` (`origin::clamp_spin`). Status: built.
@@ -168,7 +170,8 @@ another crate. Laws are composed from shares (ratios of the form
   beads lie at the local maxima of the superposed hold and are parted at its
   minima. Status: built; replaced by the founding as flow (planned).
 - Bead (`Substrate::found`): the state is the recipe mass; the reach and
-  phase are those of the most abundant kind, with phase `turn(a Z)`; and the
+  phase are those of the most abundant kind, with phase `360 frac(a Z)`
+  degrees on its plane (`turn(a Z)` in code); and the
   inside is `1 + 2 sum(inner states / pushed-out mass)`. Status: built; replaced by the founding as flow (planned).
 - Rim (`Substrate::found`): the rim is `max R (1 + s_final)` over every
   shell. Status: built; replaced by the founding as flow (planned).
@@ -200,14 +203,16 @@ another crate. Laws are composed from shares (ratios of the form
   - Orbit about `M` at reach `r`: `v = delta = M / (r + M)`; ellipse with
     `a = r`, `e = delta`, `r_p = r (1 - delta)`, `r_a = r (1 + delta)`;
     `r_a / r_p = (1 + delta) / (1 - delta) = 1 + 2M / r`.
-  - Shear: periapsis advance `delta` of a turn per traversal; return after
+  - Shear: periapsis advance `360 delta` degrees per traversal in the
+    orbital plane (a degree of structure); return after
     `q` traversals, `q` the denominator of the advance; resonances
     `r_k = (k - 1) M` return after `k`; far-face images `M / (k - 1)`.
   - Ring: the throat orbit's reading at count `t`, `R(t) = (D(n)^t by its
     exponent; phi_i(t) = t theta_i mod 1 in Q/Z, i = 1..5; whole
     traversals in Z and each plane's order)`, never one scalar; durations
     (`2 pi M / s` per traversal, in `r_g / c`) are display through a
-    certified pi. Turning in turns per traversal: `(delta(r) / r) (M / s)`,
+    certified pi. Turning in degrees per traversal on the orbit's plane:
+    `360 (delta(r) / r) (M / s)`,
     exact.
   - Local ring at reach `r`: one traversal of the orbit at `r`, lasting
     `s r (r + M) / M^2` core traversals (exact; pi cancels); every law step
@@ -249,8 +254,8 @@ another crate. Laws are composed from shares (ratios of the form
 
 - Firmament (`Substrate::found`): the firmament holds the held kinds inside
   the vessel, with spin equal to reach on the 2^-64 grid and phase
-  `turn(a Z)`; amounts are scaled by `1 / sum mass_of(z, amount)` so that the
-  firmament's mass is 1. Status: built.
+  `360 frac(a Z)` degrees on its plane (`turn(a Z)` in code); amounts are
+  scaled by `1 / sum mass_of(z, amount)` so that the firmament's mass is 1. Status: built.
 - Mass of an amount (`circuit::mass_of`): `amount (Z + Q) / hold_Z`.
   Status: built.
 - Held share (`Substrate::held_share`): the held share is
@@ -321,7 +326,7 @@ another crate. Laws are composed from shares (ratios of the form
     `n / 3 = a / (3 (4 + a))`, over `a = m / N`: `m / (3 (4N + m))`.
   - Linking: per echo `dTw = n/2 - n/2`, `dWr = n/3 - n/3`; relative
     writhe `2 N n / 3`, first whole at `N*`.
-  - Pinch: `N* = 3 / (2n) = 3 (4 + a) / (2a)` echoes, phase 1/2 turn.
+  - Pinch: `N* = 3 / (2n) = 3 (4 + a) / (2a)` echoes, at 180 degrees on the isoclinic planes.
   - Seed 7: `n / 3 = 127041008559 / 4779169536781`;
     `N* = 4779169536781 / 254082017118` echoes;
     `2 N* = 4779169536781 / 127041008559` rings, ring 37 at
@@ -368,8 +373,8 @@ another crate. Laws are composed from shares (ratios of the form
 - The bounce at a pinched throat
   ([model.md](model.md#the-bounce-at-a-pinched-throat), [#78](https://github.com/SAIOS-SAMN/xylarium/issues/78)).
   Status: planned (derived).
-  - Far face: `t -> 1 / t` per layer; axis polarity `A -> -A`; phases half
-    a turn on the five planes.
+  - Far face: `t -> 1 / t` per layer; axis polarity `A -> -A`; phases 180
+    degrees on each of the five isoclinic planes.
   - New throat's jet: `a = D(s_g) D(n_g)^(-A) / (1 - delta)`,
     `b = delta / (1 - delta)`, `delta = m / (2 H_g + m)`; held where
     `D(s_g) D(n_g)^(-A) <= 1 - 2 delta`.
@@ -453,7 +458,8 @@ another crate. Laws are composed from shares (ratios of the form
   `h = state / mean state` (the home galaxy has 1 at reach 0); a galaxy's
   share is its pull over the sum, and its delay is `tau`. Status: built.
 - Coherence (`circuit::coherence`): `1 - 2 min(d, 1 - d)`, with `d` the
-  phase difference in turns. Status: built.
+  phase difference on their shared plane as a share of 360 degrees.
+  Status: built.
 - Landing (`Substrate::landing`): a galaxy's share is its pull times its
   coherence over the sum, or the pull alone where every coherence is zero.
   Status: built.
@@ -473,11 +479,12 @@ another crate. Laws are composed from shares (ratios of the form
   (`galaxy::first_star_mass`). Status: built.
 - Galactic core mass (`cores::founding_of`): `hole_suns = hole_mass x state`.
   Status: built.
-- Circulation (`cores::founding_of`): the circulation is `4 delta / echo`
-  turns per Gyr, with `delta = inside / (reach + inside)`. Status: built.
+- Circulation (`cores::founding_of`): the circulation is `1440 delta / echo`
+  degrees per Gyr on the galaxy's orbital plane, with `delta = inside / (reach + inside)`. Status: built.
 - Galaxy plane (`cores::founding_of`): the node lies at
-  `index x golden turn`, and the tilt holds `index x plastic turn` of the
-  S^360 measure (`galaxy::node_of`, `galaxy::tilt_of`). Status: built.
+  `index x` the golden angle about the throat's axis, and the tilt toward
+  it holds `index x` the plastic angle's share of the S^360 measure (a
+  placement by index, roadmap item 40) (`galaxy::node_of`, `galaxy::tilt_of`). Status: built.
 - Galaxy scale (`cores::Shape::scale`): `2 m / (1 + m)`, with
   `m = hole_suns / hole_mass`. Status: placeholder.
 
@@ -520,7 +527,7 @@ another crate. Laws are composed from shares (ratios of the form
   `Z + Q` nucleons. Status: built.
 - Electron phase state (`circuit::electron_phase`):
   `R = kappa (1 - 2 frac(p))` in `[-kappa, kappa]`, with `p` the bounce's
-  pulse in turns and `kappa` the electrons' coherence on S^11 (`fibres`,
+  pulse as a share of 360 degrees on the isoclinic planes and `kappa` the electrons' coherence on S^11 (`fibres`,
   `2 G / ends` for the charge's electrons); `R` is zero for a kind with no
   charge. Status: built.
 - Pole point (`circuit::pole_point`, `circuit/poles.rs`): `X(t)` lies on the
@@ -529,7 +536,7 @@ another crate. Laws are composed from shares (ratios of the form
   inversion is `X(t) -> X(1 / t)` (`circuit::axis_antipole`). Status: built.
 - Axes (`circuit/axes.rs`): the pulse has one fixed axis, the pole axis
   (base axis 1), and five isoclinic planes on base axes 2-3, 4-5, 6-7, 8-9
-  and 10-11 (`circuit::plane_blade`). The planes' half turn
+  and 10-11 (`circuit::plane_blade`). 180 degrees on each isoclinic plane
   (`circuit::plane_antipole`) sends a point to its antipode, and together
   with the axis's inversion it forms the pulse's antipole
   (`circuit::antipole`). The antinode share of harmonic `q` is 0 for even `q`
@@ -558,7 +565,8 @@ another crate. Laws are composed from shares (ratios of the form
   `h = 1 + held share`; `e = sum s_z e_z` and `mu = lambda e`; `n = 1`
   beyond one galaxy ring and `n = 2` otherwise. Status: built.
 - Gathering (`formation::gathered`): `m(w) = (lambda + mu) W share_n(theta)`,
-  with `theta = w / (2 (w + R))` turns (`xyl-core measure::share_turns`).
+  with `theta = 360 w / (2 (w + R))` degrees on the infall's plane
+  (`xyl-core measure::share_turns`).
   Status: built.
 - Grip and shear: the grip is `m / (w + m)`, and the shear is
   `h w / (R (R + w))`. Status: built.
@@ -602,8 +610,9 @@ another crate. Laws are composed from shares (ratios of the form
   (`chem::Light`). Status: placeholder; the next step is yields from the
   founding (roadmap, Rules from the founding and the galactic cores).
 - Placement (`galaxy::star`): the reach is where the rings' cumulative
-  holding reaches the silver-turn pivot; the disc phase follows the golden
-  turn, the ball planes follow the plastic and golden turns, and the rate
+  holding reaches the silver-angle pivot; the disc phase follows the golden
+  angle on the disc's plane, the ball planes follow the plastic and golden
+  angles (a placement by index, roadmap item 40), and the rate
   follows the turning law. Status: built.
 - Piece star mass (`galaxy::piece_star_mass`): `m_p = s c` core masses,
   with `s` the share of the piece's infall the star tier's cut holds
@@ -690,7 +699,7 @@ another crate. Laws are composed from shares (ratios of the form
   `M_star / s x Z_rel x Rulers::reference_metallicity` (world masses); a
   region's mass is `holding x solids x enrichment`; regions inside the rock
   line `min Tc(Fe, Si, Mg)` are skipped, and the phase is
-  `k x golden turn`. Status: partial (`reference_metallicity`).
+  `k x` the golden angle on the disc's plane. Status: partial (`reference_metallicity`).
 - Formation temperature (`systems::Spec::t_form`): `278 L / a`. Status:
   placeholder.
 - Envelope (`systems::system`): a world gathers an envelope when its core
@@ -710,7 +719,7 @@ another crate. Laws are composed from shares (ratios of the form
   mass-weighted, and later ages are recorded on the lighter body
   (`World::merged_at`). Status: built.
 - Orbit (`bodies::orbits`): `e0 = swing`; the tilt is `swing / (1 + swing)`
-  of a quarter turn, and the node and periapsis take the settled phase.
+  of 90 degrees toward the axis of the star's plane, and the node and periapsis take the settled phase.
   Status: built.
 - Moon manifold (`systems::moons`): the reach is `2 pi a m / (M + m)`
   (`manifold::reach`) in the world's radii from 5; the budget is
@@ -730,7 +739,7 @@ another crate. Laws are composed from shares (ratios of the form
   the certified angle `pi / 2 -/+ asin(|a . b| / |a| |b|)`
   (`xyl_core::rotor::angle_between`), the directions exact, read at its
   midpoint; the rotor's inverse is its conjugate (`Rotor::inverse`). The
-  arc on a sphere is that turn times the chord `R sin(s / R)`
+  arc on a sphere is that angle times the chord `R sin(s / R)`
   (`bounce::curved_reach`). Status: built.
 - Disc-mass scale of the manifold: this scale is not yet built; it is the
   next step (roadmap, Worlds on the manifold chain).

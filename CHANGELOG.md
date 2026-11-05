@@ -175,6 +175,11 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Every turn in the documents names its axis and is stated in degrees, with
+  its physics as torsion (modification, structure or perturbation) and its
+  return read from the deficit at the return's reach (docs/model.md, "Turns:
+  axis, degrees and the return"; AGENTS.md; glossary, Turn).
+
 - The coordinate reads LAW-COORDINATE v1 (Mycelium 78.173): lanes carry
   the network's meanings (S spatial, G gauge, T temporal, H holonomic),
   values are signed and exact, sectors of base 60 at any depth,

@@ -52,6 +52,11 @@ A module `foo` is `src/foo.rs` or, when split, the directory `src/foo/`
 - No time-stepping loops. Change is a closed form of `t` or an event found
   by `xyl_core::event`.
 - Randomness only from `xyl_core::Stream::derive(seed, &[parts])`.
+- Every turn names its axis (the plane, by its generators) and is stated in
+  degrees; its physics is torsion, as a degree of modification, structure or
+  perturbation; its return is stated with it, read from the gravitational
+  density (the deficit at the return's reach), never assumed equal
+  ([model.md](docs/model.md#turns-axis-degrees-and-the-return)).
 - One model per quantity: replace in place and delete the old code; never
   add a parallel version (`foo2`, `new_foo`).
 - Derive from lower tiers. An underived constant is a declared ruler and is

@@ -243,7 +243,7 @@ fn star_tier(p: &(Q, Q, Option<i64>, Q)) -> String {
         show(&f.a_disc),
         show(&f.cut.star),
         show(&f.cut.spin),
-        show(&f.cut.heat),
+        show(&f.cut.received.isoclinic),
         show(&f.cut.p0),
         show(&f.cut.rim),
         show(&f.cut.compactness),

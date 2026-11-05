@@ -30,7 +30,7 @@
 //!   ladder of halvings of the piece's width; the piece cools until its
 //!   residue is under the best extent's spare, then fragments at the largest
 //!   extent that holds.
-//! - The star tier's cut (`hold_at_heat`): each kind carried to
+//! - The star tier's cut (`hold_at`): each kind carried to
 //!   `l_z = p P_0 (e_z / e_mean)(w_mean / m_z) + add` stands at
 //!   `R_z = l_z / h`; the held set is the largest fixed point of
 //!   `h / (R_z + h) >= p`, iterated from all held. The star's cut of a lit
@@ -55,7 +55,7 @@ mod shells;
 
 pub(crate) use gas::{cooling, lights, pulse_heat, vacuum_halving};
 pub use gas::{lighting, Lighting};
-pub use hold::{hold_at_heat, Hold};
+pub use hold::{hold_at, Hold};
 pub use shells::founding_shells;
 
 use crate::elements::Element;

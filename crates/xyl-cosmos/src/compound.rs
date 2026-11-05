@@ -1,16 +1,16 @@
 //! Compounds at the atom tier: two-part clusters of atoms, their encoding as
 //! kind ids, and every cluster property computed from its parts.
 //!
-//! Reads `atoms` (`unpaired`, `unpaired_hot`, `atom`, `bond`); heat is in
+//! Reads `atoms` (`unpaired`, `unpaired_hot`, `atom`, `bond`); the received turning is in
 //! the units `atoms::unpaired_hot` takes. Counts are exact `u32`, shares `Q`.
 //!
 //! - `closing`: the smallest closing cluster of two atoms with pairable
-//!   frames u_A, u_B at a heat is (u_B / g) A . (u_A / g) B,
+//!   frames u_A, u_B at a received turning is (u_B / g) A . (u_A / g) B,
 //!   g = gcd(u_A, u_B), every frame paired; hydrides are u_B = 1, water
 //!   O . 4H. Returns (id, counts, grip) or None if either pairs nothing.
 //! - Grip is `atoms::bond`'s tau_min, the weaker tightness; `held` gives the
-//!   share of a meeting's contact held, min(1, tau_min / heat).
-//! - `stands`: a cluster stands while the heat strips neither part's open
+//!   share of a meeting's contact held, min(1, tau_min / turning).
+//! - `stands`: a cluster stands while the received turning strips neither part's open
 //!   frames; an atom always stands.
 //! - Properties: `charge` = sum n Z; `bonds` = the lesser side's n u;
 //!   `open` = sum n u - 2 bonds; `hold` = 3 charge - open, so
@@ -100,10 +100,10 @@ pub fn open(k: u32) -> u32 {
     all - 2 * bonds(k)
 }
 
-/// Open frames at a place's heat: an atom's after ionization; a standing
+/// Open frames at the turning a place receives: an atom's after ionization; a standing
 /// cluster keeps the open frames it has at rest, `open` (a cluster that would
 /// not stand has already parted).
-pub fn open_hot(k: u32, heat: &Q) -> u32 {
+pub fn open_hot(k: u32, heat: &crate::atoms::Received) -> u32 {
     if is_cluster(k) {
         open(k)
     } else {
@@ -129,9 +129,9 @@ pub fn tightness(k: u32) -> Q {
         .unwrap_or(Q::ONE)
 }
 
-/// Whether a cluster stands at a place's heat: the heat strips neither part's
-/// open winding (an atom always stands).
-pub fn stands(k: u32, heat: &Q) -> bool {
+/// Whether a cluster stands at the turning a place receives: the received turning strips neither
+/// part's open winding (an atom always stands).
+pub fn stands(k: u32, heat: &crate::atoms::Received) -> bool {
     !is_cluster(k)
         || parts(k)
             .iter()
@@ -139,10 +139,10 @@ pub fn stands(k: u32, heat: &Q) -> bool {
             .all(|(z, _)| crate::atoms::unpaired_hot(*z, heat) == crate::atoms::unpaired(*z))
 }
 
-/// What two atoms meeting at a place's heat close into: (cluster id, count of
+/// What two atoms meeting at the turning a place receives close into: (cluster id, count of
 /// `za`, count of `zb`, bond grip) for the smallest closing cluster of their
 /// pairable frames. None if either has nothing to pair.
-pub fn closing(za: u32, zb: u32, heat: &Q) -> Option<(u32, u32, u32, Q)> {
+pub fn closing(za: u32, zb: u32, heat: &crate::atoms::Received) -> Option<(u32, u32, u32, Q)> {
     let (ua, ub) = (
         crate::atoms::unpaired_hot(atom_z(za)?, heat),
         crate::atoms::unpaired_hot(atom_z(zb)?, heat),
@@ -157,9 +157,10 @@ pub fn closing(za: u32, zb: u32, heat: &Q) -> Option<(u32, u32, u32, Q)> {
     Some((id, na, nb, crate::atoms::bond(&a, &b).grip))
 }
 
-/// The share of a meeting's contact a bond holds at a place's heat: 1 within
-/// its grip, else grip / heat (the remainder parts).
-pub fn held(grip: &Q, heat: &Q) -> Q {
+/// The share of a meeting's contact a bond holds at the turning a place receives: 1 within
+/// its grip, else grip over the isoclinic turning (the remainder parts).
+pub fn held(grip: &Q, received: &crate::atoms::Received) -> Q {
+    let heat = &received.isoclinic;
     if heat <= grip {
         Q::ONE
     } else {
@@ -196,19 +197,22 @@ mod tests {
     fn water_closes_from_its_parts_and_parts_by_heat() {
         // Oxygen opens four frames on S^11 and hydrogen one, so the smallest
         // closing cluster is O . 4H.
-        let (w, no, nh, grip) = closing(8, 1, &Q::ZERO).unwrap();
+        let (w, no, nh, grip) = closing(8, 1, &crate::atoms::Received::none()).unwrap();
         assert_eq!((no, nh, key(w)), (1, 4, "Z008\u{b7}4Z001".to_string()));
         assert_eq!((charge(w), open(w), bonds(w)), (12, 0, 4));
         // The identity hold + open = 3 charge holds for the cluster as for its
         // parts.
         assert_eq!(hold(w) + open(w), 3 * 12);
         assert_eq!(grip, Q::ONE);
-        // The cluster stands at heat 0; at heat 1 hydrogen's winding is
-        // stripped and the cluster parts.
-        assert!(stands(w, &Q::ZERO) && !stands(w, &Q::ONE));
+        // The cluster stands with no turning received; at an isoclinic turning of 1 hydrogen's
+        // winding is stripped and the cluster parts.
+        assert!(
+            stands(w, &crate::atoms::Received::none())
+                && !stands(w, &crate::atoms::Received::isoclinic(Q::ONE))
+        );
         // Sealed kinds pair nothing; any other pair closes by the gcd.
-        assert!(closing(28, 1, &Q::ZERO).is_none());
-        let (c, ..) = closing(8, 8, &Q::ZERO).unwrap();
+        assert!(closing(28, 1, &crate::atoms::Received::none()).is_none());
+        let (c, ..) = closing(8, 8, &crate::atoms::Received::none()).unwrap();
         assert_eq!((key(c), open(c)), ("2Z008".to_string(), 0));
         assert!(atom_z(w).is_none() && atom_z(8) == Some(8));
     }

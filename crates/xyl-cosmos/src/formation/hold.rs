@@ -1,10 +1,10 @@
-//! The star tier's cut: which kinds of an infall a core holds at its heat
+//! The star tier's cut: which kinds of an infall a core holds at the turning it receives
 //! and what it releases to the disc (see the parent module's header).
 
 use super::mass_weight;
 use xyl_core::Q;
 
-/// What a core (a star's or a planetary core) holds at its heat: the share
+/// What a core (a star's or a planetary core) holds at the turning it receives: the share
 /// of its matter held, and the released remainder.
 ///
 /// The star tier's cut: the core has no bounce, only torsion; its push is
@@ -13,7 +13,7 @@ use xyl_core::Q;
 /// l_z = p P_0 (e_z / e_mean)(w_mean / m_z) + `add` - p the core's push
 /// (1/2), P_0 the core's over-pressure, e_z the kind's open share, m_z its
 /// mass per nucleus, means by count, `add` a turning the matter brings (a
-/// world's heat) - and stands at R_z = l_z / H about the core's hold. It is
+/// world's received turning) - and stands at R_z = l_z / H about the core's hold. It is
 /// held (the star) where H / (R_z + H) >= p, else carried into the disc.
 /// Noble kinds (e = 0) carry no spin and fall in; an infall with no open
 /// frames is all star.
@@ -37,21 +37,35 @@ pub struct Hold {
     pub reach: Q,
 }
 
-/// What a core holds at its heat. Each kind's open share is taken after the
-/// heat strips its loosely held windings (atoms::unpaired_hot; a cold core
-/// passes heat 0), so the push grips only what stays open. The core's light
+/// What a core holds at the turning it receives. Each kind's open share is
+/// taken after the isoclinic turning strips its loosely held windings
+/// (atoms::unpaired_hot; a cold core receives none), so the push grips only
+/// what stays open. The core's light
 /// adds over-pressure `p0` = P_0 = 1 + PHI / H (1 for a dark core), carrying
 /// every kind out by P_0 times its push while the held threshold stays p: a
 /// dark core holds its whole infall and a transduction one releases kinds, the
 /// lightest first.
-pub fn hold_at_heat(mix: &[(u32, Q)], p: &Q, add: &Q, heat: &Q, p0: &Q) -> Hold {
-    hold_about(mix, p, add, &Q::ZERO, heat, p0)
+pub fn hold_at(
+    mix: &[(u32, Q)],
+    p: &Q,
+    add: &Q,
+    received: &crate::atoms::Received,
+    p0: &Q,
+) -> Hold {
+    hold_about(mix, p, add, &Q::ZERO, received, p0)
 }
 
-/// [`hold_at_heat`] about a core that already holds `state`.
-fn hold_about(mix: &[(u32, Q)], p: &Q, add: &Q, state: &Q, heat: &Q, p0: &Q) -> Hold {
+/// [`hold_at`] about a core that already holds `state`.
+fn hold_about(
+    mix: &[(u32, Q)],
+    p: &Q,
+    add: &Q,
+    state: &Q,
+    received: &crate::atoms::Received,
+    p0: &Q,
+) -> Hold {
     let open_of = |z: u32| {
-        Q::int(i64::from(crate::compound::open_hot(z, heat)))
+        Q::int(i64::from(crate::compound::open_hot(z, received)))
             .checked_div(&Q::int(i64::from(crate::compound::hold(z))))
             .unwrap_or(Q::ZERO)
     };

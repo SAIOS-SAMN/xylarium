@@ -106,6 +106,14 @@ another crate. Laws are composed from shares (ratios of the form
   `J = H (2a - 1) / (1 - a)`, put on the origin's grid by
   `origin::clamp_spin`. The founding reads the share once
   (`circuit::Substrate::found`) and holds it as `Substrate::share`. Status: built.
+- Received turning (`atoms::Received`; docs/model.md, Chemistry from the
+  elements; #103): `{ axis, isoclinic }`, the axis plane's push per echo
+  (the pole state's dilation, a star's compactness) and the isoclinic
+  planes' turning per echo in hydrogen units (stripping:
+  `atoms::unpaired_hot` strips windings of tightness at most
+  `min(isoclinic, 1)`; a bond holds `min(1, grip / isoclinic)`,
+  `compound::held`). `stars::Sequence::of` reads the steps on the isoclinic
+  planes and the throat climb on the axis plane. Status: built.
 - Link remanence (docs/model.md, Phase weakening and phase strengthening;
   T19, #84): `w = J - (a_0 M_0) M`; per passage
   `w' = w (1 - m / M) + J (m / M) (1 - rho_c / rho_hold)`; conserved between
@@ -692,7 +700,7 @@ another crate. Laws are composed from shares (ratios of the form
   luminosity read by the system and world layers.
 - Flicker (`stars::flicker`): `(pi / 2) |cos(2 pi t / echo)|`. Status:
   built.
-- Star's cut (`disc::star_hold`, `formation::hold_at_heat`): the spin is
+- Star's cut (`disc::star_hold`, `formation::hold_at`): the spin is
   `h w / (R (R + w))`, the heat is `2 ring_per_bell(r)` and
   `p0 = 1 + 2 transduced_per_bell(r)`; each kind is carried to
   `l = p p0 (e / e_mean)(w_mean / w) + spin` and is held where

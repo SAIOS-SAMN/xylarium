@@ -121,7 +121,7 @@ fn surface_temperature_falls_with_distance() {
             r: crate::galaxy::rings_of_kpc_dy(Dy::int(8)),
             reach: crate::galaxy::rings_of_kpc_dy(Dy::int(8)),
             compactness: Dy::sci(1, -6),
-            sequence: crate::stars::Sequence::of(&[(1, Q::ONE)], &Q::ZERO),
+            sequence: crate::stars::Sequence::of(&[(1, Q::ONE)], &crate::atoms::Received::none()),
             sources: sources.clone(),
             path: None,
         };
@@ -153,7 +153,7 @@ fn surface_temperature_falls_with_distance() {
         r: crate::galaxy::rings_of_kpc_dy(Dy::int(8)),
         reach: crate::galaxy::rings_of_kpc_dy(Dy::int(8)),
         compactness: Dy::sci(1, -6),
-        sequence: crate::stars::Sequence::of(&[(1, Q::ONE)], &Q::ZERO),
+        sequence: crate::stars::Sequence::of(&[(1, Q::ONE)], &crate::atoms::Received::none()),
         sources,
         path: None,
     };

@@ -1165,6 +1165,29 @@ what the physics produces is read, and the minds of a universe name it
   holds its turning as remanence between passages and is cleared at its
   coercivity (T19). The automorphism of the chain carries the law from the
   core down to the atom unchanged (The automorphic, synaptic chain).
+- **The nuclear and the atomic: orthogonal, analogous, coupled.**
+  - **Orthogonal in the planes.** The nuclear acts on the axis plane: the
+    Z-Q stretch, the pole state `t = U / W`, the dipole `D(n)` and the axis
+    polarity, a hyperbolic dilation. The atomic acts on the five isoclinic
+    planes: the bands' Hopf fibres, the electron phase, the twist charge and
+    a bond's turning. The two lie in orthogonal planes and commute (Weights
+    on the six planes), so a nuclear change and a chemical change are
+    distinct components and never one number.
+  - **Analogous in the law.** One attractor pair, separation and remanence
+    at both tiers: a nucleus is its Z and Q faces, a bond its two atoms'
+    faces, and both release held frames.
+  - **Coupled through the frames.** Each proton's three frames span both
+    (axiom 9): the open frames `U` are the unpaired electrons, the atomic
+    side, standing at the nucleus's Q pole; the held frames `W = 3Z - U` are
+    its bonding at the Z pole. Pairing electrons moves frames from the Q pole
+    to the Z pole, a chemical act changing the nuclear pole state, and
+    stripping moves them back; a change on one set of planes shows on the
+    other only through the frames.
+  - **Received turning carries both** (`atoms::Received`): the axis plane's
+    push, which the pole state reads (a star's compactness), and the
+    isoclinic planes' turning, which strips the windings and sets a bond's
+    hold (`atoms::unpaired_hot`, `compound::held`), each read by the laws
+    of the planes it acts on (`stars::Sequence::of` reads both).
 - **Built from the elements.**
   - The atom: its bands filled on S^11, its open and held frames, its
     tightness and its stripping by received turning (`atoms::atom`,
@@ -1206,6 +1229,11 @@ what the physics produces is read, and the minds of a universe name it
      across the planes (the field law). What a bond network receives is the
      H-lane components it delivers, per plane and between planes, with the
      return read from the deficit at the body's reach, never one temperature.
+     Opened in part: the carrier `atoms::Received` holds the axis plane's
+     push and the isoclinic planes' turning apart through the atom, the
+     two-part closure, the star cut and the star's sequence; the turnings
+     between planes and the return are to come with the frame carrier
+     (roadmap item 40).
   2. **Closure held, not chosen.** Every closure a mixture admits is held
      together, a superposition, never the one releasing most. Passage,
      perception or the network's own shear collapses it, as a vortex is
@@ -1381,7 +1409,7 @@ law, the same at a nucleus, a star and a world:
   system-tier units (`galaxy::piece_rim`, `galaxy::Star::compactness`). The rim
   comes from the atoms: the cut carries each kind to a spin from its open frames
   and its mass per nucleus and holds it where its deficit meets the push
-  (`formation::hold_at_heat`). The cut is read in three states. At collapse the
+  (`formation::hold_at`). The cut is read in three states. At collapse the
   dark cut (no over-pressure) gives the held share `s0` and rim `R0`, so the
   collapsed star's compactness is `delta0 = s0 c / (R0 60 + s0 c)`. At ignition
   the star holds `delta0` of the turning it receives per echo; that is its
@@ -1406,7 +1434,7 @@ law, the same at a nucleus, a star and a world:
   per echo at the star and pushed by the star's transduction per echo as an
   over-pressure `p0 = 1 + transduced`. Each kind is carried to
   `l = p p0 (e / e_mean)(w_mean / w) + add` and is held where
-  `h / (l / h + h) >= p` on the held hold (`formation::hold_at_heat`). The
+  `h / (l / h + h) >= p` on the held hold (`formation::hold_at`). The
   disc's agitation is `turning x swing x grip / shed`, with
   `grip = (1 - star) / (2 - star)` and `shed = e_rest + ln 2 / k_v`.
 - The star's manifold (`galaxy::disc_frame`): the star's gathering extent is

@@ -66,7 +66,7 @@ fn held_cut(r: &Q) -> Option<(usize, Q, Lit)> {
         Some(c) => c,
         None => {
             let c = piece_cut(&sub, record).map(|cut| {
-                let seq = crate::stars::Sequence::of(&cut.held, &cut.heat);
+                let seq = crate::stars::Sequence::of(&cut.held, &cut.received);
                 std::sync::Arc::new((cut, seq))
             });
             if let Ok(mut m) = map.lock() {
@@ -152,7 +152,7 @@ pub fn first_star_compactness() -> Dy {
 /// piece lights.
 pub fn first_star_sequence() -> crate::stars::Sequence {
     first_cut()
-        .map(|cut| crate::stars::Sequence::of(&cut.held, &cut.heat))
+        .map(|cut| crate::stars::Sequence::of(&cut.held, &cut.received))
         .unwrap_or_default()
         .at(first_star_compactness())
 }

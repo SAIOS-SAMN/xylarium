@@ -19,7 +19,8 @@
 //! Outputs: [`Checkpoint::of`] reads a [`Universe`]; [`Checkpoint::encode`]
 //! writes a versioned line-per-item text in which every number is an exact
 //! rational (`n` or `n/d`); [`Checkpoint::decode`] reads it back, returning
-//! `None` on a wrong version line or an unparsable known line; and
+//! `Err` on a wrong version line (the retired v3 refused by name) or an
+//! unparsable known line; and
 //! [`Checkpoint::restore`] carries the universe to the held count without
 //! deciding acts (recorded exoduses and settlements are queued instead),
 //! applies the records and queues later inputs at their counts.
@@ -34,7 +35,7 @@ use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 
 const FORECAST_FORMAT: &str = "xylarium checkpoint v4";
-/// The previous version, read for homes whose commits heard no point.
+/// The previous version, refused by name: its commits held a height alone.
 const FORMAT_V3: &str = "xylarium checkpoint v3";
 
 /// A people's held record.
@@ -95,14 +96,13 @@ pub struct Checkpoint {
 /// name's BLAKE3 hash; the tag keeps a record one word wide, since names may
 /// contain spaces.
 pub fn tag(name: &str) -> String {
-    blake3::hash(name.as_bytes()).as_bytes()[..4]
-        .iter()
-        .map(|b| format!("{b:02x}"))
-        .collect()
+    hex(&blake3::hash(name.as_bytes()).as_bytes()[..4])
 }
 
-fn hex(k: &[u8; 32]) -> String {
-    k.iter().map(|b| format!("{b:02x}")).collect()
+/// Returns bytes as lowercase hex, two digits a byte: the one hex encoder of
+/// keys, tags and hashes.
+pub fn hex(b: &[u8]) -> String {
+    b.iter().map(|x| format!("{x:02x}")).collect()
 }
 
 fn key(s: &str) -> Option<[u8; 32]> {
@@ -361,14 +361,25 @@ impl Checkpoint {
     /// Parses a checkpoint from the text written by [`Checkpoint::encode`].
     /// Unknown lines are skipped.
     ///
-    /// Returns `None` when the first line is not this checkpoint version, or
-    /// when a known line holds a number, key or index that does not parse.
-    pub fn decode(text: &str) -> Option<Checkpoint> {
-        let mut lines = text.lines();
-        let version = lines.next()?;
-        if version != FORECAST_FORMAT && version != FORMAT_V3 {
-            return None;
+    /// Returns `Err` naming the refusal when the first line is the retired
+    /// v3 or not this checkpoint version, or when a known line holds a
+    /// number, key or index that does not parse.
+    pub fn decode(text: &str) -> Result<Checkpoint, String> {
+        let version = text.lines().next().unwrap_or_default();
+        if version == FORMAT_V3 {
+            return Err(format!("{FORMAT_V3} is no longer read"));
         }
+        if version != FORECAST_FORMAT {
+            return Err(format!("not a {FORECAST_FORMAT}"));
+        }
+        Self::decode_lines(text)
+            .ok_or_else(|| format!("a line of the {FORECAST_FORMAT} does not parse"))
+    }
+
+    /// The items of a checkpoint's lines after its version line; `None` when
+    /// a known line does not parse.
+    fn decode_lines(text: &str) -> Option<Checkpoint> {
+        let lines = text.lines().skip(1);
         let mut c = Checkpoint::default();
         let mut by: std::collections::BTreeMap<usize, Held> = std::collections::BTreeMap::new();
         for l in lines {
@@ -420,9 +431,6 @@ impl Checkpoint {
                 ["anchor", o, e, h, s, g, t, hh, k] => {
                     c.anchor = Some(point_of([o, e, h, s, g, t, hh, k])?)
                 }
-                // A v3 commit with a height alone: the rest of its point was
-                // not kept, so the home is refused rather than read short.
-                ["commit", _, _] => return None,
                 ["input", at, "take", seat, k] => c.inputs.push((
                     q_of(at)?,
                     Input::Take {
@@ -783,21 +791,14 @@ mod tests {
                 },
             )],
         };
-        assert_eq!(Checkpoint::decode(&c.encode()), Some(c));
-        assert_eq!(Checkpoint::decode("not a checkpoint"), None);
+        assert_eq!(Checkpoint::decode(&c.encode()), Ok(c));
+        assert!(Checkpoint::decode("not a checkpoint").is_err());
     }
 
     #[test]
-    fn a_v3_home_without_heard_points_still_reads() {
+    fn a_v3_home_is_refused_by_name() {
         let v3 = "xylarium checkpoint v3\nat 5/2\ncommit 1/2\n";
-        let c = Checkpoint::decode(v3).unwrap();
-        assert_eq!(c.commits, vec![(Q::ratio(1, 2), None)]);
-        assert_eq!(c.anchor, None);
-        // A commit line with a height alone no longer reads: a point is whole.
-        assert_eq!(
-            Checkpoint::decode("xylarium checkpoint v4\ncommit 1/2 41\n"),
-            None
-        );
+        assert!(Checkpoint::decode(v3).is_err_and(|e| e.contains("v3")));
     }
 
     /// A point under the test origin with integer lanes.

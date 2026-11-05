@@ -1,7 +1,7 @@
 //! The substrate law reading: `universal-core [R]`.
 
 use super::Options;
-use crate::run::show;
+use crate::run::{show, Founded};
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 use xyl_cosmos::circuit::{gyr_of_rings_dy, PoleFlux, Substrate};
@@ -22,12 +22,9 @@ fn per_gyr(x: Dy) -> Dy {
 /// echo is stepped and no parcel counted. The time is read in rings and
 /// written on the T lane; Gyr is shown beside it as a display conversion.
 pub(super) fn core_read(o: &Options, t_rings: Option<Q>) -> Result<String, String> {
-    let origin = Origin::of(o.seed).ok_or("no origin")?;
-    let elements = xyl_cosmos::elements::founded(
-        &xyl_cosmos::cores::substrate_for(&origin.parent.spin)
-            .ok_or("no founding")?
-            .share,
-    )?;
+    let Founded {
+        origin, elements, ..
+    } = Founded::of(o.seed)?;
     let clock = std::time::Instant::now();
     let s = xyl_cosmos::cores::substrate(&origin).ok_or("no founding")?;
     let founded_in = clock.elapsed();

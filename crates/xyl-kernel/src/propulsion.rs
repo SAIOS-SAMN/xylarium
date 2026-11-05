@@ -4,7 +4,8 @@
 //! Inputs: a people's `cosmic::Traits` (its solvent sets the chemical
 //! fuel's exhaust molecule), the universe's `xyl_cosmos::laws::Scales`
 //! (covalent bond energy, nuclear scale), the element table (hydrogen and
-//! helium masses for fusion), and light's speed from `package::Si`.
+//! helium masses for fusion), and light's speed, the electronvolt and the
+//! atomic mass unit from `package::Si`.
 //!
 //! - Energy ([`energy_per_kg`], J/kg) per [`Drive`]: chemical, the covalent
 //!   bond over the exhaust molecule's mass; fission, [`FISSION_SHARE`] of
@@ -27,21 +28,12 @@
 use crate::cosmic::Traits;
 use xyl_core::dyadic::Dy;
 use xyl_cosmos::laws::Scales;
+use xyl_cosmos::package::Si;
 use xyl_cosmos::worlds::{covalent_ev, Solvent};
 
 /// Light's speed (m/s).
 pub fn c_m_s() -> Dy {
-    Dy::from_q(&xyl_cosmos::package::Si::c())
-}
-
-/// An electronvolt (J), measured.
-pub fn ev_j() -> Dy {
-    Dy::sci(1_602_177, -25)
-}
-
-/// An atomic mass unit (kg), measured.
-pub fn amu_kg() -> Dy {
-    Dy::sci(166_054, -32)
+    Dy::from_q(&Si::c())
 }
 
 /// The share of rest mass a fissioning heavy nucleus releases, 9.14e-4
@@ -125,7 +117,7 @@ pub fn energy_per_kg(
                 Solvent::Volatile(s) => s.mu(),
                 _ => Dy::int(CHEM_EXHAUST_AMU),
             };
-            covalent_ev(sc) * ev_j() / (amu * amu_kg())
+            covalent_ev(sc) * Dy::from_q(&Si::ev_j()) / (amu * Dy::from_q(&Si::amu_kg()))
         }
         Drive::Fission => Dy::sci(FISSION_SHARE.0, FISSION_SHARE.1) * sc.nuclear * c2,
         Drive::Fusion => fusion_share(elements) * sc.nuclear * c2,

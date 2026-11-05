@@ -31,12 +31,13 @@
 pub mod history;
 pub mod housing;
 
-use crate::cosmic::{Annal, Cosmic, SystemReader};
+use crate::cosmic::{Annal, Cosmic, People, SystemReader};
 use crate::growth::Rulers;
 use crate::knowledge::{Domain, Knowledge, Stocks, Thinkers};
 use history::{Eminent, Held, Turning};
 use housing::houses;
 use xyl_core::dyadic::Dy;
+use xyl_core::shares::deficit_dy;
 use xyl_core::Stream;
 
 /// A people's state beyond its numbers: what its world houses, its settlers
@@ -80,29 +81,16 @@ pub struct Gauges {
     pub gamma: Dy,
 }
 
-fn share(a: Dy, b: Dy) -> Dy {
-    let both = a + b;
-    if both.signum() > 0 {
-        a / both
-    } else {
-        Dy::ZERO
-    }
-}
-
 impl Gauges {
     /// Reads the gauges from a people's `numbers`, what its world houses and
     /// its knowledge stocks `k`.
     pub fn read(numbers: Dy, housing: Dy, k: &Stocks) -> Gauges {
-        let instinct = share(housing, numbers);
+        let instinct = deficit_dy(housing, numbers);
         let intelligence =
             (k.mastery(Domain::Energy) + k.mastery(Domain::Materials) + k.mastery(Domain::Biology))
                 / Dy::int(3);
         let sentience = k.mastery(Domain::Information);
-        let consciousness = if housing.signum() > 0 {
-            (Dy::ONE - numbers / housing).clamp(Dy::ZERO, Dy::ONE)
-        } else {
-            Dy::ZERO
-        };
+        let consciousness = housing::free_share(numbers, housing);
         let gamma = ((Dy::ONE + instinct)
             * (Dy::ONE + intelligence)
             * (Dy::ONE + sentience)
@@ -217,7 +205,10 @@ impl Civilizations {
             .collect();
         for (i, p) in cosmic.peoples.iter().enumerate() {
             let Some((_, years)) = spans[i] else { continue };
-            let bodies_w = cosmic.power(p).map(|pw| pw.bodies_w).unwrap_or(Dy::ZERO);
+            let bodies_w = cosmic
+                .power(p, to)
+                .map(|pw| pw.bodies_w)
+                .unwrap_or(Dy::ZERO);
             let mut t = Thinkers::of(p, bodies_w, &cosmic.ctx);
             t.consciousness = self.gauges[i].consciousness;
             self.knowledge.step_one(i, &t, years);
@@ -295,13 +286,7 @@ impl Civilizations {
             bio,
             energy,
         ) * span.environment.clamp(Dy::ZERO, Dy::ONE);
-        let gen = crate::growth::generation_yr(&p.traits, rulers);
-        let grown = crate::growth::grow(
-            p.population,
-            housed,
-            Dy::ONE / gen.max(Dy::sci(1, -9)),
-            span.years,
-        );
+        let grown = crate::growth::grow(p.population, housed, p.rate, span.years);
         let q = &mut cosmic.peoples[i];
         q.population = if housed >= Dy::ONE {
             grown.max(Dy::ZERO)
@@ -677,10 +662,26 @@ struct Carried {
     viable: Dy,
 }
 
-/// Each carried people's drive and home escape speed (m/s): the chemical
-/// drive blended toward the best its chemistry allows by energy mastery
-/// (`transit::blended`); None where the cruise speed out of the home well
-/// (`transit::cruise_speed`) is not positive.
+/// A people's drive at energy mastery `energy`: the chemical drive blended
+/// toward the best its chemistry allows (`transit::blended`), with its home
+/// escape speed and its cruise speed out of the home well (m/s,
+/// `transit::cruise_speed` at `propulsion::MASS_RATIO`).
+pub fn drive(cosmic: &Cosmic<'_>, p: &People, energy: Dy) -> (crate::propulsion::Spec, Dy, Dy) {
+    let first = crate::propulsion::Spec::of(
+        crate::propulsion::Drive::Chemical,
+        &p.traits,
+        &cosmic.gal.sc,
+        cosmic.gal.elements,
+    );
+    let spec = crate::transit::blended(&first, &crate::transit::best_spec(cosmic, p), energy);
+    let escape = crate::transit::home_escape(cosmic, p);
+    let cruise =
+        crate::transit::cruise_speed(&spec, Dy::int(crate::propulsion::MASS_RATIO), escape);
+    (spec, escape, cruise)
+}
+
+/// Each carried people's drive and home escape speed (m/s) ([`drive`] at
+/// its energy mastery); None where the cruise speed is not positive.
 fn drives(
     cosmic: &Cosmic<'_>,
     spans: &[Option<(Dy, Dy)>],
@@ -692,20 +693,7 @@ fn drives(
         .enumerate()
         .map(|(i, p)| {
             spans[i]?;
-            let first = crate::propulsion::Spec::of(
-                crate::propulsion::Drive::Chemical,
-                &p.traits,
-                &cosmic.gal.sc,
-                cosmic.gal.elements,
-            );
-            let spec = crate::transit::blended(
-                &first,
-                &crate::transit::best_spec(cosmic, p),
-                masteries[i].1,
-            );
-            let escape = crate::transit::home_escape(cosmic, p);
-            let cruise =
-                crate::transit::cruise_speed(&spec, Dy::int(crate::propulsion::MASS_RATIO), escape);
+            let (spec, escape, cruise) = drive(cosmic, p, masteries[i].1);
             (cruise.signum() > 0).then_some((spec, escape))
         })
         .collect()

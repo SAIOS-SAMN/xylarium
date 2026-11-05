@@ -719,7 +719,11 @@ layer, each with the quantity that is to derive it.
   of 10 kg (`m_mind_kg` in `life`, read as `growth::Rulers::m_mind`), the
   unit metabolism it sets (19.1 W), the unit generation (14.2 yr),
   `eta_primary = 0.015`, `trophic = 0.1` and the flux ruler 340 W/m^2 are
-  to be derived from each people's chemistry.
+  to be derived from each people's chemistry. The flux ruler is still
+  written twice (`life` and `growth::Rulers::flux_w`) until `life` exposes
+  it; the r/K rule and body size of waking (`cosmic::select`) still repeat
+  the rule inside `life::foragers`, which no longer gates waking, until
+  `life` exposes them.
 - **Laws** (`laws`): Each constant is expressed as a ratio to a measured
   value and is to be stated in core units.
 - **Civilizations** (`xyl-kernel`): The mass ratio 10, the 18 amu exhaust

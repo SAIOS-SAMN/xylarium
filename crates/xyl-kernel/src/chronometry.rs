@@ -239,20 +239,22 @@ pub struct Chronometry {
 }
 
 /// The rate of a well of mass `inside_rg` at radius `r_rg` (both in r_g):
-/// r / (r + M), exact; 1 when r + M is zero.
+/// r / (r + M), the complement of the deficit share M / (r + M)
+/// (`shares::deficit`), exact; 1 where the deficit is refused (r + M zero or
+/// a negative part).
 fn well(r_rg: &Q, inside_rg: &Q) -> Q {
-    r_rg.checked_div(&(r_rg + inside_rg)).unwrap_or(Q::ONE)
+    &Q::ONE - &xyl_core::shares::deficit(inside_rg, r_rg).unwrap_or(Q::ZERO)
 }
 
 impl Chronometry {
     /// The keepers of a founding: the epicenter, then for each galactic core
     /// its hub, deep core, inner mantle and outer rim. The chain starts empty.
     pub fn of(origin: &Origin) -> Chronometry {
-        let units = xyl_cosmos::chain::units();
-        let kpc_m = xyl_cosmos::package::Si::kpc();
-        let kpc_rg = kpc_m.checked_div(&units.r_g_m).unwrap_or(Q::ONE);
-        let cluster_kpc = (&Tier::Cluster.in_rg() * &units.r_g_m)
-            .checked_div(&kpc_m)
+        // One kpc in r_g: the galaxy tier's kpc (`chain::kpc`) times the
+        // tier's unit in r_g; one cluster unit in kpc.
+        let kpc_rg = &xyl_cosmos::chain::kpc() * &Tier::Galaxy.in_rg();
+        let cluster_kpc = crate::transit::tier_m(Tier::Cluster)
+            .checked_div(&xyl_cosmos::package::Si::kpc())
             .unwrap_or(Q::ONE);
         let lambda = xyl_cosmos::pulse::wavelength_kpc().to_q();
         let bells = |kpc: &Q| kpc.checked_div(&lambda).unwrap_or(Q::ZERO);

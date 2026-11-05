@@ -6,17 +6,21 @@
 //! Stars come from `xyl_cosmos::galaxy`, systems from
 //! `xyl_cosmos::systems`, worlds and media from `xyl_cosmos::worlds`.
 //!
+//! - The cosmic world holds no clock: the universe's count (universe.rs) is
+//!   the one present, and every reading here takes its time as an argument.
 //! - Stars are identified by their index in the galaxy's sample and placed
-//!   on their orbits at the present ([`Cosmic::place`]); [`Cosmic::distance`]
-//!   is the arc between two stars on the universe's closed space (kpc).
+//!   on their orbits at a count ([`Cosmic::place`]); [`arc_kpc`] is the arc
+//!   between two stars on the universe's closed space (kpc), read by
+//!   [`Cosmic::distance`] and by the ley network.
 //! - Systems are built only when witnessed: when a mind wakes there or a
 //!   people reaches it ([`Cosmic::witness`]; [`Cosmic::prepare`] builds the
 //!   span's systems in parallel). Worlds are read per degree of the star's
 //!   life ([`Cosmic::world_at`], [`SystemReader`]) and cached; the caches
 //!   change no result.
 //! - Waking ([`Cosmic::wake`]): each forecast mind due by the target time
-//!   arises on its world, unless the world is held or cannot feed a viable
-//!   people (then it is counted `silent`). [`select`] reads its [`Traits`]
+//!   arises on its world, unless the world is held or houses fewer than a
+//!   viable people of its traits (civ/housing.rs `houses` with nothing
+//!   learned; then it is counted `silent`). [`select`] reads its [`Traits`]
 //!   from its world: strategy (an axial tilt above 23 degrees or a star
 //!   mass below 1/2 gives r),
 //!   sense, form, sociality, mind shape and size. Its numbers start at what
@@ -42,7 +46,7 @@ mod reader;
 pub use emergence::select;
 pub use reader::SystemReader;
 
-use reader::{world_key, world_read};
+use reader::{life, world_key, world_read};
 use std::collections::BTreeMap;
 use xyl_core::dyadic::Dy;
 
@@ -52,8 +56,7 @@ use xyl_cosmos::life::Body;
 use xyl_cosmos::minds::Schedule;
 use xyl_cosmos::systems::{system, System};
 use xyl_cosmos::worlds::{
-    age_of_degree, degree_of, settings, star_degree_gyr, Ctx, Galaxy, Medium, Region, Solvent,
-    State, Where,
+    age_of_degree, degree_of, settings, Ctx, Galaxy, Medium, Region, Solvent, State, Where,
 };
 
 /// The syllables peoples' names are spoken in: display only, never a mechanic.
@@ -223,8 +226,6 @@ pub struct Cosmic<'g> {
     /// When and where each mind would wake in the undisturbed galaxy, in
     /// order of waking.
     pub forecast: Schedule,
-    /// Deep time now (Gyr after the origin).
-    pub now: Dy,
     /// The next forecast mind not yet woken (minds are in order of waking).
     next: usize,
     /// Systems built so far, keyed by star index (built only when witnessed).
@@ -251,12 +252,10 @@ impl<'g> Cosmic<'g> {
     /// minds due by then.
     pub fn genesis(gal: Galaxy<'g>, forecast: Schedule) -> Cosmic<'g> {
         let ctx = Ctx::new(gal.sc);
-        let now = forecast.minds.first().map(|m| m.epoch).unwrap_or(Dy::ZERO);
         let mut c = Cosmic {
             gal,
             ctx,
             forecast,
-            now,
             next: 0,
             systems: BTreeMap::new(),
             peoples: Vec::new(),
@@ -278,8 +277,18 @@ impl<'g> Cosmic<'g> {
                 c.gal.seed
             ),
         });
-        c.wake(now);
+        c.wake(c.dawn());
         c
+    }
+
+    /// The epoch of the forecast's first mind (Gyr; 0 when the forecast is
+    /// empty): where the universe's count begins.
+    pub fn dawn(&self) -> Dy {
+        self.forecast
+            .minds
+            .first()
+            .map(|m| m.epoch)
+            .unwrap_or(Dy::ZERO)
     }
 
     /// The system of star `n`, witnessed (built once, from physics). None
@@ -303,19 +312,20 @@ impl<'g> Cosmic<'g> {
         self.systems.get(&n)
     }
 
-    /// Where star `n` is now (kpc about the core). None for a star not yet
+    /// Where star `n` is at count `t` (rings). None for a star not yet
     /// witnessed.
-    pub fn place(&self, n: u64) -> Option<Place> {
-        self.systems.get(&n).map(|w| {
-            // The cosmos places stars in rings; `now` converts here.
-            let t = xyl_cosmos::circuit::rings_of_gyr_dy(self.now);
-            w.star.place(t, &radius())
-        })
+    pub fn place(&self, n: u64, t: Dy) -> Option<Place> {
+        self.systems.get(&n).map(|w| w.star.place(t, &radius()))
     }
 
-    /// The arc between two witnessed stars now (kpc), on the closed space.
-    pub fn distance(&self, a: u64, b: u64) -> Option<Dy> {
-        Some(self.place(a)?.arc_kpc(&self.place(b)?, &radius()))
+    /// The arc (kpc) between two witnessed stars at count `t` (rings), on
+    /// the closed space ([`arc_kpc`]).
+    pub fn distance(&self, a: u64, b: u64, t: Dy) -> Option<Dy> {
+        Some(arc_kpc(
+            &self.systems.get(&a)?.star,
+            &self.systems.get(&b)?.star,
+            t,
+        ))
     }
 
     /// A world's state at an epoch, read at its star's age then, quantised to
@@ -340,15 +350,9 @@ impl<'g> Cosmic<'g> {
         epoch: Dy,
     ) -> Option<xyl_cosmos::worlds::Heartbeat> {
         let wit = self.systems.get(&star_n)?;
-        let born = xyl_cosmos::circuit::gyr_of_rings_dy(Dy::from_q(&wit.star.born));
         // The heartbeat changes over Gyr; it is cached per degree of the
         // star's life, as world states are.
-        let deg = star_degree_gyr(
-            &wit.star.sequence(),
-            wit.star.compactness(),
-            xyl_cosmos::galaxy::kpc_of_rings_dy(Dy::from_q(&wit.star.r)),
-            &self.ctx,
-        );
+        let (born, deg) = life(wit, &self.ctx);
         let quarters = degree_of(epoch - born, deg);
         if let Some(hit) = self.heartbeat_cache.borrow().get(&(star_n, w, quarters)) {
             return *hit;
@@ -371,10 +375,11 @@ impl<'g> Cosmic<'g> {
         self.forecast.minds.get(self.next).map(|m| m.epoch)
     }
 
-    /// The power a people's world offers and its bodies turn, now (growth.rs
-    /// layer 2): starlight, its world's heat, its bodies' metabolism.
-    pub fn power(&self, p: &People) -> Option<crate::growth::Power> {
-        let (state, _, body) = self.world_at(p.star, p.world, self.now)?;
+    /// The power a people's world offers and its bodies turn at `at` (Gyr;
+    /// growth.rs layer 2): starlight, its world's heat, its bodies'
+    /// metabolism.
+    pub fn power(&self, p: &People, at: Dy) -> Option<crate::growth::Power> {
+        let (state, _, body) = self.world_at(p.star, p.world, at)?;
         Some(crate::growth::power(
             &state,
             &body,
@@ -384,4 +389,12 @@ impl<'g> Cosmic<'g> {
             &crate::growth::Rulers::default(),
         ))
     }
+}
+
+/// The arc (kpc) between stars `a` and `b`, each placed at count `t`
+/// (rings), on the universe's closed space: the one reading of the arc
+/// between two stars ([`Cosmic::distance`], `transit::Network::arc_at`).
+pub fn arc_kpc(a: &Star, b: &Star, t: Dy) -> Dy {
+    let r = radius();
+    a.place(t, &r).arc_kpc(&b.place(t, &r), &r)
 }

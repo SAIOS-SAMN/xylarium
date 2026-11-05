@@ -12,7 +12,8 @@ use xyl_cosmos::chain::units;
 use xyl_cosmos::manifold::manifolds;
 
 impl Network {
-    /// Returns the passage time between places `a` and `b` (years). Within a
+    /// Returns the passage time between places `a` and `b` at count `t`
+    /// (rings), in years. Within a
     /// system it is the drive's leg across the gap between the orbits plus
     /// the window wait `w`, weighted by `w v_orb / (v_orb + cruise)`. Within a
     /// constellation it is the drive's leg along the arc between the stars.
@@ -33,19 +34,20 @@ impl Network {
         a: Place,
         b: Place,
         who: Option<usize>,
+        t: Dy,
     ) -> Option<Dy> {
         let cruise = cruise_speed(spec, ratio, escape);
         if cruise.signum() <= 0 {
             return None;
         }
         if a.star == b.star {
-            let years = voyage(spec, ratio, escape, separation_m(cosmic, a, b)?)?.years;
+            let years = voyage(spec, ratio, escape, separation_m(cosmic, a, b, t)?)?.years;
             let wit = cosmic.systems.get(&a.star)?;
             let all = manifolds(cosmic.gal.seed, &[a.star], &wit.system, &wit.star, &units());
-            let age = (cosmic.now
-                - xyl_cosmos::circuit::gyr_of_rings_dy(Dy::from_q(&wit.star.born)))
-            .max(Dy::ZERO)
-            .to_q();
+            // The transfer window reads the star's age in Gyr.
+            let age = xyl_cosmos::circuit::gyr_of_rings_dy(t - Dy::from_q(&wit.star.born))
+                .max(Dy::ZERO)
+                .to_q();
             let wait = window_years(&all, a.world, b.world, &age, years)
                 .map(|(w, v)| w * v / (v + cruise))
                 .unwrap_or(Dy::ZERO);
@@ -53,7 +55,7 @@ impl Network {
         }
         let (ca, cb) = (*self.of.get(&a.star)?, *self.of.get(&b.star)?);
         let star_leg = |x: u64, y: u64| {
-            self.arc(cosmic, x, y)
+            self.arc_at(x, y, t)
                 .map(|arc| arc * kpc_m() / cruise / year_s())
         };
         if ca == cb {

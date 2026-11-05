@@ -9,8 +9,10 @@ use std::cell::RefCell;
 use std::cmp::Reverse;
 use std::collections::{BTreeMap, BTreeSet};
 use xyl_core::dyadic::Dy;
+use xyl_core::shares::deficit_dy;
+use xyl_core::units::Tier;
 use xyl_core::Q;
-use xyl_cosmos::chain::{units, Place};
+use xyl_cosmos::chain::Place;
 
 /// A house able to build: the people's index, the cruise speed out of the
 /// home well (m/s), the spare power (W) and the drive's exhaust speed (m/s).
@@ -48,7 +50,7 @@ impl Network {
         let mut out = Vec::new();
         let from = self.read_to;
         self.read_to = to.max(from);
-        let houses = builders(cosmic);
+        let houses = builders(cosmic, to);
         let in_tune = in_tune_stars(cosmic, discord);
         // The starts of idle builders and the due times of works are taken in
         // one time order, so `current` only ever reads the constellations
@@ -265,10 +267,10 @@ impl Network {
     }
 }
 
-/// Returns the houses that can build: living ancient peoples whose swiftest
-/// drive climbs out of the home well and whose world has spare power
-/// (starlight plus heat less the bodies' use, at least zero).
-fn builders(cosmic: &Cosmic) -> Vec<Builder> {
+/// Returns the houses that can build at `at` (Gyr): living ancient peoples
+/// whose swiftest drive climbs out of the home well and whose world has
+/// spare power (starlight plus heat less the bodies' use, at least zero).
+fn builders(cosmic: &Cosmic, at: Dy) -> Vec<Builder> {
     let ratio = Dy::int(crate::propulsion::MASS_RATIO);
     cosmic
         .peoples
@@ -279,7 +281,7 @@ fn builders(cosmic: &Cosmic) -> Vec<Builder> {
             let spec = best_spec(cosmic, p);
             let cruise = cruise_speed(&spec, ratio, home_escape(cosmic, p));
             let spare = cosmic
-                .power(p)
+                .power(p, at)
                 .map(|w| (w.starlight_w + w.heat_w - w.bodies_w).max(Dy::ZERO))
                 .unwrap_or(Dy::ZERO);
             (cruise.signum() > 0 && spare.signum() > 0).then_some((i, cruise, spare, spec.v_e))
@@ -435,23 +437,21 @@ impl<'a> Siting<'a> {
             v_e,
             rulers: crate::growth::Rulers::default(),
             c: crate::propulsion::c_m_s(),
-            rg_per_kpc: kpc_m() / Dy::from_q(&units().r_g_m),
+            // One kpc in r_g: the galaxy tier's kpc (`chain::kpc`) times
+            // the tier's unit in r_g.
+            rg_per_kpc: Dy::from_q(&(&xyl_cosmos::chain::kpc() * &Tier::Galaxy.in_rg())),
         }
     }
 
-    /// Returns star `n`'s well remainder at the mouth, delta = m / (r + m),
-    /// with the star's mass m (core masses) and the star's binding reach r
-    /// (in the core's r_g); zero when the star is not in play.
+    /// Returns star `n`'s well remainder at the mouth, the deficit share
+    /// delta = m / (r + m) (`shares::deficit_dy`), with the star's mass m
+    /// (core masses) and the star's binding reach r (in the core's r_g);
+    /// zero when the star is not in play.
     fn well(&self, n: u64) -> Dy {
         let Some(st) = self.net.index.get(&n).and_then(|&x| self.net.sample.get(x)) else {
             return Dy::ZERO;
         };
-        let (m, r) = (Dy::from_q(&st.star.mass), st.reach * self.rg_per_kpc);
-        if r + m > Dy::ZERO {
-            m / (r + m)
-        } else {
-            Dy::ZERO
-        }
+        deficit_dy(Dy::from_q(&st.star.mass), st.reach * self.rg_per_kpc)
     }
 
     /// Returns the passer for a line to star `k`: the builder, or for

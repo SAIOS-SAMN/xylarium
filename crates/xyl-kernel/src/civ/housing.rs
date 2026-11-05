@@ -14,7 +14,10 @@
 //!   producers' efficiency and eaten at the link biology mastery lifts;
 //! - [`housing`]: fed power over a body's metabolism (bodies);
 //! - [`houses`]: [`housing`] of [`feeds_w`] in the medium of the people's
-//!   solvent.
+//!   solvent, the world's starlight and heat read from `growth::power`;
+//! - [`free_share`]: the share of the housing the numbers leave free,
+//!   `1 - numbers / housing` in [0, 1] (the consciousness gauge, civ/mod.rs,
+//!   and free thought, knowledge.rs).
 //!
 //! Invariants: pure functions with no state; no harvest where the people's
 //! solvent is absent; masteries are clamped to [0, 1].
@@ -75,9 +78,10 @@ pub fn houses(
     bio: Dy,
     energy: Dy,
 ) -> Dy {
+    let world = growth::power(state, body, traits, Dy::ZERO, ctx, rulers);
     housing(
         feeds_w(
-            growth::world_w(state, body, rulers),
+            world.starlight_w + world.heat_w,
             traits.medium(ms),
             body,
             rulers,
@@ -86,4 +90,14 @@ pub fn houses(
         ),
         growth::metabolism_w(traits, ctx, rulers),
     )
+}
+
+/// The share of a world's `housing` that `numbers` leave free:
+/// `1 - numbers / housing`, clamped to [0, 1]; zero where nothing is housed.
+pub fn free_share(numbers: Dy, housing: Dy) -> Dy {
+    if housing.signum() > 0 {
+        (Dy::ONE - numbers / housing).clamp(Dy::ZERO, Dy::ONE)
+    } else {
+        Dy::ZERO
+    }
 }

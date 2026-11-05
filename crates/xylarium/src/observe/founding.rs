@@ -2,7 +2,7 @@
 //! `formation`.
 
 use super::Options;
-use crate::run::show;
+use crate::run::{show, Founded};
 use xyl_core::Q;
 use xyl_cosmos::circuit::Substrate;
 use xyl_cosmos::cores::Shape;
@@ -22,8 +22,7 @@ fn founded(origin: &Origin) -> Result<Vec<Element>, String> {
 /// reaches, then the shells grouped where kinds share one reach; every line
 /// ends with a newline.
 pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
-    let origin = Origin::of(o.seed).ok_or("no origin")?;
-    let elements = founded(&origin)?;
+    let elements = Founded::of(o.seed)?.elements;
     let mix: Vec<(u32, Q)> = xyl_cosmos::formation::kinds(&elements)
         .iter()
         .map(|k| (k.z, k.share.clone()))
@@ -87,8 +86,7 @@ pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
 /// founding shells and the open share Q / 3Z, then the ratio of reaches
 /// Z 115 / Z top (under the linear law).
 pub(super) fn founding_read(o: &Options) -> Result<String, String> {
-    let origin = Origin::of(o.seed).ok_or("no origin")?;
-    let elements = founded(&origin)?;
+    let elements = Founded::of(o.seed)?.elements;
     let mix: Vec<(u32, Q)> = elements
         .iter()
         .filter(|e| e.abundance.signum() > 0)
@@ -131,8 +129,9 @@ pub(super) fn founding_read(o: &Options) -> Result<String, String> {
 /// from), counted in rings of the galaxy's echo; every galaxy is read as the
 /// home galaxy's homologue.
 pub(super) fn formation(o: &Options) -> Result<String, String> {
-    let origin = Origin::of(o.seed).ok_or("no origin")?;
-    let elements = founded(&origin)?;
+    let Founded {
+        origin, elements, ..
+    } = Founded::of(o.seed)?;
     let shapes = xyl_cosmos::cores::shapes(&origin);
     let mut out = founding_matter(&origin, &elements);
     // Units are the universe's: time in rings, reach as a deficit share

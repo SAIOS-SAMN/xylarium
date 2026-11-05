@@ -204,6 +204,27 @@ may change public APIs and the model's laws.
   `stars::mixture_pole` (the mixture's pole state, not
   `circuit::pole_point`).
 
+- One present: the universe's count of rings (`Universe::now`) is the
+  clock; `Cosmic::place`, `Cosmic::distance`, `Cosmic::power`,
+  `transit::separation_m`, `Network::passage_years` and `Network::arc_at`
+  take the time as an argument, and Gyr is read through
+  `circuit::gyr_of_rings`. The arc between two stars is one reading,
+  `cosmic::arc_kpc`; light's crossing time is the pulse's speed
+  (`transit::crossing_years`, read by percepts too); the `chemistry` reading
+  reads the present instead of a fixed 13.8 Gyr; `tiers` reads the echo
+  rings from the keepers (`Chronometry::of`).
+
+- One housing law at waking and in the carry: a mind wakes where its world
+  houses a viable people of its traits (`civ::housing::houses`), no longer
+  where `life::foragers` counts one; a people's drive is `civ::drive` for
+  the carry and for discord, whose reach is `transit::reach_kpc`; deficit
+  shares read `xyl_core::shares`; the free share of housing is
+  `civ::housing::free_share` for the consciousness gauge and free thought;
+  the SI electronvolt and atomic mass unit are `package::Si`'s.
+
+- `Checkpoint::decode` returns `Err` naming its refusal, and `run` refuses a
+  home whose checkpoint does not decode instead of founding it afresh.
+
 - `manifold::turn_between` and `chain::Place::arc` read the certified angle
   between two directions (`xyl_core::rotor::angle_between`) in place of an
   uncertified `Dy` arccosine; `Rotor::inverse` is the rotor's conjugate
@@ -335,6 +356,14 @@ may change public APIs and the model's laws.
   `inv_two_pi`, `crowding_share` and `share2` copies; the forwarders
   `manifold::turn_between`, `field::bend` and `life::first_age`;
   `life::settled_gyr` and `minds::life_digest`.
+
+- `universe::Bell` (its Gyr period rounded to 2^-60) and `Cosmic::now`:
+  the second clock. `Network::arc`, `growth::world_w`,
+  `growth::unit_metabolism_w`, `knowledge::unit_body_w` and
+  `knowledge::knower_life_yr` (forwarders and repeats), the kernel's
+  `propulsion::ev_j` and `propulsion::amu_kg`, the private surface area
+  (`Body::area_m2` is read), and the v3 checkpoint reader (a v3 checkpoint
+  is refused by name).
 
 - The founding's rounding of rationals: `circuit::turn` (capture phases
   floored to the coordinate grid) and `circuit::grain::grid` (reaches,

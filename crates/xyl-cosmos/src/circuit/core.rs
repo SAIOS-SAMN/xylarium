@@ -18,8 +18,9 @@
 //   rings.
 // - Core: `Reverberation` per firmament kind; `outflow` empties a kind as
 //   m0 (1 - exp(-rate (t - onset))); `rate`, `state_out`, `books` (held,
-//   left, taken, founded); `inbound`, `inbound_peak`, `least_share`,
-//   `margin`; `loop_flux` composes filament, vacuum and electron channels.
+//   left, taken, founded); `inbound`, `inbound_peak`; `spin_orbit`, the
+//   core's spin over its pinches (T17); `loop_flux` composes filament,
+//   vacuum and electron channels.
 // - Ocean: `ocean_shares` and `landing` (pull times `coherence`, over the
 //   sum, so each kind's shares sum to 1); `amplitude`, `tide`, `c_ocean`.
 // - Galaxies: `galaxies` (beads whose lit holding `lit x state` is at least
@@ -367,29 +368,137 @@ impl Substrate {
         )
     }
 
-    /// The firmament's furthest reach (core rings): the outermost held kind.
-    pub fn far_reach(&self) -> Q {
-        self.firmament
-            .iter()
-            .map(|k| k.spin.clone())
-            .max()
-            .unwrap_or(Q::ZERO)
-    }
-
-    /// The least torsion share that holds the firmament whole: the furthest
-    /// held kind's reach over the rim, swung by the inbound echo at its peak,
-    /// `r_far / rim (1 + A_in)`. A parent whose spin gives less founds no
-    /// stable firmament; the drawn spin is floored at the spin giving this
-    /// share (`cores::substrate_for`).
-    pub fn least_share(&self) -> Q {
-        let rim = Dy::from_q(&self.rim).max(Dy::sci(1, -300));
-        (Dy::from_q(&self.far_reach()) / rim * self.inbound_peak()).to_q()
-    }
-
-    /// The firmament's margin: the torsion share less the least admissible
-    /// (negative: the firmament is not whole at this spin).
-    pub fn margin(&self) -> Q {
-        &self.share - &self.least_share()
+    /// The universal core's spin as a sheared orbit over its pinches (T17).
+    ///
+    /// At the bounce every founded kind is at the core, of hold `M` and
+    /// turning `J = a M^2`. A kind's frames stand on both faces: its open
+    /// share `q = U / (U + W)` on the near face, which advances `s` per
+    /// traversal, its held share on the antipode, which advances `1 - s`.
+    /// Its separation is their flow-law sum, the rapidity
+    /// `rho = q ln D(s) - (1 - q) ln D(1 - s)`; the far face exchanges `q`
+    /// and `1 - q`. A cohort of hold `m` takes the turning in proportion to
+    /// its separation against the throat's present hold,
+    /// `J (m / M) (rho_cohort / rho_hold)`, so releasing everything takes
+    /// `J` whole (axiom 11), and the spin after it is `a' = J' / M'^2`.
+    ///
+    /// A closed kind is held on both faces (T16). An open kind of axis
+    /// polarity `A` is dilated per echo by `D(s) D(n)^A` on the near face;
+    /// where that is at most one the near face holds it and the far face
+    /// releases it at once. Every other open kind climbs to the throat in
+    /// closed form, `ln t += N* ln(D(s) D(n)^A)` per pinch interval
+    /// `N* = 3 (4 + a) / (2a)`, and leaves in the cohort of the first pinch
+    /// after it arrives. The pinches are events found in closed form; the
+    /// interval moves with the spin. Logarithms and the separations are
+    /// dyadic readings, the holds exact, and each cohort's share of the
+    /// turning is gridded back to `Q`. A spinless core never pinches. `None`
+    /// where the founded elements cannot be read.
+    pub fn spin_orbit(&self, spin: &Q) -> Option<SpinOrbit> {
+        // (kind, hold, ln t, axis polarity) of each founded kind, its hold
+        // its founded mass `share mass_weight / hold` (the founding's own
+        // units, before the firmament is scaled to the universal state); ln t
+        // and the polarity are read for open kinds only.
+        let elements = crate::elements::founded(&self.share).ok()?;
+        let mut kinds: Vec<(u32, Q, Dy, i64)> = crate::formation::kinds(&elements)
+            .into_iter()
+            .filter_map(|k| {
+                let hold = Q::int(i64::from(crate::compound::hold(k.z)));
+                let m = (&k.share * &crate::formation::mass_weight(k.z)).checked_div(&hold)?;
+                (m.signum() > 0).then_some((k.z, m))
+            })
+            .filter_map(|(z, m)| {
+                let (u, w) = (crate::compound::open(z), crate::compound::hold(z));
+                if u == 0 {
+                    return Some((z, m, Dy::ZERO, 0));
+                }
+                let t = Dy::from_q(&Q::int(i64::from(u))) / Dy::from_q(&Q::int(i64::from(w)));
+                Some((z, m, t.ln()?, crate::atoms::axis_polarity(z)?))
+            })
+            .collect();
+        let mut hold = kinds.iter().fold(Q::ZERO, |m, k| &m + &k.1);
+        let mut a = spin.clone();
+        let mut turning = &(&a * &hold) * &hold;
+        let mut cohorts = Vec::new();
+        let mut echoes = Dy::ZERO;
+        while a.signum() > 0 && a <= Q::ONE {
+            let s = crate::bounce::torsion_share(&Q::ONE, &a);
+            let (Some(near), Some(anti)) = (
+                Dy::from_q(&(&Q::int(3) + &a)).ln(),
+                Dy::from_q(&(&Q::int(2) - &s).checked_div(&s).unwrap_or(Q::ZERO)).ln(),
+            ) else {
+                break;
+            };
+            let lnn = Dy::from_q(&(&Q::ONE + &(&a * &Q::ratio(1, 2))))
+                .ln()
+                .unwrap_or(Dy::ZERO);
+            let separation = |z: u32, far: bool| {
+                let (u, w) = (crate::compound::open(z), crate::compound::hold(z));
+                let q = Dy::from_q(&Q::int(i64::from(u))) / Dy::from_q(&Q::int(i64::from(u + w)));
+                let q = if far { Dy::ONE - q } else { q };
+                q * near - (Dy::ONE - q) * anti
+            };
+            let spread = |members: &[(u32, Q, Dy, i64)], far: bool| {
+                members
+                    .iter()
+                    .fold(Dy::ZERO, |r, k| r + Dy::from_q(&k.1) * separation(k.0, far))
+            };
+            let open = |k: &(u32, Q, Dy, i64)| crate::compound::open(k.0) > 0;
+            // The near face holds by pressure what the far face releases.
+            let pressed = |k: &(u32, Q, Dy, i64)| open(k) && near + lnn * Dy::int(k.3) <= Dy::ZERO;
+            let (out, far, at) = if cohorts.is_empty() && kinds.iter().any(pressed) {
+                let (out, stay): (Vec<_>, Vec<_>) = kinds.drain(..).partition(pressed);
+                kinds = stay;
+                (out, true, Dy::ZERO)
+            } else {
+                let interval =
+                    Dy::from_q(&(&Q::int(3) * &(&Q::int(4) + &a))) / Dy::from_q(&(&Q::int(2) * &a));
+                // The pinch at which each open kind arrives: the least whole
+                // k with k N* ln(D(s) D(n)^A) >= -ln t.
+                let arrive = |k: &(u32, Q, Dy, i64)| {
+                    let rate = near + lnn * Dy::int(k.3);
+                    if !open(k) || rate.signum() <= 0 {
+                        return None;
+                    }
+                    let need = (-k.2 / (interval * rate)).to_q();
+                    let whole = i64::try_from(-(-&need).floor_i128()?).ok()?;
+                    Some(whole.max(1))
+                };
+                let Some(first) = kinds.iter().filter_map(arrive).min() else {
+                    break;
+                };
+                echoes += interval * Dy::int(first);
+                let (out, stay): (Vec<_>, Vec<_>) =
+                    kinds.drain(..).partition(|k| arrive(k) == Some(first));
+                kinds = stay
+                    .into_iter()
+                    .map(|(z, m, lt, ax)| {
+                        let climbed = if m.signum() > 0 && crate::compound::open(z) > 0 {
+                            lt + interval * Dy::int(first) * (near + lnn * Dy::int(ax))
+                        } else {
+                            lt
+                        };
+                        (z, m, climbed, ax)
+                    })
+                    .collect();
+                (out, false, echoes)
+            };
+            let all: Vec<_> = out.iter().chain(kinds.iter()).cloned().collect();
+            let m = out.iter().fold(Q::ZERO, |s, k| &s + &k.1);
+            // The cohort's separation over the hold's, each mass-weighted.
+            let per = |sum: Dy, of: &Q| sum / Dy::from_q(of);
+            let share = (per(spread(&out, far), &m) / per(spread(&all, false), &hold)).to_q();
+            let taken = &(&turning * &m.checked_div(&hold).unwrap_or(Q::ZERO)) * &share;
+            turning = &turning - &xyl_core::certified::down(&taken, 64);
+            hold = &hold - &m;
+            a = turning.checked_div(&(&hold * &hold)).unwrap_or(Q::ZERO);
+            cohorts.push(Cohort {
+                echoes: at,
+                far,
+                hold: m,
+                share,
+                spin: a.clone(),
+            });
+        }
+        Some(SpinOrbit { cohorts, spin: a })
     }
 
     /// The outflow from the core by `t` rings after the bounce, by kind (held
@@ -783,6 +892,32 @@ impl Substrate {
             .unwrap_or(Q::ZERO)
             .frac()
     }
+}
+
+/// One cohort of the core's spin orbit (T17).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Cohort {
+    /// Echoes after the bounce at which it leaves.
+    pub echoes: Dy,
+    /// Whether it leaves by the far face.
+    pub far: bool,
+    /// Its hold, in the founding's mass units.
+    pub hold: Q,
+    /// Its share of the turning against its share of the hold: its
+    /// separation over the throat's, `rho_cohort / rho_hold`.
+    pub share: Q,
+    /// The core's spin once it has left.
+    pub spin: Q,
+}
+
+/// The core's spin orbit (T17): its cohorts and its spin once they have
+/// left. The pair closes on both faces where the spin is at most one.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SpinOrbit {
+    /// The cohorts, in the order they leave.
+    pub cohorts: Vec<Cohort>,
+    /// The spin once the last cohort has left.
+    pub spin: Q,
 }
 
 #[cfg(test)]

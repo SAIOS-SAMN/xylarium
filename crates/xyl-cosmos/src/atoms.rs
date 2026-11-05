@@ -58,6 +58,35 @@ impl Band {
     }
 }
 
+impl Band {
+    /// The band's axis polarity (T7): the sum of the axis weights `m0` of its
+    /// unpaired electrons. The axis level `m0` holds `C(l - |m0| + 9, 9)`
+    /// orientations; a band at most half full fills the Z side (`m0 < 0`)
+    /// first, singly, and one more than half full has paired the Z side and
+    /// keeps its unpaired electrons on the Q side.
+    pub fn axis_polarity(&self) -> i64 {
+        let l = i64::from(self.l);
+        let frames = crate::fibres::directions(self.l);
+        let (mut left, z_first) = if self.electrons <= frames {
+            (u64::from(self.electrons), true)
+        } else {
+            (u64::from(self.room() - self.electrons), false)
+        };
+        let mut a = 0i64;
+        for step in 0..=2 * l {
+            let m0 = if z_first { step - l } else { l - step };
+            let level = crate::fibres::choose(u64::try_from(l - m0.abs()).unwrap_or(0) + 9, 9);
+            let k = level.min(left);
+            a += i64::try_from(k).unwrap_or(0) * m0;
+            left -= k;
+            if left == 0 {
+                break;
+            }
+        }
+        a
+    }
+}
+
 /// An atom's computed structure.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Atom {
@@ -191,6 +220,12 @@ pub fn unpaired(z: u32) -> u32 {
         t.insert(z, u);
     }
     u
+}
+
+/// A kind's axis polarity `A` (T7): the sum of its bands' axis polarities,
+/// Z side negative, Q side positive. `None` for a cluster id or Z = 0.
+pub fn axis_polarity(z: u32) -> Option<i64> {
+    atom(z).map(|a| a.bands.iter().map(Band::axis_polarity).sum())
 }
 
 fn fill(z: u32) -> Atom {

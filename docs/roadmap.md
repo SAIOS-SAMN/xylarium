@@ -134,14 +134,24 @@ where it belongs to one.
 
 ### Foundations (milestone 3, layer 0)
 
-28. **One angle unit** ([#40](https://github.com/SAIOS-SAMN/xylarium/issues/40), `defect`). Degrees, minutes and seconds of
-    arc on every lane, the ring count kept on the T lane, one angle API in
-    degrees.
+28. **One angle unit** ([#40](https://github.com/SAIOS-SAMN/xylarium/issues/40), `defect`). Done for the coordinate
+    (LAW-COORDINATE v1: exact signed lanes in sectors of base 60, the T lane
+    written by `xyl_core::coordinate::beat`); left, the angle APIs still in
+    radians (`dyadic`, `turning`, the phases of `galaxy::Orbit` and `cores`;
+    item 40), and the code that holds angles as shares of a whole turn,
+    whose comments change with it: every turn on a named plane in degrees,
+    with its return read from the deficit at its reach
+    ([model.md](model.md#turns-axis-degrees-and-the-return)).
 29. **The flow law and the dilation in `xyl-core`** ([#42](https://github.com/SAIOS-SAMN/xylarium/issues/42), `defect`,
-    `law`). `D(p)`, the flow law and the deficit share in one place; the
-    rotors' tangent law and the squared share retired.
-30. **Duplicate laws** ([#43](https://github.com/SAIOS-SAMN/xylarium/issues/43), `defect`). One deficit function, one pull,
-    one moon model, one meeting law, one trig and exp stack.
+    `law`). Done: `D(p)`, the flow law and the deficit share in
+    `xyl_core::shares`, and the squared share removed; left, the rotors'
+    composition and the field's twist rotor, which go with the frame carrier
+    (item 40).
+30. **Duplicate laws** ([#43](https://github.com/SAIOS-SAMN/xylarium/issues/43), `defect`). Done: one deficit function, one
+    meeting law (`formation::founding_shells`), one certified exponential,
+    ln 2 and pi. Left: the ocean's own pulls beside `Substrate::pulls`, the
+    moons' placement beside `manifold`, and the two rotation carriers
+    (item 40).
 31. **Rule breaks** ([#44](https://github.com/SAIOS-SAMN/xylarium/issues/44), `defect`). Hole spin from `Stream::derive`,
     refusal instead of zero, `survival`, coherence in meetings.
 
@@ -169,7 +179,10 @@ where it belongs to one.
     homologue galaxies, stars by index and the forecast of minds are replaced
     by tiers formed from the flow.
 34. **The echo moves position** ([#37](https://github.com/SAIOS-SAMN/xylarium/issues/37), `defect`, `law`). The echo acts on
-    angular state and frames only.
+    angular state and frames only. Done: the reach-scaled admission
+    (`least_share`) is removed with the paired throat (#86). Left:
+    `push_at` and `beyond_at` banding reaches by the swing, `Push::swing`,
+    and the pulse carrying world positions in `field`.
 35. **Parcels carry counts** ([#38](https://github.com/SAIOS-SAMN/xylarium/issues/38), `defect`, `law`). Counts of nuclei
     with pole state and heat; chemistry is what a parcel closes into.
 36. **Fixed tables and chains** ([#39](https://github.com/SAIOS-SAMN/xylarium/issues/39), `defect`). Each replaced by what
@@ -227,7 +240,13 @@ where it belongs to one.
     Its shape is settled by T18 (founded matter turns its five planes
     together): an axis-plane phase, one isoclinic phase and the turning
     between planes that carries a body into its parent; that turning is
-    to be derived from the fold's writhe where a link forms.
+    to be derived from the fold's writhe where a link forms. The H lane
+    follows FORMS-COORDINATE v3 (Mycelium): each component keyed by its
+    generator (the plane named by its two axes, a turning between planes by
+    the axes it mixes), held in degrees as an exact rational with a rate in
+    degrees per bell advanced in closed form, `K` counted per component, and
+    the turning between planes stored as a separate component; composition
+    through the generators awaits the turning law (Netstratum docs/117).
 41. **The automorphic, synaptic chain**
     ([#97](https://github.com/SAIOS-SAMN/xylarium/issues/97), `law`,
     `proposal`; depends on items 39 and 40;

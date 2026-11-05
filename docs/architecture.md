@@ -39,8 +39,8 @@ the parent's spin drawn from the seed; it does not read the layers built on it.
 
 Units are `G = c = M_core = 1`. The universal core's holding, the
 universal state, is 1 in these units. The [firmament](glossary.md) (the
-[throat](glossary.md)'s held kinds, the vessel band computed by
-`atoms::vessel`) is scaled so its mass equals that state. Each galactic
+[throat](glossary.md)'s closed kinds, held on both faces of the paired
+throat) is scaled so its mass equals that state. Each galactic
 core's mass is its [bead](glossary.md)'s state in the universal core's
 units.
 

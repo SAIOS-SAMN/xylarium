@@ -1152,81 +1152,95 @@ answer, the code it builds on and what that code lacks today.
 
 Planned ([#103](https://github.com/SAIOS-SAMN/xylarium/issues/103), roadmap
 item 42), with the galaxy's gas (#8), condensates (#15) and geochemistry
-(#17). Chemistry flows from the elements to chemistry in stars to chemistry
-in matter, by one law at every tier: the release of held frames, which
-already orders a star's fusion and fission (Polarity, fusion and fission).
-A bond is a paired throat at the atomic tier: two atoms' open frames paired
-into a closed hold (T16 at the smallest tier, The automorphic, synaptic
-chain).
+(#17). Chemistry and biology are not modelled: they emerge from the
+founding's physics, read at the atomic tier by the same laws the throats
+obey. Nothing here names a state, a species or a substance in advance;
+what the physics produces is read, and the minds of a universe name it
+(Names emerge, civilizations.md).
 
+- **The law at the atomic tier.** A bond is a paired throat at the
+  smallest tier: two atoms' faces as an attractor pair, each face advancing
+  by that atom's torsion share, the bond read by its separation across them,
+  `rho = q ln D(s) - (1 - q) ln D(1 - s)` (T17), never by one tightness. It
+  holds its turning as remanence between passages and is cleared at its
+  coercivity (T19). The automorphism of the chain carries the law from the
+  core down to the atom unchanged (The automorphic, synaptic chain).
 - **Built from the elements.**
   - The atom: its bands filled on S^11, its open and held frames, its
-    tightness and its ionisation by heat (`atoms::atom`,
-    `atoms::unpaired_hot`, `atoms::tightness`), its bonds (`atoms::bond`)
-    and its axis polarity (`atoms::axis_polarity`, T7).
-  - The two-part compound: the smallest closing cluster
-    `(u_B / g) A . (u_A / g) B` with every frame paired, its grip, and
-    whether it stands at a heat (`compound::closing`, `compound::held`,
-    `compound::stands`). Water closes as one oxygen with four hydrogen
-    frames paired (O.4H).
-  - The star's nucleosynthesis: steps ordered by release
-    (`stars::fusion_step`, `stars::fission_step`, `stars::Sequence`).
-- **Where the chain breaks** (an inventory of 2026-11-05).
-  - **Stars to galactic gas.** Enrichment reads a channel-share column of the
-    element table rescaled to the Milky Way and the Sun (`chem`'s
-    calibration, its present-day abundances, reference metallicity, helium
-    enrichment and delay windows), never the stars' products
-    (`stars::Step::products`).
-  - **Gas to solids.** Condensation, the core and mantle split and the ices
-    are tables (`systems::ICES`, the mantle partition `MANTLE_KEPT`, the
-    element table's condensation temperatures and Goldschmidt classes).
-    `compound::closing`, `compound::held`, `compound::stands` and
+    tightness and its stripping by received turning (`atoms::atom`,
+    `atoms::unpaired_hot`, `atoms::tightness`), its two-atom bond
+    (`atoms::bond`), and its weights on the six planes: the axis polarity
+    on the axis plane (`atoms::axis_polarity`, T7) and the twist charge on
+    the isoclinic planes (T6).
+  - The two-part closure: the smallest cluster of two atoms with every
+    frame paired, `(u_B / g) A . (u_A / g) B` (`compound::closing`,
+    `compound::held`, `compound::stands`).
+  - The star's nucleosynthesis: steps by release (`stars::fusion_step`,
+    `stars::fission_step`, `stars::Sequence`).
+- **Where the chain is not yet emergent** (an inventory of 2026-11-05, 55
+  findings). Every one is a calibration to the Earth, the Sun or the Milky
+  Way, or a catalogue standing where the physics is to be read:
+  - **Stars to galactic gas.** Enrichment reads a channel-share column of
+    the element table rescaled to the Milky Way and the Sun (`chem`'s
+    calibration), never the stars' products (`stars::Step::products`).
+  - **Gas to solids.** Condensation, the split of a body's matter and its
+    frozen matter are tables (`systems::ICES`, the mantle partition
+    `MANTLE_KEPT`, the element table's condensation temperatures and
+    classes); `compound::closing`, `compound::held`, `compound::stands` and
     `atoms::bond` have no consumer outside `compound` yet.
-  - **Compounds to volatiles.** Six fixed species with catalogued phase
-    diagrams (`worlds::volatiles`), whose formulas disagree with the bond
-    rule (water as two hydrogens, not O.4H); the greenhouse and albedos are
-    calibrated to Earth.
-  - **Isotopes.** One mass number per element, from the table's atomic
-    weight (`circuit::mass_number`); four Earth isotopes and a bulk-silicate
+  - **Closures to volatiles.** Six catalogued species with Earth's phase
+    diagrams (`worlds::volatiles`), whose formulas disagree with the closure
+    law (`compound::closing` closes oxygen with four hydrogen frames
+    paired); the greenhouse and albedos are calibrated to Earth.
+  - **Nuclides.** One mass number per element, from the table's atomic
+    weight (`circuit::mass_number`); four Earth isotopes and an Earth
     inventory stand for radiogenic heat (`bodies::isotopes`).
-  - **Life and civilisation.** Bond energies, solvent cohesion, the richness
-    groups, the biotic window and the metabolism ruler are tabled
-    (`worlds::media`, `life`); the drives' constants are tabled and offered
-    without reading a world's elements (`xyl-kernel propulsion`).
-- **Isotopes.** A kind is a nuclide `(Z, Q)`. Its stability is its `Q / Z`
-  against the dipole of the tier it formed in, `D(n) = 1 + a / 2` (T2), read
-  in closed form, never from a chart. A nuclide off the dipole relaxes
-  toward it, Q into Z or Z into Q: a release of held frames, each decay an
-  event found in closed form. Radiogenic heat is those decays, and an
-  isotope ratio frozen by a cooling front is a physical record (Phase
-  weakening and phase strengthening).
-- **Closure over a mixture.** Beyond two-part clusters, a mixture at a heat
-  closes into chains, rings and networks, each structure read from the
-  atoms present, the closures that release most forming first, as a star's
-  sequence orders its steps; no product list is fixed.
-- **Phases from grip against heat.** A solid is held on every frame of its
-  network (the held share `min(1, tau_min / heat)` is one); a liquid is
-  partly held, its contacts breaking and re-forming, with viscosity
-  `nu = t / (1 + t)` in the pole coordinate; a gas is released; a plasma has
-  its open frames stripped (`atoms::unpaired_hot`). Pressure is containment
-  and the stretching pressure (T12). Triple and critical points are where
-  these readings meet; any phase the mixture closes into is read the same
-  way.
-- **Biology.** A world's solvents are what its matter closes into as a
-  liquid at its heat. Copying fidelity reads that solvent's grip. Of the two
-  drives, eating is taking a release (bonds broken toward more held frames)
-  and reproducing is copying a closed structure by templated closure; all
-  else emerges.
-- **Civilisation.** Fuels, propellants and materials are the same releases
-  over a world's own elements, as a people masters them.
+  - **Life and civilisation.** Bond energies in electronvolts, cohesion from
+    heats of vaporisation, chosen element groups, a biotic window in kelvin
+    and a metabolism ruler are tabled (`worlds::media`, `life`); the drives'
+    constants are tabled and offered without reading a world's elements
+    (`xyl-kernel propulsion`).
+- **The vents to open.** Each replaces a scalar with the structure the
+  physics carries:
+  1. **Received turning, not heat.** The pulse a body absorbs is a versor
+     across the planes (the field law). What a bond network receives is the
+     H-lane components it delivers, per plane and between planes, with the
+     return read from the deficit at the body's reach, never one temperature.
+  2. **Closure held, not chosen.** Every closure a mixture admits is held
+     together, a superposition, never the one releasing most. Passage,
+     perception or the network's own shear collapses it, as a vortex is
+     collapsed (MU-RECURSION law 10).
+  3. **States as orbits, not phases.** A bond network's state is its sheared
+     orbit across the planes: which of its links hold their remanence and
+     which pass, and how the received turning advances them. Held
+     throughout, flowing, released and stripped are readings of that orbit;
+     the minds name them, and no phase list or diagram is kept.
+  4. **Nuclides on every plane.** A nuclide is the attractor pair at the
+     nuclear tier, its Z and Q faces with the separation and twist of the pair;
+     its stability is that pair's reading against the dipole of the tier it
+     formed in (T2), and its decay a passage clearing remanence, an event in
+     closed form. A ratio frozen by a cooling front is a physical record
+     (Phase weakening and phase strengthening).
+  5. **Living matter on the synaptic chain.** An organism is a set of links
+     whose weights are their remanence: memory and heredity are held
+     turning, metabolism is passage through the links, reproduction is the
+     automorphism (a copy commuting with the change of tier), and selection
+     is coercivity, what can clear a link's weight and what cannot. Of the
+     two drives given, eating is taking a passage and reproducing is the
+     copy; everything else emerges.
+  6. **No Earth units in a law.** Energies are releases of held frames and
+     received turning is in degrees on its planes; kelvin, electronvolts and
+     joules stand only at the SI seam, for display (`package::Si`).
 - **Order of the work.**
-  1. Isotopes as kinds: stability from the dipole, decay as release events.
-  2. Closure over a mixture: chains, rings and networks by release.
-  3. Phases from grip against heat, pressure from containment.
-  4. The galactic gas from the stars' products (#8).
-  5. Condensates, volatiles and geochemistry from 1 to 4 (#15, #17).
-  6. Life's solvents, fidelity and metabolism from the same releases.
-  7. Civilisation chemistry from a world's own elements.
+  1. Received turning per plane (vent 1).
+  2. Closure held as a superposition (vent 2), over two-part closures first,
+     then the networks a mixture admits.
+  3. States as the network's orbit (vent 3).
+  4. Nuclides as attractor pairs (vent 4).
+  5. The galactic gas from the stars' products (#8), and the solids, frozen
+     matter and volatiles read from 1 to 4 (#15, #17).
+  6. Living matter on the synaptic chain (vent 5, with #97).
+  7. A people's chemistry from its world's own elements.
 
 ### Radiation: irradiation held, transduced and passed on
 

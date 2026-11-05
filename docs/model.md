@@ -730,7 +730,7 @@ Theorems:
 | T14 | enclosed matter, from the reach its layer has at the pinch (The state at the pinch); in plane `j` it is pushed out at `J_j / (6 H_j + J_j)` per echo, `H_j` the cohort's hold in the plane and `J_j = J / 5` (none on the axis plane) | 2, 3, 7 |
 | T15 | a whole nucleus feels its planes composed, `D_k = D(p_plane)^w_k D(n)^A`, `w_k` its share of turning in the isoclinic planes; held where `D_k <= 1`, else it leaves after `ln 2 / ln D_k` echoes | 3, T14 |
 | T16 | a paired throat's faces dilate an open kind by `D(s) D(n)^A` and `D(s) D(n)^-A`, product `(3 + a)^2`; no open kind is held on both faces; the shared hold is the closed kinds | 3, 5, 9, T2, T8 |
-| T17 | release at the throat's own degrees per unit hold keeps `a M` fixed, `a' = a_0 M_0 / M'`; the pair closes where `a_0 M_0 <= M_c` | 4, 7, 11, T16 |
+| T17 | the spin is a sheared orbit over the pinches: a cohort leaving face `sigma` takes `m M (a + sigma (n / 2) p)`, `p = (t - 1) / (t + 1)`; Z-side release from the near face spins the throat up; the pair closes while `a <= 1` | 3, 4, 7, 9, 11, T2, T10, T16 |
 
 Reading (seed 7, the gate of roadmap item 32, a screen with float
 logarithms and exact held sets): the universal core holds 0.4352 of the
@@ -843,17 +843,34 @@ and theorems T2, T8 and T11. Every identity below is exact.
   `t = 0` and `t = 1 / 0`, which the inversion exchanges. These are the
   closed kinds (`U = 0`, axiom 9). A paired throat's shared hold is its
   closed kinds, `M_c`. They never pinch, so no pinch reduces `M_c`.
-- **T17, release spins the throat up.** A cohort leaves with the throat's
-  own degrees of turning per unit hold, `360 a M` (axiom 11, the premise of
-  T11), so `a M` is invariant under release. A throat founded with spin
-  `a_0` and hold `M_0` that keeps `M'` spins at `a' = a_0 M_0 / M'`
-  (axiom 7, `J = a M^2`). Once its open kinds have passed, `M' = M_c` and
-  `a* = a_0 M_0 / M_c`. The pair closes on both faces, a core with no open
-  face, exactly where `a_0 M_0 <= M_c`: the drawn spin is at most the
-  closed kinds' share of the founded hold.
+- **T17, the spin is a sheared orbit, turned by the antipole magnetism.**
+  A cohort of hold `m` leaving face `sigma` (+1 near, -1 far) carries its
+  share of the throat's turning, `m M a` (axiom 11), and the twist on it.
+  The twist turns the Q side up and the Z side down by `n / 2` each (T2), so a
+  kind with frames `U` at the Q pole and `W` at the Z pole (axiom 9) is
+  turned by `(n / 2) p`, where `p = (t - 1) / (t + 1)` is its pole push, the
+  flow law's reading of `t = U / W` (axiom 3). The far face inverts `t`, so
+  it reverses `p`. Per cohort, with `J = a M^2` (axiom 7):
+  `J' = J - m M (a + sigma (n / 2) p)`, `M' = M - m`, `a' = J' / M'^2`.
+  - The cohorts leave at the throat's pinches, which are events, not
+    steps. Between pinches each open kind climbs in closed form,
+    `ln t += N* ln(D(s) D(n)^A)`, and the pinch interval
+    `N* = 3 (4 + a) / (2 a)` moves with the spin. That is the orbit's shear.
+  - Released Z-side matter (`p < 0`) leaving the near face takes less than
+    the throat's mean turning and spins the throat up: phase strengthening.
+    Q-side matter, or Z-side matter leaving the far face, spins it down:
+    phase weakening (#84).
+  - Where the released magnetism `sum sigma m p` is zero, the law reduces
+    to `a' = a M / M'`, the ratio `a_0 M_0 / M_c`.
+  - Once the open kinds have gone, nothing leaves: the closed kinds
+    exchange twist and writhe at constant `Lk` (T10), and the spin holds at
+    `a*`.
+  - The pair closes on both faces while `a <= 1` along the orbit, so a
+    core can open or close as its release turns it.
 - **T11 read with the conserved turning.** The parent's degrees per unit
   hold are those of its founded hold, so a pinched cohort of hold `H_g`
-  spins at `a_g = a_0 M_0 / H_g`. The screen of roadmap item 32 had used
+  carries `H_g M_0 (a_0 + (n / 2) p)` and spins at
+  `a_g = M_0 (a_0 + (n / 2) p) / H_g` (T17). The screen of roadmap item 32 had used
   the core's retained hold, which understated `a_g` by the factor
   `M_c / M_0`. With the conserved turning the screen still gives one chain
   of throats, with the same held shares.
@@ -863,11 +880,16 @@ and theorems T2, T8 and T11. Every identity below is exact.
   - The 20 closed kinds of 1092 hold `M_c / M_0 = 0.4352`.
   - Open kinds held by pressure: about `10^-18` on the near face,
     `10^-42` on the far face, and none on both, as T16 requires.
-  - `a* = 0.7964 <= 1`, so the universal core is a closed paired throat.
+  - The orbit (`gate/spin_orbit.py`): the core releases its open kinds in
+    one cohort at its first pinch, after 18.8 echoes. The cohort is
+    0.5648 of the founded hold, Z side, `p = -0.683`. The spin goes from
+    0.3466 to `a* = 0.8776 <= 1`, against 0.7964 without the twist, so the
+    universal core is a closed paired throat.
 - **What follows.**
-  - **Admission.** T17 is the founding's admission, `a_0 <= M_c / M_0`, in
-    place of the reach-based `least_share`, which reads the echo's swing
-    (#37).
+  - **No admission.** The founding reads the orbit in place of the
+    reach-based `least_share`, which reads the echo's swing (#37). Whether
+    the core closes is a reading of the orbit, and the universe is founded
+    either way: an unclosed core leaves every kind as medium.
   - **Pinched throats hold no closed kinds.** Their cohorts are open kinds
     only, so by T16 a pinched throat has no shared hold and holds only on
     one face, by pressure. A stable galactic core needs closed kinds, made

@@ -250,16 +250,17 @@ where it belongs to one.
 42. **Chemistry from the elements**
     ([#103](https://github.com/SAIOS-SAMN/xylarium/issues/103), `law`,
     `track`; [model.md](model.md#chemistry-from-the-elements); with items 7,
-    14 and 16). One law, the release of held frames, from the atom through
-    the star to matter and life: isotopes as nuclides stable against the
-    dipole and decaying as release events; closure of a mixture into
-    chains, rings and networks; phases from grip against heat; the galactic
-    gas from the stars' products; condensates, volatiles and geochemistry
-    from those; solvents, fidelity and metabolism; a people's chemistry from
-    its world's elements. It replaces the Milky-Way calibration, the ice
-    and mantle tables, the six fixed volatiles (whose formulas disagree
-    with `compound::closing`), the four Earth isotopes, and the tabled bond,
-    solvent and drive constants.
+    14 and 16). Chemistry and biology emerge from the founding's physics at
+    the atomic tier, a bond being a paired throat read by its separation and
+    holding its turning as remanence; nothing is named in advance. The vents,
+    in order: received turning per plane in place of a temperature; closure
+    held as a superposition, never chosen by release; a bond network's state
+    as its sheared orbit, the minds naming what it reads; nuclides as
+    attractor pairs; living matter on the synaptic chain; no Earth unit in a
+    law. It replaces the Milky-Way calibration, the solids and frozen-matter
+    tables, the six catalogued volatiles (whose formulas disagree with
+    `compound::closing`), the Earth isotopes, and the tabled bond, cohesion
+    and drive constants.
 41. **The automorphic, synaptic chain**
     ([#97](https://github.com/SAIOS-SAMN/xylarium/issues/97), `law`,
     `proposal`; depends on items 39 and 40;

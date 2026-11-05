@@ -201,6 +201,13 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Chemistry from the elements restated as emergent (docs/model.md, roadmap
+  item 42, #103): no state, species or substance named in advance; a bond is
+  a paired throat read by its separation and holding remanence; the vents
+  are received turning per plane, closure held as a superposition, states
+  as the bond network's orbit, nuclides as attractor pairs, living matter on
+  the synaptic chain, and no Earth unit in a law.
+
 - Every turn in the documents names its axis and is stated in degrees, with
   its physics as torsion (modification, structure or perturbation) and its
   return read from the deficit at the return's reach (docs/model.md, "Turns:

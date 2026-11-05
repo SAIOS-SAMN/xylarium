@@ -23,14 +23,18 @@ pub struct Place {
     pub world: usize,
 }
 
-/// Returns a world's escape speed (m/s): the turning rate of the turning law
-/// (turning.rs) at the world's surface times the world's radius. In the
-/// core's units this is c delta with delta = M / (R + M), a deficit share in
-/// place of sqrt(2 G M / R).
+/// Returns a world's escape speed (m/s): the turning law at the world's
+/// surface times its radius, `c delta` with `delta = M / (R + M)` the
+/// deficit share (`xyl_core::shares::deficit`), the mass read as a length
+/// `G M / c^2`, in place of sqrt(2 G M / R).
 pub fn escape_speed(w: &World) -> Dy {
-    let m = &w.mass * &Si::world_mass_kg();
+    // The world's mass as a length, G m / c^2, against its radius.
+    let c = Si::c();
+    let m = (&(&Si::g() * &w.mass) * &Si::world_mass_kg())
+        .checked_div(&(&c * &c))
+        .unwrap_or(Q::ZERO);
     let r = &w.radius * &Si::world_radius_m();
-    Dy::from_q(&(&xyl_cosmos::package::Si::rad_s(&xyl_cosmos::turning::turning_si(&m, &r)) * &r))
+    Dy::from_q(&(&c * &xyl_core::shares::deficit(&m, &r).unwrap_or(Q::ZERO)))
 }
 
 /// Returns the gap (m) between worlds `wa` and `wb` of one system at the

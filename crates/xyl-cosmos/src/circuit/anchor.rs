@@ -2,8 +2,8 @@
 // in the cluster tier (60^7 r_g of the core).
 //
 // Inputs: the founding's rim (cluster units), the rings until the home
-// galaxy's gas first lights (formation.rs `cools_in`), the parent's spin,
-// its torsion share and the firmament's margin; `chain::units` for r_g in
+// galaxy's gas first lights (formation.rs `cools_in`), the parent's spin
+// and the firmament's margin; `chain::units` for r_g in
 // metres, `xyl_core::units::Tier` and `package::Si` (kpc, c; the Gyr only
 // in the boundary conversions).
 //
@@ -83,9 +83,6 @@ pub struct Anchor {
     /// The parent's Kerr spin as admitted (drawn from the seed, floored by
     /// cores::substrate_for).
     pub spin: Q,
-    /// The share the jet carries through the throat at each crossing, from
-    /// the spin by torsion (origin::torsion_share).
-    pub share: Q,
     /// The firmament's margin: the torsion share less the least share that
     /// holds the firmament whole, `r_far / rim (1 + A_in)` at the inbound
     /// echo's peak (`Substrate::least_share`). Negative where no admissible
@@ -137,15 +134,15 @@ pub fn anchor() -> Anchor {
         radius_rg: Q::ZERO,
         first_stars: Q::ZERO,
         spin: Q::ZERO,
-        share: Q::ZERO,
         margin: Q::ZERO,
     }
 }
 
 /// The anchor from the founding's rim (cluster units), the rings until the
-/// home galaxy's gas first collapses, the parent's spin with its torsion
-/// share, and the firmament's margin.
-pub(crate) fn of(rim: &Q, cools_in: Option<i64>, spin: &Q, share: &Q, margin: &Q) -> Anchor {
+/// home galaxy's gas first collapses, the parent's spin and the
+/// firmament's margin (the torsion share is held by the substrate,
+/// `Substrate::share`).
+pub(crate) fn of(rim: &Q, cools_in: Option<i64>, spin: &Q, margin: &Q) -> Anchor {
     let units = crate::chain::units();
     let kpc_m = crate::package::Si::kpc();
     let cluster_m = &Tier::Cluster.in_rg() * &units.r_g_m;
@@ -174,7 +171,6 @@ pub(crate) fn of(rim: &Q, cools_in: Option<i64>, spin: &Q, share: &Q, margin: &Q
         radius_rg,
         first_stars: rings,
         spin: spin.clone(),
-        share: share.clone(),
         margin: margin.clone(),
     }
 }

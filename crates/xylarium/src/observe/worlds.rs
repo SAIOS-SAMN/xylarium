@@ -570,7 +570,11 @@ fn star_rows(k: u64, st: &Star, sys: &System, planets: &[(Q, Q, bool)]) -> Strin
 /// the chain frame and the planets (orbit in AU, mass in world units).
 pub(super) fn worlds_read(o: &Options, n: usize) -> Result<String, String> {
     let origin = Origin::of(o.seed).ok_or("no origin")?;
-    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
+    let elements = xyl_cosmos::elements::founded(
+        &xyl_cosmos::cores::substrate_for(&origin.parent.spin)
+            .ok_or("no founding")?
+            .share,
+    )?;
     let chem = xyl_cosmos::chem::Chemistry::of(&origin).ok_or("no chemistry")?;
     let (mut counts, mut ratios, mut rows) = (Vec::new(), Vec::new(), String::new());
     let (mut belts, mut moons, mut giants, mut comets) = (0usize, 0usize, 0usize, 0usize);

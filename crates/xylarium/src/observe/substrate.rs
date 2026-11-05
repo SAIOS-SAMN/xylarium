@@ -23,7 +23,11 @@ fn per_gyr(x: Dy) -> Dy {
 /// written on the T lane; Gyr is shown beside it as a display conversion.
 pub(super) fn core_read(o: &Options, t_rings: Option<Q>) -> Result<String, String> {
     let origin = Origin::of(o.seed).ok_or("no origin")?;
-    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
+    let elements = xyl_cosmos::elements::founded(
+        &xyl_cosmos::cores::substrate_for(&origin.parent.spin)
+            .ok_or("no founding")?
+            .share,
+    )?;
     let clock = std::time::Instant::now();
     let s = xyl_cosmos::cores::substrate(&origin).ok_or("no founding")?;
     let founded_in = clock.elapsed();

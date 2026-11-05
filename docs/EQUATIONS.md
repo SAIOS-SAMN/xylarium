@@ -99,8 +99,9 @@ another crate. Laws are composed from shares (ratios of the form
   `a = (H + J) / (2H + J)` with `H = 2M` and `J = a_Kerr M^2`; at the
   universal core (`M = 1`) `a = 1/2` at zero spin and `a = 3/5` at the
   extremal spin. The inverse (`bounce::spin_of_share`) is
-  `J = H (2a - 1) / (1 - a)`, read on the origin's grid by
-  `origin::spin_of_share`. Status: built.
+  `J = H (2a - 1) / (1 - a)`, put on the origin's grid by
+  `origin::clamp_spin`. The founding reads the share once
+  (`circuit::Substrate::found`) and holds it as `Substrate::share`. Status: built.
 - Paired throat (docs/model.md, The core as a paired throat; #86): near
   face `D(s) D(n)^A`, far face `D(s) D(n)^-A`, product `(3 + a)^2`, so the
   shared hold is the closed kinds `M_c` (T16). The spin's orbit (T17):
@@ -110,13 +111,14 @@ another crate. Laws are composed from shares (ratios of the form
   `p = -0.683`, giving `a* = 0.8776`. Status: derived; not built.
 - Admission (`Substrate::least_share`, `cores::substrate_for`): the founding
   requires `a >= (r_far / rim) (1 + A_in_peak)`; otherwise the universe is
-  refounded at `spin_of_share(least_share)`, with at most three foundings.
+  refounded at `clamp_spin(spin_of_share(least_share))`, with at most three foundings.
   The margin is `a - least_share` (`Substrate::margin`). Status: built.
 - Cascade readings (`origin::Origin::of`): the lumpiness is
   `sum max(state - mean, 0) / sum state`, the held share is
   `firmament mass / holding`, the assembly time is `Lighting::cools_in` and
   the efficiency is `Lighting::lit`. Status: built.
-- Closed share (`elements::closed_share`): `h_Z = (3Z - u_Z) / 3Z`. Status:
+- Closed share (`elements::closed_share`): `h_Z = hold_Z / 3Z = (3Z - u_Z) / 3Z`
+  (`compound::hold`). Status:
   built.
 - Capture chain (`elements::founded`): `count_1 = 2^b` and
   `count_Z = floor(count_(Z-1) a h_Z)`. Status: built.
@@ -129,7 +131,7 @@ another crate. Laws are composed from shares (ratios of the form
   the counts are built; the catalogue columns (mass, melt, boil, density,
   condensation, class) are placeholders, and the next step derives them from
   the atom.
-- Orientations on S^11 (`atoms::orientations`): a band has
+- Orientations on S^11 (`fibres::directions`): a band has
   `C(l + 11, 11) - C(l + 9, 11)` orientations, and its room is twice that.
   Status: built.
 - Fill (`atoms::atom`): each electron goes to the tightest open winding, with
@@ -248,10 +250,10 @@ another crate. Laws are composed from shares (ratios of the form
   `firmament mass / (firmament mass + sum bead masses)`. Status: built.
 - Throat push (`circuit::throat_push`): `p = delta(H, H) = 1/2`. Status:
   built.
-- Dilation per echo (`circuit::dilation`), one law for every holder:
+- Dilation per echo (`xyl_core::shares::dilation_dy`), one law for every holder:
   `rho = (1 + p) / (1 - p)`, `p` the push the holder receives. Status:
   built.
-- Jet dilation (`circuit::jet_dilation`): the continuum carries the
+- Jet dilation (`shares::dilation_dy` of the torsion share): the continuum carries the
   throat's torsion share `s = (H + J) / (2H + J)` at each crossing, so
   `rho = D(s) = (1 + s) / (1 - s)`: 3 at `s = 1/2` (no spin), 4 at
   `s = 3/5` (the universal core's extremal spin). Status: built.
@@ -505,7 +507,8 @@ another crate. Laws are composed from shares (ratios of the form
 ### Z, Q and R (the pole model)
 
 - Weights (`circuit::nucleus_weights`, `circuit::mix_weights`): `Z` is the
-  proton count and `Q` the neutron count (the mass number less the charge,
+  proton count and `Q` the neutron count (the mass number
+  `A = floor(a + 1/2)` less the charge, `circuit::mass_number`,
   from the element table; a cluster sums its parts), and a kind weighs
   `Z + Q` nucleons. Status: built.
 - Electron phase state (`circuit::electron_phase`):
@@ -555,7 +558,8 @@ another crate. Laws are composed from shares (ratios of the form
 - Vacuum halving (`formation::vacuum_halving`): `k_v` is the least whole
   `k >= ln 2 / ln((R + h) / R)`. Status: built.
 - Heat (`formation::collapse`): the heat is
-  `min(1, ring x swing x grip(W) / shed)`, with `ring = 1 / (pi (R + 1))` and
+  `min(1, ring x swing x grip(W) / shed)` (`formation::pulse_heat`, the one
+  form for the gas and the disc), with `ring = 1 / (pi (R + 1))` and
   `shed = e + ln 2 / k_v`. Status: built.
 - Spare (`formation::collapse`): the spare is `grip(w) - shear(w) - heat` on
   `w = W / 2^k` for `k < 48`. Status: built.
@@ -629,7 +633,7 @@ another crate. Laws are composed from shares (ratios of the form
   `t0 <= 1/2`. Status: built.
 - A star's throat (`stars::Sequence::throat_echoes`):
   `circuit::echoes_to_throat` of its pole point under
-  `circuit::dilation(delta)`, `n* = ln(1 / t0) / ln((1 + delta) / (1 - delta))`,
+  `shares::dilation_dy(delta)`, `n* = ln(1 / t0) / ln((1 + delta) / (1 - delta))`,
   echoes from ignition; none where `t0 = 0`. Status: built.
 - Fusion step (`stars::fusion_step`): the least `k >= 2` with a kind at `A'
   = k A_z` releasing `1 - w' / (k w) > 0`, the greatest release there.
@@ -662,7 +666,7 @@ another crate. Laws are composed from shares (ratios of the form
   `h* / (l / h* + h*) >= p`, at the largest fixed point `h*` of the held
   hold. Status: built.
 - Disc agitation (`disc::star_hold`):
-  `a_disc = min(1, turning x swing x grip / shed)`, with
+  `a_disc = min(1, turning x swing x grip / shed)` (`formation::pulse_heat`), with
   `grip = (1 - star) / (2 - star)` and `shed = e_rest + ln 2 / k_v`. Status:
   built.
 - Star's manifold (`galaxy::disc_frame`): the gathering is

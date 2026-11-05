@@ -11,7 +11,7 @@
 //!
 //! - `substrate_for`: founds the substrate at the drawn spin; where the
 //!   firmament's margin is negative it refounds at the least admissible
-//!   spin (`origin::spin_of_share` of `least_share`), with at most three
+//!   spin (`bounce::spin_of_share` of `least_share`, clamped to the grid), with at most three
 //!   foundings in all, then sets `circuit::anchor`. None where the element table fails.
 //! - `shapes`, `shape`, `held`: the home galaxy is index 0 at the universe
 //!   core with mass `hole_mass` and a flat plane; every other galaxy is a
@@ -221,16 +221,18 @@ pub fn substrate_for(spin: &Q) -> Option<Arc<crate::circuit::Substrate>> {
         return Some(s.clone());
     }
     // Admission: while the firmament's margin is negative and the spin is
-    // below the least admissible one (origin::spin_of_share of
-    // Substrate::least_share), refound at that spin; at most three foundings.
-    // The anchor is the admitted founding's.
+    // below the least admissible one (bounce::spin_of_share of
+    // Substrate::least_share at the universal core's mass, clamped to the
+    // open grid; a share no spin reaches gives the extremal spin), refound
+    // at that spin; at most three foundings. The anchor is the admitted
+    // founding's.
     let mut spin = spin.clone();
     let mut found = None;
     for _ in 0..3 {
-        let elements =
-            crate::elements::founded(&crate::bounce::torsion_share(&Q::ONE, &spin)).ok()?;
-        let (s, anchor) = crate::circuit::Substrate::found(&spin, &elements);
-        let least = crate::origin::spin_of_share(&s.least_share());
+        let (s, anchor) = crate::circuit::Substrate::found(&spin)?;
+        let least = crate::origin::clamp_spin(
+            &crate::bounce::spin_of_share(&Q::ONE, &s.least_share()).unwrap_or(Q::ONE),
+        );
         let whole = s.margin().signum() >= 0 || spin >= least;
         found = Some((s, anchor, spin.clone()));
         if whole {

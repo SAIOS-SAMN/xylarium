@@ -280,7 +280,11 @@ pub(super) fn tiers(o: &Options, n: u64) -> Result<String, String> {
     // Each world about the star: the count is 1 + a / r_g(star). No time is
     // given, since the length of the star's echo needs the star's radius.
     let chem = Chemistry::of(&origin).ok_or("no chemistry")?;
-    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
+    let elements = xyl_cosmos::elements::founded(
+        &xyl_cosmos::cores::substrate_for(&origin.parent.spin)
+            .ok_or("no founding")?
+            .share,
+    )?;
     if let Some(sys) = xyl_cosmos::systems::system(o.seed, &origin, &[n], &star, &chem, &elements) {
         let all = xyl_cosmos::manifold::manifolds(o.seed, &[n], &sys, &star, &units());
         let units = units();

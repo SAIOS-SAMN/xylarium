@@ -134,7 +134,11 @@ pub fn with<T>(
     let chem = Chemistry::of(&origin).ok_or("no chemistry")?;
     eprintln!("universe: chemistry in {:.1?}", t0.elapsed());
     xyl_core::watch::stage("forecast");
-    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
+    let elements = xyl_cosmos::elements::founded(
+        &xyl_cosmos::cores::substrate_for(&origin.parent.spin)
+            .ok_or("no founding")?
+            .share,
+    )?;
     // A universe's laws come from its package; until a package supplies
     // them, the reference laws are used.
     let sc = Laws::default().scales();
@@ -567,7 +571,11 @@ pub fn genesis(o: Options) -> Result<bool, String> {
     }
     let origin = Origin::of(o.seed).ok_or("no origin")?;
     let chem = Chemistry::of(&origin).ok_or("no chemistry")?;
-    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
+    let elements = xyl_cosmos::elements::founded(
+        &xyl_cosmos::cores::substrate_for(&origin.parent.spin)
+            .ok_or("no founding")?
+            .share,
+    )?;
     // A universe's laws come from its package; until a package supplies
     // them, the reference laws are used.
     let sc = Laws::default().scales();
@@ -658,7 +666,7 @@ fn template_census(anchor: &xyl_cosmos::circuit::Anchor, origin: &Origin) -> Str
             ),
             xyl_cosmos::package::hole_mass(),
             anchor.spin,
-            anchor.share,
+            sub.share,
             sub.holding(),
             sub.held_share(),
             sub.beads.len(),

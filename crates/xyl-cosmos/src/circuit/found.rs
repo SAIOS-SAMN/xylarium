@@ -1,7 +1,7 @@
 // The founding: `Substrate::found` builds the substrate from the parent's
-// spin and the founded elements.
+// spin, the one torsion share read from it and the elements founded at it.
 //
-// Inputs: the spin, its torsion share (`origin::torsion_share`), the elements
+// Inputs: the spin, its torsion share (`bounce::torsion_share`, read once), the elements
 // (`elements::Element`), `formation::kinds` and `formation::founding_shells`
 // for the cascade, `atoms::vessel`, and `formation::lighting`. Reaches are
 // core rings; amounts are held frames, universe units.
@@ -106,24 +106,29 @@ impl Substrate {
     /// The pushed-out kinds form shells; kinds with overlapping spreads link
     /// into runs, and each run's superposed hold beads at its maxima (one
     /// galaxy per bead) and parts at its minima. Each kind's matter goes to the
-    /// bead whose span contains its reach.
-    pub fn found(spin: &Q, elements: &[crate::elements::Element]) -> (Substrate, Anchor) {
+    /// bead whose span contains its reach. The torsion share is read here
+    /// once from the parent's `spin` (`bounce::torsion_share` at the
+    /// universal core's mass, 1) and held as [`Substrate::share`]; the
+    /// elements are founded at it (`elements::founded`). `None` where the
+    /// element table fails.
+    pub fn found(spin: &Q) -> Option<(Substrate, Anchor)> {
         let mut prof = Prof::new(usize::MAX);
         // The founding depends only on the laws and the torsion share, so the
         // cache key is the founding digest and the share.
         let share = crate::bounce::torsion_share(&Q::ONE, spin);
         super::grain::set_founding_bits(crate::elements::founding_bits(&share));
-        let key = format!("{}-{}", &env!("XYL_FOUNDING_DIGEST")[..12], share).replace('/', "-");
-        let anchor_of = |s: &Substrate| {
-            super::anchor::of(&s.rim, s.lighting.cools_in, spin, &share, &s.margin())
-        };
+        let digest = crate::package::founding_digest();
+        let key = format!("{}-{}", digest.get(..12).unwrap_or(digest), share).replace('/', "-");
+        let anchor_of =
+            |s: &Substrate| super::anchor::of(&s.rim, s.lighting.cools_in, spin, &s.margin());
         if let Some(mut s) = super::cache::load(&key) {
             s.reverb = s.reverberation();
             let a = anchor_of(&s);
             prof.lap("founding: from the cache");
-            return (s, a);
+            return Some((s, a));
         }
-        let kinds = formation::kinds(elements);
+        let elements = crate::elements::founded(&share).ok()?;
+        let kinds = formation::kinds(&elements);
         let mix: Vec<(u32, Q)> = kinds.iter().map(|k| (k.z, k.share.clone())).collect();
         let (s_final, shells) = formation::founding_shells(&mix);
         prof.lap("founding: shells");
@@ -168,15 +173,13 @@ impl Substrate {
         s.reverb = s.reverberation();
         prof.lap("founding: reverberation");
         // The home galaxy's gas is these beads read one tier down
-        // (formation.rs); the swing is 1 + the inbound echo's mean over the
-        // first echo.
-        let swing = &Q::ONE + &s.inbound_mean(echo()).to_q();
-        s.lighting = formation::lighting(&s.beads, &s.unit(), &s.held_share(), &swing);
+        // (formation.rs), heated at the inbound echo's swing.
+        s.lighting = formation::lighting(&s.beads, &s.unit(), &s.held_share(), &s.echo_swing());
         prof.lap("founding: first collapse");
         s.nucleons_founded = s.holding();
         super::cache::store(&key, &s);
         let a = anchor_of(&s);
-        (s, a)
+        Some((s, a))
     }
 
     /// The held share of the founded matter, by mass so the books close by

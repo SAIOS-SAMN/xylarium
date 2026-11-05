@@ -16,9 +16,10 @@
 //!
 //! `bounce::torsion_share` at the universal core (`M = 1`) is
 //! a = (H + J) / (2H + J) with H = 2M, J = a_Kerr M^2: 1/2 at zero spin, 3/5
-//! at the extremal spin; [`spin_of_share`] inverts it
-//! onto the grid. [`Origin::of`] returns None where the founding or the
-//! bounce cannot be built; the same seed gives the same origin.
+//! at the extremal spin; `bounce::spin_of_share` inverts it, and
+//! [`clamp_spin`] puts the inverse on the grid. [`Origin::of`] returns None
+//! where the founding or the bounce cannot be built; the same seed gives the
+//! same origin.
 //! Terms: torsion share, lumpiness (docs/glossary.md).
 
 use crate::bounce::Bounce;
@@ -37,7 +38,7 @@ fn unit(rng: &mut Stream) -> Q {
 
 /// A drawn value fixed as one exact rational: the 2^-40 grid point at or
 /// below its enclosure's midpoint (within 2^-40 of the true draw).
-fn fix(e: &Encl) -> Q {
+pub(crate) fn fix(e: &Encl) -> Q {
     xyl_core::certified::down(&e.mid(), GRID_BITS)
 }
 
@@ -72,13 +73,6 @@ pub struct Origin {
     /// The star efficiency: the lit share of the home galaxy's gas, what
     /// collapses into clouds, by holding, in [0, 1].
     pub efficiency: Q,
-}
-
-/// The parent's spin whose torsion share is `a` (`bounce::spin_of_share` at
-/// the universal core's mass, 1), clamped to the open grid. A share at or
-/// above three fifths (the extremal spin's) gives the extremal spin.
-pub fn spin_of_share(a: &Q) -> Q {
-    crate::bounce::spin_of_share(&Q::ONE, a).map_or_else(|| clamp_spin(&Q::ONE), |j| clamp_spin(&j))
 }
 
 /// A uniform rational strictly inside (0, 1) on the 2^-40 grid.
@@ -142,15 +136,19 @@ mod tests {
         // A spinless hole carries one half and does not bounce; the extremal
         // spin carries three fifths; the inversion lands within a grid step.
         let torsion_share = |spin: &Q| crate::bounce::torsion_share(&Q::ONE, spin);
+        let on_grid =
+            |a: &Q| clamp_spin(&crate::bounce::spin_of_share(&Q::ONE, a).unwrap_or(Q::ONE));
         assert_eq!(torsion_share(&Q::ZERO), Q::new(1, 2).unwrap());
         assert_eq!(torsion_share(&Q::ONE), Q::new(3, 5).unwrap());
         for n in [1i64, 7, 50, 99] {
             let spin = Q::new(n, 100).unwrap();
-            let back = spin_of_share(&torsion_share(&spin));
+            let back = on_grid(&torsion_share(&spin));
             assert!((&back - &spin).abs() <= grid_step(), "{spin} -> {back}");
         }
-        // A share no spin reaches gives the extremal spin.
-        assert_eq!(spin_of_share(&Q::ONE), clamp_spin(&Q::ONE));
-        assert!(spin_of_share(&Q::new(1, 3).unwrap()) >= grid_step());
+        // A share no spin reaches gives the extremal spin; one below a half
+        // stays inside the open grid.
+        assert!(crate::bounce::spin_of_share(&Q::ONE, &Q::ONE).is_none());
+        assert_eq!(on_grid(&Q::ONE), clamp_spin(&Q::ONE));
+        assert!(on_grid(&Q::new(1, 3).unwrap()) >= grid_step());
     }
 }

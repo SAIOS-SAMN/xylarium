@@ -4,7 +4,7 @@
 //! Inputs: `origin::Origin` (first stars, star efficiency, the founding's
 //! light nuclei via `elements::founded`, read as [`Light`]), `galaxy`
 //! (`birth` for each ring's first light, `density` for the disc profile,
-//! `core_reach`), `centre::galaxy_episode` for the core's echo, and the
+//! `core_reach`), `circuit::echo` for the core's echo, and the
 //! element table's channel shares (`elements::Channel`). Reaches at the
 //! public interface are galaxy rings, read in kpc inside through the
 //! boundary `galaxy::kpc_of_rings` (`ring_of`); the model's radii are kpc,
@@ -46,7 +46,7 @@
 //! calibration cannot be built.
 //!
 //! Calibration: yield scales are fitted once per process, on the first
-//! history built, to the measured gas at `Rulers::r0` today: core collapse
+//! history built, to the measured gas at `galaxy::r0` today: core collapse
 //! from O, type Ia from Fe, AGB from N; mergers and spallation at scale 1.
 //! Every later universe in the process uses the same scales. A galactic
 //! core's recipe (`cores`) is applied to these abundances in `systems`.
@@ -119,11 +119,6 @@ impl Rulers {
     /// calibration epoch, removed in phase 5 (docs/roadmap.md, milestone 3).
     pub fn today() -> Q {
         crate::turning::span_in_rings(&decimal("13.8").unwrap_or(Q::ZERO))
-    }
-    /// The reference ring (galaxy rings): the galaxy's half-holding reach
-    /// (`galaxy::r0`), read from the founding's structure.
-    pub fn r0() -> Q {
-        crate::galaxy::r0()
     }
     /// The disc's flat rotation speed, 220 km/s.
     pub fn v_flat() -> Q {
@@ -294,15 +289,18 @@ mod tests {
         let chem = crate::genesis::chem();
         let today = Rulers::today();
         // Oxygen's abundance at r0 today is non-negative.
-        let o = chem.relative("O", &Rulers::r0(), &today, &Q::ONE).unwrap();
+        let o = chem
+            .relative("O", &crate::galaxy::r0(), &today, &Q::ONE)
+            .unwrap();
         assert!(o.signum() >= 0, "O at R0 today: {o}");
         // So is the metallicity.
-        let made = chem.metals(&Rulers::r0(), &today).unwrap();
+        let made = chem.metals(&crate::galaxy::r0(), &today).unwrap();
         assert!(made.signum() >= 0, "metals {made}");
         // At half the first stars' epoch no channel has made uranium yet.
         let before = origin.first_stars().lo.checked_div(&Q::int(2)).unwrap();
         assert_eq!(
-            chem.relative("U", &Rulers::r0(), &before, &Q::ONE).unwrap(),
+            chem.relative("U", &crate::galaxy::r0(), &before, &Q::ONE)
+                .unwrap(),
             Q::ZERO
         );
     }

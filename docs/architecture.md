@@ -168,14 +168,14 @@ and may run beside `run`. Bracketed arguments are optional, with their defaults.
 
 | Word | Arguments | Kind | Shows |
 |---|---|---|---|
-| `formation` | | Law | Each galaxy's cut, gas, cooling and stars, counted in rings of the galaxy's anchor echo |
+| `formation` | | Law | The founding's matter, then each galaxy's pieces of gas, their lighting and the star cut of the first lit pieces (`disc::star_hold` through `galaxy::disc_frame`) with the worlds their manifolds hold, counted in rings |
 | `seals` | `[N=1600]` | Law | The quantum capacity of kinds Z 1 to N on the bands of each kind's atom, the seams and the kinds that seal |
-| `founding-reach` | | Law | Every founded kind's reach about the throat from the founding cascade, and its open share |
+| `founding-reach` | | Law | Every founded kind's reach about the throat from the founding shells, and its open share |
 | `worlds` | `[N=200]` | Law | The planets of the first N sample stars as settling leaves them: orbits, masses, neighbour ratios, and the stars without worlds by cause |
 | `push` | `[N=150]` | Law | Each kind's push with Z in both poles against the built and linear pushes, Z 1 to N |
 | `bonding` | `[N=150]` | Law | Each kind's contacts, grip and conduction in a body of like atoms, Z 1 to N |
 | `universal-core` | `[R]` | Law | The universal core's substrate R rings after the bounce (default: the first stars), on the T lane with Gyr as a display conversion: its reverberation kind by kind, its outflow, the ocean's shares, every galaxy's intake, the books, Z Q R |
-| `founding` | | Law | The equitable cascade and the founding cascade: stacks, spins, reaches and the settled bell |
+| `founding` | | Law | The founding shells (`formation::founding_shells`) on the founding's mix: the final share, the held kinds, and each shell's kinds, amount and reach |
 | `galactic-core` | `N` | Law | Galactic core N of the founding (0 is the home galaxy's, at the universal core): its hole, its mass ratio to the home hole, its place |
 | `tiers` | `S` | Law | Star S and its worlds, each turn counted in its anchor's rings |
 | `universe` | | Carried | The default: the bell's count, the peoples, the seats, the bells, the books, the worlds formed and the cores |

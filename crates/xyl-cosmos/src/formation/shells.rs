@@ -1,8 +1,8 @@
-//! The founding cascade and the founding shells: each kind's capture share,
-//! the stacks of the mass profile and each kind's reach about the throat
-//! (see the parent module's header for the formulas).
+//! The founding shells: each kind's capture share, the stacks of the mass
+//! profile and each kind's reach about the throat (see the parent module's
+//! header for the formulas).
 
-use super::{half, mass_weight, weight};
+use super::{half, mass_weight};
 use rayon::prelude::*;
 use std::collections::BTreeMap;
 use xyl_core::Q;
@@ -88,220 +88,7 @@ fn carried_reach(push: &Q, w: &Q, h_final: &Q) -> Q {
     )
 }
 
-/// One stack of the founding cascade.
-#[derive(Clone, Debug)]
-pub struct Stack {
-    /// The stack's kinds, heaviest first.
-    pub kinds: Vec<u32>,
-    /// Amount: the sum of the stack's kinds' amounts.
-    pub amount: Q,
-    /// Amount-weighted mean mass per nucleus of the stack's kinds.
-    pub w_mean: Q,
-    /// Push share b_k of the bounce that released the stack.
-    pub bounce: Q,
-    /// Spin at release, before its passages.
-    pub released: Q,
-    /// Spin once the cascade settles (after every passage through it).
-    pub settled: Q,
-    /// The beat set by the stack's release: the round trip 2 l_0 to its
-    /// release reach.
-    pub beat: Q,
-}
-
-/// The founding cascade (diagnostic): the stack built by the capture chain,
-/// emptied from the top by bursts.
-/// - Stacks are the beads of the mass profile (each kind's amount x mass per
-///   nucleus, heaviest first): a bead at every local maximum, parted at the
-///   minima.
-/// - Bounce k releases stack k at its push b_k, carried to
-///   l_0 = b_k w_all / w_k (the mean mass over all kinds over the stack's
-///   mean mass), reach R = l_0 (the throat's state 1).
-/// - Once released, it passes out through every earlier stack still inside
-///   its reach, innermost first. Each passage is a meeting: with T the
-///   contrast of their deficits (delta = 1 / (R + 1)) and no grip applied,
-///   the earlier stack gains T m spread / M and the released one gives
-///   T m_j spread / M (never more than it carries), M their combined amount
-///   and spread their spin contrast, so the sum of m l is conserved.
-/// - What stack k loses in its passages it hands back at the throat:
-///   b_(k+1) = p + that loss, so the next bounce is stronger.
-/// - The beat: each stack's release sets a round trip 2 l_0 to its release
-///   reach; the returned beat is the throat's, 2 (twice its reach, 1).
-///
-/// Returns the stacks and the beat.
-pub fn cascade(mix: &[(u32, Q)]) -> (Vec<Stack>, Q) {
-    let p = half(&Q::ONE);
-    // Inertia is the mass per nucleus; stacks are ordered heaviest first.
-    let mut kinds = weighed(mix, |_| Q::ONE);
-    kinds.sort_by(|a, b| b.2.cmp(&a.2));
-    if kinds.is_empty() {
-        return (Vec::new(), Q::int(2));
-    }
-    let amount = kinds.iter().fold(Q::ZERO, |acc, (_, a, _)| &acc + a);
-    let total_w = kinds.iter().fold(Q::ZERO, |acc, (_, a, w)| &acc + &(a * w));
-    let w_all = total_w.checked_div(&amount).unwrap_or(Q::ONE);
-    let prof: Vec<Q> = kinds.iter().map(|(_, a, w)| a * w).collect();
-    let mut stacks: Vec<Stack> = Vec::new();
-    let mut b = p.clone();
-    for (a0, a1) in profile_beads(&prof) {
-        let part = &kinds[a0..a1];
-        let m = part.iter().fold(Q::ZERO, |acc, (_, a, _)| &acc + a);
-        let mw = part.iter().fold(Q::ZERO, |acc, (_, a, w)| &acc + &(a * w));
-        let w_mean = mw.checked_div(&m).unwrap_or(Q::ONE);
-        // The release spin is l0 = b_k w_all / w_mean.
-        let l0 = on_grid(&(&b * &w_all).checked_div(&w_mean).unwrap_or(Q::ZERO));
-        let (l, lost) = pass_out(&mut stacks, &m, l0.clone());
-        stacks.push(Stack {
-            kinds: part.iter().map(|(z, _, _)| *z).collect(),
-            amount: m.clone(),
-            w_mean,
-            bounce: b.clone(),
-            released: l0.clone(),
-            settled: l.clone(),
-            beat: &Q::int(2) * &l0,
-        });
-        // The next push is b_(k+1) = p + the spin stack k gave in its passages.
-        b = &p + &lost;
-    }
-    (stacks, Q::int(2))
-}
-
-/// A released stack of amount `m` and spin `l` passing out through every
-/// earlier stack inside its reach, innermost first. Each meeting exchanges
-/// spin by the contrast `T = |d_in - d_out| / (d_in + d_out)` of their
-/// deficits `d = 1 / (R + 1)`: the earlier stack gains `T m spread / M` and
-/// the released one gives `T m_j spread / M` (at most its spin), `M` their
-/// combined amount and `spread` their spin contrast. Returns the released
-/// stack's spin after its passages and the spin it gave.
-fn pass_out(stacks: &mut [Stack], m: &Q, mut l: Q) -> (Q, Q) {
-    let mut lost = Q::ZERO;
-    let mut order: Vec<usize> = (0..stacks.len()).collect();
-    order.sort_by(|&x, &y| stacks[x].settled.cmp(&stacks[y].settled));
-    for j in order {
-        if stacks[j].settled >= l {
-            continue;
-        }
-        let (r_in, r_out) = (stacks[j].settled.clone(), l.clone());
-        let (d_in, d_out) = (
-            Q::ONE.checked_div(&(&r_in + &Q::ONE)).unwrap_or(Q::ZERO),
-            Q::ONE.checked_div(&(&r_out + &Q::ONE)).unwrap_or(Q::ZERO),
-        );
-        let t = (&d_in - &d_out)
-            .abs()
-            .checked_div(&(&d_in + &d_out))
-            .unwrap_or(Q::ZERO);
-        let both = m + &stacks[j].amount;
-        let spread = &l - &stacks[j].settled;
-        let give = on_grid(
-            &(&(&t * &stacks[j].amount) * &spread)
-                .checked_div(&both)
-                .unwrap_or(Q::ZERO),
-        )
-        .min(l.clone());
-        let gain = on_grid(&(&(&t * m) * &spread).checked_div(&both).unwrap_or(Q::ZERO));
-        l = &l - &give;
-        lost = &lost + &give;
-        stacks[j].settled = &stacks[j].settled + &gain;
-    }
-    (l, lost)
-}
-
-/// The equitable cascade (diagnostic): bursts from the top and expansion
-/// from the base combined; K is the epicentre's spin, k the orbital speed,
-/// and each share is the unlocked face 1/2 R / (R + H) at the kind's capture. Holds,
-/// per form, the spin K, the throat's final share, the stacks (kinds, push,
-/// reaches) and the kinds the throat holds.
-#[derive(Clone, Debug)]
-pub struct EquitableReading {
-    /// Label of the form of the cascade read.
-    pub form: &'static str,
-    /// Epicentre spin K: the sum of every kind's capture share.
-    pub k_spin: Q,
-    /// The throat's final hold, H = 1 + the held share.
-    pub h_final: Q,
-    /// The throat's final share, 1/2 held / (held + H) after the last capture;
-    /// each founding shell spreads R (1 +/- s_final).
-    pub s_final: Q,
-    /// Per stack: kinds (heaviest first), push K + s_i, reaches (lightest
-    /// kind's, heaviest kind's), and the orbital speed at the heaviest.
-    pub stacks: Vec<(Vec<u32>, Q, Q, Q, Q)>,
-    /// The kinds the throat holds: those whose reach times (1 + s_final) is at
-    /// most 1.
-    pub held: Vec<u32>,
-}
-
-/// Runs the equitable cascade (diagnostic) on `mix`, a list of (kind, amount)
-/// pairs, and returns one [`EquitableReading`] per form. Kinds with zero amount
-/// or zero mass are ignored; an empty result means no kind remained.
-pub fn equitable_cascade(mix: &[(u32, Q)]) -> Vec<EquitableReading> {
-    // Inertia is the mass per nucleus.
-    let mut kinds = weighed(mix, |_| Q::ONE);
-    if kinds.is_empty() {
-        return Vec::new();
-    }
-    let amount = kinds.iter().fold(Q::ZERO, |acc, (_, a, _)| &acc + a);
-    // The capture chain runs light to heavy (Z ascending).
-    kinds.sort_by_key(|k| k.0);
-    let mut out = Vec::new();
-    // One form is read: each capture's share is the unlocked hemisphere,
-    // 1/2 (1 - delta) = 1/2 R / (R + H), with R = held and H = 1 + held.
-    for form in ["the unlocked face, R = held"] {
-        let (shares, held) = capture_shares(&kinds, &amount);
-        let k_spin = shares.values().fold(Q::ZERO, |acc, s| &acc + s);
-        let h_final = &Q::ONE + &held;
-        let s_final = final_share(&held, &h_final);
-        // The stacks are the beads of the weight profile (amount x mass),
-        // heaviest first.
-        let mut heavy = kinds.clone();
-        heavy.sort_by(|a, b| b.2.cmp(&a.2));
-        let prof: Vec<Q> = heavy.iter().map(|(_, a, w)| a * w).collect();
-        let mut stacks = Vec::new();
-        let mut held_z = Vec::new();
-        for (a0, a1) in profile_beads(&prof) {
-            let part = &heavy[a0..a1];
-            // The push K + s_i acts on each kind's mass,
-            // R = (K + s_i) / w / H, with no mean-mass factor (as in
-            // founding_shells).
-            let push = &k_spin + &stack_share(part, &shares);
-            let (w_light, w_heavy) = (
-                part.iter().map(|k| k.2.clone()).min().unwrap_or(Q::ONE),
-                part.iter().map(|k| k.2.clone()).max().unwrap_or(Q::ONE),
-            );
-            let (r_far, r_deep) = (
-                carried_reach(&push, &w_light, &h_final),
-                carried_reach(&push, &w_heavy, &h_final),
-            );
-            // The orbital speed at the heaviest kind is H / (R_deep + H).
-            let k_orbit = on_grid(
-                &h_final
-                    .checked_div(&(&r_deep + &h_final))
-                    .unwrap_or(Q::ZERO),
-            );
-            for (z, _, w) in part {
-                if &carried_reach(&push, w, &h_final) * &(&Q::ONE + &s_final) <= Q::ONE {
-                    held_z.push(*z);
-                }
-            }
-            stacks.push((
-                part.iter().map(|k| k.0).collect(),
-                push,
-                r_far,
-                r_deep,
-                k_orbit,
-            ));
-        }
-        out.push(EquitableReading {
-            form,
-            k_spin,
-            h_final,
-            s_final,
-            stacks,
-            held: held_z,
-        });
-    }
-    out
-}
-
-/// The founding shells (the equitable cascade): each kind's reach about the
+/// The founding shells: each kind's reach about the
 /// throat, R_z = (K + s_i) / w_z / H, after the filter below, and whether
 /// the throat holds it (R_z (1 + s_final) <= 1). Returns the final share
 /// s_final (each shell spreads R (1 +/- s_final)) and, per kind,
@@ -310,7 +97,11 @@ pub fn founding_shells(mix: &[(u32, Q)]) -> (Q, Vec<(u32, Q, Q, bool)>) {
     // The founding runs on mass: amounts are converted from held frames to
     // mass (x mass / hold) for the capture shares, the profile's beads and
     // the carriage's inertia, and converted back on return.
-    let to_mass = |z: u32| mass_weight(z).checked_div(&weight(z)).unwrap_or(Q::ONE);
+    let to_mass = |z: u32| {
+        mass_weight(z)
+            .checked_div(&Q::int(i64::from(crate::compound::hold(z))))
+            .unwrap_or(Q::ONE)
+    };
     let mut kinds = weighed(mix, to_mass);
     if kinds.is_empty() {
         return (Q::ZERO, Vec::new());

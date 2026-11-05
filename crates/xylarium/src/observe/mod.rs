@@ -66,7 +66,7 @@
 //!   formation         each galaxy's cut, gas, cooling and stars
 //!   seals \[Z\]         the sealed kinds, the seams and the vessel (the
 //!                     firmament's band) up to Z
-//!   founding          the founding's equitable cascade and its stacks
+//!   founding          the founding shells on the founding's mix
 //!   founding-reach    each kind's reach about the throat at the founding
 //!   worlds \[N\]        the planets of the first N stars (default 200),
 //!                     settled, why a star stands without worlds, and the

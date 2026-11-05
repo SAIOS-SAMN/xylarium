@@ -1,5 +1,5 @@
 //! The calibration: each channel's yield scale fitted once per process to
-//! the measured gas at `Rulers::r0` today, and the Sun's birth gas under it.
+//! the measured gas at `galaxy::r0` today, and the Sun's birth gas under it.
 
 use super::{channel_index, ring_of, Model, Params, Rulers, BITS, CHANNELS};
 use crate::elements::{decimal, table, Channel, Element};
@@ -27,7 +27,7 @@ impl Calibration {
     fn build(p: &Params) -> Option<Calibration> {
         let elements = table().ok()?;
         let model = Model::of(p);
-        let k0 = ring_of(&Rulers::r0());
+        let k0 = ring_of(&crate::galaxy::r0());
         let today = Rulers::today();
         let reference = model
             .concs(k0, &today)

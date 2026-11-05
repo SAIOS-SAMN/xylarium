@@ -207,6 +207,15 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- A bond keeps both atoms whole and is read by planes (`atoms::Bond`): each
+  face's pole push and polarity on the axis plane, the pushes composed by
+  the flow law, and every open winding of each face on the isoclinic planes
+  with its tightness (`Atom::winding_tightness`), in place of one weaker
+  tightness and a ratio. `compound::closing` returns the bond;
+  `compound::held` is removed (`Bond::held`). The `bonding` reading's own
+  copy of the winding tightness is removed. New reading
+  `xylarium observe bond A B [T]` (#107).
+
 - A seat's focus is four exact shares of free thought, one per domain, each
   in `[0, 1]` and together at most 1 (`knowledge::Focus`), in place of one
   domain or none; `Decision::Focus` and `Input::Focus` carry it, and the

@@ -20,7 +20,9 @@
 //! Outputs: `Atom` (bands, outer shell, `unpaired`, `tightness`
 //! (Z - inner electrons) / n_out, `closed`, `sealed`), `unpaired`, `unpaired_hot` (strips
 //! every band held no tighter than the isoclinic turning received, capped at 1), `vessel`, `bond`
-//! (shared share tau_min / tau_max, grip tau_min) and `hold` (a
+//! (the two faces whole: each face's pole push on the axis plane composed by
+//! the flow law, each face's polarity, and every open winding held against
+//! the isoclinic turning) and `hold` (a
 //! cluster's light holding from stretches, bends and dipole). `atom` returns
 //! None for Z = 0 or a cluster id. Seals fall at Z = 2, 28, 208, 1092;
 //! `vessel` returns (lower, upper): the last seal within `TOP_Z`, and the
@@ -107,6 +109,19 @@ pub struct Atom {
 }
 
 impl Atom {
+    /// How tightly band `b` is held: the charge its windings enclose, Z less
+    /// the electrons of every shallower turning, over its turning `n`, in
+    /// hydrogen units (exact).
+    pub fn winding_tightness(&self, b: &Band) -> Q {
+        let shallower: u32 = self
+            .bands
+            .iter()
+            .filter(|c| c.n < b.n)
+            .map(|c| c.electrons)
+            .sum();
+        Q::new(i64::from(self.z) - i64::from(shallower), i64::from(b.n)).unwrap_or(Q::ZERO)
+    }
+
     /// Every frame paired: the atom bonds nothing.
     pub fn closed(&self) -> bool {
         self.unpaired == 0
@@ -200,17 +215,7 @@ pub fn unpaired_hot(z: u32, received: &Received) -> u32 {
     let Some(a) = atom(z) else { return 0 };
     a.bands
         .iter()
-        .filter(|b| {
-            let shallower: u32 = a
-                .bands
-                .iter()
-                .filter(|c| c.n < b.n)
-                .map(|c| c.electrons)
-                .sum();
-            let tight =
-                Q::new(i64::from(z) - i64::from(shallower), i64::from(b.n)).unwrap_or(Q::ZERO);
-            tight > *heat
-        })
+        .filter(|b| a.winding_tightness(b) > *heat)
         .map(Band::unpaired)
         .sum()
 }
@@ -328,29 +333,94 @@ fn fill(z: u32) -> Atom {
     }
 }
 
-/// A bond between two atoms, from the ratio of their tightnesses: the shared
-/// share s = tau_min / tau_max (1 fully shared, near 0 transferred to the
-/// tighter atom), and the grip tau_min, the weaker hold.
+/// A bond between two atoms: a paired throat at the atomic tier, its two
+/// atoms its faces (model.md, Chemistry from the elements). It keeps both
+/// faces whole and is read by planes, never by one tightness:
+/// - on the axis plane, each face's pole push `(U - W) / (U + W)` from its
+///   frames (axiom 9), composed across the pair by the flow law, and each
+///   face's axis polarity, kept apart;
+/// - on the isoclinic planes, every open winding of each face with its
+///   tightness, each held against the received turning;
+/// - between planes, nothing in founded matter, whose five isoclinic planes
+///   turn together (T18).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Bond {
-    /// Shared share in (0, 1]: tau_min / tau_max; 1 is fully shared, near 0 is
-    /// transferred to the tighter atom.
-    pub shared: Q,
-    /// Grip: tau_min, the smaller of the two tightnesses (the weaker hold).
-    pub grip: Q,
+    /// The two atoms, the bond's faces.
+    pub faces: [Atom; 2],
 }
 
-/// The bond between atoms `a` and `b`, from their tightnesses (see [`Bond`]).
-/// When the larger tightness is zero the shared share is taken as 1.
+/// One open winding of a face: its band and how much of it a received
+/// turning leaves held.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct WindingHold {
+    /// The band's turning count.
+    pub n: u32,
+    /// The band's shape degree.
+    pub l: u32,
+    /// Its unpaired electrons.
+    pub unpaired: u32,
+    /// The share of it held: 1 within its tightness, else its tightness over
+    /// the isoclinic turning (the rule `compound::stands` and
+    /// `atoms::unpaired_hot` cut at; the graded stripping law is still to be
+    /// derived, #107).
+    pub held: Q,
+}
+
+impl Bond {
+    /// Each face's pole push on the axis plane, `(U - W) / (U + W)`, with `U`
+    /// its open frames and `W = 3Z - U` its held frames.
+    pub fn pole_pushes(&self) -> [Q; 2] {
+        self.faces.clone().map(|a| {
+            let u = Q::int(i64::from(a.unpaired));
+            let w = &Q::int(3 * i64::from(a.z)) - &u;
+            (&u - &w).checked_div(&(&u + &w)).unwrap_or(Q::ZERO)
+        })
+    }
+
+    /// The bond's separation on the axis plane: the first face's pole push
+    /// against the second's, composed by the flow law, `p_a (+) (-p_b)`.
+    /// `None` where a push lies on the boundary of the flow law's domain.
+    pub fn axis_separation(&self) -> Option<Q> {
+        let [a, b] = self.pole_pushes();
+        xyl_core::shares::flow(&a, &-b)
+    }
+
+    /// Each face's axis polarity (T7), kept apart.
+    pub fn polarities(&self) -> [Option<i64>; 2] {
+        self.faces.clone().map(|a| axis_polarity(a.z))
+    }
+
+    /// Each face's open windings and the share of each the isoclinic
+    /// turning `received` leaves held.
+    pub fn held(&self, received: &Received) -> [Vec<WindingHold>; 2] {
+        let turning = received.isoclinic.clone().min(Q::ONE);
+        self.faces.clone().map(|a| {
+            a.bands
+                .iter()
+                .filter(|b| b.unpaired() > 0)
+                .map(|b| {
+                    let tight = a.winding_tightness(b);
+                    let held = if turning <= tight {
+                        Q::ONE
+                    } else {
+                        tight.checked_div(&turning).unwrap_or(Q::ONE)
+                    };
+                    WindingHold {
+                        n: b.n,
+                        l: b.l,
+                        unpaired: b.unpaired(),
+                        held,
+                    }
+                })
+                .collect()
+        })
+    }
+}
+
+/// The bond between atoms `a` and `b` (see [`Bond`]).
 pub fn bond(a: &Atom, b: &Atom) -> Bond {
-    let (lo, hi) = if a.tightness <= b.tightness {
-        (&a.tightness, &b.tightness)
-    } else {
-        (&b.tightness, &a.tightness)
-    };
     Bond {
-        shared: lo.checked_div(hi).unwrap_or(Q::ONE),
-        grip: lo.clone(),
+        faces: [a.clone(), b.clone()],
     }
 }
 

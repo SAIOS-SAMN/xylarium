@@ -106,6 +106,15 @@ another crate. Laws are composed from shares (ratios of the form
   `J = H (2a - 1) / (1 - a)`, put on the origin's grid by
   `origin::clamp_spin`. The founding reads the share once
   (`circuit::Substrate::found`) and holds it as `Substrate::share`. Status: built.
+- Bond (`atoms::Bond`; docs/model.md, Scalar collapses; #107): two faces,
+  the two atoms whole. Axis plane: each face's pole push
+  `p = (U - W) / (U + W)`, `W = 3Z - U` (`Bond::pole_pushes`), their
+  separation `p_a (+) (-p_b)` by the flow law (`Bond::axis_separation`),
+  each face's polarity (`Bond::polarities`). Isoclinic planes: each open
+  winding's tightness `(Z - shallower electrons) / n`
+  (`Atom::winding_tightness`) and the share a turning leaves held,
+  `min(1, tau / min(turning, 1))` (`Bond::held`). Status: built; the graded
+  stripping law is to be derived.
 - Received turning (`atoms::Received`; docs/model.md, Chemistry from the
   elements; #103): `{ axis, isoclinic }`, the axis plane's push per echo
   (the pole state's dilation, a star's compactness) and the isoclinic

@@ -175,6 +175,7 @@ and may run beside `run`. Bracketed arguments are optional, with their defaults.
 | `founding-reach` | | Law | Every founded kind's reach about the throat from the founding shells, and its open share |
 | `worlds` | `[N=200]` | Law | The planets of the first N sample stars as settling leaves them: orbits, masses, neighbour ratios, and the stars without worlds by cause |
 | `push` | `[N=150]` | Law | Each kind's push with Z in both poles against the built and linear pushes, Z 1 to N |
+| `bond` | `A B [T=0]` | Law | The bond of atoms A and B by its planes (`atoms::Bond`): each face's pole push and polarity on the axis plane and their composition, each face's open windings with their tightness and the share an isoclinic turning T leaves held |
 | `bonding` | `[N=150]` | Law | Each kind's contacts, grip and conduction in a body of like atoms, Z 1 to N |
 | `universal-core` | `[R]` | Law | The universal core's substrate R rings after the bounce (default: the first stars), on the T lane with Gyr as a display conversion: its reverberation kind by kind, its outflow, the ocean's shares, every galaxy's intake, the books, Z Q R |
 | `founding` | | Law | The founding shells (`formation::founding_shells`) on the founding's mix: the final share, the held kinds, and each shell's kinds, amount and reach |

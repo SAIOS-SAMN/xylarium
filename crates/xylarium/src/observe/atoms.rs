@@ -6,18 +6,6 @@ use std::collections::BTreeMap;
 use xyl_core::Q;
 use xyl_cosmos::origin::Origin;
 
-/// The hold of the nucleus on band `n` of atom `a`:
-/// `tau_b = (Z - the electrons of every shallower turning) / n`.
-fn band_hold(a: &xyl_cosmos::atoms::Atom, z: u32, n: u32) -> Q {
-    let shallower: u32 = a
-        .bands
-        .iter()
-        .filter(|c| c.n < n)
-        .map(|c| c.electrons)
-        .sum();
-    Q::ratio(i64::from(z) - i64::from(shallower), i64::from(n))
-}
-
 /// The `bonding N` reading: how atoms of one kind bond into a body,
 /// converging in Q over R, with Z incorporated into Q through the nucleus's
 /// hold (without it the reading is only linear) and limited by each band's
@@ -50,7 +38,7 @@ pub(super) fn bonding(top: usize) -> String {
         // Per open frame: tau_b and the band's free room 1 - omega_b.
         let mut frames: Vec<(Q, Q)> = Vec::new();
         for b in a.bands.iter().filter(|b| b.unpaired() > 0) {
-            let tau = band_hold(&a, z, b.n);
+            let tau = a.winding_tightness(b);
             let d = xyl_cosmos::fibres::directions(b.l).max(1);
             let free = &Q::ONE - &Q::new(i64::from(b.unpaired()), i64::from(d)).unwrap_or(Q::ONE);
             for _ in 0..b.unpaired() {
@@ -133,7 +121,7 @@ pub(super) fn push_reading(top: usize) -> String {
         };
         let (mut a_z, mut q_z) = (Q::ZERO, Q::ZERO);
         for b in &a.bands {
-            let tau = band_hold(&a, z, b.n);
+            let tau = a.winding_tightness(b);
             let (held, open) = (3 * b.electrons - b.unpaired(), b.unpaired());
             a_z = &a_z + &(&tau * &Q::int(i64::from(held)));
             q_z = &q_z + &(&tau * &Q::int(i64::from(open)));
@@ -284,4 +272,58 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
     }
     out.push_str(&rows);
     out
+}
+
+/// The `bond A B [T]` reading: the bond of atoms `A` and `B` read by its
+/// planes (`atoms::Bond`). On the axis plane, each face's pole push and
+/// polarity and the flow law's composition of the two pushes; on the
+/// isoclinic planes, every open winding of each face with its tightness and
+/// the share of it a received isoclinic turning `T` (default 0) leaves held;
+/// between planes, nothing in founded matter (T18).
+pub(super) fn bond_reading(a: u32, b: u32, turning: &Q) -> Result<String, String> {
+    let (fa, fb) = (
+        xyl_cosmos::atoms::atom(a).ok_or_else(|| format!("no atom of Z {a}"))?,
+        xyl_cosmos::atoms::atom(b).ok_or_else(|| format!("no atom of Z {b}"))?,
+    );
+    let bond = xyl_cosmos::atoms::bond(&fa, &fb);
+    let received = xyl_cosmos::atoms::Received::isoclinic(turning.clone());
+    let pushes = bond.pole_pushes();
+    let polarity = bond.polarities();
+    let mut out = format!(
+        "The bond of Z {a} and Z {b} at an isoclinic turning of {}\n",
+        crate::run::show(turning)
+    );
+    out.push_str(&format!(
+        "  Axis plane: pole pushes {} and {}, separation {}; polarities {} and {}\n",
+        crate::run::show(&pushes[0]),
+        crate::run::show(&pushes[1]),
+        bond.axis_separation()
+            .map(|x| crate::run::show(&x))
+            .unwrap_or_else(|| "-".into()),
+        polarity[0]
+            .map(|x| x.to_string())
+            .unwrap_or_else(|| "-".into()),
+        polarity[1]
+            .map(|x| x.to_string())
+            .unwrap_or_else(|| "-".into()),
+    ));
+    for (face, (z, atom)) in bond.held(&received).iter().zip([(a, &fa), (b, &fb)]) {
+        out.push_str(&format!("  Isoclinic planes, Z {z}:"));
+        for (w, band) in face
+            .iter()
+            .zip(atom.bands.iter().filter(|x| x.unpaired() > 0))
+        {
+            out.push_str(&format!(
+                " ({}, {}) {} open, tightness {}, held {};",
+                w.n,
+                w.l,
+                w.unpaired,
+                crate::run::show(&atom.winding_tightness(band)),
+                crate::run::show(&w.held)
+            ));
+        }
+        out.push('\n');
+    }
+    out.push_str("  Between planes: none in founded matter (T18)\n");
+    Ok(out)
 }

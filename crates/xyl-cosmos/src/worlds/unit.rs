@@ -47,7 +47,8 @@ pub fn unit() -> &'static State {
             merged_at: None,
         };
         // Bulk-silicate isotopes per kg of mantle today (U238, U235, Th232,
-        // K40), scaled back to the Sun's birth 4.57 Gyr ago below.
+        // K40), scaled back to the unit world's birth (`bodies::unit_age_gyr`
+        // ago) below.
         let today = [
             Dy::sci(19856, -12),
             Dy::sci(144, -12),
@@ -58,10 +59,11 @@ pub fn unit() -> &'static State {
         // m_kg - m_core).
         let mantle_kg =
             (Dy::ONE - Dy::from_q(&layers_core)) * Dy::from_q(&crate::package::Si::world_mass_kg());
+        let unit_age = Dy::from_q(&bodies::unit_age_gyr());
         let mut sources: [Q; 4] = Default::default();
         for (i, conc) in today.iter().enumerate() {
             let half = bodies::isotopes()[i].2.clone();
-            let back = (Dy::sci(457, -2) * xyl_core::dyadic::ln2() / Dy::from_q(&half)).exp();
+            let back = (unit_age * xyl_core::dyadic::ln2() / Dy::from_q(&half)).exp();
             sources[i] = (mantle_kg * *conc * back).to_q();
         }
         let set = Setting {
@@ -70,24 +72,26 @@ pub fn unit() -> &'static State {
             lum: Dy::ONE,
             a_au: Dy::ONE,
             z: Dy::ONE,
-            r_kpc: Dy::int(8),
+            r: crate::galaxy::rings_of_kpc_dy(Dy::int(8)),
+            reach: crate::galaxy::rings_of_kpc_dy(Dy::int(8)),
             compactness: crate::galaxy::first_star_compactness(),
             sequence: crate::galaxy::first_star_sequence(),
             sources,
             path: None,
         };
-        build(&set, Dy::sci(457, -2), &Ctx::new(Scales::default()))
+        build(&set, unit_age, &Ctx::new(Scales::default()))
     })
 }
 
 /// One degree of a star's life (Gyr): its main-sequence lifetime over 360,
 /// never shorter than one core period. A world changes at its star's pace,
 /// so it is treated as unchanged within a degree. The lifetime is that of a
-/// star of transduction sequence `seq` and compactness `delta` at `r_kpc` from
-/// the core (`life::lifetime`).
-pub fn star_degree_gyr(seq: &crate::stars::Sequence, delta: Dy, r_kpc: Dy, ctx: &Ctx) -> Dy {
+/// star of transduction sequence `seq` and compactness `delta` at `reach`
+/// (galaxy rings, `galaxy::Star::reach_rings`) about its core
+/// (`life::lifetime`).
+pub fn star_degree_gyr(seq: &crate::stars::Sequence, delta: Dy, reach: Dy, ctx: &Ctx) -> Dy {
     let ring = crate::circuit::gyr_of_rings_dy(crate::pulse::core_period());
-    (crate::life::lifetime(seq, delta, r_kpc, ctx) / Dy::int(360))
+    (crate::life::lifetime(seq, delta, reach, ctx) / Dy::int(360))
         .max(ring)
         .max(Dy::sci(1, -12))
 }

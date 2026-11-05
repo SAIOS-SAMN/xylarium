@@ -571,8 +571,9 @@ another crate. Laws are composed from shares (ratios of the form
 - Lighting (`formation::lights`, `formation::lighting`): a piece lights where
   clouds > 0 and `cooled + heat < 1/2`; `cools_in` is the least over lit
   pieces, and `lit` is the lit holding over all holding. Status: built.
-- Reach in galaxy rings (`stars::reach_rings`): `r_kpc / galaxy_kpc`.
-  Status: built.
+- A star's reach (`galaxy::Star::reach_rings`): its orbit radius about its
+  galactic core, galaxy rings; the star's class, its system's light and its
+  worlds' life and minds all read it. Status: built.
 - First light (`galaxy::birth`): the first light of the piece at the
   star's reach falls at `max(cools_in, 1)` rings; there is none where the
   piece never lights. Status: built.
@@ -628,7 +629,7 @@ another crate. Laws are composed from shares (ratios of the form
   (`compound::open_hot`), `w_z(q) = 3 Z - u_z(q)` held; `A_z` the element
   table's `a` rounded to the nearest whole (`stars::nucleon_count`). Status:
   built.
-- Pole point of a star (`stars::pole_point`): `t0 = sum n_z u_z / sum n_z
+- Pole state of a star (`stars::mixture_pole`): `t0 = sum n_z u_z / sum n_z
   w_z` over the held mixture (`disc::StarHold::held`), `n_z = share_z / w_z`;
   `t0 <= 1/2`. Status: built.
 - A star's throat (`stars::Sequence::throat_echoes`):
@@ -688,10 +689,12 @@ another crate. Laws are composed from shares (ratios of the form
 - Envelope (`systems::system`): a world gathers an envelope when its core
   holds at least 10 world masses, by a declared gathering law. Status:
   placeholder.
-- Settling rate (`systems::settle_about`): `omega(A) = [M / (A + M)] / A`
-  in `r_g`. Status: built.
-- Kick (`systems::settle_about`): `eps = [m / (r + m)] / r / |dw|` and
-  `N = age |dw|`; `q` is the least continued-fraction denominator with
+- Settling rate (`systems::settle_about`): the turning law
+  `omega(A) = bell [M / (A + M)] / A` per ring with `A` in `r_g`
+  (`turning::turning_dy`). Status: built.
+- Kick (`systems::settle_about`): `eps = omega_m(r) / |dw|`, the turning law
+  about the pair's mass `m` across its gap `r` (`turning::turning_dy`), and
+  `N = age |dw|` with the age in rings (`circuit::rings_of_gyr_dy`); `q` is the least continued-fraction denominator with
   `|s - p/q| N q <= 1`, `c = |1 - 2 frac(q psi_0)|`, and the swing is
   `eps (floor(N / q) c + N mod q)`. Status: built.
 - Merge (`systems::settle_about`): the merge age is the first age with
@@ -702,8 +705,8 @@ another crate. Laws are composed from shares (ratios of the form
 - Orbit (`bodies::orbits`): `e0 = swing`; the tilt is `swing / (1 + swing)`
   of a quarter turn, and the node and periapsis take the settled phase.
   Status: built.
-- Moon manifold (`systems::moons`): the reach is `2 pi a m / (M + m)` in the
-  world's radii from 5; the budget is
+- Moon manifold (`systems::moons`): the reach is `2 pi a m / (M + m)`
+  (`manifold::reach`) in the world's radii from 5; the budget is
   `min(a_disc x (reach / a_out) x solids, belt pool)`; the world share is
   `m / (m + budget)`; the tide is `s / (x + s)` with `x = a / a_out`; moons
   follow the degree law with no heat and settle about the world. Status:
@@ -716,12 +719,12 @@ another crate. Laws are composed from shares (ratios of the form
   giants' mass. Status: partial.
 - Resolution guard (`systems::exp`): `exp(x)` is enclosed by
   `[0, 2^-bits]` for `x <= -(bits + 1)`. Status: built.
-- Angle between bodies (`manifold::turn_between`, `chain::Place::arc`):
+- Angle between bodies (`manifold::gap`, `chain::Place::arc`):
   the certified angle `pi / 2 -/+ asin(|a . b| / |a| |b|)`
   (`xyl_core::rotor::angle_between`), the directions exact, read at its
-  midpoint; the rotor's inverse is its conjugate (`Rotor::inverse`).
-  Status: built. The galaxy network's fast path (`chain::Place::arc_kpc_dy`)
-  still reads a `Dy` arccosine.
+  midpoint; the rotor's inverse is its conjugate (`Rotor::inverse`). The
+  arc on a sphere is that turn times the chord `R sin(s / R)`
+  (`bounce::curved_reach`). Status: built.
 - Disc-mass scale of the manifold: this scale is not yet built; it is the
   next step (roadmap, Worlds on the manifold chain).
 - Degree of a star's life (`worlds::star_degree_gyr`):
@@ -771,7 +774,7 @@ the Xylarium function is the implementation. The ids are proposals.
 | LAW-TORSION-SHARE | `s(H, J) = (H + J) / (2H + J)`, `H` the horizon reach and `J` the spin's share, both stated by the universe | core | `bounce::torsion_share` |
 | LAW-JET-MAP | `t -> a t + b`, `a = D(p_c) / (1 - p_v)`, `b = p_v / (1 - p_v)` | Xylarium | `circuit::jet_map` |
 | LAW-THROAT-CROSSING | `t_n = t* + (t0 - t*) a^n`, crossing at `n = ln((1 - t*) / (t0 - t*)) / ln a`; refused for `t0 <= 0` | Xylarium | `circuit::throat_crossing` |
-| LAW-POLARITY-SEQUENCE | pole point `sum(n u) / sum(n w)`; fusion below the throat, fission above, ordered by release | Xylarium | `stars::sequence::pole_point`, `Sequence::of` |
+| LAW-POLARITY-SEQUENCE | pole point `sum(n u) / sum(n w)`; fusion below the throat, fission above, ordered by release | Xylarium | `stars::sequence::mixture_pole`, `Sequence::of` |
 
 LAW-TORSION-SHARE takes the horizon reach as an argument: Xylarium states
 `H = M (1 - delta_h) / delta_h = 2M` (`bounce::horizon_reach`) with the

@@ -77,9 +77,7 @@ pub fn crowd_r0() -> Dy {
 /// the founding; no bulge or nucleus profile is declared). The origin's
 /// star-formation share and the orbit's exposure scale it where it is read
 /// (`life`).
-pub fn cosmic_rays(r_kpc: Dy) -> Dy {
-    // The reach is read in galaxy rings through the boundary
-    // `galaxy::rings_of_kpc`.
-    let r = crate::galaxy::rings_of_kpc(&r_kpc.to_q());
-    Dy::from_q(&crate::galaxy::density(&r).mid()).max(Dy::ZERO)
+pub fn cosmic_rays(r: Dy) -> Dy {
+    // `r` is the star's home-equivalent reach (galaxy rings).
+    crate::galaxy::crowding(r)
 }

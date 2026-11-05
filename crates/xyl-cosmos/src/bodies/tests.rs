@@ -57,21 +57,25 @@ fn closer_world_locks_sooner_with_shorter_year() {
             && os[0].cos_obliquity >= -Q::ONE
             && os[0].cos_obliquity <= Q::ONE
     );
-    let now = os[1].at(&Q::int(3));
-    assert!(now.day > Q::ZERO, "a world that turns has a day");
+    // The orbit at an age is read on its path (`worlds::Path`).
+    let at = |o: &Orbit| crate::worlds::Path::of(o).heartbeat(Dy::int(3));
+    let now = at(&os[1]);
+    assert!(now.day_s > Dy::ZERO, "a world that turns has a day");
     // The year is one turn at the turning law's rate and is longer for the
     // farther world.
-    let law = (&Q::int(360) * &Si::seconds_per_ring())
-        .checked_div(&crate::turning::turning_si(&sun, &os[1].a_m))
-        .unwrap();
-    assert!(
-        (&now.year_s - &law).abs() <= &law * &Q::ratio(1, 1_000_000_000),
-        "year {} against the law's {}",
-        now.year_s,
-        law
+    let law = Dy::from_q(
+        &(&Q::int(360) * &Si::seconds_per_ring())
+            .checked_div(&crate::turning::turning_si(&sun, &os[1].a_m))
+            .unwrap(),
     );
     assert!(
-        os[0].at(&Q::int(3)).year_s < now.year_s,
+        (now.year_s - law).abs() <= law * Dy::sci(1, -9),
+        "year {} against the law's {}",
+        now.year_s.to_q(),
+        law.to_q()
+    );
+    assert!(
+        at(&os[0]).year_s < now.year_s,
         "the closer world's year is shorter"
     );
 }

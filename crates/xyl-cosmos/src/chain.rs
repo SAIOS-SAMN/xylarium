@@ -1,11 +1,12 @@
 //! The anchor chain's galactic tier: places of stars and cores held as
 //! bearings on spheres, and arc lengths between them (docs/model.md).
 //!
-//! Reads `package::Si` and `package::hole_mass` (for `units`, the core
+//! Reads `package::Si` and `package::core_kg` (for `units`, the core
 //! hole's `xyl_core::units::Units`), `galaxy::rim_kpc` and
 //! `galaxy::radius_kpc` (from `circuit::anchor`). Lengths are in the galaxy
-//! tier's unit, 60^5 r_g of the core (`Tier::Galaxy`); `kpc` gives one
-//! kiloparsec in that unit.
+//! tier's unit, 60^5 r_g of the core (`Tier::Galaxy`), one galaxy ring;
+//! `galaxy::rings_of_kpc` and `galaxy::kpc_of_rings` convert to and from
+//! kiloparsecs.
 //!
 //! A star's place is its arc `reach` from its galaxy's core along the
 //! galaxy's sphere (radius rim / pi, `galaxy_radius`), its unit direction
@@ -13,42 +14,34 @@
 //! core's place is the same on the universe's sphere (radius `radius`).
 //!
 //! Outputs: `Place` (`core`, `in_galaxy`, `standing_off`, `to_anchor`,
-//! `arc`, `arc_kpc`, `arc_kpc_dy`, `cell`) and `Cell`. On a shared sphere
-//! the arc is the turn between directions times `R sin(inner / R)`, plus the
-//! absolute differences in reach and climb and both `out`s (summed, no
-//! squares or roots); between galaxies it is each place's path to its core
-//! plus the arc between the cores. The turn uses a dyadic `acos` and the
-//! midpoints of certified pi and sine, so `arc` returns an `Encl::exact` of
-//! that reading, not a proven bound. `cell` is a degree label computed in
-//! dyadics; no law reads it.
+//! `arc`, `arc_kpc`, `cell`) and `Cell`. On a shared sphere the arc is the
+//! turn between directions times the circle at the inner reach,
+//! `R sin(inner / R)` (`bounce::curved_reach`, the one chord on an S^360),
+//! plus the absolute differences in reach and climb and both `out`s (summed,
+//! no squares or roots); between galaxies it is each place's path to its
+//! core plus the arc between the cores. The turn is the midpoint of the
+//! certified angle between the directions (`xyl_core::rotor::angle_between`)
+//! and the chord the midpoint of a certified sine, so `arc` returns an
+//! `Encl::exact` of that reading, not a proven bound. `cell` is a degree
+//! label computed in dyadics; no law reads it.
 
 use crate::package::Si;
-use xyl_core::certified::{cos_sin_turns, pi, Encl};
+use xyl_core::certified::{pi, Encl};
 use xyl_core::dyadic::Dy;
-use xyl_core::units::{Tier, Units};
+use xyl_core::units::Units;
 use xyl_core::Q;
 
 /// This galaxy's units: the core hole's scale (measured G, c and hole mass),
 /// the SI seam removed with the SI layers (#25). The package's measured
 /// constants are nonzero; a refusal of `Units::of` reads as no scale, zero.
 pub fn units() -> Units {
-    Units::of(
-        &Si::g(),
-        &Si::c(),
-        &(&crate::package::hole_mass() * &Si::star_mass_kg()),
-    )
-    .unwrap_or(Units { r_g_m: Q::ZERO })
-}
-
-/// One kiloparsec in the galaxy tier's unit (exact); zero with no scale.
-pub fn kpc() -> Q {
-    units().in_tier(&Si::kpc(), Tier::Galaxy).unwrap_or(Q::ZERO)
+    Units::of(&Si::g(), &Si::c(), &crate::package::core_kg()).unwrap_or(Units { r_g_m: Q::ZERO })
 }
 
 /// The universe's curvature radius in the galaxy tier's unit: the founding's
 /// rim over pi (circuit::anchor).
 pub fn radius() -> Q {
-    &crate::galaxy::radius_kpc() * &kpc()
+    crate::galaxy::rings_of_kpc(&crate::galaxy::radius_kpc())
 }
 
 /// The radius of a galaxy's sphere (each galaxy an enclosed S^360): the
@@ -57,7 +50,7 @@ pub fn radius() -> Q {
 /// units). The home galaxy's rim is the founding's (circuit::anchor); another
 /// galaxy's rim is that rim times the galaxy's `scale`.
 pub fn galaxy_radius(scale: &Q) -> Q {
-    let rim = &(&crate::galaxy::rim_kpc() * scale) * &kpc();
+    let rim = crate::galaxy::rings_of_kpc(&(&crate::galaxy::rim_kpc() * scale));
     rim.checked_div(&pi(80).mid()).unwrap_or(Q::ONE)
 }
 
@@ -143,8 +136,9 @@ impl Place {
     }
 
     /// The arc to another place. On a shared sphere: the turn between the
-    /// directions (acos of their dot product) times the circle at the inner
-    /// reach, R sin(s / R), plus the differences in reach and climb and both
+    /// directions (`xyl_core::rotor::angle_between`) times the circle at the
+    /// inner reach, R sin(s / R) (`bounce::curved_reach`), plus the
+    /// differences in reach and climb and both
     /// places' `out`. Between galaxies: each place's path to its core plus the
     /// arc between the cores on the universe's sphere of radius `r`. No
     /// squared lengths or roots.
@@ -159,14 +153,7 @@ impl Place {
                 .map(|e| e.mid())
                 .unwrap_or(Q::ZERO);
             let inner = self.reach.clone().min(other.reach.clone()).max(Q::ZERO);
-            let full = &(&Q::int(2) * &pi(80).mid()) * &sphere;
-            let around = if full.signum() > 0 {
-                let (_, s) =
-                    cos_sin_turns(&Encl::exact(inner.checked_div(&full).unwrap_or(Q::ZERO)));
-                &sphere * &s.mid()
-            } else {
-                inner
-            };
+            let around = crate::bounce::curved_reach(&inner, &sphere);
             let climb = &(&(&self.reach - &other.reach).abs()
                 + &(&self.climb - &other.climb).abs())
                 + &(&self.out + &other.out);
@@ -208,38 +195,8 @@ impl Place {
         }
     }
 
-    /// The arc in kiloparsecs, computed in dyadics within one galaxy (turn x
-    /// sphere x sin(inner / sphere), plus the climbs) for fast per-pair
-    /// evaluation; between galaxies, the exact arc.
-    pub fn arc_kpc_dy(&self, other: &Place, r: &Q) -> Dy {
-        if self.galaxy != other.galaxy || self.galaxy.is_none() {
-            return self.arc_kpc(other, r);
-        }
-        let d = |q: &Q| Dy::from_q(q);
-        let agree = (0..3).fold(Dy::ZERO, |a, k| a + d(&self.dir[k]) * d(&other.dir[k]));
-        let turn = agree.clamp(Dy::int(-1), Dy::ONE).acos();
-        let (ra, rb, sphere) = (d(&self.reach), d(&other.reach), d(&self.sphere));
-        let inner = ra.min(rb).max(Dy::ZERO);
-        let around = if sphere.signum() > 0 {
-            sphere * (inner / sphere).sin()
-        } else {
-            inner
-        };
-        let climb = (ra - rb).abs()
-            + (d(&self.climb) - d(&other.climb)).abs()
-            + d(&self.out)
-            + d(&other.out);
-        (turn * around + climb) / d(&kpc())
-    }
-
-    /// The exact arc converted to kiloparsecs.
+    /// The exact arc converted to kiloparsecs (`galaxy::kpc_of_rings`).
     pub fn arc_kpc(&self, other: &Place, r: &Q) -> Dy {
-        Dy::from_q(
-            &self
-                .arc(other, r)
-                .mid()
-                .checked_div(&kpc())
-                .unwrap_or(Q::ZERO),
-        )
+        Dy::from_q(&crate::galaxy::kpc_of_rings(&self.arc(other, r).mid()))
     }
 }

@@ -13,19 +13,22 @@
 //!
 //! Outputs:
 //! - `manifolds` -> one `Manifold` per world: rate in degrees per ring from
-//!   the turning law, eccentricity relaxing toward its forced value as a
-//!   boost (`Manifold::e`), plane as an exact half-angle frame, twist per
+//!   the turning law, eccentricity relaxing toward its forced value
+//!   (`Manifold::e`, `bodies::eccentricity`), plane as an exact half-angle frame, twist per
 //!   turn equal to the anchor's deficit. A giant's moons sit on a 2:1 chain:
 //!   each rate is the innermost's halved k times, k the nearest power of two
 //!   to the turning-law ratio.
 //! - `Manifold::stand` and `bearing`: the vector (as enclosures) and the
 //!   bearing (direction, distance a (1 - e cos M)) at an age.
-//! - `reach`, `Manifold::reach`: the arc `2 pi a m / (M + m)`.
+//! - `reach`, `Manifold::reach`: the arc `2 pi a m / (M + m)`, the one
+//!   reading of a child's reach (a star's manifold in `galaxy::disc_frame`,
+//!   a world's moon budget and moons' reach in `systems`).
 //! - `cap_degrees`, `star_cap_degrees`: the share of the anchor's S^n a
 //!   reach fills (`measure::share_turns`), times 360. `share`: belonging, 1
 //!   at the centre, 1/2 at the reach, falling beyond.
 //! - `gap`, `out_to_star`, `galaxy_place`: distances composed up the chain;
-//!   turns between directions use a dyadic `acos`. `gap` and `out_to_star`
+//!   turns between directions are `xyl_core::rotor::angle_between` at its
+//!   midpoint. `gap` and `out_to_star`
 //!   return `None` for a world not in the list.
 //!
 //! Terms: manifold (docs/glossary.md).
@@ -35,16 +38,17 @@ use crate::galaxy::Star;
 use crate::package::Si;
 use crate::systems::System;
 use xyl_core::certified::{cos_sin_turns, pi, Encl};
+use xyl_core::dyadic::Dy;
 use xyl_core::measure;
-use xyl_core::motion::{Boost, Modes};
 use xyl_core::rotor::{Half, Rotor};
 use xyl_core::units::{Tier, Units};
 use xyl_core::{Stream, Q};
 
 const BITS: u32 = 80;
 
-/// 1 / (2 pi), enclosed once.
-fn per_turn() -> &'static Encl {
+/// 1 / (2 pi), enclosed once: converts radians to turns (the drawn
+/// inclination here, a star's turning and vertical swing in `galaxy`).
+pub(crate) fn per_turn() -> &'static Encl {
     static K: std::sync::OnceLock<Encl> = std::sync::OnceLock::new();
     K.get_or_init(|| {
         let p = pi(100);
@@ -140,7 +144,7 @@ pub fn manifolds(
     };
     for (i, w) in sys.worlds.iter().enumerate() {
         let mut draw = Stream::derive(seed, &["anomaly".into(), star.n.into(), (i as u64).into()]);
-        let m0 = xyl_core::dyadic::Dy::unit(draw.next_u64()).to_q();
+        let m0 = Dy::unit(draw.next_u64()).to_q();
         let mass_kg = &w.mass * &Si::world_mass_kg();
         match (w.host, &w.a_host_radii) {
             (Some(h), Some(a_r)) => {
@@ -235,17 +239,14 @@ impl Manifold {
         }
     }
 
-    /// Eccentricity at `age` rings: the relaxation as a boost.
+    /// Eccentricity at `age` rings: the one relaxation law
+    /// (`bodies::eccentricity`), its time constant `tau_e` in rings.
     pub fn e(&self, age: &Q) -> Encl {
-        if self.tau_e.is_zero() {
-            return Encl::exact(self.e_forced.clone());
-        }
-        let k = Q::ONE.checked_div(&self.tau_e).unwrap_or(Q::ZERO);
-        Modes::of(vec![
-            Boost::e(self.e_forced.clone(), Q::ZERO),
-            Boost::e(&self.e0 - &self.e_forced, -k),
-        ])
-        .value(age)
+        let d = Dy::from_q;
+        Encl::exact(
+            crate::bodies::eccentricity(d(&self.e0), d(&self.e_forced), d(&self.tau_e), d(age))
+                .to_q(),
+        )
     }
 
     /// State at `age` rings (since the star's birth).
@@ -325,14 +326,6 @@ pub struct Bearing {
     pub r: Q,
 }
 
-/// The turn between two directions (radians), read from the certified
-/// angle between them (`xyl_core::rotor::angle_between`) at its midpoint.
-pub fn turn_between(a: &[Q; 3], b: &[Q; 3]) -> Q {
-    xyl_core::rotor::angle_between(a, b, 64)
-        .map(|e| e.mid())
-        .unwrap_or(Q::ZERO)
-}
-
 /// The gap between two worlds of one system at `age` (system tier units).
 /// Within one anchor: the turn between their directions times the smaller
 /// distance, plus the difference in distances. Otherwise a moon's distance
@@ -350,7 +343,10 @@ pub fn gap(all: &[Manifold], wa: usize, wb: usize, age: &Q) -> Option<Q> {
     if ma.anchor == mb.anchor {
         let (ba, bb) = (ma.bearing(age, all), mb.bearing(age, all));
         let inner = ba.r.clone().min(bb.r.clone());
-        let sweep = &turn_between(&ba.dir, &bb.dir) * &inner;
+        let turn = xyl_core::rotor::angle_between(&ba.dir, &bb.dir, 64)
+            .map(|e| e.mid())
+            .unwrap_or(Q::ZERO);
+        let sweep = &turn * &inner;
         return Some(&(&sweep + &(&ba.r - &bb.r).abs()) * &dilation(ma.tier, Tier::System));
     }
     match (ma.anchor, mb.anchor) {
@@ -390,7 +386,7 @@ fn cone_share(n: u32, x: &Encl) -> Encl {
     let half = Q::ratio(1, 2);
     let turns = |q: &Q, up: bool| {
         let t = x_turns(q, up).max(Q::ZERO).min(half.clone());
-        xyl_core::dyadic::Dy::from_q(&t)
+        Dy::from_q(&t)
     };
     let at = |q: &Q, up: bool| measure::share_turns(n, turns(q, up)).to_q();
     Encl {
@@ -483,10 +479,10 @@ pub fn galaxy_place(
     star: &Star,
     all: &[Manifold],
     world: usize,
-    t: xyl_core::dyadic::Dy,
+    t: Dy,
     r: &Q,
 ) -> Option<crate::chain::Place> {
-    let age = (t - xyl_core::dyadic::Dy::from_q(&star.born)).to_q();
+    let age = (t - Dy::from_q(&star.born)).to_q();
     let out = &out_to_star(all, world, &age)? * &dilation(Tier::System, Tier::Galaxy);
     Some(star.place(t, r).standing_off(&out))
 }

@@ -3,7 +3,10 @@
 use super::*;
 
 /// The digest of the source of the laws under which the forecast was
-/// computed: a cache stored under other laws is recomputed, not reused.
+/// computed (every source file, so the life-side laws a star's share is
+/// computed from with them): a cache stored under other laws is recomputed,
+/// not reused. A star's inputs (the star as drawn and what the galaxy's code
+/// reads of its place) are keyed separately per star.
 pub fn laws_digest() -> String {
     // Every source file of the laws, hashed at build time (build.rs).
     env!("XYL_SOURCE_DIGEST").to_string()

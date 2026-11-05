@@ -1125,9 +1125,10 @@ law, the same at a nucleus, a star and a world:
   line; its phase is its index times the golden turn. A core of ten world
   masses or more acquires an envelope by the declared gathering law.
 - Settling (`systems::settle_about`): about an anchor of mass `M` in core
-  units, each body turns at `omega(A) = [M / (A + M)] / A`. Neighbours meet
-  `N = age |dw|` times, and each meeting kicks by
-  `eps = [m / (r + m)] / r / |dw|`. The kicks repeat on the continued
+  units, each body turns by the turning law, `omega(A) = bell [M / (A + M)] / A`
+  per ring (`turning::turning_dy`). Neighbours meet `N = age |dw|` times,
+  and each meeting kicks by `eps = omega_m(r) / |dw|`, the turning law about
+  the pair's mass across its gap. The kicks repeat on the continued
   fraction period `q` of the phase step and cancel to
   `c = |1 - 2 frac(q psi_0)|` per period, so the greatest swing is
   `eps (floor(N / q) c + N mod q)`. A pair merges at the first age at which
@@ -1148,7 +1149,7 @@ law, the same at a nucleus, a star and a world:
   comet cloud by a declared share.
 - Exponentials below the working resolution are enclosed by `[0, 2^-bits]`
   rather than computed (`systems::exp`).
-- Angles between bodies: `manifold::turn_between` and `chain::Place::arc`
+- Angles between bodies: `manifold::gap` and `chain::Place::arc`
   read the turn between two directions as the certified angle between them
   (`xyl_core::rotor::angle_between`): the directions stay exact and only the
   angle, which has no rational form in general, is an enclosure.
@@ -1215,7 +1216,7 @@ irradiation opens. Every quantity is read from the atoms:
   over the star's transduction per bell (`stars::transduced_per_bell`); the
   first step is the main sequence, later steps the giant phases, and the hold no
   step transduced is the remnant (`stars::Sequence::of`, `stars::fusion_step`,
-  `stars::fission_step`, `stars::pole_point`, `circuit::echoes_to_throat`).
+  `stars::fission_step`, `stars::mixture_pole`, `circuit::echoes_to_throat`).
   Status: built.
 - **A held body that does not ignite.** Where no step of the held mixture
   releases hold under its polarity, the body holds its matter and transduces

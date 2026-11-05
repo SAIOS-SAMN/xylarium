@@ -5,8 +5,9 @@
 //! layers, element masses, and the settling's swing and phase from
 //! `systems::settle_about`), the host's mass in kg, `laws::Scales`, and SI
 //! constants from `package::Si`. Mean motion and break-up spin come from the
-//! turning law (`turning::turning_si`); the tidal stretch across a body is
-//! its host's deficit difference `delta(a - R) - delta(a + R)`.
+//! turning law (`turning::turning_si`, read in rad/s by `package::Si::rad_s`);
+//! the tidal stretch across a body is its host's deficit difference
+//! `delta(a - R) - delta(a + R)`.
 //!
 //! - [`orbits`]: per world an [`Orbit`]. Eccentricity is the settled swing,
 //!   capped at half the fractional gap to the nearest neighbour; inclination
@@ -16,8 +17,9 @@
 //!   birth spin (0.1 to 0.5 of break-up) are drawn from the caller's stream.
 //!   Tidal circularisation ([`circularise_gyr`]) and spin lock ([`lock_gyr`])
 //!   use Love number `k2` ([`love`]) and `Q = 100`.
-//! - [`Orbit::at`]: eccentricity relaxed toward the forced value, spin braked
-//!   linearly to lock, day and year lengths.
+//! - [`eccentricity`]: the eccentricity relaxed toward the forced value, the
+//!   one relaxation law (`worlds::Path` and `manifold::Manifold` read it);
+//!   the spin braked linearly to lock is `worlds::Path::heartbeat`.
 //! - [`interior`]: the [`Interior`] at an age in closed form. Heat is a sum
 //!   of boosts (`xyl_core::motion::Modes`: U238, U235, Th232, K40 at
 //!   half-lives scaled by `Scales`, plus the tide's modes); the mantle sits
@@ -60,19 +62,15 @@ fn ex(x: &Q) -> Q {
     on_grid(exp(x, BITS).mid())
 }
 
-/// The turning rate at a body's surface (rad/s): the turning law c delta / R
-/// evaluated at radius R, which is the body's break-up spin.
-fn surface_turning(m_kg: &Q, r_m: &Q) -> Q {
-    crate::turning::turning_rad_s(m_kg, r_m)
+/// The turning law about `host_kg` at `r_m` metres in radians per SI second
+/// (`package::Si::rad_s` of `turning::turning_si`): a world's mean motion at
+/// its orbit, or at the body's surface radius its break-up spin.
+fn rad_s(host_kg: &Q, r_m: &Q) -> Q {
+    Si::rad_s(&crate::turning::turning_si(host_kg, r_m))
 }
 
 fn pi_q() -> Q {
     pi(BITS).mid()
-}
-
-fn unit(rng: &mut Stream) -> Q {
-    let x = i64::try_from(rng.next_u64() >> 11).unwrap_or(0);
-    Q::ratio(x, 1 << 53)
 }
 
 /// A rocky body's measured constants.

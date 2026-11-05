@@ -62,12 +62,19 @@ pub fn half_life(i: usize, sc: &Scales) -> Dy {
     gamow(i).map(|g| t * sc.half_life(g)).unwrap_or(t)
 }
 
+/// The unit world's age (Gyr), 4.57: the age at which its isotope
+/// inventories (`isotopes`) and its star's activity are measured, and at
+/// which the unit world is read (`worlds::unit`). A declared ruler.
+pub fn unit_age_gyr() -> Q {
+    Q::ratio(457, 100)
+}
+
 /// A world's heat sources: each isotope's mass (kg) at its star's birth.
 /// `kept` is, per isotope, the share made and still unspent at the star's
 /// birth over the Sun's (see [`kept`]).
 pub fn heat_sources(world: &World, elements: &[Element], kept: &[Q; 4]) -> [Q; 4] {
     let mut out: [Q; 4] = Default::default();
-    let solar_age = Q::ratio(457, 100);
+    let unit_age = unit_age_gyr();
     for (i, (_, el, half, _, today)) in isotopes().iter().enumerate() {
         let Some(ei) = elements.iter().position(|e| &e.sym == el) else {
             continue;
@@ -78,8 +85,8 @@ pub fn heat_sources(world: &World, elements: &[Element], kept: &[Q; 4]) -> [Q; 4
         let tau = half
             .checked_div(&xyl_core::certified::ln2(BITS).mid())
             .unwrap_or(Q::ONE);
-        let at_sun_birth = today * &ex(&solar_age.checked_div(&tau).unwrap_or(Q::ZERO));
-        out[i] = on_grid(&(&mass_kg * &at_sun_birth) * &kept[i]);
+        let at_unit_birth = today * &ex(&unit_age.checked_div(&tau).unwrap_or(Q::ZERO));
+        out[i] = on_grid(&(&mass_kg * &at_unit_birth) * &kept[i]);
     }
     out
 }

@@ -16,8 +16,9 @@
 //!   embryo whose solids are the star's mass over its gathering share times
 //!   the gas's metal mass fraction, enriched past each ice line. Embryos
 //!   form only outside the rock line (Fe, Si, Mg condensation).
-//! - Settling (`settle_about`, closed form in ages): neighbours turning at
-//!   `omega = [M / (A + M)] / A` kick each other once per synodic period; a
+//! - Settling (`settle_about`, closed form in ages): neighbours turning by
+//!   the turning law (`turning::turning_dy`, `omega = bell [M / (A + M)] / A`
+//!   per ring) kick each other once per synodic period; a
 //!   pair merges at the first age its kick spans its gap (bisection to
 //!   life's horizon). Merges before `settled_gyr` (3 Gyr) are applied; later
 //!   ones are recorded as `World::merged_at` on the lighter body.
@@ -48,8 +49,9 @@
 use crate::chem::Chemistry;
 use crate::elements::extent;
 use crate::elements::{decimal, Class, Element};
+use crate::field::dyadic;
 use crate::galaxy::{density, Star};
-use xyl_core::certified::{down, pi, Encl};
+use xyl_core::certified::{down, Encl};
 use xyl_core::dyadic::Dy;
 use xyl_core::{Stream, Q};
 
@@ -68,13 +70,6 @@ fn fix(e: &Encl) -> Q {
     down(&e.mid(), GRID_BITS)
 }
 
-/// Rounds a base to dyadic precision before a certified power or exponential is
-/// taken of it. Abundances reach 1e-67 per hydrogen, so exact denominators run
-/// to hundreds of bits; the result is fixed on the grid anyway.
-fn held(x: &Q) -> Q {
-    Dy::from_q(x).to_q()
-}
-
 /// The certified exponential of a held argument.
 fn exp(x: &Q, bits: u32) -> Encl {
     // For x <= -(bits + 1), e^x < 2^-bits, so the result is enclosed by
@@ -87,21 +82,10 @@ fn exp(x: &Q, bits: u32) -> Encl {
             hi: floor,
         };
     }
-    xyl_core::certified::exp(&held(x), bits)
-}
-
-/// A uniform rational in [0, 1).
-fn unit(rng: &mut Stream) -> Q {
-    let x = i64::try_from(rng.next_u64() >> 11).unwrap_or(0);
-    Q::ratio(x, 1 << 53)
-}
-
-/// A sun's gravitational length, G M_sun / c^2 (m).
-pub(crate) fn star_length_m() -> Q {
-    use crate::package::Si;
-    (&Si::g() * &Si::star_mass_kg())
-        .checked_div(&(&Si::c() * &Si::c()))
-        .unwrap_or(Q::ZERO)
+    // Abundances reach 1e-67 per hydrogen, so exact denominators run to
+    // hundreds of bits; the base is held to 62 bits (`field::dyadic`) and
+    // the result is fixed on the grid anyway.
+    xyl_core::certified::exp(&dyadic(x), bits)
 }
 
 /// A star's specification: its mass and luminosity, in solar units.
@@ -155,7 +139,9 @@ pub struct World {
     /// For a moon, its orbital distance in the giant's radii; `None` for a
     /// planet.
     pub a_host_radii: Option<Q>,
-    /// Mass shares of the layers: core, mantle, ices, envelope.
+    /// Mass shares of the layers: core, mantle, ices, envelope. The ices'
+    /// layer is the body's ice share ([`World::ice_share`]) of the
+    /// non-envelope mass.
     pub layers: [Q; 4],
     /// Each element's mass in the world (world masses), indexed as the
     /// element table.
@@ -181,6 +167,25 @@ pub struct World {
     /// The age (Gyr) at which the world merges into its heavier neighbour;
     /// `None` for a world that persists to the horizon.
     pub merged_at: Option<Q>,
+}
+
+impl World {
+    /// The body's ice share: the ices over the solid (non-envelope) mass,
+    /// `layers[2] / (1 - layers[3])`, set where the world is made (the
+    /// gathered ices `s` per unit of rock give `s / (1 + s)`). Zero for a
+    /// world that is all envelope.
+    pub fn ice_share(&self) -> Q {
+        self.layers[2]
+            .checked_div(&(&Q::ONE - &self.layers[3]))
+            .unwrap_or(Q::ZERO)
+    }
+
+    /// Whether the body is icy: more than a fifth of its solid mass is ice
+    /// ([`World::ice_share`]), so ice's rigidity holds its shape and tides.
+    /// The one icy test.
+    pub fn icy(&self) -> bool {
+        self.ice_share() > Q::ratio(1, 5)
+    }
 }
 
 /// A belt: the disc's solids no world gathered.
@@ -246,7 +251,7 @@ pub fn system(
     parts.extend(path.iter().map(|&p| p.into()));
     let mut rng = Stream::derive(seed, &parts);
     let lump = chem
-        .lump(&star.r, &star.born, &unit(&mut rng))
+        .lump(&star.r, &star.born, &Dy::unit(rng.next_u64()).to_q())
         .unwrap_or(Q::ONE);
     // The birth gas is the ring chemistry at the star's radius and birth
     // time, weighted by the galaxy's composition at that time (the founding
@@ -272,7 +277,7 @@ pub fn system(
     // The worlds' outer edge is the star's manifold reach (AU, from galaxy
     // rings through the boundary `galaxy::kpc_of_rings`); a world's reach is
     // its region's share of it.
-    let a_out = held(
+    let a_out = dyadic(
         &(&crate::galaxy::kpc_of_rings(&frame.reach) * &crate::package::Si::kpc())
             .checked_div(&crate::package::Si::au())
             .unwrap_or(Q::ZERO),
@@ -285,7 +290,7 @@ pub fn system(
         * &crate::package::Si::star_mass_kg()
             .checked_div(&crate::package::Si::world_mass_kg())
             .unwrap_or(Q::ZERO);
-    let infall_solids = held(
+    let infall_solids = dyadic(
         &(&star_earths
             .checked_div(&frame.star_share.clone().max(Q::ratio(1, 1_000_000_000)))
             .unwrap_or(Q::ZERO)
@@ -296,7 +301,7 @@ pub fn system(
     let mut worlds: Vec<World> = Vec::new();
     // The disc's ungathered solids (the belts' share), less the mass that
     // worlds take as moons.
-    let mut moon_pool = held(&(&belt_share * &infall_solids));
+    let mut moon_pool = dyadic(&(&belt_share * &infall_solids));
     let mut giants_mass = Q::ZERO;
     let mut orbits: Vec<(Q, bool)> = Vec::new();
     if a_out.signum() > 0 && !regions.is_empty() {
@@ -356,16 +361,23 @@ fn moon_budget(
     infall_solids: &Q,
     moon_pool: &Q,
 ) -> (Q, Q) {
-    let world_reach_au = &(&(&Q::int(2) * &pi(BITS).mid()) * a)
-        * &mass.checked_div(&(star_earths + mass)).unwrap_or(Q::ZERO);
+    let world_reach_au = world_reach(a, mass, star_earths);
     let width = world_reach_au.checked_div(a_out).unwrap_or(Q::ZERO);
-    let budget = held(&(&(&frame.a_disc * &width) * infall_solids).min(moon_pool.clone()));
+    let budget = dyadic(&(&(&frame.a_disc * &width) * infall_solids).min(moon_pool.clone()));
     let x = a.checked_div(a_out).unwrap_or(Q::ONE);
     let tide = frame
         .star_share
         .checked_div(&(&x + &frame.star_share))
         .unwrap_or(Q::ZERO);
     (budget, tide)
+}
+
+/// A world's reach in its star's field, `2 pi a m / (M + m)`
+/// (`manifold::reach`) in `a`'s unit, for a world of `mass` about a star of
+/// `star_earths` (both world masses).
+fn world_reach(a: &Q, mass: &Q, star_earths: &Q) -> Q {
+    let ratio = mass.checked_div(star_earths).unwrap_or(Q::ZERO);
+    crate::manifold::reach(&Encl::exact(a.clone()), &ratio).mid()
 }
 
 /// The rock line's temperature (K): the lowest condensation temperature of
@@ -420,7 +432,7 @@ fn embryos(
 ) -> Vec<Embryo> {
     let mut embryos: Vec<Embryo> = Vec::new();
     for (k, (reach, holding)) in regions.iter().enumerate() {
-        let a = held(&(a_out * reach));
+        let a = dyadic(&(a_out * reach));
         let t_form = spec.t_form(&a);
         if &t_form > t_rock {
             continue;
@@ -432,7 +444,7 @@ fn embryos(
         } else {
             Q::ONE
         };
-        let m = held(&(&(holding * infall_solids) * &enrich));
+        let m = dyadic(&(&(holding * infall_solids) * &enrich));
         if m.signum() <= 0 {
             continue;
         }
@@ -488,7 +500,13 @@ fn planet(
     };
     let core = e.m.clone();
     let mut envelope = Q::ZERO;
-    let m_au = (&spec.mass * &star_length_m())
+    // The star as a length: r_g (`chain::units`) per core mass, a sun's
+    // share of it.
+    let star_length_m = crate::chain::units()
+        .r_g_m
+        .checked_div(&crate::package::hole_mass())
+        .unwrap_or(Q::ZERO);
+    let m_au = (&spec.mass * &star_length_m)
         .checked_div(&crate::package::Si::au())
         .unwrap_or(Q::ZERO);
     let period = (&oq * &(&oq + &m_au)).checked_div(&(&Q::ONE + &m_au))?;
@@ -498,7 +516,7 @@ fn planet(
     let keep = fix(&exp(&-(grow.checked_div(&Q::int(3))?), BITS));
     if core >= Q::int(10) {
         let gathering = core.checked_div(&(&core + &Q::int(10)))?;
-        envelope = held(
+        envelope = dyadic(
             &(&(&(&(&core * &keep) * &gathering) * &Q::ratio(56, 10))
                 * &spec.mass.clone().min(Q::ONE)),
         );

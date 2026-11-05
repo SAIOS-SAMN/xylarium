@@ -32,8 +32,12 @@ pub struct Chemistry {
 pub struct Home {
     /// The star's birth (Gyr after the origin).
     pub born: Dy,
-    /// The star's distance from its galaxy's core (kpc).
-    pub r_kpc: Dy,
+    /// The star's home-equivalent reach (galaxy rings, `galaxy::Star::r`),
+    /// where the galaxy's crowding is read.
+    pub r: Dy,
+    /// The star's reach about its galactic core (galaxy rings,
+    /// `galaxy::Star::reach_rings`), where its life is read.
+    pub reach: Dy,
     /// The share of the star's orbit spent inside the crowded plane layer at
     /// the settled age, in \[0, 1\].
     pub exposure: Dy,
@@ -58,8 +62,11 @@ impl Home {
     pub fn of(_gal: &Galaxy, star: &Star, sys: &System) -> Home {
         Home {
             born: crate::circuit::gyr_of_rings_dy(Dy::from_q(&star.born)),
-            r_kpc: crate::galaxy::kpc_of_rings_dy(Dy::from_q(&star.r)),
-            exposure: star.exposure(crate::circuit::rings_of_gyr_dy(settled_gyr())),
+            r: Dy::from_q(&star.r),
+            reach: star.reach_rings(),
+            exposure: star.exposure(crate::circuit::rings_of_gyr_dy(Dy::from_q(
+                &crate::systems::settled_gyr(),
+            ))),
             star_mass: Dy::from_q(&sys.spec.mass),
             compactness: star.compactness(),
             sequence: star.sequence(),
@@ -114,8 +121,8 @@ pub fn chemistries(ms: &[Medium], body: &Body, home: &Home, ctx: &Ctx) -> Vec<Ch
     // A lit medium's window closes at 0.9 of the star's lifetime, as the
     // star's rising luminosity on the giant branch evaporates the seas.
     let star_end =
-        home.born + lifetime(&home.sequence, home.compactness, home.r_kpc, ctx) * Dy::ratio(9, 10);
-    let crowd = worlds::cosmic_rays(home.r_kpc) * home.exposure;
+        home.born + lifetime(&home.sequence, home.compactness, home.reach, ctx) * Dy::ratio(9, 10);
+    let crowd = worlds::cosmic_rays(home.r) * home.exposure;
     let area = body.area_m2();
     let mut out = Vec::new();
     for (region, m) in by {
@@ -397,14 +404,15 @@ fn arrivals(living: &[Living], first: &[Option<Lineage>]) -> Vec<Vec<(Region, Dy
 
 /// A world's media at an epoch (Gyr after the origin), read at the star's
 /// age then, rounded to the nearest quarter Gyr (the resolution at which a
-/// world in play is read) and at least `first_age`. It is used to judge
+/// world in play is read) and at least one degree of its star's life
+/// (`worlds::star_degree_gyr`). It is used to judge
 /// what a mind arising at that epoch can live on.
 pub fn world_at(set: &Setting, born: Dy, epoch: Dy, ctx: &Ctx) -> Vec<Medium> {
     let quarters = ((epoch - born) * Dy::int(4) + Dy::ratio(1, 2)).trunc_i64();
-    let age = (Dy::int(quarters) / Dy::int(4)).max(first_age(
+    let age = (Dy::int(quarters) / Dy::int(4)).max(worlds::star_degree_gyr(
         &set.sequence,
         set.compactness,
-        set.r_kpc,
+        set.reach,
         ctx,
     ));
     let state = build(set, age, ctx);

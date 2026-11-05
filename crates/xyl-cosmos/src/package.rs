@@ -2,7 +2,8 @@
 //! derive.
 //!
 //! Outputs: [`hole_mass`], the universal core's mass in suns (4.3e6, a
-//! declared value), the one bridge to SI: its gravitational radius is the
+//! declared value), and [`core_kg`], that mass in kg, the one bridge to SI:
+//! its gravitational radius is the
 //! unit of length (`xyl_core::units`); [`Si`], the SI constants and rulers
 //! (unit world, sun, AU, G, c, kpc, Gyr, Boltzmann, Planck, eV, amu, gas and
 //! Faraday constants) as exact rationals, the seam where measured laws enter
@@ -24,6 +25,14 @@ use xyl_core::Q;
 /// is the parent's spin, drawn from the universe's seed (origin.rs).
 pub fn hole_mass() -> Q {
     Q::int(4_300_000)
+}
+
+/// The universal core's mass in kg: [`hole_mass`] (suns) times the sun's
+/// kilograms (`Si::star_mass_kg`). The one place a core mass meets the
+/// kilogram: the core's units (`chain::units`) and every SI-side reading in
+/// core masses (`turning`, `bodies`, `systems`) read it.
+pub fn core_kg() -> Q {
+    &hole_mass() * &Si::star_mass_kg()
 }
 
 /// The SI constants and rulers the package declares, as exact rationals; the
@@ -63,6 +72,16 @@ impl Si {
         let r_g_m = crate::chain::units().r_g_m;
         (&crate::circuit::anchor().bell * &r_g_m)
             .checked_div(&Si::c())
+            .unwrap_or(Q::ZERO)
+    }
+    /// A rate in degrees per ring in radians per SI second, for the tidal
+    /// and thermal laws not yet written in angles: the one SI conversion of
+    /// a turning rate. Pi enters only here, the SI second only through
+    /// [`Si::seconds_per_ring`]. Zero before a founding.
+    pub fn rad_s(deg_per_ring: &Q) -> Q {
+        let pi = xyl_core::certified::pi(64).mid();
+        (deg_per_ring * &pi)
+            .checked_div(&(&Q::int(180) * &Si::seconds_per_ring()))
             .unwrap_or(Q::ZERO)
     }
     /// The kiloparsec, 3.0857e19 m.

@@ -11,6 +11,11 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- `xyl_core::cga` is `Cl(p, q)` (Concordance 2.10, draft 5): `Mv<NEG>`
+  carries the signature in its type, `Mv` is the conformal `Mv<EM>`, and
+  two signatures never compose; the reordering sign is read in closed form
+  from the masks; the four passage fixtures of 2.11 hold in `Cl(3, 2)`.
+
 - The bounce at a pinched throat (docs/model.md, EQUATIONS.md, #78): the
   far face inverts each layer's pole state and axis polarity and turns its
   phases half a turn; the new throat's own jet releases it; for seed 7 the

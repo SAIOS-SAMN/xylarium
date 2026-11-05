@@ -1,4 +1,6 @@
-//! Conformal geometric algebra `Cl(n+1, 1)` over exact rationals.
+//! Geometric algebra `Cl(p, q)` over exact rationals, the signature carried
+//! by the multivector's type (Concordance 2.10), and its conformal model
+//! `Cl(n+1, 1)`.
 //!
 //! Inputs: [`Q`] coefficients and coordinates; no other module.
 //!
@@ -15,6 +17,20 @@
 //! axes are bits 0-2, `e+` bit 3 and `e-` bit 4 (`e+^2 = +1`, `e-^2 = -1`), and
 //! base axis `i` past the third is bit `i + 1`, so the null basis keeps its
 //! bits as `n` grows (up to `MAX_N`).
+//!
+//! Signature: `Mv<NEG>` is a multivector of the algebra whose generators in
+//! the mask `NEG` square to `-1` and all others to `+1`; `Mv` is the
+//! conformal `Mv<EM>`. The product is written once for every signature, and
+//! two multivectors of different signatures have no product or sum: the
+//! composition does not compile.
+//!
+//! ```compile_fail
+//! use xyl_core::Q;
+//! use xyl_core::cga::{point_at, Mv, E1, EM, EP};
+//! let conformal = point_at(&[Q::ONE]);
+//! let other = Mv::<{ EP | EM }>::blade(E1, Q::ONE);
+//! let _ = conformal.geo(&other);
+//! ```
 //!
 //! The conformal model: a point of `Q^n` is `X(x) = x + 1/2 |x|^2 e_inf + e_o`
 //! on the null cone; a dual sphere about `c` through `p` is
@@ -74,29 +90,33 @@ fn half() -> Q {
     Q::new(1, 2).unwrap_or(Q::ONE)
 }
 
-/// The sign of reordering the generators of `a` past those of `b`.
+/// The sign of reordering the generators of `a` past those of `b`: the
+/// parity of the pairs of a generator of `b` below one of `a`. Bit `j` of
+/// `above` is the parity of the generators of `a` above `j`, folded in by
+/// doubling shifts across the word.
 fn reorder_sign(a: usize, b: usize) -> bool {
-    let mut hi = a >> 1;
-    let mut swaps = 0u32;
-    while hi != 0 {
-        swaps += (hi & b).count_ones();
-        hi >>= 1;
+    let mut above = a >> 1;
+    let mut shift = 1;
+    while shift < usize::BITS {
+        above ^= above >> shift;
+        shift <<= 1;
     }
-    swaps & 1 == 1
+    (above & b).count_ones() % 2 == 1
 }
 
 fn grade_of(mask: usize) -> u32 {
     mask.count_ones()
 }
 
-/// An exact multivector: its non-zero terms, ascending by blade mask.
+/// An exact multivector of the signature `NEG` (the generators squaring to
+/// `-1`): its non-zero terms, ascending by blade mask.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Mv {
+pub struct Mv<const NEG: usize = EM> {
     c: Vec<(usize, Q)>,
 }
 
-impl Mv {
-    fn of_terms(mut terms: Vec<(usize, Q)>) -> Mv {
+impl<const NEG: usize> Mv<NEG> {
+    fn of_terms(mut terms: Vec<(usize, Q)>) -> Mv<NEG> {
         terms.sort_unstable_by_key(|(m, _)| *m);
         let mut c: Vec<(usize, Q)> = Vec::with_capacity(terms.len());
         for (m, v) in terms {
@@ -106,10 +126,10 @@ impl Mv {
             }
         }
         c.retain(|(_, v)| !v.is_zero());
-        Mv { c }
+        Mv::<NEG> { c }
     }
 
-    fn map_terms(&self, f: impl Fn(usize, &Q) -> Q) -> Mv {
+    fn map_terms(&self, f: impl Fn(usize, &Q) -> Q) -> Mv<NEG> {
         Mv {
             c: self
                 .c
@@ -121,19 +141,19 @@ impl Mv {
     }
 
     /// The zero multivector (no terms).
-    pub fn zero() -> Mv {
-        Mv { c: Vec::new() }
+    pub fn zero() -> Mv<NEG> {
+        Mv::<NEG> { c: Vec::new() }
     }
 
     /// The grade-0 multivector `v`.
-    pub fn scalar(v: Q) -> Mv {
-        Mv::blade(0, v)
+    pub fn scalar(v: Q) -> Mv<NEG> {
+        Mv::<NEG>::blade(0, v)
     }
 
     /// The single blade with generator bit mask `mask` (see [`E1`], [`EP`],
     /// [`base_axis`]) and coefficient `v`; zero when `v` is zero.
-    pub fn blade(mask: usize, v: Q) -> Mv {
-        Mv::of_terms(vec![(mask, v)])
+    pub fn blade(mask: usize, v: Q) -> Mv<NEG> {
+        Mv::<NEG>::of_terms(vec![(mask, v)])
     }
 
     /// The non-zero terms as `(blade mask, coefficient)`, ascending by mask.
@@ -166,36 +186,36 @@ impl Mv {
     }
 
     /// The sum `self + o`.
-    pub fn add(&self, o: &Mv) -> Mv {
-        Mv::of_terms(self.c.iter().chain(&o.c).cloned().collect())
+    pub fn add(&self, o: &Mv<NEG>) -> Mv<NEG> {
+        Mv::<NEG>::of_terms(self.c.iter().chain(&o.c).cloned().collect())
     }
 
     /// The difference `self - o`.
-    pub fn sub(&self, o: &Mv) -> Mv {
+    pub fn sub(&self, o: &Mv<NEG>) -> Mv<NEG> {
         self.add(&o.scale(&-Q::ONE))
     }
 
     /// Every coefficient multiplied by the rational `s`.
-    pub fn scale(&self, s: &Q) -> Mv {
+    pub fn scale(&self, s: &Q) -> Mv<NEG> {
         self.map_terms(|_, v| v * s)
     }
 
     /// The geometric product. A term changes sign for an odd reordering and
-    /// for a shared `e-` (`e-^2 = -1`).
-    pub fn geo(&self, o: &Mv) -> Mv {
+    /// once for each negative generator the two blades share.
+    pub fn geo(&self, o: &Mv<NEG>) -> Mv<NEG> {
         let mut terms = Vec::with_capacity(self.c.len() * o.c.len());
         for (i, x) in &self.c {
             for (j, y) in &o.c {
-                let negative = reorder_sign(*i, *j) ^ ((i & j & EM) != 0);
+                let negative = reorder_sign(*i, *j) ^ ((i & j & NEG).count_ones() % 2 == 1);
                 let term = x * y;
                 terms.push((i ^ j, if negative { -term } else { term }));
             }
         }
-        Mv::of_terms(terms)
+        Mv::<NEG>::of_terms(terms)
     }
 
     /// The reverse: a blade of grade `g` takes the sign `(-1)^(g(g-1)/2)`.
-    pub fn reverse(&self) -> Mv {
+    pub fn reverse(&self) -> Mv<NEG> {
         self.map_terms(|m, v| {
             if (grade_of(m) / 2) % 2 == 1 {
                 -v
@@ -206,12 +226,12 @@ impl Mv {
     }
 
     /// The grade involution: a blade of grade `g` takes the sign `(-1)^g`.
-    pub fn involute(&self) -> Mv {
+    pub fn involute(&self) -> Mv<NEG> {
         self.map_terms(|m, v| if grade_of(m) % 2 == 1 { -v } else { v.clone() })
     }
 
     /// The part of grade `g`.
-    pub fn grade(&self, g: u32) -> Mv {
+    pub fn grade(&self, g: u32) -> Mv<NEG> {
         Mv {
             c: self
                 .c
@@ -228,13 +248,13 @@ impl Mv {
     }
 
     /// The versor sandwich `V x V~`.
-    pub fn sandwich(&self, x: &Mv) -> Mv {
+    pub fn sandwich(&self, x: &Mv<NEG>) -> Mv<NEG> {
         self.geo(x).geo(&self.reverse())
     }
 
     /// The twisted adjoint `V^ x V~`: the sandwich for an even versor, its
     /// negation for an odd one (the action of a reflection on a vector).
-    pub fn twisted(&self, x: &Mv) -> Mv {
+    pub fn twisted(&self, x: &Mv<NEG>) -> Mv<NEG> {
         self.involute().geo(x).geo(&self.reverse())
     }
 
@@ -254,13 +274,13 @@ impl Mv {
     }
 
     /// The outer product `A ^ v` of a grade-`g` blade and a vector.
-    pub fn wedge_vector(&self, g: u32, v: &Mv) -> Mv {
+    pub fn wedge_vector(&self, g: u32, v: &Mv<NEG>) -> Mv<NEG> {
         self.geo(v).grade(g + 1)
     }
 
     /// Projective equality: `self = lambda o` for some non-zero rational.
-    pub fn projective_eq(&self, o: &Mv) -> bool {
-        projective_ratio(self, o).is_some_and(|l| !l.is_zero())
+    pub fn projective_eq(&self, o: &Mv<NEG>) -> bool {
+        projective_ratio::<NEG>(self, o).is_some_and(|l| !l.is_zero())
     }
 }
 
@@ -337,7 +357,7 @@ pub fn dilator(rho: &Q) -> Mv {
 /// `Some(lambda)` where `a = lambda b`, read by cross multiplication.
 /// Returns `None` when the two have different blades or are not
 /// proportional, or `b` is zero.
-pub fn projective_ratio(a: &Mv, b: &Mv) -> Option<Q> {
+pub fn projective_ratio<const NEG: usize>(a: &Mv<NEG>, b: &Mv<NEG>) -> Option<Q> {
     if a.term_count() != b.term_count() {
         return None;
     }
@@ -450,5 +470,47 @@ mod tests {
         // Another point at the same distance from the centre lies on it too.
         let y = point_at(&[Q::int(0), Q::int(0), Q::int(1)]);
         assert!(y.geo(&s).scalar_part().is_zero());
+    }
+
+    /// The four passage fixtures (Concordance 2.11) in `Cl(3,2)`: `Z1`-`Z3`
+    /// square to `+1` (bits 0-2), `Q1`, `Q2` to `-1` (bits 3-4).
+    #[test]
+    fn passage_fixtures_hold_in_cl_3_2() {
+        const SIG: usize = 0b11000;
+        let (z1, z2, z3, q1, q2) = (E1, E2, E3, EP, EM);
+        let b = |mask: usize, v: i64| Mv::<SIG>::blade(mask, Q::int(v));
+        for (g, sq) in [(z1, 1), (z2, 1), (z3, 1), (q1, -1), (q2, -1)] {
+            assert_eq!(b(g, 1).geo(&b(g, 1)), b(0, sq));
+            for h in [z1, z2, z3, q1, q2].into_iter().filter(|h| *h != g) {
+                assert!(b(g, 1).geo(&b(h, 1)).add(&b(h, 1).geo(&b(g, 1))).is_zero());
+            }
+        }
+        let q = b(0, 3).add(&b(z2 | z3, 2)).add(&b(z1 | q2, 1));
+        // 1. The null direction `e_Z1 + e_Q1` twice annuls the state.
+        let v = b(z1, 1).add(&b(q1, 1));
+        assert!(v.geo(&v).geo(&q).is_zero());
+        // 2. `(e_Z1 + 2 e_Q1) q` lies on degrees 1 and 3 only.
+        let vq = b(z1, 1).add(&b(q1, 2)).geo(&q);
+        assert!(!vq.is_zero() && vq.terms().all(|(m, _)| m.count_ones() % 2 == 1));
+        // 3. `[e_Z1Q1, e_Z1Q2] = -2 e_Q1Q2`, unhalved.
+        let (x, y) = (b(z1 | q1, 1), b(z1 | q2, 1));
+        assert_eq!(x.geo(&y).sub(&y.geo(&x)), b(q1 | q2, -2));
+        // 4. `(e_Z1Z2 + e_Q1Z2)^2 = 0`.
+        let n = b(z1 | z2, 1).add(&b(q1 | z2, 1));
+        assert!(n.geo(&n).is_zero());
+    }
+
+    /// The reordering sign is the parity of the inverted pairs of generators.
+    #[test]
+    fn reorder_sign_equals_parity_of_inversions() {
+        for a in 0usize..64 {
+            for b in 0usize..64 {
+                let pairs: u32 = (0..6)
+                    .filter(|j| b >> j & 1 == 1)
+                    .map(|j| (a >> (j + 1)).count_ones())
+                    .sum();
+                assert_eq!(reorder_sign(a, b), pairs % 2 == 1);
+            }
+        }
     }
 }

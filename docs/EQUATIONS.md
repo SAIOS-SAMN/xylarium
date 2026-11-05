@@ -30,6 +30,14 @@ another crate. Laws are composed from shares (ratios of the form
 - `Dy`, the dyadic `m 2^e` with a 62-bit mantissa rounded toward zero
   (`xyl-core dyadic.rs`), holds readings at seams; they are converted to `Q`
   on a grid before being held. Status: built.
+- Geometric product (`xyl_core::cga::Mv::geo`), in `Cl(p, q)` with the
+  signature `NEG` (the generators squaring to `-1`) carried by the type
+  `Mv<NEG>`: `e_A e_B = (-1)^(r + |A & B & NEG|) e_(A xor B)`, where `r`, the
+  parity of the pairs of a generator of `B` below one of `A`, is
+  `|B & S(A)| mod 2` with `S(A)` the word folded by doubling shifts; no walk
+  over generators. `Mv` is the conformal `Mv<EM>`, `Cl(n+1, 1)`; two
+  signatures never compose (the product does not compile). The four
+  Concordance 2.11 fixtures hold in `Cl(3, 2)`. Status: built.
 - Capture phase (`circuit::found`): `(share Z) mod 1`, exact; its
   denominator divides the torsion share's. Status: built.
 - Coordinate (`xyl_core::coordinate::Reading`): whole turns and a share,

@@ -285,6 +285,11 @@ may change public APIs and the model's laws.
   `measure::share_turns`), `shares::opposed` (`flow(x, -y)`) and
   `Dy::cosh`; no production code called them.
 
+- `Rotor::matrix`: a rotor turns a vector by its own action,
+  `v + (w t + u x t) / n` with `t = 2 u x v` (`Rotor::apply`), and
+  `field::Bell::of` reads a stellar hole's axis as the frame's image of
+  the z axis through it.
+
 ## 0.3.0 - 2026-10-30
 
 First public release.

@@ -12,8 +12,9 @@
 //!   sine exactly (the share of a sphere within an angle is `measure`'s).
 //! - [`Rotor`], a rational quaternion `(w, x, y, z)` at any scale, the even
 //!   part of Cl(3): `about(k, h)` turns about axis `k`, `then_after` composes
-//!   by multiplication, `matrix` gives the exact rotation matrix, `apply`
-//!   turns an enclosed vector.
+//!   by multiplication, `inverse` is the conjugate, and `apply` turns an
+//!   enclosed vector by the rotor's own action `v + (w t + u x t) / n`,
+//!   `t = 2 u x v`, with no matrix.
 //!
 //! Invariants: composition is exact for turns about any axes (the one-axis
 //! case is the tangent law `(a + b) / (1 - ab)`). `Half::of_turns` rounds the
@@ -150,41 +151,44 @@ impl Rotor {
         }
     }
 
-    /// The rotor's rotation as an exact rational matrix; the entries are
-    /// divided by the squared norm, so the rotor's scale does not matter.
-    pub fn matrix(&self) -> [[Q; 3]; 3] {
-        let (w, x, y, z) = (&self.w, &self.x, &self.y, &self.z);
-        let (ww, xx, yy, zz) = (w * w, x * x, y * y, z * z);
-        let n = &(&ww + &xx) + &(&yy + &zz);
-        let k = |v: Q| v.checked_div(&n).unwrap_or(Q::ZERO);
-        let two = Q::int(2);
-        let tw = |a: &Q, b: &Q| &two * &(a * b);
-        [
+    /// An exact vector turned by the rotor: `v + (w t + u x t) / n` with
+    /// `t = 2 u x v`, `u` the rotor's bivector part and `n` its squared norm,
+    /// so the rotor's scale does not matter (a zero rotor leaves `v`).
+    fn turn(&self, v: &[Q; 3]) -> [Q; 3] {
+        let cross = |a: &[Q; 3], b: &[Q; 3]| -> [Q; 3] {
             [
-                k(&(&ww + &xx) - &(&yy + &zz)),
-                k(&tw(x, y) - &tw(w, z)),
-                k(&tw(x, z) + &tw(w, y)),
-            ],
-            [
-                k(&tw(x, y) + &tw(w, z)),
-                k(&(&ww - &xx) + &(&yy - &zz)),
-                k(&tw(y, z) - &tw(w, x)),
-            ],
-            [
-                k(&tw(x, z) - &tw(w, y)),
-                k(&tw(y, z) + &tw(w, x)),
-                k(&(&ww - &xx) - &(&yy - &zz)),
-            ],
-        ]
+                &(&a[1] * &b[2]) - &(&a[2] * &b[1]),
+                &(&a[2] * &b[0]) - &(&a[0] * &b[2]),
+                &(&a[0] * &b[1]) - &(&a[1] * &b[0]),
+            ]
+        };
+        let u = [self.x.clone(), self.y.clone(), self.z.clone()];
+        let n = &(&(&self.w * &self.w) + &(&u[0] * &u[0])) + &(&(&u[1] * &u[1]) + &(&u[2] * &u[2]));
+        let t = cross(&u, v).map(|c| c.scale(2));
+        let ut = cross(&u, &t);
+        std::array::from_fn(|i| {
+            let k = (&(&self.w * &t[i]) + &ut[i])
+                .checked_div(&n)
+                .unwrap_or(Q::ZERO);
+            &v[i] + &k
+        })
     }
 
-    /// An enclosed vector rotated by the rotor's matrix.
+    /// An enclosed vector turned by the rotor: its exact midpoint turned
+    /// (`turn`), each component widened by the sum of the vector's radii,
+    /// since a turn moves no vector by more than its length. An exact
+    /// vector stays exact.
     pub fn apply(&self, v: &[Encl; 3]) -> [Encl; 3] {
-        let m = self.matrix();
-        std::array::from_fn(|i| {
-            (0..3).fold(Encl::exact(Q::ZERO), |acc, j| {
-                acc.add(&v[j].mul(&Encl::exact(m[i][j].clone())))
-            })
+        let mid: [Q; 3] = std::array::from_fn(|i| v[i].mid());
+        let rad = v
+            .iter()
+            .fold(Q::ZERO, |acc, e| &acc + &(&e.hi - &e.lo))
+            .checked_div(&Q::int(2))
+            .unwrap_or(Q::ZERO);
+        let turned = self.turn(&mid);
+        std::array::from_fn(|i| Encl {
+            lo: &turned[i] - &rad,
+            hi: &turned[i] + &rad,
         })
     }
 }
@@ -226,11 +230,41 @@ mod tests {
         // A quarter turn about z, then one about x, carries x to y and then y
         // to z.
         let r = Rotor::about(0, &right).then_after(&Rotor::about(2, &right));
-        let m = r.matrix();
-        assert_eq!(
-            (m[0][0].clone(), m[1][0].clone(), m[2][0].clone()),
-            (Q::ZERO, Q::ZERO, Q::ONE)
-        );
+        let e = |a: i64, b: i64, c: i64| [a, b, c].map(|k| Encl::exact(Q::int(k)));
+        assert_eq!(r.apply(&e(1, 0, 0)), e(0, 0, 1));
+        // A turn keeps an exact vector's length at any scale of the rotor,
+        // and its inverse brings the vector back.
+        let s = Rotor {
+            w: Q::int(2),
+            x: Q::int(1),
+            y: Q::ratio(-1, 3),
+            z: Q::int(5),
+        };
+        let v = e(3, -4, 7);
+        let turned = s.apply(&v);
+        let len = |v: &[Encl; 3]| v.iter().fold(Q::ZERO, |acc, c| &acc + &(&c.lo * &c.lo));
+        assert_eq!(len(&turned), len(&v));
+        assert_eq!(s.inverse().apply(&turned), v);
+        // An enclosed vector's turn encloses the turn of every point in it.
+        let wide = [
+            Encl {
+                lo: Q::ratio(29, 10),
+                hi: Q::int(3),
+            },
+            Encl::exact(Q::int(-4)),
+            Encl {
+                lo: Q::int(7),
+                hi: Q::ratio(71, 10),
+            },
+        ];
+        let out = s.apply(&wide);
+        for p in [
+            e(3, -4, 7),
+            [Q::ratio(29, 10), Q::int(-4), Q::ratio(71, 10)].map(Encl::exact),
+        ] {
+            let at = s.apply(&p);
+            assert!((0..3).all(|i| out[i].contains(&at[i].lo)));
+        }
     }
 
     #[test]

@@ -41,7 +41,9 @@ carry the `2^-40` resolution of the draw.
   provides points, versors and dilators. The nucleon poles described below
   are its origin and its point at infinity.
 - Rotors (`xyl_core::rotor`) are rational quaternions, the even part of
-  `Cl(3)`. Every manifold holds its frame as an exact rotor.
+  `Cl(3)`. Every manifold holds its frame as an exact rotor, and a rotor
+  turns a vector by the quaternion action (`Rotor::apply`), never by a
+  matrix.
 - Sphere measure (`xyl_core::measure`) gives the share of an n-sphere
   within an angle of an axis, on which caps and shares on a manifold are
   based.

@@ -192,12 +192,15 @@ impl Bell {
             Kind::Stellar(s) => {
                 let o = &s.orbit;
                 // The orbit plane's normal: the frame's image of the z axis.
-                let m = o.frame().matrix();
+                let z = xyl_core::certified::Encl::exact(Q::ZERO);
+                let n = o
+                    .frame()
+                    .apply(&[z.clone(), z, xyl_core::certified::Encl::exact(Q::ONE)]);
                 (
                     [
-                        grid(Dy::from_q(&m[0][2])),
-                        grid(Dy::from_q(&m[1][2])),
-                        grid(Dy::from_q(&m[2][2])),
+                        grid(Dy::from_q(&n[0].mid())),
+                        grid(Dy::from_q(&n[1].mid())),
+                        grid(Dy::from_q(&n[2].mid())),
                     ],
                     drawn_spin(seed, s.n),
                 )

@@ -155,6 +155,18 @@ fn law_reading(o: &Options, what: &[String]) -> Result<Option<String>, String> {
         Some("worlds") => worlds::worlds_read(o, count(what, 200))?,
         Some("push") => atoms::push_reading(count(what, 150)),
         Some("bonding") => atoms::bonding(count(what, 150)),
+        Some("bond") => {
+            let z = |i: usize| -> Result<u32, String> {
+                what.get(i)
+                    .and_then(|x| x.parse().ok())
+                    .ok_or_else(|| "bond takes two atomic numbers".to_string())
+            };
+            let turning = what
+                .get(3)
+                .and_then(|x| xyl_kernel::checkpoint::q_of(x))
+                .unwrap_or(xyl_core::Q::ZERO);
+            atoms::bond_reading(z(1)?, z(2)?, &turning)?
+        }
         Some("universal-core") => {
             // The universal core's substrate R rings after the bounce (at the
             // first stars by default), every value a closed form of R.

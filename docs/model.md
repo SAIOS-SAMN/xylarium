@@ -1160,8 +1160,14 @@ clean: their lanes are never summed, ordered or compared as one number.
 - **The atom and the bond.**
   - Stripping is all or nothing per band (`atoms::unpaired_hot`), so
     `compound::stands` is a boolean.
-  - A bond is one tightness and a ratio (`atoms::Bond`), losing both faces
-    and their separation.
+  - A bond is read across its two faces (opened, `atoms::Bond`): on the
+    axis plane each face's pole push and polarity, the pushes composed by
+    the flow law; on the isoclinic planes every open winding of each face
+    with its tightness. Its hold rule is still a cut (held whole within
+    a winding's tightness, else tightness over turning, the turning capped
+    at one), so `xylarium observe bond` reads every winding tighter than
+    hydrogen's held whole at any turning: the graded stripping law is to be
+    derived.
   - The atom's hold sums its modes into one number (`atoms::hold`).
 - **The founding and the stars.**
   - The spin orbit folds each kind's separation into one spread
@@ -1253,8 +1259,9 @@ what the physics produces is read, and the minds of a universe name it
 - **Built from the elements.**
   - The atom: its bands filled on S^11, its open and held frames, its
     tightness and its stripping by received turning (`atoms::atom`,
-    `atoms::unpaired_hot`, `atoms::tightness`), its two-atom bond
-    (`atoms::bond`), and its weights on the six planes: the axis polarity
+    `atoms::unpaired_hot`, `atoms::tightness`), its two-atom bond read
+    across both faces by planes (`atoms::bond`, `atoms::Bond`), and its
+    weights on the six planes: the axis polarity
     on the axis plane (`atoms::axis_polarity`, T7) and the twist charge on
     the isoclinic planes (T6).
   - The two-part closure: the smallest cluster of two atoms with every

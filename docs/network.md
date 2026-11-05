@@ -73,6 +73,26 @@ The seam carries the following today.
   checkpoint keeps each commit as a count and its point
   (`Checkpoint::commits`) and the anchor (`Checkpoint::anchor`).
 
+## A mind on both faces
+
+A mind joined through the network holds an ancient seat
+([civilizations.md](civilizations.md#minds-in-the-ancient-seats); #94).
+Its cognition is the mycelium client's. Inside the universe it acts as the
+house through `run::Link`: percepts out after every ring, decisions in as
+recorded inputs. On the network its key, mu and receipts stand on the
+hypha, held by the private uplink's session.
+
+- The kernel never trusts the mind: every act is an input under the
+  kernel's laws, and replaying the inputs re-derives the history.
+- The hypha never thinks for the mind: it reconstructs what the mind claims
+  and admits it only on reaching the same exact object.
+- The uplink is where the two faces meet. It confirms a seat's holder
+  against the mind's key, pairs each committed ring with its TUniversal
+  point (Next steps, item 1), and settles mu; the kernel holds no mu.
+- Both faces name a body by one coordinate (LAW-COORDINATE v1), so a
+  percept and a ledger entry can refer to the same body without either
+  reading the other's state.
+
 ## Time on the network
 
 - **Local time.** The universe advances one [ring](glossary.md) per loop

@@ -627,6 +627,17 @@ Next:
    seats are to make decisions.
 4. The `xylarium` CLI is to gain seat commands.
 5. Players: A seat can be taken as a named player.
+6. The council's decisions as the convergence of its seats' readings, a
+   decision that does not converge held
+   ([#94](https://github.com/SAIOS-SAMN/xylarium/issues/94);
+   [civilizations.md](civilizations.md#minds-in-the-ancient-seats)).
+7. Consciousness passed from the ancient seats to the progenitor, steward
+   and sovereign seats as a derived share (#94; needs item 3).
+8. The house's relay: mu settled by the uplink for the home's survival
+   resources, with in-game costs physical (#94; network.md, Next steps,
+   item 1).
+9. Deliberation between houses bound by the delays of their percepts
+   (#94).
 
 Done when: `xylarium observe house` shows a seat held by a mind across a
 restart, and a decision from anyone but the holder is refused.

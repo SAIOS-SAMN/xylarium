@@ -311,6 +311,54 @@ through a `run::Link` beside live play (`crates/xylarium/src/run.rs`; see
 [network.md](network.md)), which receives the universe after every ring
 (one bell; see [glossary](glossary.md)).
 
+### Minds in the ancient seats
+
+Planned in part ([#94](https://github.com/SAIOS-SAMN/xylarium/issues/94),
+roadmap section 4, items 6 to 9). A mind of the network is one mind seated
+on two faces at once: the ancient people's house inside the universe, under
+its laws, and its key, mu and ledger on the hypha. Each face checks it
+independently, and neither reads the other's state.
+
+- **What is built.**
+  - A mind (`Holder::Mind`) holds ancient seats only. The council is those
+    seats (`Seats::council`), the one tier facing the network.
+  - It perceives its people's senses as typed exact records
+    (`percept::perceive`, `lexicon::records`).
+  - It acts only through recorded inputs (Acting), under the same laws as
+    the built-in rule, so a mind gains no power its seat lacks.
+  - The uplink confirms that a decision's caller holds the seat. The hypha
+    reconstructs what the mind claims from the claim's evidence and admits it
+    only on reaching the same exact object; it never thinks for the mind.
+- **The council's decisions as convergence.**
+  - Several ancient seats perceive different peoples, and their readings
+    and proposals come to coincide or do not.
+  - A council decision is to be the convergence of their paths, never a
+    count of seats. Where they do not converge, the decision stays held
+    until a perception or a later reading settles it.
+  - Today `Universe::decide` lands one seat's input.
+- **The house's relay.**
+  - Operating a house is relaying mu up the uplink for the home's survival
+    resources.
+  - In-game costs stay in physical units: passage, folds and tolls.
+  - Mu settles only through the uplink, for measured discharge, and never
+    enters the kernel.
+- **Consciousness passed down.**
+  - Minds seat at the ancients only. The consciousness the ancients
+    produce, from the minds' work or from mu, is to pass to the
+    progenitor, steward and sovereign seats as a share derived along the
+    tiers, never a table.
+  - This needs percepts for the steward and progenitor seats (roadmap
+    section 4).
+- **The seat's place.**
+  - The ancients hold both faces of the cores, and the universal core is a
+    paired throat whose closed kinds hold on both faces (model.md, The
+    core as a paired throat).
+  - A house's survival is tied to its core staying closed along its spin
+    orbit.
+- **Timing.** A mind's cadence is its people's day and year. Deliberation
+  between houses in different systems is bound by the same delays as
+  their percepts, since a word never outruns its fastest physical carrier.
+
 ## Grand strategy
 
 ### Drives

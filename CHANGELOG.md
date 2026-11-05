@@ -254,6 +254,10 @@ may change public APIs and the model's laws.
   and motion's own `ln 2` and `pow2` are removed, and `certified` builds
   its dyadics with the one gcd-free constructor of `q`.
 
+- `Dy::PI` is `Dy::pi()`, and `Dy`'s ln 2 is read the same way: each is
+  the certified enclosure (`certified::pi`, `certified::ln2`) rounded down
+  to 62 bits once, in place of a hard-coded literal.
+
 ### Removed
 
 - The founding's rounding of rationals: `circuit::turn` (capture phases

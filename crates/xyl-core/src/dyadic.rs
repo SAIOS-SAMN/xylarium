@@ -2,7 +2,8 @@
 //! integer mantissa, every operation done in integers and rounded toward zero.
 //!
 //! Inputs: integers, ratios and [`Q`] values (`int`, `ratio`, `sci`,
-//! `from_q`); no other module.
+//! `from_q`); the constants pi and ln 2 are read once, rounded down, from
+//! the enclosures of `certified`.
 //!
 //! Outputs: [`Dy`], normalised (`m == 0` or `2^61 <= |m| < 2^62`), with
 //! arithmetic (also as `+ - * /` operators), `sqrt`, `ln`, `exp`, `pow`,
@@ -32,6 +33,7 @@ use num_bigint::BigInt;
 use num_rational::BigRational;
 use num_traits::{One, Signed, ToPrimitive, Zero};
 use std::cmp::Ordering;
+use std::sync::OnceLock;
 
 const MANT: u32 = 62;
 const TOP: i128 = 1 << MANT;
@@ -299,11 +301,12 @@ impl Dy {
 }
 
 impl Dy {
-    /// The constant pi to 62 bits.
-    pub const PI: Dy = Dy {
-        m: 3_622_009_729_038_561_421,
-        e: -60,
-    };
+    /// The constant pi to 62 bits, rounded down: read once from the certified enclosure
+    /// `certified::pi`.
+    pub fn pi() -> Dy {
+        static PI: OnceLock<Dy> = OnceLock::new();
+        *PI.get_or_init(|| Dy::from_q(&crate::certified::pi(80).lo))
+    }
     /// One, exact.
     pub const ONE: Dy = Dy { m: 1 << 61, e: -61 };
 
@@ -400,7 +403,7 @@ impl Dy {
     /// `(sin x, cos x)`: reduced by the nearest whole number of quarter turns
     /// to |r| <= pi/4, then the Taylor series in 62-bit fixed point.
     pub fn sin_cos(&self) -> (Dy, Dy) {
-        let half_pi = Dy::PI * Dy::ratio(1, 2);
+        let half_pi = Dy::pi() * Dy::ratio(1, 2);
         let q = (*self / half_pi
             + if self.m >= 0 {
                 Dy::ratio(1, 2)
@@ -449,7 +452,7 @@ impl Dy {
             return Dy::ZERO;
         }
         if self.abs() > Dy::ONE {
-            let h = Dy::PI * Dy::ratio(1, 2);
+            let h = Dy::pi() * Dy::ratio(1, 2);
             let inner = (Dy::ONE / *self).atan();
             return if self.m > 0 { h - inner } else { -h - inner };
         }
@@ -478,13 +481,13 @@ impl Dy {
         let x = Dy::clamp(*self, -Dy::ONE, Dy::ONE);
         let s = (Dy::ONE - x * x).max(Dy::ZERO).root();
         if x.m == 0 {
-            return Dy::PI * Dy::ratio(1, 2);
+            return Dy::pi() * Dy::ratio(1, 2);
         }
         let a = (s / x).atan();
         if x.m > 0 {
             a
         } else {
-            a + Dy::PI
+            a + Dy::pi()
         }
     }
 
@@ -617,10 +620,11 @@ fn to_fixed(x: &Dy) -> Option<i128> {
     }
 }
 
-/// `ln 2` in 2^-62 fixed point: the floor of `ln 2 x 2^62`, computed to 80
-/// digits.
+/// `ln 2` in 2^-62 fixed point: the floor of `ln 2 x 2^62`, read once from
+/// the certified enclosure `certified::ln2`.
 fn ln2_fixed() -> i128 {
-    3_196_577_161_300_663_914
+    static L: OnceLock<i128> = OnceLock::new();
+    *L.get_or_init(|| to_fixed(&Dy::from_q(&crate::certified::ln2(80).lo)).unwrap_or(0))
 }
 
 /// `atanh(z)` for |z| <= 1/3 in 2^-62 fixed point: `sum z^(2k+1) / (2k+1)`.
@@ -709,7 +713,7 @@ mod tests {
     #[test]
     fn operators_constants_and_powers() {
         assert!(near(
-            &Dy::PI,
+            &Dy::pi(),
             "3.14159265358979323846",
             "0.000000000000000001"
         ));
@@ -718,6 +722,13 @@ mod tests {
             "0.69314718055994530942",
             "0.000000000000000001"
         ));
+        // The constants are decided by their enclosures: both bounds round
+        // down to the same 62 bits.
+        let (p, l) = (crate::certified::pi(80), crate::certified::ln2(80));
+        assert_eq!(Dy::from_q(&p.lo), Dy::from_q(&p.hi));
+        assert_eq!(Dy::from_q(&l.lo), Dy::from_q(&l.hi));
+        assert_eq!(Dy::pi(), Dy::from_q(&p.hi));
+        assert_eq!(ln2(), Dy::from_q(&l.hi));
         assert_eq!(Dy::ONE.to_q(), Q::ONE);
         assert_eq!(
             Dy::sci(5972, 21).to_q(),

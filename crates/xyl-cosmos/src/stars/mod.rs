@@ -72,7 +72,7 @@ pub fn reach_rings(r_kpc: Dy) -> Dy {
 /// magnitude integrated over half an echo, `1 / pi`, times the vacuum's share
 /// `1 / (r + 1)`.
 pub fn ring_per_bell(reach: Dy) -> Dy {
-    deficit_dy(Dy::ONE, reach) / Dy::PI
+    deficit_dy(Dy::ONE, reach) / Dy::pi()
 }
 
 /// The vessel's drift at reach `r` over one bell at `t` rings: `bell q(t)`
@@ -234,7 +234,7 @@ pub fn flicker(t: Dy) -> Dy {
     if echo.signum() <= 0 || crate::circuit::anchor().rim.signum() <= 0 {
         return Dy::ONE;
     }
-    Dy::PI / Dy::int(2) * (Dy::int(2) * Dy::PI * t / echo).cos().abs()
+    Dy::pi() / Dy::int(2) * (Dy::int(2) * Dy::pi() * t / echo).cos().abs()
 }
 
 /// The share of a star's first step transduced by `age` rings at reach `r`
@@ -263,9 +263,9 @@ mod tests {
         // The ring per bell falls with the vacuum's share and is 1 / pi at
         // r = 0.
         assert!(ring_per_bell(Dy::ZERO) > ring_per_bell(Dy::int(10)));
-        assert_eq!(ring_per_bell(Dy::ZERO), Dy::ONE / Dy::PI);
+        assert_eq!(ring_per_bell(Dy::ZERO), Dy::ONE / Dy::pi());
         // The flicker is at most pi / 2 times the mean.
-        assert!(flicker(Dy::ZERO) <= Dy::PI / Dy::int(2) + Dy::sci(1, -12));
+        assert!(flicker(Dy::ZERO) <= Dy::pi() / Dy::int(2) + Dy::sci(1, -12));
     }
 
     #[test]

@@ -7,7 +7,7 @@ use super::*;
 /// with the sine taken from the angle (not sqrt(1 - cos^2)).
 pub fn polar_share(cos_obliquity: Dy) -> Dy {
     let sin = cos_obliquity.clamp(-Dy::ONE, Dy::ONE).acos().sin().abs();
-    (Dy::int(4) * sin / Dy::PI).min(Dy::ONE)
+    (Dy::int(4) * sin / Dy::pi()).min(Dy::ONE)
 }
 
 /// What a world's climate is solved from.

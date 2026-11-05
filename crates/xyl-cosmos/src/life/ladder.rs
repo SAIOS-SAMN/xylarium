@@ -268,7 +268,7 @@ pub fn transfer_gyr(target: &Body) -> Dy {
     ))) * Dy::sci(1, 9);
     let reach = target.radius * Dy::from_q(&crate::package::Si::world_radius_m())
         / (Dy::int(2)
-            * Dy::PI
+            * Dy::pi()
             * target.a_au.max(Dy::sci(1, -9))
             * Dy::from_q(&crate::package::Si::au()));
     year / reach.max(Dy::sci(1, -30)) / Dy::sci(1, 9)

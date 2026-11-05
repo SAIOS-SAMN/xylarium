@@ -259,7 +259,7 @@ impl Bell {
         let angle = Dy::int(2) * (Dy::from_q(&t) * norm).atan();
         // The screw's translation for this turn, in AU, along the axis.
         let shift = Dy::from_q(&self.pitch_kpc) * Dy::from_q(&au_per_kpc()) * angle
-            / (Dy::int(2) * Dy::PI)
+            / (Dy::int(2) * Dy::pi())
             / norm.max(Dy::sci(1, -30));
         let along = [
             grid(shift * Dy::from_q(&self.axis[0])),

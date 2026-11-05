@@ -342,7 +342,7 @@ fn shape(world: &World, sc: &Scales) -> Shape {
     let radius = Dy::from_q(&world.radius);
     let m_kg = mass * l.world_mass_kg;
     let r_m = radius * l.world_radius_m;
-    let four_pi = Dy::int(4) * Dy::PI;
+    let four_pi = Dy::int(4) * Dy::pi();
     let area = four_pi * r_m * l.world_radius_m;
     let grav = l.unit_world_gravity() * mass / radius.max(Dy::sci(1, -6));
     let envelope = Dy::from_q(&world.layers[3]);

@@ -169,6 +169,15 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The coordinate reads LAW-COORDINATE v1 (Mycelium 78.173): lanes carry
+  the network's meanings (S spatial, G gauge, T temporal, H holonomic),
+  values are signed and exact, sectors of base 60 at any depth,
+  `Reading::within` reads Below, Within or Above and refuses two lanes by
+  name; the law's fixtures 2, 3 and 4 are the module's tests;
+  `coordinate::beat` writes the T lane. Removed `Reading::mark`, `places`,
+  `arc`, the six-place cap and `coordinate::direction`, an in-plane reading
+  with no caller.
+
 - The founding reads the torsion share once (`circuit::Substrate::found`,
   which now takes only the spin and founds the elements itself) and holds it
   as `Substrate::share`; readers take that held value. The inbound echo's

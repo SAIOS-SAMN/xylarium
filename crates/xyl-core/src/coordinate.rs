@@ -1,304 +1,342 @@
-//! The coordinate (docs/network.md): a body's exact reading on one of the four
-//! lanes {S, G, T, H} of TUniversal, written in degrees, minutes, seconds and
-//! three finer sexagesimal places of arc: the sector of a protractor of
-//! `360 x 60^5` marks that holds it, with the whole turns kept.
+//! The coordinate (docs/network.md; LAW-COORDINATE v1, Mycelium proposal
+//! 78.173): a body's exact value on one of the four lanes of TUniversal,
+//! read in sectors of base 60.
 //!
-//! Inputs: an exact rational value in turns ([`Q`]) on a [`Lane`]: S, the
-//! body's phase on its anchor's ring; G, its holding as a share of its
-//! anchor's; T, the body's beat, whole rings plus a phase; H, not yet
-//! modelled. `direction` uses the enclosed cosine and sine of `certified`.
+//! Inputs: an exact rational value of either sign ([`Q`]) on a [`Lane`],
+//! in the unit the caller names (turns, rings or degrees). The lanes carry
+//! the network's meanings: S spatial (boost and dilation, the reach), G
+//! gauge (change of kind), T temporal (null flux: the beat and the
+//! passages), H holonomic (turnings between planes).
 //!
-//! Outputs: [`Reading`] (`of` keeps the whole turns, `rings`, and the share of
-//! the turn, `share`), with `mark` (the sector index `m`,
-//! `m / MARKS <= share < (m + 1) / MARKS`), `places` (degrees 0-359, then
-//! minutes, seconds and three finer places 0-59), `written`
-//! (`DDD:MM:SS:XX:XX:XX`, prefixed `N/` with the whole turns on the T lane),
-//! `value` (rings plus share), `arc` (whole degrees, minutes and seconds and
-//! the seconds' exact remainder) and `within` (whether a reading lies in the
-//! sector of a given depth that holds another, on the same lane and turns,
-//! decided on the exact shares); and `direction`, the sector of the in-plane
-//! direction (x, y), read with no arctangent. The places and their written
-//! form are display: nothing is compared or stored by them.
+//! Outputs: [`Reading`] (`of`, `sector`, `within`); [`Sector`], the
+//! half-open interval `[m 60^-d, (m + 1) 60^-d)` that holds the value at
+//! depth `d`, `m` fixed by exact comparison, with `lo`, `hi`, `places` and
+//! `written` (`2;20`, `-1;40`); [`Side`], where a reading lies against
+//! another's sector; [`beat`], the T lane written as whole rings and the
+//! ring's phase in degrees; [`CoordinateRefusal`].
 //!
-//! Invariants: the value stays exact; places are decided by exact comparison,
-//! never by rounding, and a prefix of places names a whole coarser sector.
-//! A coordinate is computed from the body's values, with no index or hash.
-//! `direction` returns `None` for the zero direction and where the 2^-60
-//! enclosures cannot decide the sector; its sector is the reading of an
-//! irrational turn, which has no exact share.
+//! Invariants: the value stays exact and is never held on a grid; sectors
+//! nest (the sector at depth `d + 1` lies in the one at depth `d` that holds
+//! the same value); `within` decides on the sector's exact bounds; readings
+//! on different lanes are refused, never compared; places and their writing
+//! are display only. A coordinate is computed from the body's values, with
+//! no index or hash.
 //!
 //! Terms: TUniversal (docs/glossary.md).
 
 use crate::Q;
 
-/// Degrees in a turn.
+/// Degrees in a turn: the unit a turn is written in (seconds are degrees).
 pub const DEGREES: i64 = 360;
-/// Marks on a lane's protractor: 360 degrees of 60^5 marks, the fifth
-/// sexagesimal place of arc.
-pub const MARKS: i64 = DEGREES * 60 * 60 * 60 * 60 * 60;
-/// Places of a coordinate: degrees, minutes, seconds and three finer places.
-pub const PLACES: usize = 6;
 
-/// The four lanes.
+/// The base of the places.
+const BASE: i64 = 60;
+
+/// The four lanes, in the network's meanings.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Lane {
-    /// The body's phase on its anchor's ring, in turns.
+    /// Spatial: boost and dilation, the reach. A body's holding as a share
+    /// of its anchor's is read here, by its dilation.
     S,
-    /// The body's holding as a share of its anchor's.
+    /// Gauge: change of kind (planned: pairing and the transductions).
     G,
-    /// The body's beat: the ring and phase of its pulse.
+    /// Temporal: null flux, the beat and the passages; the universe's
+    /// count in rings.
     T,
-    /// The fourth lane; no reading is modelled on it yet.
+    /// Holonomic: turnings between planes. A body's phase on its anchor's
+    /// ring is the turning of one plane.
     H,
 }
 
-/// A lane's reading: whole turns and an exact share of the turn, in [0, 1).
+/// Why a reading is refused, with the coordinates that caused it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CoordinateRefusal {
+    /// Two readings on different lanes: the lane held and the lane asked.
+    LanesDiffer {
+        /// The lane of the reading held.
+        held: Lane,
+        /// The lane of the reading asked against.
+        asked: Lane,
+    },
+    /// A sector index past a machine word at this depth.
+    Unbounded {
+        /// The depth asked.
+        depth: u32,
+    },
+}
+
+/// Where a reading lies against a sector.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Side {
+    /// Below the sector's lower bound.
+    Below,
+    /// In the sector, its lower bound included.
+    Within,
+    /// At or above the sector's upper bound.
+    Above,
+}
+
+/// A lane's reading: its exact value.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Reading {
     /// The lane the reading is taken on.
     pub lane: Lane,
-    /// The whole turns (on the T lane, the rings).
-    pub rings: Q,
-    /// The exact share of the turn, in \[0, 1).
-    pub share: Q,
+    /// The exact value, of either sign, in the caller's unit.
+    pub value: Q,
+}
+
+/// The sector of depth `depth` and index `index`:
+/// `[index 60^-depth, (index + 1) 60^-depth)`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Sector {
+    /// The depth: how many places of base 60 the sector is read to.
+    pub depth: u32,
+    /// The index `m`, the integer the exact comparison fixes.
+    pub index: i128,
+}
+
+/// `60^depth`, or `None` past a machine word.
+fn scale(depth: u32) -> Option<i128> {
+    i128::from(BASE).checked_pow(depth)
+}
+
+impl Sector {
+    /// The sector at `depth` that holds `value`.
+    pub fn of(value: &Q, depth: u32) -> Result<Sector, CoordinateRefusal> {
+        let index = scale(depth)
+            .and_then(|s| (value * &Q::from_i128(s, 1)?).floor_i128())
+            .ok_or(CoordinateRefusal::Unbounded { depth })?;
+        Ok(Sector { depth, index })
+    }
+
+    /// The lower bound, `index 60^-depth`, held in the sector.
+    pub fn lo(&self) -> Option<Q> {
+        Q::from_i128(self.index, scale(self.depth)?)
+    }
+
+    /// The upper bound, `(index + 1) 60^-depth`, not held.
+    pub fn hi(&self) -> Option<Q> {
+        Q::from_i128(self.index.checked_add(1)?, scale(self.depth)?)
+    }
+
+    /// The whole part at or below the lower bound, and the `depth` places in
+    /// `0..60` that follow it, coarsest first. Display only.
+    pub fn places(&self) -> Option<(i128, Vec<u8>)> {
+        let s = scale(self.depth)?;
+        let whole = self.index.div_euclid(s);
+        let mut rest = self.index.rem_euclid(s);
+        let mut places = vec![0u8; usize::try_from(self.depth).ok()?];
+        for p in places.iter_mut().rev() {
+            *p = u8::try_from(rest % i128::from(BASE)).ok()?;
+            rest /= i128::from(BASE);
+        }
+        Some((whole, places))
+    }
+
+    /// Written as the whole part, `;`, and the places of two digits each,
+    /// separated by `,` (`2;20,00`, `-1;40`; `2` at depth 0). Display only.
+    pub fn written(&self) -> Option<String> {
+        let (whole, places) = self.places()?;
+        let places: Vec<String> = places.iter().map(|p| format!("{p:02}")).collect();
+        Some(if places.is_empty() {
+            format!("{whole}")
+        } else {
+            format!("{whole};{}", places.join(","))
+        })
+    }
 }
 
 impl Reading {
-    /// A reading of `value` turns on `lane`: its whole turns and its share.
+    /// A reading of `value` on `lane`.
     pub fn of(lane: Lane, value: &Q) -> Reading {
-        let share = value.frac();
         Reading {
             lane,
-            rings: value - &share,
-            share,
+            value: value.clone(),
         }
     }
 
-    /// The value read: the whole turns plus the share.
-    pub fn value(&self) -> Q {
-        &self.rings + &self.share
+    /// The sector at `depth` that holds the value.
+    pub fn sector(&self, depth: u32) -> Result<Sector, CoordinateRefusal> {
+        Sector::of(&self.value, depth)
     }
 
-    /// The sector of the protractor the reading lies in, decided exactly: the
-    /// mark `m` with `m / MARKS <= share < (m + 1) / MARKS`. Returns `None`
-    /// only if the mark does not fit an `i64`.
-    pub fn mark(&self) -> Option<i64> {
-        let m = (&self.share * &Q::int(MARKS)).floor_i128()?;
-        i64::try_from(m).ok()
-    }
-
-    /// The reading's six places, coarsest first: degrees (0-359), then
-    /// minutes, seconds and three finer places (0-59).
-    pub fn places(&self) -> Option<[u16; PLACES]> {
-        let mut c = self.mark()?;
-        let mut out = [0u16; PLACES];
-        for p in (1..PLACES).rev() {
-            out[p] = u16::try_from(c % 60).ok()?;
-            c /= 60;
+    /// Where this reading lies against the sector at `depth` that holds
+    /// `other`'s value, decided on the sector's exact bounds. Readings on
+    /// different lanes are refused.
+    pub fn within(&self, other: &Reading, depth: u32) -> Result<Side, CoordinateRefusal> {
+        if self.lane != other.lane {
+            return Err(CoordinateRefusal::LanesDiffer {
+                held: self.lane,
+                asked: other.lane,
+            });
         }
-        out[0] = u16::try_from(c).ok()?;
-        Some(out)
-    }
-
-    /// Written `DDD:MM:SS:XX:XX:XX`; on the T lane prefixed with the rings,
-    /// `N/DDD:MM:SS:XX:XX:XX`.
-    pub fn written(&self) -> Option<String> {
-        let p = self.places()?;
-        let arc = std::iter::once(format!("{:03}", p[0]))
-            .chain(p[1..].iter().map(|d| format!("{d:02}")))
-            .collect::<Vec<_>>()
-            .join(":");
-        Some(if self.lane == Lane::T {
-            format!("{}/{arc}", self.rings)
+        let sector = other.sector(depth)?;
+        let bounds = sector.lo().zip(sector.hi());
+        let (lo, hi) = bounds.ok_or(CoordinateRefusal::Unbounded { depth })?;
+        Ok(if self.value < lo {
+            Side::Below
+        } else if self.value < hi {
+            Side::Within
         } else {
-            arc
+            Side::Above
         })
     }
-
-    /// Whether the reading lies on the lane of `other`, in the same whole
-    /// turns and in the sector of `depth` places that holds `other`: decided
-    /// on the exact shares against the sector's exact bounds, never on
-    /// written places (a coarser sector holds every finer one it contains).
-    pub fn within(&self, other: &Reading, depth: usize) -> Option<bool> {
-        if self.lane != other.lane || self.rings != other.rings {
-            return Some(false);
-        }
-        let width = sector(depth.min(PLACES))?;
-        let q = other.share.checked_div(&width)?;
-        let lo = &(&(&q - &q.frac()) * &width);
-        Some(&self.share >= lo && self.share < lo + &width)
-    }
-
-    /// The reading's arc, exact: whole degrees, minutes and seconds, and the
-    /// remainder of the seconds as an exact share. Nothing is truncated; the
-    /// places of [`Reading::places`] are its display.
-    pub fn arc(&self) -> (Q, Q, Q, Q) {
-        let deg = &self.share * &Q::int(DEGREES);
-        let d = &deg - &deg.frac();
-        let min = &(&deg - &d) * &Q::int(60);
-        let m = &min - &min.frac();
-        let sec = &(&min - &m) * &Q::int(60);
-        let s = &sec - &sec.frac();
-        let rest = &sec - &s;
-        (d, m, s, rest)
-    }
 }
 
-/// A sector's width in turns at `depth` places: a whole turn at 0, then a
-/// degree, a minute, a second and three finer places.
-fn sector(depth: usize) -> Option<Q> {
-    let mut w = Q::ONE;
-    for p in 0..depth {
-        w = w.checked_div(&Q::int(if p == 0 { DEGREES } else { 60 }))?;
-    }
-    Some(w)
-}
-
-/// The turn of a direction (the flows' phase reading): the sector of the
-/// protractor the in-plane direction (x, y) lies in, decided exactly
-/// with no arctangent and no rounding. A rational direction's turn is
-/// irrational except at whole eighths (Niven: a rational share of the turn
-/// has a rational tangent only at whole eighths), so the share returned is
-/// the sector's mark and the exact value is never needed. The quarter-turn is
-/// read from the signs and the eighth from |x| against |y|, both exactly.
-/// Within the quarter, bisection finds the last mark m at or before the
-/// direction: the direction lies at or past m where the cross product of the
-/// mark's direction with (x, y), `cos(m) y - sin(m) x`, is not negative,
-/// evaluated on certified enclosures of cos and sin (the sign changes once
-/// across the quarter). Returns `None` for the zero direction, or where the
-/// enclosure cannot decide the sign (a direction within about 2^-60 of a
-/// mark, the fixed-point grid of `certified::FIXED`).
-pub fn direction(lane: Lane, x: &Q, y: &Q) -> Option<Reading> {
-    if x.is_zero() && y.is_zero() {
-        return None;
-    }
-    let quarter = MARKS / 4;
-    // The quarter-turn `q` from the signs, and (u, v), the direction turned
-    // back by q quarter turns into [0, 1/4).
-    let (q, u, v) = match (x.signum(), y.signum()) {
-        (1, s) if s >= 0 => (0, x.clone(), y.clone()),
-        (s, 1) if s <= 0 => (1, y.clone(), -x.clone()),
-        (-1, s) if s <= 0 => (2, -x.clone(), -y.clone()),
-        _ => (3, -y.clone(), x.clone()),
-    };
-    // Whether (u, v) lies at or past mark m of the quarter (m in [0, quarter)).
-    // `None` when the enclosure of the cross product holds zero.
-    let at_or_past = |m: i64| -> Option<bool> {
-        if m == 0 {
-            return Some(true);
-        }
-        if m == quarter / 2 {
-            return Some(v >= u);
-        }
-        let t = crate::certified::Encl::exact(Q::new(m, MARKS)?);
-        let (c, s_) = crate::certified::cos_sin_turns(&t);
-        let cross = crate::certified::Encl::exact(v.clone())
-            .mul(&c)
-            .sub(&crate::certified::Encl::exact(u.clone()).mul(&s_));
-        if cross.lo.signum() >= 0 {
-            Some(true)
-        } else if cross.hi.signum() < 0 {
-            Some(false)
-        } else {
-            None
-        }
-    };
-    let (mut lo, mut hi) = (0i64, quarter);
-    while hi - lo > 1 {
-        let mid = lo + (hi - lo) / 2;
-        if at_or_past(mid)? {
-            lo = mid;
-        } else {
-            hi = mid;
-        }
-    }
-    Some(Reading {
-        lane,
-        rings: Q::ZERO,
-        share: Q::new(lo + q * quarter, MARKS)?,
-    })
+/// The T lane written: the whole rings, `/`, and the ring's phase in
+/// degrees to `depth` places (`2/17;03,24`). Display only.
+pub fn beat(rings: &Q, depth: u32) -> Result<String, CoordinateRefusal> {
+    let phase = rings.frac();
+    let whole = rings - &phase;
+    let arc = Sector::of(&(&phase * &Q::int(DEGREES)), depth)?
+        .written()
+        .ok_or(CoordinateRefusal::Unbounded { depth })?;
+    Ok(format!("{whole}/{arc}"))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    /// LAW-COORDINATE v1 fixture 2: the sexagesimal reading at stated depths
+    /// gives the stated index, bounds and writing.
     #[test]
-    fn a_reading_keeps_its_turns_and_names_its_sector_in_degrees() {
-        let r = Reading::of(Lane::S, &Q::new(7, 3).unwrap());
-        // The whole turns are kept and the share stays exact.
-        assert_eq!(
-            (r.rings.clone(), r.share.clone()),
-            (Q::int(2), Q::new(1, 3).unwrap())
+    fn sector_equals_law_coordinate_fixture_2() {
+        let third_less = &Q::ratio(1, 3) - &Q::from_i128(1, 10i128.pow(15)).unwrap();
+        let rows: [(Q, u32, i128, Q, Q, &str); 8] = [
+            (Q::ratio(7, 3), 0, 2, Q::ratio(2, 1), Q::ratio(3, 1), "2"),
+            (
+                Q::ratio(7, 3),
+                1,
+                140,
+                Q::ratio(7, 3),
+                Q::ratio(47, 20),
+                "2;20",
+            ),
+            (
+                Q::ratio(7, 3),
+                2,
+                8400,
+                Q::ratio(7, 3),
+                Q::ratio(8401, 3600),
+                "2;20,00",
+            ),
+            (
+                Q::ratio(1, 7),
+                3,
+                30857,
+                Q::ratio(30857, 216000),
+                Q::ratio(5143, 36000),
+                "0;08,34,17",
+            ),
+            (
+                Q::ratio(360, 7),
+                2,
+                185142,
+                Q::ratio(30857, 600),
+                Q::ratio(185143, 3600),
+                "51;25,42",
+            ),
+            (
+                Q::ratio(-1, 3),
+                1,
+                -20,
+                Q::ratio(-1, 3),
+                Q::ratio(-19, 60),
+                "-1;40",
+            ),
+            (
+                Q::ratio(-1, 7),
+                1,
+                -9,
+                Q::ratio(-3, 20),
+                Q::ratio(-2, 15),
+                "-1;51",
+            ),
+            (
+                third_less,
+                6,
+                15551999999,
+                Q::from_i128(15551999999, 46656000000).unwrap(),
+                Q::ratio(1, 3),
+                "0;19,59,59,59,59,59",
+            ),
+        ];
+        for (v, d, m, lo, hi, w) in rows {
+            let s = Sector::of(&v, d).unwrap();
+            assert_eq!(s.index, m, "index of {v} at {d}");
+            assert_eq!((s.lo().unwrap(), s.hi().unwrap()), (lo, hi));
+            assert_eq!(s.written().unwrap(), w);
+        }
+    }
+
+    /// LAW-COORDINATE v1 fixture 3: each sector lies in the one a depth
+    /// coarser, and the coarser sector holding its lower bound is that one.
+    #[test]
+    fn sector_nests_in_coarser_sector() {
+        for v in [
+            Q::ratio(1, 7),
+            Q::ratio(-22, 7),
+            Q::ratio(7, 3),
+            Q::ratio(0, 1),
+            Q::ratio(-1, 3),
+        ] {
+            for d in 0..5 {
+                let (outer, inner) = (Sector::of(&v, d).unwrap(), Sector::of(&v, d + 1).unwrap());
+                assert!(outer.lo().unwrap() <= inner.lo().unwrap());
+                assert!(inner.hi().unwrap() <= outer.hi().unwrap());
+                assert_eq!(Sector::of(&inner.lo().unwrap(), d).unwrap(), outer);
+            }
+        }
+    }
+
+    /// LAW-COORDINATE v1 fixture 4: `within` reads below, within and above
+    /// a sector's exact bounds.
+    #[test]
+    fn within_equals_law_coordinate_fixture_4() {
+        let other = Reading::of(Lane::S, &Q::ratio(1, 3));
+        let fine = &Q::ratio(1, 3) + &Q::from_i128(1, 3 * 60i128.pow(6)).unwrap();
+        let below = &Q::ratio(1, 3) - &Q::from_i128(1, 10i128.pow(15)).unwrap();
+        for (s, d, side) in [
+            (Q::ratio(1, 3), 1, Side::Within),
+            (Q::ratio(7, 20), 1, Side::Above),
+            (below, 1, Side::Below),
+            (fine, 6, Side::Within),
+            (Q::ratio(2, 5), 0, Side::Within),
+            (Q::ratio(2, 5), 1, Side::Above),
+        ] {
+            assert_eq!(Reading::of(Lane::S, &s).within(&other, d), Ok(side));
+        }
+    }
+
+    /// Readings on different lanes are refused by name, never compared.
+    #[test]
+    fn within_refuses_lanes_that_differ() {
+        let (s, t) = (
+            Reading::of(Lane::S, &Q::ratio(1, 3)),
+            Reading::of(Lane::T, &Q::ratio(1, 3)),
         );
-        assert_eq!(r.value(), Q::new(7, 3).unwrap());
-        // A third of a turn is 120 degrees exactly.
-        assert_eq!(r.written().unwrap(), "120:00:00:00:00:00");
-        // A value just below a mark lies in the sector before it; it is not
-        // rounded up.
-        let below = Reading::of(
-            Lane::S,
-            &(&Q::new(7, 3).unwrap() - &Q::new(1, 10i64.pow(15)).unwrap()),
-        );
-        assert_eq!(below.written().unwrap(), "119:59:59:59:59:59");
-        assert_eq!(below.within(&r, 1), Some(false));
-        // On the T lane the rings are written and compared.
-        let t = Reading::of(Lane::T, &Q::new(9, 4).unwrap());
-        assert_eq!(t.written().unwrap(), "2/090:00:00:00:00:00");
         assert_eq!(
-            t.within(&Reading::of(Lane::T, &Q::new(5, 4).unwrap()), 1),
-            Some(false)
-        );
-        assert_eq!(
-            t.within(&Reading::of(Lane::T, &Q::new(91, 40).unwrap()), 0),
-            Some(true)
+            s.within(&t, 1),
+            Err(CoordinateRefusal::LanesDiffer {
+                held: Lane::S,
+                asked: Lane::T
+            })
         );
     }
 
+    /// A sector index past a machine word is refused by name.
     #[test]
-    fn a_direction_reads_its_sector_exactly() {
-        let q = |n, d| Q::new(n, d).unwrap();
-        let w = |x: i64, y: i64| {
-            direction(Lane::S, &q(x, 1), &q(y, 1))
-                .unwrap()
-                .written()
-                .unwrap()
-        };
-        // The axes and the diagonals are exact marks.
-        assert_eq!(w(3, 0), "000:00:00:00:00:00");
-        assert_eq!(w(0, 2), "090:00:00:00:00:00");
-        assert_eq!(w(1, 1), "045:00:00:00:00:00");
-        assert_eq!(w(-1, -1), "225:00:00:00:00:00");
-        // A direction just past the diagonal lies in the sector after it; it
-        // is not rounded back.
-        let past = direction(Lane::S, &q(1_000_000, 1), &q(1_000_001, 1)).unwrap();
-        assert!(past.mark().unwrap() >= MARKS / 8);
-        assert!(direction(Lane::S, &q(0, 1), &q(0, 1)).is_none());
+    fn sector_refuses_index_past_word() {
+        assert_eq!(
+            Sector::of(&Q::ratio(1, 3), 40),
+            Err(CoordinateRefusal::Unbounded { depth: 40 })
+        );
     }
 
+    /// The beat keeps the whole rings and writes the ring's phase in degrees.
     #[test]
-    fn readings_inside_one_mark_stay_distinct_and_the_arc_is_exact() {
-        // Two shares 1/(3 MARKS) apart lie in one mark: the written places
-        // agree, the exact comparison at full depth does not merge them.
-        let a = Reading::of(Lane::S, &Q::new(1, 3).unwrap());
-        let b = Reading::of(
-            Lane::S,
-            &(&Q::new(1, 3).unwrap() + &Q::new(1, 3 * MARKS).unwrap()),
-        );
-        assert_eq!(a.written(), b.written());
-        assert_eq!(b.within(&a, PLACES), Some(true));
-        assert_ne!(a.share, b.share);
-        // The arc keeps the remainder: 1/7 of a turn is 51 deg 25' 42" and 6/7".
-        let r = Reading::of(Lane::S, &Q::new(1, 7).unwrap());
-        assert_eq!(
-            r.arc(),
-            (Q::int(51), Q::int(25), Q::int(42), Q::new(6, 7).unwrap())
-        );
-        let (d, m, sec, rest) = r.arc();
-        let q = |n: i64| Q::int(n);
-        let minutes = &(&sec + &rest).checked_div(&q(60)).unwrap() + &m;
-        let degrees = &minutes.checked_div(&q(60)).unwrap() + &d;
-        let back = degrees.checked_div(&q(360)).unwrap();
-        assert_eq!(back, r.share);
+    fn beat_writes_rings_and_phase_in_degrees() {
+        assert_eq!(beat(&Q::ratio(9, 4), 2).unwrap(), "2/90;00,00");
     }
 }

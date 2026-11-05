@@ -26,7 +26,7 @@ impl run::Link for Printer {
     ) {
         println!(
             "T {}: {} peoples, {} bells",
-            u.t_coordinate().written().unwrap_or_default(),
+            xyl_core::coordinate::beat(&u.t_coordinate().value, 5).unwrap_or_default(),
             u.cosmic.peoples.len(),
             bells.len()
         );
@@ -36,7 +36,7 @@ impl run::Link for Printer {
         println!(
             "checkpoint written to {} at T {}",
             home.display(),
-            u.t_coordinate().written().unwrap_or_default()
+            xyl_core::coordinate::beat(&u.t_coordinate().value, 5).unwrap_or_default()
         );
         Ok(())
     }

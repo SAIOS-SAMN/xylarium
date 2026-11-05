@@ -191,8 +191,9 @@ impl<'g> Universe<'g> {
         self.clocks.anchor_at(point);
     }
 
-    /// The present on the T lane: whole rings of the bell and the phase of
-    /// the ring in degrees of arc (`xyl_core::coordinate`).
+    /// The present on the T lane, in rings of the bell; written by
+    /// `xyl_core::coordinate::beat` as whole rings and the ring's phase in
+    /// degrees.
     pub fn t_coordinate(&self) -> xyl_core::coordinate::Reading {
         xyl_core::coordinate::Reading::of(xyl_core::coordinate::Lane::T, &self.now)
     }

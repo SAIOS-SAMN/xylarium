@@ -42,9 +42,10 @@ Three number types, defined in `xyl-core`, carry every law:
   grid, before it is held.
 
 Angles are held as exact turns where the rate is rational and are read in
-degrees: the coordinate (`xyl_core::coordinate`) writes a value as degrees,
-minutes, seconds and three finer sexagesimal places of arc, with the whole
-turns kept (on the T lane, the rings). Phases about a throat are exact: a
+degrees: the coordinate (`xyl_core::coordinate`, LAW-COORDINATE v1) reads
+a value in sectors of base 60 to any depth, exactly, and writes degrees and
+their sexagesimal places as display; on the T lane the whole rings are
+kept (`coordinate::beat`). Phases about a throat are exact: a
 kind's capture phase is the torsion share turned Z times, whose denominator
 divides the share's, so it never grows. Only drawn values carry a grid,
 the 2^-40 resolution of the draw.

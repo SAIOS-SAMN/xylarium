@@ -40,10 +40,12 @@ another crate. Laws are composed from shares (ratios of the form
   Concordance 2.11 fixtures hold in `Cl(3, 2)`. Status: built.
 - Capture phase (`circuit::found`): `(share Z) mod 1`, exact; its
   denominator divides the torsion share's. Status: built.
-- Coordinate (`xyl_core::coordinate::Reading`): whole turns and a share,
-  exact; `arc` is whole degrees, minutes and seconds with the seconds' exact
-  remainder; `within` compares exact shares against a sector's exact bounds;
-  `DDD:MM:SS:XX:XX:XX` (`N/DDD:...` with the rings on the T lane) is display
+- Coordinate (`xyl_core::coordinate`, LAW-COORDINATE v1): a lane is an
+  exact rational of either sign; its sector at depth `d` is
+  `[m 60^-d, (m + 1) 60^-d)` with `m = floor(v 60^d)`, exact and nested;
+  `Reading::within` reads Below, Within or Above on the sector's exact
+  bounds and refuses readings on two lanes; places (`2;20`, `-1;40`) and
+  `coordinate::beat` (whole rings and the phase in degrees) are display
   only. Status: built.
 
 ## 2. Units and the master frame

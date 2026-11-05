@@ -96,8 +96,8 @@ The seam carries the following today.
   point heard with its origin receipt (`Chronometry::anchor`), so every
   count of the bell has a place on the network: the anchor plus its rings.
   The present is read on the T lane as whole rings and the ring's phase in
-  degrees (`Universe::t_coordinate`); `xylarium observe clock` prints the
-  anchor.
+  degrees (`Universe::t_coordinate`, written by `coordinate::beat`);
+  `xylarium observe clock` prints the anchor.
 - **Dilation per segment.** The binding to the network is on the height
   `h` (MU-CHRONOMETRY 3.3). The kernel does not configure a ratio between
   rings and network time: `Chronometry::dilations` reads, for each segment
@@ -126,10 +126,17 @@ The seam carries the following today.
 - Quantities computed with logarithms, such as the jet's onset per kind
   (`circuit::onset_echoes`), stay inside the kernel and do not cross the
   boundary.
-- The coordinate (`crates/xyl-core/src/coordinate.rs`) holds a body's
-  readings on four lanes `{S, G, T, H}`, each whole turns and an exact share
-  of the turn, written in degrees, minutes, seconds and three finer places
-  of arc (the rings kept on the T lane).
+- The coordinate (`crates/xyl-core/src/coordinate.rs`) reads LAW-COORDINATE
+  v1 (Mycelium proposal 78.173). Its lanes carry the network's meanings:
+  S spatial (a body's holding share is read here by its dilation), G
+  gauge (planned: pairing and the transductions), T temporal (the count in
+  rings), H holonomic (a body's phase on its anchor's ring is one plane's
+  turning). A lane is an exact rational of either sign; its sector at depth
+  `d` is `[m 60^-d, (m + 1) 60^-d)`; `Reading::within` reads Below, Within
+  or Above against another's sector and refuses two lanes by name. The
+  kernel reads the law's fixtures 2, 3 and 4 as its tests; fixtures 1, 5
+  and 6 (the origin, the ordered key and neighbour ranges) wait on bodies
+  being addressed by coordinate (roadmap item 40).
 
 ## Mu
 
@@ -147,12 +154,11 @@ in-game costs (ley lines, tolls, folds) are kept in physical units.
 2. **Keep the whole point.** `Checkpoint::commits` holds a count and a bare
    height, `(Q, Option<u64>)`. It is to store the full TUniversal point
    instead, so that the lanes of the point are kept.
-3. **Name the coordinate lanes apart.** The kernel's lanes mean a body's
-   phase on the ring of its anchor (S), its holding as a share of the
-   holding of its anchor (G) and the beat of the body (T); H is not yet
-   read. On the network the same letters mean spatial, gauge, temporal and
-   holonomic. The kernel's lanes are to receive distinct names, or the two
-   sets are to be mapped explicitly at the seam.
+3. **The coordinate's origin and ordered key.** The lanes carry the
+   network's meanings (done). The origin, the ordered key and neighbour
+   ranges of LAW-COORDINATE v1 (its fixtures 1, 5 and 6) are to come with
+   bodies addressed by coordinate rather than by sample index (roadmap
+   item 40).
 4. **Freshness and crossings.** When passage mouths are published to the
    network, each mouth is to carry a freshness in final-point advances, and
    crossings are to be applied at an anchor so that their reconciliation

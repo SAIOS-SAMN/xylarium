@@ -30,9 +30,7 @@ pub(super) fn core_read(o: &Options, t_rings: Option<Q>) -> Result<String, Strin
     let founded_in = clock.elapsed();
     let t_rings = t_rings.unwrap_or_else(|| xyl_cosmos::circuit::anchor().first_stars);
     let t = Dy::from_q(&t_rings);
-    let at = xyl_core::coordinate::Reading::of(xyl_core::coordinate::Lane::T, &t_rings)
-        .written()
-        .unwrap_or_else(|| show(&t_rings));
+    let at = xyl_core::coordinate::beat(&t_rings, 5).unwrap_or_else(|_| show(&t_rings));
     let mut out = format!(
         concat!(
             "The substrate at T {} ({} Gyr) (seed {}): founded in {:.1?}; the bell {} Gyr, ",

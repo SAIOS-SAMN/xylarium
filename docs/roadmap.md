@@ -30,8 +30,8 @@ its source location.
 | Rationals (QQ) | All held state: element counts, firmament and bead amounts, reaches, spans, phases, the anchor, star and world masses | `xyl_core::Q`, lowest terms, `i64` on the stack and promoted to big integers on overflow; division is checked |
 | Reals (RR) | Never held directly. A real value enters as a proven rational enclosure `lo <= x <= hi` (pi, roots, exp, ln, sin, cos), or as a dyadic reading `m 2^e` at a seam, rounded toward zero and gridded back to `Q` before it is held | `xyl_core::certified::Encl`; `xyl_core::dyadic::Dy` |
 
-Angles are exact turns, read in degrees, minutes and seconds of arc
-(`xyl_core::coordinate`). Phases about a throat are exact; drawn values
+Angles are exact turns, read in sectors of base 60 and written in degrees
+and their places (`xyl_core::coordinate`, LAW-COORDINATE v1). Phases about a throat are exact; drawn values
 carry the `2^-40` resolution of the draw.
 
 ### Algebra and geometry
@@ -650,7 +650,9 @@ Next:
    point, a commitment to the universe's state and the previous entry's
    hash.
 3. The whole point is to be kept in `Checkpoint::commits`.
-4. The kernel's coordinate lanes are to be named apart from the network's.
+4. The coordinate's origin, ordered key and neighbour ranges
+   (LAW-COORDINATE v1, fixtures 1, 5 and 6) are to come with bodies
+   addressed by coordinate.
 5. Published passage mouths are to carry freshness, and crossings are to be
    applied at an anchor.
 

@@ -8,10 +8,8 @@
 //! Outputs:
 //! - [`Half`], a half-angle held as its direction `(c, s)` at any scale (its
 //!   tangent `s / c`, including `c = 0`, a half-angle of a quarter turn):
-//!   `compose` adds angles, `cos_sin` gives the whole angle's cosine and sine
-//!   exactly, and `share` gives `sin^2(theta / 2)`, the share of the
-//!   ordinary sphere (S^2) within the angle of an axis (other dimensions use
-//!   `measure`).
+//!   `compose` adds angles and `cos_sin` gives the whole angle's cosine and
+//!   sine exactly (the share of a sphere within an angle is `measure`'s).
 //! - [`Rotor`], a rational quaternion `(w, x, y, z)` at any scale, the even
 //!   part of Cl(3): `about(k, h)` turns about axis `k`, `then_after` composes
 //!   by multiplication, `matrix` gives the exact rotation matrix, `apply`
@@ -86,15 +84,6 @@ impl Half {
             .checked_div(&n)
             .unwrap_or(Q::ZERO);
         (cos, sin)
-    }
-
-    /// The share of the ordinary sphere (S^2) within the whole angle of an
-    /// axis: `sin^2` of the half-angle, exact. Other dimensions use the
-    /// curve of `measure`.
-    pub fn share(&self) -> Q {
-        (&self.s * &self.s)
-            .checked_div(&self.norm())
-            .unwrap_or(Q::ZERO)
     }
 }
 
@@ -229,14 +218,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn halves_compose_exactly_and_hold_a_spheres_volume() {
-        // Two right angles compose to a half turn: cos -1, sin 0, and the
-        // share of the whole sphere.
+    fn halves_and_rotors_compose_exactly() {
+        // Two right angles compose to a half turn: cos -1, sin 0.
         let right = Half::of_t(Q::ONE);
         let half_turn = right.compose(&right);
         assert_eq!(half_turn.cos_sin(), (-Q::ONE, Q::ZERO));
-        assert_eq!(half_turn.share(), Q::ONE);
-        assert_eq!(right.share(), Q::new(1, 2).unwrap());
         // A quarter turn about z, then one about x, carries x to y and then y
         // to z.
         let r = Rotor::about(0, &right).then_after(&Rotor::about(2, &right));

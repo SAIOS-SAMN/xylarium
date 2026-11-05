@@ -281,6 +281,10 @@ may change public APIs and the model's laws.
   re-derived the torsion share that `bounce::torsion_share` holds. The
   sheared return `k / (1 - theta)` stays a theorem of docs/model.md (T4).
 
+- Unread readings of xyl-core: `rotor::Half::share` (the S^2 case of
+  `measure::share_turns`), `shares::opposed` (`flow(x, -y)`) and
+  `Dy::cosh`; no production code called them.
+
 ## 0.3.0 - 2026-10-30
 
 First public release.

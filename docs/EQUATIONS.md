@@ -77,7 +77,7 @@ another crate. Laws are composed from shares (ratios of the form
 - Deficit law (`xyl_core::shares::deficit`, `deficit_dy`):
   `delta(R, M) = M / (R + M)`, and the received share is `1 - delta`.
   Status: built.
-- Dilation and flow law (`xyl_core::shares::dilation`, `flow`, `opposed`):
+- Dilation and flow law (`xyl_core::shares::dilation`, `flow`):
   `D(p) = (1 + p) / (1 - p)` for `-1 < p < 1`; `x (+) y = (x + y) / (1 + x
   y)`; `D(x (+) y) = D(x) D(y)`. Status: built.
 - Horizon reach (`bounce::horizon_reach`): `delta_h = 1/3`, so

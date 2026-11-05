@@ -7,7 +7,7 @@
 //!
 //! Outputs: [`Dy`], normalised (`m == 0` or `2^61 <= |m| < 2^62`), with
 //! arithmetic (also as `+ - * /` operators), `sqrt`, `ln`, `exp`, `pow`,
-//! `powi`, `sin_cos`, `atan`, `acos`, `cosh`, `grid` (rounding to `2^-bits`),
+//! `powi`, `sin_cos`, `atan`, `acos`, `grid` (rounding to `2^-bits`),
 //! `unit` (a uniform draw from 64 random bits), `to_q` (exact) and the codec
 //! pair `to_bits` / `from_bits`.
 //!
@@ -491,12 +491,6 @@ impl Dy {
         }
     }
 
-    /// `cosh x = (e^x + e^-x) / 2`.
-    pub fn cosh(&self) -> Dy {
-        let e = self.exp();
-        (e + Dy::ONE / e) * Dy::ratio(1, 2)
-    }
-
     /// A uniform draw in [0, 1) from 64 random bits: the top 53 bits, scaled
     /// by 2^-53.
     pub fn unit(bits: u64) -> Dy {
@@ -771,7 +765,6 @@ mod tests {
             "2.41885840577637762338",
             tol
         ));
-        assert!(near(&Dy::int(1).cosh(), "1.54308063481524377848", tol));
         assert_eq!(Dy::unit(0), Dy::ZERO);
         let x = Dy::ratio(-22, 7);
         let (m, e) = x.to_bits();

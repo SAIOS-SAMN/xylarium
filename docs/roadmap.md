@@ -236,12 +236,15 @@ where it belongs to one.
     (at the law: `xyl_core::shares`, invariant under every dilation, the
     tier ladder one instance); a link's
     weight its stored turning between planes, its memory the remanence,
-    strengthened by passage and weakened by disuse; the pulse carried link
+    strengthened by a passage less separated than its hold and weakened by
+    one more separated, conserved between passages (T19); the pulse carried link
     to link; the council's convergence on the same links (#94).
 39. **Phase weakening and phase strengthening**
     ([#84](https://github.com/SAIOS-SAMN/xylarium/issues/84), `proposal`,
     `law`; depends on items 32 and 34;
-    [model.md](model.md#phase-weakening-and-phase-strengthening)).
+    [model.md](model.md#phase-weakening-and-phase-strengthening)). A
+    link's remanence is derived (T19): built from passages by their
+    separation, conserved between them, cleared at its coercivity.
     Remanence of the pole state: the part of a drive's displacement held
     when the drive falls to its mean, and its coercivity; the inverse
     driven by mass at distance from a core (a star's own included), by a

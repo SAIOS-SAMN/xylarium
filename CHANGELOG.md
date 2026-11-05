@@ -11,6 +11,12 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- T19, a link's remanence (docs/model.md, #84): `w = J - (a_0 M_0) M`,
+  built and worn by passages by their separation, conserved between them,
+  cleared at its coercivity. For seed 7 the universal core keeps 0.1982 of
+  its turning as remanence. Corrects #97's "fades with disuse": the weight
+  is conserved between passages.
+
 - The automorphic, synaptic chain (docs/model.md, roadmap item 41, #97):
   one attractor-pair map at every tier, commuting with the tier's dilation,
   and links weighted by their history. At the law, the deficit and the flow

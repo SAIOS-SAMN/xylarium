@@ -109,9 +109,12 @@ The seam carries the following today.
 
 ## The algebra and pole states
 
-- `crates/xyl-core/src/cga.rs` is the conformal geometric algebra
-  `Cl(n+1, 1)` over exact rationals (`xyl_core::Q`), used at `n = 3`:
-  `Cl(4, 1)`, the algebra the hypha's shared libraries use. Values that
+- `crates/xyl-core/src/cga.rs` is the geometric algebra `Cl(p, q)` over
+  exact rationals (`xyl_core::Q`), the signature carried by the type
+  `Mv<NEG>` so that two signatures never compose (Concordance 2.10). Its
+  conformal model `Cl(n+1, 1)` is used at `n = 3`: `Cl(4, 1)`, the algebra
+  the hypha's shared libraries use. The four passage fixtures of
+  Concordance 2.11 hold in `Cl(3, 2)`. Values that
   cross the boundary are exact and compared by their decoded values.
 - The pole model ([EQUATIONS.md](EQUATIONS.md#z-q-and-r-the-pole-model),
   "Z, Q and R"): the Z pole is at the origin `e_o`, the Q pole at infinity

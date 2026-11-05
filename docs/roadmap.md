@@ -36,7 +36,8 @@ carry the `2^-40` resolution of the draw.
 
 ### Algebra and geometry
 
-- Conformal geometric algebra `Cl(n+1, 1)` over `Q` (`xyl_core::cga`)
+- Geometric algebra `Cl(p, q)` over `Q` (`xyl_core::cga`), the signature
+  carried by the multivector's type; its conformal model `Cl(n+1, 1)`
   provides points, versors and dilators. The nucleon poles described below
   are its origin and its point at infinity.
 - Rotors (`xyl_core::rotor`) are rational quaternions, the even part of

@@ -11,6 +11,12 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The register of scalar collapses (docs/model.md, roadmap item 43, #107):
+  50 sites across the five crates and the order of opening them.
+- Embedded minds planned (docs/network.md, roadmap section 4 items 10 to
+  12, #108): the client's cognition hosted by the uplink, one per ancient
+  seat, through the house's seat-surface path; the uplink's first fixes.
+
 - Chemistry from the elements recorded (docs/model.md, roadmap item 42,
   #103): the chain from the atom through the star to matter and life by the
   release of held frames, the inventory of where it breaks today (55

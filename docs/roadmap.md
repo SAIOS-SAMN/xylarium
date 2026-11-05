@@ -247,6 +247,15 @@ where it belongs to one.
     degrees per bell advanced in closed form, `K` counted per component, and
     the turning between planes stored as a separate component; composition
     through the generators awaits the turning law (Netstratum docs/117).
+43. **Scalar collapses**
+    ([#107](https://github.com/SAIOS-SAMN/xylarium/issues/107), `defect`,
+    `law`;
+    [model.md](model.md#scalar-collapses-the-register-and-the-order-of-opening)).
+    The register of 50 sites where a structured quantity is one number, a
+    graded reading a boolean, or a choice a scalar, and the order of
+    opening: the bond and stripping as graded shares; candidates held
+    together; booleans to shares where they gate existence; relations held
+    by tier; lanes and planes kept whole; enclosures kept.
 42. **Chemistry from the elements**
     ([#103](https://github.com/SAIOS-SAMN/xylarium/issues/103), `law`,
     `track`; [model.md](model.md#chemistry-from-the-elements); with items 7,
@@ -685,6 +694,14 @@ Next:
    item 1).
 9. Deliberation between houses bound by the delays of their percepts
    (#94).
+10. The uplink's exact T reading, each act on the lane of its kind, and a
+    mind's focus as a four-share vector
+    ([#108](https://github.com/SAIOS-SAMN/xylarium/issues/108), #107).
+11. Embedded minds: the uplink hosts the client's cognition, one per
+    ancient seat, through the house's seat-surface path, linked to the
+    hypha under each mind's key (#108;
+    [network.md](network.md#a-mind-on-both-faces)).
+12. The council's convergence act on the embedded and joined minds (#94).
 
 Done when: `xylarium observe house` shows a seat held by a mind across a
 restart, and a decision from anyone but the holder is refused.

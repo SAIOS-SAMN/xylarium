@@ -11,6 +11,12 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Minds in the ancient seats (docs/civilizations.md, docs/network.md,
+  roadmap section 4 items 6 to 9, #94): what is built of a mind seated on
+  both faces, the house in the kernel and its key on the hypha, and the
+  polity still to derive (the council's convergence, the house's relay,
+  consciousness passed down, the seat's place on the paired throat).
+
 - T18 (docs/model.md, #90): founded matter turns its five isoclinic planes
   together, so one isoclinic phase per body. A frame is the axis-plane
   phase, that phase and the turning between planes into its parent.

@@ -1,11 +1,11 @@
-//! A star's disc: the star tier's cut of a lit bead's infall, the worlds its
-//! manifold holds against the galaxy core's twist, and each world's
-//! planetary core.
+//! A star's disc: the star tier's cut of a lit bead's infall and the worlds
+//! its manifold holds against the galaxy core's twist.
 //!
-//! Reads `circuit::Bead` and the formation helpers (`cooling`, `lights`,
-//! `hold_at_heat`, `throat_push`, `vacuum_halving`). All quantities are exact
-//! `Q`: reaches and holdings are shares of the infall or of the star's
-//! manifold, extents are in galaxy rings, heat in hydrogen units.
+//! Reads `circuit::Bead`, `circuit::throat_push` and the formation helpers
+//! (`cooling`, `lights`, `hold_at_heat`, `pulse_heat`, `vacuum_halving`).
+//! All quantities are exact `Q`: reaches and holdings are shares of the
+//! infall or of the star's manifold, extents are in galaxy rings, heat in
+//! hydrogen units.
 //!
 //! Outputs:
 //! - `star_hold` -> `Option<StarHold>`, read in three states of the infall.
@@ -24,9 +24,6 @@
 //!   equal degrees, each adding `1 - a` of its line; a world closes where
 //!   the gathered matter's deficit `m / (star + m)` reaches the twist
 //!   `tide x`. Returns each world's (reach, holding) and the belt share.
-//! - `star_disc` -> worlds (`World`: reach, holding, heat, kept share,
-//!   lightest held kind) and belts. Every fragment takes the disc's mix; a
-//!   per-reach composition is not yet modelled.
 //!
 //! Invariant: worlds and belts together hold `1 - star`. This file is not
 //! among the founding digest's sources (build.rs), so editing it leaves the
@@ -47,28 +44,6 @@ pub fn rim_share(mass: &Q, rim: &Q) -> Q {
     }
     let rim_rg = &rim.clone().max(Q::ZERO) * &xyl_core::units::Tier::System.in_rg();
     xyl_core::shares::deficit(mass, &rim_rg).unwrap_or(Q::ONE)
-}
-
-/// A world of a star's disc: its reach and holding (shares of the star's
-/// manifold), the heat at its place, and its planetary core's cut: the share
-/// of the world's matter the core holds and the lightest kind held (rocky,
-/// giant and intermediate worlds follow from these; there are no type
-/// labels).
-#[derive(Clone, Debug)]
-pub struct World {
-    /// Reach from the star (share of the manifold's reach).
-    pub reach: Q,
-    /// Holding (share of the manifold's matter).
-    pub holding: Q,
-    /// Heat at the world's reach, a(r) = delta_s(r) a_disc, where
-    /// delta_s(r) = star / (r + star) is the star's light share at that reach
-    /// and the vacuum takes the rest.
-    pub heat: Q,
-    /// The share of the world's matter its core holds; the rest rejoins the
-    /// disc's gas.
-    pub kept: Q,
-    /// The lightest kind held (`None`: nothing held).
-    pub lightest: Option<u32>,
 }
 
 /// A lit bead's infall and the star's cut of it, read on the chain.
@@ -138,37 +113,30 @@ pub fn star_hold(bead: &Bead, unit: &Q, held: &Q, swing: &Q, turning: &Q) -> Opt
     // infall within the rim `R0` (system-tier units). The collapsed star's
     // mass is `m0 = s0 c` core masses, which is `m0` in `r_g`, so its
     // compactness is `delta0 = m0 / (R0 60 + m0)`.
-    let dark = hold_at_heat(&c.mix, &throat_push(), &spin, turning, &Q::ONE);
+    let push = crate::circuit::throat_push().to_q();
+    let dark = hold_at_heat(&c.mix, &push, &spin, turning, &Q::ONE);
     let compactness = rim_share(&(&dark.held * &c.cloud), &dark.reach);
     let held = held_mixture(&c.mix, &dark.rest);
     // Ignition: the star holds `delta0` of the turning it receives per echo;
     // that held share is its transduction, which adds the over-pressure
     // `p0 = 1 + transduced` and releases the loosest kinds.
     let p0 = &Q::ONE + &(&compactness * turning);
-    let cut = hold_at_heat(&c.mix, &throat_push(), &spin, turning, &p0);
+    let cut = hold_at_heat(&c.mix, &push, &spin, turning, &p0);
     let star = cut.held;
     let rim = cut.reach.clone();
-    // `a_disc = turning x swing x grip / shed`, at most 1, in the same form in
-    // which the cooling reads a piece's heat: grip = D / (1 + D) with D the
-    // disc's holding, shed = the released kinds' open frames plus ln 2 / k
-    // for the vacuum's halving over k rings. A zero shed gives 1.
+    // `a_disc = turning x swing x grip / shed`, at most 1, in the form in
+    // which the cooling reads a piece's heat (`formation::pulse_heat`):
+    // grip = D / (1 + D) with D the disc's holding, shed = the released
+    // kinds' open frames plus the vacuum's halving.
     let disc_holding = &Q::ONE - &star;
     let grip = disc_holding
         .checked_div(&(&Q::ONE + &disc_holding))
         .unwrap_or(Q::ZERO);
-    let ln2 = xyl_core::certified::ln2(64).mid();
-    let shed = &cut.rest_open
-        + &vacuum_halving(&reach, &h)
-            .map(|k| ln2.checked_div(&Q::int(k)).unwrap_or(Q::ZERO))
-            .unwrap_or(Q::ZERO);
-    let a_disc = if shed.signum() > 0 {
-        (&(turning * swing) * &grip)
-            .checked_div(&shed)
-            .unwrap_or(Q::ONE)
-            .min(Q::ONE)
-    } else {
-        Q::ONE
-    };
+    let a_disc = pulse_heat(
+        &(&(turning * swing) * &grip),
+        &cut.rest_open,
+        vacuum_halving(&reach, &h),
+    );
     Some(StarHold {
         star,
         tide: c.tide,
@@ -241,43 +209,4 @@ pub fn manifold_worlds(star: &Q, a: &Q, tide: &Q) -> (Vec<(Q, Q)>, Q) {
         }
     }
     (worlds, &left_all - &taken)
-}
-
-/// A star's disc and its worlds: the worlds the star's manifold holds against
-/// the core's twist (`manifold_worlds`), each cut by its planetary core on
-/// the disc's mix (`rest`), and the belt holding. Provisional: every
-/// fragment takes the disc's mix; a per-reach composition is not yet
-/// modelled.
-pub fn star_disc(star: &Q, tide: &Q, rest: &[(u32, Q)]) -> (Vec<World>, Q) {
-    let mid_disc = half(&(star + &Q::ONE));
-    let rate = mid_disc.checked_div(&(&mid_disc + star)).unwrap_or(Q::ZERO);
-    // `a_disc = (1 - tide) x mid / (mid + star)`, mid = (star + 1) / 2: the
-    // share the galaxy's tide leaves unlocked at the star.
-    let a_disc = &(&Q::ONE - tide) * &rate;
-    let (frags, belts) = manifold_worlds(star, &a_disc, tide);
-    let worlds = frags
-        .into_iter()
-        .map(|(reach, holding)| world(star, &a_disc, rest, reach, holding))
-        .collect();
-    (worlds, belts)
-}
-
-/// The planetary core of a disc fragment: in the fragment's units it holds
-/// one ring as its state and its matter as its holding. The core pushes by
-/// EM repulsion on open frames at the throat's push, p = 1/2 (`throat_push`). The
-/// place's heat, delta_s(r) a_disc with delta_s(r) = star / (r + star) the
-/// star's light share at the reach (the vacuum takes 1 - delta_s), adds to
-/// every kind's carried spin as turning; the core itself is cold (heat 0,
-/// no over-pressure).
-fn world(star: &Q, a_disc: &Q, mix: &[(u32, Q)], reach: Q, holding: Q) -> World {
-    let light = star.checked_div(&(&reach + star)).unwrap_or(Q::ZERO);
-    let heat = &light * a_disc;
-    let c = hold_at_heat(mix, &throat_push(), &heat, &Q::ZERO, &Q::ONE);
-    World {
-        reach,
-        holding,
-        heat,
-        kept: c.held,
-        lightest: c.lightest,
-    }
 }

@@ -7,75 +7,76 @@ use xyl_core::Q;
 use xyl_cosmos::circuit::Substrate;
 use xyl_cosmos::cores::Shape;
 use xyl_cosmos::elements::Element;
-use xyl_cosmos::formation::{Formation, Piece};
 use xyl_cosmos::origin::Origin;
 
-/// The `founding` reading: the founding's equitable cascade form by form
-/// with its stacks, then the founding cascade and its stacks; every line
+/// The founded elements of `origin`'s universe, at the torsion share the
+/// founding holds (`circuit::Substrate::share`).
+fn founded(origin: &Origin) -> Result<Vec<Element>, String> {
+    let sub = xyl_cosmos::cores::substrate_for(&origin.parent.spin).ok_or("no founding")?;
+    xyl_cosmos::elements::founded(&sub.share)
+}
+
+/// The `founding` reading: the founding shells on the founding's mix (each
+/// kind's share of the holding, as `circuit::Substrate::found` reads it):
+/// the final share, the kinds the throat holds and the pushed-out kinds'
+/// reaches, then the shells grouped where kinds share one reach; every line
 /// ends with a newline.
 pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
     let origin = Origin::of(o.seed).ok_or("no origin")?;
-    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
-    let kinds = xyl_cosmos::formation::kinds(&elements);
-    let mix: Vec<(u32, Q)> = kinds.iter().map(|k| (k.z, k.share.clone())).collect();
-    let mut out = String::new();
-    for r in xyl_cosmos::formation::equitable_cascade(&mix) {
-        out.push_str(&format!(
-            concat!(
-                "Equitable cascade, form {}: spin K {}, throat H {}, final share {}; ",
-                "held {} kinds (Z {:?}..{:?})\n"
-            ),
-            r.form,
-            show(&r.k_spin),
-            show(&r.h_final),
-            show(&r.s_final),
-            r.held.len(),
-            r.held.iter().min(),
-            r.held.iter().max()
-        ));
-        for (k, (zs, push, far, deep, korb)) in r.stacks.iter().enumerate() {
-            out.push_str(&format!(
-                concat!(
-                    "  Stack {}: Z {}..{} ({} kinds), push K + s_i {}, ",
-                    "reach lightest {} heaviest {}, orbital speed at the heaviest {}\n"
-                ),
-                k + 1,
-                zs.iter().min().unwrap_or(&0),
-                zs.iter().max().unwrap_or(&0),
-                zs.len(),
-                show(push),
-                show(far),
-                show(deep),
-                show(korb)
-            ));
-        }
-    }
-    let (stacks, settled) = xyl_cosmos::formation::cascade(&mix);
-    out.push_str(&format!(
+    let elements = founded(&origin)?;
+    let mix: Vec<(u32, Q)> = xyl_cosmos::formation::kinds(&elements)
+        .iter()
+        .map(|k| (k.z, k.share.clone()))
+        .collect();
+    let (s_final, shells) = xyl_cosmos::formation::founding_shells(&mix);
+    let held: Vec<u32> = shells.iter().filter(|s| s.3).map(|s| s.0).collect();
+    let out_reach = || shells.iter().filter(|s| !s.3).map(|s| s.2.clone());
+    let (near, far) = (out_reach().min(), out_reach().max());
+    let rim = shells
+        .iter()
+        .map(|s| &s.2 * &(&Q::ONE + &s_final))
+        .max()
+        .unwrap_or(Q::ZERO);
+    let dash_or = |q: Option<&Q>| q.map(show).unwrap_or_else(|| "-".into());
+    let mut out = format!(
         concat!(
-            "The founding cascade (a reading): {} kinds, {} stacks; ",
-            "the settled bell's round trip {}\n"
+            "The founding shells: {} kinds, final share {}; ",
+            "held {} kinds (Z {:?}..{:?}); pushed-out reaches {} .. {} rings; rim {} rings\n"
         ),
         mix.len(),
-        stacks.len(),
-        show(&settled)
-    ));
-    for (k, st) in stacks.iter().enumerate() {
+        show(&s_final),
+        held.len(),
+        held.iter().min(),
+        held.iter().max(),
+        dash_or(near.as_ref()),
+        dash_or(far.as_ref()),
+        show(&rim)
+    );
+    // Shells in order of reach, kinds standing at one reach grouped.
+    let mut by_reach: Vec<&(u32, Q, Q, bool)> = shells.iter().collect();
+    by_reach.sort_by(|a, b| a.2.cmp(&b.2).then(a.0.cmp(&b.0)));
+    let mut groups: Vec<Vec<&(u32, Q, Q, bool)>> = Vec::new();
+    for s in by_reach {
+        match groups.last_mut() {
+            Some(g) if g.first().is_some_and(|f| f.2 == s.2) => g.push(s),
+            _ => groups.push(vec![s]),
+        }
+    }
+    for (k, g) in groups.iter().enumerate() {
+        let amount = g.iter().fold(Q::ZERO, |a, s| &a + &s.1);
         out.push_str(&format!(
-            concat!(
-                "  Stack {}: Z {}..{} ({} kinds), amount {}, mean hold {}, bounce {}, ",
-                "released spin {}, settled {}, beat {}\n"
-            ),
+            "  Shell {}: Z {}..{} ({} kinds), amount {}, reach {} rings, {}\n",
             k + 1,
-            st.kinds.iter().min().unwrap_or(&0),
-            st.kinds.iter().max().unwrap_or(&0),
-            st.kinds.len(),
-            show(&st.amount),
-            show(&st.w_mean),
-            show(&st.bounce),
-            show(&st.released),
-            show(&st.settled),
-            show(&st.beat)
+            g.iter().map(|s| s.0).min().unwrap_or(0),
+            g.iter().map(|s| s.0).max().unwrap_or(0),
+            g.len(),
+            show(&amount),
+            g.first().map(|s| show(&s.2)).unwrap_or_default(),
+            if g.iter().all(|s| s.3) {
+                "held"
+            } else {
+                "pushed out"
+            }
         ));
     }
     Ok(out)
@@ -83,11 +84,11 @@ pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
 
 /// The `founding-reach` reading (the table's ceiling at TOP_Z): for selected
 /// founded kinds and the heaviest, the reach about the Wellspring from the
-/// founding cascade and the open share Q / 3Z, then the ratio of reaches
+/// founding shells and the open share Q / 3Z, then the ratio of reaches
 /// Z 115 / Z top (under the linear law).
 pub(super) fn founding_read(o: &Options) -> Result<String, String> {
     let origin = Origin::of(o.seed).ok_or("no origin")?;
-    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
+    let elements = founded(&origin)?;
     let mix: Vec<(u32, Q)> = elements
         .iter()
         .filter(|e| e.abundance.signum() > 0)
@@ -124,25 +125,20 @@ pub(super) fn founding_read(o: &Options) -> Result<String, String> {
     Ok(out)
 }
 
-/// The `formation` reading (laws not yet connected to the game's stars): the
-/// founding's matter, then each galaxy's cut, gas, cooling and stars, counted
-/// in rings of the galaxy's echo (a turning counts in its anchor's echo),
-/// with years only at the seam, then the scratch infalls.
+/// The `formation` reading: the founding's matter, then each galaxy's gas,
+/// its lit pieces and the star tier's cut of the first lit pieces
+/// (`galaxy::disc_frame`, the cut `disc::star_hold` the stars are made
+/// from), counted in rings of the galaxy's echo; every galaxy is read as the
+/// home galaxy's homologue.
 pub(super) fn formation(o: &Options) -> Result<String, String> {
     let origin = Origin::of(o.seed).ok_or("no origin")?;
-    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
+    let elements = founded(&origin)?;
     let shapes = xyl_cosmos::cores::shapes(&origin);
     let mut out = founding_matter(&origin, &elements);
     // Units are the universe's: time in rings, reach as a deficit share
     // of its enclosure, mass as a holding share (never years, kpc or suns).
-    // The pieces are the founding's beads one tier down, heated by the pulse
-    // at swing = 1 + the inbound echo's mean over the first echo, as at the
-    // founding; every galaxy is read as the home galaxy's homologue.
     let sub = xyl_cosmos::cores::substrate(&origin).ok_or("no founding")?;
-    let swing = &Q::ONE + &sub.inbound_mean(xyl_cosmos::circuit::echo()).to_q();
-    let f = xyl_cosmos::formation::of(&sub.beads, &sub.unit(), &sub.held_share(), &swing);
-    out.push_str(&galaxies(&shapes, &f, &sub));
-    out.push_str(&scratch_infalls(&elements));
+    out.push_str(&galaxies(&shapes, &sub));
     Ok(out)
 }
 
@@ -187,203 +183,80 @@ fn founding_matter(origin: &Origin, elements: &[Element]) -> String {
     )
 }
 
-/// Each galaxy's formation lines: its share of the universe, the gas and
-/// its pieces, the clouds and stars, the first four forming pieces' star
-/// tier and the first four pieces.
-fn galaxies(shapes: &[Shape], f: &Formation, sub: &Substrate) -> String {
+/// Each galaxy's formation lines: its share of the universe, the gas's
+/// pieces and lit share, the first four lit pieces' star tier and the first
+/// four pieces.
+fn galaxies(shapes: &[Shape], sub: &Substrate) -> String {
     let total = shapes.iter().fold(Q::ZERO, |a, s| &a + &s.mass_ratio());
-    // `gas = sum lambda (to - from)` over the pieces.
-    let gas: Q = f
-        .pieces
-        .iter()
-        .fold(Q::ZERO, |a, p| &a + &(&p.lambda * &(&p.to - &p.from)));
-    let formed: Vec<&Piece> = f.pieces.iter().filter(|p| p.clouds > 0).collect();
-    let clouds: i64 = formed.iter().map(|p| p.clouds).sum();
-    let stars = formed.iter().fold(Q::ZERO, |a, p| &a + &p.stars);
-    let in_stars = formed
-        .iter()
-        .fold(Q::ZERO, |a, p| &a + &(&p.star * &p.stars));
-    let first = formed.iter().filter_map(|p| p.cools_in).min();
-    let (small, big) = (
-        formed
-            .iter()
-            .filter(|p| p.stars.signum() > 0)
-            .map(|p| p.star.clone())
-            .min(),
-        formed
-            .iter()
-            .filter(|p| p.stars.signum() > 0)
-            .map(|p| p.star.clone())
-            .max(),
-    );
-    let dark: Q = f
-        .pieces
-        .iter()
-        .filter(|p| p.clouds == 0)
-        .fold(Q::ZERO, |a, p| &a + &(&p.lambda * &(&p.to - &p.from)));
-    let dash_or = |q: Option<&Q>| q.map(show).unwrap_or_else(|| "-".into());
+    let l = &sub.lighting;
+    let lit: Vec<&(Q, Q, Option<i64>, Q)> = l.pieces.iter().filter(|p| p.2.is_some()).collect();
     let mut out = String::new();
     for sh in shapes {
         let s_g = sh.mass_ratio().checked_div(&total).unwrap_or(Q::ONE);
         out.push_str(&format!(
             concat!(
                 "Galaxy {} (its share of the universe {}): push {}, held in the core {}; ",
-                "gas {} in {} pieces (the beads), lit share {}\n"
+                "{} pieces (the beads), {} lit, first lighting at {} rings, lit share {}\n"
             ),
             sh.index,
             show(&s_g),
-            show(&f.push),
-            show(&f.held),
-            show(&gas),
-            f.pieces.len(),
-            show(&sub.lighting.lit)
+            xyl_cosmos::circuit::throat_push(),
+            show(&sub.held_share()),
+            l.pieces.len(),
+            lit.len(),
+            l.cools_in
+                .map(|n| n.to_string())
+                .unwrap_or_else(|| "-".into()),
+            show(&l.lit)
         ));
-        out.push_str(&format!(
-            concat!(
-                "  Clouds {}, first collapsing at {} rings; stars {}, holding {} of the grains; ",
-                "each {} .. {} of the grains; gas that never lights: {}\n"
-            ),
-            clouds,
-            first.map(|n| n.to_string()).unwrap_or_else(|| "-".into()),
-            show(&stars),
-            show(&in_stars),
-            dash_or(small.as_ref()),
-            dash_or(big.as_ref()),
-            show(&dark)
-        ));
-        // The star tier (the core's cut and its disc) of each of the first
-        // four pieces that form stars.
-        for pc in formed.iter().filter(|p| p.stars.signum() > 0).take(4) {
-            out.push_str(&star_tier(pc));
-            out.push_str(&worlds_line(&pc.worlds));
+        // The star tier (the star's cut and its manifold's worlds) of each
+        // of the first four lit pieces.
+        for p in lit.iter().take(4) {
+            out.push_str(&star_tier(p));
         }
         // The first four pieces, lit or not.
-        for pc in f.pieces.iter().take(4) {
-            out.push_str(&piece_line(pc));
+        for p in l.pieces.iter().take(4) {
+            out.push_str(&format!(
+                "  piece {} to {} rings: lights after {} rings, infall {} rings\n",
+                show(&p.0),
+                show(&p.1),
+                p.2.map(|n| n.to_string()).unwrap_or_else(|| "-".into()),
+                show(&p.3)
+            ));
         }
     }
     out
 }
 
-/// A forming piece's star tier: its tide, agitation, the star's share of
-/// its infall, open shares, worlds and belts.
-fn star_tier(pc: &Piece) -> String {
-    // Each world's holding as a share of its star's holding (holding shares,
-    // not world units).
-    let shares = |w: &Q| show(&w.checked_div(&pc.star_share).unwrap_or(Q::ZERO));
-    format!(
-        concat!(
-            "  Star tier at reach {}: tide {}, infall agitation {}; the star {} of its infall; ",
-            "open share infall {} / disc {}; {} worlds, from {} to {} of its star's holding, ",
-            "belts {} of the infall\n"
-        ),
-        show(&pc.reach),
-        show(&pc.tide),
-        show(&pc.heated),
-        show(&pc.star_share),
-        show(&pc.infall_open),
-        show(&pc.disc_open),
-        pc.worlds.len(),
-        pc.worlds
-            .first()
-            .map(|w| shares(&w.holding))
-            .unwrap_or_else(|| "-".into()),
-        pc.worlds
-            .last()
-            .map(|w| shares(&w.holding))
-            .unwrap_or_else(|| "-".into()),
-        show(&pc.belts)
-    )
-}
-
-/// A piece of gas: its reach and span in rings, holding, agitation,
-/// emission, cooling, heat (heated - cooled), clouds and lighting time.
-fn piece_line(pc: &Piece) -> String {
-    format!(
-        concat!(
-            "  piece at reach {} ({} to {} rings): holding per ring {}, agitation {}, ",
-            "emission {}, cooled {}, heat {}, clouds {}, lights after {} rings\n"
-        ),
-        show(&pc.reach),
-        show(&pc.from),
-        show(&pc.to),
-        show(&pc.lambda),
-        show(&pc.agitation),
-        show(&pc.emission),
-        show(&pc.cooled),
-        show(&(&pc.heated - &pc.cooled)),
-        pc.clouds,
-        pc.cools_in
-            .map(|n| n.to_string())
-            .unwrap_or_else(|| "-".into())
-    )
-}
-
-/// The planetary cores on the founding's mix: a scratch reading of the
-/// law (one infall of the founding's matter, not a formed star: no star
-/// forms here until convection is modelled), at the galaxy's tide inside
-/// its rim, delta_gal = 2 / (R + 2) for R = 1, 3/2, 2.
-fn scratch_infalls(elements: &[Element]) -> String {
-    let mix: Vec<(u32, Q)> = xyl_cosmos::formation::kinds(elements)
-        .iter()
-        .map(|k| (k.z, k.share.clone()))
-        .collect();
-    let p = Q::ratio(1, 2);
-    let mut out = String::new();
-    for (r, tide) in [
-        ("1", Q::ratio(2, 3)),
-        ("3/2", Q::ratio(4, 7)),
-        ("2", Q::ratio(1, 2)),
-    ] {
-        let c = xyl_cosmos::formation::hold_at_heat(&mix, &p, &Q::ZERO, &Q::ZERO, &Q::ONE);
-        let (worlds, belts) = xyl_cosmos::disc::star_disc(&c.held, &tide, &c.rest);
-        out.push_str(&format!(
-            concat!(
-                "Scratch infall of the founding's mix at galactic reach {} (tide {}): ",
-                "the star {} of it, held down to Z {}; its disc {} kinds, {} worlds, belts {}\n"
-            ),
-            r,
-            show(&tide),
-            show(&c.held),
-            c.lightest
-                .map(|z| z.to_string())
-                .unwrap_or_else(|| "-".into()),
-            c.rest.len(),
-            worlds.len(),
-            show(&belts)
-        ));
-        out.push_str(&worlds_line(&worlds));
-    }
-    out
-}
-
-/// The worlds of a disc, each with its planetary core's cut: inner, middle
-/// and outer (up to six shown).
-fn worlds_line(worlds: &[xyl_cosmos::disc::World]) -> String {
-    let n = worlds.len();
-    let picks: Vec<usize> = if n <= 6 {
-        (0..n).collect()
-    } else {
-        vec![0, 1, n / 3, n / 2, 2 * n / 3, n - 1]
+/// A lit piece's star tier, read at its midpoint for the piece's star mass
+/// (`galaxy::piece_star_mass`): the cut's tide, disc agitation, held share,
+/// turning, heat, over-pressure, rim and compactness, and the worlds and
+/// belt its manifold holds (`disc::manifold_worlds`).
+fn star_tier(p: &(Q, Q, Option<i64>, Q)) -> String {
+    let mid = (&p.0 + &p.1).checked_div(&Q::int(2)).unwrap_or(Q::ZERO);
+    let frame = xyl_cosmos::galaxy::piece_star_mass(&mid)
+        .and_then(|m| xyl_cosmos::galaxy::disc_frame(&mid, &m));
+    let Some(f) = frame else {
+        return format!("  Star tier at {} rings: no cut\n", show(&mid));
     };
-    picks
-        .into_iter()
-        .filter_map(|i| worlds.get(i).map(|w| (i, w)))
-        .map(|(i, w)| {
-            format!(
-                concat!(
-                    "    world {} at {}: holding {}, heat {}, its core keeps {} of its matter, ",
-                    "held down to Z {}\n"
-                ),
-                i,
-                show(&w.reach),
-                show(&w.holding),
-                show(&w.heat),
-                show(&w.kept),
-                w.lightest
-                    .map(|z| z.to_string())
-                    .unwrap_or_else(|| "-".into())
-            )
-        })
-        .collect()
+    let (worlds, belt) = xyl_cosmos::disc::manifold_worlds(&f.star_share, &f.a_disc, &f.tide);
+    format!(
+        concat!(
+            "  Star tier at {} rings: tide {}, disc agitation {}; the star {} of its infall ",
+            "(spin {}, heat {}, over-pressure {}, rim {}, compactness {}); ",
+            "its manifold {} of the reach held, {} worlds, belt {}\n"
+        ),
+        show(&mid),
+        show(&f.tide),
+        show(&f.a_disc),
+        show(&f.cut.star),
+        show(&f.cut.spin),
+        show(&f.cut.heat),
+        show(&f.cut.p0),
+        show(&f.cut.rim),
+        show(&f.cut.compactness),
+        show(&f.star_share),
+        worlds.len(),
+        show(&belt)
+    )
 }

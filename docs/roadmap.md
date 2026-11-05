@@ -193,7 +193,7 @@ where it belongs to one.
 3. **Elements attached to the filament's released pressure**
    ([#4](https://github.com/SAIOS-SAMN/xylarium/issues/4), `proposal`, `law`).
    The cascade assigns each kind one reach and exchanges between stacks on the way out
-   (`formation::cascade`, `formation::founding_shells`). In its place: the
+   (`formation::founding_shells`). In its place: the
    bounce releases the torsion share's pressure along the filament, falling with
    reach as the vacuum's share; each kind attaches to it by its open frames and
    is held back by its held frames, and settles where the two balance, as a
@@ -501,7 +501,7 @@ Landed:
 
 - One law per formula: the torsion share `(H + J) / (2H + J)` for every
   throat (`bounce::torsion_share`), the dilation `(1 + p) / (1 - p)` for
-  every holder (`circuit::dilation`), and the throat crossing of the echo
+  every holder (`shares::dilation_dy`), and the throat crossing of the echo
   map `t -> a t + b` in closed form (`circuit::throat_crossing`).
 - The jetstream for every holder: out through the continuum, back through
   the vacuum (`circuit::jet_map`). The firmament's onsets and each star's

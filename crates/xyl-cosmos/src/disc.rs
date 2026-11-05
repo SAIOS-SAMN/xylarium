@@ -2,7 +2,7 @@
 //! its manifold holds against the galaxy core's twist.
 //!
 //! Reads `circuit::Bead`, `circuit::throat_push` and the formation helpers
-//! (`cooling`, `lights`, `hold_at_heat`, `pulse_heat`, `vacuum_halving`).
+//! (`cooling`, `lights`, `hold_at`, `pulse_heat`, `vacuum_halving`).
 //! All quantities are exact `Q`: reaches and holdings are shares of the
 //! infall or of the star's manifold, extents are in galaxy rings, heat in
 //! hydrogen units.
@@ -65,9 +65,11 @@ pub struct StarHold {
     /// The turning the infall carries into the cut: the galaxy's shear across
     /// the infall's extent, `H w / (R (R + w))`.
     pub spin: Q,
-    /// The heat the cut was read at: the pulse's turning at the star per
-    /// echo, in hydrogen units (`atoms::unpaired_hot`).
-    pub heat: Q,
+    /// The turning the cut was read at, per set of planes
+    /// (`atoms::Received`): on the isoclinic planes the pulse's turning at
+    /// the star per echo, in hydrogen units (`atoms::unpaired_hot`), and on
+    /// the axis plane the star's compactness.
+    pub received: crate::atoms::Received,
     /// The over-pressure the star's transduction adds, `1 + transduced per echo`.
     pub p0: Q,
     /// The held core's rim (system-tier units, `60 r_g`): the reach of the
@@ -88,7 +90,7 @@ pub struct StarHold {
     pub held: Vec<(u32, Q)>,
 }
 
-/// The star tier's cut of a lit bead's infall (`hold_at_heat` on the bead's
+/// The star tier's cut of a lit bead's infall (`hold_at` on the bead's
 /// kinds at the throat's push). The infall collapses carrying the galaxy's
 /// shear across its extent as turning (`add`), is heated by the pulse's
 /// turning at the star per echo (`heat`, hydrogen units) and is pushed by the
@@ -114,14 +116,15 @@ pub fn star_hold(bead: &Bead, unit: &Q, held: &Q, swing: &Q, turning: &Q) -> Opt
     // mass is `m0 = s0 c` core masses, which is `m0` in `r_g`, so its
     // compactness is `delta0 = m0 / (R0 60 + m0)`.
     let push = crate::circuit::throat_push().to_q();
-    let dark = hold_at_heat(&c.mix, &push, &spin, turning, &Q::ONE);
+    let isoclinic = crate::atoms::Received::isoclinic(turning.clone());
+    let dark = hold_at(&c.mix, &push, &spin, &isoclinic, &Q::ONE);
     let compactness = rim_share(&(&dark.held * &c.cloud), &dark.reach);
     let held = held_mixture(&c.mix, &dark.rest);
     // Ignition: the star holds `delta0` of the turning it receives per echo;
     // that held share is its transduction, which adds the over-pressure
     // `p0 = 1 + transduced` and releases the loosest kinds.
     let p0 = &Q::ONE + &(&compactness * turning);
-    let cut = hold_at_heat(&c.mix, &push, &spin, turning, &p0);
+    let cut = hold_at(&c.mix, &push, &spin, &isoclinic, &p0);
     let star = cut.held;
     let rim = cut.reach.clone();
     // `a_disc = turning x swing x grip / shed`, at most 1, in the form in
@@ -144,7 +147,10 @@ pub fn star_hold(bead: &Bead, unit: &Q, held: &Q, swing: &Q, turning: &Q) -> Opt
         infall: c.infall,
         cloud: c.cloud,
         spin,
-        heat: turning.clone(),
+        received: crate::atoms::Received {
+            axis: compactness.clone(),
+            isoclinic: turning.clone(),
+        },
         p0,
         rim,
         compactness,

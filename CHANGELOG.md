@@ -201,6 +201,13 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The scalar heat of the atom, the two-part closure, the star cut and the
+  star's sequence is the typed received turning `atoms::Received`
+  (`axis`, `isoclinic`): the stripping and bond laws read the isoclinic
+  planes, the pole state's climb the axis plane, and `stars::Sequence::of`
+  reads both. `formation::hold_at_heat` is renamed `formation::hold_at`;
+  `disc::StarHold::heat` is `StarHold::received` (#103).
+
 - Chemistry from the elements restated as emergent (docs/model.md, roadmap
   item 42, #103): no state, species or substance named in advance; a bond is
   a paired throat read by its separation and holding remanence; the vents

@@ -5,12 +5,11 @@
 //!
 //! Reads `elements::table` (each kind's nucleon count `A_z`, the table's `a`
 //! rounded to the nearest whole) and `compound::open_hot` and
-//! `compound::charge` (a kind's open frames at heat and its charge). Heat is
-//! the turning the star receives per echo, in hydrogen units
-//! (`atoms::unpaired_hot`); shares are shares of the star's hold; echoes are
-//! counted from ignition.
+//! `compound::charge` (a kind's open frames under received turning and its charge). The received
+//! turning is the turning the star receives per echo, in hydrogen units (`atoms::unpaired_hot`);
+//! shares are shares of the star's hold; echoes are counted from ignition.
 //!
-//! - Frames at heat: a kind `z` keeps `u_z(q)` open frames (its Q pole) and
+//! - Frames under received turning: a kind `z` keeps `u_z(q)` open frames (its Q pole) and
 //!   holds `w_z(q) = 3 Z - u_z(q)` (its Z pole).
 //! - Pole state (`mixture_pole`): over the held mixture, with `n_z = share_z /
 //!   w_z` nuclei of each kind, `t0 = sum n_z u_z / sum n_z w_z`, at most 1/2.
@@ -81,31 +80,31 @@ pub fn nucleon_count(z: u32) -> Option<u32> {
     nucleons().of.get(&z).copied()
 }
 
-/// A kind's open frames at `heat` (hydrogen units), `u_z(q)`: its Q pole.
-fn open_at(z: u32, heat: &Q) -> Q {
-    Q::int(i64::from(crate::compound::open_hot(z, heat)))
+/// A kind's open frames at `received` (hydrogen units), `u_z(q)`: its Q pole.
+fn open_at(z: u32, received: &crate::atoms::Received) -> Q {
+    Q::int(i64::from(crate::compound::open_hot(z, received)))
 }
 
-/// A kind's held frames at `heat`, `w_z(q) = 3 Z - u_z(q)`: its Z pole,
+/// A kind's held frames at `received`, `w_z(q) = 3 Z - u_z(q)`: its Z pole,
 /// never negative.
-pub fn held_frames(z: u32, heat: &Q) -> Q {
-    (&Q::int(3 * i64::from(crate::compound::charge(z))) - &open_at(z, heat)).max(Q::ZERO)
+pub fn held_frames(z: u32, received: &crate::atoms::Received) -> Q {
+    (&Q::int(3 * i64::from(crate::compound::charge(z))) - &open_at(z, received)).max(Q::ZERO)
 }
 
 /// The collective's pole state, the coordinate `t0 = sum n_z u_z / sum n_z
 /// w_z` of its pole point on the filament (one carrier's point is
 /// `circuit::pole_point`), over the held mixture `held` (kind, share of the
-/// hold) at `heat`, with `n_z = share_z / w_z` the count of nuclei of each
+/// hold) at `received`, with `n_z = share_z / w_z` the count of nuclei of each
 /// kind. Its inverse is the star's polarity. Zero for an empty mixture or
 /// one whose kinds hold no frames.
-pub fn mixture_pole(held: &[(u32, Q)], heat: &Q) -> Q {
+pub fn mixture_pole(held: &[(u32, Q)], received: &crate::atoms::Received) -> Q {
     let (mut open, mut closed) = (Q::ZERO, Q::ZERO);
     for (z, share) in held {
-        let w = held_frames(*z, heat);
+        let w = held_frames(*z, received);
         let Some(n) = share.checked_div(&w) else {
             continue;
         };
-        open = &open + &(&n * &open_at(*z, heat));
+        open = &open + &(&n * &open_at(*z, received));
         closed = &closed + &(&n * &w);
     }
     open.checked_div(&closed).unwrap_or(Q::ZERO)
@@ -151,14 +150,14 @@ pub struct Sequence {
     pub remnant: Q,
 }
 
-/// The fusion step of kind `z` at `heat`: the smallest `k >= 2` for which a
+/// The fusion step of kind `z` at `received`: the smallest `k >= 2` for which a
 /// kind lies at `A' = k A_z` and releases hold `1 - w' / (k w) > 0`, with the
 /// largest release among the kinds there. Returns `(k, z', release)`, or
 /// `None` where no such kind exists in the table.
-pub fn fusion_step(z: u32, heat: &Q) -> Option<(u32, u32, Q)> {
+pub fn fusion_step(z: u32, received: &crate::atoms::Received) -> Option<(u32, u32, Q)> {
     let index = nucleons();
     let a = nucleon_count(z)?;
-    let w = held_frames(z, heat);
+    let w = held_frames(z, received);
     let top = *index.at.keys().next_back()?;
     for k in 2..=(top / a) {
         let Some(kinds) = index.at.get(&(k * a)) else {
@@ -168,7 +167,7 @@ pub fn fusion_step(z: u32, heat: &Q) -> Option<(u32, u32, Q)> {
         let best = kinds
             .iter()
             .filter_map(|p| {
-                let release = &Q::ONE - &held_frames(*p, heat).checked_div(&kw)?;
+                let release = &Q::ONE - &held_frames(*p, received).checked_div(&kw)?;
                 (release.signum() > 0).then_some((*p, release))
             })
             .max_by(|x, y| x.1.cmp(&y.1).then_with(|| y.0.cmp(&x.0)));
@@ -179,14 +178,14 @@ pub fn fusion_step(z: u32, heat: &Q) -> Option<(u32, u32, Q)> {
     None
 }
 
-/// The fission step of kind `z` at `heat`: the split into kinds of nucleon
+/// The fission step of kind `z` at `received`: the split into kinds of nucleon
 /// counts `A1 + A2 = A_z` nearest equal halves for which a pair releases
 /// hold `1 - (w1 + w2) / w > 0`, with the largest release at that split.
 /// Returns `([z1, z2], release)`, or `None` where no split releases.
-pub fn fission_step(z: u32, heat: &Q) -> Option<([u32; 2], Q)> {
+pub fn fission_step(z: u32, received: &crate::atoms::Received) -> Option<([u32; 2], Q)> {
     let index = nucleons();
     let a = nucleon_count(z)?;
-    let w = held_frames(z, heat);
+    let w = held_frames(z, received);
     for a1 in (1..=a / 2).rev() {
         let (Some(lo), Some(hi)) = (index.at.get(&a1), index.at.get(&(a - a1))) else {
             continue;
@@ -195,7 +194,7 @@ pub fn fission_step(z: u32, heat: &Q) -> Option<([u32; 2], Q)> {
             .iter()
             .flat_map(|z1| hi.iter().map(move |z2| (*z1, *z2)))
             .filter_map(|(z1, z2)| {
-                let made = &held_frames(z1, heat) + &held_frames(z2, heat);
+                let made = &held_frames(z1, received) + &held_frames(z2, received);
                 let release = &Q::ONE - &made.checked_div(&w)?;
                 (release.signum() > 0).then_some(([z1, z2], release))
             })
@@ -232,21 +231,21 @@ impl Default for Sequence {
 
 impl Sequence {
     /// The sequence of the held mixture `held` (kind, share; renormalised to
-    /// one) at `heat` (hydrogen units): the fusion stages, each the held
+    /// one) at `received` (hydrogen units): the fusion stages, each the held
     /// kind of greatest release stepping on the mixture as it stands, its
     /// products' hold `share x (1 - release)` joining the mixture; then,
     /// where `t0 > 0`, the fission stages read the same way, the products
     /// sharing the passed hold in proportion to their held frames.
     /// `throat_echoes` is left `None` ([`Sequence::at`] sets it). An empty
     /// mixture gives no step and a remnant of one.
-    pub fn of(held: &[(u32, Q)], heat: &Q) -> Sequence {
+    pub fn of(held: &[(u32, Q)], received: &crate::atoms::Received) -> Sequence {
         let total = held.iter().fold(Q::ZERO, |a, (_, s)| &a + s);
         let held: Vec<(u32, Q)> = held
             .iter()
             .filter_map(|(z, s)| Some((*z, s.checked_div(&total)?)))
             .filter(|(_, s)| s.signum() > 0)
             .collect();
-        let pole = mixture_pole(&held, heat);
+        let pole = mixture_pole(&held, received);
         let mut holds = Holds::new();
         for (z, s) in &held {
             add_hold(&mut holds, *z, s);
@@ -255,18 +254,25 @@ impl Sequence {
         // Fusion stages, then the fission stages; the timeline runs the
         // fission stages only from the collective's throat crossing
         // (`Sequence::at`), which a collective with nothing open never makes.
-        transduce(&mut holds, heat, false, &mut steps);
-        transduce(&mut holds, heat, true, &mut steps);
+        transduce(&mut holds, received, false, &mut steps);
+        transduce(&mut holds, received, true, &mut steps);
         let cumulative = steps.iter().fold(Q::ZERO, |a, s| &a + &s.transduced);
-        Sequence {
+        let sequence = Sequence {
             pole_point: pole,
             steps,
             throat_echoes: None,
             remnant: &Q::ONE - &cumulative,
+        };
+        // The steps read the isoclinic planes' turning; the pole point's
+        // climb to the throat reads the axis plane's push.
+        match received.axis.signum() {
+            1 => sequence.at(Dy::from_q(&received.axis)),
+            _ => sequence,
         }
     }
 
-    /// The sequence for a star of compactness `delta`: `throat_echoes` set to
+    /// The sequence re-read on the axis plane for a star whose own push,
+    /// its compactness `delta`, differs from the cut's: `throat_echoes` set to
     /// the echoes its pole point takes to the throat under the star's
     /// jetstream, out through the continuum and back through the vacuum, both
     /// at `delta` (`circuit::jet_map`, `circuit::throat_crossing`).
@@ -307,18 +313,18 @@ struct Found {
     release: Q,
 }
 
-/// The step kind `z` takes at `heat` in the given direction (`fission`
+/// The step kind `z` takes at `received` in the given direction (`fission`
 /// false: fusion), found from the element table by [`fusion_step`] or
 /// [`fission_step`].
-fn found_step(z: u32, heat: &Q, fission: bool) -> Option<Found> {
+fn found_step(z: u32, received: &crate::atoms::Received, fission: bool) -> Option<Found> {
     if fission {
-        fission_step(z, heat).map(|(pair, release)| Found {
+        fission_step(z, received).map(|(pair, release)| Found {
             products: pair.to_vec(),
             nuclei: 1,
             release,
         })
     } else {
-        fusion_step(z, heat).map(|(k, product, release)| Found {
+        fusion_step(z, received).map(|(k, product, release)| Found {
             products: vec![product],
             nuclei: k,
             release,
@@ -335,7 +341,12 @@ fn found_step(z: u32, heat: &Q, fission: bool) -> Option<Found> {
 /// heavier kinds (fusion) or strictly to lighter ones (fission), so the
 /// stages end; the count of stages is guarded by the square of the table's
 /// kinds.
-fn transduce(holds: &mut Holds, heat: &Q, fission: bool, steps: &mut Vec<Step>) {
+fn transduce(
+    holds: &mut Holds,
+    received: &crate::atoms::Received,
+    fission: bool,
+    steps: &mut Vec<Step>,
+) {
     let mut found: BTreeMap<u32, Option<Found>> = BTreeMap::new();
     let guard = nucleons().of.len().saturating_mul(nucleons().of.len());
     for _ in 0..guard {
@@ -346,7 +357,7 @@ fn transduce(holds: &mut Holds, heat: &Q, fission: bool, steps: &mut Vec<Step>) 
             }
             let step = found
                 .entry(key.1)
-                .or_insert_with(|| found_step(key.1, heat, fission));
+                .or_insert_with(|| found_step(key.1, received, fission));
             let Some(step) = step.as_ref() else { continue };
             // Keys are visited in increasing (A, z), so a later key replaces
             // the best only on a strictly greater release.
@@ -363,7 +374,7 @@ fn transduce(holds: &mut Holds, heat: &Q, fission: bool, steps: &mut Vec<Step>) 
         let frames: Vec<Q> = step
             .products
             .iter()
-            .map(|p| held_frames(*p, heat))
+            .map(|p| held_frames(*p, received))
             .collect();
         let all = frames.iter().fold(Q::ZERO, |a, w| &a + w);
         let mut given = Q::ZERO;
@@ -414,22 +425,22 @@ mod tests {
         ]
     }
 
-    fn heats() -> [Q; 3] {
-        [Q::ZERO, Q::ratio(1, 3), Q::ONE]
+    fn heats() -> [crate::atoms::Received; 3] {
+        [Q::ZERO, Q::ratio(1, 3), Q::ONE].map(crate::atoms::Received::isoclinic)
     }
 
     #[test]
     fn hydrogen_sequence_starts_with_the_step_the_rule_finds() {
-        // The pure-hydrogen mixture at heat 0 begins with the fusion step the
+        // The pure-hydrogen mixture with no turning received begins with the fusion step the
         // rule finds for its one kind, on the whole hold, and its product
         // takes the next stage with the hold passed to it.
-        let seq = Sequence::of(&hydrogen(), &Q::ZERO);
-        let (k, product, release) = fusion_step(1, &Q::ZERO).unwrap();
+        let seq = Sequence::of(&hydrogen(), &crate::atoms::Received::none());
+        let (k, product, release) = fusion_step(1, &crate::atoms::Received::none()).unwrap();
         let first = &seq.steps[0];
         assert_eq!((first.kind, first.nuclei), (1, k));
         assert_eq!(first.products, vec![product]);
         assert_eq!((&first.share, &first.release), (&Q::ONE, &release));
-        // At heat 0 the frames are the kinds' holds, so the release is the
+        // With no turning received the frames are the kinds' holds, so the release is the
         // built form `1 - hold(z') / (k hold(z))`.
         let built = &Q::ONE
             - &Q::int(i64::from(crate::compound::hold(product)))
@@ -446,13 +457,13 @@ mod tests {
         // A kind's open frames are at most its charge of its 3Z, so the
         // collective's pole point is at most 1/2.
         let half = Q::ratio(1, 2);
-        for heat in heats() {
+        for received in heats() {
             for z in (1..=200).step_by(7) {
-                let t0 = mixture_pole(&[(z, Q::ONE)], &heat);
+                let t0 = mixture_pole(&[(z, Q::ONE)], &received);
                 assert!(t0.signum() >= 0 && t0 <= half, "z {z}: {t0}");
             }
             for mix in mixtures() {
-                assert!(mixture_pole(&mix, &heat) <= half);
+                assert!(mixture_pole(&mix, &received) <= half);
             }
         }
     }
@@ -463,7 +474,7 @@ mod tests {
             crate::circuit::jet_map(d, d)
                 .and_then(|(a, b)| crate::circuit::throat_crossing(Dy::from_q(t), a, b))
         };
-        let t0 = mixture_pole(&hydrogen(), &Q::ZERO);
+        let t0 = mixture_pole(&hydrogen(), &crate::atoms::Received::none());
         let deltas = [
             Dy::sci(1, -6),
             Dy::sci(1, -3),
@@ -480,9 +491,9 @@ mod tests {
 
     #[test]
     fn steps_conserve_nucleons_and_the_books_close() {
-        for heat in heats() {
+        for received in heats() {
             for mix in mixtures() {
-                let seq = Sequence::of(&mix, &heat);
+                let seq = Sequence::of(&mix, &received);
                 let cumulative = seq.cumulative().last().cloned().unwrap_or(Q::ZERO);
                 assert_eq!(&cumulative + &seq.remnant, Q::ONE);
                 for s in &seq.steps {
@@ -508,7 +519,7 @@ mod tests {
         // A cluster has no nucleon count in the element table and takes no
         // step; a held mixture of clusters alone does not ignite.
         let water = crate::compound::cluster(8, 1, 1, 2).unwrap();
-        let seq = Sequence::of(&[(water, Q::ONE)], &Q::ZERO);
+        let seq = Sequence::of(&[(water, Q::ONE)], &crate::atoms::Received::none());
         assert!(!seq.ignites());
         assert_eq!(seq.remnant, Q::ONE);
         let delta = Dy::ratio(1, 10);
@@ -519,10 +530,14 @@ mod tests {
         );
         // Every kind of the table without a step of either direction gives
         // the same.
-        for z in (1..=200)
-            .filter(|z| fusion_step(*z, &Q::ZERO).is_none() && fission_step(*z, &Q::ZERO).is_none())
-        {
-            assert!(!Sequence::of(&[(z, Q::ONE)], &Q::ZERO).ignites(), "z {z}");
+        for z in (1..=200).filter(|z| {
+            fusion_step(*z, &crate::atoms::Received::none()).is_none()
+                && fission_step(*z, &crate::atoms::Received::none()).is_none()
+        }) {
+            assert!(
+                !Sequence::of(&[(z, Q::ONE)], &crate::atoms::Received::none()).ignites(),
+                "z {z}"
+            );
         }
     }
 }

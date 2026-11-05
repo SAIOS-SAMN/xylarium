@@ -640,7 +640,7 @@ mod tests {
 
     /// A pure-hydrogen held mixture at heat 0.
     fn hydrogen() -> crate::stars::Sequence {
-        crate::stars::Sequence::of(&[(1, Q::ONE)], &Q::ZERO)
+        crate::stars::Sequence::of(&[(1, Q::ONE)], &crate::atoms::Received::none())
     }
 
     /// The first step's release of the pure-hydrogen sequence.

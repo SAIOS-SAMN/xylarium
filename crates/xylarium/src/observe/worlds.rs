@@ -514,7 +514,7 @@ fn chain_frame(st: &Star) -> String {
                 au(&f.extent),
                 au(&f.reach),
                 Dy::from_q(&f.cut.spin),
-                Dy::from_q(&f.cut.heat),
+                Dy::from_q(&f.cut.received.isoclinic),
                 Dy::from_q(&f.cut.p0),
                 Dy::from_q(&f.star_share),
                 Dy::from_q(&f.tide),

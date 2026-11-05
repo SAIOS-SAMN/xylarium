@@ -13,7 +13,7 @@
 //! - Compactness `delta`: a star's deficit at its rim, `m / (R 60 + m)`
 //!   (`disc::rim_share`), with `R` the rim of the held core its cloud's cut
 //!   gives (`galaxy::piece_rim`, from the atoms' open frames and masses in
-//!   `formation::hold_at_heat`). Every star of a cloud shares the rim, so a
+//!   `formation::hold_at`). Every star of a cloud shares the rim, so a
 //!   heavier star is more compact (`galaxy::Star::compactness`).
 //! - Transduction (`transduced_per_bell`): the share of the ring it receives that a star
 //!   holds and transduces per bell, `delta x ring_per_bell(r)`, with the
@@ -279,7 +279,7 @@ mod tests {
         // The life is the first step's transduced share over the transduction, in
         // rings; each later step ends after the one before; a more compact
         // star lives fewer rings.
-        let seq = Sequence::of(&[(1, Q::ONE)], &Q::ZERO);
+        let seq = Sequence::of(&[(1, Q::ONE)], &crate::atoms::Received::none());
         let ends = ends(&seq, delta, r);
         let main = ends[0].clone();
         assert_eq!(life(&seq, delta, r), main);

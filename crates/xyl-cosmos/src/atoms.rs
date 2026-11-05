@@ -1,6 +1,6 @@
 //! The atom: the electron structure of a neutral atom of Z charges, filled
 //! electron by electron on S^11, and the chemistry read from it (bonding
-//! capacity, tightness, ionization by heat, bonds, light holding).
+//! capacity, tightness, stripping by received turning, bonds, light holding).
 //!
 //! Reads only `compound::is_cluster`, `elements::TOP_Z` and `fibres::directions`; all counts are
 //! exact integers and tightnesses exact `Q`, in hydrogen units (hydrogen's
@@ -19,7 +19,7 @@
 //!
 //! Outputs: `Atom` (bands, outer shell, `unpaired`, `tightness`
 //! (Z - inner electrons) / n_out, `closed`, `sealed`), `unpaired`, `unpaired_hot` (strips
-//! every band held no tighter than the heat, capped at 1), `vessel`, `bond`
+//! every band held no tighter than the isoclinic turning received, capped at 1), `vessel`, `bond`
 //! (shared share tau_min / tau_max, grip tau_min) and `hold` (a
 //! cluster's light holding from stretches, bends and dipole). `atom` returns
 //! None for Z = 0 or a cluster id. Seals fall at Z = 2, 28, 208, 1092;
@@ -147,20 +147,54 @@ pub fn atom(z: u32) -> Option<Atom> {
     Some(t.entry(z).or_insert_with(|| fill(z)).clone())
 }
 
-/// Ionization by heat: a core strips every winding held no more tightly than
-/// the core's turning. A winding's tightness, in hydrogen units (hydrogen's
-/// lone electron = 1), is (Z - electrons of every shallower shell) / n; the
-/// heat, in the same unit, is the core's turning this echo (capped at 1).
-/// Returns the unpaired count of the remaining windings: stripped hydrogen
-/// has none, while heavy kinds keep their deep windings. At heat 0 every atom
-/// is whole.
-pub fn unpaired_hot(z: u32, heat: &Q) -> u32 {
+/// The turning a body receives from the pulse, one component per orthogonal
+/// set of planes (model.md, Chemistry from the elements; T18): the axis
+/// plane's dilation, which carries the pole state (the nuclear side), and
+/// the turning of the five isoclinic planes, which strips the electrons'
+/// windings (the atomic side), the five alike in founded matter. Both are
+/// read per echo, the isoclinic part in hydrogen units (the turning that
+/// strips hydrogen's lone winding is 1), the axis part as a push.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Received {
+    /// The axis plane's push per echo: the star's compactness for a star.
+    pub axis: Q,
+    /// The isoclinic planes' turning per echo, in hydrogen units.
+    pub isoclinic: Q,
+}
+
+impl Received {
+    /// A body that receives nothing on either set of planes.
+    pub fn none() -> Received {
+        Received {
+            axis: Q::ZERO,
+            isoclinic: Q::ZERO,
+        }
+    }
+
+    /// A body that receives `turning` on the isoclinic planes and nothing on
+    /// the axis plane.
+    pub fn isoclinic(turning: Q) -> Received {
+        Received {
+            axis: Q::ZERO,
+            isoclinic: turning,
+        }
+    }
+}
+
+/// Stripping by received turning: the isoclinic planes' turning strips every
+/// winding held no more tightly than it. A winding's tightness, in hydrogen
+/// units (hydrogen's lone electron = 1), is (Z - electrons of every shallower
+/// shell) / n; the isoclinic turning, in the same unit, is what the core
+/// receives this echo (capped at 1). Returns the unpaired count of the
+/// remaining windings: stripped hydrogen has none, while heavy kinds keep
+/// their deep windings. With no turning received every atom is whole.
+pub fn unpaired_hot(z: u32, received: &Received) -> u32 {
+    let heat = &received.isoclinic;
     if heat.signum() <= 0 {
         return unpaired(z);
     }
-    // The heat is the core's turning in whole turns of the core's bell, capped
-    // at one (hydrogen's lone electron); windings with tightness <= heat are
-    // stripped.
+    // The isoclinic turning per echo, capped at one (hydrogen's lone
+    // electron); windings with tightness at most this are stripped.
     let heat = heat.clone().min(Q::ONE);
     let heat = &heat;
     let Some(a) = atom(z) else { return 0 };

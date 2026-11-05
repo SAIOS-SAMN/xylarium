@@ -111,8 +111,9 @@ another crate. Laws are composed from shares (ratios of the form
   `w' = w (1 - m / M) + J (m / M) (1 - rho_c / rho_hold)`; conserved between
   passages; coercivity `m* = w M / (w + J (rho_c / rho_hold - 1))`; for one
   release, the remanent share `1 - rho_hold / rho_closed`. Seed 7: 0.1982,
-  30.85 of 155.64 degrees per unit of closed hold. Status: derived; not
-  built.
+  70.88 of `360 a* = 357.59` degrees per unit hold in the core's units.
+  Status: built (`circuit::SpinOrbit::remanence`; read by
+  `xylarium observe universal-core`).
 - Automorphism of the chain (docs/model.md, The automorphic, synaptic
   chain; #97): `M / (r + M)` is of degree zero in length, so
   `deficit(lambda M, lambda r) = deficit(M, r)` and the flow law of the two

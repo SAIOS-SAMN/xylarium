@@ -123,6 +123,61 @@ fn core_state(s: &Substrate, t: Dy) -> String {
             "open: past the Kerr bound"
         }
     ));
+    let share_of = |x: &Q| show(&x.checked_div(&orbit.founded).unwrap_or(Q::ZERO));
+    let pressed = orbit
+        .cohorts
+        .iter()
+        .filter(|c| c.far)
+        .fold(Q::ZERO, |m, c| &m + &c.hold);
+    let faces = &(&Q::int(3) + &anchor.spin) * &(&Q::int(3) + &anchor.spin);
+    out.push_str(&format!(
+        concat!(
+            "  The pair's holds (T16): on both faces, the closed kinds, {} of the founded hold; ",
+            "on the near face only, by pressure (released by the far face), {}; on both faces by ",
+            "pressure, none (the faces' product (3 + a)^2 = {})\n"
+        ),
+        share_of(&orbit.held),
+        share_of(&pressed),
+        show(&faces)
+    ));
+    // In the core's units the closed hold is 1, so its turning per unit hold
+    // is 360 a* degrees.
+    let remanent = orbit
+        .remanence
+        .checked_div(&orbit.turning)
+        .unwrap_or(Q::ZERO);
+    let per_hold = &Q::int(360) * &orbit.spin;
+    out.push_str(&format!(
+        concat!(
+            "  The core's remanence (T19): {} of its held turning, {} of {} degrees per unit ",
+            "hold in the core's units\n"
+        ),
+        show(&remanent),
+        show(&(&remanent * &per_hold)),
+        show(&per_hold)
+    ));
+    if let Ok(elements) = xyl_cosmos::elements::founded(&s.share) {
+        let a: Vec<i64> = xyl_cosmos::formation::kinds(&elements)
+            .iter()
+            .filter_map(|k| xyl_cosmos::atoms::axis_polarity(k.z))
+            .collect();
+        let mut values = a.clone();
+        values.sort_unstable();
+        values.dedup();
+        out.push_str(&format!(
+            concat!(
+                "  Axis polarity (T7): {} kinds, {} Z side, {} Q side, {} neutral; ",
+                "{} values from {} to {}\n"
+            ),
+            a.len(),
+            a.iter().filter(|x| **x < 0).count(),
+            a.iter().filter(|x| **x > 0).count(),
+            a.iter().filter(|x| **x == 0).count(),
+            values.len(),
+            values.first().copied().unwrap_or(0),
+            values.last().copied().unwrap_or(0)
+        ));
+    }
     for c in &orbit.cohorts {
         out.push_str(&format!(
             concat!(

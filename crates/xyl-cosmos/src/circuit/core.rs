@@ -415,6 +415,7 @@ impl Substrate {
             })
             .collect();
         let mut hold = kinds.iter().fold(Q::ZERO, |m, k| &m + &k.1);
+        let founded = hold.clone();
         let mut a = spin.clone();
         let mut turning = &(&a * &hold) * &hold;
         let mut cohorts = Vec::new();
@@ -498,7 +499,16 @@ impl Substrate {
                 spin: a.clone(),
             });
         }
-        Some(SpinOrbit { cohorts, spin: a })
+        // T19: the turning held beyond the founded turning per unit hold.
+        let remanence = &turning - &(&(spin * &founded) * &hold);
+        Some(SpinOrbit {
+            cohorts,
+            spin: a,
+            founded,
+            held: hold,
+            turning,
+            remanence,
+        })
     }
 
     /// The outflow from the core by `t` rings after the bounce, by kind (held
@@ -918,6 +928,15 @@ pub struct SpinOrbit {
     pub cohorts: Vec<Cohort>,
     /// The spin once the last cohort has left.
     pub spin: Q,
+    /// The founded hold `M_0`, in the founding's mass units.
+    pub founded: Q,
+    /// The hold once the last cohort has left.
+    pub held: Q,
+    /// The turning once the last cohort has left, `a M^2`.
+    pub turning: Q,
+    /// The remanence (T19): the turning held beyond the founded turning per
+    /// unit hold, `J - (a_0 M_0) M`.
+    pub remanence: Q,
 }
 
 #[cfg(test)]

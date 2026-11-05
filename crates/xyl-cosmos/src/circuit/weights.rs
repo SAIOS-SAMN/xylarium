@@ -6,7 +6,8 @@
 // `nuclei_of` (grain.rs); a `Substrate`'s outflow and intakes.
 //
 // Outputs: `TwoWeights` (protons, neutrons, `mass`, `neutron_share`);
-// `neutrons_of` (mass number rounded to the nearest nucleon, less the
+// `mass_number` (the table's mass rounded to the nearest nucleon, A = floor(a + 1/2));
+// `neutrons_of` (the mass number less the
 // charge, summed over a cluster's parts); `nucleus_weights`; `mix_weights`
 // (whole nuclei only); `electron_phase`, R = kappa (1 - 2 frac(p)) in
 // [-kappa, kappa], zero for a kind with no charge; and `Substrate::two_weights`,
@@ -45,21 +46,36 @@ impl TwoWeights {
     }
 }
 
-/// A kind's neutrons: its mass number (the table's mass rounded to the nearest
-/// whole nucleon) less its charge; a cluster sums its parts.
+/// An atom's mass number `A_z = floor(a + 1/2)`: the element table's mass
+/// `a` rounded to the nearest whole nucleon. `None` for a cluster, a kind
+/// outside the table or a mass that rounds to zero. Indexed once per
+/// process. The one mass-number law for every tier.
+pub fn mass_number(z: u32) -> Option<u32> {
+    static INDEX: std::sync::OnceLock<std::collections::BTreeMap<u32, u32>> =
+        std::sync::OnceLock::new();
+    INDEX
+        .get_or_init(|| {
+            crate::elements::table()
+                .unwrap_or_default()
+                .iter()
+                .filter_map(|e| {
+                    let a = (&e.a + &Q::ratio(1, 2)).floor_i128()?;
+                    let a = u32::try_from(a).ok().filter(|&a| a > 0)?;
+                    Some((e.z, a))
+                })
+                .collect()
+        })
+        .get(&z)
+        .copied()
+}
+
+/// A kind's neutrons: its mass number ([`mass_number`]) less its charge; a
+/// cluster sums its parts.
 pub fn neutrons_of(k: u32) -> Q {
-    let table = crate::elements::table().ok();
     let of_atom = |z: u32| -> Q {
-        let Some(e) = table
-            .as_ref()
-            .and_then(|t| t.get(z as usize - 1))
-            .filter(|e| e.z == z)
-        else {
-            return Q::ZERO;
-        };
-        let a = &e.a + &Q::ratio(1, 2);
-        let whole = &a - &a.frac();
-        (&whole - &Q::int(i64::from(z))).max(Q::ZERO)
+        mass_number(z)
+            .map(|a| Q::int(i64::from(a.saturating_sub(z))))
+            .unwrap_or(Q::ZERO)
     };
     crate::compound::parts(k)
         .iter()

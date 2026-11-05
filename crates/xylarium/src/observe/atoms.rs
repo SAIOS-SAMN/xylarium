@@ -22,7 +22,7 @@ fn band_hold(a: &xyl_cosmos::atoms::Atom, z: u32, n: u32) -> Q {
 /// converging in Q over R, with Z incorporated into Q through the nucleus's
 /// hold (without it the reading is only linear) and limited by each band's
 /// orthogonal capacity. Each open band b of the atom carries u_b open frames
-/// and d_b = orientations(l) mutually orthogonal directions on S^11 (the
+/// and d_b = fibres::directions(l) mutually orthogonal directions on S^11 (the
 /// band's capacity), and is held by
 /// tau_b = (Z - the electrons of every shallower turning) / n:
 ///     Q_Z = sum u_b tau_b                 (Z in Q)
@@ -51,7 +51,7 @@ pub(super) fn bonding(top: usize) -> String {
         let mut frames: Vec<(Q, Q)> = Vec::new();
         for b in a.bands.iter().filter(|b| b.unpaired() > 0) {
             let tau = band_hold(&a, z, b.n);
-            let d = xyl_cosmos::atoms::orientations(b.l).max(1);
+            let d = xyl_cosmos::fibres::directions(b.l).max(1);
             let free = &Q::ONE - &Q::new(i64::from(b.unpaired()), i64::from(d)).unwrap_or(Q::ONE);
             for _ in 0..b.unpaired() {
                 frames.push((tau.clone(), free.clone()));
@@ -139,10 +139,10 @@ pub(super) fn push_reading(top: usize) -> String {
             q_z = &q_z + &(&tau * &Q::int(i64::from(open)));
         }
         // The built push is `1/2 open / hold`, with `open = compound::open(z)`
-        // (the electrons' open frames) and `hold = formation::weight(z)`.
+        // (the electrons' open frames) and `hold = compound::hold(z)`.
         let (open, hold) = (
             Q::int(i64::from(xyl_cosmos::compound::open(z))),
-            xyl_cosmos::formation::weight(z),
+            Q::int(i64::from(xyl_cosmos::compound::hold(z))),
         );
         let half = Q::ratio(1, 2);
         let p_built = &half * &open.checked_div(&hold).unwrap_or(Q::ZERO);
@@ -197,7 +197,9 @@ pub(super) fn push_reading(top: usize) -> String {
 /// reading also lists the seams and the vessel, and prints rows for selected
 /// kinds.
 pub(super) fn seals_read(o: &Options, top: usize) -> String {
-    let share = Origin::of(o.seed).map(|b| b.parent.share());
+    let share = Origin::of(o.seed)
+        .and_then(|b| xyl_cosmos::cores::substrate_for(&b.parent.spin))
+        .map(|s| s.share.clone());
     let mut out = String::from(
         "The seals (rho_Q = +1, the quantum substrate filled) and rho_Q along the table\n",
     );
@@ -221,7 +223,7 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
         let cap: u32 = (1..=a.outer_n)
             .map(|n| {
                 (0..n)
-                    .map(|l| 2 * xyl_cosmos::atoms::orientations(l))
+                    .map(|l| 2 * xyl_cosmos::fibres::directions(l))
                     .sum::<u32>()
             })
             .sum();

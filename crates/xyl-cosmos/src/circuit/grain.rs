@@ -1,7 +1,7 @@
 // The grain: amounts cut into whole nuclei, and a mix's mass. Reaches and
 // phases are exact; nothing rational is rounded.
 //
-// Inputs: `formation::weight` (3Z - unpaired frames per nucleus) and
+// Inputs: `compound::hold` (3Z - unpaired frames per nucleus) and
 // `formation::mass_weight` (Z + Q nucleons).
 //
 // Outputs (crate-private): `nuclei_of` (whole amount and count of a kind;
@@ -23,7 +23,7 @@ use xyl_core::Q;
 /// used for amounts because it would freeze rare kinds in place.
 pub(crate) fn nuclei_of(x: &Q, z: u32) -> (Q, Q) {
     let unit = nucleon_unit();
-    let one = &formation::weight(z) * &unit;
+    let one = &Q::int(i64::from(crate::compound::hold(z))) * &unit;
     // The whole count is exact (counts exceed machine integers: q - frac q).
     let n = x
         .checked_div(&one)
@@ -70,7 +70,7 @@ pub(crate) fn weigh(m: &Mix) -> Q {
 /// hold, times its Z + Q nucleons (not its 3Z frames).
 pub(crate) fn mass_of(z: u32, a: &Q) -> Q {
     (a * &formation::mass_weight(z))
-        .checked_div(&formation::weight(z))
+        .checked_div(&Q::int(i64::from(crate::compound::hold(z))))
         .unwrap_or(Q::ZERO)
 }
 

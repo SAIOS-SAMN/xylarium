@@ -2,13 +2,13 @@
 //! electron by electron on S^11, and the chemistry read from it (bonding
 //! capacity, tightness, ionization by heat, bonds, light holding).
 //!
-//! Reads only `compound::is_cluster` and `elements::TOP_Z`; all counts are
+//! Reads only `compound::is_cluster`, `elements::TOP_Z` and `fibres::directions`; all counts are
 //! exact integers and tightnesses exact `Q`, in hydrogen units (hydrogen's
 //! lone electron = 1). Each atom is filled once and cached per process.
 //!
 //! Model: a band (n, l) is the family of windings closing in n ticks with
 //! shape l (0 <= l < n). Its orientations are the degree-l harmonics on
-//! S^11, `orientations(l) = C(l + 11, 11) - C(l + 9, 11)` = 1, 12, 77, 352,
+//! S^11, `fibres::directions(l) = C(l + 11, 11) - C(l + 9, 11)` = 1, 12, 77, 352,
 //! ...; each holds one counter-turning pair along its Hopf fibre, so a band
 //! holds twice its orientations and shells hold 2, 26, 180, 884. `atom`
 //! adds each electron to the tightest open band by the ring-density law:
@@ -20,7 +20,7 @@
 //! Outputs: `Atom` (bands, outer shell, `unpaired`, `tightness`
 //! (Z - inner electrons) / n_out, `closed`, `sealed`), `unpaired`, `unpaired_hot` (strips
 //! every band held no tighter than the heat, capped at 1), `vessel`, `bond`
-//! (shared share tau_min / tau_max, grip tau_min), `closes` and `hold` (a
+//! (shared share tau_min / tau_max, grip tau_min) and `hold` (a
 //! cluster's light holding from stretches, bends and dipole). `atom` returns
 //! None for Z = 0 or a cluster id. Seals fall at Z = 2, 28, 208, 1092;
 //! `vessel` returns (lower, upper): the last seal within `TOP_Z`, and the
@@ -44,12 +44,12 @@ pub struct Band {
 impl Band {
     /// Capacity: one counter-turning pair along each orientation's fibre.
     pub fn room(&self) -> u32 {
-        2 * orientations(self.l)
+        2 * crate::fibres::directions(self.l)
     }
 
     /// Unpaired electrons: free orientations fill first, then pairs.
     pub fn unpaired(&self) -> u32 {
-        let frames = orientations(self.l);
+        let frames = crate::fibres::directions(self.l);
         if self.electrons <= frames {
             self.electrons
         } else {
@@ -93,21 +93,6 @@ impl Atom {
                     .any(|b| b.n == self.outer_n && b.l == l && b.electrons == b.room())
             })
     }
-}
-
-/// The independent turnings of shape `l` on S^11: the degree-l harmonics in
-/// twelve dimensions, C(l + 11, 11) - C(l + 9, 11) (exact, topological).
-pub fn orientations(l: u32) -> u32 {
-    let c = |n: u64, k: u64| -> u64 {
-        if k > n {
-            return 0;
-        }
-        (1..=k).fold(1u64, |acc, i| acc * (n - k + i) / i)
-    };
-    let l = u64::from(l);
-    let all = c(l + 11, 11);
-    let lower = if l >= 2 { c(l + 9, 11) } else { 0 };
-    u32::try_from(all - lower).unwrap_or(u32::MAX)
 }
 
 /// The neutral atom of `z` charges (`None` for z = 0 or a cluster). The fill
@@ -224,7 +209,7 @@ fn fill(z: u32) -> Atom {
         for n in 1..=nmax {
             for l in 0..n {
                 let have = occ.get(&(n, l)).copied().unwrap_or(0);
-                if have >= 2 * orientations(l) {
+                if have >= 2 * crate::fibres::directions(l) {
                     continue;
                 }
                 let reach = u64::from(n + 1) * u64::from(l + 1);
@@ -298,28 +283,6 @@ pub fn bond(a: &Atom, b: &Atom) -> Bond {
         shared: lo.checked_div(hi).unwrap_or(Q::ONE),
         grip: lo.clone(),
     }
-}
-
-/// Whether a cluster (compound) closes: every unpaired electron pairs with
-/// one on another atom and the bonds hold it together. Requires no closed
-/// atom, an even unpaired total, no atom with more than all the others
-/// combined, and at least atoms - 1 bonds. Exact, no search.
-pub fn closes(zs: &[u32]) -> bool {
-    let Some(counts) = zs
-        .iter()
-        .map(|&z| atom(z).map(|a| a.unpaired))
-        .collect::<Option<Vec<u32>>>()
-    else {
-        return false;
-    };
-    if zs.len() < 2 || counts.contains(&0) {
-        return false;
-    }
-    let total: u32 = counts.iter().sum();
-    let most = counts.iter().copied().max().unwrap_or(0);
-    total % 2 == 0
-        && most <= total - most
-        && total / 2 + 1 >= u32::try_from(zs.len()).unwrap_or(u32::MAX)
 }
 
 /// How a cluster holds outgoing light: every motion that swings charge
@@ -400,10 +363,10 @@ mod tests {
         // The orientations are the degree-l harmonics in twelve dimensions.
         assert_eq!(
             (
-                orientations(0),
-                orientations(1),
-                orientations(2),
-                orientations(3)
+                crate::fibres::directions(0),
+                crate::fibres::directions(1),
+                crate::fibres::directions(2),
+                crate::fibres::directions(3)
             ),
             (1, 12, 77, 352)
         );
@@ -423,26 +386,17 @@ mod tests {
     }
 
     #[test]
-    fn clusters_close_and_hold_light_by_their_asymmetry() {
-        // On S^11 oxygen has four unpaired electrons: it closes with four
-        // hydrogens, not two; a closed kind (Z 28) bonds nothing.
+    fn clusters_hold_light_by_their_asymmetry() {
+        // On S^11 oxygen has four unpaired electrons (its closing with four
+        // hydrogens is `compound::closing`).
         assert_eq!(atom(8).unwrap().unpaired, 4);
-        assert!(
-            closes(&[8, 1, 1, 1, 1]) && closes(&[1, 1]) && !closes(&[8, 1, 1]) && !closes(&[28, 1])
-        );
         // A symmetric pair swings no charge and holds no light; a mixed cluster
         // holds some.
         assert_eq!(hold(&[7, 7]), Q::ZERO);
         assert!(hold(&[8, 1, 1, 1, 1]) > Q::ZERO);
     }
 
-    /// `C(n, k)`, exact on `u64` for the band sizes here.
-    fn choose(n: u64, k: u64) -> u64 {
-        if k > n {
-            return 0;
-        }
-        (1..=k).fold(1u64, |a, i| a * (n - k + i) / i)
-    }
+    use crate::fibres::choose;
 
     #[test]
     fn a_bands_harmonics_split_by_weight_on_the_six_planes() {
@@ -467,7 +421,7 @@ mod tests {
                     }
                 }
             }
-            assert_eq!(total, u64::from(orientations(l)), "l = {l}");
+            assert_eq!(total, u64::from(crate::fibres::directions(l)), "l = {l}");
         }
         // By axis weight alone, M_l(m0) = C(l - |m0| + 9, 9), summing to the
         // orientations for every band of the table.
@@ -475,7 +429,7 @@ mod tests {
             let by_axis: u64 = (0..=l)
                 .map(|a| choose(u64::from(l - a) + 9, 9) * if a == 0 { 1 } else { 2 })
                 .sum();
-            assert_eq!(by_axis, u64::from(orientations(l)), "l = {l}");
+            assert_eq!(by_axis, u64::from(crate::fibres::directions(l)), "l = {l}");
         }
     }
 }

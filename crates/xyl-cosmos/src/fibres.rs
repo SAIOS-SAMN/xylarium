@@ -9,7 +9,7 @@
 //! d(l) = C(l + 11, 11) - C(l + 9, 11)      (1, 12, 77, 352, ...)
 //! ```
 //!
-//! (`directions`; the same count as `atoms::orientations`).
+//! (`directions`; an atom's band of shape l has as many orientations).
 //!
 //! - An end first claims a free direction of the open degree alone (a lone
 //!   end, counted in `free`).
@@ -30,7 +30,7 @@
 //! for N closed turnings (ends 2, 28, 208, 1092).
 
 /// C(n, k), exact; zero when k exceeds n.
-fn choose(n: u64, k: u64) -> u64 {
+pub(crate) fn choose(n: u64, k: u64) -> u64 {
     if k > n {
         return 0;
     }
@@ -38,9 +38,13 @@ fn choose(n: u64, k: u64) -> u64 {
     (0..k).fold(1u64, |acc, i| acc * (n - i) / (i + 1))
 }
 
-/// The independent directions of harmonic degree `l` on S^11.
-pub fn directions(l: u64) -> u64 {
-    choose(l + 11, 11) - if l >= 2 { choose(l + 9, 11) } else { 0 }
+/// The independent directions of harmonic degree `l` on S^11, the degree-l
+/// harmonics in twelve dimensions (exact, topological): an atom's band of
+/// shape `l` has this many orientations (`atoms::Band`).
+pub fn directions(l: u32) -> u32 {
+    let l = u64::from(l);
+    let d = choose(l + 11, 11) - if l >= 2 { choose(l + 9, 11) } else { 0 };
+    u32::try_from(d).unwrap_or(u32::MAX)
 }
 
 /// The fibres a body holds when it has closed every degree of turnings 1..=n:
@@ -83,7 +87,7 @@ impl Coherence {
     /// empty, otherwise binds to a lone end; a degree whose every direction
     /// holds a fibre closes and the next opens.
     pub fn arrive(&mut self) {
-        let d = directions(self.degree);
+        let d = u64::from(directions(u32::try_from(self.degree).unwrap_or(u32::MAX)));
         self.ends += 1;
         if self.lone + self.bound < d {
             self.lone += 1;
@@ -137,14 +141,6 @@ mod tests {
 
     #[test]
     fn fibre_seals_match_the_atom_and_lose_no_end() {
-        // The count directions(l) equals the S^11 harmonic count
-        // atoms::orientations.
-        for l in 0..8u32 {
-            assert_eq!(
-                directions(u64::from(l)),
-                u64::from(crate::atoms::orientations(l))
-            );
-        }
         // Grown end by end to 1200, no end is lost at any arrival, and every
         // seal carries the telescoped harmonics' fibre count.
         let mut c = Coherence::new();

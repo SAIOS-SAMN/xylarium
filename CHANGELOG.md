@@ -149,6 +149,18 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The founding reads the torsion share once (`circuit::Substrate::found`,
+  which now takes only the spin and founds the elements itself) and holds it
+  as `Substrate::share`; readers take that held value. The inbound echo's
+  swing `1 + A_in` is one function, `Substrate::echo_swing`, and the
+  founding cache key reads `package::founding_digest`. The heat a piece's
+  gas and a star's disc take from the pulse is one form,
+  `formation::pulse_heat`. The mass number `floor(a + 1/2)` is
+  `circuit::mass_number`, and the harmonic count on S^11 is
+  `fibres::directions` with one binomial. The `founding` and `formation`
+  readings read the live founding shells and the live star cut
+  (`disc::star_hold` through `galaxy::disc_frame`).
+
 - `manifold::turn_between` and `chain::Place::arc` read the certified angle
   between two directions (`xyl_core::rotor::angle_between`) in place of an
   uncertified `Dy` arccosine; `Rotor::inverse` is the rotor's conjugate
@@ -249,6 +261,17 @@ may change public APIs and the model's laws.
   body that does not ignite forms no remnant node (`pulse::nodes_among`).
 
 ### Removed
+
+- Parallel founding and formation models: the dead star cut
+  `formation::of` with `Formation` and `Piece`, the dead disc model
+  `disc::star_disc` with `disc::World` and the `formation` reading's scratch
+  infalls, and the diagnostic cascades `formation::cascade`,
+  `formation::equitable_cascade`, `Stack` and `EquitableReading`; the
+  stored copy `Anchor::share` and `Bounce::share`; `atoms::orientations`,
+  `atoms::closes` (replaced by `compound::closing`) and the hand-rolled gcd.
+  Forward-only wrappers: `formation::throat_push`, `formation::weight`,
+  `origin::spin_of_share`, `centre::galaxy_episode`, `circuit::dilation`,
+  `circuit::jet_dilation` and `chem::Rulers::r0`.
 
 - The founding's rounding of rationals: `circuit::turn` (capture phases
   floored to the coordinate grid) and `circuit::grain::grid` (reaches,

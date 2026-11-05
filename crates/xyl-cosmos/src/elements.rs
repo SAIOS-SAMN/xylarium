@@ -170,12 +170,11 @@ struct Row {
 /// upper edge) with the open fifth turning above it.
 pub const TOP_Z: u32 = 1700;
 
-/// The closed share of a capture that makes kind `z`: (3Z - unpaired) / 3Z.
+/// The closed share of a capture that makes kind `z`: its hold over its
+/// span, `compound::hold(z) / 3Z = (3Z - unpaired) / 3Z`.
 fn closed_share(z: u32) -> Q {
-    let unpaired = crate::atoms::atom(z).map(|x| x.unpaired).unwrap_or(0);
-    let full = Q::int(3 * i64::from(z));
-    Q::int(3 * i64::from(z) - i64::from(unpaired))
-        .checked_div(&full)
+    Q::int(i64::from(crate::compound::hold(z)))
+        .checked_div(&Q::int(3 * i64::from(z)))
         .unwrap_or(Q::ZERO)
 }
 

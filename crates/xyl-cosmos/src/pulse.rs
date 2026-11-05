@@ -151,7 +151,7 @@ pub fn core_period() -> Dy {
 
 /// The wavefront's wavelength (kpc): light speed x the core's period.
 pub fn wavelength_kpc() -> Dy {
-    c_kpc_per_ring() * core_period()
+    c_kpc_per_ring() * crate::circuit::bell()
 }
 
 /// What a place hears of the bells at `t` rings.

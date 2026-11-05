@@ -137,7 +137,7 @@ that need a founded universe read the shared test genesis
 fn a_galaxy_ring_conserves_its_metals() {
     let origin = crate::genesis::origin();
     let chem = crate::genesis::chem();
-    let made = chem.metals(&Rulers::r0(), &Rulers::today()).unwrap();
+    let made = chem.metals(&crate::galaxy::r0(), &Rulers::today()).unwrap();
     assert!(made.signum() >= 0, "metals {made}");
 }
 ```

@@ -281,12 +281,12 @@ the parcel's loop (`circuit::Substrate::loop_flux`, swung by the inbound
 echo) moves frames between held and open, and so sets its heat. The same
 net push `p_net` dilates the parcel's pole state per echo. Chemistry is what
 a parcel's kinds close into at the parcel's heat (`compound::closing`,
-`atoms::closes`), and a parcel whose pole state reaches the throat
+`compound::held`), and a parcel whose pole state reaches the throat
 (`t = 1`) begins to transduce (`stars::Sequence`).
 
 **Meetings.** Where two parcels reach the same `r`, they exchange matter by
 the contrast of their deficits `T` times their coherence, with `sum m l`
-conserved (the passage of `formation::cascade`). Meetings and onsets are the
+conserved (the filter of `formation::founding_shells`). Meetings and onsets are the
 events of the founding; between them every parcel's path is the closed form
 above.
 
@@ -316,7 +316,7 @@ longer holds.
   `p = delta(H, H) = 1/2` (`circuit::throat_push`). The jet carries the
   throat's torsion share `s = (H + J) / (2H + J)` at each crossing
   (`bounce::torsion_share`), so the continuum dilates the pole coordinate
-  by `rho = D(s) = (1 + s) / (1 - s)` per echo (`circuit::jet_dilation`):
+  by `rho = D(s) = (1 + s) / (1 - s)` per echo (`shares::dilation_dy`):
   3 for a spinless throat, rising to 4 at the extremal spin.
 - Reverberation (`Substrate::reverberation`) takes the firmament kinds
   in order of spin. For each kind the hold is
@@ -1127,7 +1127,7 @@ for each firmament kind). Each echo carries the state out through the
 continuum and back through the vacuum:
 
 - **Continuum (outflow).** The filament dilates the state by the push the
-  holder holds, `rho = (1 + p) / (1 - p)` (`circuit::dilation`): `p = 1/2`
+  holder holds, `rho = (1 + p) / (1 - p)` (`shares::dilation_dy`): `p = 1/2`
   for a firmament kind at the throat, the compactness `delta` for a star's
   collective. It moves `(rho - 1) u w / (w + rho u)` frames from the Z pole
   to the Q pole.

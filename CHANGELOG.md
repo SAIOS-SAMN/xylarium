@@ -267,6 +267,10 @@ may change public APIs and the model's laws.
 - Hosted CI (`.github/workflows/ci.yml`) and its README badge are removed;
   the checks are run locally.
 
+- `xyl_core::orbit`, which no production code read; `Orbit::throat`
+  re-derived the torsion share that `bounce::torsion_share` holds. The
+  sheared return `k / (1 - theta)` stays a theorem of docs/model.md (T4).
+
 ## 0.3.0 - 2026-10-30
 
 First public release.

@@ -765,6 +765,7 @@ Theorems:
 | T16 | a paired throat's faces dilate an open kind by `D(s) D(n)^A` and `D(s) D(n)^-A`, product `(3 + a)^2`; no open kind is held on both faces; the shared hold is the closed kinds | 3, 5, 9, T2, T8 |
 | T17 | the spin is a sheared orbit over the pinches: a cohort leaving face `sigma` takes `m M (a + sigma (n / 2) p)`, `p = (t - 1) / (t + 1)`; Z-side release from the near face spins the throat up; the pair closes while `a <= 1` | 3, 4, 7, 9, 11, T2, T10, T16 |
 | T18 | the five isoclinic planes are interchangeable in the multiplicity and the filling, so each holds a fifth of the isoclinic hold and T14's pushes are equal: one isoclinic phase per body; distinct plane phases come only from a link's turning between planes | 8, T6, T7, T14 |
+| T19 | a link's remanence `w = J - (a_0 M_0) M`: per passage `w' = w (1 - m / M) + J (m / M) (1 - rho_c / rho_hold)`; conserved between passages; cleared by a passage of hold `m* = w M / (w + J (rho_c / rho_hold - 1))`; for one release, the remanent share `1 - rho_hold / rho_closed` | 7, 11, T10, T17 |
 
 Reading (seed 7, the gate of roadmap item 32, a screen with float
 logarithms and exact held sets): the universal core holds 0.4352 of the
@@ -1050,8 +1051,9 @@ ancient seats, #94).
     weakening and phase strengthening).
   - **Strengthening and weakening.** A passage less separated than the
     link's hold strengthens it, as release turns a throat's spin up (T17).
-    A drive falling to its mean weakens it. A link's weight grows with
-    what passes through it and fades with disuse.
+    A passage more separated than the hold weakens it (T19). Between
+    passages the weight is conserved, never faded by disuse; clearing it
+    takes a passage of the opposite sign, its coercivity.
   - **The signal.** It is the pulse, the bell and its echo, carried from
     link to link by each link's weight and delay. This replaces the sum of
     every bell as one phasor over a flat arc (`pulse::hear`).
@@ -1071,8 +1073,37 @@ ancient seats, #94).
 
 ### Phase weakening and phase strengthening
 
-Planned ([#84](https://github.com/SAIOS-SAMN/xylarium/issues/84),
-roadmap item 39); not yet derived. This section records what the law is to
+Derived for a link's turning (T19, below); the pole state's own remanence
+and the cooling record are planned
+([#84](https://github.com/SAIOS-SAMN/xylarium/issues/84), roadmap item 39).
+
+- **T19, a link's remanence.** A link (a throat, or a link of the chain)
+  holds turning `J` with hold `M`. Its remanence is the turning it holds
+  beyond what it would hold had every passage taken the founded turning per
+  unit hold: `w = J - (a_0 M_0) M`.
+  - **Per passage.** A passage of hold `m` at separation `rho_c` against
+    the hold's `rho_hold` takes `J (m / M) (rho_c / rho_hold)` (T17), so
+    `w' = w (1 - m / M) + J (m / M) (1 - rho_c / rho_hold)`, exact in the
+    holds and turnings.
+  - **Strengthening and weakening.** A passage less separated than the hold
+    builds remanence: phase strengthening. One more separated wears it
+    down: phase weakening.
+  - **Coercivity.** The hold of a passage at separation `rho_c` that clears
+    `w` is `m* = w M / (w + J (rho_c / rho_hold - 1))`.
+  - **Persistence.** Between passages the remanence is conserved (axiom 11),
+    never faded by disuse. Friction, the residual `n / 3` (T10), moves it
+    from twist into writhe at constant `Lk`: a degree of structure, not a
+    loss.
+  - **Closed form.** For one release down to the closed hold, the
+    remanent share of the held turning is `1 - rho_hold / rho_closed`.
+  - **Reading** (seed 7, a screen with float logarithms;
+    `/opt/handoff/xylarium-kernel/gate/remanence.py`): `rho_hold = -0.7977`
+    and `rho_closed = -0.9949`, so the universal core's remanent share is
+    0.1982, the same as the orbit gives directly. Per unit of closed hold
+    the core turns 155.64 degrees, of which 30.85 are remanent: the memory
+    its founding left in it.
+
+The rest of this section records what the pole state's own remanence is to
 answer, the code it builds on and what that code lacks today.
 
 - **Phase weakening (remanence).** A drive moves a kind's pole state

@@ -1016,6 +1016,57 @@ and the order in which that is to be opened up.
   7. Placement from the founding's coordinate, not the sample index (#36,
      #79).
 
+### The automorphic, synaptic chain
+
+Planned ([#97](https://github.com/SAIOS-SAMN/xylarium/issues/97), roadmap
+item 41), with The frame, the place and the chain (#90), Phase weakening and
+phase strengthening (#84) and the polity (civilizations.md, Minds in the
+ancient seats, #94).
+
+- **Automorphic: one map at every tier.**
+  - The attractor pair is the same at every tier: the faces advance `s`
+    and `1 - s`, a body's separation is
+    `rho = q ln D(s) - (1 - q) ln D(1 - s)` (T17), and its return is read
+    from the deficit `M / (r + M)` (axiom 2). This holds alike for the
+    core, a star, a planet, a moon and a nucleon.
+  - The map commutes with the change of tier: a link read in one tier and
+    carried by the dilation to another (`manifold::dilation`, `60^k`) is
+    the link read there.
+  - At the law this holds now. The deficit is of degree zero in length, so
+    it and the flow law are invariant under every tier's dilation
+    (`xyl_core::shares`, the test
+    `deficit_is_invariant_under_tier_dilation`).
+  - The chain fails it today. Tiers hop through SI, frames are rebuilt per
+    tier, and homologue galaxies reuse home values (The frame, the place
+    and the chain).
+- **Synaptic: a link holds a weight set by its history.**
+  - **The weight.** It is the link's stored turning between planes, `tau`,
+    the H lane's inter-plane component (FORMS-COORDINATE v3). It connects
+    one plane to another across the link.
+  - **Its memory.** It is the link's remanence: the part of a drive's
+    displacement the link keeps when the drive falls to its mean (Phase
+    weakening and phase strengthening).
+  - **Strengthening and weakening.** A passage less separated than the
+    link's hold strengthens it, as release turns a throat's spin up (T17).
+    A drive falling to its mean weakens it. A link's weight grows with
+    what passes through it and fades with disuse.
+  - **The signal.** It is the pulse, the bell and its echo, carried from
+    link to link by each link's weight and delay. This replaces the sum of
+    every bell as one phasor over a flat arc (`pulse::hear`).
+  - **Friction.** It is what a link cannot hold, the residual `n / 3`
+    turned to writhe (T10): the loss at each junction.
+- **One structure for matter and minds.** A council's convergence is the
+  minds' readings coming to coincide across the links between their
+  houses, weighted by those links.
+- **Order of the work.**
+  1. One link type for the whole chain (roadmap item 40).
+  2. The identity at the link: reading then dilating equals dilating then
+     reading.
+  3. The weight as a closed form of the passages through the link, sheared,
+     never stepped.
+  4. The pulse carried along the links.
+  5. The council's convergence on the same links.
+
 ### Phase weakening and phase strengthening
 
 Planned ([#84](https://github.com/SAIOS-SAMN/xylarium/issues/84),

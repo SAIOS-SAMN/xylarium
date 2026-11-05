@@ -122,4 +122,42 @@ mod tests {
             assert_eq!(net, (&h - &m).checked_div(&(&(&r + &h) + &m)).unwrap());
         }
     }
+
+    /// The automorphism of the chain at the law (docs/model.md, The
+    /// automorphic, synaptic chain): the deficit is of degree zero in length,
+    /// so reading a hold and a reach in one tier, or both carried to another
+    /// tier by its dilation, gives the same share, exactly; and the pushes it
+    /// gives compose the same way by the flow law.
+    #[test]
+    fn deficit_is_invariant_under_tier_dilation() {
+        use crate::units::Tier;
+        let tiers = [
+            Tier::Universe,
+            Tier::Cluster,
+            Tier::Galaxy,
+            Tier::System,
+            Tier::Planet,
+        ];
+        let pairs = [
+            (Q::ratio(1, 1), Q::ratio(3, 1)),
+            (Q::ratio(2, 7), Q::ratio(5, 3)),
+            (Q::ratio(9, 4), Q::ratio(1, 60)),
+        ];
+        for (m, r) in &pairs {
+            let held = deficit(m, r).unwrap();
+            for t in tiers {
+                let k = t.in_rg();
+                assert_eq!(deficit(&(m * &k), &(r * &k)).unwrap(), held);
+            }
+            let other = deficit(r, m).unwrap();
+            for t in tiers {
+                let k = t.in_rg();
+                let carried = flow(
+                    &deficit(&(m * &k), &(r * &k)).unwrap(),
+                    &deficit(&(r * &k), &(m * &k)).unwrap(),
+                );
+                assert_eq!(carried, flow(&held, &other));
+            }
+        }
+    }
 }

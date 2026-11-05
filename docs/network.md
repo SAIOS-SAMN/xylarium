@@ -103,10 +103,13 @@ hypha, held by the private uplink's session.
   signs under the mind's key, so the kernel sees the same recorded inputs as
   from a joined mind and the court reconstructs what it claims; the kernel
   takes no mycelium dependency.
-- **What the uplink is to fix first** (#107): it is to send the exact T
-  reading (today floored to a whole ring), frame each act on the lane of
-  its kind (today all on S), and take a mind's focus as a four-share
-  vector (today one count).
+- **What the uplink fixed first** (#107). A percept's axis coordinate
+  `u` (Mycelium 78.156) is the universe's exact count, whole rings and the
+  ring's phase, never floored to a ring. A mind's focus is four exact
+  shares (`knowledge::Focus`), and the seat listing states the call's four
+  arguments. The frame's lane byte is a vestige: Mycelium writes S on every
+  act and nothing reads it, an act's lanes being the modes its content
+  moves, so the uplink writes S until Mycelium retires the byte.
 
 ## Time on the network
 

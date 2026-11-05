@@ -207,6 +207,14 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- A seat's focus is four exact shares of free thought, one per domain, each
+  in `[0, 1]` and together at most 1 (`knowledge::Focus`), in place of one
+  domain or none; `Decision::Focus` and `Input::Focus` carry it, and the
+  checkpoint is `xylarium checkpoint v5` (v3 and v4 are refused by name; the
+  live homes were converted, focus none as four zero shares). In the
+  uplink, a percept's axis coordinate is the exact count, and FOCUS takes
+  four exact shares stated in the seat listing (#107, #108).
+
 - The scalar heat of the atom, the two-part closure, the star cut and the
   star's sequence is the typed received turning `atoms::Received`
   (`axis`, `isoclinic`): the stripping and bond laws read the isoclinic

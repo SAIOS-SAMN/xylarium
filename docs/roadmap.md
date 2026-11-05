@@ -228,6 +228,15 @@ where it belongs to one.
     together): an axis-plane phase, one isoclinic phase and the turning
     between planes that carries a body into its parent; that turning is
     to be derived from the fold's writhe where a link forms.
+41. **The automorphic, synaptic chain**
+    ([#97](https://github.com/SAIOS-SAMN/xylarium/issues/97), `law`,
+    `proposal`; depends on items 39 and 40;
+    [model.md](model.md#the-automorphic-synaptic-chain)). One
+    attractor-pair map at every tier, commuting with the tier's dilation
+    (at the law: `xyl_core::shares`, invariant under every tier); a link's
+    weight its stored turning between planes, its memory the remanence,
+    strengthened by passage and weakened by disuse; the pulse carried link
+    to link; the council's convergence on the same links (#94).
 39. **Phase weakening and phase strengthening**
     ([#84](https://github.com/SAIOS-SAMN/xylarium/issues/84), `proposal`,
     `law`; depends on items 32 and 34;

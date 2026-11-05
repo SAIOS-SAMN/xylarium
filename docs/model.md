@@ -1148,6 +1148,86 @@ answer, the code it builds on and what that code lacks today.
   keeps a physical record of its formation for archaeology and the annals
   to read.
 
+### Chemistry from the elements
+
+Planned ([#103](https://github.com/SAIOS-SAMN/xylarium/issues/103), roadmap
+item 42), with the galaxy's gas (#8), condensates (#15) and geochemistry
+(#17). Chemistry flows from the elements to chemistry in stars to chemistry
+in matter, by one law at every tier: the release of held frames, which
+already orders a star's fusion and fission (Polarity, fusion and fission).
+A bond is a paired throat at the atomic tier: two atoms' open frames paired
+into a closed hold (T16 at the smallest tier, The automorphic, synaptic
+chain).
+
+- **Built from the elements.**
+  - The atom: its bands filled on S^11, its open and held frames, its
+    tightness and its ionisation by heat (`atoms::atom`,
+    `atoms::unpaired_hot`, `atoms::tightness`), its bonds (`atoms::bond`)
+    and its axis polarity (`atoms::axis_polarity`, T7).
+  - The two-part compound: the smallest closing cluster
+    `(u_B / g) A . (u_A / g) B` with every frame paired, its grip, and
+    whether it stands at a heat (`compound::closing`, `compound::held`,
+    `compound::stands`). Water closes as one oxygen with four hydrogen
+    frames paired (O.4H).
+  - The star's nucleosynthesis: steps ordered by release
+    (`stars::fusion_step`, `stars::fission_step`, `stars::Sequence`).
+- **Where the chain breaks** (an inventory of 2026-11-05).
+  - **Stars to galactic gas.** Enrichment reads a channel-share column of the
+    element table rescaled to the Milky Way and the Sun (`chem`'s
+    calibration, its present-day abundances, reference metallicity, helium
+    enrichment and delay windows), never the stars' products
+    (`stars::Step::products`).
+  - **Gas to solids.** Condensation, the core and mantle split and the ices
+    are tables (`systems::ICES`, the mantle partition `MANTLE_KEPT`, the
+    element table's condensation temperatures and Goldschmidt classes).
+    `compound::closing`, `compound::held`, `compound::stands` and
+    `atoms::bond` have no consumer outside `compound` yet.
+  - **Compounds to volatiles.** Six fixed species with catalogued phase
+    diagrams (`worlds::volatiles`), whose formulas disagree with the bond
+    rule (water as two hydrogens, not O.4H); the greenhouse and albedos are
+    calibrated to Earth.
+  - **Isotopes.** One mass number per element, from the table's atomic
+    weight (`circuit::mass_number`); four Earth isotopes and a bulk-silicate
+    inventory stand for radiogenic heat (`bodies::isotopes`).
+  - **Life and civilisation.** Bond energies, solvent cohesion, the richness
+    groups, the biotic window and the metabolism ruler are tabled
+    (`worlds::media`, `life`); the drives' constants are tabled and offered
+    without reading a world's elements (`xyl-kernel propulsion`).
+- **Isotopes.** A kind is a nuclide `(Z, Q)`. Its stability is its `Q / Z`
+  against the dipole of the tier it formed in, `D(n) = 1 + a / 2` (T2), read
+  in closed form, never from a chart. A nuclide off the dipole relaxes
+  toward it, Q into Z or Z into Q: a release of held frames, each decay an
+  event found in closed form. Radiogenic heat is those decays, and an
+  isotope ratio frozen by a cooling front is a physical record (Phase
+  weakening and phase strengthening).
+- **Closure over a mixture.** Beyond two-part clusters, a mixture at a heat
+  closes into chains, rings and networks, each structure read from the
+  atoms present, the closures that release most forming first, as a star's
+  sequence orders its steps; no product list is fixed.
+- **Phases from grip against heat.** A solid is held on every frame of its
+  network (the held share `min(1, tau_min / heat)` is one); a liquid is
+  partly held, its contacts breaking and re-forming, with viscosity
+  `nu = t / (1 + t)` in the pole coordinate; a gas is released; a plasma has
+  its open frames stripped (`atoms::unpaired_hot`). Pressure is containment
+  and the stretching pressure (T12). Triple and critical points are where
+  these readings meet; any phase the mixture closes into is read the same
+  way.
+- **Biology.** A world's solvents are what its matter closes into as a
+  liquid at its heat. Copying fidelity reads that solvent's grip. Of the two
+  drives, eating is taking a release (bonds broken toward more held frames)
+  and reproducing is copying a closed structure by templated closure; all
+  else emerges.
+- **Civilisation.** Fuels, propellants and materials are the same releases
+  over a world's own elements, as a people masters them.
+- **Order of the work.**
+  1. Isotopes as kinds: stability from the dipole, decay as release events.
+  2. Closure over a mixture: chains, rings and networks by release.
+  3. Phases from grip against heat, pressure from containment.
+  4. The galactic gas from the stars' products (#8).
+  5. Condensates, volatiles and geochemistry from 1 to 4 (#15, #17).
+  6. Life's solvents, fidelity and metabolism from the same releases.
+  7. Civilisation chemistry from a world's own elements.
+
 ### Radiation: irradiation held, transduced and passed on
 
 Light, heat and their dispersal are one exchange read through the deficit

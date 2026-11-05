@@ -11,6 +11,13 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Chemistry from the elements recorded (docs/model.md, roadmap item 42,
+  #103): the chain from the atom through the star to matter and life by the
+  release of held frames, the inventory of where it breaks today (55
+  findings across eight stages), and the order of the work. Notes that the
+  fixed volatiles' formulas disagree with `compound::closing` (water closes
+  as O.4H).
+
 - T19, a link's remanence (docs/model.md, #84): `w = J - (a_0 M_0) M`,
   built and worn by passages by their separation, conserved between them,
   cleared at its coercivity. For seed 7 the universal core keeps 0.1982 of

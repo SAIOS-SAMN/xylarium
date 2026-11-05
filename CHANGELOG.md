@@ -248,6 +248,12 @@ may change public APIs and the model's laws.
   carried in `life::Home::sequence` and `worlds::Setting::sequence`. A held
   body that does not ignite forms no remnant node (`pulse::nodes_among`).
 
+- One certified exponential: `motion::Boost::grown` splits the rapidity
+  into whole halvings (an exact power of two) and a remainder in
+  `[0, 2 ln 2)` that `certified::exp_of` encloses; `certified::exp_fixed`
+  and motion's own `ln 2` and `pow2` are removed, and `certified` builds
+  its dyadics with the one gcd-free constructor of `q`.
+
 ### Removed
 
 - The founding's rounding of rationals: `circuit::turn` (capture phases

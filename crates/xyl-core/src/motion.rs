@@ -2,7 +2,7 @@
 //! in one step, with no loop over time.
 //!
 //! Inputs: exact amplitudes, rates and times ([`Q`]) in the caller's units;
-//! uses `certified` for `ln 2` and the fixed-point `exp`.
+//! uses `certified` for `ln 2` and `exp`.
 //!
 //! Outputs:
 //! - [`Boost`], one mode `amp x base^(rate t)` with [`Base`] `E` (e-folds) or
@@ -22,41 +22,21 @@
 //! only the remainder goes through the series; a rapidity below -4096 is
 //! held as the bound `[0, 2^-4096]`.
 
-use crate::certified::{exp_fixed, exp_of, fixed_bounds, ln2, Encl, FIXED};
+use crate::certified::{exp_of, ln2, pow2, Encl, FIXED};
+use crate::q::dyadic;
 use crate::Q;
 use num_bigint::BigInt;
 use num_rational::BigRational;
-use num_traits::{One, Signed, ToPrimitive};
-use std::sync::OnceLock;
+use num_traits::{One, ToPrimitive};
 
-/// The enclosure of ln 2 to 2^-100, computed once; finer than any reading
-/// requires.
-fn ln2_held() -> &'static Encl {
-    static LN2: OnceLock<Encl> = OnceLock::new();
-    LN2.get_or_init(|| ln2(100).outward(100))
-}
-
-/// The lower and upper bounds of ln 2 in units of 2^-60.
-fn ln2_fixed() -> (i128, i128) {
-    static L: OnceLock<(i128, i128)> = OnceLock::new();
-    *L.get_or_init(|| {
-        (
-            fixed_bounds(&ln2_held().lo).0,
-            fixed_bounds(&ln2_held().hi).1,
-        )
-    })
-}
-
-/// 2^k, exact.
-fn pow2(k: &BigInt) -> Q {
-    let n = k.abs().to_usize().unwrap_or(0);
-    let p = BigInt::one() << n;
-    let r = if k.is_negative() {
-        BigRational::new(BigInt::one(), p)
+/// `2^k`, exact, for a whole `k` of either sign; `None` past `u32` halvings.
+fn two_to(k: i64) -> Option<Q> {
+    let n = u32::try_from(k.unsigned_abs()).ok()?;
+    Some(if k < 0 {
+        dyadic(BigInt::one(), u64::from(n))
     } else {
-        BigRational::from_integer(p)
-    };
-    Q::from_big(r)
+        dyadic(pow2(n), 0)
+    })
 }
 
 /// What a boost's rapidity counts: e-folds or halvings.
@@ -104,14 +84,17 @@ impl Boost {
     fn efolds(&self) -> Encl {
         match self.base {
             Base::E => Encl::exact(self.rate.clone()),
-            Base::Two => Encl::exact(self.rate.clone()).mul(ln2_held()),
+            // The enclosure of ln 2 to 2^-100, finer than any reading requires.
+            Base::Two => Encl::exact(self.rate.clone()).mul(&ln2(100)),
         }
     }
 
-    /// `base^(rate t)`, enclosed: the whole halvings of the rapidity as an
-    /// exact power of two, and only the remainder (under two halvings)
-    /// through the series, in fixed-point integers bounded outward
-    /// (`exp_fixed`). A rapidity above 4096 goes through `exp_of` directly.
+    /// `base^(rate t)`, enclosed: the rapidity `x = rate t` is split into
+    /// whole halvings `k` and a remainder `r` in `[0, 2 ln 2)` (base two:
+    /// `x = k + f`, `r = f ln 2`; base e: `x = k ln 2 + r`), `2^k` is exact
+    /// and `e^r` is `certified::exp_of` of the remainder's enclosure, so the
+    /// value keeps its relative precision at any magnitude. A rapidity above
+    /// 4096 goes through `exp_of` directly.
     pub fn grown(&self, t: &Q) -> Encl {
         let x = &self.rate * t;
         if x.is_zero() {
@@ -120,44 +103,39 @@ impl Boost {
         // A decay past 4096 halvings (or e-folds) is below 2^-4096 and is
         // returned as the enclosure [0, 2^-4096].
         let far = Q::int(4096);
+        let floor = two_to(-4096).unwrap_or(Q::ZERO);
         if x < -far.clone() {
             return Encl {
                 lo: Q::ZERO,
-                hi: pow2(&BigInt::from(-4096)),
+                hi: floor,
             };
         }
         if x > far {
             return exp_of(&Encl::exact(x).mul(&self.efolds()), FIXED);
         }
-        let (l_lo, l_hi) = ln2_fixed();
-        let (k, a_lo, a_hi) = match self.base {
+        let l2 = ln2(100);
+        let whole = |k: &BigInt| Encl::exact(Q::from_reduced(BigRational::from_integer(k.clone())));
+        let (k, r) = match self.base {
             Base::Two => {
-                // `x = k + f` with f in [0, 1); f ln 2 is bounded by the products
-                // of the fixed-point bounds of f and of ln 2.
                 let k = x.floor();
-                let f = &x - &Q::from_reduced(BigRational::from_integer(k.clone()));
-                let (f_lo, f_hi) = fixed_bounds(&f);
-                (k, (f_lo * l_lo) >> FIXED, ((f_hi * l_hi) >> FIXED) + 1)
+                let f = Encl::exact(x.clone()).sub(&whole(&k));
+                (k, f.mul(&l2))
             }
             Base::E => {
-                // `x = k ln 2 + r` with r in [0, 2 ln 2).
-                let (x_lo, x_hi) = fixed_bounds(&x);
-                let mut k = x_lo.div_euclid(l_hi);
-                let r = |k: i128| {
-                    (
-                        x_lo - (k * l_lo).max(k * l_hi),
-                        x_hi - (k * l_lo).min(k * l_hi),
-                    )
-                };
-                let (mut r_lo, mut r_hi) = r(k);
-                if r_lo < 0 {
+                // The first `k` whose remainder is certainly non-negative.
+                let mut k = x.checked_div(&l2.hi).map(|q| q.floor()).unwrap_or_default();
+                let mut r = Encl::exact(x.clone()).sub(&whole(&k).mul(&l2));
+                if r.lo.signum() < 0 {
                     k -= 1;
-                    (r_lo, r_hi) = r(k);
+                    r = Encl::exact(x.clone()).sub(&whole(&k).mul(&l2));
                 }
-                (BigInt::from(k), r_lo, r_hi)
+                (k, r)
             }
         };
-        Encl::exact(pow2(&k)).mul(&exp_fixed(a_lo, a_hi))
+        let Some(scale) = k.to_i64().and_then(two_to) else {
+            return exp_of(&Encl::exact(x).mul(&self.efolds()), FIXED);
+        };
+        Encl::exact(scale).mul(&exp_of(&r, FIXED))
     }
 }
 
@@ -420,5 +398,39 @@ impl Grown {
             .entry(rate.clone())
             .or_insert_with(|| Boost::e(Q::ONE, -rate.clone()).grown(t))
             .clone()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::certified::exp;
+
+    #[test]
+    fn a_mode_grown_and_its_reverse_compose_to_one() {
+        for (n, d) in [(1, 3), (-7, 2), (250, 1), (-3000, 7), (2, 1)] {
+            let x = Q::new(n, d).unwrap();
+            for b in [
+                Boost::e(Q::ONE, x.clone()),
+                Boost::halving(Q::ONE, x.clone()),
+            ] {
+                let there = b.grown(&Q::ONE);
+                let back = Boost {
+                    rate: -x.clone(),
+                    ..b.clone()
+                }
+                .grown(&Q::ONE);
+                assert!(there.mul(&back).contains(&Q::ONE));
+            }
+            // Base e is the certified exponential.
+            let e = Boost::e(Q::ONE, x.clone()).grown(&Q::ONE);
+            let direct = exp(&x, 80);
+            assert!(e.lo <= direct.hi && direct.lo <= e.hi);
+        }
+        // Whole halvings are exact powers of two.
+        assert_eq!(
+            Boost::halving(Q::ONE, Q::int(-5)).grown(&Q::ONE),
+            Encl::exact(Q::new(1, 32).unwrap())
+        );
     }
 }

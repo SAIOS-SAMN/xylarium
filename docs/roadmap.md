@@ -209,6 +209,19 @@ where it belongs to one.
    The books become one cycle across the universe: held, in flight outward, held
    downstream and in flight inward together equal founded.
 
+39. **Phase weakening and phase strengthening**
+    ([#84](https://github.com/SAIOS-SAMN/xylarium/issues/84), `proposal`,
+    `law`; depends on items 32 and 34;
+    [model.md](model.md#phase-weakening-and-phase-strengthening)).
+    Remanence of the pole state: the part of a drive's displacement held
+    when the drive falls to its mean, and its coercivity; the inverse
+    driven by mass at distance from a core (a star's own included), by a
+    throat with an Einstein-Cartan bounce, or by core fusion, as antipoles.
+    Builds on `circuit::push_at`, `circuit::jet_map`,
+    `Substrate::loop_flux`, `circuit::electron_phase`,
+    `xyl_core::shares::deficit` and `stars::fusion_step`; needs the held
+    residual as a closed form of the drive's history.
+
 ### Galaxy (milestone 3, layer B)
 
 5. **Fluid bands** ([#6](https://github.com/SAIOS-SAMN/xylarium/issues/6),

@@ -110,9 +110,11 @@ another crate. Laws are composed from shares (ratios of the form
   `origin::spin_of_share`. Status: built.
 - Paired throat (docs/model.md, The core as a paired throat; #86): near
   face `D(s) D(n)^A`, far face `D(s) D(n)^-A`, product `(3 + a)^2`, so the
-  shared hold is the closed kinds `M_c` (T16). Release keeps `a M` fixed:
-  `a' = a_0 M_0 / M'`, and the pair closes where `a_0 M_0 <= M_c` (T17).
-  Seed 7: `M_c / M_0 = 0.4352`, `a* = 0.7964`. Status: derived; not built.
+  shared hold is the closed kinds `M_c` (T16). The spin's orbit (T17):
+  per cohort `J' = J - m M (a + sigma (n / 2) p)`, `p = (t - 1) / (t + 1)`,
+  `M' = M - m`, `a' = J' / M'^2`, at pinches `N* = 3 (4 + a) / (2a)` apart;
+  the pair closes while `a <= 1`. Seed 7: one cohort, 0.5648 of the hold at
+  `p = -0.683`, giving `a* = 0.8776`. Status: derived; not built.
 - Admission (`Substrate::least_share`, `cores::substrate_for`): the founding
   requires `a >= (r_far / rim) (1 + A_in_peak)`; otherwise the universe is
   refounded at `spin_of_share(least_share)`, with at most three foundings.

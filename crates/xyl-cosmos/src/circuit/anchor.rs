@@ -3,7 +3,7 @@
 //
 // Inputs: the founding's rim (cluster units), the rings until the home
 // galaxy's gas first lights (formation.rs `cools_in`), the parent's spin
-// and the firmament's margin; `chain::units` for r_g in
+// and the core's spin after its orbit (T17); `chain::units` for r_g in
 // metres, `xyl_core::units::Tier` and `package::Si` (kpc, c; the Gyr only
 // in the boundary conversions).
 //
@@ -80,14 +80,12 @@ pub struct Anchor {
     /// When the first stars shone (rings after the origin): the rings until
     /// the home galaxy's gas first collapses, at least one.
     pub first_stars: Q,
-    /// The parent's Kerr spin as admitted (drawn from the seed, floored by
-    /// cores::substrate_for).
+    /// The parent's Kerr spin, drawn from the seed.
     pub spin: Q,
-    /// The firmament's margin: the torsion share less the least share that
-    /// holds the firmament whole, `r_far / rim (1 + A_in)` at the inbound
-    /// echo's peak (`Substrate::least_share`). Negative where no admissible
-    /// spin reaches it: the firmament is not whole.
-    pub margin: Q,
+    /// The universal core's spin once its open kinds have left
+    /// (`Substrate::spin_orbit`, T17); its paired throat closes on both faces
+    /// where this is at most one.
+    pub core_spin: Q,
 }
 
 static ANCHOR: std::sync::OnceLock<Anchor> = std::sync::OnceLock::new();
@@ -134,15 +132,15 @@ pub fn anchor() -> Anchor {
         radius_rg: Q::ZERO,
         first_stars: Q::ZERO,
         spin: Q::ZERO,
-        margin: Q::ZERO,
+        core_spin: Q::ZERO,
     }
 }
 
 /// The anchor from the founding's rim (cluster units), the rings until the
 /// home galaxy's gas first collapses, the parent's spin and the
-/// firmament's margin (the torsion share is held by the substrate,
+/// core's spin after its orbit (T17; the torsion share is held by the substrate,
 /// `Substrate::share`).
-pub(crate) fn of(rim: &Q, cools_in: Option<i64>, spin: &Q, margin: &Q) -> Anchor {
+pub(crate) fn of(rim: &Q, cools_in: Option<i64>, spin: &Q, core_spin: &Q) -> Anchor {
     let units = crate::chain::units();
     let kpc_m = crate::package::Si::kpc();
     let cluster_m = &Tier::Cluster.in_rg() * &units.r_g_m;
@@ -171,7 +169,7 @@ pub(crate) fn of(rim: &Q, cools_in: Option<i64>, spin: &Q, margin: &Q) -> Anchor
         radius_rg,
         first_stars: rings,
         spin: spin.clone(),
-        margin: margin.clone(),
+        core_spin: core_spin.clone(),
     }
 }
 

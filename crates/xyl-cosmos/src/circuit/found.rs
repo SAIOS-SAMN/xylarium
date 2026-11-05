@@ -6,13 +6,13 @@
 // for the cascade, `atoms::vessel`, and `formation::lighting`. Reaches are
 // core rings; amounts are held frames, universe units.
 //
-// Steps: every kind is assigned its reach, spread r (1 +/- s_final). Held
-// kinds inside the vessel band form the firmament (`Kind`), scaled so their
-// mass is 1, the universal state; each kind's capture phase is the share
-// turned Z times. The other shells link into runs where spreads overlap;
-// each run's superposed hold is cut at its local minima into beads (`Bead`),
-// and each kind goes whole to the bead whose span contains its reach. The
-// rim is the outermost shell's outer edge.
+// Steps: every kind is assigned its reach, spread r (1 +/- s_final). The closed
+// kinds, held on both faces of the paired throat (T16), form the firmament
+// (`Kind`), scaled so their mass is 1, the universal state; each kind's capture
+// phase is the share turned Z times. The other shells link into runs where
+// spreads overlap; each run's superposed hold is cut at its local minima into
+// beads (`Bead`), and each kind goes whole to the bead whose span contains its
+// reach. The rim is the outermost shell's outer edge.
 //
 // Outputs: `Substrate` with the anchor (anchor.rs); `held_share`, `census`,
 // `unit` (sum of states), `holding` (everything founded, by mass) and
@@ -100,9 +100,9 @@ pub struct Substrate {
 
 impl Substrate {
     /// The founding cascade. Every kind is carried by the equitable push to its
-    /// reach about the throat, spread R (1 +/- s_final). The vessel's kinds
-    /// within the throat (atoms::vessel, the band up to the last seal) are held
-    /// as the firmament; held kinds outside the vessel leave with the expelled matter.
+    /// reach about the throat, spread R (1 +/- s_final). The closed kinds are
+    /// held as the firmament, the paired throat's shared hold (T16); every
+    /// open kind leaves with the expelled matter.
     /// The pushed-out kinds form shells; kinds with overlapping spreads link
     /// into runs, and each run's superposed hold beads at its maxima (one
     /// galaxy per bead) and parts at its minima. Each kind's matter goes to the
@@ -119,11 +119,13 @@ impl Substrate {
         super::grain::set_founding_bits(crate::elements::founding_bits(&share));
         let digest = crate::package::founding_digest();
         let key = format!("{}-{}", digest.get(..12).unwrap_or(digest), share).replace('/', "-");
-        let anchor_of =
-            |s: &Substrate| super::anchor::of(&s.rim, s.lighting.cools_in, spin, &s.margin());
+        let anchor_of = |s: &Substrate| {
+            let core = s.spin_orbit(spin)?.spin;
+            Some(super::anchor::of(&s.rim, s.lighting.cools_in, spin, &core))
+        };
         if let Some(mut s) = super::cache::load(&key) {
             s.reverb = s.reverberation();
-            let a = anchor_of(&s);
+            let a = anchor_of(&s)?;
             prof.lap("founding: from the cache");
             return Some((s, a));
         }
@@ -132,10 +134,11 @@ impl Substrate {
         let mix: Vec<(u32, Q)> = kinds.iter().map(|k| (k.z, k.share.clone())).collect();
         let (s_final, shells) = formation::founding_shells(&mix);
         prof.lap("founding: shells");
-        let in_vessel = |z: u32| crate::atoms::vessel().is_some_and(|(lo, hi)| z >= lo && z <= hi);
+        // The paired throat holds on both faces only its closed kinds (T16):
+        // they are the firmament, and every open kind leaves.
         let shells: Vec<(u32, Q, Q, bool)> = shells
             .into_iter()
-            .map(|(z, a, r, held)| (z, a, r, held && in_vessel(z)))
+            .map(|(z, a, r, _)| (z, a, r, crate::compound::open(z) == 0))
             .collect();
         let firmament = firmament_of(&shells, &share);
         // The pushed-out shells are sorted by reach and linked into runs where
@@ -178,7 +181,7 @@ impl Substrate {
         prof.lap("founding: first collapse");
         s.nucleons_founded = s.holding();
         super::cache::store(&key, &s);
-        let a = anchor_of(&s);
+        let a = anchor_of(&s)?;
         Some((s, a))
     }
 

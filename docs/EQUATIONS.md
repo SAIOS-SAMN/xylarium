@@ -127,15 +127,16 @@ another crate. Laws are composed from shares (ratios of the form
   the turning between planes into its parent. Status: derived; not built.
 - Paired throat (docs/model.md, The core as a paired throat; #86): near
   face `D(s) D(n)^A`, far face `D(s) D(n)^-A`, product `(3 + a)^2`, so the
-  shared hold is the closed kinds `M_c` (T16). The spin's orbit (T17):
-  per cohort `J' = J - m M (a + sigma (n / 2) p)`, `p = (t - 1) / (t + 1)`,
+  shared hold is the closed kinds `M_c` (T16). The spin's orbit (T17): a
+  kind's separation across the attractor pair is
+  `rho = q ln D(s) - (1 - q) ln D(1 - s)`, `q = U / (U + W)`,
+  `D(s) = 3 + a`, `D(1 - s) = (6 + a) / (2 + a)` (the far face exchanges
+  `q` and `1 - q`); per cohort `J' = J - J (m / M) (rho_cohort / rho_hold)`,
   `M' = M - m`, `a' = J' / M'^2`, at pinches `N* = 3 (4 + a) / (2a)` apart;
   the pair closes while `a <= 1`. Seed 7: one cohort, 0.5648 of the hold at
-  `p = -0.683`, giving `a* = 0.8776`. Status: derived; not built.
-- Admission (`Substrate::least_share`, `cores::substrate_for`): the founding
-  requires `a >= (r_far / rim) (1 + A_in_peak)`; otherwise the universe is
-  refounded at `clamp_spin(spin_of_share(least_share))`, with at most three foundings.
-  The margin is `a - least_share` (`Substrate::margin`). Status: built.
+  `rho = -0.646` against `-0.798`, giving `a* = 0.9933`. Status: built
+  (`circuit::Substrate::spin_orbit`, `atoms::axis_polarity`,
+  `circuit::Anchor::core_spin`; the firmament is the closed kinds).
 - Cascade readings (`origin::Origin::of`): the lumpiness is
   `sum max(state - mean, 0) / sum state`, the held share is
   `firmament mass / holding`, the assembly time is `Lighting::cools_in` and
@@ -411,8 +412,8 @@ another crate. Laws are composed from shares (ratios of the form
   Z 1093 to 1700 hold 22 closed kinds (Z 1094, 1118, 1272-1276, 1298-1302,
   1326, 1328, 1352, 1354, 1378-1396, even), unfounded: the founding stops
   at the vessel's seal, Z 1092. Status: built (the test
-  `a_kind_is_held_exactly_when_it_has_no_open_frames`); the firmament's
-  `beyond_share` test does not yet read it.
+  `a_kind_is_held_exactly_when_it_has_no_open_frames`), and the firmament
+  is the closed kinds (`circuit::Substrate::found`).
 - Jet onset (`circuit::onset_echoes`): `circuit::throat_crossing` of
   `t = open / hold` under the kind's jetstream map at the torsion share `s`
   and the kind's vacuum share `delta`, `a = D(s) / (1 - delta)`,

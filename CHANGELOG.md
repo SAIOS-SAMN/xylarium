@@ -23,6 +23,13 @@ may change public APIs and the model's laws.
   law are invariant under every tier's dilation
   (`shares::tests::deficit_is_invariant_under_dilation`).
 
+- The core as a paired throat, built (#86). The firmament is the closed
+  kinds (T16; for seed 7 it was 525 kinds of the vessel band). Each kind's
+  axis polarity is `atoms::axis_polarity` (T7). The universal core's spin
+  orbit is `circuit::Substrate::spin_orbit` (T17), and the anchor holds the
+  core's spin after it (`circuit::Anchor::core_spin`). `xylarium observe
+  universal-core` prints the cohorts and whether the pair closes.
+
 - Minds in the ancient seats (docs/civilizations.md, docs/network.md,
   roadmap section 4 items 6 to 9, #94): what is built of a mind seated on
   both faces, the house in the kernel and its key on the hypha, and the
@@ -36,11 +43,11 @@ may change public APIs and the model's laws.
 - The audit of the frame, the place and the chain recorded as planned work
   (docs/model.md, roadmap item 40, #90).
 
-- The throat's spin as a sheared orbit (docs/model.md, T17 amended, #86).
-  Each cohort takes the throat's turning plus its twist, `(n / 2) p` with
-  `p = (t - 1) / (t + 1)` its pole push, signed by face. Z-side release
-  from the near face spins the throat up. There is no admission; whether
-  the core closes is read along the orbit. For seed 7, `a* = 0.8776`.
+- The throat's spin as a sheared orbit (docs/model.md, T17, #86). A kind's
+  separation across the attractor pair of the faces,
+  `rho = q ln D(s) - (1 - q) ln D(1 - s)`, apportions the turning each
+  cohort takes. There is no equal split and no admission; whether the core
+  closes is read along the orbit. For seed 7, `a* = 0.9933`.
 - The core as a paired throat (docs/model.md, T16, #86). The near and far
   faces dilate an open kind by factors whose product is `(3 + a)^2`, so the
   pair holds on both faces only its closed kinds.
@@ -374,6 +381,11 @@ may change public APIs and the model's laws.
   to 62 bits once, in place of a hard-coded literal.
 
 ### Removed
+
+- The founding's admission: `Substrate::least_share`, `far_reach`,
+  `margin`, `Anchor::margin` and the refounding at a raised spin in
+  `cores::substrate_for`. The founding is made once at the drawn spin, and
+  whether its core closes is read on the orbit.
 
 - Parallel founding and formation models: the dead star cut
   `formation::of` with `Formation` and `Piece`, the dead disc model

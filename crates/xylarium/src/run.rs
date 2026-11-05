@@ -621,7 +621,7 @@ pub fn genesis(o: Options) -> Result<bool, String> {
         concat!(
             "xylarium genesis v2\nseed {}\nfounding {}\nlaws {}\nlife {}\n",
             "big-origin first-stars {} bell-gyr {} rim-cluster {} home-rim-kpc {} ",
-            "radius-kpc {} margin {}\n"
+            "radius-kpc {} core-spin {}\n"
         ),
         o.seed,
         xyl_cosmos::package::founding_digest(),
@@ -632,7 +632,7 @@ pub fn genesis(o: Options) -> Result<bool, String> {
         anchor.rim,
         anchor.home_rim_kpc,
         anchor.radius_kpc,
-        anchor.margin
+        anchor.core_spin
     );
     out.push_str(&template_census(&anchor, origin));
     for c in &founding {

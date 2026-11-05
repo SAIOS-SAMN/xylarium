@@ -87,9 +87,10 @@ pub(super) fn core_read(o: &Options, t_rings: Option<Q>) -> Result<String, Strin
     Ok(out)
 }
 
-/// The core's state at T: the kinds reaching past the throat, the
-/// admission (spin, torsion share, least share, margin), the inbound echo
-/// and the push it swings, and the kinds past the throat under it.
+/// The core's state at T: the kinds reaching past the throat, the paired
+/// throat's spin orbit (its cohorts and the core's spin after them), the
+/// inbound echo and the push it swings, and the kinds past the throat under
+/// it.
 fn core_state(s: &Substrate, t: Dy) -> String {
     let rv = &s.reverb;
     let anchor = xyl_cosmos::circuit::anchor();
@@ -97,25 +98,44 @@ fn core_state(s: &Substrate, t: Dy) -> String {
     let mut out = format!(
         concat!(
             "  The core: {} of {} firmament kinds reach past the throat over the bell's swing; ",
-            "the furthest held kind at {} rings of the rim's {}\n"
+            "the rim at {} rings\n"
         ),
         leaving,
         rv.len(),
-        show(&s.far_reach()),
         show(&s.rim)
     );
+    let Some(orbit) = s.spin_orbit(&anchor.spin) else {
+        out.push_str("  The paired throat: the founded elements could not be read\n");
+        return out;
+    };
     out.push_str(&format!(
         concat!(
-            "  The admission: the parent's spin {} (drawn, then floored at the least ",
-            "that holds the firmament whole), torsion share {}; ",
-            "the least share {} at the inbound echo's peak {}; margin {}\n"
+            "  The paired throat (T16, T17): the parent's spin {}, torsion share {}; ",
+            "{} cohorts leave; the core's spin after them {} ({})\n"
         ),
         show(&anchor.spin),
         show(&s.share),
-        show(&s.least_share()),
-        s.inbound_peak(),
-        show(&anchor.margin)
+        orbit.cohorts.len(),
+        show(&orbit.spin),
+        if orbit.spin <= Q::ONE {
+            "closed on both faces"
+        } else {
+            "open: past the Kerr bound"
+        }
     ));
+    for c in &orbit.cohorts {
+        out.push_str(&format!(
+            concat!(
+                "    cohort at {} echoes ({} face): hold {}, ",
+                "turning share over hold share {}, spin after {}\n"
+            ),
+            c.echoes,
+            if c.far { "far" } else { "near" },
+            show(&c.hold),
+            show(&c.share),
+            show(&c.spin)
+        ));
+    }
     out.push_str(&format!(
         concat!(
             "  The inbound echo at T: {} (the ring plus the vessel's drift, per echo); ",

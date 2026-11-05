@@ -160,12 +160,11 @@ pole axis and the five isoclinic planes).
   `H / (2H + J)` and the jet carries `a = (H + J) / (2H + J)`. The share is 1/2
   at zero spin and 3/5 at extremal spin. The inverse is `J = H (2a - 1) / (1 -
   a)` (`spin_of_share`).
-- Admission (`cores::substrate_for`) requires the torsion share to be at
-  least the furthest held kind's reach over the rim, scaled by the peak of
-  the inbound echo, `a >= r_far / rim (1 + A_in_peak)`
-  (`Substrate::least_share`). Where the condition fails, the spin is raised
-  to the spin of that share and the universe is founded again, at most three
-  times; the margin `a - least_share` is held on the anchor.
+- The founding is made once at the drawn spin (`cores::substrate_for`);
+  whether the universal core's paired throat closes is read on its spin
+  orbit (`circuit::Substrate::spin_orbit`, T17; The core as a paired
+  throat), and the anchor holds the core's spin after it
+  (`circuit::Anchor::core_spin`).
 - The cascade yields four readings. Lumpiness is the beads' states above the
   mean over the sum of all bead states. Held share is the firmament's mass
   over all founded mass. Assembly is the number of bells until the home
@@ -242,8 +241,8 @@ twelve digits (they are sparse). Every other open kind reaches the throat
 and leaves.
 The firmament is therefore the closed kinds (for seed 7, 20 kinds with
 43.5% of the founded mass, from Z 2 to the seal at Z 1092), not the
-vessel's band; the present `beyond_share` test, which holds the vessel by
-its assigned reaches, goes with the cascade. Heavier closed kinds exist
+vessel's band (built: `circuit::Substrate::found` holds the closed kinds
+as the firmament, T16). Heavier closed kinds exist
 (22 between Z 1093 and Z 1700) but are not founded, because the founding's
 budget stops at the vessel's seal.
 
@@ -324,8 +323,8 @@ longer holds.
 ## 4. The firmament and the core
 
 - The firmament (`circuit::Substrate::found`, `circuit::Kind`) consists of
-  the held kinds inside the vessel band, each at its reach (its spin about
-  the throat) and its capture phase. Their amounts are scaled, preserving
+  the closed kinds, the paired throat's shared hold (T16), each at its
+  reach (its spin about the throat) and its capture phase. Their amounts are scaled, preserving
   their founded proportions, so that their total mass is the universal
   state, 1, which is the core's mass. The held share is then
   `1 / (1 + unit)`, where `unit` is the sum of the beads' states
@@ -763,7 +762,7 @@ Theorems:
 | T14 | enclosed matter, from the reach its layer has at the pinch (The state at the pinch); in plane `j` it is pushed out at `J_j / (6 H_j + J_j)` per echo, `H_j` the cohort's hold in the plane and `J_j = J / 5` (none on the axis plane) | 2, 3, 7 |
 | T15 | a whole nucleus feels its planes composed, `D_k = D(p_plane)^w_k D(n)^A`, `w_k` its share of turning in the isoclinic planes; held where `D_k <= 1`, else it leaves after `ln 2 / ln D_k` echoes | 3, T14 |
 | T16 | a paired throat's faces dilate an open kind by `D(s) D(n)^A` and `D(s) D(n)^-A`, product `(3 + a)^2`; no open kind is held on both faces; the shared hold is the closed kinds | 3, 5, 9, T2, T8 |
-| T17 | the spin is a sheared orbit over the pinches: a cohort leaving face `sigma` takes `m M (a + sigma (n / 2) p)`, `p = (t - 1) / (t + 1)`; Z-side release from the near face spins the throat up; the pair closes while `a <= 1` | 3, 4, 7, 9, 11, T2, T10, T16 |
+| T17 | the spin is a sheared orbit over the pinches: a kind's separation is `rho = q ln D(s) - (1 - q) ln D(1 - s)` across the attractor pair; a cohort takes `J (m / M) (rho_cohort / rho_hold)`; a cohort less separated than its hold spins the throat up; the pair closes while `a <= 1` | 3, 7, 9, 11, T2, T10, T16 |
 | T18 | the five isoclinic planes are interchangeable in the multiplicity and the filling, so each holds a fifth of the isoclinic hold and T14's pushes are equal: one isoclinic phase per body; distinct plane phases come only from a link's turning between planes | 8, T6, T7, T14 |
 | T19 | a link's remanence `w = J - (a_0 M_0) M`: per passage `w' = w (1 - m / M) + J (m / M) (1 - rho_c / rho_hold)`; conserved between passages; cleared by a passage of hold `m* = w M / (w + J (rho_c / rho_hold - 1))`; for one release, the remanent share `1 - rho_hold / rho_closed` | 7, 11, T10, T17 |
 
@@ -857,8 +856,13 @@ Derived ([#78](https://github.com/SAIOS-SAMN/xylarium/issues/78)); not yet built
 
 ### The core as a paired throat
 
-Derived ([#86](https://github.com/SAIOS-SAMN/xylarium/issues/86)); not yet
-built. A core is one throat with two faces, near and far, and never an open
+Derived and built ([#86](https://github.com/SAIOS-SAMN/xylarium/issues/86)):
+the firmament is the closed kinds (`circuit::Substrate::found`), the spin
+orbit is `circuit::Substrate::spin_orbit` with each kind's axis polarity
+from `atoms::axis_polarity` (T7), and the anchor holds the core's spin
+after it (`circuit::Anchor::core_spin`); `xylarium observe universal-core`
+prints the cohorts. A pinched throat's own cohort spin waits on the
+pinches being built. A core is one throat with two faces, near and far, and never an open
 singularity: the far face of the universal core is the parent's core, and the
 far face of a pinched throat is the core it bounces into (The bounce at a
 pinched throat). Its stability is read from axioms 3, 4, 5, 7, 9 and 11
@@ -878,25 +882,29 @@ and theorems T2, T8 and T11. Every identity below is exact.
   `t = 0` and `t = 1 / 0`, which the inversion exchanges. These are the
   closed kinds (`U = 0`, axiom 9). A paired throat's shared hold is its
   closed kinds, `M_c`. They never pinch, so no pinch reduces `M_c`.
-- **T17, the spin is a sheared orbit, turned by the antipole magnetism.**
-  A cohort of hold `m` leaving face `sigma` (+1 near, -1 far) carries its
-  share of the throat's turning, `m M a` (axiom 11), and the twist on it.
-  The twist turns the Q side up and the Z side down by `n / 2` each (T2), so a
-  kind with frames `U` at the Q pole and `W` at the Z pole (axiom 9) is
-  turned by `(n / 2) p`, where `p = (t - 1) / (t + 1)` is its pole push, the
-  flow law's reading of `t = U / W` (axiom 3). The far face inverts `t`, so
-  it reverses `p`. Per cohort, with `J = a M^2` (axiom 7):
-  `J' = J - m M (a + sigma (n / 2) p)`, `M' = M - m`, `a' = J' / M'^2`.
+- **T17, the spin is a sheared orbit, turned by the faces' separation.**
+  The two faces are an attractor and its inverse at the same level: the
+  near face advances `s` per traversal, the antipode `1 - s`. A kind's
+  frames stand on both, its open share `q = U / (U + W)` (axiom 9) on the
+  near face and its held share on the antipode, so its degree of
+  separation is the flow-law sum of the two advances (axiom 3), never their
+  mean: the rapidity `rho = q ln D(s) - (1 - q) ln D(1 - s)`, with
+  `D(s) = 3 + a` (T2) and `D(1 - s) = (6 + a) / (2 + a)`. The far face
+  exchanges `q` and `1 - q`. A cohort of hold `m` takes the turning in
+  proportion to its separation against the throat's present hold,
+  `J' = J - J (m / M) (rho_cohort / rho_hold)`, `M' = M - m`,
+  `a' = J' / M'^2` (axioms 7 and 11); releasing everything takes `J`
+  whole. What the pair cannot hold, the residual `n / 3` (T10), is
+  friction, not repulsion.
   - The cohorts leave at the throat's pinches, which are events, not
     steps. Between pinches each open kind climbs in closed form,
     `ln t += N* ln(D(s) D(n)^A)`, and the pinch interval
     `N* = 3 (4 + a) / (2 a)` moves with the spin. That is the orbit's shear.
-  - Released Z-side matter (`p < 0`) leaving the near face takes less than
-    the throat's mean turning and spins the throat up: phase strengthening.
-    Q-side matter, or Z-side matter leaving the far face, spins it down:
-    phase weakening (#84).
-  - Where the released magnetism `sum sigma m p` is zero, the law reduces
-    to `a' = a M / M'`, the ratio `a_0 M_0 / M_c`.
+  - A cohort less separated than the hold it leaves takes less than its
+    share of the turning and spins the throat up: phase strengthening. One
+    more separated spins it down: phase weakening (#84).
+  - Where a cohort's separation equals the hold's, the law reduces to
+    `a' = a M / M'`, the ratio `a_0 M_0 / M_c`.
   - Once the open kinds have gone, nothing leaves: the closed kinds
     exchange twist and writhe at constant `Lk` (T10), and the spin holds at
     `a*`.
@@ -904,8 +912,8 @@ and theorems T2, T8 and T11. Every identity below is exact.
     core can open or close as its release turns its spin.
 - **T11 read with the conserved turning.** The parent's degrees per unit
   hold are those of its founded hold, so a pinched cohort of hold `H_g`
-  carries `H_g M_0 (a_0 + (n / 2) p)` and spins at
-  `a_g = M_0 (a_0 + (n / 2) p) / H_g` (T17). The screen of roadmap item 32 had used
+  carries `J (H_g / M) (rho_g / rho_hold)` and spins at that over `H_g^2`
+  (T17). The screen of roadmap item 32 had used
   the core's retained hold, which understated `a_g` by the factor
   `M_c / M_0`. With the conserved turning the screen still gives one chain
   of throats, with the same held shares.
@@ -915,14 +923,20 @@ and theorems T2, T8 and T11. Every identity below is exact.
   - The 20 closed kinds of 1092 hold `M_c / M_0 = 0.4352`.
   - Open kinds held by pressure: about `10^-18` on the near face,
     `10^-42` on the far face, and none on both, as T16 requires.
-  - The orbit (`gate/spin_orbit.py`): the core releases its open kinds in
+  - The orbit (`gate/shear_orbit.py`): the core releases its open kinds in
     one cohort at its first pinch, after 18.8 echoes. The cohort is
-    0.5648 of the founded hold, Z side, `p = -0.683`. The spin goes from
-    0.3466 to `a* = 0.8776 <= 1`, against 0.7964 without the twist, so the
-    universal core is a closed paired throat.
+    0.5648 of the founded hold at separation `rho = -0.646`, against the
+    hold's `-0.798` (the closed kinds' is `-0.995`), so it takes 0.81 of
+    its share of the turning. The spin goes from 0.3466 to `a* = 0.9933`,
+    under the Kerr bound by 0.7%: the universal core is a closed paired
+    throat. In closed form, `a* = a_0 M_0 rho_closed / (rho_hold M_c)`.
+  - Read on the binary (`xylarium observe universal-core`, seed 7): one
+    near-face cohort at 18.81 echoes, its turning share over its hold share
+    0.8095, the core's spin after it 0.993298, closed on both faces; the
+    firmament is the 20 closed kinds, and the books close.
 - **What follows.**
   - **No admission.** The founding reads the orbit in place of the
-    reach-based `least_share`, which reads the echo's swing (#37). Whether
+    reach-based admission, which read the echo's swing (#37). Whether
     the core closes is a reading of the orbit, and the universe is founded
     either way: an unclosed core leaves every kind as medium.
   - **Pinched throats hold no closed kinds.** Their cohorts are open kinds

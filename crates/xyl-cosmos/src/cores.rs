@@ -9,10 +9,9 @@
 //! galaxy units each, `Shape::anchor`), phases in turns, times in rings
 //! (one ring one bell, `circuit::bell`), rates per ring, masses suns.
 //!
-//! - `substrate_for`: founds the substrate at the drawn spin; where the
-//!   firmament's margin is negative it refounds at the least admissible
-//!   spin (`bounce::spin_of_share` of `least_share`, clamped to the grid), with at most three
-//!   foundings in all, then sets `circuit::anchor`. None where the element table fails.
+//! - `substrate_for`: founds the substrate once at the drawn spin and sets
+//!   `circuit::anchor`, which carries the core's spin after its orbit
+//!   (`Substrate::spin_orbit`, T17). None where the element table fails.
 //! - `shapes`, `shape`, `held`: the home galaxy is index 0 at the universe
 //!   core with mass `hole_mass` and a flat plane; every other galaxy is a
 //!   bead of the founding cascade, of mass `hole_mass x state`, its plane
@@ -211,8 +210,8 @@ fn cache() -> &'static Mutex<BTreeMap<(u64, String), Arc<Founding>>> {
 /// The substrate founded at the parent's `spin`, once per spin per process:
 /// the founding depends on the laws and the spin alone (the torsion share
 /// sets the chain and the cascade), not on a seed's other draws. Each
-/// founding not found in the cache sets the anchor (circuit::anchor) to the
-/// admitted founding's. None where the element table fails.
+/// founding not found in the cache sets the anchor (circuit::anchor) to its
+/// own. None where the element table fails.
 pub fn substrate_for(spin: &Q) -> Option<Arc<crate::circuit::Substrate>> {
     static S: OnceLock<Mutex<BTreeMap<String, Arc<crate::circuit::Substrate>>>> = OnceLock::new();
     let table = S.get_or_init(|| Mutex::new(BTreeMap::new()));
@@ -220,32 +219,12 @@ pub fn substrate_for(spin: &Q) -> Option<Arc<crate::circuit::Substrate>> {
     if let Some(s) = table.lock().ok()?.get(&drawn) {
         return Some(s.clone());
     }
-    // Admission: while the firmament's margin is negative and the spin is
-    // below the least admissible one (bounce::spin_of_share of
-    // Substrate::least_share at the universal core's mass, clamped to the
-    // open grid; a share no spin reaches gives the extremal spin), refound
-    // at that spin; at most three foundings. The anchor is the admitted
-    // founding's.
-    let mut spin = spin.clone();
-    let mut found = None;
-    for _ in 0..3 {
-        let (s, anchor) = crate::circuit::Substrate::found(&spin)?;
-        let least = crate::origin::clamp_spin(
-            &crate::bounce::spin_of_share(&Q::ONE, &s.least_share()).unwrap_or(Q::ONE),
-        );
-        let whole = s.margin().signum() >= 0 || spin >= least;
-        found = Some((s, anchor, spin.clone()));
-        if whole {
-            break;
-        }
-        spin = least;
-    }
-    let (s, anchor, admitted) = found?;
+    // Founded once at the drawn spin; whether the core's paired throat
+    // closes is read on its orbit (Substrate::spin_orbit), never admitted.
+    let (s, anchor) = crate::circuit::Substrate::found(spin)?;
     crate::circuit::set_anchor(anchor);
     let s = Arc::new(s);
-    let mut t = table.lock().ok()?;
-    t.insert(drawn, s.clone());
-    t.insert(format!("{admitted}"), s.clone());
+    table.lock().ok()?.insert(drawn, s.clone());
     Some(s)
 }
 

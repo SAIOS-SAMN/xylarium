@@ -261,6 +261,16 @@ may change public APIs and the model's laws.
   carried in `life::Home::sequence` and `worlds::Setting::sequence`. A held
   body that does not ignite forms no remnant node (`pulse::nodes_among`).
 
+- One certified exponential: `motion::Boost::grown` splits the rapidity
+  into whole halvings (an exact power of two) and a remainder in
+  `[0, 2 ln 2)` that `certified::exp_of` encloses; `certified::exp_fixed`
+  and motion's own `ln 2` and `pow2` are removed, and `certified` builds
+  its dyadics with the one gcd-free constructor of `q`.
+
+- `Dy::PI` is `Dy::pi()`, and `Dy`'s ln 2 is read the same way: each is
+  the certified enclosure (`certified::pi`, `certified::ln2`) rounded down
+  to 62 bits once, in place of a hard-coded literal.
+
 ### Removed
 
 - The founding's rounding of rationals: `circuit::turn` (capture phases
@@ -279,6 +289,19 @@ may change public APIs and the model's laws.
   `field::burn_out_share` (`binding_mev`, `nucleon_mev`, `weak_mev`).
 - Hosted CI (`.github/workflows/ci.yml`) and its README badge are removed;
   the checks are run locally.
+
+- `xyl_core::orbit`, which no production code read; `Orbit::throat`
+  re-derived the torsion share that `bounce::torsion_share` holds. The
+  sheared return `k / (1 - theta)` stays a theorem of docs/model.md (T4).
+
+- Unread readings of xyl-core: `rotor::Half::share` (the S^2 case of
+  `measure::share_turns`), `shares::opposed` (`flow(x, -y)`) and
+  `Dy::cosh`; no production code called them.
+
+- `Rotor::matrix`: a rotor turns a vector by its own action,
+  `v + (w t + u x t) / n` with `t = 2 u x v` (`Rotor::apply`), and
+  `field::Bell::of` reads a stellar hole's axis as the frame's image of
+  the z axis through it.
 
 ## 0.3.0 - 2026-10-30
 

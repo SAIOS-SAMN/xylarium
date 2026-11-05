@@ -192,12 +192,15 @@ impl Bell {
             Kind::Stellar(s) => {
                 let o = &s.orbit;
                 // The orbit plane's normal: the frame's image of the z axis.
-                let m = o.frame().matrix();
+                let z = xyl_core::certified::Encl::exact(Q::ZERO);
+                let n = o
+                    .frame()
+                    .apply(&[z.clone(), z, xyl_core::certified::Encl::exact(Q::ONE)]);
                 (
                     [
-                        grid(Dy::from_q(&m[0][2])),
-                        grid(Dy::from_q(&m[1][2])),
-                        grid(Dy::from_q(&m[2][2])),
+                        grid(Dy::from_q(&n[0].mid())),
+                        grid(Dy::from_q(&n[1].mid())),
+                        grid(Dy::from_q(&n[2].mid())),
                     ],
                     drawn_spin(seed, s.n),
                 )
@@ -259,7 +262,7 @@ impl Bell {
         let angle = Dy::int(2) * (Dy::from_q(&t) * norm).atan();
         // The screw's translation for this turn, in AU, along the axis.
         let shift = Dy::from_q(&self.pitch_kpc) * Dy::from_q(&au_per_kpc()) * angle
-            / (Dy::int(2) * Dy::PI)
+            / (Dy::int(2) * Dy::pi())
             / norm.max(Dy::sci(1, -30));
         let along = [
             grid(shift * Dy::from_q(&self.axis[0])),

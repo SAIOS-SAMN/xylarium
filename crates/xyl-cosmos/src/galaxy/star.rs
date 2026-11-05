@@ -490,7 +490,7 @@ fn third_turns() -> Q {
 /// rounded to the grid.
 pub(crate) fn tilt_of(u: Dy) -> (Dy, Dy) {
     let theta = measure::angle_holding(measure::UNIVERSE_N, Dy::ONE - u);
-    let (s, c) = (Dy::PI * theta).sin_cos();
+    let (s, c) = (Dy::pi() * theta).sin_cos();
     let fix = |x: Dy| Dy::from_q(&down(&x.max(Dy::ZERO).to_q(), GRID_BITS));
     (fix(c), fix(s))
 }
@@ -498,7 +498,7 @@ pub(crate) fn tilt_of(u: Dy) -> (Dy, Dy) {
 /// A node at `u` of a turn about the axis, as the half-angle direction
 /// (cos, sin) rounded to the grid.
 pub(crate) fn node_of(u: Dy) -> (Dy, Dy) {
-    let (s, c) = (Dy::PI * u).sin_cos();
+    let (s, c) = (Dy::pi() * u).sin_cos();
     let fix = |x: Dy| Dy::from_q(&down(&x.to_q(), GRID_BITS));
     (fix(c), fix(s))
 }

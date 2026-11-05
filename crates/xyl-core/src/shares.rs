@@ -9,8 +9,8 @@
 //! - [`dilation`]: the dilation per echo of a push `p`, `D(p) = (1 + p) / (1 -
 //!   p)`, for `-1 < p < 1`; `D(-p) = 1 / D(p)`.
 //! - [`flow`]: the composition of two pushes, `x (+) y = (x + y) / (1 + x
-//!   y)`; [`opposed`] is `x (+) (-y)`, two pushes in opposite directions.
-//!   The dilation turns the flow law into a product, `D(x (+) y) = D(x) D(y)`.
+//!   y)` (two opposed pushes compose as `x (+) (-y)`). The dilation turns
+//!   the flow law into a product, `D(x (+) y) = D(x) D(y)`.
 //!
 //! Invariants: every value is exact on `Q`; a push outside `(-1, 1)` and a
 //! deficit with a negative hold or reach, or with both zero, are refused
@@ -48,12 +48,6 @@ pub fn flow(x: &Q, y: &Q) -> Option<Q> {
         return None;
     }
     (x + y).checked_div(&(&Q::ONE + &(x * y)))
-}
-
-/// A push `x` against an opposed push `y`: `x (+) (-y) = (x - y) / (1 - x
-/// y)`. `None` for either push outside `(-1, 1)`.
-pub fn opposed(x: &Q, y: &Q) -> Option<Q> {
-    flow(x, &-y.clone())
 }
 
 /// [`deficit`] on readings: `m / (r + m)`, zero for a non-positive hold, and
@@ -124,7 +118,7 @@ mod tests {
             (Q::ratio(1, 2), Q::ratio(2, 1), Q::ratio(7, 3)),
         ] {
             let (p_c, p_v) = (deficit(&h, &r).unwrap(), deficit(&m, &r).unwrap());
-            let net = opposed(&p_c, &p_v).unwrap();
+            let net = flow(&p_c, &-p_v).unwrap();
             assert_eq!(net, (&h - &m).checked_div(&(&(&r + &h) + &m)).unwrap());
         }
     }

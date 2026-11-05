@@ -183,17 +183,17 @@ impl Place {
     pub fn cell(&self) -> Cell {
         let d = |q: &Q| Dy::from_q(q);
         let (x, y, z) = (d(&self.dir[0]), d(&self.dir[1]), d(&self.dir[2]));
-        let half = Dy::PI / Dy::int(2);
+        let half = Dy::pi() / Dy::int(2);
         let az = if x.signum() > 0 {
             (y / x).atan()
         } else if x.signum() < 0 {
-            (y / x).atan() + if y.signum() >= 0 { Dy::PI } else { -Dy::PI }
+            (y / x).atan() + if y.signum() >= 0 { Dy::pi() } else { -Dy::pi() }
         } else if y.signum() >= 0 {
             half
         } else {
             -half
         };
-        let deg = |rad: Dy| rad * Dy::int(180) / Dy::PI;
+        let deg = |rad: Dy| rad * Dy::int(180) / Dy::pi();
         let mut az_deg = deg(az).trunc_i64();
         if az_deg < 0 {
             az_deg += 360;

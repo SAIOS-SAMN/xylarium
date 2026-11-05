@@ -167,7 +167,7 @@ fn constants() -> &'static Constants {
         geo_flux: Dy::sci(87, -3) / Dy::int(340),
         heat_unit_w: Dy::sci(87, -3)
             * Dy::int(4)
-            * Dy::PI
+            * Dy::pi()
             * Dy::from_q(&crate::package::Si::world_radius_m())
             * Dy::from_q(&crate::package::Si::world_radius_m()),
         giant_flux: Dy::ratio(54, 10) / Dy::int(340),

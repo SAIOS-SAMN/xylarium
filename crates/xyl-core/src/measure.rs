@@ -59,7 +59,7 @@ fn ladder(n: u32) -> Arc<Vec<Dy>> {
     if let Some(l) = map.lock().ok().and_then(|m| m.get(&n).cloned()) {
         return l;
     }
-    let step = Dy::PI / Dy::int(RUNGS as i64);
+    let step = Dy::pi() / Dy::int(RUNGS as i64);
     let mut held = Vec::with_capacity(RUNGS + 1);
     let mut sum = Dy::ZERO;
     held.push(sum);
@@ -86,8 +86,8 @@ pub fn share_turns(n: u32, theta: Dy) -> Dy {
     }
     let l = ladder(n);
     let whole = l[RUNGS];
-    let rad = t * Dy::int(2) * Dy::PI;
-    let step = Dy::PI / Dy::int(RUNGS as i64);
+    let rad = t * Dy::int(2) * Dy::pi();
+    let step = Dy::pi() / Dy::int(RUNGS as i64);
     let i = usize::try_from((rad / step).trunc_i64())
         .unwrap_or(0)
         .min(RUNGS - 1);
@@ -104,7 +104,7 @@ pub fn angle_holding(n: u32, s: Dy) -> Dy {
     let whole = l[RUNGS];
     let want = s * whole;
     let i = l.partition_point(|x| *x < want).clamp(1, RUNGS) - 1;
-    let step = Dy::PI / Dy::int(RUNGS as i64);
+    let step = Dy::pi() / Dy::int(RUNGS as i64);
     let (lo, hi) = (step * Dy::int(i as i64), step * Dy::int(i as i64 + 1));
     let gap = l[i + 1] - l[i];
     let mut rad = if gap.signum() > 0 {
@@ -119,5 +119,5 @@ pub fn angle_holding(n: u32, s: Dy) -> Dy {
         }
         rad = (rad - (l[i] + rung(n, lo, rad) - want) / slope).clamp(lo, hi);
     }
-    rad / (Dy::int(2) * Dy::PI)
+    rad / (Dy::int(2) * Dy::pi())
 }

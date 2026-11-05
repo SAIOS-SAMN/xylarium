@@ -700,13 +700,13 @@ impl Substrate {
     /// echo's torque invariant), so it oscillates without drift.
     fn ringing(&self, s: Dy) -> Dy {
         let echo = echo();
-        (Dy::int(2) * Dy::PI * s / echo).cos() / echo
+        (Dy::int(2) * Dy::pi() * s / echo).cos() / echo
     }
 
     /// The core's pulse integrated from its arrival to `s` rings after it:
     /// sin(2 pi s / echo) / (2 pi).
     fn rung(&self, s: Dy) -> Dy {
-        (Dy::int(2) * Dy::PI * s / echo()).sin() / (Dy::int(2) * Dy::PI)
+        (Dy::int(2) * Dy::pi() * s / echo()).sin() / (Dy::int(2) * Dy::pi())
     }
 
     /// The ocean's non-tidal waveform at reach `r` (rings) and `t`: the core's
@@ -753,7 +753,7 @@ impl Substrate {
                 let drift = gain * self.rate(sent).0 / inside;
                 let recession = drift + gain * ring / inside;
                 let swing = if reached {
-                    gain / (Dy::int(2) * Dy::PI) / inside
+                    gain / (Dy::int(2) * Dy::pi()) / inside
                 } else {
                     Dy::ZERO
                 };

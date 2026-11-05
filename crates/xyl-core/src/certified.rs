@@ -7,9 +7,10 @@
 //! Outputs: [`Encl`], an interval `lo <= x <= hi` of exact rationals, with
 //! interval arithmetic (`add`, `sub`, `mul`, `recip`, `outward`); the functions
 //! `sqrt`, `exp`, `exp_of`, `ln`, `ln2`, `pi`, `powq`, `cos_sin_turns` (angle
-//! in turns), `asin_small` and `asin_any`; the 128-bit fixed-point path
-//! `exp_fixed` / `fixed_bounds` in units of `2^-FIXED` (`FIXED` = 60); and
-//! `down` / `up`, rounding to the grid of `2^-bits`.
+//! in turns), `asin_small` and `asin_any`; `fixed_bounds`, a rational in
+//! 128-bit units of `2^-FIXED` (`FIXED` = 60) for the fixed-point series of
+//! the circular functions; and `down` / `up`, rounding to the grid of
+//! `2^-bits`.
 //!
 //! Invariants:
 //! - every series is summed with an explicit bound on its remainder;
@@ -28,11 +29,12 @@
 //!
 //! Terms: `Encl` (docs/glossary.md).
 
+use crate::q::dyadic;
 use crate::Q;
 use num_bigint::BigInt;
 use num_integer::Integer;
 use num_rational::BigRational;
-use num_traits::{One, Zero};
+use num_traits::One;
 
 /// An exact rational interval proven to contain a real value.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -43,33 +45,20 @@ pub struct Encl {
     pub hi: Q,
 }
 
-fn pow2(bits: u32) -> BigInt {
+/// `2^bits`, exact.
+pub(crate) fn pow2(bits: u32) -> BigInt {
     BigInt::one() << bits
-}
-
-/// `k / 2^bits` in lowest terms without a gcd: the common factor of
-/// numerator and denominator is two to the numerator's count of trailing zero
-/// bits.
-fn dyadic(k: BigInt, bits: u32) -> Q {
-    // Zero has no trailing zero bits to count; it maps to the canonical zero.
-    if k.is_zero() {
-        return Q::ZERO;
-    }
-    let tz = u32::try_from(k.trailing_zeros().unwrap_or(0))
-        .unwrap_or(0)
-        .min(bits);
-    Q::from_reduced(BigRational::new_raw(k >> tz, pow2(bits - tz)))
 }
 
 /// `q` rounded down to the grid of `2^-bits`: one floor division of the
 /// numerator, shifted left by `bits`, by the denominator.
 pub fn down(q: &Q, bits: u32) -> Q {
-    dyadic((q.numer() << bits).div_floor(&q.denom()), bits)
+    dyadic((q.numer() << bits).div_floor(&q.denom()), u64::from(bits))
 }
 
 /// `q` rounded up to the grid of `2^-bits`.
 pub fn up(q: &Q, bits: u32) -> Q {
-    dyadic((q.numer() << bits).div_ceil(&q.denom()), bits)
+    dyadic((q.numer() << bits).div_ceil(&q.denom()), u64::from(bits))
 }
 
 impl Encl {
@@ -364,42 +353,9 @@ pub fn exp_of(x: &Encl, bits: u32) -> Encl {
     }
 }
 
-/// The fixed point of [`exp_fixed`]: values in units of `2^-60`.
+/// The fixed point of [`fixed_bounds`], [`cos_sin_turns`] and
+/// [`asin_small`]: values in units of `2^-60`.
 pub const FIXED: u32 = 60;
-
-/// `exp(a)` for `a` in `[lo, hi] x 2^-60` with `0 <= lo <= hi < 2^61`
-/// (so `a < 2`), proven, in 128-bit integers. Each bound's Taylor series is
-/// summed with every product rounded toward the side of that bound (the
-/// lower bound's terms floored, the upper bound's rounded up). The series
-/// stops once `n >= 4` and a term `t_n` has fallen to one unit; with `a < 2`
-/// each later term is less than half the one before, so the upper bound adds
-/// `2 t_n + 2` units for the remainder. Negative inputs are read as zero. The
-/// result is a proven enclosure like that of `exp`, computed in integer
-/// arithmetic.
-pub fn exp_fixed(lo: i128, hi: i128) -> Encl {
-    let one: i128 = 1 << FIXED;
-    let series = |x: i128, up: bool| -> i128 {
-        let (mut term, mut sum, mut n) = (one, one, 1i128);
-        loop {
-            let prod = term * x;
-            let mut next = (prod >> FIXED) / n;
-            if up && (prod & (one - 1) != 0 || (prod >> FIXED) % n != 0) {
-                next += 1;
-            }
-            term = next;
-            sum += term;
-            if (n >= 4 && term <= 1) || n > 200 {
-                return if up { sum + 2 * term + 2 } else { sum };
-            }
-            n += 1;
-        }
-    };
-    let q = |v: i128| Q::from_i128(v, one).unwrap_or(Q::ZERO);
-    Encl {
-        lo: q(series(lo.max(0), false)),
-        hi: q(series(hi.max(0), true)),
-    }
-}
 
 /// `q` in units of `2^-60`, rounded down and up.
 pub fn fixed_bounds(q: &Q) -> (i128, i128) {

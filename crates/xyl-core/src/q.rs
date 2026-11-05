@@ -316,9 +316,9 @@ fn two_power(d: &BigInt) -> Option<u64> {
     (d == &(BigInt::one() << e)).then_some(e)
 }
 
-/// `n / 2^e` in lowest terms: the common factor is two to the count of
-/// trailing zero bits of `n`.
-fn dyadic(n: BigInt, e: u64) -> Q {
+/// `n / 2^e` in lowest terms without a gcd: the common factor is two to the
+/// count of trailing zero bits of `n`.
+pub(crate) fn dyadic(n: BigInt, e: u64) -> Q {
     if n.is_zero() {
         return Q::ZERO;
     }

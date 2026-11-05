@@ -146,7 +146,7 @@ fn surface_m2(body: &Body) -> Dy {
     let unit_r = Dy::from_q(&xyl_cosmos::package::Si::world_radius_m());
     let r_m = body.radius * unit_r;
     // Linear area rule against the unit world: A = 4 pi r R_unit.
-    Dy::int(4) * Dy::PI * r_m * unit_r
+    Dy::int(4) * Dy::pi() * r_m * unit_r
 }
 
 /// The power available to a people of `numbers` bodies on world `body` in

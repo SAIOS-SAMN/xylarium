@@ -45,13 +45,6 @@ another crate. Laws are composed from shares (ratios of the form
   remainder; `within` compares exact shares against a sector's exact bounds;
   `DDD:MM:SS:XX:XX:XX` (`N/DDD:...` with the rings on the T lane) is display
   only. Status: built.
-- Orbit (`xyl_core::orbit::Orbit`): per plane the periapsis advance
-  `theta_i` per traversal; periapsis `t theta_i mod 1`, anomaly
-  `t (1 - theta_i) mod 1`; sheared return `k / (1 - theta_i)`; return to the
-  form against facets `lambda_i` (1, or 1/2 for the antipode): the least
-  common multiple of `lambda_i / (1 - theta_i)`; capacity the least whole
-  `k` with `k (1 - theta_i) / lambda_i` whole on every plane. Spinless
-  throat: return 2 (the echo); `a = 1`: `5/2`. Status: built.
 
 ## 2. Units and the master frame
 
@@ -84,7 +77,7 @@ another crate. Laws are composed from shares (ratios of the form
 - Deficit law (`xyl_core::shares::deficit`, `deficit_dy`):
   `delta(R, M) = M / (R + M)`, and the received share is `1 - delta`.
   Status: built.
-- Dilation and flow law (`xyl_core::shares::dilation`, `flow`, `opposed`):
+- Dilation and flow law (`xyl_core::shares::dilation`, `flow`):
   `D(p) = (1 + p) / (1 - p)` for `-1 < p < 1`; `x (+) y = (x + y) / (1 + x
   y)`; `D(x (+) y) = D(x) D(y)`. Status: built.
 - Horizon reach (`bounce::horizon_reach`): `delta_h = 1/3`, so

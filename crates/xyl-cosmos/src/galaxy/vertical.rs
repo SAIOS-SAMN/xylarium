@@ -111,7 +111,7 @@ pub fn vertical(r: Dy, born: Dy, age: Dy, u: Dy, phase: Dy) -> Vertical {
     let sigma = h * nu * heating_share(r, born, age) * share;
     let vz = sigma * -(Dy::ONE - u).max(Dy::sci(1, -12)).log();
     let (amp, period) = if nu.signum() > 0 {
-        (vz / nu, Dy::int(2) * Dy::PI / nu)
+        (vz / nu, Dy::int(2) * Dy::pi() / nu)
     } else {
         (Dy::ZERO, Dy::ZERO)
     };
@@ -122,7 +122,7 @@ pub fn vertical(r: Dy, born: Dy, age: Dy, u: Dy, phase: Dy) -> Vertical {
     } else {
         // The share is `atan(h / A)` over the quarter turn, avoiding the root
         // of 1 - x^2 in asin(h / A).
-        (h / amp).atan() * Dy::int(2) / Dy::PI
+        (h / amp).atan() * Dy::int(2) / Dy::pi()
     };
     Vertical {
         amp,

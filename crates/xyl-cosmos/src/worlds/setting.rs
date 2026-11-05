@@ -67,7 +67,7 @@ impl Path {
             let frac = t / self.lock_gyr.max(Dy::sci(1, -12));
             self.spin0 - (self.spin0 - mean) * frac
         };
-        let two_pi = Dy::int(2) * Dy::PI;
+        let two_pi = Dy::int(2) * Dy::pi();
         Heartbeat {
             day_s: two_pi / w.max(Dy::sci(1, -12)),
             year_s: two_pi / mean.max(Dy::sci(1, -30)),

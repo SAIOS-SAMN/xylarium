@@ -818,6 +818,44 @@ Derived ([#78](https://github.com/SAIOS-SAMN/xylarium/issues/78)); not yet built
   below one a throat's matter goes into a single pinch, so these laws give
   one chain, not a population (#79).
 
+### Phase weakening and phase strengthening
+
+Planned ([#84](https://github.com/SAIOS-SAMN/xylarium/issues/84),
+roadmap item 39); not yet derived. This section records what the law is to
+answer, the code it builds on and what that code lacks today.
+
+- **Phase weakening (remanence).** A drive moves a kind's pole state
+  `t = U / W` away from its rest: the push `h / (R + h) (1 + A_in(t))`
+  with the inbound echo `A_in` (`circuit::push_at`, `Substrate::inbound`,
+  `inbound_mean`), the jet map `t -> a t + b` (`circuit::jet_map`) and the
+  jetstream's residual dilation (`Substrate::loop_flux`). When the drive
+  falls back to its mean, the part of the displacement that stays held is
+  the remanence, and the phase weakens by what is released. The candidates
+  are read from the dipole's split, `D(p_pair) = D(n) D(n / 3)` (The
+  antipoles, the shear and the pinch): `n` held as torsion, `n / 3` released
+  as writhe. The coercivity is the reverse push that takes the held part
+  back to zero.
+- **Phase strengthening (the inverse).** The antipole of weakening drives
+  the pole state further from its rest. Three sources are to be derived:
+  - mass at distance from a core, a star's own included, through the
+    deficit `M / (r + M)` at its reach (`xyl_core::shares::deficit`);
+  - a throat with an Einstein-Cartan bounce, whose far face inverts
+    `t -> 1 / t` and the axis polarity `A -> -A` (`bounce`; The bounce at
+    a pinched throat);
+  - core fusion, while the collective is on the Z side, `t < 1`
+    (`stars::fusion_step`; Polarity, fusion and fission).
+- **What the code lacks.** Every law is a closed form of the present state.
+  The jet map is affine and invertible. The electron phase
+  `R = kappa (1 - 2 frac(p))` (`circuit::electron_phase`) reads the current
+  pulse phase. The T8 holding is a threshold on the present state, not a
+  memory. A kind's axis polarity at rest is neutral, and there is no
+  coercivity quantity. The law needs one carrier: the held residual as a
+  closed form of the drive's history, with no time-stepping.
+- **What it would give.** A cooling front that freezes a kind's axis
+  polarity at the phase of the pulse it formed in, so that a world's matter
+  keeps a physical record of its formation for archaeology and the annals
+  to read.
+
 ### Radiation: irradiation held, transduced and passed on
 
 Light, heat and their dispersal are one exchange read through the deficit

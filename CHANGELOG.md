@@ -11,6 +11,10 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Phase weakening (remanence) and phase strengthening recorded as planned
+  work (docs/model.md, roadmap item 39, #84), with the code they build on
+  and what that code lacks.
+
 - `xyl_core::cga` is `Cl(p, q)` (Concordance 2.10, draft 5): `Mv<NEG>`
   carries the signature in its type, `Mv` is the conformal `Mv<EM>`, and
   two signatures never compose; the reordering sign is read in closed form

@@ -898,6 +898,69 @@ and theorems T2, T8 and T11. Every identity below is exact.
   - **What persists on the child side.** A core persists on the child side
     of a bounce only through the closed kinds it carries.
 
+### The frame, the place and the chain
+
+Planned ([#90](https://github.com/SAIOS-SAMN/xylarium/issues/90), roadmap
+item 40); audited 2026-11-05. This section records where the cartography
+loses the model's dimensions and where the manifold chain is not composed,
+and the order in which that is to be opened up.
+
+- **The root.** A frame is a rational quaternion, `xyl_core::rotor::Rotor`,
+  the even part of Cl(3). A place is `chain::Place`, a direction in three
+  coordinates with a reach, a climb and an offset. The model's states live
+  on the axis plane and five isoclinic planes (axiom 8); the algebra that
+  holds them is `xyl_core::cga`, and the planes' blades are
+  `circuit::axes::plane_blade`.
+- **Frames built, not composed.**
+  - Four sites build a frame from a node and a tilt about the fixed axes
+    `z` and `x`: `galaxy::Orbit::frame`, `cores::Shape::place_at`, the
+    founding's `dir0` in `cores`, and `frame_of` in `manifold`.
+  - A frame is read through one image: the orbit normal as the image of
+    `z` in `field::Bell::of`, and a place as the image of `(cos, sin, 0)`.
+  - A planet's frame ignores its star's frame, and a moon's is the identity.
+  - `manifold::galaxy_place` keeps a world's distance from its star and
+    drops its direction (`chain::Place::standing_off`).
+  - Field anchors sit on the first axis (`field::Anchor::on_orbit`).
+  - `transit::separation_m` reads two worlds in different systems as their
+    stars' arc.
+- **Units hop through SI in the chain.** A star's reach goes through kpc
+  and metres to AU; `manifold::manifolds` goes through kilograms and metres;
+  moons through AU, metres and kilograms; the spheres' radii through kpc.
+  Between tiers the chain's own map is `manifold::dilation`.
+- **Relations not read in the lowest common tier.** `pulse::hear` weighs
+  bells over a flat arc in kpc as one complex phasor on one plane;
+  chronometry adds distances in kpc; galaxies carry no cross-ties.
+- **Separation by squares.** `xyl_core::rotor::angle_between` (a dot product
+  and a root) is the distance under every arc. Separations are sums of one
+  angle and differences of radii, and the field's shear and work are sums
+  of squares, against axiom 3's composition and caps in degrees.
+- **Links without shear.** A star's galactic orbit and a core's circulation
+  are closed circles. A moon's eccentricity never relaxes, no link carries
+  a torque, and settling's kicks repeat every `q` meetings, against
+  axiom 10.
+- **Containment by radius.** Membership is decided by comparing radii, and
+  no cap decides anything.
+- **Exactness.** Directions and angles are stored as enclosure midpoints,
+  and phases evolve in radians as dyadics.
+- **Dimension cut down.**
+  - The disc's collapse is read on a circle and the bulge's on a sphere,
+    and a body's extent on a sphere.
+  - The spin is one scalar on all five planes, and the horizon crossing
+    turns one plane only.
+  - Homologue galaxies read their stars at home values.
+- **Order of the work.**
+  1. One frame carrier over the six planes, composed along the chain, a
+     place being its parent's frame acting on the body's own state; the
+     per-plane phases derived from the per-plane pushes (T14, T15).
+  2. The chain's tier maps by `manifold::dilation` only, with SI read once
+     at the inlet, and relations in the lowest common tier.
+  3. Separation and containment by caps in degrees.
+  4. Shear, stretch, torque and twist on every link.
+  5. Exact enclosures and exact turns.
+  6. The dimension of the disc, the bulge and a body.
+  7. Placement from the founding's coordinate, not the sample index (#36,
+     #79).
+
 ### Phase weakening and phase strengthening
 
 Planned ([#84](https://github.com/SAIOS-SAMN/xylarium/issues/84),

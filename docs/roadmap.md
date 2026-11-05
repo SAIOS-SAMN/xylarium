@@ -215,6 +215,15 @@ where it belongs to one.
    The books become one cycle across the universe: held, in flight outward, held
    downstream and in flight inward together equal founded.
 
+40. **The frame, the place and the chain**
+    ([#90](https://github.com/SAIOS-SAMN/xylarium/issues/90), `defect`,
+    `law`; [model.md](model.md#the-frame-the-place-and-the-chain)). One
+    frame carrier over the axis plane and five planes in `xyl_core::cga`,
+    composed along the anchor chain, replacing `xyl_core::rotor::Rotor` and
+    the three coordinates of `chain::Place`; tier maps by
+    `manifold::dilation` only; separation and containment by caps in
+    degrees; shear, stretch, torque and twist on every link; exact turns.
+    First step, the per-plane phases from the per-plane pushes (T14, T15).
 39. **Phase weakening and phase strengthening**
     ([#84](https://github.com/SAIOS-SAMN/xylarium/issues/84), `proposal`,
     `law`; depends on items 32 and 34;

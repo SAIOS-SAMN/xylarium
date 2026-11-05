@@ -11,6 +11,9 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The audit of the frame, the place and the chain recorded as planned work
+  (docs/model.md, roadmap item 40, #90).
+
 - The throat's spin as a sheared orbit (docs/model.md, T17 amended, #86).
   Each cohort takes the throat's turning plus its twist, `(n / 2) p` with
   `p = (t - 1) / (t + 1)` its pole push, signed by face. Z-side release
@@ -394,6 +397,12 @@ may change public APIs and the model's laws.
   `v + (w t + u x t) / n` with `t = 2 u x v` (`Rotor::apply`), and
   `field::Bell::of` reads a stellar hole's axis as the frame's image of
   the z axis through it.
+
+### Fixed
+
+- Merged embryos' phases meet along the shorter arc between them,
+  weighted by mass (`systems` settling); they were averaged as numbers, so
+  0.95 and 0.05 met at 0.5.
 
 ## 0.3.0 - 2026-10-30
 

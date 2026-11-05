@@ -694,8 +694,9 @@ Next:
    item 1).
 9. Deliberation between houses bound by the delays of their percepts
    (#94).
-10. The uplink's exact T reading, each act on the lane of its kind, and a
-    mind's focus as a four-share vector
+10. Done: the uplink's exact T reading and a mind's focus as four exact
+    shares (`knowledge::Focus`); the frame's lane byte stays S until
+    Mycelium retires it
     ([#108](https://github.com/SAIOS-SAMN/xylarium/issues/108), #107).
 11. Embedded minds: the uplink hosts the client's cognition, one per
     ancient seat, through the house's seat-surface path, linked to the

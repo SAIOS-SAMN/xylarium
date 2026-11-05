@@ -315,7 +315,7 @@ pub(crate) fn summary(u: &Universe<'_>) -> String {
         .knowledge
         .of
         .iter()
-        .filter(|k| k.focus.is_some())
+        .filter(|k| !k.focus.is_none())
         .count();
     // The most numerous people, described by the quantities its population is
     // derived from: the mass and metabolic power of one body, and the harvest

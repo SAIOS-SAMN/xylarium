@@ -28,15 +28,17 @@
 //! Terms: checkpoint (docs/glossary.md).
 
 use crate::chronometry::Point;
-use crate::knowledge::Domain;
+use crate::knowledge::{Domain, Focus};
 use crate::seats::Holder;
 use crate::universe::{Input, Universe};
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 
-const FORECAST_FORMAT: &str = "xylarium checkpoint v4";
+const FORECAST_FORMAT: &str = "xylarium checkpoint v5";
 /// The previous version, refused by name: its commits held a height alone.
 const FORMAT_V3: &str = "xylarium checkpoint v3";
+/// The superseded layout whose focus was one domain or none.
+const FORMAT_V4: &str = "xylarium checkpoint v4";
 
 /// A people's held record.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -54,7 +56,7 @@ pub struct Held {
     /// `None` when the people had no knowledge layer.
     pub stock: Option<[Q; 4]>,
     /// The domain the people's inquiry is turned to; `None` when unturned.
-    pub focus: Option<Domain>,
+    pub focus: Focus,
     /// The home radiation the people's repair is tuned to; `None` until the
     /// people first received nonzero radiation.
     pub home: Option<Q>,
@@ -153,15 +155,11 @@ pub fn q_of(s: &str) -> Option<Q> {
     }
 }
 
+/// An eminent figure's domain, by its index.
 fn domain(s: &str) -> Option<Domain> {
     s.parse::<usize>()
         .ok()
         .and_then(|i| Domain::ALL.get(i).copied())
-}
-
-fn domain_text(d: Option<Domain>) -> String {
-    d.map(|d| d.index().to_string())
-        .unwrap_or_else(|| "-".into())
 }
 
 impl Checkpoint {
@@ -188,7 +186,7 @@ impl Checkpoint {
                     population: p.population.to_q(),
                     capacity: p.capacity.to_q(),
                     stock: k.map(|k| k.stock.map(|x| x.to_q())),
-                    focus: k.and_then(|k| k.focus),
+                    focus: k.map(|k| k.focus.clone()).unwrap_or_else(Focus::none),
                     home: u.field.home.get(i).copied().flatten().map(|h| h.to_q()),
                 }
             })
@@ -285,7 +283,7 @@ impl Checkpoint {
                     s[1],
                     s[2],
                     s[3],
-                    domain_text(p.focus)
+                    p.focus.written()
                 ));
             }
             if let Some(h) = &p.home {
@@ -349,10 +347,9 @@ impl Checkpoint {
                     world,
                     emigrants,
                 } => out.push_str(&format!("input {at} settle {parent} {world} {emigrants}\n")),
-                Input::Focus { seat, domain } => out.push_str(&format!(
-                    "input {at} focus {seat} {}\n",
-                    domain_text(*domain)
-                )),
+                Input::Focus { seat, focus } => {
+                    out.push_str(&format!("input {at} focus {seat} {}\n", focus.written()))
+                }
             }
         }
         out
@@ -366,8 +363,8 @@ impl Checkpoint {
     /// number, key or index that does not parse.
     pub fn decode(text: &str) -> Result<Checkpoint, String> {
         let version = text.lines().next().unwrap_or_default();
-        if version == FORMAT_V3 {
-            return Err(format!("{FORMAT_V3} is no longer read"));
+        if version == FORMAT_V3 || version == FORMAT_V4 {
+            return Err(format!("{version} is no longer read"));
         }
         if version != FORECAST_FORMAT {
             return Err(format!("not a {FORECAST_FORMAT}"));
@@ -412,7 +409,7 @@ impl Checkpoint {
                     let i: usize = i.parse().ok()?;
                     let h = by.entry(i).or_insert_with(|| blank(i, t));
                     h.stock = Some([q_of(a)?, q_of(b)?, q_of(cc)?, q_of(d)?]);
-                    h.focus = domain(f);
+                    h.focus = Focus::parse(f)?;
                 }
                 ["home", i, t, x] => {
                     let i: usize = i.parse().ok()?;
@@ -466,7 +463,7 @@ impl Checkpoint {
                     q_of(at)?,
                     Input::Focus {
                         seat: seat.parse().ok()?,
-                        domain: domain(d),
+                        focus: Focus::parse(d)?,
                     },
                 )),
                 _ => {}
@@ -509,7 +506,7 @@ impl Checkpoint {
             p.capacity = Dy::from_q(&h.capacity);
             if let (Some(k), Some(s)) = (u.civ.knowledge.of.get_mut(h.index), &h.stock) {
                 k.stock = s.clone().map(|x| Dy::from_q(&x));
-                k.focus = h.focus;
+                k.focus = h.focus.clone();
             }
             if let Some(home) = &h.home {
                 if u.field.home.len() <= h.index {
@@ -589,7 +586,7 @@ fn blank(i: usize, t: &str) -> Held {
         population: Q::ZERO,
         capacity: Q::ZERO,
         stock: None,
-        focus: None,
+        focus: Focus::none(),
         home: None,
     }
 }
@@ -705,7 +702,7 @@ mod tests {
                 population: Q::ratio(108_971, 1),
                 capacity: Q::ratio(3, 7),
                 stock: Some([Q::ratio(1, 3), Q::ZERO, Q::ratio(2, 9), Q::ONE]),
-                focus: Some(Domain::Materials),
+                focus: Focus::of([Q::ZERO, Q::ratio(3, 4), Q::ratio(1, 8), Q::ZERO]).unwrap(),
                 home: Some(Q::ratio(5, 11)),
             }],
             inputs: vec![
@@ -720,7 +717,7 @@ mod tests {
                     Q::ratio(2, 3),
                     Input::Focus {
                         seat: 3,
-                        domain: None,
+                        focus: Focus::none(),
                     },
                 ),
                 (

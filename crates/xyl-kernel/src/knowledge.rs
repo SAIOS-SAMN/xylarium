@@ -32,6 +32,7 @@
 use crate::cosmic::{People, Shape, Strategy, Traits};
 use crate::growth::{self, Rulers};
 use xyl_core::dyadic::Dy;
+use xyl_core::Q;
 use xyl_cosmos::worlds::{t_unit, Ctx, Solvent, Where};
 
 /// A domain of knowledge.
@@ -80,6 +81,79 @@ impl Domain {
 
 /// A value per domain, indexed by `Domain::index`.
 pub type ByDomain = [Dy; 4];
+
+/// A ruler's direction of inquiry: an exact share of the people's free
+/// thought for each domain (energy, materials, biology, information), each
+/// in `[0, 1]` and together at most 1, read whole and never as a winner. All
+/// zero lets the inquiry follow the people's needs.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Focus {
+    shares: [Q; 4],
+}
+
+impl Default for Focus {
+    fn default() -> Focus {
+        Focus::none()
+    }
+}
+
+impl Focus {
+    /// The focus of `shares`, in domain order; `None` where a share lies
+    /// outside `[0, 1]` or the shares sum past 1.
+    pub fn of(shares: [Q; 4]) -> Option<Focus> {
+        let sum = shares.iter().fold(Q::ZERO, |a, s| &a + s);
+        let each = shares.iter().all(|s| s.signum() >= 0 && *s <= Q::ONE);
+        (each && sum <= Q::ONE).then_some(Focus { shares })
+    }
+
+    /// No direction: the inquiry follows the people's needs.
+    pub fn none() -> Focus {
+        Focus {
+            shares: std::array::from_fn(|_| Q::ZERO),
+        }
+    }
+
+    /// The shares, in domain order.
+    pub fn shares(&self) -> &[Q; 4] {
+        &self.shares
+    }
+
+    /// The domains the focus directs, each with its share, in domain order
+    /// (`materials 3/4, biology 1/8`); empty where it directs nothing.
+    pub fn described(&self) -> String {
+        Domain::ALL
+            .iter()
+            .zip(&self.shares)
+            .filter(|(_, s)| s.signum() > 0)
+            .map(|(d, s)| format!("{} {s}", d.name()))
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+
+    /// Whether the focus directs nothing.
+    pub fn is_none(&self) -> bool {
+        self.shares.iter().all(|s| s.signum() == 0)
+    }
+
+    /// Written as the four shares in domain order, joined by commas.
+    pub fn written(&self) -> String {
+        self.shares
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>()
+            .join(",")
+    }
+
+    /// The focus [`Focus::written`] wrote; `None` where it does not parse or
+    /// is not a focus.
+    pub fn parse(text: &str) -> Option<Focus> {
+        let parts: Vec<Q> = text
+            .split(',')
+            .map(crate::checkpoint::q_of)
+            .collect::<Option<_>>()?;
+        Focus::of(parts.try_into().ok()?)
+    }
+}
 
 // -------------------------------------------------------------------- Constants.
 
@@ -388,18 +462,11 @@ pub fn effort(t: &Thinkers) -> Effort {
 
 /// Returns how a span's thought divides among the domains, and the free
 /// thought's weights: lived thought by affinity, free thought by curiosity +
-/// pull + 1 for the focused domain (knowledge.quarter's weights).
-pub fn directed(e: &Effort, t: &Thinkers, focus: Option<Domain>) -> (ByDomain, ByDomain) {
+/// pull + the focus's share of each domain (knowledge.quarter's weights).
+pub fn directed(e: &Effort, t: &Thinkers, focus: &Focus) -> (ByDomain, ByDomain) {
     let pull = t.needs.pulls();
-    let weights: ByDomain = std::array::from_fn(|i| {
-        curiosity()
-            + pull[i].max(Dy::ZERO)
-            + if focus.is_some_and(|f| f.index() == i) {
-                Dy::ONE
-            } else {
-                Dy::ZERO
-            }
-    });
+    let weights: ByDomain =
+        std::array::from_fn(|i| curiosity() + pull[i].max(Dy::ZERO) + Dy::from_q(&focus.shares[i]));
     let wsum: Dy = weights.iter().copied().sum();
     let asum: Dy = t.profile.affinity.iter().copied().sum();
     let out = std::array::from_fn(|i| {
@@ -444,7 +511,7 @@ pub struct Stocks {
     /// Knowledge held per domain (KU).
     pub stock: ByDomain,
     /// A ruler's direction of inquiry (a seat's focus decision).
-    pub focus: Option<Domain>,
+    pub focus: Focus,
     /// The people's fluid intelligence, as last read (not yet modelled).
     pub fluid: Dy,
     /// Growth rate per year of the total stock over the last span:
@@ -494,11 +561,12 @@ impl Knowledge {
         }
     }
 
-    /// Sets a ruler's direction of inquiry for people `who`: the focused
-    /// domain's free-thought weight rises by 1 (knowledge.focus).
-    pub fn focus(&mut self, who: usize, d: Option<Domain>) {
+    /// Sets a ruler's direction of inquiry for people `who`: each domain's
+    /// free-thought weight rises by the focus's share of it
+    /// (knowledge.focus).
+    pub fn focus(&mut self, who: usize, focus: Focus) {
         self.sync(who + 1);
-        self.of[who].focus = d;
+        self.of[who].focus = focus;
     }
 
     /// Advances every people's knowledge over `years` (knowledge.quarter):
@@ -525,7 +593,7 @@ impl Knowledge {
             } else {
                 Effort::default()
             };
-            let (by, weights) = directed(&e, t, s.focus);
+            let (by, weights) = directed(&e, t, &s.focus);
             let share = forgetting(t.life_yr, t.profile.collective);
             let lam = rate(share);
             for d in Domain::ALL {
@@ -669,12 +737,30 @@ mod tests {
         assert!(s.stock[Domain::Biology.index()] > s.stock[Domain::Materials.index()]);
         // A focus moves the stock toward the focused domain.
         let mut k2 = Knowledge::default();
-        k2.focus(0, Some(Domain::Materials));
+        k2.focus(0, Focus::of([Q::ZERO, Q::ONE, Q::ZERO, Q::ZERO]).unwrap());
         th.needs = Needs::default();
         k2.step(&[th], Dy::int(10));
         assert!(
             k2.of[0].stock[Domain::Materials.index()] > k2.of[0].stock[Domain::Biology.index()]
         );
         assert!(k2.of[0].growth.signum() > 0);
+    }
+
+    /// A focus holds four shares, each in [0, 1] and together at most 1;
+    /// anything else is refused, and the written form reads back whole.
+    #[test]
+    fn focus_refuses_shares_out_of_bounds_and_round_trips() {
+        let f = Focus::of([Q::ratio(1, 2), Q::ZERO, Q::ratio(1, 3), Q::ratio(1, 6)]).unwrap();
+        assert_eq!(Focus::parse(&f.written()), Some(f.clone()));
+        assert!(!f.is_none() && Focus::none().is_none());
+        assert_eq!(
+            Focus::of([Q::ratio(3, 4), Q::ratio(1, 2), Q::ZERO, Q::ZERO]),
+            None
+        );
+        assert_eq!(
+            Focus::of([Q::ratio(-1, 4), Q::ZERO, Q::ZERO, Q::ZERO]),
+            None
+        );
+        assert_eq!(Focus::parse("1/2,1/2"), None);
     }
 }

@@ -120,7 +120,10 @@ materials, biology and information. There is no technology tree.
 - Effort is allocated across domains by the people's needs (hunger to
   biology, a spent crust to materials, a power shortfall to energy, trade
   to information) over a floor (`knowledge::curiosity`, one quarter of a
-  domain's pull), plus any focus set by a seat (`Input::Focus`). Hunger is
+  domain's pull), plus any focus set by a seat (`Input::Focus`): four exact
+  shares of free thought, one per domain, each in `[0, 1]` and together at
+  most 1 (`knowledge::Focus`), each adding its share to its domain's
+  weight; none is a winner. Hunger is
   computed from the people's population over its world's capacity
   (`knowledge::Needs::of`); the crust, power and trade pulls read zero until
   the layers that supply them are built.
@@ -294,7 +297,7 @@ The kernel applies the following inputs (`universe::Input`) and no others.
 | Input | Made by | Effect |
 |---|---|---|
 | `Take { seat, mind }` | A joining mind | The seat is held by that key |
-| `Focus { seat, domain }` | A seat on a people | Directs (or, with `None`, releases) the people's inquiry |
+| `Focus { seat, focus }` | A seat on a people | Directs the people's inquiry by four shares of free thought (all zero releases it) |
 | `Handle { seat, a, b, handling }` | A steward seat | Sets the handling of the line between stars `a` and `b` in the steward's realm |
 | `Move { people, world }` | The carry | An exodus |
 | `Settle { parent, world, emigrants }` | The carry | A settlement |

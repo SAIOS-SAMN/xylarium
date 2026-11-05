@@ -50,7 +50,11 @@ pub(super) fn people(u: &Universe<'_>, n: Option<usize>) -> String {
         }
         out.push_str(&format!(
             "  focus: {}\n",
-            k.focus.map(|d| d.name()).unwrap_or("none")
+            if k.focus.is_none() {
+                "none".to_string()
+            } else {
+                k.focus.described()
+            }
         ));
     }
     if let Some(g) = u.civ.gauges.get(i) {

@@ -31,7 +31,7 @@
 use crate::civ::Civilizations;
 use crate::cosmic::Cosmic;
 use crate::field::Field;
-use crate::knowledge::Domain;
+use crate::knowledge::Focus;
 use crate::seats::{Holder, On, Seats};
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
@@ -47,14 +47,13 @@ pub enum Input {
         /// The taking mind's 32-byte key.
         mind: [u8; 32],
     },
-    /// A ruler directing its people's inquiry to a domain (`None` lifts the
-    /// direction).
+    /// A ruler directing its people's inquiry: a share of free thought per
+    /// domain (all zero lifts the direction).
     Focus {
         /// Index of the ruler's seat in [`Seats::list`].
         seat: usize,
-        /// The domain the inquiry is directed to; `None` lets it follow the
-        /// people's needs.
-        domain: Option<Domain>,
+        /// The direction of inquiry (`knowledge::Focus`).
+        focus: Focus,
     },
     /// A people moved whole to another world of its star (an exodus decided
     /// by the carry, recorded so a restart lays it back at its count).
@@ -90,11 +89,11 @@ pub enum Input {
 
 /// A decision a seat's holder may make: a people's ruler directs its
 /// inquiry; a realm's steward sets a ley line's handling.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Decision {
-    /// Direct the people's inquiry to a domain, or lift the direction with
-    /// `None`.
-    Focus(Option<Domain>),
+    /// Direct the people's inquiry by a share of free thought per domain, or
+    /// lift the direction with [`Focus::none`].
+    Focus(Focus),
     /// Set the handling of the ley line between stars `a` and `b` (either
     /// way) in the steward's realm.
     Handle {
@@ -248,7 +247,7 @@ impl<'g> Universe<'g> {
         let On::People(p) = on else {
             return Err("the seat is on no people");
         };
-        let Decision::Focus(domain) = d else {
+        let Decision::Focus(focus) = d else {
             return Err("no such decision");
         };
         self.civ.knowledge.sync(self.cosmic.peoples.len());
@@ -257,8 +256,11 @@ impl<'g> Universe<'g> {
             .knowledge
             .of
             .get(p)
-            .is_some_and(|s| s.focus == domain);
-        let input = Input::Focus { seat, domain };
+            .is_some_and(|s| s.focus == focus);
+        let input = Input::Focus {
+            seat,
+            focus: focus.clone(),
+        };
         let text = if same {
             let name = self
                 .cosmic
@@ -266,9 +268,9 @@ impl<'g> Universe<'g> {
                 .get(p)
                 .map(|x| x.name.clone())
                 .unwrap_or_default();
-            match domain {
-                Some(x) => format!("{name} holds its inquiry on {}", x.name()),
-                None => format!("{name} lets its inquiry follow its needs"),
+            match focus.is_none() {
+                false => format!("{name} holds its inquiry on {}", focus.described()),
+                true => format!("{name} lets its inquiry follow its needs"),
             }
         } else {
             let text = self.apply(&input);
@@ -708,21 +710,21 @@ impl<'g> Universe<'g> {
                 Ok(_) => format!("seat {seat} taken by a mind"),
                 Err(e) => format!("seat {seat} not taken: {e}"),
             },
-            Input::Focus { seat, domain } => {
+            Input::Focus { seat, focus } => {
                 let Some(On::People(p)) = self.seats.list.get(*seat).map(|s| s.on) else {
                     return format!("seat {seat} is on no people");
                 };
                 self.civ.knowledge.sync(self.cosmic.peoples.len());
-                self.civ.knowledge.focus(p, *domain);
+                self.civ.knowledge.focus(p, focus.clone());
                 let name = self
                     .cosmic
                     .peoples
                     .get(p)
                     .map(|x| x.name.clone())
                     .unwrap_or_default();
-                match domain {
-                    Some(d) => format!("{name} turns its inquiry to {}", d.name()),
-                    None => format!("{name} lets its inquiry follow its needs"),
+                match focus.is_none() {
+                    false => format!("{name} turns its inquiry to {}", focus.described()),
+                    true => format!("{name} lets its inquiry follow its needs"),
                 }
             }
             Input::Handle {

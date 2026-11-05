@@ -62,8 +62,10 @@ fn qd(a: &Q, b: &Q) -> Q {
     a.checked_div(b).unwrap_or(Q::ZERO)
 }
 
-/// A value held to 62 significant bits, as a dyadic rational.
-fn dyadic(q: &Q) -> Q {
+/// A value held to 62 significant bits, as a dyadic rational: a base or
+/// share rounded before a certified power or exponential is taken of it, or
+/// before it is stored (the fields here, the systems' reaches and masses).
+pub(crate) fn dyadic(q: &Q) -> Q {
     Dy::from_q(q).to_q()
 }
 
@@ -110,11 +112,6 @@ fn plane_of(axis: &[Q; 3]) -> Mv {
         .add(&Mv::blade(E1 | E2, axis[2].clone()))
 }
 
-/// Bend: the translation by `d`.
-pub fn bend(d: &[Q; 3]) -> Mv {
-    cga::translator_at(d)
-}
-
 /// Rotate about `axis` by `2 atan(t |axis|)`: the rotor `1 + t B`, a
 /// rational point of the circle (unnormalized; the scale is removed when a
 /// point is read back).
@@ -125,7 +122,7 @@ pub fn rotate(axis: &[Q; 3], t: &Q) -> Mv {
 /// Twist: a turn about `axis` (as in `rotate`) followed by the translation
 /// `along`.
 pub fn twist(axis: &[Q; 3], t: &Q, along: &[Q; 3]) -> Mv {
-    bend(along).geo(&rotate(axis, t))
+    cga::translator_at(along).geo(&rotate(axis, t))
 }
 
 /// A point moved by a versor, exactly (an odd versor acts by its twisted
@@ -192,12 +189,15 @@ impl Bell {
             Kind::Stellar(s) => {
                 let o = &s.orbit;
                 // The orbit plane's normal: the frame's image of the z axis.
-                let m = o.frame().matrix();
+                let z = xyl_core::certified::Encl::exact(Q::ZERO);
+                let n = o
+                    .frame()
+                    .apply(&[z.clone(), z, xyl_core::certified::Encl::exact(Q::ONE)]);
                 (
                     [
-                        grid(Dy::from_q(&m[0][2])),
-                        grid(Dy::from_q(&m[1][2])),
-                        grid(Dy::from_q(&m[2][2])),
+                        grid(Dy::from_q(&n[0].mid())),
+                        grid(Dy::from_q(&n[1].mid())),
+                        grid(Dy::from_q(&n[2].mid())),
                     ],
                     drawn_spin(seed, s.n),
                 )
@@ -259,7 +259,7 @@ impl Bell {
         let angle = Dy::int(2) * (Dy::from_q(&t) * norm).atan();
         // The screw's translation for this turn, in AU, along the axis.
         let shift = Dy::from_q(&self.pitch_kpc) * Dy::from_q(&au_per_kpc()) * angle
-            / (Dy::int(2) * Dy::PI)
+            / (Dy::int(2) * Dy::pi())
             / norm.max(Dy::sci(1, -30));
         let along = [
             grid(shift * Dy::from_q(&self.axis[0])),
@@ -529,7 +529,7 @@ mod tests {
     fn versors_bend_and_rotate_exactly() {
         // Bend: a translation by (1/3, -2, 5/7).
         let d = [Q::ratio(1, 3), Q::ratio(-2, 1), Q::ratio(5, 7)];
-        assert_eq!(carry(&bend(&d), &origin()).unwrap(), d);
+        assert_eq!(carry(&cga::translator_at(&d), &origin()).unwrap(), d);
         // Rotate: a quarter turn about z (t = 1: 2 atan 1) takes x to +-y.
         let zaxis = [Q::ZERO, Q::ZERO, Q::ONE];
         let r = carry(&rotate(&zaxis, &Q::ONE), &[Q::ONE, Q::ZERO, Q::ZERO]).unwrap();

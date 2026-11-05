@@ -1,7 +1,7 @@
 //! The network: the ley lines ([`Ley`]), the stars in play and their
 //! constellations as last read, and the arcs between stars at a given time.
 
-use super::{binding_pairs, constellations, in_play, kpc_m, year_s};
+use super::{binding_pairs, constellations, in_play};
 use super::{Constellation, Handling, InPlay};
 use crate::cosmic::Cosmic;
 use std::collections::BTreeMap;
@@ -82,11 +82,18 @@ pub struct Network {
     pub holds_to: Dy,
 }
 
-/// Returns a passage's crossing time (years): the light time across a
-/// mouth of width `reach_kpc`. The throat shortens any span to the mouth's
-/// width, so no light time is charged for the span itself.
+/// Returns the light time (years) across `reach_kpc`: light's speed is the
+/// pulse's, `pulse::c_kpc_per_ring` (the bell and r_g), read per Gyr through
+/// `circuit::rings_of_gyr_dy` and per year. A passage's crossing is the light
+/// time across a mouth of that width: the throat shortens any span to the
+/// mouth's width, so no light time is charged for the span itself.
 pub fn crossing_years(reach_kpc: Dy) -> Dy {
-    reach_kpc * kpc_m() / crate::propulsion::c_m_s() / year_s()
+    let c =
+        xyl_cosmos::circuit::rings_of_gyr_dy(xyl_cosmos::pulse::c_kpc_per_ring()) / Dy::sci(1, 9);
+    if c.signum() <= 0 {
+        return Dy::ZERO;
+    }
+    reach_kpc / c
 }
 
 impl Network {
@@ -150,7 +157,8 @@ impl Network {
             return;
         }
         let sphere = xyl_cosmos::chain::radius();
-        let ring = Dy::from_q(&crate::universe::Bell::of().period_gyr);
+        // One ring of the bell, read in Gyr (the network's times are Gyr).
+        let ring = xyl_cosmos::circuit::gyr_of_rings_dy(xyl_cosmos::circuit::bell());
         let mut placed: BTreeMap<usize, xyl_cosmos::chain::Place> = BTreeMap::new();
         let mut speeds: BTreeMap<usize, Dy> = BTreeMap::new();
         let mut changed = self.constellations.is_empty();
@@ -166,7 +174,7 @@ impl Network {
                     speeds.insert(x, self.sample[x].speed_bound(t));
                 }
             }
-            let arc = placed[&i].arc_kpc_dy(&placed[&j], &sphere);
+            let arc = placed[&i].arc_kpc(&placed[&j], &sphere);
             let now = arc <= span;
             changed |= now != self.bound[k];
             self.bound[k] = now;
@@ -196,22 +204,16 @@ impl Network {
             .unwrap_or(t + Dy::sci(1, 3));
     }
 
-    /// Returns the arc (kpc) between stars `a` and `b` at time `t`, each
-    /// placed at `t`, or None if either is not in play.
+    /// Returns the arc (kpc) between stars `a` and `b` in play, each placed
+    /// at count `t` (rings; `cosmic::arc_kpc`), or None if either is not in
+    /// play. The stars in play include stars no people has witnessed, so the
+    /// network reads the stars in play (`sample`) rather than the cosmic world's systems.
     pub fn arc_at(&self, a: u64, b: u64, t: Dy) -> Option<Dy> {
-        let sphere = xyl_cosmos::chain::radius();
         let (sa, sb) = (
             &self.sample.get(*self.index.get(&a)?)?.star,
             &self.sample.get(*self.index.get(&b)?)?.star,
         );
-        // The cosmos places stars in rings; `t` (Gyr) converts here.
-        let t = xyl_cosmos::circuit::rings_of_gyr_dy(t);
-        Some(sa.place(t, &sphere).arc_kpc(&sb.place(t, &sphere), &sphere))
-    }
-
-    /// Returns the arc (kpc) between stars `a` and `b` at the current time.
-    pub fn arc(&self, cosmic: &Cosmic, a: u64, b: u64) -> Option<Dy> {
-        self.arc_at(a, b, cosmic.now)
+        Some(crate::cosmic::arc_kpc(sa, sb, t))
     }
 
     /// Returns the due time (Gyr) of the next line under way, an event of the

@@ -67,7 +67,7 @@ pub fn binding_at(a: &Star, ma: Dy, b: &Star, mb: Dy, rate0: Dy, span_kpc: Dy) -
 /// share at r is still at least one half.
 pub fn binding_reach(s: &Star, m: Dy) -> Dy {
     let half = Dy::ratio(1, 2);
-    let rate0 = s.rate_at_dy(s.orbit.radius);
+    let rate0 = s.orbit.rate;
     let (mut lo, mut hi) = (Dy::ZERO, radius_kpc(s).max(Dy::sci(1, -3)));
     if binding_at(s, m, s, m, rate0, hi) >= half {
         return hi;
@@ -134,7 +134,7 @@ pub struct InPlay {
 impl InPlay {
     pub(super) fn of(star: Star, suns: Dy) -> InPlay {
         let reach = binding_reach(&star, suns);
-        let rate0 = star.rate_at_dy(star.orbit.radius);
+        let rate0 = star.orbit.rate;
         InPlay {
             star,
             suns,

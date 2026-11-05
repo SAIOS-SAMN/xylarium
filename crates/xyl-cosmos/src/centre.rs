@@ -2,7 +2,7 @@
 //! the matter that falls to it, passes its throat, and returns as jets.
 //!
 //! Reads `bounce::Bounce` (rebuilt on every change of mass) and
-//! `circuit::echo` for the jet episode (`galaxy_episode`, the echo, two
+//! `circuit::echo` for the jet episode (the galaxy's echo, two
 //! rings). Masses are suns and times rings (one ring one bell), all exact
 //! `Q`; exponentials are `xyl_core::certified` enclosures whose lower bound
 //! is fixed on a 2^-40 grid.
@@ -44,14 +44,6 @@ pub fn horizon_share() -> Q {
 pub fn efficiency() -> Q {
     Q::ratio(1, 10)
 }
-/// A galaxy's jet episode (rings): the galaxy's echo, the pulse out to its
-/// rim and back twice (`circuit::echo`, two rings), so the jet returns on
-/// the galaxy's clock and no span is declared. A centre carries the episode
-/// it was made with.
-pub fn galaxy_episode() -> Q {
-    crate::circuit::echo().to_q()
-}
-
 /// The throat's far face: the persistent central engine of the universe on
 /// the other side.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -89,7 +81,7 @@ pub struct Core {
     /// read in (the hole's units).
     pub enclosure: Q,
     /// The jet episode's e-folding time (rings): the galaxy's echo
-    /// ([`galaxy_episode`]).
+    /// (`circuit::echo`), the episode it was made with.
     pub episode: Q,
     /// Mass at formation (suns).
     pub mass0: Q,
@@ -113,7 +105,7 @@ impl Core {
     /// its galaxy's S^360 enclosure of curvature radius `enclosure`, crossed
     /// at the galaxy's phase `phase` (its bead's capture phase, turns), its
     /// jets returning over `episode` rings (the galaxy's echo,
-    /// [`galaxy_episode`]). `None` where `Bounce::of` refuses.
+    /// `circuit::echo`). `None` where `Bounce::of` refuses.
     pub fn new(mass: Q, spin: &Q, enclosure: &Q, phase: &Q, episode: &Q) -> Option<Core> {
         let hole = Bounce::of(&mass, spin, enclosure, phase)?;
         Some(Core {

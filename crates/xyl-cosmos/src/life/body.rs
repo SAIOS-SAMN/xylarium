@@ -19,16 +19,16 @@ pub fn growing_share(tilt_deg: i64) -> Dy {
 /// insolation is `h0 sin(phi) sin(dec) + cos(phi) cos(dec) sin(h0)`, with
 /// `h0` the sunset hour angle and `dec = tilt x sin(2 pi (d + 1/2) / 48)`.
 pub(super) fn growing(deg: i64) -> Dy {
-    let eps = Dy::int(deg) * Dy::PI / Dy::int(180);
+    let eps = Dy::int(deg) * Dy::pi() / Dy::int(180);
     let days = 48i64;
     let (mut total, mut weight) = (Dy::ZERO, Dy::ZERO);
     for i in 0..9i64 {
-        let phi = Dy::int(5 + 10 * i) * Dy::PI / Dy::int(180);
+        let phi = Dy::int(5 + 10 * i) * Dy::pi() / Dy::int(180);
         let (sp, cp) = phi.sin_cos();
         let mut qs = Vec::with_capacity(48);
         for d in 0..days {
-            let dec =
-                eps * (Dy::int(2) * Dy::PI * (Dy::int(d) + Dy::ratio(1, 2)) / Dy::int(days)).sin();
+            let dec = eps
+                * (Dy::int(2) * Dy::pi() * (Dy::int(d) + Dy::ratio(1, 2)) / Dy::int(days)).sin();
             let (sd, cd) = dec.sin_cos();
             // The sunset hour angle obeys cos(h0) = -tan(phi) tan(dec); polar
             // day and polar night clamp h0 to pi and 0.
@@ -36,7 +36,7 @@ pub(super) fn growing(deg: i64) -> Dy {
             let h0 = if x >= Dy::ONE {
                 Dy::ZERO
             } else if x <= -Dy::ONE {
-                Dy::PI
+                Dy::pi()
             } else {
                 x.acos()
             };
@@ -85,13 +85,13 @@ impl Body {
     /// A world's body at the settled age: tilt and tidal lock are read from
     /// the spin path at that age (upright and unlocked without a path).
     pub fn of(set: &Setting) -> Body {
-        let age = settled_gyr();
+        let age = Dy::from_q(&crate::systems::settled_gyr());
         let (locked, cos) = match set.path {
             Some(p) => (age >= p.lock_gyr, p.cos_obliquity_at(age)),
             None => (false, Dy::ONE),
         };
         let obl = cos.acos();
-        let tilt = obl.min(Dy::PI - obl) * Dy::int(180) / Dy::PI;
+        let tilt = obl.min(Dy::pi() - obl) * Dy::int(180) / Dy::pi();
         Body {
             radius: Dy::from_q(&set.world.radius),
             giant: set.world.giant,
@@ -109,7 +109,7 @@ impl Body {
     /// `Medium::band` of it.
     pub fn area_m2(&self) -> Dy {
         let world_radius_m = Dy::from_q(&crate::package::Si::world_radius_m());
-        Dy::int(4) * Dy::PI * self.radius * world_radius_m * world_radius_m
+        Dy::int(4) * Dy::pi() * self.radius * world_radius_m * world_radius_m
     }
 }
 
@@ -147,18 +147,18 @@ pub fn foragers(ms: &[Medium], region: Region, body: &Body, ctx: &Ctx) -> Dy {
     if region != Region::Plasmic {
         mass = mass / gravity.max(Dy::sci(1, -3));
     }
-    let factor = (Dy::int(2) * mass / (Dy::ONE + mass))
-        * worlds::body_temperature(med.solvent, ctx)
-        / worlds::t_unit();
+    let factor =
+        crate::laws::share2(mass) * worlds::body_temperature(med.solvent, ctx) / worlds::t_unit();
     Dy::int(50_000) * area * season * med.energy * Dy::ratio(1, 10) / factor.max(Dy::sci(1, -300))
 }
 
-/// A star's main-sequence lifetime (Gyr) at `r_kpc` from the core for a
+/// A star's main-sequence lifetime (Gyr) at `reach` (galaxy rings, the
+/// star's orbit radius about its core, `galaxy::Star::reach_rings`) for a
 /// star of transduction sequence `seq` and compactness `delta`: `stars::life`
-/// (its first step) at the star's reach in rings, times the universe's
-/// nuclear scale. Zero for a star that does not ignite.
-pub fn lifetime(seq: &crate::stars::Sequence, delta: Dy, r_kpc: Dy, ctx: &Ctx) -> Dy {
+/// (its first step) at that reach, times the universe's nuclear scale. Zero
+/// for a star that does not ignite.
+pub fn lifetime(seq: &crate::stars::Sequence, delta: Dy, reach: Dy, ctx: &Ctx) -> Dy {
     // The star's life is counted in rings; it converts here to Gyr.
-    let life = crate::stars::life(seq, delta, crate::stars::reach_rings(r_kpc));
+    let life = crate::stars::life(seq, delta, reach);
     Dy::from_q(&crate::circuit::gyr_of_rings(&life)) * ctx.sc.nuclear
 }

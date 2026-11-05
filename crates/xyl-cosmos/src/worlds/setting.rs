@@ -25,8 +25,7 @@ pub struct Path {
     pub spin0: Dy,
 }
 
-/// A world's day and year at an age, from its spin and orbit (bodies.rs
-/// `Orbit::at`).
+/// A world's day and year at an age, from its spin and orbit.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Heartbeat {
     /// Its day (s); a locked world's day is its year.
@@ -52,14 +51,15 @@ impl Path {
         }
     }
 
-    /// Its day and year at age `t` (Gyr): the turning law sets the year; the
-    /// spin brakes linearly from the birth spin toward the orbital rate until
-    /// lock (bodies.rs `Orbit::at`). A path with no birth spin is locked.
+    /// Its day and year at age `t` (Gyr): the turning law sets the year
+    /// (`turning::turning_si` in rad/s, `package::Si::rad_s`); the spin
+    /// brakes linearly from the birth spin toward the orbital rate until
+    /// lock. A path with no birth spin is locked.
     pub fn heartbeat(&self, t: Dy) -> Heartbeat {
-        let mean = Dy::from_q(&crate::turning::turning_rad_s(
+        let mean = Dy::from_q(&crate::package::Si::rad_s(&crate::turning::turning_si(
             &self.host_kg.to_q(),
             &self.a_m.to_q(),
-        ));
+        )));
         let locked = t >= self.lock_gyr || self.spin0.signum() <= 0;
         let w = if locked {
             mean
@@ -67,7 +67,7 @@ impl Path {
             let frac = t / self.lock_gyr.max(Dy::sci(1, -12));
             self.spin0 - (self.spin0 - mean) * frac
         };
-        let two_pi = Dy::int(2) * Dy::PI;
+        let two_pi = Dy::int(2) * Dy::pi();
         Heartbeat {
             day_s: two_pi / w.max(Dy::sci(1, -12)),
             year_s: two_pi / mean.max(Dy::sci(1, -30)),
@@ -129,8 +129,12 @@ pub struct Setting<'a> {
     pub a_au: Dy,
     /// Its birth gas's metals (solar = 1).
     pub z: Dy,
-    /// Its star's distance from the galaxy's centre (kpc).
-    pub r_kpc: Dy,
+    /// Its star's home-equivalent reach (galaxy rings, `galaxy::Star::r`),
+    /// where its birth gas and the galaxy's crowding are read.
+    pub r: Dy,
+    /// Its star's reach about its galactic core (galaxy rings,
+    /// `galaxy::Star::reach_rings`), where the star's life is read.
+    pub reach: Dy,
     /// Its star's compactness, the star's deficit at its rim
     /// (`galaxy::Star::compactness`).
     pub compactness: Dy,
@@ -229,8 +233,9 @@ pub struct State {
     /// Cosmic-ray flux where its system circles, relative to the disc's at R0
     /// (see [`cosmic_rays`]).
     pub cr: Dy,
-    /// Stellar-wind exposure: its star's activity relative to the Sun's at
-    /// 4.57 Gyr, over its distance (AU).
+    /// Stellar-wind exposure: its star's activity relative to the unit star's
+    /// at the unit world's age (`bodies::unit_age_gyr`), over its distance
+    /// (AU).
     pub sw: Dy,
     /// Light reaching its surface (flux units).
     pub light: Dy,
@@ -268,9 +273,7 @@ pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
     let star_rel = set.star_mass / sc.star_mass;
     // Interior heat sources: isotopes, formation heat and tides from the
     // host.
-    let ice_sum = ices.total();
-    let ice_share = ice_sum / (Dy::ONE + ice_sum);
-    let icy = ice_share > Dy::ratio(1, 5);
+    let icy = w.icy();
     let tide = set
         .path
         .map(|p| p.tide(mass, radius, icy))
@@ -294,7 +297,7 @@ pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
     // a saturated star), times 3/2 with no magnetic field.
     let t_exo = c.thermosphere
         * t_eq0
-        * (Dy::int(2) * act / (Dy::ONE + act))
+        * crate::laws::share2(act)
         * if field.signum() > 0 {
             Dy::ONE
         } else {
@@ -383,10 +386,12 @@ fn radiated(set: &Setting, age: Dy, ctx: &Ctx) -> State {
     // does not enter the climate.
     let flux = set.lum / a_au;
     let t_form = c.t_unit * set.lum / a_au;
-    let env =
-        Dy::from_q(&crate::galaxy::density(&crate::galaxy::rings_of_kpc(&set.r_kpc.to_q())).mid());
-    let cr = cosmic_rays(set.r_kpc);
-    let sw = activity(star_rel, age) / activity(Dy::ONE, Dy::sci(457, -2)) / a_au;
+    // The galactic environment and the cosmic rays both follow the crowding
+    // of the star's ring (`galaxy::crowding`).
+    let cr = cosmic_rays(set.r);
+    let env = cr;
+    let unit_age = Dy::from_q(&bodies::unit_age_gyr());
+    let sw = activity(star_rel, age) / activity(Dy::ONE, unit_age) / a_au;
     let mut ices = Mix::default();
     for (name, f) in &w.ices {
         if let Some(s) = Species::of(name) {

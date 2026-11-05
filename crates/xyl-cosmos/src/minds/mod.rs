@@ -20,7 +20,7 @@
 //!   [`Kept`] cost. Stars outside the [`Sight`] stay compact. Work is spread
 //!   over threads; the merged result does not depend on the thread count.
 //!   With a cache folder, each star's share is stored under a key of the
-//!   star's inputs and the source digest ([`life_digest`]) and reused while
+//!   star's inputs and the source digest ([`laws_digest`]) and reused while
 //!   both are unchanged.
 //! - [`ancients`]: the core-born minds (within `galaxy::core_reach` of their
 //!   galactic core, [`in_core`]) that wake within [`ancient_window`] of that
@@ -34,7 +34,7 @@
 //! Terms: ancient, forecast (of minds), sight (docs/glossary.md).
 
 use crate::galaxy::{sample, star};
-use crate::life::{self, first_age, foragers, horizon_gyr, system_life, viable, world_at, Lineage};
+use crate::life::{self, foragers, horizon_gyr, system_life, viable, world_at, Lineage};
 use crate::systems::system;
 use crate::worlds::{Ctx, Galaxy, Region};
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
@@ -208,10 +208,10 @@ fn star_life(
         }
         let born = crate::circuit::gyr_of_rings_dy(Dy::from_q(&star.born));
         let t0 = born
-            + first_age(
+            + crate::worlds::star_degree_gyr(
                 &star.sequence(),
                 star.compactness(),
-                crate::galaxy::kpc_of_rings_dy(Dy::from_q(&star.r)),
+                star.reach_rings(),
                 ctx,
             );
         if t0 >= horizon_gyr() {
@@ -347,17 +347,6 @@ fn merge(shares: impl Iterator<Item = BatchLife>) -> Schedule {
     out
 }
 
-/// The digest of the life-side laws: the source from which a star's share
-/// is computed once the star is given (its system's formation and every law
-/// of its worlds and life). A star's inputs (the star as drawn and what the
-/// galaxy's code reads of its place) are keyed separately per star, so a
-/// change to the galaxy's code recomputes only the stars it changed;
-/// computing a key costs a star's draw, never its system.
-pub fn life_digest() -> String {
-    // Every source file of the laws, hashed at build time (build.rs).
-    env!("XYL_SOURCE_DIGEST").to_string()
-}
-
 /// The key of a star's inputs to its share (24 hex characters): the galaxy's
 /// key, the star's index, the star as drawn, and what the galaxy's code reads
 /// of its place (the density, the birth time and the distance from the core
@@ -435,7 +424,7 @@ pub fn schedule(
     let total = limit
         .unwrap_or_else(|| sample(gal.origin))
         .min(sample(gal.origin));
-    let folder = keep.map(|dir| dir.join(key(gal)).join(life_digest()));
+    let folder = keep.map(|dir| dir.join(key(gal)).join(laws_digest()));
     if let Some(f) = &folder {
         let _ = std::fs::create_dir_all(f);
     }

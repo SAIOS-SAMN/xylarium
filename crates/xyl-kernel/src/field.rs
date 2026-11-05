@@ -306,7 +306,7 @@ fn ring_star(
         let place = w
             .star
             .place(to_ring, &radius())
-            .standing_off(&(&off * &xyl_cosmos::chain::kpc()));
+            .standing_off(&(&off * &xyl_cosmos::galaxy::rings_of_kpc(&Q::ONE)));
         let (delay, d) = path(node, &place, to_ring);
         let k = bell.arrivals(delay, from_ring, to_ring);
         if k == 0 {

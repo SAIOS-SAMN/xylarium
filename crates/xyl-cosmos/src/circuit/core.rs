@@ -11,7 +11,7 @@
 //
 // - Deficit: `xyl_core::shares::deficit_dy(h, r) = h / (r + h)`, the vacuum's
 //   share at reach `r` about a hold `h`; `throat_push` is its value
-//   at r = h, 1/2; `jet_dilation` D(s) = (1 + s) / (1 - s) at the torsion
+//   at r = h, 1/2; the jet's dilation D(s) = (1 + s) / (1 - s) at the torsion
 //   share s, 3 at s = 1/2 and 4 at s = 3/5.
 // - Clock: `bell` is one ring, `echo` two; a kind's `onset_echoes` is
 //   ln(hold / open) / ln 3 (None for a sealed kind), `onset` the same in
@@ -43,29 +43,6 @@ use xyl_core::Q;
 pub fn throat_push() -> Dy {
     let h = Dy::from_q(&crate::bounce::horizon_reach(&Q::ONE));
     deficit_dy(h, h)
-}
-
-/// The dilation per echo of what a band carries: a band swinging between
-/// `r (1 - p)` and `r (1 + p)` dilates the pole coordinate of what it
-/// carries by `D(p) = (1 + p) / (1 - p)` per echo (poles.rs,
-/// `xyl_core::shares::dilation_dy`). `p` is the push the holder receives,
-/// the throat's `1/2` for the firmament and a star's compactness for its
-/// collective; a push is not negative. `None` for `p` outside `[0, 1)`.
-pub fn dilation(p: Dy) -> Option<Dy> {
-    if p.signum() < 0 {
-        return None;
-    }
-    dilation_dy(p)
-}
-
-/// The jet's dilation per echo along the filament: the continuum carries the
-/// torsion share `s` of the throat at each crossing
-/// (`bounce::torsion_share`), so the dilation is `D(s) = (1 + s) / (1 - s)`:
-/// three for a spinless hole (`s = 1/2`, the throat's push), four at the
-/// extremal spin of the universal core (`s = 3/5`). One for a share outside
-/// `[0, 1)`.
-pub fn jet_dilation(s: Dy) -> Dy {
-    dilation(s).unwrap_or(Dy::ONE)
 }
 
 /// The echoes a pole point `t` takes to reach the throat (`t = 1`) under the
@@ -107,13 +84,18 @@ pub fn throat_crossing(t0: Dy, a: Dy, b: Dy) -> Option<Dy> {
 
 /// The jetstream's mean echo map for a holder that holds the push `p_c` on
 /// the continuum and receives `p_v` from the vacuum: the continuum dilates the
-/// pole point by `rho = (1 + p_c) / (1 - p_c)` ([`dilation`]), and the vacuum
+/// pole point by the dilation per echo `rho = (1 + p_c) / (1 - p_c)`
+/// (`xyl_core::shares::dilation_dy`, one law for every holder: the throat's
+/// `1/2` for the firmament, a star's compactness for its collective), and the vacuum
 /// moves `p_v` of the held frames to the open ones, `t -> (t + p_v) / (1 -
 /// p_v)`; the electrons' phase state has mean zero over an echo. Composed,
 /// `t -> a t + b` with `a = rho / (1 - p_v)` and `b = p_v / (1 - p_v)`.
-/// `None` for a push outside `[0, 1)`.
+/// `None` for a push outside `[0, 1)`: a push is not negative.
 pub fn jet_map(p_c: Dy, p_v: Dy) -> Option<(Dy, Dy)> {
-    let rho = dilation(p_c)?;
+    if p_c.signum() < 0 {
+        return None;
+    }
+    let rho = dilation_dy(p_c)?;
     if p_v.signum() < 0 || p_v >= Dy::ONE {
         return None;
     }
@@ -300,6 +282,13 @@ impl Substrate {
         echo() * (self.rung(t) + self.state_out(t)) / t
     }
 
+    /// The inbound echo's swing over the first echo, `1 + A_in` with `A_in`
+    /// the inbound echo's mean over the first echo ([`Self::inbound_mean`]):
+    /// the swing the founding's gas and every piece's star cut are heated by.
+    pub fn echo_swing(&self) -> Q {
+        &Q::ONE + &self.inbound_mean(echo()).to_q()
+    }
+
     /// The inbound echo's peak: the ring at its crest (one) plus the vessel's
     /// greatest drift, which stands at one of the kinds' onsets (each term
     /// decays from the kind's onset).
@@ -357,8 +346,9 @@ impl Substrate {
         if w.signum() <= 0 || u.signum() <= 0 {
             return None;
         }
-        // The filament opens frames by its dilation: (u + f) / (w - f) = rho u / w.
-        let rho = jet_dilation(Dy::from_q(&self.share)).to_q();
+        // The filament opens frames by the jet's dilation at the torsion share
+        // s, D(s) = (1 + s) / (1 - s): (u + f) / (w - f) = rho u / w.
+        let rho = dilation_dy(Dy::from_q(&self.share))?.to_q();
         let filament = (&(&(&rho - &Q::ONE) * &u) * &w).checked_div(&(&w + &(&rho * &u)))?;
         // Vacuum channel: f_v = p w, p the vacuum's share swung by 1 + A_in.
         let p = (deficit_dy(rv.hold, rv.reach) * swing).to_q();
@@ -700,13 +690,13 @@ impl Substrate {
     /// echo's torque invariant), so it oscillates without drift.
     fn ringing(&self, s: Dy) -> Dy {
         let echo = echo();
-        (Dy::int(2) * Dy::PI * s / echo).cos() / echo
+        (Dy::int(2) * Dy::pi() * s / echo).cos() / echo
     }
 
     /// The core's pulse integrated from its arrival to `s` rings after it:
     /// sin(2 pi s / echo) / (2 pi).
     fn rung(&self, s: Dy) -> Dy {
-        (Dy::int(2) * Dy::PI * s / echo()).sin() / (Dy::int(2) * Dy::PI)
+        (Dy::int(2) * Dy::pi() * s / echo()).sin() / (Dy::int(2) * Dy::pi())
     }
 
     /// The ocean's non-tidal waveform at reach `r` (rings) and `t`: the core's
@@ -753,7 +743,7 @@ impl Substrate {
                 let drift = gain * self.rate(sent).0 / inside;
                 let recession = drift + gain * ring / inside;
                 let swing = if reached {
-                    gain / (Dy::int(2) * Dy::PI) / inside
+                    gain / (Dy::int(2) * Dy::pi()) / inside
                 } else {
                     Dy::ZERO
                 };
@@ -818,9 +808,9 @@ mod tests {
         // coincide, one half; the jet's dilation is three for a spinless
         // throat and four at the extremal spin's torsion share, three fifths.
         assert_eq!(throat_push(), Dy::ratio(1, 2));
-        assert_eq!(jet_dilation(Dy::ratio(1, 2)), Dy::int(3));
+        assert_eq!(dilation_dy(Dy::ratio(1, 2)), Some(Dy::int(3)));
         assert_eq!(xyl_core::shares::dilation(&Q::ratio(3, 5)), Some(Q::int(4)));
-        assert!((jet_dilation(Dy::ratio(3, 5)) - Dy::int(4)).abs() < Dy::sci(1, -15));
+        assert!((dilation_dy(Dy::ratio(3, 5)).unwrap() - Dy::int(4)).abs() < Dy::sci(1, -15));
         // A band inside the throat stays, one outside leaves, and between them
         // the share is linear.
         assert_eq!(
@@ -864,7 +854,7 @@ mod tests {
         // within ln(W / U) / ln D(s) echoes, the bound of the jet map
         // t -> a t with a = D(s).
         for s in [Dy::ratio(1, 2), Dy::ratio(3, 5)] {
-            let ln_d = jet_dilation(s).log();
+            let ln_d = dilation_dy(s).unwrap().log();
             for z in 1..=crate::elements::TOP_Z {
                 if crate::compound::is_cluster(z) {
                     continue;

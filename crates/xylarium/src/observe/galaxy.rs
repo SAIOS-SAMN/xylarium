@@ -2,12 +2,10 @@
 //! `tiers S`.
 
 use super::Options;
-use crate::run::show;
+use crate::run::{show, Founded};
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
-use xyl_cosmos::chain::{kpc, radius, units};
-use xyl_cosmos::chem::Chemistry;
-use xyl_cosmos::origin::Origin;
+use xyl_cosmos::chain::{radius, units};
 use xyl_cosmos::package::Si;
 use xyl_kernel::universe::Universe;
 
@@ -20,14 +18,14 @@ pub(super) fn galaxy(u: &Universe<'_>) -> String {
     out.push_str(&format!(
         "  r_g = {} m; the galaxy tier's unit 60^5 r_g; 1 kpc = {} of it\n",
         show(&units().r_g_m),
-        show(&kpc())
+        show(&xyl_cosmos::galaxy::rings_of_kpc(&Q::ONE))
     ));
     out.push_str(&format!(
         "  the universe's radius = {} galaxy units\n",
         show(&r)
     ));
     out.push_str(&format!("Bells: {}\n", u.field.bells()));
-    let t = xyl_cosmos::circuit::rings_of_gyr_dy(u.cosmic.now);
+    let t = Dy::from_q(&u.now);
     // The end of the first and of the last step of the founding's first lit
     // star's sequence at reach 0, the core's reach, counted in rings and
     // printed in Gyr.
@@ -80,7 +78,7 @@ fn star_on_manifold(
     w: &xyl_kernel::cosmic::Witnessed,
 ) -> String {
     // The star counts time in rings; ages and the life print in Gyr.
-    let t = xyl_cosmos::circuit::rings_of_gyr_dy(u.cosmic.now);
+    let t = Dy::from_q(&u.now);
     let s = &w.star;
     // The star's bearing from its galactic core, in galaxy-tier units:
     // `way = reach + |climb|` and `height = dir_z reach + climb`.
@@ -104,7 +102,7 @@ fn star_on_manifold(
         name,
         show(&way),
         show(&height),
-        show(&(&frac * &Q::int(360))),
+        show(&(&frac * &Q::int(xyl_core::coordinate::DEGREES))),
         radius_kpc,
         reach,
         show(&xyl_cosmos::circuit::gyr_of_rings(
@@ -140,34 +138,46 @@ fn show_or_dash(v: Option<Q>) -> String {
 }
 
 /// The `chemistry` reading: elements relative to the Sun's birth gas across
-/// the disc at three epochs, each ring's gas and star formation today, and
-/// each galactic core's weight dials.
+/// the disc now (the universe's count) and at two epochs, each ring's gas
+/// and star formation now, and each galactic core's weight dials.
 pub(super) fn chemistry(u: &Universe<'_>) -> String {
     let chem = u.cosmic.gal.chem;
     let mut out = String::from("relative to the Sun's birth gas (1 = as the Sun was made)\n");
-    for (label, t) in [("today", "13.8"), ("at 9.2 Gyr", "9.2"), ("at 3 Gyr", "3")] {
+    // The chemistry counts time in rings; the epochs given in Gyr convert
+    // here.
+    let now = format!("now, {} Gyr", u.gyr());
+    let epochs = [
+        (now.as_str(), u.now.clone()),
+        (
+            "at 9.2 Gyr",
+            xyl_cosmos::circuit::rings_of_gyr(&rational("9.2")),
+        ),
+        (
+            "at 3 Gyr",
+            xyl_cosmos::circuit::rings_of_gyr(&rational("3")),
+        ),
+    ];
+    for (label, t) in &epochs {
         out.push_str(&format!("  {label}:\n"));
         for r in ["2", "4", "8", "13"] {
-            // The chemistry counts time in rings; the epoch converts here.
-            let t = xyl_cosmos::circuit::rings_of_gyr(&rational(t));
-            let at = |s: &str| show_or_dash(chem.relative(s, &rings(r), &t, &Q::ONE));
+            let at = |s: &str| show_or_dash(chem.relative(s, &rings(r), t, &Q::ONE));
             out.push_str(&format!(
                 "    {r:>2} kpc  O {}  Fe {}  N {}  Eu {}  metals {}\n",
                 at("O"),
                 at("Fe"),
                 at("N"),
                 at("Eu"),
-                show_or_dash(chem.metals(&rings(r), &t))
+                show_or_dash(chem.metals(&rings(r), t))
             ));
         }
     }
-    // Each ring's closed forms at 13.8 Gyr: gas, star formation and metals.
+    // Each ring's closed forms now: gas, star formation and metals.
     out.push_str(concat!(
-        "The disc today (closed forms per ring: gas and star formation ",
+        "The disc now (closed forms per ring: gas and star formation ",
         "in suns per pc^2 and per pc^2 Gyr)\n"
     ));
     let model = &chem.model;
-    let today = xyl_cosmos::circuit::rings_of_gyr(&rational("13.8"));
+    let today = u.now.clone();
     let dt = &today - &model.params.first_stars;
     for r in ["2", "4", "8", "13"] {
         let k = xyl_cosmos::chem::ring_of(&rings(r));
@@ -225,17 +235,28 @@ pub(super) fn chemistry(u: &Universe<'_>) -> String {
 /// Returns `Err` when the origin, the star, the chemistry or the founded
 /// elements cannot be derived.
 pub(super) fn tiers(o: &Options, n: u64) -> Result<String, String> {
-    let origin = Origin::of(o.seed).ok_or("no origin")?;
-    let star = xyl_cosmos::galaxy::star(o.seed, &origin, n).ok_or("no such star")?;
+    let founded = Founded::of(o.seed)?;
+    let origin = &founded.origin;
+    let star = xyl_cosmos::galaxy::star(o.seed, origin, n).ok_or("no such star")?;
     let (c, kpc_m, yr_s, star_mass_kg) = (Si::c(), Si::kpc(), Si::yr_s(), Si::star_mass_kg());
-    // `r_g = G M / c^2` (m); years = metres / (c yr_s).
-    let rg = |kg: &Q| (&Si::g() * kg).checked_div(&(&c * &c)).unwrap_or(Q::ZERO);
+    // `r_g = G M / c^2` (m, `Units::of`); years = metres / (c yr_s).
+    let rg = |kg: &Q| {
+        xyl_core::units::Units::of(&Si::g(), &c, kg)
+            .map(|u| u.r_g_m)
+            .unwrap_or(Q::ZERO)
+    };
     let years = |m: &Q| m.checked_div(&(&c * &yr_s)).unwrap_or(Q::ZERO);
-    let pi = xyl_core::certified::pi(64).mid();
     let mut out = String::new();
-    // The universe's echo ring is its great circle, 2 pi R_u (m).
+    // The keepers count each echo in bells, the founding's 2 rim / c
+    // (chronometry.rs): the universe's ring is its great circle, the
+    // epicenter's ring; a galaxy's is its hub's.
+    let clocks = xyl_kernel::chronometry::Chronometry::of(origin);
+    let bell_m = &(&Q::int(2) * &xyl_cosmos::galaxy::rim_kpc()) * &kpc_m;
+    let ring_of = |k: Option<&xyl_kernel::chronometry::Keeper>| {
+        k.map(|k| &k.ring * &bell_m).ok_or("no keeper")
+    };
     let r_u = &xyl_cosmos::galaxy::radius_kpc() * &kpc_m;
-    let ring_u = &(&Q::int(2) * &pi) * &r_u;
+    let ring_u = ring_of(clocks.keepers.first())?;
     out.push_str(&format!(
         "The universe's echo: radius {} m, one ring {} yr (its own, the founding's rim over pi)\n",
         show(&r_u),
@@ -244,8 +265,10 @@ pub(super) fn tiers(o: &Options, n: u64) -> Result<String, String> {
     // The galaxy's echo ring is twice the rim, out to the far side and back
     // (m).
     let scale = star.scale.to_q();
-    let rim_m = &(&xyl_cosmos::galaxy::rim_kpc() * &scale) * &kpc_m;
-    let ring_g = &Q::int(2) * &rim_m;
+    let ring_g =
+        ring_of(clocks.keepers.iter().find(|k| {
+            k.galaxy == Some(star.core) && k.shell == xyl_kernel::chronometry::Shell::Hub
+        }))?;
     out.push_str(&format!(
         "Galaxy {}'s echo: rim {} kpc (the founding's, scaled by its core), one ring {} yr\n",
         star.core,
@@ -273,23 +296,23 @@ pub(super) fn tiers(o: &Options, n: u64) -> Result<String, String> {
         ),
         n,
         Dy::from_q(&radius_kpc),
-        show(&hold.checked_div(&(&reach + &hold)).unwrap_or(Q::ZERO)),
+        show(&xyl_core::shares::deficit(&hold, &reach).unwrap_or(Q::ZERO)),
         show(&count),
         show(&years(&(&count * &ring_g)))
     ));
     // Each world about the star: the count is 1 + a / r_g(star). No time is
     // given, since the length of the star's echo needs the star's radius.
-    let chem = Chemistry::of(&origin).ok_or("no chemistry")?;
-    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
-    if let Some(sys) = xyl_cosmos::systems::system(o.seed, &origin, &[n], &star, &chem, &elements) {
+    let chem = founded.chemistry()?;
+    if let Some(sys) =
+        xyl_cosmos::systems::system(o.seed, origin, &[n], &star, &chem, &founded.elements)
+    {
         let all = xyl_cosmos::manifold::manifolds(o.seed, &[n], &sys, &star, &units());
-        let units = units();
         let star_kg = &sys.spec.mass * &star_mass_kg;
         for m in all
             .iter()
             .filter(|m| m.anchor == xyl_cosmos::manifold::Anchor::Star)
         {
-            let a_m = &(&m.a * &xyl_core::units::Tier::System.in_rg()) * &units.r_g_m;
+            let a_m = &m.a * &xyl_kernel::transit::tier_m(xyl_core::units::Tier::System);
             let count = &Q::ONE + &a_m.checked_div(&rg(&star_kg)).unwrap_or(Q::ZERO);
             out.push_str(&format!(
                 concat!(
@@ -321,7 +344,7 @@ const REFERENCE_REACH: (i64, i64) = (8, 15);
 /// Earth's star's age, life and compactness as reference values for
 /// comparison only; no law reads them.
 pub(super) fn star_types(u: &Universe<'_>, n: usize, share: Q) -> String {
-    let t = xyl_cosmos::circuit::rings_of_gyr_dy(u.cosmic.now);
+    let t = Dy::from_q(&u.now);
     let (seed, origin) = (u.cosmic.gal.seed, u.cosmic.gal.origin);
     let mut cores: Vec<u32> = vec![0];
     cores.extend(xyl_cosmos::cores::shapes(origin).iter().map(|s| s.index));
@@ -346,7 +369,7 @@ pub(super) fn star_types(u: &Universe<'_>, n: usize, share: Q) -> String {
     }
     let mut out = format!(
         "Star classes at {} Gyr: {read} sample stars of {} galaxies\n",
-        show(&u.cosmic.now.to_q()),
+        u.gyr(),
         cores.len()
     );
     for ((name, decade), count) in &census {

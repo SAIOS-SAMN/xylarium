@@ -17,6 +17,7 @@
 
 use crate::universe::Universe;
 use xyl_core::dyadic::Dy;
+use xyl_core::shares::deficit_dy;
 
 /// A people's readings. A field is `None` where the people has no knowledge
 /// stock or gauge to read.
@@ -32,11 +33,6 @@ pub struct Step {
     pub r: Option<Dy>,
     /// Aware but frozen: sentience x (1 - consciousness).
     pub frozen: Option<Dy>,
-}
-
-fn share(a: Dy, b: Dy) -> Option<Dy> {
-    let both = a + b;
-    (both.signum() > 0).then(|| a / both)
 }
 
 /// Returns the readings of every people with a population above zero, as
@@ -55,7 +51,7 @@ pub fn living(u: &Universe<'_>) -> Vec<(usize, Step)> {
             let held: Dy = k.stock.iter().copied().sum();
             let learn = k.effort.total();
             let forget = k.forgetting * held;
-            s.z = share(learn, forget);
+            s.z = (learn + forget > Dy::ZERO).then(|| deficit_dy(learn, forget));
             s.r = (learn + forget > Dy::ZERO).then(|| (learn - forget) / (learn + forget));
         }
         if let Some(g) = u.civ.gauges.get(i) {

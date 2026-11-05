@@ -45,13 +45,6 @@ another crate. Laws are composed from shares (ratios of the form
   remainder; `within` compares exact shares against a sector's exact bounds;
   `DDD:MM:SS:XX:XX:XX` (`N/DDD:...` with the rings on the T lane) is display
   only. Status: built.
-- Orbit (`xyl_core::orbit::Orbit`): per plane the periapsis advance
-  `theta_i` per traversal; periapsis `t theta_i mod 1`, anomaly
-  `t (1 - theta_i) mod 1`; sheared return `k / (1 - theta_i)`; return to the
-  form against facets `lambda_i` (1, or 1/2 for the antipode): the least
-  common multiple of `lambda_i / (1 - theta_i)`; capacity the least whole
-  `k` with `k (1 - theta_i) / lambda_i` whole on every plane. Spinless
-  throat: return 2 (the echo); `a = 1`: `5/2`. Status: built.
 
 ## 2. Units and the master frame
 
@@ -84,7 +77,7 @@ another crate. Laws are composed from shares (ratios of the form
 - Deficit law (`xyl_core::shares::deficit`, `deficit_dy`):
   `delta(R, M) = M / (R + M)`, and the received share is `1 - delta`.
   Status: built.
-- Dilation and flow law (`xyl_core::shares::dilation`, `flow`, `opposed`):
+- Dilation and flow law (`xyl_core::shares::dilation`, `flow`):
   `D(p) = (1 + p) / (1 - p)` for `-1 < p < 1`; `x (+) y = (x + y) / (1 + x
   y)`; `D(x (+) y) = D(x) D(y)`. Status: built.
 - Horizon reach (`bounce::horizon_reach`): `delta_h = 1/3`, so
@@ -106,8 +99,9 @@ another crate. Laws are composed from shares (ratios of the form
   `a = (H + J) / (2H + J)` with `H = 2M` and `J = a_Kerr M^2`; at the
   universal core (`M = 1`) `a = 1/2` at zero spin and `a = 3/5` at the
   extremal spin. The inverse (`bounce::spin_of_share`) is
-  `J = H (2a - 1) / (1 - a)`, read on the origin's grid by
-  `origin::spin_of_share`. Status: built.
+  `J = H (2a - 1) / (1 - a)`, put on the origin's grid by
+  `origin::clamp_spin`. The founding reads the share once
+  (`circuit::Substrate::found`) and holds it as `Substrate::share`. Status: built.
 - Paired throat (docs/model.md, The core as a paired throat; #86): near
   face `D(s) D(n)^A`, far face `D(s) D(n)^-A`, product `(3 + a)^2`, so the
   shared hold is the closed kinds `M_c` (T16). The spin's orbit (T17):
@@ -117,13 +111,14 @@ another crate. Laws are composed from shares (ratios of the form
   `p = -0.683`, giving `a* = 0.8776`. Status: derived; not built.
 - Admission (`Substrate::least_share`, `cores::substrate_for`): the founding
   requires `a >= (r_far / rim) (1 + A_in_peak)`; otherwise the universe is
-  refounded at `spin_of_share(least_share)`, with at most three foundings.
+  refounded at `clamp_spin(spin_of_share(least_share))`, with at most three foundings.
   The margin is `a - least_share` (`Substrate::margin`). Status: built.
 - Cascade readings (`origin::Origin::of`): the lumpiness is
   `sum max(state - mean, 0) / sum state`, the held share is
   `firmament mass / holding`, the assembly time is `Lighting::cools_in` and
   the efficiency is `Lighting::lit`. Status: built.
-- Closed share (`elements::closed_share`): `h_Z = (3Z - u_Z) / 3Z`. Status:
+- Closed share (`elements::closed_share`): `h_Z = hold_Z / 3Z = (3Z - u_Z) / 3Z`
+  (`compound::hold`). Status:
   built.
 - Capture chain (`elements::founded`): `count_1 = 2^b` and
   `count_Z = floor(count_(Z-1) a h_Z)`. Status: built.
@@ -136,7 +131,7 @@ another crate. Laws are composed from shares (ratios of the form
   the counts are built; the catalogue columns (mass, melt, boil, density,
   condensation, class) are placeholders, and the next step derives them from
   the atom.
-- Orientations on S^11 (`atoms::orientations`): a band has
+- Orientations on S^11 (`fibres::directions`): a band has
   `C(l + 11, 11) - C(l + 9, 11)` orientations, and its room is twice that.
   Status: built.
 - Fill (`atoms::atom`): each electron goes to the tightest open winding, with
@@ -255,10 +250,10 @@ another crate. Laws are composed from shares (ratios of the form
   `firmament mass / (firmament mass + sum bead masses)`. Status: built.
 - Throat push (`circuit::throat_push`): `p = delta(H, H) = 1/2`. Status:
   built.
-- Dilation per echo (`circuit::dilation`), one law for every holder:
+- Dilation per echo (`xyl_core::shares::dilation_dy`), one law for every holder:
   `rho = (1 + p) / (1 - p)`, `p` the push the holder receives. Status:
   built.
-- Jet dilation (`circuit::jet_dilation`): the continuum carries the
+- Jet dilation (`shares::dilation_dy` of the torsion share): the continuum carries the
   throat's torsion share `s = (H + J) / (2H + J)` at each crossing, so
   `rho = D(s) = (1 + s) / (1 - s)`: 3 at `s = 1/2` (no spin), 4 at
   `s = 3/5` (the universal core's extremal spin). Status: built.
@@ -512,7 +507,8 @@ another crate. Laws are composed from shares (ratios of the form
 ### Z, Q and R (the pole model)
 
 - Weights (`circuit::nucleus_weights`, `circuit::mix_weights`): `Z` is the
-  proton count and `Q` the neutron count (the mass number less the charge,
+  proton count and `Q` the neutron count (the mass number
+  `A = floor(a + 1/2)` less the charge, `circuit::mass_number`,
   from the element table; a cluster sums its parts), and a kind weighs
   `Z + Q` nucleons. Status: built.
 - Electron phase state (`circuit::electron_phase`):
@@ -562,7 +558,8 @@ another crate. Laws are composed from shares (ratios of the form
 - Vacuum halving (`formation::vacuum_halving`): `k_v` is the least whole
   `k >= ln 2 / ln((R + h) / R)`. Status: built.
 - Heat (`formation::collapse`): the heat is
-  `min(1, ring x swing x grip(W) / shed)`, with `ring = 1 / (pi (R + 1))` and
+  `min(1, ring x swing x grip(W) / shed)` (`formation::pulse_heat`, the one
+  form for the gas and the disc), with `ring = 1 / (pi (R + 1))` and
   `shed = e + ln 2 / k_v`. Status: built.
 - Spare (`formation::collapse`): the spare is `grip(w) - shear(w) - heat` on
   `w = W / 2^k` for `k < 48`. Status: built.
@@ -574,8 +571,9 @@ another crate. Laws are composed from shares (ratios of the form
 - Lighting (`formation::lights`, `formation::lighting`): a piece lights where
   clouds > 0 and `cooled + heat < 1/2`; `cools_in` is the least over lit
   pieces, and `lit` is the lit holding over all holding. Status: built.
-- Reach in galaxy rings (`stars::reach_rings`): `r_kpc / galaxy_kpc`.
-  Status: built.
+- A star's reach (`galaxy::Star::reach_rings`): its orbit radius about its
+  galactic core, galaxy rings; the star's class, its system's light and its
+  worlds' life and minds all read it. Status: built.
 - First light (`galaxy::birth`): the first light of the piece at the
   star's reach falls at `max(cools_in, 1)` rings; there is none where the
   piece never lights. Status: built.
@@ -631,12 +629,12 @@ another crate. Laws are composed from shares (ratios of the form
   (`compound::open_hot`), `w_z(q) = 3 Z - u_z(q)` held; `A_z` the element
   table's `a` rounded to the nearest whole (`stars::nucleon_count`). Status:
   built.
-- Pole point of a star (`stars::pole_point`): `t0 = sum n_z u_z / sum n_z
+- Pole state of a star (`stars::mixture_pole`): `t0 = sum n_z u_z / sum n_z
   w_z` over the held mixture (`disc::StarHold::held`), `n_z = share_z / w_z`;
   `t0 <= 1/2`. Status: built.
 - A star's throat (`stars::Sequence::throat_echoes`):
   `circuit::echoes_to_throat` of its pole point under
-  `circuit::dilation(delta)`, `n* = ln(1 / t0) / ln((1 + delta) / (1 - delta))`,
+  `shares::dilation_dy(delta)`, `n* = ln(1 / t0) / ln((1 + delta) / (1 - delta))`,
   echoes from ignition; none where `t0 = 0`. Status: built.
 - Fusion step (`stars::fusion_step`): the least `k >= 2` with a kind at `A'
   = k A_z` releasing `1 - w' / (k w) > 0`, the greatest release there.
@@ -669,7 +667,7 @@ another crate. Laws are composed from shares (ratios of the form
   `h* / (l / h* + h*) >= p`, at the largest fixed point `h*` of the held
   hold. Status: built.
 - Disc agitation (`disc::star_hold`):
-  `a_disc = min(1, turning x swing x grip / shed)`, with
+  `a_disc = min(1, turning x swing x grip / shed)` (`formation::pulse_heat`), with
   `grip = (1 - star) / (2 - star)` and `shed = e_rest + ln 2 / k_v`. Status:
   built.
 - Star's manifold (`galaxy::disc_frame`): the gathering is
@@ -691,10 +689,12 @@ another crate. Laws are composed from shares (ratios of the form
 - Envelope (`systems::system`): a world gathers an envelope when its core
   holds at least 10 world masses, by a declared gathering law. Status:
   placeholder.
-- Settling rate (`systems::settle_about`): `omega(A) = [M / (A + M)] / A`
-  in `r_g`. Status: built.
-- Kick (`systems::settle_about`): `eps = [m / (r + m)] / r / |dw|` and
-  `N = age |dw|`; `q` is the least continued-fraction denominator with
+- Settling rate (`systems::settle_about`): the turning law
+  `omega(A) = bell [M / (A + M)] / A` per ring with `A` in `r_g`
+  (`turning::turning_dy`). Status: built.
+- Kick (`systems::settle_about`): `eps = omega_m(r) / |dw|`, the turning law
+  about the pair's mass `m` across its gap `r` (`turning::turning_dy`), and
+  `N = age |dw|` with the age in rings (`circuit::rings_of_gyr_dy`); `q` is the least continued-fraction denominator with
   `|s - p/q| N q <= 1`, `c = |1 - 2 frac(q psi_0)|`, and the swing is
   `eps (floor(N / q) c + N mod q)`. Status: built.
 - Merge (`systems::settle_about`): the merge age is the first age with
@@ -705,8 +705,8 @@ another crate. Laws are composed from shares (ratios of the form
 - Orbit (`bodies::orbits`): `e0 = swing`; the tilt is `swing / (1 + swing)`
   of a quarter turn, and the node and periapsis take the settled phase.
   Status: built.
-- Moon manifold (`systems::moons`): the reach is `2 pi a m / (M + m)` in the
-  world's radii from 5; the budget is
+- Moon manifold (`systems::moons`): the reach is `2 pi a m / (M + m)`
+  (`manifold::reach`) in the world's radii from 5; the budget is
   `min(a_disc x (reach / a_out) x solids, belt pool)`; the world share is
   `m / (m + budget)`; the tide is `s / (x + s)` with `x = a / a_out`; moons
   follow the degree law with no heat and settle about the world. Status:
@@ -719,12 +719,12 @@ another crate. Laws are composed from shares (ratios of the form
   giants' mass. Status: partial.
 - Resolution guard (`systems::exp`): `exp(x)` is enclosed by
   `[0, 2^-bits]` for `x <= -(bits + 1)`. Status: built.
-- Angle between bodies (`manifold::turn_between`, `chain::Place::arc`):
+- Angle between bodies (`manifold::gap`, `chain::Place::arc`):
   the certified angle `pi / 2 -/+ asin(|a . b| / |a| |b|)`
   (`xyl_core::rotor::angle_between`), the directions exact, read at its
-  midpoint; the rotor's inverse is its conjugate (`Rotor::inverse`).
-  Status: built. The galaxy network's fast path (`chain::Place::arc_kpc_dy`)
-  still reads a `Dy` arccosine.
+  midpoint; the rotor's inverse is its conjugate (`Rotor::inverse`). The
+  arc on a sphere is that turn times the chord `R sin(s / R)`
+  (`bounce::curved_reach`). Status: built.
 - Disc-mass scale of the manifold: this scale is not yet built; it is the
   next step (roadmap, Worlds on the manifold chain).
 - Degree of a star's life (`worlds::star_degree_gyr`):
@@ -774,7 +774,7 @@ the Xylarium function is the implementation. The ids are proposals.
 | LAW-TORSION-SHARE | `s(H, J) = (H + J) / (2H + J)`, `H` the horizon reach and `J` the spin's share, both stated by the universe | core | `bounce::torsion_share` |
 | LAW-JET-MAP | `t -> a t + b`, `a = D(p_c) / (1 - p_v)`, `b = p_v / (1 - p_v)` | Xylarium | `circuit::jet_map` |
 | LAW-THROAT-CROSSING | `t_n = t* + (t0 - t*) a^n`, crossing at `n = ln((1 - t*) / (t0 - t*)) / ln a`; refused for `t0 <= 0` | Xylarium | `circuit::throat_crossing` |
-| LAW-POLARITY-SEQUENCE | pole point `sum(n u) / sum(n w)`; fusion below the throat, fission above, ordered by release | Xylarium | `stars::sequence::pole_point`, `Sequence::of` |
+| LAW-POLARITY-SEQUENCE | pole point `sum(n u) / sum(n w)`; fusion below the throat, fission above, ordered by release | Xylarium | `stars::sequence::mixture_pole`, `Sequence::of` |
 
 LAW-TORSION-SHARE takes the horizon reach as an argument: Xylarium states
 `H = M (1 - delta_h) / delta_h = 2M` (`bounce::horizon_reach`) with the

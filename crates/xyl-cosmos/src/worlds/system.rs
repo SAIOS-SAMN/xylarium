@@ -47,13 +47,12 @@ pub fn settings<'a>(gal: &Galaxy, path: &[u64], sys: &'a System, star: &Star) ->
         let sun = crate::chem::reference_birth_gas(el).unwrap_or(Q::ONE);
         *k = k.checked_div(&sun).unwrap_or_else(|| k.clone());
     }
-    let (star_mass, lum, z, r_kpc) = (
+    let (star_mass, lum, z, r, reach) = (
         Dy::from_q(&sys.spec.mass),
         Dy::from_q(&sys.spec.lum),
         Dy::from_q(&z),
-        // The worlds read the reach in kpc through the boundary
-        // `galaxy::kpc_of_rings`.
-        crate::galaxy::kpc_of_rings_dy(Dy::from_q(&star.r)),
+        Dy::from_q(&star.r),
+        star.reach_rings(),
     );
     let mut planet = 0usize;
     let mut paths: Vec<Option<Path>> = Vec::with_capacity(sys.worlds.len());
@@ -91,7 +90,8 @@ pub fn settings<'a>(gal: &Galaxy, path: &[u64], sys: &'a System, star: &Star) ->
             lum,
             a_au: Dy::from_q(&w.a),
             z,
-            r_kpc,
+            r,
+            reach,
             compactness: star.compactness(),
             sequence: star.sequence(),
             sources: bodies::heat_sources(w, elements, &kept),
@@ -112,7 +112,7 @@ pub fn events(set: &Setting, age: Dy, ctx: &Ctx) -> Vec<(&'static str, Encl)> {
             out.push(("its host locks its spin", Encl::exact(p.lock_gyr.to_q())));
         }
     }
-    let start = crate::life::first_age(&set.sequence, set.compactness, set.r_kpc, ctx);
+    let start = star_degree_gyr(&set.sequence, set.compactness, set.reach, ctx);
     if !set.world.giant && age > start {
         let margin = |a: &Q| {
             let st = build(set, Dy::from_q(a), ctx);

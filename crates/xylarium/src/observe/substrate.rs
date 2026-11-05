@@ -1,7 +1,7 @@
 //! The substrate law reading: `universal-core [R]`.
 
 use super::Options;
-use crate::run::show;
+use crate::run::{show, Founded};
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 use xyl_cosmos::circuit::{gyr_of_rings_dy, PoleFlux, Substrate};
@@ -22,8 +22,9 @@ fn per_gyr(x: Dy) -> Dy {
 /// echo is stepped and no parcel counted. The time is read in rings and
 /// written on the T lane; Gyr is shown beside it as a display conversion.
 pub(super) fn core_read(o: &Options, t_rings: Option<Q>) -> Result<String, String> {
-    let origin = Origin::of(o.seed).ok_or("no origin")?;
-    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
+    let Founded {
+        origin, elements, ..
+    } = Founded::of(o.seed)?;
     let clock = std::time::Instant::now();
     let s = xyl_cosmos::cores::substrate(&origin).ok_or("no founding")?;
     let founded_in = clock.elapsed();
@@ -286,7 +287,7 @@ fn galaxies(origin: &Origin, s: &Substrate, t: Dy) -> String {
     // converted to galaxy units) over the length one ring of its reach spans
     // (its anchor distance over its reach in rings).
     let shapes = xyl_cosmos::cores::shapes(origin);
-    let kpc = xyl_cosmos::chain::kpc();
+    let kpc = xyl_cosmos::galaxy::rings_of_kpc(&Q::ONE);
     let mut out = String::new();
     for g in s.push(t) {
         let shape = shapes.iter().find(|sh| sh.index == g.index);

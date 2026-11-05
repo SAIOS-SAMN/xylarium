@@ -44,12 +44,14 @@ mean duration, and impacts at rate `mu` stretch a rung of mean `m` to
 `(e^(mu m) - 1) / mu`. No random draw is used, so the epoch of a mind is a
 function of its world and its system only.
 
-`Cosmic::wake` (`cosmic/emergence.rs`) advances deep time to a target epoch and
-processes each forecast mind whose epoch falls before it. A mind becomes a
-people only where its world, read at that epoch, feeds a viable population
-(`xyl_cosmos::life::viable`, 500 bodies); otherwise no people is created.
-For a new people, `cosmic::select` derives the people's traits from its world,
-its numbers start at what its world houses on foraging alone, and two annals
+`Cosmic::wake` (`cosmic/emergence.rs`) processes each forecast mind whose
+epoch falls at or before a target epoch; the cosmic world holds no clock:
+the universe's count is the one present. For a new people,
+`cosmic::select` derives the people's traits from its world. A mind becomes a
+people only where its world, read at that epoch, houses a viable population
+of those traits (`civ::housing::houses` with nothing learned, at least
+`xyl_cosmos::life::viable`, 500 bodies); otherwise no people is created. Its
+numbers start at what its world houses on foraging alone, and two annals
 are written: `DEEP_HISTORY` (when life began and the rungs it passed) and
 `EMERGENCE`.
 

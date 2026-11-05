@@ -45,14 +45,11 @@ pub struct Vertical {
 
 /// The crowding of the ring containing `r` (galaxy rings), as a dyadic: the
 /// ring's holding per galaxy ring over that of the reference ring
-/// ([`density`]), 1 at the reference ring and never negative.
-fn crowding(r: Dy) -> Dy {
+/// ([`density`]), 1 at the reference ring and never negative. The one
+/// reading of the crowding on readings (the plane's pull, the worlds'
+/// environment and cosmic rays).
+pub fn crowding(r: Dy) -> Dy {
     Dy::from_q(&density(&r.to_q()).mid()).max(Dy::ZERO)
-}
-
-/// The crowding share `2d / (1 + d)` of crowding `d`, in [0, 2).
-fn crowding_share(d: Dy) -> Dy {
-    Dy::int(2) * d / (Dy::ONE + d)
 }
 
 /// The crowded layer's half-thickness at reach `r` (galaxy rings):
@@ -77,7 +74,7 @@ pub fn layer(r: Dy) -> Dy {
 /// `d` the ring's crowding ([`density`]). Zero before a founding.
 pub fn vertical_frequency(r: Dy) -> Dy {
     let omega = crate::turning::turning_dy(inside_mass_dy(r), r, Tier::Galaxy);
-    omega * crowding_share(crowding(r))
+    omega * crate::laws::share2(crowding(r))
 }
 
 /// The heating share `s = t / (1 + t)` of a star born at `born` (rings) at
@@ -102,7 +99,7 @@ fn heating_share(r: Dy, born: Dy, age: Dy) -> Dy {
 /// oscillation (turns). Amplitude and period are zero where the plane has no
 /// pull (before a founding).
 pub fn vertical(r: Dy, born: Dy, age: Dy, u: Dy, phase: Dy) -> Vertical {
-    let share = crowding_share(crowding(r));
+    let share = crate::laws::share2(crowding(r));
     let nu = vertical_frequency(r);
     let h = layer(r);
     // The speed scale is `sigma = h nu s 2d / (1 + d)` (galaxy rings per
@@ -111,7 +108,7 @@ pub fn vertical(r: Dy, born: Dy, age: Dy, u: Dy, phase: Dy) -> Vertical {
     let sigma = h * nu * heating_share(r, born, age) * share;
     let vz = sigma * -(Dy::ONE - u).max(Dy::sci(1, -12)).log();
     let (amp, period) = if nu.signum() > 0 {
-        (vz / nu, Dy::int(2) * Dy::PI / nu)
+        (vz / nu, Dy::int(2) * Dy::pi() / nu)
     } else {
         (Dy::ZERO, Dy::ZERO)
     };
@@ -122,7 +119,7 @@ pub fn vertical(r: Dy, born: Dy, age: Dy, u: Dy, phase: Dy) -> Vertical {
     } else {
         // The share is `atan(h / A)` over the quarter turn, avoiding the root
         // of 1 - x^2 in asin(h / A).
-        (h / amp).atan() * Dy::int(2) / Dy::PI
+        (h / amp).atan() * Dy::int(2) / Dy::pi()
     };
     Vertical {
         amp,

@@ -1,8 +1,9 @@
 //! The clock reading: `clock`.
 
 use crate::run::show;
-use xyl_core::dyadic::Dy;
 use xyl_core::Q;
+use xyl_cosmos::circuit::{bell, gyr_of_rings, gyr_of_rings_dy};
+use xyl_kernel::checkpoint::hex;
 use xyl_kernel::chronometry::Chronometry;
 use xyl_kernel::universe::Universe;
 
@@ -13,15 +14,14 @@ use xyl_kernel::universe::Universe;
 pub(super) fn clock(u: &Universe<'_>) -> String {
     let next = u
         .next_event()
-        .map(|t| format!("count {} ({} Gyr)", show(&t), u.bell.gyr_dy(&t)))
+        .map(|t| format!("count {} ({} Gyr)", show(&t), show(&gyr_of_rings(&t))))
         .unwrap_or_else(|| "none queued".into());
     let mut out = format!(
         concat!(
-            "The bell: one ring {} Gyr (exact: {}); now count {} (exact: {}); ",
+            "The bell: one ring {} Gyr; now count {} (exact: {}); ",
             "the next event {}\n"
         ),
-        Dy::from_q(&u.bell.period_gyr),
-        u.bell.period_gyr,
+        gyr_of_rings_dy(bell()),
         show(&u.now),
         u.now,
         next
@@ -38,16 +38,7 @@ pub(super) fn clock(u: &Universe<'_>) -> String {
         let rel = c.inside[k].map(|i| &r.slip - &slips[i]).unwrap_or(Q::ZERO);
         slips.push(r.slip.clone());
         let lag = &Q::ONE - &keeper.rate;
-        let head = c
-            .heads
-            .get(k)
-            .map(|h| {
-                h[..6]
-                    .iter()
-                    .map(|b| format!("{b:02x}"))
-                    .collect::<String>()
-            })
-            .unwrap_or_default();
+        let head = c.heads.get(k).map(|h| hex(&h[..6])).unwrap_or_default();
         out.push_str(&format!(
             concat!(
                 "  {:<12} galaxy {:<2} {} kpc out: its ring {} bells, 1 - rate {}, ",

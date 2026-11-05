@@ -342,7 +342,7 @@ fn shape(world: &World, sc: &Scales) -> Shape {
     let radius = Dy::from_q(&world.radius);
     let m_kg = mass * l.world_mass_kg;
     let r_m = radius * l.world_radius_m;
-    let four_pi = Dy::int(4) * Dy::PI;
+    let four_pi = Dy::int(4) * Dy::pi();
     let area = four_pi * r_m * l.world_radius_m;
     let grav = l.unit_world_gravity() * mass / radius.max(Dy::sci(1, -6));
     let envelope = Dy::from_q(&world.layers[3]);
@@ -428,7 +428,7 @@ pub fn interior(
     // The central pressure is p = m / R (1 for the unit world); iron's
     // melting point is the iron liquidus times 2 p / (1 + p).
     let press = (mass / radius.max(Dy::sci(1, -3))).max(Dy::sci(1, -4));
-    let t_liq_core = l.iron_liquidus * sc.chem * (Dy::int(2) * press / (Dy::ONE + press));
+    let t_liq_core = l.iron_liquidus * sc.chem * crate::laws::share2(press);
     let cap_core = m_core * (l.cp_iron + l.l_iron / (l.freeze_span * t_liq_core));
     let depth = (r_m - r_core).max(Dy::ZERO);
     let adiabat =
@@ -506,13 +506,6 @@ pub fn interior(
     }
 }
 
-/// The Love number `k2` of a uniform elastic body, as a dyadic (see [`love`]).
-pub(super) fn love_dy(mass: Dy, radius: Dy, icy: bool) -> Dy {
-    let p_self = Dy::from_q(&Rock::world_pressure()) * mass / radius.max(Dy::sci(1, -6));
-    let mu = Dy::from_q(&if icy { Rock::mu_ice() } else { Rock::mu_rock() });
-    Dy::ratio(3, 2) / (Dy::ONE + Dy::int(19) * mu / (Dy::int(2) * p_self))
-}
-
 /// Tidal heating of a synchronously rotating world on an eccentric orbit (W):
 /// `10.5 (k2 / Q) (G M m / a) n e stretch` with Q = 100. `host_kg` and `a_m`
 /// are in SI, `mass` and `radius` in world units; zero when `e` or `a_m` is
@@ -524,8 +517,8 @@ pub fn tidal_w(host_kg: Dy, a_m: Dy, e: Dy, mass: Dy, radius: Dy, icy: bool) -> 
     let l = Lab::get();
     let r = radius * l.world_radius_m;
     // The mean motion n (rad/s) comes from the turning law.
-    let n = Dy::from_q(&crate::turning::turning_rad_s(&host_kg.to_q(), &a_m.to_q()));
-    let k2 = love_dy(mass, radius, icy);
+    let n = Dy::from_q(&rad_s(&host_kg.to_q(), &a_m.to_q()));
+    let k2 = Dy::from_q(&love(&mass.to_q(), &radius.to_q(), icy));
     let st = Dy::from_q(&stretch(&host_kg.to_q(), &a_m.to_q(), &r.to_q()));
     Dy::ratio(21, 2) * k2 / Dy::int(100)
         * (l.g * host_kg * mass * l.world_mass_kg / a_m)

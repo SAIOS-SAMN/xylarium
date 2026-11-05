@@ -139,14 +139,6 @@ pub fn stands(k: u32, heat: &Q) -> bool {
             .all(|(z, _)| crate::atoms::unpaired_hot(*z, heat) == crate::atoms::unpaired(*z))
 }
 
-fn gcd(a: u32, b: u32) -> u32 {
-    if b == 0 {
-        a
-    } else {
-        gcd(b, a % b)
-    }
-}
-
 /// What two atoms meeting at a place's heat close into: (cluster id, count of
 /// `za`, count of `zb`, bond grip) for the smallest closing cluster of their
 /// pairable frames. None if either has nothing to pair.
@@ -158,7 +150,7 @@ pub fn closing(za: u32, zb: u32, heat: &Q) -> Option<(u32, u32, u32, Q)> {
     if ua == 0 || ub == 0 {
         return None;
     }
-    let g = gcd(ua, ub);
+    let g = num_integer::gcd(ua, ub);
     let (na, nb) = (ub / g, ua / g);
     let id = cluster(za, na, zb, nb)?;
     let (a, b) = (crate::atoms::atom(za)?, crate::atoms::atom(zb)?);

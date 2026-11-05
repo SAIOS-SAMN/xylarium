@@ -162,6 +162,69 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The founding reads the torsion share once (`circuit::Substrate::found`,
+  which now takes only the spin and founds the elements itself) and holds it
+  as `Substrate::share`; readers take that held value. The inbound echo's
+  swing `1 + A_in` is one function, `Substrate::echo_swing`, and the
+  founding cache key reads `package::founding_digest`. The heat a piece's
+  gas and a star's disc take from the pulse is one form,
+  `formation::pulse_heat`. The mass number `floor(a + 1/2)` is
+  `circuit::mass_number`, and the harmonic count on S^11 is
+  `fibres::directions` with one binomial. The `founding` and `formation`
+  readings read the live founding shells and the live star cut
+  (`disc::star_hold` through `galaxy::disc_frame`).
+
+- One turning law per carrier: `turning::turning` (exact) and
+  `turning::turning_dy` (readings, through `xyl_core::shares::deficit_dy`);
+  the settling's pair rates and kicks and the moons' resonances read
+  `turning_dy` per ring (ages through `circuit::rings_of_gyr_dy`); rates in
+  rad/s are `package::Si::rad_s` of `turning::turning_si`; the core's mass
+  in kg is `package::core_kg` everywhere; `turning::span_in_rings` reads
+  `circuit::rings_of_gyr`.
+
+- A star's life is read at its own reach about its core
+  (`galaxy::Star::reach_rings`, the orbit radius) in every layer:
+  `life::lifetime` and `worlds::star_degree_gyr` take that reach in galaxy
+  rings, and `worlds::Setting` and `life::Home` carry the star's
+  home-equivalent reach `r` (crowding) and its reach `reach` (life) in place
+  of a distance in kpc; `worlds::cosmic_rays` takes galaxy rings.
+
+- One reading per quantity in the system, body and world layers: the ice
+  share of a body is `systems::World::ice_share` and the one icy test
+  `World::icy` (envelope worlds were read icy by one reader and not by the
+  other); a child's reach is `manifold::reach` (moon budget, moons); the
+  eccentricity's relaxation is `bodies::eccentricity` (also for
+  `manifold::Manifold::e`); the Love number is `bodies::love`; the share
+  `2x / (1 + x)` is `laws::share2`; the crowding is `galaxy::crowding`; the
+  chord on a sphere is `bounce::curved_reach` (`chain::Place::arc`); one
+  `manifold::per_turn`; one `field::dyadic`; draws are `Dy::unit`; the
+  settled age is `systems::settled_gyr`; the unit world's age of 4.57 Gyr is
+  one declared ruler, `bodies::unit_age_gyr`; the forecast's cache is keyed
+  by `minds::laws_digest`; `stars::pole_point` is renamed
+  `stars::mixture_pole` (the mixture's pole state, not
+  `circuit::pole_point`).
+
+- One present: the universe's count of rings (`Universe::now`) is the
+  clock; `Cosmic::place`, `Cosmic::distance`, `Cosmic::power`,
+  `transit::separation_m`, `Network::passage_years` and `Network::arc_at`
+  take the time as an argument, and Gyr is read through
+  `circuit::gyr_of_rings`. The arc between two stars is one reading,
+  `cosmic::arc_kpc`; light's crossing time is the pulse's speed
+  (`transit::crossing_years`, read by percepts too); the `chemistry` reading
+  reads the present instead of a fixed 13.8 Gyr; `tiers` reads the echo
+  rings from the keepers (`Chronometry::of`).
+
+- One housing law at waking and in the carry: a mind wakes where its world
+  houses a viable people of its traits (`civ::housing::houses`), no longer
+  where `life::foragers` counts one; a people's drive is `civ::drive` for
+  the carry and for discord, whose reach is `transit::reach_kpc`; deficit
+  shares read `xyl_core::shares`; the free share of housing is
+  `civ::housing::free_share` for the consciousness gauge and free thought;
+  the SI electronvolt and atomic mass unit are `package::Si`'s.
+
+- `Checkpoint::decode` returns `Err` naming its refusal, and `run` refuses a
+  home whose checkpoint does not decode instead of founding it afresh.
+
 - `manifold::turn_between` and `chain::Place::arc` read the certified angle
   between two directions (`xyl_core::rotor::angle_between`) in place of an
   uncertified `Dy` arccosine; `Rotor::inverse` is the rotor's conjugate
@@ -261,7 +324,46 @@ may change public APIs and the model's laws.
   carried in `life::Home::sequence` and `worlds::Setting::sequence`. A held
   body that does not ignite forms no remnant node (`pulse::nodes_among`).
 
+- One certified exponential: `motion::Boost::grown` splits the rapidity
+  into whole halvings (an exact power of two) and a remainder in
+  `[0, 2 ln 2)` that `certified::exp_of` encloses; `certified::exp_fixed`
+  and motion's own `ln 2` and `pow2` are removed, and `certified` builds
+  its dyadics with the one gcd-free constructor of `q`.
+
+- `Dy::PI` is `Dy::pi()`, and `Dy`'s ln 2 is read the same way: each is
+  the certified enclosure (`certified::pi`, `certified::ln2`) rounded down
+  to 62 bits once, in place of a hard-coded literal.
+
 ### Removed
+
+- Parallel founding and formation models: the dead star cut
+  `formation::of` with `Formation` and `Piece`, the dead disc model
+  `disc::star_disc` with `disc::World` and the `formation` reading's scratch
+  infalls, and the diagnostic cascades `formation::cascade`,
+  `formation::equitable_cascade`, `Stack` and `EquitableReading`; the
+  stored copy `Anchor::share` and `Bounce::share`; `atoms::orientations`,
+  `atoms::closes` (replaced by `compound::closing`) and the hand-rolled gcd.
+  Forward-only wrappers: `formation::throat_push`, `formation::weight`,
+  `origin::spin_of_share`, `centre::galaxy_episode`, `circuit::dilation`,
+  `circuit::jet_dilation` and `chem::Rulers::r0`.
+
+- Parallel copies replaced by the one model above: `turning::turning_rad_s`,
+  `turning::rad_s`, `turning::rate_per_ring` and the private rings-per-Gyr
+  conversion; `stars::reach_rings`; `chain::kpc`; `chain::Place::arc_kpc_dy`
+  (read `arc_kpc`); `bodies::Orbit::at` and `bodies::Now` (test only; the
+  live orbit at an age is `worlds::Path`); the private `love_dy`,
+  `mean_motion`, `surface_turning`, `star_length_m`, `held`, `unit`,
+  `inv_two_pi`, `crowding_share` and `share2` copies; the forwarders
+  `manifold::turn_between`, `field::bend` and `life::first_age`;
+  `life::settled_gyr` and `minds::life_digest`.
+
+- `universe::Bell` (its Gyr period rounded to 2^-60) and `Cosmic::now`:
+  the second clock. `Network::arc`, `growth::world_w`,
+  `growth::unit_metabolism_w`, `knowledge::unit_body_w` and
+  `knowledge::knower_life_yr` (forwarders and repeats), the kernel's
+  `propulsion::ev_j` and `propulsion::amu_kg`, the private surface area
+  (`Body::area_m2` is read), and the v3 checkpoint reader (a v3 checkpoint
+  is refused by name).
 
 - The founding's rounding of rationals: `circuit::turn` (capture phases
   floored to the coordinate grid) and `circuit::grain::grid` (reaches,
@@ -279,6 +381,19 @@ may change public APIs and the model's laws.
   `field::burn_out_share` (`binding_mev`, `nucleon_mev`, `weak_mev`).
 - Hosted CI (`.github/workflows/ci.yml`) and its README badge are removed;
   the checks are run locally.
+
+- `xyl_core::orbit`, which no production code read; `Orbit::throat`
+  re-derived the torsion share that `bounce::torsion_share` holds. The
+  sheared return `k / (1 - theta)` stays a theorem of docs/model.md (T4).
+
+- Unread readings of xyl-core: `rotor::Half::share` (the S^2 case of
+  `measure::share_turns`), `shares::opposed` (`flow(x, -y)`) and
+  `Dy::cosh`; no production code called them.
+
+- `Rotor::matrix`: a rotor turns a vector by its own action,
+  `v + (w t + u x t) / n` with `t = 2 u x v` (`Rotor::apply`), and
+  `field::Bell::of` reads a stellar hole's axis as the frame's image of
+  the z axis through it.
 
 ## 0.3.0 - 2026-10-30
 

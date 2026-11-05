@@ -69,7 +69,7 @@ fn lines(u: &Universe<'_>, k: usize) -> String {
     }
     for l in net.lines.iter().take(k) {
         let arc = net
-            .arc(&u.cosmic, l.from, l.to)
+            .arc_at(l.from, l.to, Dy::from_q(&u.now))
             .map(|d| d.to_string())
             .unwrap_or_else(|| "-".into());
         out.push_str(&format!(
@@ -117,7 +117,11 @@ fn passages(u: &Universe<'_>, k: usize) -> String {
             .peoples
             .iter()
             .filter(|q| q.population.signum() > 0 && q.name != p.name)
-            .filter_map(|q| u.cosmic.distance(p.star, q.star).map(|d| (d, q)))
+            .filter_map(|q| {
+                u.cosmic
+                    .distance(p.star, q.star, Dy::from_q(&u.now))
+                    .map(|d| (d, q))
+            })
             .collect();
         near.sort_by_key(|a| a.0);
         out.push_str(&format!("  passages from {} (star {}):\n", p.name, p.star));
@@ -136,6 +140,7 @@ fn passages(u: &Universe<'_>, k: usize) -> String {
                     world: q.world,
                 },
                 u.cosmic.peoples.iter().position(|x| std::ptr::eq(x, p)),
+                Dy::from_q(&u.now),
             );
             out.push_str(&format!(
                 "    to {} (star {}, {d} kpc): {}\n",
@@ -155,7 +160,7 @@ fn passages(u: &Universe<'_>, k: usize) -> String {
 fn cells(u: &Universe<'_>, k: usize) -> String {
     let net = &u.network;
     let sphere = xyl_cosmos::chain::radius();
-    let now = xyl_cosmos::circuit::rings_of_gyr_dy(u.gyr());
+    let now = Dy::from_q(&u.now);
     let places: BTreeMap<u64, xyl_cosmos::chain::Place> = net
         .sample
         .iter()

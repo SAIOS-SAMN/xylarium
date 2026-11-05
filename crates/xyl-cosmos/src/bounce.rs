@@ -9,7 +9,8 @@
 //!
 //! Reads `xyl_core::cga` (`point_at`, `sphere_through`, `keeping`, `Source`),
 //! `xyl_core::rotor::Half`, `circuit::axes` (the five isoclinic planes and
-//! their antipole) and `origin::torsion_share`. Units are natural, G = c = 1;
+//! their antipole). `torsion_share` is the jet's share from the spin, read
+//! once by the founding (`circuit::Substrate::found`). Units are natural, G = c = 1;
 //! points have `AXES` = 11 coordinates (the pole axis first), so the algebra
 //! is `Cl(12, 1)` over `Q`.
 //!
@@ -181,12 +182,6 @@ pub struct Bounce {
 }
 
 impl Bounce {
-    /// The share the bounce's jet carries through the throat at each crossing,
-    /// from its mass and spin by torsion ([`torsion_share`]).
-    pub fn share(&self) -> Q {
-        torsion_share(&self.mass, &self.spin)
-    }
-
     /// The bounce of a black hole of `mass` and Kerr parameter `spin`, read in
     /// the S^360 enclosure of curvature radius `enclosure` and crossed on the
     /// first isoclinic plane at the [`horizon_reach`] taken along the

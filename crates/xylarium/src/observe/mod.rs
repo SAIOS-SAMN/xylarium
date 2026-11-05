@@ -66,7 +66,7 @@
 //!   formation         each galaxy's cut, gas, cooling and stars
 //!   seals \[Z\]         the sealed kinds, the seams and the vessel (the
 //!                     firmament's band) up to Z
-//!   founding          the founding's equitable cascade and its stacks
+//!   founding          the founding shells on the founding's mix
 //!   founding-reach    each kind's reach about the throat at the founding
 //!   worlds \[N\]        the planets of the first N stars (default 200),
 //!                     settled, why a star stands without worlds, and the
@@ -96,7 +96,6 @@ mod universe;
 mod worlds;
 
 use crate::run::{roster, with, Options, Source};
-use xyl_cosmos::origin::Origin;
 use xyl_kernel::universe::Universe;
 
 /// The list of readings printed for an unknown word.
@@ -109,10 +108,6 @@ const READINGS: &str = concat!(
     "worlds [N], ",
     "push [N], bonding [N]"
 );
-
-fn hex(b: &[u8]) -> String {
-    b.iter().map(|x| format!("{x:02x}")).collect()
-}
 
 fn count(what: &[String], default: usize) -> usize {
     what.get(1).and_then(|s| s.parse().ok()).unwrap_or(default)
@@ -175,9 +170,9 @@ fn law_reading(o: &Options, what: &[String]) -> Result<Option<String>, String> {
         // The cascade report already ends each line with a newline.
         Some("founding") => return founding::founding_cascade(o).map(Some),
         Some("galactic-core") => {
-            let origin = Origin::of(o.seed).ok_or("no origin")?;
+            let founded = crate::run::Founded::of(o.seed)?;
             let n = what.get(1).and_then(|s| s.parse::<u32>().ok());
-            universe::galactic_core(&origin, n)?
+            universe::galactic_core(&founded.origin, n)?
         }
         Some("tiers") => {
             let n = what

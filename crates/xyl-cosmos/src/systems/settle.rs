@@ -2,6 +2,7 @@
 //! ages.
 
 use super::*;
+use xyl_core::units::Tier;
 
 /// A small body of a disc on a circular orbit: the reach `a` (AU, or host
 /// radii for a moon), the mass `m` (world masses) and the phase (turns).
@@ -20,11 +21,16 @@ pub(super) struct Embryo {
 }
 
 /// The core units used by the settling: r_g in metres and the core's mass in
-/// kilograms.
+/// kilograms (`package::core_kg`).
 pub(super) fn rg_units() -> (Dy, Dy) {
     let r_g = Dy::from_q(&crate::chain::units().r_g_m);
-    let core_kg = Dy::from_q(&(&crate::package::hole_mass() * &crate::package::Si::star_mass_kg()));
-    (r_g, core_kg)
+    (r_g, Dy::from_q(&crate::package::core_kg()))
+}
+
+/// The system tier's unit in r_g (60, `Tier::System`): the settling holds
+/// its reaches in r_g and reads the turning law in that tier.
+pub(super) fn sixty() -> Dy {
+    Dy::from_q(&Tier::System.in_rg())
 }
 
 /// A planet's reach a (AU) in r_g.
@@ -75,16 +81,18 @@ struct Pairs<'r> {
     reach: &'r dyn Fn(&Q) -> Dy,
     /// One world mass.
     unit_world: Dy,
-    /// The light-travel length of one Gyr in r_g, converting ages to spans.
+    /// Rings per Gyr (`circuit::rings_of_gyr_dy`), converting ages to the
+    /// turning law's rings.
     per_gyr: Dy,
     /// The horizon (Gyr) merge ages are searched out to.
     top: Dy,
 }
 
 impl Pairs<'_> {
-    /// The turning law omega(A) = [M / (A + M)] / A.
+    /// The turning law about the anchor at reach `a` (r_g), radians per
+    /// ring (`turning::turning_dy`).
     fn omega(&self, a: Dy) -> Dy {
-        (self.anchor / (a + self.anchor)) / a
+        crate::turning::turning_dy(self.anchor, a / sixty(), Tier::System)
     }
 
     /// A pair's kick over `gyr`: `eps (floor(N / q) c + N mod q)`, the
@@ -102,7 +110,8 @@ impl Pairs<'_> {
         if dw.is_zero() {
             return Dy::ZERO;
         }
-        let eps = (mm / (r + mm)) / r / dw;
+        // The pair's own turning law across its gap, over the rates' gap.
+        let eps = crate::turning::turning_dy(mm, r / sixty(), Tier::System) / dw;
         let n = gyr * self.per_gyr * dw;
         let s = w1.max(w2) / dw;
         let s = s - Dy::int(s.trunc_i64());
@@ -151,9 +160,11 @@ impl Pairs<'_> {
 /// The settling about an anchor (a star, or a world for its moons), with the
 /// anchor's mass and each body's reach as lengths in r_g (G = c = M_core = 1).
 ///
-/// Each body turns at omega(A) = [M / (A + M)] / A. Neighbours meet once per
+/// Each body turns by the turning law, omega(A) = bell [M / (A + M)] / A
+/// radians per ring (`turning::turning_dy`). Neighbours meet once per
 /// synodic period; each meeting turns them by
-/// eps = [m / (r + m)] / r / |omega_i - omega_j|, and over an age they meet
+/// eps = omega_m(r) / |omega_i - omega_j|, the turning law about the pair's
+/// mass m across its gap r, and over an age (in rings) they meet
 /// N = age |omega_i - omega_j| times. The phase step per meeting,
 /// s = frac(omega_i / |omega_i - omega_j|), is approximated by the smallest
 /// continued-fraction convergent p/q with |s - p/q| <= 1 / (N q), so kicks
@@ -181,13 +192,12 @@ pub(super) fn settle_about(
     settled: &Q,
     horizon: &Q,
 ) -> Vec<Embryo> {
-    let (r_g, core_kg) = rg_units();
+    let (_, core_kg) = rg_units();
     let pairs = Pairs {
         anchor,
         reach,
         unit_world: Dy::from_q(&crate::package::Si::world_mass_kg()) / core_kg,
-        per_gyr: Dy::from_q(&crate::package::Si::gyr_s()) * Dy::from_q(&crate::package::Si::c())
-            / r_g,
+        per_gyr: crate::circuit::rings_of_gyr_dy(Dy::ONE),
         top: Dy::from_q(horizon),
     };
     let ages = merge_until(&mut b, &pairs, Dy::from_q(settled));
@@ -198,7 +208,7 @@ pub(super) fn settle_about(
     for (i, age) in ages.iter().enumerate() {
         let Some(t) = *age else { continue };
         let lighter = if b[i].m >= b[i + 1].m { i + 1 } else { i };
-        let when = held(&t.max(Dy::ZERO).to_q());
+        let when = dyadic(&t.max(Dy::ZERO).to_q());
         let e = &mut b[lighter];
         if e.merged_at.as_ref().is_none_or(|m| &when < m) {
             e.merged_at = Some(when);
@@ -226,7 +236,7 @@ fn merge_until(b: &mut Vec<Embryo>, pairs: &Pairs, by_settled: Dy) -> Vec<Option
         let (x, y) = (b[i].clone(), b[i + 1].clone());
         let m = &x.m + &y.m;
         let by = |u: &Q, v: &Q| {
-            held(
+            dyadic(
                 &(&(u * &x.m) + &(v * &y.m))
                     .checked_div(&m)
                     .unwrap_or_else(|| u.clone()),
@@ -234,7 +244,7 @@ fn merge_until(b: &mut Vec<Embryo>, pairs: &Pairs, by_settled: Dy) -> Vec<Option
         };
         b[i] = Embryo {
             a: by(&x.a, &y.a),
-            m: held(&m),
+            m: dyadic(&m),
             phase: by(&x.phase, &y.phase).frac(),
             swing: Q::ZERO,
             merged_at: None,
@@ -270,7 +280,7 @@ fn set_swings(b: &mut [Embryo], pairs: &Pairs, at: Dy) {
                 let own = (pairs.reach)(&b[i].a).max(Dy::sci(1, -30));
                 s = s.max(pairs.kick(x, y, at) * inner / own);
             }
-            held(&s.min(Dy::ONE).to_q())
+            dyadic(&s.min(Dy::ONE).to_q())
         })
         .collect();
     for (e, sw) in b.iter_mut().zip(swings) {

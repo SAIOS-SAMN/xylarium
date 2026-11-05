@@ -11,8 +11,6 @@
 //! - [`units`]: the unit ladder anchored at the universal core
 //!   (`G = c = M_core = 1`, tiers a power of sixty of `r_g` apart);
 //! - [`shares`]: the deficit share, the dilation and the flow law;
-//! - [`orbit`]: an orbit's reading at a count: the axis dilation by its
-//!   exponent and each isoclinic plane's phase in Q/Z;
 //! - [`measure`]: the share of an n-sphere within an angle of an axis;
 //! - [`motion`]: closed-form orbits of exponential modes; [`event`]: the
 //!   certified crossing solver; [`coordinate`]: the sexagesimal coordinate;
@@ -31,7 +29,6 @@ pub mod dyadic;
 pub mod event;
 pub mod measure;
 pub mod motion;
-pub mod orbit;
 pub mod q;
 pub mod rng;
 pub mod rotor;

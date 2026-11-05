@@ -48,7 +48,7 @@ fn fidelity_orders_water_methane_and_plasma() {
         "methane {ch4} vs water {e}"
     );
     let world_radius_m = Dy::from_q(&crate::package::Si::world_radius_m());
-    let area = Dy::int(4) * Dy::PI * world_radius_m * world_radius_m;
+    let area = Dy::int(4) * Dy::pi() * world_radius_m * world_radius_m;
     let rungs = |s: worlds::Species, t: Dy| {
         ladder(
             &medium(Solvent::Volatile(s), t, Dy::ratio(1, 2), Dy::ratio(3, 4)),
@@ -71,7 +71,7 @@ fn temperate_water_ladder_completes() {
         Dy::ratio(3, 4),
     );
     let world_radius_m = Dy::from_q(&crate::package::Si::world_radius_m());
-    let area = Dy::int(4) * Dy::PI * world_radius_m * world_radius_m;
+    let area = Dy::int(4) * Dy::pi() * world_radius_m * world_radius_m;
     let lad = ladder(&m, area, &ctx).expect("water copies");
     assert!(
         lad.complete,

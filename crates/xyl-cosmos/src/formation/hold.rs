@@ -1,7 +1,7 @@
 //! The star tier's cut: which kinds of an infall a core holds at its heat
 //! and what it releases to the disc (see the parent module's header).
 
-use super::{mass_weight, weight};
+use super::mass_weight;
 use xyl_core::Q;
 
 /// What a core (a star's or a planetary core) holds at its heat: the share
@@ -52,12 +52,19 @@ pub fn hold_at_heat(mix: &[(u32, Q)], p: &Q, add: &Q, heat: &Q, p0: &Q) -> Hold 
 fn hold_about(mix: &[(u32, Q)], p: &Q, add: &Q, state: &Q, heat: &Q, p0: &Q) -> Hold {
     let open_of = |z: u32| {
         Q::int(i64::from(crate::compound::open_hot(z, heat)))
-            .checked_div(&weight(z))
+            .checked_div(&Q::int(i64::from(crate::compound::hold(z))))
             .unwrap_or(Q::ZERO)
     };
     let kinds: Vec<(u32, Q, Q, Q)> = mix
         .iter()
-        .map(|(z, share)| (*z, share.clone(), weight(*z), open_of(*z)))
+        .map(|(z, share)| {
+            (
+                *z,
+                share.clone(),
+                Q::int(i64::from(crate::compound::hold(*z))),
+                open_of(*z),
+            )
+        })
         .filter(|(_, _, w, _)| w.signum() > 0)
         .collect();
     let all = |open: Q| Hold {

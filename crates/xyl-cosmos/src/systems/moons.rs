@@ -2,6 +2,7 @@
 //! cloud of a system.
 
 use super::*;
+use xyl_core::units::Tier;
 
 /// The moons of the last world in `worlds`, on the manifold the world anchors
 /// in the star's field: reach `2 pi a m / (M + m)`, from five world radii
@@ -39,15 +40,12 @@ pub(super) fn moons(
             .unwrap_or(Q::ZERO);
     // The world's reach in the star's field, 2 pi a m / (M + m), in metres;
     // `outer` is that reach in world radii.
-    let a_m = &(&g_a * &crate::package::Si::au());
-    let reach_m = &(&(&Q::int(2) * &pi(BITS).mid()) * a_m)
-        * &g_mass
-            .checked_div(&(&star_earths + &g_mass))
-            .unwrap_or(Q::ZERO);
+    let a_m = &g_a * &crate::package::Si::au();
+    let reach_m = world_reach(&a_m, &g_mass, &star_earths);
     let r_m = &g_radius * &crate::package::Si::world_radius_m();
     let (inner, outer) = (
         Q::int(5),
-        held(&reach_m.checked_div(&r_m).unwrap_or(Q::ZERO)),
+        dyadic(&reach_m.checked_div(&r_m).unwrap_or(Q::ZERO)),
     );
     if outer <= inner {
         return Q::ZERO;
@@ -61,8 +59,8 @@ pub(super) fn moons(
         .iter()
         .enumerate()
         .map(|(k, (reach, holding))| Embryo {
-            a: held(&(&outer * reach).max(inner.clone())),
-            m: held(&(holding * &all)),
+            a: dyadic(&(&outer * reach).max(inner.clone())),
+            m: dyadic(&(holding * &all)),
             phase: (&Q::int(i64::try_from(k).unwrap_or(0)) * &crate::galaxy::golden_turns()).frac(),
             swing: Q::ZERO,
             merged_at: None,
@@ -117,9 +115,11 @@ pub(super) fn moons(
 /// by the distance of the two turning rates' ratio from the nearest
 /// first-order resonance p / (p + 1) (that distance floored at 1/1000).
 fn forced_eccentricities(settled: &[Embryo], anchor: Dy, radius_rg: Dy, g_mass: &Q) -> Vec<Q> {
+    // The turning law at each moon (`turning::turning_dy`); its ratio, not
+    // its unit, is read.
     let rate = |a_r: &Q| {
         let a = Dy::from_q(a_r) * radius_rg;
-        (anchor / (a + anchor)) / a
+        crate::turning::turning_dy(anchor, a / sixty(), Tier::System)
     };
     (0..settled.len())
         .map(|k| {

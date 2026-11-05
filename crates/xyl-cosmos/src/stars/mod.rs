@@ -5,7 +5,7 @@
 //! `circuit::bell` and `echo` (one and two rings), the substrate's firmament
 //! outflow rate (`cores::substrate_for`, per ring), the element table and
 //! `compound` (frames at heat, in `sequence.rs`).
-//! Reach `r` is in galaxy rings (`reach_rings` converts from kpc); times are
+//! Reach `r` is in galaxy rings (`galaxy::Star::reach_rings`); times are
 //! rings of time after the origin (one ring one bell); masses are core
 //! masses and light is power in core units, core masses (times `c^2`,
 //! `c = 1`) per ring. No constant of the Sun enters.
@@ -38,7 +38,8 @@
 //!   The [`timeline`] runs fusion steps until the collective's throat
 //!   crossing and fission steps from it; [`remnant`] is the hold the steps
 //!   that ran did not transduce.
-//! - Sequence (`sequence.rs`): the held collective's pole point, its
+//! - Sequence (`sequence.rs`): the held collective's pole state
+//!   (`mixture_pole`), its
 //!   dilation to the throat, and the fusion and fission steps by polarity.
 //! - Not yet modelled: ejecta returned to the galaxy's gas.
 //!
@@ -48,31 +49,18 @@
 mod sequence;
 
 pub use sequence::{
-    fission_step, fusion_step, held_frames, nucleon_count, pole_point, Sequence, Step,
+    fission_step, fusion_step, held_frames, mixture_pole, nucleon_count, Sequence, Step,
 };
 
 use xyl_core::dyadic::Dy;
 use xyl_core::shares::deficit_dy;
 use xyl_core::Q;
 
-/// A home-galaxy star's reach about the universal core (galaxy rings) from
-/// its distance from the core (kpc), in the galaxy tier's ring, the unit in
-/// which the star's piece is lit, so the vacuum's share `1 / (r + 1)` gives
-/// the same hold at the star as the cooling gave at its piece. Zero before a
-/// founding; never negative.
-pub fn reach_rings(r_kpc: Dy) -> Dy {
-    let kpc = Dy::from_q(&crate::circuit::anchor().galaxy_kpc);
-    if kpc.signum() <= 0 {
-        return Dy::ZERO;
-    }
-    (r_kpc / kpc).max(Dy::ZERO)
-}
-
 /// The pulse's ring delivered at reach `r` over one bell: the waveform's
 /// magnitude integrated over half an echo, `1 / pi`, times the vacuum's share
 /// `1 / (r + 1)`.
 pub fn ring_per_bell(reach: Dy) -> Dy {
-    deficit_dy(Dy::ONE, reach) / Dy::PI
+    deficit_dy(Dy::ONE, reach) / Dy::pi()
 }
 
 /// The vessel's drift at reach `r` over one bell at `t` rings: `bell q(t)`
@@ -234,7 +222,7 @@ pub fn flicker(t: Dy) -> Dy {
     if echo.signum() <= 0 || crate::circuit::anchor().rim.signum() <= 0 {
         return Dy::ONE;
     }
-    Dy::PI / Dy::int(2) * (Dy::int(2) * Dy::PI * t / echo).cos().abs()
+    Dy::pi() / Dy::int(2) * (Dy::int(2) * Dy::pi() * t / echo).cos().abs()
 }
 
 /// The share of a star's first step transduced by `age` rings at reach `r`
@@ -263,9 +251,9 @@ mod tests {
         // The ring per bell falls with the vacuum's share and is 1 / pi at
         // r = 0.
         assert!(ring_per_bell(Dy::ZERO) > ring_per_bell(Dy::int(10)));
-        assert_eq!(ring_per_bell(Dy::ZERO), Dy::ONE / Dy::PI);
+        assert_eq!(ring_per_bell(Dy::ZERO), Dy::ONE / Dy::pi());
         // The flicker is at most pi / 2 times the mean.
-        assert!(flicker(Dy::ZERO) <= Dy::PI / Dy::int(2) + Dy::sci(1, -12));
+        assert!(flicker(Dy::ZERO) <= Dy::pi() / Dy::int(2) + Dy::sci(1, -12));
     }
 
     #[test]

@@ -19,7 +19,7 @@ pub fn strikes_per_gyr(debris: Dy, body: &Body) -> Dy {
     // (AU) both converted to metres.
     let reach = body.radius * Dy::from_q(&crate::package::Si::world_radius_m())
         / (Dy::int(2)
-            * Dy::PI
+            * Dy::pi()
             * body.a_au.max(Dy::sci(1, -9))
             * Dy::from_q(&crate::package::Si::au()));
     debris.clamp(Dy::ZERO, Dy::ONE) * orbits * reach

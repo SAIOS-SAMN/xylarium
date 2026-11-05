@@ -86,6 +86,55 @@ pub(crate) fn show(q: &Q) -> String {
     Dy::from_q(q).to_string()
 }
 
+/// What a seed founds before any galaxy is read: the origin and the founded
+/// elements; the chemistry is built on request ([`Founded::chemistry`]),
+/// since readings that need only the founding skip it. The one constructor
+/// every command and reading starts from.
+pub(crate) struct Founded {
+    /// The universe's seed.
+    pub(crate) seed: u64,
+    /// The origin the seed derives.
+    pub(crate) origin: Origin,
+    /// The elements the origin's founding makes.
+    pub(crate) elements: Vec<xyl_cosmos::elements::Element>,
+}
+
+impl Founded {
+    /// The origin and founded elements of `seed`; `Err` when either cannot
+    /// be derived.
+    pub(crate) fn of(seed: u64) -> Result<Founded, String> {
+        let origin = Origin::of(seed).ok_or("no origin")?;
+        let elements = xyl_cosmos::elements::founded(
+            &xyl_cosmos::cores::substrate_for(&origin.parent.spin)
+                .ok_or("no founding")?
+                .share,
+        )?;
+        Ok(Founded {
+            seed,
+            origin,
+            elements,
+        })
+    }
+
+    /// The galaxy's chemistry from the origin; `Err` when it cannot be
+    /// derived.
+    pub(crate) fn chemistry(&self) -> Result<Chemistry, String> {
+        Chemistry::of(&self.origin).ok_or_else(|| "no chemistry".to_string())
+    }
+
+    /// The galaxy of the founding with chemistry `chem`, under the reference
+    /// laws until a package supplies a universe's own.
+    pub(crate) fn galaxy<'a>(&'a self, chem: &'a Chemistry) -> Galaxy<'a> {
+        Galaxy {
+            seed: self.seed,
+            origin: &self.origin,
+            chem,
+            elements: &self.elements,
+            sc: Laws::default().scales(),
+        }
+    }
+}
+
 fn checkpoint_path(home: &Path) -> PathBuf {
     home.join("checkpoint")
 }
@@ -130,22 +179,13 @@ pub fn with<T>(
         o.home.display()
     ));
     xyl_core::watch::stage("chemistry");
-    let origin = Origin::of(o.seed).ok_or("no origin")?;
-    let chem = Chemistry::of(&origin).ok_or("no chemistry")?;
+    let founded = Founded::of(o.seed)?;
+    let chem = founded.chemistry()?;
+    let origin = &founded.origin;
     eprintln!("universe: chemistry in {:.1?}", t0.elapsed());
     xyl_core::watch::stage("forecast");
-    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
-    // A universe's laws come from its package; until a package supplies
-    // them, the reference laws are used.
-    let sc = Laws::default().scales();
-    let ctx = Ctx::new(sc);
-    let gal = Galaxy {
-        seed: o.seed,
-        origin: &origin,
-        chem: &chem,
-        elements: &elements,
-        sc,
-    };
+    let gal = founded.galaxy(&chem);
+    let ctx = Ctx::new(gal.sc);
     let schedule = forecast(&gal, &ctx, &o.home, o.stars, o.threads, o.census);
     eprintln!("universe: forecast in {:.1?}", t0.elapsed());
     xyl_core::watch::stage("genesis and begin (the bells weighed)");
@@ -163,7 +203,7 @@ pub fn with<T>(
             .collect()
     });
     let mut u = Universe::begin(cosmic, heavy.as_deref());
-    u.network.seat(o.seed, &origin, o.stars);
+    u.network.seat(o.seed, origin, o.stars);
     if heavy.is_none() {
         let list: Vec<String> = u.field.heavy().iter().map(u64::to_string).collect();
         let _ = std::fs::create_dir_all(&o.home)
@@ -175,10 +215,14 @@ pub fn with<T>(
         u.gyr(),
         t0.elapsed()
     );
-    let source = if let Some(c) = std::fs::read_to_string(checkpoint_path(&o.home))
+    // A checkpoint that does not decode is refused, never replaced by a
+    // fresh universe.
+    let held = std::fs::read_to_string(checkpoint_path(&o.home))
         .ok()
-        .and_then(|t| Checkpoint::decode(&t))
-    {
+        .map(|t| Checkpoint::decode(&t))
+        .transpose()
+        .map_err(|e| format!("{}: {e}", checkpoint_path(&o.home).display()))?;
+    let source = if let Some(c) = held {
         let n = c.restore(&mut u);
         eprintln!(
             "universe: checkpoint at count {}: {n} peoples' records taken, {} inputs held",
@@ -200,7 +244,7 @@ pub fn with<T>(
         t0.elapsed()
     );
     xyl_core::watch::stage("read");
-    f(&mut u, source, &origin)
+    f(&mut u, source, origin)
 }
 
 /// The roster: each people with its role, star, world, region, population and
@@ -513,8 +557,7 @@ fn play(
         }
         rings += 1;
         if let Some(l) = link.as_mut() {
-            let at = xyl_cosmos::circuit::rings_of_gyr_dy(u.gyr());
-            let relays = xyl_cosmos::pulse::relays(&bells, at);
+            let relays = xyl_cosmos::pulse::relays(&bells, Dy::from_q(&u.now));
             l.ring(u, &bells, &relays);
         }
         if rings % 6 == 0 {
@@ -565,23 +608,14 @@ pub fn genesis(o: Options) -> Result<bool, String> {
             o.home.display()
         ));
     }
-    let origin = Origin::of(o.seed).ok_or("no origin")?;
-    let chem = Chemistry::of(&origin).ok_or("no chemistry")?;
-    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
-    // A universe's laws come from its package; until a package supplies
-    // them, the reference laws are used.
-    let sc = Laws::default().scales();
-    let ctx = Ctx::new(sc);
-    let gal = Galaxy {
-        seed: o.seed,
-        origin: &origin,
-        chem: &chem,
-        elements: &elements,
-        sc,
-    };
+    let founded = Founded::of(o.seed)?;
+    let chem = founded.chemistry()?;
+    let (origin, elements) = (&founded.origin, &founded.elements);
+    let gal = founded.galaxy(&chem);
+    let ctx = Ctx::new(gal.sc);
     std::fs::create_dir_all(&o.home).map_err(|e| e.to_string())?;
     let schedule = forecast(&gal, &ctx, &o.home, o.stars, o.threads, o.census);
-    let founding = xyl_cosmos::cores::founding(&origin, &elements);
+    let founding = xyl_cosmos::cores::founding(origin, elements);
     let anchor = xyl_cosmos::circuit::anchor();
     let mut out = format!(
         concat!(
@@ -592,7 +626,7 @@ pub fn genesis(o: Options) -> Result<bool, String> {
         o.seed,
         xyl_cosmos::package::founding_digest(),
         xyl_cosmos::minds::laws_digest(),
-        xyl_cosmos::minds::life_digest(),
+        xyl_cosmos::minds::laws_digest(),
         xyl_cosmos::circuit::gyr_of_rings(&origin.first_stars().mid()),
         xyl_cosmos::circuit::gyr_of_rings_dy(xyl_cosmos::circuit::bell()),
         anchor.rim,
@@ -600,7 +634,7 @@ pub fn genesis(o: Options) -> Result<bool, String> {
         anchor.radius_kpc,
         anchor.margin
     );
-    out.push_str(&template_census(&anchor, &origin));
+    out.push_str(&template_census(&anchor, origin));
     for c in &founding {
         let s = &c.shape;
         out.push_str(&format!(
@@ -624,11 +658,8 @@ pub fn genesis(o: Options) -> Result<bool, String> {
     ));
     let cosmic = Cosmic::genesis(gal, schedule);
     let mut u = Universe::begin(cosmic, None);
-    u.network.seat(o.seed, &origin, o.stars);
-    out.push_str(&format!(
-        "bell period-gyr {}\nfirst-dawn count {}\n",
-        u.bell.period_gyr, u.now
-    ));
+    u.network.seat(o.seed, origin, o.stars);
+    out.push_str(&format!("first-dawn count {}\n", u.now));
     keep(&mut u, &o.home, None)?;
     let tmp = record.with_extension("tmp");
     std::fs::write(&tmp, out)
@@ -658,7 +689,7 @@ fn template_census(anchor: &xyl_cosmos::circuit::Anchor, origin: &Origin) -> Str
             ),
             xyl_cosmos::package::hole_mass(),
             anchor.spin,
-            anchor.share,
+            sub.share,
             sub.holding(),
             sub.held_share(),
             sub.beads.len(),

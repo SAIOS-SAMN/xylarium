@@ -127,14 +127,7 @@ pub fn first_star_mass(sub: &crate::circuit::Substrate) -> Option<Q> {
     if let Some(m) = map.lock().ok().and_then(|m| m.get(&key).cloned()) {
         return m;
     }
-    let first = sub
-        .lighting
-        .pieces
-        .iter()
-        .filter_map(|p| p.2.map(|rings| (rings, p)))
-        .min_by(|x, y| x.0.cmp(&y.0).then_with(|| x.1 .0.cmp(&y.1 .0)))
-        .map(|(_, p)| p);
-    let mass = first
+    let mass = first_piece(sub)
         .and_then(|p| piece_cut(sub, p))
         .map(|cut| &cut.star * &cut.cloud);
     if let Ok(mut m) = map.lock() {
@@ -170,14 +163,18 @@ pub fn first_star_sequence() -> crate::stars::Sequence {
 fn first_cut() -> Option<crate::disc::StarHold> {
     let anchor = crate::circuit::anchor();
     let sub = crate::cores::substrate_for(&anchor.spin)?;
-    let first = sub
-        .lighting
+    piece_cut(&sub, first_piece(&sub)?)
+}
+
+/// The piece of `sub`'s lighting that lights first: the least rings to
+/// light, on a tie the innermost. `None` where no piece lights.
+fn first_piece(sub: &crate::circuit::Substrate) -> Option<&(Q, Q, Option<i64>, Q)> {
+    sub.lighting
         .pieces
         .iter()
         .filter_map(|p| p.2.map(|rings| (rings, p)))
         .min_by(|x, y| x.0.cmp(&y.0).then_with(|| x.1 .0.cmp(&y.1 .0)))
-        .map(|(_, p)| p)?;
-    piece_cut(&sub, first)
+        .map(|(_, p)| p)
 }
 
 /// The disc's frame at reach `r` (galaxy rings) of the home galaxy for a
@@ -232,7 +229,7 @@ fn piece_cut(
         .beads
         .iter()
         .find(|b| b.span.0 == record.0 && b.span.1 == record.1)?;
-    let swing = &Q::ONE + &sub.inbound_mean(crate::circuit::echo()).to_q();
+    let swing = sub.echo_swing();
     // The pulse's turning per echo (two bells) in hydrogen units at the
     // piece's reach about the universal core; the cut derives the star's
     // transduction from it and the collapsed star's compactness.

@@ -25,6 +25,7 @@
 //! Every function is total and deterministic: a world with no convective
 //! power has moment 0, standoff 0 and exposure 1; divisors are floored.
 
+use crate::laws::share2;
 use crate::worlds::{unit, State};
 use xyl_core::dyadic::Dy;
 
@@ -36,13 +37,6 @@ fn unit_world_standoff() -> Dy {
 
 fn power(w: &State) -> Dy {
     (w.q_cmb - w.q_ad).max(Dy::ZERO) * w.r_core
-}
-
-/// The share `2x / (1 + x)`: 0 at x = 0, 1 at x = 1, approaching 2 as x grows.
-/// The module uses it in place of power laws.
-fn share2(x: Dy) -> Dy {
-    let x = x.max(Dy::ZERO);
-    Dy::int(2) * x / (Dy::ONE + x)
 }
 
 /// The world's dipole moment in units of the unit world's moment: the share

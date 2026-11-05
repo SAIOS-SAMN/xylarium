@@ -61,7 +61,9 @@ impl Light {
     /// The light nuclei of the gas the founding of `origin` seeds. `None` when
     /// the table cannot be built or hydrogen and helium carry no mass.
     pub fn of(origin: &Origin) -> Option<Light> {
-        let table = crate::elements::founded(&origin.parent.share()).ok()?;
+        let table =
+            crate::elements::founded(&crate::cores::substrate_for(&origin.parent.spin)?.share)
+                .ok()?;
         let by = |sym: &str| table.iter().find(|e| e.sym == sym);
         let (h, he) = (by("H")?, by("He")?);
         let (m_h, m_he) = (&h.abundance * &h.a, &he.abundance * &he.a);

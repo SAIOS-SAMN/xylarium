@@ -41,7 +41,9 @@ carry the `2^-40` resolution of the draw.
   provides points, versors and dilators. The nucleon poles described below
   are its origin and its point at infinity.
 - Rotors (`xyl_core::rotor`) are rational quaternions, the even part of
-  `Cl(3)`. Every manifold holds its frame as an exact rotor.
+  `Cl(3)`. Every manifold holds its frame as an exact rotor, and a rotor
+  turns a vector by the quaternion action (`Rotor::apply`), never by a
+  matrix.
 - Sphere measure (`xyl_core::measure`) gives the share of an n-sphere
   within an angle of an axis, on which caps and shares on a manifold are
   based.
@@ -93,7 +95,7 @@ Next, in order:
 1. Done ([#26](https://github.com/SAIOS-SAMN/xylarium/issues/26)): the
    rotor's inverse (`Rotor::inverse`) and the certified angle between two
    directions (`rotor::angle_between`) replace the `acos` readings in
-   `manifold::turn_between` and `chain::Place::arc`.
+   `manifold::gap` and `chain::Place::arc`.
 2. The atom's catalogue columns (mass number, phase temperatures, density)
    are to be derived from 3Z, 3Q and R rather than read from
    `data/elements.tsv` (milestone 3, chemistry from the census).
@@ -197,7 +199,7 @@ where it belongs to one.
 3. **Elements attached to the filament's released pressure**
    ([#4](https://github.com/SAIOS-SAMN/xylarium/issues/4), `proposal`, `law`).
    The cascade assigns each kind one reach and exchanges between stacks on the way out
-   (`formation::cascade`, `formation::founding_shells`). In its place: the
+   (`formation::founding_shells`). In its place: the
    bounce releases the torsion share's pressure along the filament, falling with
    reach as the vacuum's share; each kind attaches to it by its open frames and
    is held back by its held frames, and settles where the two balance, as a
@@ -351,7 +353,7 @@ where it belongs to one.
     ([#26](https://github.com/SAIOS-SAMN/xylarium/issues/26), `proposal`, `good
     first issue`). Done: `Rotor::inverse` and the certified
     `rotor::angle_between` replace the `acos` readings in
-    `manifold::turn_between` and `chain::Place::arc`.
+    `manifold::gap` and `chain::Place::arc`.
 
 ## 1. Founding in the core's units (done)
 
@@ -453,8 +455,8 @@ Rules for every layer:
   time is a position on the temporal coordinate (`xyl_core::coordinate`,
   the T lane): whole rings plus a phase in degrees, minutes and seconds of
   arc; local time between orbital bodies is their relative phase.
-- No conversion of an Earth-valued constant: no `turning::rate_per_ring`
-  or `span_in_rings` of a value declared per Gyr, no `Si::` in a law. SI
+- No conversion of an Earth-valued constant: no `turning::span_in_rings`
+  or `circuit::rings_of_gyr` of a value declared per Gyr, no `Si::` in a law. SI
   appears only in `package::Si` for display and for the universal
   constants (c, G, k_B, h).
 - Verification by the founding's own invariants (conservation balances,
@@ -484,8 +486,8 @@ Landed:
   the prototype's stellar-mass unit through the marked boundaries
   `galaxy::kpc_of_rings`, `galaxy::rings_of_kpc` and
   `galaxy::suns_of_core_masses` / `core_masses_of_suns`; the SI forms of the
-  turning law (`turning_si`, `turning_rad_s`) remain as boundaries for the
-  system and body layers.
+  turning law (`turning_si`, read in rad/s by `Si::rad_s`) remain as
+  boundaries for the system and body layers.
 - Layer B, part 2, star masses and star light: a piece's star mass is the share
   of its infall the star tier's cut holds, `m_p = s c` core masses
   (`galaxy::piece_star_mass`); the initial mass function draws a share `x = b u
@@ -518,7 +520,7 @@ Landed:
 
 - One law per formula: the torsion share `(H + J) / (2H + J)` for every
   throat (`bounce::torsion_share`), the dilation `(1 + p) / (1 - p)` for
-  every holder (`circuit::dilation`), and the throat crossing of the echo
+  every holder (`shares::dilation_dy`), and the throat crossing of the echo
   map `t -> a t + b` in closed form (`circuit::throat_crossing`).
 - The jetstream for every holder: out through the continuum, back through
   the vacuum (`circuit::jet_map`). The firmament's onsets and each star's
@@ -703,7 +705,9 @@ layer, each with the quantity that is to derive it.
   be derived from the enrichment that the founding produces.
 - **Systems and worlds** (`systems`, `worlds`, `bodies`, `turning`): The
   light's warmth `278 L / a` (`Spec::t_form`), the world scales and
-  cosmic-ray reference (`worlds::crowd_r0`), the laboratory rock and iron
+  cosmic-ray reference (`worlds::crowd_r0`), the unit world's age of 4.57
+  Gyr at which its isotopes and its star's activity are measured
+  (`bodies::unit_age_gyr`), the laboratory rock and iron
   (`bodies`), the rigidity bodies (`turning::rigidity`), the measured
   element rows Z 1-99 (`data/elements.tsv`) and the fixed volatile species
   are to be derived from each world's chemistry. In the element table,
@@ -715,7 +719,11 @@ layer, each with the quantity that is to derive it.
   of 10 kg (`m_mind_kg` in `life`, read as `growth::Rulers::m_mind`), the
   unit metabolism it sets (19.1 W), the unit generation (14.2 yr),
   `eta_primary = 0.015`, `trophic = 0.1` and the flux ruler 340 W/m^2 are
-  to be derived from each people's chemistry.
+  to be derived from each people's chemistry. The flux ruler is still
+  written twice (`life` and `growth::Rulers::flux_w`) until `life` exposes
+  it; the r/K rule and body size of waking (`cosmic::select`) still repeat
+  the rule inside `life::foragers`, which no longer gates waking, until
+  `life` exposes them.
 - **Laws** (`laws`): Each constant is expressed as a ratio to a measured
   value and is to be stated in core units.
 - **Civilizations** (`xyl-kernel`): The mass ratio 10, the 18 amu exhaust

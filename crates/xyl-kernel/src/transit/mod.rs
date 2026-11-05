@@ -9,10 +9,11 @@
 //! in m or kpc, speeds in m/s, energies in J, and times in years or Gyr as
 //! each item states.
 //!
-//! - Distance ([`separation_m`]): within a system it is the gap between the
-//!   current positions of the two orbits ([`orbit_gap_m`]); between systems
-//!   it is the arc between the stars
-//!   ([`Cosmic::distance`](crate::cosmic::Cosmic::distance)).
+//! - Distance ([`separation_m`], at a count of the bell): within a system it
+//!   is the gap between the positions of the two orbits ([`orbit_gap_m`]);
+//!   between systems it is the arc between the stars
+//!   ([`Cosmic::distance`](crate::cosmic::Cosmic::distance), the one arc
+//!   [`crate::cosmic::arc_kpc`]). [`tier_m`] is the metres in a tier's unit.
 //! - Voyage ([`voyage`]): the craft leaves the well at [`escape_speed`],
 //!   coasts at half the remaining speed change ([`cruise_speed`]) and brakes
 //!   with the other half; the fuel is payload x (R - 1) at the fuel's energy
@@ -77,6 +78,12 @@ use xyl_cosmos::package::Si;
 #[cfg(test)]
 fn au_m() -> Dy {
     Dy::from_q(&Si::au())
+}
+
+/// Returns the metres in one unit of `tier`: the white hole's `r_g`
+/// (`chain::units`) times the tier's unit in `r_g` (`Tier::in_rg`).
+pub fn tier_m(tier: xyl_core::units::Tier) -> xyl_core::Q {
+    &xyl_cosmos::chain::units().r_g_m * &tier.in_rg()
 }
 
 /// Returns one kiloparsec in metres, read from the SI seam (`package::Si`).

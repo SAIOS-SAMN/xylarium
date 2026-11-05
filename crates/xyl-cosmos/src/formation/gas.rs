@@ -2,24 +2,21 @@
 //! channels, its collapse into infalls and the galaxy's lighting (see the
 //! parent module's header for the formulas).
 
-use super::{emission, half, throat_push};
+use super::{emission, half};
 use crate::circuit::Bead;
 use xyl_core::Q;
 
 /// A piece's cooling: the bead's kinds at its pinch (element, share of the
-/// piece), its holding per ring, its agitation and emission, its collapse
-/// (rings to cool, the infall extent, each infall's holding, how many fit,
-/// the cooled residue), its tide and its heat at ignition.
+/// piece), its holding per ring, its collapse
+/// (rings to cool, the infall extent, each infall's holding, how many fit),
+/// its tide and its heat at ignition (the cooled residue plus the pulse's heat).
 pub(crate) struct Cooling {
     pub(crate) mix: Vec<(u32, Q)>,
     pub(crate) lambda: Q,
-    pub(crate) agitation: Q,
-    pub(crate) emission: Q,
     pub(crate) cools_in: Option<i64>,
     pub(crate) infall: Q,
     pub(crate) cloud: Q,
     pub(crate) clouds: i64,
-    pub(crate) cooled: Q,
     pub(crate) tide: Q,
     pub(crate) heated: Q,
 }
@@ -48,7 +45,7 @@ pub(crate) fn cooling(bead: &Bead, unit: &Q, h: &Q, swing: &Q) -> Option<Cooling
         .collect();
     let holding = bead.state.checked_div(unit).unwrap_or(Q::ZERO);
     let lambda = holding.checked_div(&width).unwrap_or(Q::ZERO);
-    let push = throat_push();
+    let push = crate::circuit::throat_push().to_q();
     let deficit = xyl_core::shares::deficit(h, &reach).unwrap_or(Q::ZERO);
     let agitation = (&push - &deficit)
         .checked_div(&push)
@@ -69,13 +66,10 @@ pub(crate) fn cooling(bead: &Bead, unit: &Q, h: &Q, swing: &Q) -> Option<Cooling
     Some(Cooling {
         mix,
         lambda,
-        agitation,
-        emission,
         cools_in,
         infall,
         cloud,
         clouds,
-        cooled,
         tide: deficit,
         heated,
     })
@@ -84,7 +78,7 @@ pub(crate) fn cooling(bead: &Bead, unit: &Q, h: &Q, swing: &Q) -> Option<Cooling
 /// Whether a cooled piece lights: it fragments into at least one infall and
 /// its agitation at ignition is under the throat's push.
 pub(crate) fn lights(c: &Cooling) -> bool {
-    c.clouds > 0 && c.heated < throat_push()
+    c.clouds > 0 && c.heated < crate::circuit::throat_push().to_q()
 }
 
 /// The home galaxy's lighting: the rings until its gas first lights (the
@@ -218,25 +212,13 @@ pub(crate) fn collapse(
         let m = &shell * &gathered(w, reach, n);
         m.checked_div(&(w + &m)).unwrap_or(Q::ZERO)
     };
-    // The agitation shed per ring is e from the open frames' emission plus
-    // ln 2 / k_v for the vacuum's halving every k_v rings.
-    let vacuum = vacuum_halving(reach, h);
-    let ln2 = xyl_core::certified::ln2(64).mid();
-    let shed = e + &vacuum
-        .map(|k| ln2.checked_div(&Q::int(k)).unwrap_or(Q::ZERO))
-        .unwrap_or(Q::ZERO);
     // The pulse's heat is 1 / (pi (R + 1)) times the swing and the whole
-    // piece's grip, over the shed per ring, capped at 1; with no shedding
-    // the heat is 1.
+    // piece's grip, over what the piece sheds per ring (`pulse_heat`).
+    let vacuum = vacuum_halving(reach, h);
     let ring = Q::ONE
         .checked_div(&(&xyl_core::certified::pi(64).mid() * &(reach + &Q::ONE)))
         .unwrap_or(Q::ZERO);
-    let taken = &(&ring * swing) * &grip(width);
-    let heat = if shed.signum() > 0 {
-        taken.checked_div(&shed).unwrap_or(Q::ONE).min(Q::ONE)
-    } else {
-        Q::ONE
-    };
+    let heat = pulse_heat(&(&(&ring * swing) * &grip(width)), e, vacuum);
     let none = (None, Q::ZERO, Q::ZERO, 0, Q::ZERO, heat.clone());
     // The spare, spare(w) = grip(w) - H w / (R (R + w)) - heat, is the
     // agitation an infall of extent w can still hold against.
@@ -300,6 +282,26 @@ pub(crate) fn collapse(
         a,
         heat,
     )
+}
+
+/// The heat the pulse leaves in matter that takes `taken` of it per ring
+/// (the ring the bell brings, times the swing and the matter's grip): the
+/// taken share over what the matter sheds per ring, capped at 1. The shed is
+/// the open frames' emission `open` plus `ln 2 / k_v` for the vacuum's
+/// halving every `k_v` rings (`vacuum`, from [`vacuum_halving`]). With no
+/// shedding the heat is 1. One form for a piece's gas (`collapse`) and a
+/// star's disc (`disc::star_hold`).
+pub(crate) fn pulse_heat(taken: &Q, open: &Q, vacuum: Option<i64>) -> Q {
+    let ln2 = xyl_core::certified::ln2(64).mid();
+    let shed = open
+        + &vacuum
+            .map(|k| ln2.checked_div(&Q::int(k)).unwrap_or(Q::ZERO))
+            .unwrap_or(Q::ZERO);
+    if shed.signum() > 0 {
+        taken.checked_div(&shed).unwrap_or(Q::ONE).min(Q::ONE)
+    } else {
+        Q::ONE
+    }
 }
 
 /// The rings a piece takes to halve its agitation `halvings` times: by ring

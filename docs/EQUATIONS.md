@@ -102,6 +102,11 @@ another crate. Laws are composed from shares (ratios of the form
   `J = H (2a - 1) / (1 - a)`, put on the origin's grid by
   `origin::clamp_spin`. The founding reads the share once
   (`circuit::Substrate::found`) and holds it as `Substrate::share`. Status: built.
+- Isoclinic frame (docs/model.md, The frame, the place and the chain; T18,
+  #90): `H_j = H_iso / 5` and `J_j = J / 5` on each of the five planes, so
+  T14's push `J_j / (6 H_j + J_j)` is the same on all five: one isoclinic
+  phase per body. A frame is the axis-plane phase, the isoclinic phase and
+  the turning between planes into its parent. Status: derived; not built.
 - Paired throat (docs/model.md, The core as a paired throat; #86): near
   face `D(s) D(n)^A`, far face `D(s) D(n)^-A`, product `(3 + a)^2`, so the
   shared hold is the closed kinds `M_c` (T16). The spin's orbit (T17):

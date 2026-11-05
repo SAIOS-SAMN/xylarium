@@ -731,6 +731,7 @@ Theorems:
 | T15 | a whole nucleus feels its planes composed, `D_k = D(p_plane)^w_k D(n)^A`, `w_k` its share of turning in the isoclinic planes; held where `D_k <= 1`, else it leaves after `ln 2 / ln D_k` echoes | 3, T14 |
 | T16 | a paired throat's faces dilate an open kind by `D(s) D(n)^A` and `D(s) D(n)^-A`, product `(3 + a)^2`; no open kind is held on both faces; the shared hold is the closed kinds | 3, 5, 9, T2, T8 |
 | T17 | the spin is a sheared orbit over the pinches: a cohort leaving face `sigma` takes `m M (a + sigma (n / 2) p)`, `p = (t - 1) / (t + 1)`; Z-side release from the near face spins the throat up; the pair closes while `a <= 1` | 3, 4, 7, 9, 11, T2, T10, T16 |
+| T18 | the five isoclinic planes are interchangeable in the multiplicity and the filling, so each holds a fifth of the isoclinic hold and T14's pushes are equal: one isoclinic phase per body; distinct plane phases come only from a link's turning between planes | 8, T6, T7, T14 |
 
 Reading (seed 7, the gate of roadmap item 32, a screen with float
 logarithms and exact held sets): the universal core holds 0.4352 of the
@@ -948,10 +949,31 @@ and the order in which that is to be opened up.
   - The spin is one scalar on all five planes, and the horizon crossing
     turns one plane only.
   - Homologue galaxies read their stars at home values.
+- **T18, founded matter turns its five planes together.**
+  - The five isoclinic planes are interchangeable in every count the
+    founding makes. The multiplicity `C(q + 4, 4)` (T6) counts the weights
+    `(m_1, ..., m_5)` by `sum |m_j|`, and the filling reads the axis levels
+    only (T7, T10). No state's plane is chosen.
+  - So each plane holds a fifth of a kind's isoclinic hold,
+    `H_j = H_iso / 5`, and with `J_j = J / 5` the pushes of T14 are equal
+    on all five planes. Each plane advances by one `theta` per echo, which
+    axiom 8 states as the spin turning them together.
+  - Distinct phases on the planes cannot come from the pushes. They come
+    only from a link that turns one plane into another: a body whose
+    planes are turned relative to its parent's.
+  - A frame is therefore three parts: the axis-plane phase; the isoclinic
+    phase, a sheared orbit (T4); and the turning that carries the body's
+    planes into its parent's, the turning between planes of the coordinate's
+    holonomic lane. The present node and tilt are that turning restricted
+    to one pair of planes.
+  - The turning a link carries is still to be derived from the fold's
+    writhe where the link forms (T10, T13). Until then the drawn node and
+    tilt stand as its factors, composed along the chain.
 - **Order of the work.**
   1. One frame carrier over the six planes, composed along the chain, a
-     place being its parent's frame acting on the body's own state; the
-     per-plane phases derived from the per-plane pushes (T14, T15).
+     place being its parent's frame acting on the body's own state.
+     T18 settles its shape: an axis-plane phase, one isoclinic phase and
+     the turning that carries the body's planes into its parent's.
   2. The chain's tier maps by `manifold::dilation` only, with SI read once
      at the inlet, and relations in the lowest common tier.
   3. Separation and containment by caps in degrees.

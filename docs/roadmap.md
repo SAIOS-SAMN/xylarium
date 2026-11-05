@@ -223,7 +223,10 @@ where it belongs to one.
     the three coordinates of `chain::Place`; tier maps by
     `manifold::dilation` only; separation and containment by caps in
     degrees; shear, stretch, torque and twist on every link; exact turns.
-    First step, the per-plane phases from the per-plane pushes (T14, T15).
+    Its shape is settled by T18 (founded matter turns its five planes
+    together): an axis-plane phase, one isoclinic phase and the turning
+    between planes that carries a body into its parent; that turning is
+    to be derived from the fold's writhe where a link forms.
 39. **Phase weakening and phase strengthening**
     ([#84](https://github.com/SAIOS-SAMN/xylarium/issues/84), `proposal`,
     `law`; depends on items 32 and 34;

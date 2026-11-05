@@ -11,6 +11,10 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- T18 (docs/model.md, #90): founded matter turns its five isoclinic planes
+  together, so one isoclinic phase per body. A frame is the axis-plane
+  phase, that phase and the turning between planes into its parent.
+
 - The audit of the frame, the place and the chain recorded as planned work
   (docs/model.md, roadmap item 40, #90).
 

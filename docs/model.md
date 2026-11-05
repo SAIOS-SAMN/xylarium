@@ -729,6 +729,8 @@ Theorems:
 | T13 | a pinch encloses the whole cohort released since the last, in every direction | 8, T10 |
 | T14 | enclosed matter, from the reach its layer has at the pinch (The state at the pinch); in plane `j` it is pushed out at `J_j / (6 H_j + J_j)` per echo, `H_j` the cohort's hold in the plane and `J_j = J / 5` (none on the axis plane) | 2, 3, 7 |
 | T15 | a whole nucleus feels its planes composed, `D_k = D(p_plane)^w_k D(n)^A`, `w_k` its share of turning in the isoclinic planes; held where `D_k <= 1`, else it leaves after `ln 2 / ln D_k` echoes | 3, T14 |
+| T16 | a paired throat's faces dilate an open kind by `D(s) D(n)^A` and `D(s) D(n)^-A`, product `(3 + a)^2`; no open kind is held on both faces; the shared hold is the closed kinds | 3, 5, 9, T2, T8 |
+| T17 | release at the throat's own degrees per unit hold keeps `a M` fixed, `a' = a_0 M_0 / M'`; the pair closes where `a_0 M_0 <= M_c` | 4, 7, 11, T16 |
 
 Reading (seed 7, the gate of roadmap item 32, a screen with float
 logarithms and exact held sets): the universal core holds 0.4352 of the
@@ -817,6 +819,62 @@ Derived ([#78](https://github.com/SAIOS-SAMN/xylarium/issues/78)); not yet built
   ratio of the bulk's climb to the pinch interval, about 0.67, decides it:
   below one a throat's matter goes into a single pinch, so these laws give
   one chain, not a population (#79).
+
+### The core as a paired throat
+
+Derived ([#86](https://github.com/SAIOS-SAMN/xylarium/issues/86)); not yet
+built. A core is one throat with two faces, near and far, and never an open
+singularity: the far face of the universal core is the parent's core, and the
+far face of a pinched throat is the core it bounces into (The bounce at a
+pinched throat). Its stability is read from axioms 3, 4, 5, 7, 9 and 11
+and theorems T2, T8 and T11. Every identity below is exact.
+
+- **Both faces dilate one kind.** On the near face an open kind of axis
+  polarity `A` is dilated per echo by `D(s) D(n)^A` (T8). The far face is
+  the inversion, `t -> 1 / t` and `A -> -A` (axiom 5), so there the same
+  kind is dilated by `D(s) D(n)^-A`. The product of the two faces is
+  `D(s)^2 = (3 + a)^2 >= 9`, whatever the polarity (T2).
+- **T16, the pair holds its closed kinds.** A kind is held by pressure on a
+  face where its dilation is at most `1 - 2 delta <= 1`, with `delta` its
+  deficit at the shared horizon, the same on both faces. Two such factors
+  would multiply to at most 1, but they multiply to at least 9. So no open
+  kind is held on both faces: a kind held on one face is released on the
+  other. The only states every dilation `t -> a t` fixes are the two poles
+  `t = 0` and `t = 1 / 0`, which the inversion exchanges. These are the
+  closed kinds (`U = 0`, axiom 9). A paired throat's shared hold is its
+  closed kinds, `M_c`. They never pinch, so no pinch reduces `M_c`.
+- **T17, release spins the throat up.** A cohort leaves with the throat's
+  own degrees of turning per unit hold, `360 a M` (axiom 11, the premise of
+  T11), so `a M` is invariant under release. A throat founded with spin
+  `a_0` and hold `M_0` that keeps `M'` spins at `a' = a_0 M_0 / M'`
+  (axiom 7, `J = a M^2`). Once its open kinds have passed, `M' = M_c` and
+  `a* = a_0 M_0 / M_c`. The pair closes on both faces, a core with no open
+  face, exactly where `a_0 M_0 <= M_c`: the drawn spin is at most the
+  closed kinds' share of the founded hold.
+- **T11 read with the conserved turning.** The parent's degrees per unit
+  hold are those of its founded hold, so a pinched cohort of hold `H_g`
+  spins at `a_g = a_0 M_0 / H_g`. The screen of roadmap item 32 had used
+  the core's retained hold, which understated `a_g` by the factor
+  `M_c / M_0`. With the conserved turning the screen still gives one chain
+  of throats, with the same held shares.
+- **Reading** (seed 7; a screen: `a_0` exact, the per-face holds by float
+  powers; `/opt/handoff/xylarium-kernel/gate/paired_throat_gate.py`):
+  - `a_0 = 381123025677 / 2^40`, about 0.3466.
+  - The 20 closed kinds of 1092 hold `M_c / M_0 = 0.4352`.
+  - Open kinds held by pressure: about `10^-18` on the near face,
+    `10^-42` on the far face, and none on both, as T16 requires.
+  - `a* = 0.7964 <= 1`, so the universal core is a closed paired throat.
+- **What follows.**
+  - **Admission.** T17 is the founding's admission, `a_0 <= M_c / M_0`, in
+    place of the reach-based `least_share`, which reads the echo's swing
+    (#37).
+  - **Pinched throats hold no closed kinds.** Their cohorts are open kinds
+    only, so by T16 a pinched throat has no shared hold and holds only on
+    one face, by pressure. A stable galactic core needs closed kinds, made
+    in it by core fusion or brought to it (#79; Phase weakening and phase
+    strengthening).
+  - **What persists on the child side.** A core persists on the child side
+    of a bounce only through the closed kinds it carries.
 
 ### Phase weakening and phase strengthening
 

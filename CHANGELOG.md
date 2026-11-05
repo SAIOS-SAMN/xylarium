@@ -11,6 +11,13 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The core as a paired throat (docs/model.md, T16 and T17, #86). The near
+  and far faces dilate an open kind by factors whose product is
+  `(3 + a)^2`, so the pair holds on both faces only its closed kinds.
+  Release at the throat's own degrees per unit hold keeps `a M` fixed, so
+  the pair closes where `a_0 M_0 <= M_c`. For seed 7, `M_c / M_0 = 0.4352`
+  and `a* = 0.7964`. T11's cohort spin is read with the founded hold.
+
 - Phase weakening (remanence) and phase strengthening recorded as planned
   work (docs/model.md, roadmap item 39, #84), with the code they build on
   and what that code lacks.

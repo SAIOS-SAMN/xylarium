@@ -149,7 +149,11 @@ where it belongs to one.
     at the pinch per layer and circuit
     ([model.md](model.md#the-state-at-the-pinch-the-fold-and-its-circuits));
     the bounce at a pinched throat
-    ([model.md](model.md#the-bounce-at-a-pinched-throat)); the galactic
+    ([model.md](model.md#the-bounce-at-a-pinched-throat)); the core as a
+    paired throat, closing where `a_0 M_0 <= M_c`, which is to replace the
+    reach-based admission
+    ([model.md](model.md#the-core-as-a-paired-throat),
+    [#86](https://github.com/SAIOS-SAMN/xylarium/issues/86)); the galactic
     cores' multiplicity is still to be derived (#79): the gate gives one
     chain; the firmament is the
     closed kinds, proved in EQUATIONS.md, Throat holding; [#35](https://github.com/SAIOS-SAMN/xylarium/issues/35), `track`, `law`). Parcels leave their

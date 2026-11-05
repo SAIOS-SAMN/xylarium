@@ -9,26 +9,11 @@ use super::{
 };
 use crate::chain::Place;
 use crate::origin::Origin;
-use xyl_core::certified::{cos_sin_turns, down, pi, Encl};
+use xyl_core::certified::{cos_sin_turns, down, Encl};
 use xyl_core::dyadic::Dy;
 use xyl_core::measure;
 use xyl_core::units::Tier;
 use xyl_core::{Stream, Q};
-
-/// 1 / (2 pi), enclosed once: converts the turning law's and the vertical
-/// swing's radians per ring to turns.
-fn inv_two_pi() -> &'static Encl {
-    static K: std::sync::OnceLock<Encl> = std::sync::OnceLock::new();
-    K.get_or_init(|| {
-        let p = pi(100);
-        let two = Q::int(2);
-        Encl {
-            lo: Q::ONE.checked_div(&(&p.hi * &two)).unwrap_or(Q::ZERO),
-            hi: Q::ONE.checked_div(&(&p.lo * &two)).unwrap_or(Q::ZERO),
-        }
-        .outward(100)
-    })
-}
 
 /// A star's galactic manifold from the core (`chain`): its radius, turning
 /// rate and plane. The plane's angles are held as exact half-angles, and the
@@ -67,7 +52,7 @@ impl Orbit {
     /// Orbital phase at `t` rings (turns): the initial phase plus the
     /// turning, `turns0 + omega t / (2 pi)`.
     pub fn turns_at(&self, t: Dy) -> Dy {
-        self.turns0 + self.rate * t * Dy::from_q(&inv_two_pi().mid())
+        self.turns0 + self.rate * t * Dy::from_q(&crate::manifold::per_turn().mid())
     }
 }
 
@@ -129,9 +114,10 @@ impl Star {
 
     /// The star's reach about its galactic core (galaxy rings). A star relates
     /// to the core it is anchored on, in the lowest common tier (the
-    /// containment chain), so its reach is the orbit radius in its galaxy
-    /// (`stars::reach_rings`); the galaxy's reach about the universal core is
-    /// one tier up and is not added to it.
+    /// containment chain), so its reach is the orbit radius in its galaxy;
+    /// the galaxy's reach about the universal core is one tier up and is not
+    /// added to it. Every reading of the star's life (its class, its system's
+    /// spec, its worlds' life and minds) reads this reach.
     pub fn reach_rings(&self) -> Dy {
         self.orbit.radius.max(Dy::ZERO)
     }
@@ -139,7 +125,8 @@ impl Star {
     /// The galaxy's turning rate (radians per ring) at radius `own` (galaxy
     /// rings) in the star's galaxy: the turning law over the home-equivalent
     /// mass inside times the hole ratio (core masses), as for the star's
-    /// orbital rate (used for constellation shear).
+    /// orbital rate (used for constellation shear). At the star's own orbit
+    /// radius this is the stored `orbit.rate`; read that instead.
     pub fn rate_at_dy(&self, own: Dy) -> Dy {
         let scale = self.scale.max(Dy::sci(1, -12));
         let inside = super::inside_mass_dy(own / scale) * self.mass_ratio;
@@ -170,7 +157,8 @@ impl Star {
                 let age = (t - born).max(Dy::ZERO);
                 let r_home = Dy::from_q(&self.r);
                 let v = vertical(r_home, born, age, u, phase);
-                let turned = Encl::exact((vertical_frequency(r_home) * t).to_q()).mul(inv_two_pi());
+                let turned = Encl::exact((vertical_frequency(r_home) * t).to_q())
+                    .mul(crate::manifold::per_turn());
                 let swing = Encl::exact(phase.to_q()).add(&turned);
                 Encl::exact((v.amp * self.scale).to_q())
                     .mul(&cos_sin_turns(&swing).1)

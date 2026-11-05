@@ -12,7 +12,7 @@
 //!
 //! - Frames at heat: a kind `z` keeps `u_z(q)` open frames (its Q pole) and
 //!   holds `w_z(q) = 3 Z - u_z(q)` (its Z pole).
-//! - Pole point (`pole_point`): over the held mixture, with `n_z = share_z /
+//! - Pole state (`mixture_pole`): over the held mixture, with `n_z = share_z /
 //!   w_z` nuclei of each kind, `t0 = sum n_z u_z / sum n_z w_z`, at most 1/2.
 //! - Throat (`Sequence::throat_echoes`): the star's jetstream carries the
 //!   pole point out through the continuum and back through the vacuum, both
@@ -97,11 +97,13 @@ pub fn held_frames(z: u32, heat: &Q) -> Q {
     (&Q::int(3 * i64::from(crate::compound::charge(z))) - &open_at(z, heat)).max(Q::ZERO)
 }
 
-/// The collective's pole point `t0 = sum n_z u_z / sum n_z w_z` over the held
-/// mixture `held` (kind, share of the hold) at `heat`, with `n_z = share_z /
-/// w_z` the count of nuclei of each kind. Its inverse is the star's polarity.
-/// Zero for an empty mixture or one whose kinds hold no frames.
-pub fn pole_point(held: &[(u32, Q)], heat: &Q) -> Q {
+/// The collective's pole state, the coordinate `t0 = sum n_z u_z / sum n_z
+/// w_z` of its pole point on the filament (one carrier's point is
+/// `circuit::pole_point`), over the held mixture `held` (kind, share of the
+/// hold) at `heat`, with `n_z = share_z / w_z` the count of nuclei of each
+/// kind. Its inverse is the star's polarity. Zero for an empty mixture or
+/// one whose kinds hold no frames.
+pub fn mixture_pole(held: &[(u32, Q)], heat: &Q) -> Q {
     let (mut open, mut closed) = (Q::ZERO, Q::ZERO);
     for (z, share) in held {
         let w = held_frames(*z, heat);
@@ -249,7 +251,7 @@ impl Sequence {
             .filter_map(|(z, s)| Some((*z, s.checked_div(&total)?)))
             .filter(|(_, s)| s.signum() > 0)
             .collect();
-        let pole = pole_point(&held, heat);
+        let pole = mixture_pole(&held, heat);
         let mut holds = Holds::new();
         for (z, s) in &held {
             add_hold(&mut holds, *z, s);
@@ -451,11 +453,11 @@ mod tests {
         let half = Q::ratio(1, 2);
         for heat in heats() {
             for z in (1..=200).step_by(7) {
-                let t0 = pole_point(&[(z, Q::ONE)], &heat);
+                let t0 = mixture_pole(&[(z, Q::ONE)], &heat);
                 assert!(t0.signum() >= 0 && t0 <= half, "z {z}: {t0}");
             }
             for mix in mixtures() {
-                assert!(pole_point(&mix, &heat) <= half);
+                assert!(mixture_pole(&mix, &heat) <= half);
             }
         }
     }
@@ -466,7 +468,7 @@ mod tests {
             crate::circuit::jet_map(d, d)
                 .and_then(|(a, b)| crate::circuit::throat_crossing(Dy::from_q(t), a, b))
         };
-        let t0 = pole_point(&hydrogen(), &Q::ZERO);
+        let t0 = mixture_pole(&hydrogen(), &Q::ZERO);
         let deltas = [
             Dy::sci(1, -6),
             Dy::sci(1, -3),

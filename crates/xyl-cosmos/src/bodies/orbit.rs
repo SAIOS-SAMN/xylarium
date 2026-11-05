@@ -1,5 +1,5 @@
 //! Orbits and spins: the drawn elements, tidal circularisation and spin
-//! lock, and the orbit at an age.
+//! lock. The orbit and spin at an age are read by `worlds::Path`.
 
 use super::*;
 
@@ -32,21 +32,6 @@ pub struct Orbit {
     pub tau_e: Q,
 }
 
-/// What an orbit is at an age.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Now {
-    /// Eccentricity at this age, damped from `e0` toward the forced value.
-    pub e: Q,
-    /// Whether the host's tides have locked the spin (age at or past `lock_gyr`).
-    pub locked: bool,
-    /// Length of the day, in standard days of 86 400 s.
-    pub day: Q,
-    /// Length of the year (orbital period), in s.
-    pub year_s: Q,
-    /// Cosine of the spin axis's tilt, in \[-1, 1\]; 1 once locked.
-    pub cos_obliquity: Q,
-}
-
 /// A body's self-gravity pressure (Pa): the unit world's rho g R (3.4e11 Pa)
 /// times the body's mass over its radius, both in world units.
 pub(super) fn self_pressure(mass: &Q, radius: &Q) -> Q {
@@ -73,22 +58,19 @@ pub fn love(mass: &Q, radius: &Q, icy: bool) -> Q {
 pub(super) fn stretch(host_kg: &Q, a_m: &Q, r_m: &Q) -> Q {
     // The host's mass as a length is r_g times the host's mass over the
     // core's mass.
-    let core_kg = &crate::package::hole_mass() * &Si::star_mass_kg();
-    let m_len = &crate::chain::units().r_g_m * &host_kg.checked_div(&core_kg).unwrap_or(Q::ZERO);
-    let delta = |x: &Q| m_len.checked_div(&(x + &m_len)).unwrap_or(Q::ZERO);
+    let m_len = &crate::chain::units().r_g_m
+        * &host_kg
+            .checked_div(&crate::package::core_kg())
+            .unwrap_or(Q::ZERO);
+    let delta = |x: &Q| xyl_core::shares::deficit(&m_len, x).unwrap_or(Q::ZERO);
     (&delta(&(a_m - r_m).max(Q::ONE)) - &delta(&(a_m + r_m))).max(Q::ZERO)
-}
-
-/// A planet's mean motion about its star (rad/s), from the turning law.
-pub(super) fn mean_motion(host_kg: &Q, a_m: &Q) -> Q {
-    crate::turning::turning_rad_s(host_kg, a_m)
 }
 
 /// Tidal damping time of eccentricity (Gyr):
 /// 4/63 (Q / k2) (m / M) / (n stretch).
 pub fn circularise_gyr(host_kg: &Q, a_m: &Q, mass: &Q, radius: &Q, icy: bool) -> Q {
     let (m, r) = (mass * &Si::world_mass_kg(), radius * &Si::world_radius_m());
-    let n = mean_motion(host_kg, a_m);
+    let n = rad_s(host_kg, a_m);
     let k2 = love(mass, radius, icy);
     let t = &(&Q::ratio(4, 63) * &Rock::tidal_q().checked_div(&k2).unwrap_or(Q::ZERO))
         * &m.checked_div(host_kg).unwrap_or(Q::ZERO);
@@ -106,7 +88,7 @@ pub fn circularise_gyr(host_kg: &Q, a_m: &Q, mass: &Q, radius: &Q, icy: bool) ->
 pub fn lock_gyr(host_kg: &Q, a_m: &Q, mass: &Q, radius: &Q, icy: bool, spin0: &Q) -> Q {
     let r = radius * &Si::world_radius_m();
     let k2 = love(mass, radius, icy);
-    let n = mean_motion(host_kg, a_m).max(Q::ratio(1, 1 << 60));
+    let n = rad_s(host_kg, a_m).max(Q::ratio(1, 1 << 60));
     let rigid = (&Rock::inertia() * &Rock::tidal_q())
         .checked_div(&(&(&Q::int(3) * &k2) * &stretch(host_kg, a_m, &r)))
         .unwrap_or(Q::ZERO);
@@ -152,14 +134,14 @@ pub fn orbits(star_kg: &Q, worlds: &[&World], rng: &mut Stream) -> Vec<Orbit> {
                 .unwrap_or(Q::ZERO);
         let node = w.phase.clone();
         let peri = w.phase.clone();
-        let cos_obliquity = &(&Q::int(2) * &unit(rng)) - &Q::ONE;
-        let share = &Q::ratio(1, 10) + &(&Q::ratio(4, 10) * &unit(rng));
-        let icy = w.layers[2] > Q::ratio(1, 5);
+        let cos_obliquity = &(&Q::int(2) * &Dy::unit(rng.next_u64()).to_q()) - &Q::ONE;
+        let share = &Q::ratio(1, 10) + &(&Q::ratio(4, 10) * &Dy::unit(rng.next_u64()).to_q());
+        let icy = w.icy();
         let (m, r) = (
             &w.mass * &Si::world_mass_kg(),
             &w.radius * &Si::world_radius_m(),
         );
-        let breakup = surface_turning(&m, &r);
+        let breakup = rad_s(&m, &r);
         let spin0 = on_grid(&share * &breakup);
         let lock = lock_gyr(star_kg, &a_m, &w.mass, &w.radius, icy, &spin0);
         let tau_e = circularise_gyr(star_kg, &a_m, &w.mass, &w.radius, icy);
@@ -204,42 +186,4 @@ pub fn orbits(star_kg: &Q, worlds: &[&World], rng: &mut Stream) -> Vec<Orbit> {
         };
     }
     out
-}
-
-impl Orbit {
-    /// The orbit and spin at an age `t` (Gyr): eccentricity damped
-    /// exponentially toward the forced value with time constant `tau_e`, and
-    /// spin braked linearly toward the mean motion until `lock_gyr`. Once
-    /// locked, the day equals the year and the obliquity cosine is 1.
-    pub fn at(&self, t: &Q) -> Now {
-        let e = if self.tau_e.signum() <= 0 {
-            self.e_forced.clone()
-        } else {
-            &self.e_forced
-                + &(&(&self.e0 - &self.e_forced)
-                    * &ex(&-(t.checked_div(&self.tau_e).unwrap_or(Q::ZERO))))
-        };
-        let n = mean_motion(&self.host_kg, &self.a_m);
-        let locked = t >= &self.lock_gyr;
-        let (w_now, cos_obliquity) = if locked {
-            (n.clone(), Q::ONE)
-        } else {
-            let frac = t.checked_div(&self.lock_gyr).unwrap_or(Q::ZERO);
-            (
-                &self.spin0 - &(&(&self.spin0 - &n) * &frac),
-                self.cos_obliquity.clone(),
-            )
-        };
-        let two_pi = &Q::int(2) * &pi_q();
-        let day_s = two_pi
-            .checked_div(&w_now.max(Q::ratio(1, 1_000_000_000_000)))
-            .unwrap_or(Q::ZERO);
-        Now {
-            e: on_grid(e),
-            locked,
-            day: on_grid(day_s.checked_div(&Si::day_s()).unwrap_or(Q::ZERO)),
-            year_s: on_grid(two_pi.checked_div(&n).unwrap_or(Q::ZERO)),
-            cos_obliquity,
-        }
-    }
 }

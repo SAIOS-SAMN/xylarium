@@ -96,6 +96,16 @@ fn pw(x: &Q, n: i64, d: i64) -> Encl {
     })
 }
 
+/// The share `2x / (1 + x)` on readings: [`pw`]'s share
+/// `(1 + p) x / (1 + p x)` at `p = 1`, 0 at x = 0, 1 at x = 1 and
+/// approaching 2 as x grows; a negative `x` reads as 0. The one place the
+/// layers that use it in place of a power law (crowding, activity,
+/// metabolism, pressure, the dynamo) read it.
+pub(crate) fn share2(x: Dy) -> Dy {
+    let x = x.max(Dy::ZERO);
+    Dy::int(2) * x / (Dy::ONE + x)
+}
+
 fn prod(parts: &[Encl]) -> Encl {
     parts.iter().fold(Encl::exact(Q::ONE), |a, b| a.mul(b))
 }

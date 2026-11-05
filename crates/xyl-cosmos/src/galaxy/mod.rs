@@ -58,7 +58,7 @@ pub use frame::{
 };
 pub(crate) use star::{golden_turns, node_of, plastic_turns, tilt_of};
 pub use star::{imf, star, Class, Orbit, Star};
-pub use vertical::{layer, vertical, vertical_frequency, Vertical};
+pub use vertical::{crowding, layer, vertical, vertical_frequency, Vertical};
 
 use crate::origin::Origin;
 use xyl_core::certified::Encl;

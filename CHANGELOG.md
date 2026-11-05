@@ -149,6 +149,36 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- One turning law per carrier: `turning::turning` (exact) and
+  `turning::turning_dy` (readings, through `xyl_core::shares::deficit_dy`);
+  the settling's pair rates and kicks and the moons' resonances read
+  `turning_dy` per ring (ages through `circuit::rings_of_gyr_dy`); rates in
+  rad/s are `package::Si::rad_s` of `turning::turning_si`; the core's mass
+  in kg is `package::core_kg` everywhere; `turning::span_in_rings` reads
+  `circuit::rings_of_gyr`.
+
+- A star's life is read at its own reach about its core
+  (`galaxy::Star::reach_rings`, the orbit radius) in every layer:
+  `life::lifetime` and `worlds::star_degree_gyr` take that reach in galaxy
+  rings, and `worlds::Setting` and `life::Home` carry the star's
+  home-equivalent reach `r` (crowding) and its reach `reach` (life) in place
+  of a distance in kpc; `worlds::cosmic_rays` takes galaxy rings.
+
+- One reading per quantity in the system, body and world layers: the ice
+  share of a body is `systems::World::ice_share` and the one icy test
+  `World::icy` (envelope worlds were read icy by one reader and not by the
+  other); a child's reach is `manifold::reach` (moon budget, moons); the
+  eccentricity's relaxation is `bodies::eccentricity` (also for
+  `manifold::Manifold::e`); the Love number is `bodies::love`; the share
+  `2x / (1 + x)` is `laws::share2`; the crowding is `galaxy::crowding`; the
+  chord on a sphere is `bounce::curved_reach` (`chain::Place::arc`); one
+  `manifold::per_turn`; one `field::dyadic`; draws are `Dy::unit`; the
+  settled age is `systems::settled_gyr`; the unit world's age of 4.57 Gyr is
+  one declared ruler, `bodies::unit_age_gyr`; the forecast's cache is keyed
+  by `minds::laws_digest`; `stars::pole_point` is renamed
+  `stars::mixture_pole` (the mixture's pole state, not
+  `circuit::pole_point`).
+
 - `manifold::turn_between` and `chain::Place::arc` read the certified angle
   between two directions (`xyl_core::rotor::angle_between`) in place of an
   uncertified `Dy` arccosine; `Rotor::inverse` is the rotor's conjugate
@@ -249,6 +279,16 @@ may change public APIs and the model's laws.
   body that does not ignite forms no remnant node (`pulse::nodes_among`).
 
 ### Removed
+
+- Parallel copies replaced by the one model above: `turning::turning_rad_s`,
+  `turning::rad_s`, `turning::rate_per_ring` and the private rings-per-Gyr
+  conversion; `stars::reach_rings`; `chain::kpc`; `chain::Place::arc_kpc_dy`
+  (read `arc_kpc`); `bodies::Orbit::at` and `bodies::Now` (test only; the
+  live orbit at an age is `worlds::Path`); the private `love_dy`,
+  `mean_motion`, `surface_turning`, `star_length_m`, `held`, `unit`,
+  `inv_two_pi`, `crowding_share` and `share2` copies; the forwarders
+  `manifold::turn_between`, `field::bend` and `life::first_age`;
+  `life::settled_gyr` and `minds::life_digest`.
 
 - The founding's rounding of rationals: `circuit::turn` (capture phases
   floored to the coordinate grid) and `circuit::grain::grid` (reaches,

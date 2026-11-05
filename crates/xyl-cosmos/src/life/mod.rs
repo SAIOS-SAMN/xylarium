@@ -126,30 +126,18 @@ pub fn horizon_gyr() -> Dy {
     Dy::int(30)
 }
 
-/// The earliest age at which a world is read (Gyr after its star's birth):
-/// one degree of the star's lifetime (`worlds::star_degree_gyr`) at the
-/// star's distance `r_kpc` from the core, for a star of transduction sequence
-/// `seq` and compactness `delta`.
-pub fn first_age(seq: &crate::stars::Sequence, delta: Dy, r_kpc: Dy, ctx: &Ctx) -> Dy {
-    worlds::star_degree_gyr(seq, delta, r_kpc, ctx)
-}
-
 /// The ages at which a world's media are probed (Gyr after its star's
-/// birth): one degree of the star's lifetime and each doubling of it, while
+/// birth): one degree of the star's lifetime (`worlds::star_degree_gyr`, the
+/// earliest age a world is read) and each doubling of it, while
 /// the star's birth plus the age lies within the horizon, at most 64 ages.
 pub fn probe_ages(home: &Home, ctx: &Ctx) -> Vec<Dy> {
     let mut out = Vec::new();
-    let mut a = first_age(&home.sequence, home.compactness, home.r_kpc, ctx);
+    let mut a = worlds::star_degree_gyr(&home.sequence, home.compactness, home.reach, ctx);
     while home.born + a < horizon_gyr() && out.len() < 64 {
         out.push(a);
         a = a * Dy::int(2);
     }
     out
-}
-
-/// The settled age at which a world's chemistry is read (Gyr).
-pub fn settled_gyr() -> Dy {
-    Dy::int(3)
 }
 
 /// The 500 of Franklin's 50/500 rule: the population size that keeps a

@@ -7,23 +7,26 @@
 //! bell is `circuit::anchor().bell`, in units of r_g / c; rates are radians
 //! per ring (one ring one bell).
 //!
-//! - Deficit: `deficit_share` = M(<r) / (r + M(<r)), M and r in r_g, exact,
-//!   at most 1; the same share by which the well slows clocks.
-//! - Turning ([`turning`], [`turning_dy`]): `omega = delta(<r) bell / r`
-//!   radians per ring, with `r` in r_g and `delta = M / (r + M)`. With
-//!   c = 1 the speed `omega r / bell = delta` stays below light; the same law
-//!   applies at every tier. Far from a point mass `delta` goes as M / r.
+//! - Deficit: `xyl_core::shares::deficit` = M(<r) / (r + M(<r)), M and r in
+//!   r_g, exact, at most 1; the same share by which the well slows clocks.
+//! - Turning ([`turning`] exact, [`turning_dy`] on readings): `omega =
+//!   delta(<r) bell / r` radians per ring, with `r` in r_g and
+//!   `delta = M / (r + M)`. With c = 1 the speed `omega r / bell = delta`
+//!   stays below light; the same law applies at every tier. Far from a point
+//!   mass `delta` goes as M / r. These are the law's two forms, one per
+//!   carrier; every other rate reads one of them.
 //! - Twist: once around, a carried direction turns by delta of a turn
 //!   (`twist_per_turn`, degrees).
 //!
 //! Boundary (removed as the system, body and world layers are converted):
-//! `turning_si`, `turning_rad_s`, `rad_s`, `year`, `twist_per_turn`,
-//! `roundness` and `rigidity` take kilograms and metres or suns and AU and
-//! convert them to core masses and r_g through the SI seam
-//! (`package::Si`, `package::hole_mass`), then evaluate the same law;
-//! `span_in_rings` and `rate_per_ring` convert rulers declared in Gyr for
-//! the chemistry until it is converted. `roundness` / `rigidity` are
-//! provisional (measured rock and ice boundary bodies).
+//! `turning_si`, `year`, `twist_per_turn`, `roundness` and `rigidity` take
+//! kilograms and metres or suns and AU and convert them to core masses and
+//! r_g through the SI seam (`package::Si`, `package::core_kg`), then evaluate the
+//! same law; a rate in radians per SI second is `package::Si::rad_s` of
+//! `turning_si`. `span_in_rings` converts rulers declared in Gyr for the
+//! chemistry through `circuit::rings_of_gyr` until it is converted.
+//! `roundness` / `rigidity` are provisional (measured rock and ice boundary
+//! bodies).
 //! Non-positive radii and zero denominators give zero, and so does every
 //! rate before a founding (the ring is the founding's bell).
 //! Terms: turning law, deficit (docs/glossary.md).
@@ -31,7 +34,7 @@
 use crate::elements::decimal;
 use crate::package::Si;
 use xyl_core::dyadic::Dy;
-use xyl_core::shares::deficit;
+use xyl_core::shares::{deficit, deficit_dy};
 use xyl_core::units::Tier;
 use xyl_core::Q;
 
@@ -76,7 +79,8 @@ pub fn turning(inside: &Q, r: &Q, tier: Tier) -> Q {
 
 /// The turning law in dyadics, for per-pair evaluation: radians per ring at
 /// `r` units of `tier` about `inside` core masses, `omega = delta bell / r`
-/// as in [`turning`]. A non-positive radius, or no founding, gives zero.
+/// as in [`turning`], the deficit read by `xyl_core::shares::deficit_dy`. A
+/// non-positive radius, or no founding, gives zero.
 pub fn turning_dy(inside: Dy, r: Dy, tier: Tier) -> Dy {
     // The bell in r_g / c, kept once the founding has set it.
     static BELL: std::sync::OnceLock<Dy> = std::sync::OnceLock::new();
@@ -93,21 +97,17 @@ pub fn turning_dy(inside: Dy, r: Dy, tier: Tier) -> Dy {
     if r.signum() <= 0 {
         return Dy::ZERO;
     }
-    let (m, r_rg) = (inside.max(Dy::ZERO), r * Dy::from_q(&tier.in_rg()));
-    bell * (m / (r_rg + m)) / r_rg
-}
-
-/// The core's mass in kg, the SI seam's reading of one core mass
-/// (boundary).
-fn core_kg() -> Q {
-    &crate::package::hole_mass() * &Si::star_mass_kg()
+    let r_rg = r * Dy::from_q(&tier.in_rg());
+    bell * deficit_dy(inside, r_rg) / r_rg
 }
 
 /// `inside_kg` kilograms and `r_m` metres in core masses and r_g (boundary).
 fn core_units_of_si(inside_kg: &Q, r_m: &Q) -> (Q, Q) {
     let units = crate::chain::units();
     (
-        inside_kg.checked_div(&core_kg()).unwrap_or(Q::ZERO),
+        inside_kg
+            .checked_div(&crate::package::core_kg())
+            .unwrap_or(Q::ZERO),
         r_m.checked_div(&units.r_g_m).unwrap_or(Q::ZERO),
     )
 }
@@ -119,24 +119,11 @@ fn deficit_si(inside_kg: &Q, r_m: &Q) -> Q {
     deficit(&m, &r).unwrap_or(Q::ZERO)
 }
 
-/// The turning law at `r_m` metres about `inside_kg` kilograms in radians
-/// per SI second, `omega = c delta / r` with the deficit share read in core
-/// units: the same law as [`turning`], written with the SI seam's `c` so it
-/// needs no founding. Boundary, for the tidal and thermal laws not yet
-/// written in core units. A non-positive radius gives zero.
-pub fn turning_rad_s(inside_kg: &Q, r_m: &Q) -> Q {
-    if r_m.signum() <= 0 {
-        return Q::ZERO;
-    }
-    (&Si::c() * &deficit_si(inside_kg, r_m))
-        .checked_div(r_m)
-        .unwrap_or(Q::ZERO)
-}
-
 /// The turning law at `r_m` metres about `inside_kg` kilograms in degrees
 /// per ring: [`turning`] in core units times 180 / pi, rounded down to the
 /// 2^-60 grid. Boundary, for the system and body layers not yet in core
-/// units. A non-positive radius, or no founding, gives zero.
+/// units; `package::Si::rad_s` reads it in radians per SI second. A
+/// non-positive radius, or no founding, gives zero.
 pub fn turning_si(inside_kg: &Q, r_m: &Q) -> Q {
     let (m, r) = core_units_of_si(inside_kg, r_m);
     let pi = xyl_core::certified::pi(80).mid();
@@ -144,16 +131,6 @@ pub fn turning_si(inside_kg: &Q, r_m: &Q) -> Q {
         .checked_div(&pi)
         .unwrap_or(Q::ZERO);
     xyl_core::certified::down(&deg_ring, 60)
-}
-
-/// Converts a rate in degrees per ring to radians per SI second, for the
-/// tidal and thermal laws not yet written in angles; pi enters only here, and
-/// the SI second only through `Si::seconds_per_ring`. Zero before a founding.
-pub fn rad_s(deg_per_ring: &Q) -> Q {
-    let pi = xyl_core::certified::pi(64).mid();
-    (deg_per_ring * &pi)
-        .checked_div(&(&Q::int(180) * &Si::seconds_per_ring()))
-        .unwrap_or(Q::ZERO)
 }
 
 /// A world's year (rings): one turn (360 degrees) at `a_au` about
@@ -164,37 +141,11 @@ pub fn year(star_suns: &Q, a_au: &Q) -> Q {
     Q::int(360).checked_div(&w).unwrap_or(Q::ZERO)
 }
 
-/// Rings per Gyr: the SI seam's Gyr (`Si::gyr_s`) over its seconds per ring
-/// (`Si::seconds_per_ring`), held to 62 bits and kept once a universe is
-/// founded; zero before. The one place a ruler declared in Gyr meets the
-/// ring.
-fn rings_per_declared() -> Q {
-    static R: std::sync::OnceLock<Q> = std::sync::OnceLock::new();
-    if let Some(r) = R.get() {
-        return r.clone();
-    }
-    let r = Si::gyr_s()
-        .checked_div(&Si::seconds_per_ring())
-        .map(|r| Dy::from_q(&r).to_q())
-        .unwrap_or(Q::ZERO);
-    if r.signum() > 0 {
-        let _ = R.set(r.clone());
-    }
-    r
-}
-
-/// A span declared in Gyr (a measured ruler), in rings, held to 62 bits:
-/// converted once, where the ruler is declared. Zero before a founding.
+/// A span declared in Gyr (a measured ruler), in rings
+/// (`circuit::rings_of_gyr`), held to 62 bits: converted once, where the
+/// ruler is declared. Zero before a founding.
 pub fn span_in_rings(span: &Q) -> Q {
-    Dy::from_q(&(span * &rings_per_declared())).to_q()
-}
-
-/// A rate declared per Gyr (a measured ruler), per ring, held to 62 bits:
-/// converted once, where the ruler is declared. Zero before a founding.
-pub fn rate_per_ring(rate: &Q) -> Q {
-    rate.checked_div(&rings_per_declared())
-        .map(|r| Dy::from_q(&r).to_q())
-        .unwrap_or(Q::ZERO)
+    Dy::from_q(&crate::circuit::rings_of_gyr(span)).to_q()
 }
 
 /// The twist in degrees: the angle by which a carried direction turns over
@@ -278,7 +229,7 @@ mod tests {
         assert!(gap <= &exact * &Q::ratio(1, 1 << 40), "{gap}");
         // The SI boundary reads the same law: degrees per ring over 180 / pi.
         let units = crate::chain::units();
-        let kg = &m * &core_kg();
+        let kg = &m * &crate::package::core_kg();
         let metres = &(&r * &Tier::Galaxy.in_rg()) * &units.r_g_m;
         let pi = xyl_core::certified::pi(80).mid();
         let si = turning_si(&kg, &metres);

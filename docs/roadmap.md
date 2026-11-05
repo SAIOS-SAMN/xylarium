@@ -93,7 +93,7 @@ Next, in order:
 1. Done ([#26](https://github.com/SAIOS-SAMN/xylarium/issues/26)): the
    rotor's inverse (`Rotor::inverse`) and the certified angle between two
    directions (`rotor::angle_between`) replace the `acos` readings in
-   `manifold::turn_between` and `chain::Place::arc`.
+   `manifold::gap` and `chain::Place::arc`.
 2. The atom's catalogue columns (mass number, phase temperatures, density)
    are to be derived from 3Z, 3Q and R rather than read from
    `data/elements.tsv` (milestone 3, chemistry from the census).
@@ -334,7 +334,7 @@ where it belongs to one.
     ([#26](https://github.com/SAIOS-SAMN/xylarium/issues/26), `proposal`, `good
     first issue`). Done: `Rotor::inverse` and the certified
     `rotor::angle_between` replace the `acos` readings in
-    `manifold::turn_between` and `chain::Place::arc`.
+    `manifold::gap` and `chain::Place::arc`.
 
 ## 1. Founding in the core's units (done)
 
@@ -436,8 +436,8 @@ Rules for every layer:
   time is a position on the temporal coordinate (`xyl_core::coordinate`,
   the T lane): whole rings plus a phase in degrees, minutes and seconds of
   arc; local time between orbital bodies is their relative phase.
-- No conversion of an Earth-valued constant: no `turning::rate_per_ring`
-  or `span_in_rings` of a value declared per Gyr, no `Si::` in a law. SI
+- No conversion of an Earth-valued constant: no `turning::span_in_rings`
+  or `circuit::rings_of_gyr` of a value declared per Gyr, no `Si::` in a law. SI
   appears only in `package::Si` for display and for the universal
   constants (c, G, k_B, h).
 - Verification by the founding's own invariants (conservation balances,
@@ -467,8 +467,8 @@ Landed:
   the prototype's stellar-mass unit through the marked boundaries
   `galaxy::kpc_of_rings`, `galaxy::rings_of_kpc` and
   `galaxy::suns_of_core_masses` / `core_masses_of_suns`; the SI forms of the
-  turning law (`turning_si`, `turning_rad_s`) remain as boundaries for the
-  system and body layers.
+  turning law (`turning_si`, read in rad/s by `Si::rad_s`) remain as
+  boundaries for the system and body layers.
 - Layer B, part 2, star masses and star light: a piece's star mass is the share
   of its infall the star tier's cut holds, `m_p = s c` core masses
   (`galaxy::piece_star_mass`); the initial mass function draws a share `x = b u
@@ -686,7 +686,9 @@ layer, each with the quantity that is to derive it.
   be derived from the enrichment that the founding produces.
 - **Systems and worlds** (`systems`, `worlds`, `bodies`, `turning`): The
   light's warmth `278 L / a` (`Spec::t_form`), the world scales and
-  cosmic-ray reference (`worlds::crowd_r0`), the laboratory rock and iron
+  cosmic-ray reference (`worlds::crowd_r0`), the unit world's age of 4.57
+  Gyr at which its isotopes and its star's activity are measured
+  (`bodies::unit_age_gyr`), the laboratory rock and iron
   (`bodies`), the rigidity bodies (`turning::rigidity`), the measured
   element rows Z 1-99 (`data/elements.tsv`) and the fixed volatile species
   are to be derived from each world's chemistry. In the element table,

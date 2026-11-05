@@ -174,7 +174,7 @@ impl Network {
                     speeds.insert(x, self.sample[x].speed_bound(t));
                 }
             }
-            let arc = placed[&i].arc_kpc_dy(&placed[&j], &sphere);
+            let arc = placed[&i].arc_kpc(&placed[&j], &sphere);
             let now = arc <= span;
             changed |= now != self.bound[k];
             self.bound[k] = now;

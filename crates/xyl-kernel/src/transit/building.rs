@@ -385,7 +385,7 @@ impl<'a> Placer<'a> {
     /// Returns the arc (kpc) between stars `a` and `b` at `start`, or None if
     /// either is not in play.
     fn arc(&self, a: u64, b: u64) -> Option<Dy> {
-        Some(self.place(a)?.arc_kpc_dy(&self.place(b)?, &self.sphere))
+        Some(self.place(a)?.arc_kpc(&self.place(b)?, &self.sphere))
     }
 
     /// Returns each galaxy's centre at `start`, read from the first star in
@@ -437,9 +437,11 @@ impl<'a> Siting<'a> {
             v_e,
             rulers: crate::growth::Rulers::default(),
             c: crate::propulsion::c_m_s(),
-            // One kpc in r_g: the galaxy tier's kpc (`chain::kpc`) times
+            // One kpc in r_g: the galaxy tier's kpc (`galaxy::rings_of_kpc`) times
             // the tier's unit in r_g.
-            rg_per_kpc: Dy::from_q(&(&xyl_cosmos::chain::kpc() * &Tier::Galaxy.in_rg())),
+            rg_per_kpc: Dy::from_q(
+                &(&xyl_cosmos::galaxy::rings_of_kpc(&Q::ONE) * &Tier::Galaxy.in_rg()),
+            ),
         }
     }
 

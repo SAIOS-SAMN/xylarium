@@ -65,14 +65,9 @@ fn nucleons() -> &'static Nucleons {
             at: BTreeMap::new(),
         };
         for e in crate::elements::table().unwrap_or_default() {
-            // `A_z = floor(a + 1/2)`, the nearest whole count of nucleons.
-            let Some(a) = (&e.a + &Q::ratio(1, 2)).floor_i128() else {
+            let Some(a) = crate::circuit::mass_number(e.z).filter(|a| *a > 0) else {
                 continue;
             };
-            let Ok(a) = u32::try_from(a) else { continue };
-            if a == 0 {
-                continue;
-            }
             index.of.insert(e.z, a);
             index.at.entry(a).or_default().push(e.z);
         }

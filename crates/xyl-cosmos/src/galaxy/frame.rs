@@ -229,7 +229,7 @@ fn piece_cut(
         .beads
         .iter()
         .find(|b| b.span.0 == record.0 && b.span.1 == record.1)?;
-    let swing = &Q::ONE + &sub.inbound_mean(crate::circuit::echo()).to_q();
+    let swing = sub.echo_swing();
     // The pulse's turning per echo (two bells) in hydrogen units at the
     // piece's reach about the universal core; the cut derives the star's
     // transduction from it and the collapsed star's compactness.

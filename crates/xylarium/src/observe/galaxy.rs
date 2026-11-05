@@ -5,7 +5,7 @@ use super::Options;
 use crate::run::{show, Founded};
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
-use xyl_cosmos::chain::{kpc, radius, units};
+use xyl_cosmos::chain::{radius, units};
 use xyl_cosmos::package::Si;
 use xyl_kernel::universe::Universe;
 
@@ -18,7 +18,7 @@ pub(super) fn galaxy(u: &Universe<'_>) -> String {
     out.push_str(&format!(
         "  r_g = {} m; the galaxy tier's unit 60^5 r_g; 1 kpc = {} of it\n",
         show(&units().r_g_m),
-        show(&kpc())
+        show(&xyl_cosmos::galaxy::rings_of_kpc(&Q::ONE))
     ));
     out.push_str(&format!(
         "  the universe's radius = {} galaxy units\n",

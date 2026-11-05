@@ -250,9 +250,9 @@ impl Chronometry {
     /// The keepers of a founding: the epicenter, then for each galactic core
     /// its hub, deep core, inner mantle and outer rim. The chain starts empty.
     pub fn of(origin: &Origin) -> Chronometry {
-        // One kpc in r_g: the galaxy tier's kpc (`chain::kpc`) times the
+        // One kpc in r_g: the galaxy tier's kpc (`galaxy::rings_of_kpc`) times the
         // tier's unit in r_g; one cluster unit in kpc.
-        let kpc_rg = &xyl_cosmos::chain::kpc() * &Tier::Galaxy.in_rg();
+        let kpc_rg = &xyl_cosmos::galaxy::rings_of_kpc(&Q::ONE) * &Tier::Galaxy.in_rg();
         let cluster_kpc = crate::transit::tier_m(Tier::Cluster)
             .checked_div(&xyl_cosmos::package::Si::kpc())
             .unwrap_or(Q::ONE);

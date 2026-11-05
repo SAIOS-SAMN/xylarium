@@ -30,7 +30,7 @@ pub struct Place {
 pub fn escape_speed(w: &World) -> Dy {
     let m = &w.mass * &Si::world_mass_kg();
     let r = &w.radius * &Si::world_radius_m();
-    Dy::from_q(&(&xyl_cosmos::turning::turning_rad_s(&m, &r) * &r))
+    Dy::from_q(&(&xyl_cosmos::package::Si::rad_s(&xyl_cosmos::turning::turning_si(&m, &r)) * &r))
 }
 
 /// Returns the gap (m) between worlds `wa` and `wb` of one system at the
@@ -133,7 +133,7 @@ pub fn window_years(
     let turns = off - Dy::int(off.trunc_i64()) + if off.signum() < 0 { Dy::ONE } else { Dy::ZERO };
     let wait = turns.max(Dy::ZERO) / rel.abs() * Dy::sci(1, 9);
     let a_m = &a.a * &tier_m(a.tier);
-    let v_orb = Dy::from_q(&(&xyl_cosmos::turning::rad_s(&a.rate) * &a_m));
+    let v_orb = Dy::from_q(&(&xyl_cosmos::package::Si::rad_s(&a.rate) * &a_m));
     Some((wait, v_orb))
 }
 

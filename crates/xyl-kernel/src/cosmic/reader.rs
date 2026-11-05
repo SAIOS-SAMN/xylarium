@@ -126,7 +126,7 @@ pub(super) fn life(wit: &Witnessed, ctx: &Ctx) -> (Dy, Dy) {
     let deg = star_degree_gyr(
         &wit.star.sequence(),
         wit.star.compactness(),
-        xyl_cosmos::galaxy::kpc_of_rings_dy(Dy::from_q(&wit.star.r)),
+        wit.star.reach_rings(),
         ctx,
     );
     (born, deg)

@@ -626,7 +626,7 @@ pub fn genesis(o: Options) -> Result<bool, String> {
         o.seed,
         xyl_cosmos::package::founding_digest(),
         xyl_cosmos::minds::laws_digest(),
-        xyl_cosmos::minds::life_digest(),
+        xyl_cosmos::minds::laws_digest(),
         xyl_cosmos::circuit::gyr_of_rings(&origin.first_stars().mid()),
         xyl_cosmos::circuit::gyr_of_rings_dy(xyl_cosmos::circuit::bell()),
         anchor.rim,

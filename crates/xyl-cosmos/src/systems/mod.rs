@@ -51,7 +51,8 @@ use crate::elements::extent;
 use crate::elements::{decimal, Class, Element};
 use crate::field::dyadic;
 use crate::galaxy::{density, Star};
-use xyl_core::certified::{down, Encl};
+use crate::origin::fix;
+use xyl_core::certified::Encl;
 use xyl_core::dyadic::Dy;
 use xyl_core::{Stream, Q};
 
@@ -64,11 +65,6 @@ use moons::*;
 use settle::*;
 
 const BITS: u32 = 64;
-const GRID_BITS: u32 = 40;
-
-fn fix(e: &Encl) -> Q {
-    down(&e.mid(), GRID_BITS)
-}
 
 /// The certified exponential of a held argument.
 fn exp(x: &Q, bits: u32) -> Encl {

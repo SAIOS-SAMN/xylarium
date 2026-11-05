@@ -287,7 +287,7 @@ fn galaxies(origin: &Origin, s: &Substrate, t: Dy) -> String {
     // converted to galaxy units) over the length one ring of its reach spans
     // (its anchor distance over its reach in rings).
     let shapes = xyl_cosmos::cores::shapes(origin);
-    let kpc = xyl_cosmos::chain::kpc();
+    let kpc = xyl_cosmos::galaxy::rings_of_kpc(&Q::ONE);
     let mut out = String::new();
     for g in s.push(t) {
         let shape = shapes.iter().find(|sh| sh.index == g.index);

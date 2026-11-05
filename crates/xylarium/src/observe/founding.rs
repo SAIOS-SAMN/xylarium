@@ -9,13 +9,6 @@ use xyl_cosmos::cores::Shape;
 use xyl_cosmos::elements::Element;
 use xyl_cosmos::origin::Origin;
 
-/// The founded elements of `origin`'s universe, at the torsion share the
-/// founding holds (`circuit::Substrate::share`).
-fn founded(origin: &Origin) -> Result<Vec<Element>, String> {
-    let sub = xyl_cosmos::cores::substrate_for(&origin.parent.spin).ok_or("no founding")?;
-    xyl_cosmos::elements::founded(&sub.share)
-}
-
 /// The `founding` reading: the founding shells on the founding's mix (each
 /// kind's share of the holding, as `circuit::Substrate::found` reads it):
 /// the final share, the kinds the throat holds and the pushed-out kinds'

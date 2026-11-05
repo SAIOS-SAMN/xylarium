@@ -1,10 +1,10 @@
 //! Readings of the universe as a whole: `universe`, `cores`, `star`,
 //! `house`, `annals` and `events`.
 
-use super::hex;
 use crate::run::{show, summary};
 use xyl_core::dyadic::Dy;
 use xyl_cosmos::origin::Origin;
+use xyl_kernel::checkpoint::hex;
 use xyl_kernel::seats::{Holder, On, Role};
 use xyl_kernel::universe::Universe;
 
@@ -29,7 +29,7 @@ pub(super) fn universe(u: &Universe<'_>) -> String {
     out.push_str(&format!(
         "count {} of the bell ({} yr a ring)  {} Gyr\n",
         show(&u.now),
-        Dy::from_q(&u.bell.period_gyr) * Dy::sci(1, 9),
+        xyl_cosmos::circuit::gyr_of_rings_dy(xyl_cosmos::circuit::bell()) * Dy::sci(1, 9),
         u.gyr()
     ));
     out.push_str(&format!(
@@ -238,7 +238,7 @@ pub(super) fn events(u: &Universe<'_>, k: usize) -> String {
             format!(
                 "count {} ({} Gyr) {} {}\n",
                 show(&e.at),
-                u.bell.gyr_dy(&e.at),
+                show(&xyl_cosmos::circuit::gyr_of_rings(&e.at)),
                 e.kind,
                 e.text
             )

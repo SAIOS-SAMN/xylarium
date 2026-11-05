@@ -2,11 +2,11 @@
 //! the bell's count, holding the cosmic world, the civilizations, the field,
 //! the seats, the ley network and the keepers' clocks.
 //!
-//! - Clock: `now` is an exact rational count of the core's rings. [`Bell`]
-//!   holds the ring's period in Gyr (`xyl_cosmos::pulse::core_period`, one
-//!   ring, converted at the boundary by `circuit::gyr_of_rings` and rounded
-//!   down onto a 2^-60 grid); deep time in Gyr is count x period,
-//!   converted to `Dy` at the seam with the older layers.
+//! - Clock: `now` is an exact rational count of the core's rings, the one
+//!   present of the universe; the cosmic world reads it as an argument. Deep
+//!   time in Gyr is a reading of the count through `circuit::gyr_of_rings`,
+//!   converted to `Dy` at the seam with the older layers, and a Gyr epoch
+//!   reads back as a count through `circuit::rings_of_gyr`.
 //! - Events: [`Universe::next_event`] is the soonest of the forecast's next
 //!   waking, the next pending [`Input`] and the next ley line falling due.
 //!   [`Universe::advance_to`] applies each at its count, then takes every
@@ -35,47 +35,7 @@ use crate::knowledge::Domain;
 use crate::seats::{Holder, On, Seats};
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
-
-/// The bell: the core's exact period, used to convert counts to deep time.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Bell {
-    /// The period of one ring of the core (Gyr), rounded down once onto a
-    /// 2^-60 grid.
-    pub period_gyr: Q,
-}
-
-impl Bell {
-    /// The bell of the core: the core's period in Gyr, rounded down onto a
-    /// 2^-60 grid.
-    pub fn of() -> Bell {
-        let gyr = xyl_cosmos::circuit::gyr_of_rings(&xyl_cosmos::pulse::core_period().to_q());
-        Bell {
-            period_gyr: xyl_core::certified::down(&gyr, 60),
-        }
-    }
-
-    /// Deep time (Gyr since the origin) at a count: count x period.
-    pub fn gyr(&self, count: &Q) -> Q {
-        count * &self.period_gyr
-    }
-
-    /// The count at a deep time `gyr`: gyr / period; zero when the period is
-    /// zero.
-    pub fn count(&self, gyr: &Q) -> Q {
-        gyr.checked_div(&self.period_gyr).unwrap_or(Q::ZERO)
-    }
-
-    /// The count at a deep time given as the older layers' `Dy` Gyr (the
-    /// seam).
-    pub fn count_dy(&self, gyr: Dy) -> Q {
-        self.count(&gyr.to_q())
-    }
-
-    /// Deep time at a count as the older layers' `Dy` Gyr (the seam).
-    pub fn gyr_dy(&self, count: &Q) -> Dy {
-        Dy::from_q(&self.gyr(count))
-    }
-}
+use xyl_cosmos::circuit::{gyr_of_rings, rings_of_gyr};
 
 /// An input: an action no law determines, applied at its count.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -169,8 +129,6 @@ pub struct Universe<'g> {
     pub field: Field,
     /// The seats minds may take, and their holders.
     pub seats: Seats,
-    /// The core's period, converting counts to deep time.
-    pub bell: Bell,
     /// Now, as the bell's count.
     pub now: Q,
     /// Inputs waiting for their count, in order.
@@ -198,14 +156,12 @@ impl<'g> Universe<'g> {
     /// `Field::of`. The bells' rings are delivered when the universe is
     /// carried (`advance_to`).
     pub fn begin(cosmic: Cosmic<'g>, heavy: Option<&[u64]>) -> Universe<'g> {
-        let bell = Bell::of();
-        let now = bell.count_dy(cosmic.now);
+        let now = rings_of_gyr(&cosmic.dawn().to_q());
         let mut u = Universe {
             field: Field::of(&cosmic, heavy),
             seats: Seats::of(&cosmic),
             cosmic,
             civ: Civilizations::default(),
-            bell,
             now,
             pending: Vec::new(),
             inputs: Vec::new(),
@@ -243,7 +199,7 @@ impl<'g> Universe<'g> {
 
     /// Deep time now (Gyr), as the older layers' `Dy`.
     pub fn gyr(&self) -> Dy {
-        self.bell.gyr_dy(&self.now)
+        Dy::from_q(&gyr_of_rings(&self.now))
     }
 
     /// Whole rings the bell has rung, floor(now) clamped at zero: the time
@@ -334,9 +290,9 @@ impl<'g> Universe<'g> {
     /// first pending input and the next ley line falling due; `None` when
     /// there is none. A pending input may lie at or before now.
     pub fn next_event(&self) -> Option<Q> {
-        let wake = self.cosmic.next_wake().map(|g| self.bell.count_dy(g));
+        let wake = self.cosmic.next_wake().map(|g| rings_of_gyr(&g.to_q()));
         let input = self.pending.first().map(|(at, _)| at.clone());
-        let ley = self.network.next_due().map(|g| self.bell.count_dy(g));
+        let ley = self.network.next_due().map(|g| rings_of_gyr(&g.to_q()));
         [wake, input, ley].into_iter().flatten().min()
     }
 
@@ -403,7 +359,7 @@ impl<'g> Universe<'g> {
         let discord = self.discord();
         for (epoch, kind, text) in self.network.step(&self.cosmic, &discord, at) {
             self.log.push(Logged {
-                at: self.bell.count_dy(epoch),
+                at: rings_of_gyr(&epoch.to_q()),
                 kind,
                 text,
             });
@@ -465,7 +421,7 @@ impl<'g> Universe<'g> {
         // in parallel.
         let clock = std::time::Instant::now();
         xyl_core::watch::stage("carry: prepare");
-        self.cosmic.prepare(self.bell.gyr_dy(to));
+        self.cosmic.prepare(Dy::from_q(&gyr_of_rings(to)));
         let prepared = clock.elapsed();
         xyl_core::watch::note(&format!(
             "prepare {prepared:.1?}: {} systems witnessed",
@@ -477,7 +433,7 @@ impl<'g> Universe<'g> {
             let next = self.next_event().filter(|t| t <= to && t > &self.now);
             let target = next.clone().unwrap_or_else(|| to.clone());
             if target > self.now {
-                let at = self.bell.gyr_dy(&target);
+                let at = Dy::from_q(&gyr_of_rings(&target));
                 if live {
                     let before = self.gyr();
                     self.civilizations(before, at);
@@ -491,7 +447,7 @@ impl<'g> Universe<'g> {
                 if self
                     .network
                     .next_due()
-                    .is_some_and(|d| self.bell.count_dy(d) <= self.now)
+                    .is_some_and(|d| rings_of_gyr(&d.to_q()) <= self.now)
                 {
                     self.carry_network();
                 }
@@ -658,16 +614,15 @@ impl<'g> Universe<'g> {
     }
 
     /// Each living non-ancient people's discord and its parts, for peoples
-    /// whose star lies in a constellation: drive by energy mastery,
-    /// v_e = v_chem + mu (v_best - v_chem); reach per generation,
-    /// rho = cruise x generation; share off its constellation,
-    /// o = rho / (rho + reach_C); forgetting share f = 1 - z; whether its
-    /// constellation holds a ley mouth, J; d = o f (1 - J); breach b from
-    /// folded space; discord = 1 - (1 - d)(1 - b).
+    /// whose star lies in a constellation: drive by energy mastery
+    /// (`civ::drive`), v_e = v_chem + mu (v_best - v_chem); reach per
+    /// generation (`transit::reach_kpc`), rho = cruise x generation; share
+    /// off its constellation, the deficit share o = rho / (rho + reach_C);
+    /// forgetting share f = 1 - z; whether its constellation holds a ley
+    /// mouth, J; d = o f (1 - J); breach b from folded space;
+    /// discord = 1 - (1 - d)(1 - b).
     pub fn discord_parts(&self) -> std::collections::BTreeMap<usize, crate::transit::Discord> {
-        use crate::transit::{
-            best_spec, blended, cruise_speed, home_escape, kpc_m, year_s, Discord,
-        };
+        use crate::transit::{reach_kpc, Discord};
         let rulers = crate::growth::Rulers::default();
         let net = &self.network;
         let mut out = std::collections::BTreeMap::new();
@@ -686,23 +641,14 @@ impl<'g> Universe<'g> {
                 .get(i)
                 .map(|k| k.mastery(crate::knowledge::Domain::Energy))
                 .unwrap_or(Dy::ZERO);
-            let first = crate::propulsion::Spec::of(
-                crate::propulsion::Drive::Chemical,
-                &p.traits,
-                &self.cosmic.gal.sc,
-                self.cosmic.gal.elements,
+            let (spec, escape, cruise) = crate::civ::drive(&self.cosmic, p, mastery);
+            let reach = reach_kpc(
+                &spec,
+                Dy::int(crate::propulsion::MASS_RATIO),
+                escape,
+                crate::growth::generation_yr(&p.traits, &rulers),
             );
-            let spec = blended(&first, &best_spec(&self.cosmic, p), mastery);
-            let escape = home_escape(&self.cosmic, p);
-            let cruise = cruise_speed(&spec, Dy::int(crate::propulsion::MASS_RATIO), escape);
-            let reach =
-                cruise * crate::growth::generation_yr(&p.traits, &rulers) * year_s() / kpc_m();
-            let both = reach + mouth;
-            let off = if both.signum() > 0 {
-                reach / both
-            } else {
-                Dy::ZERO
-            };
+            let off = xyl_core::shares::deficit_dy(reach, mouth);
             let forget = Dy::ONE - step.z.unwrap_or(Dy::ONE);
             let joined = net.holds_mouth(p.star);
             let d = if joined { Dy::ZERO } else { off * forget };
@@ -839,7 +785,7 @@ impl<'g> Universe<'g> {
                     },
                 ),
             };
-            self.inputs.push((self.bell.count_dy(at), input));
+            self.inputs.push((rings_of_gyr(&at.to_q()), input));
         }
     }
 
@@ -848,7 +794,7 @@ impl<'g> Universe<'g> {
     fn log_annals(&mut self) {
         for a in &self.cosmic.annals[self.annals_seen..] {
             self.log.push(Logged {
-                at: self.bell.count_dy(a.epoch),
+                at: rings_of_gyr(&a.epoch.to_q()),
                 kind: a.kind,
                 text: a.text.clone(),
             });

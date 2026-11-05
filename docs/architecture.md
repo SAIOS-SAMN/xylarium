@@ -74,14 +74,16 @@ function (`systems`).
 ## The event engine
 
 Time is counted in [bells](glossary.md) of the universe's core (one bell
-is light's round trip to the home galaxy's rim). Events are kept in a queue
-ordered by count. An advance performs the following operations:
+is light's round trip to the home galaxy's rim). The universe's count
+(`Universe::now`) is the one present: the cosmic world and the transit
+readings take it as an argument, and Gyr is a reading of it through
+`circuit::gyr_of_rings`. Events are kept in a queue ordered by count. An advance performs the following operations:
 
 - It prepares, in parallel, the systems and worlds of every mind due in the
   span; these are pure functions of the seed.
 - It adds each forecast mind's people at the epoch of that mind. A world
-  that can no longer feed a viable people at that moment produces no
-  people.
+  that houses fewer than a viable people at that moment (the housing law,
+  `civ::housing::houses`) produces no people.
 - It opens ley lines at their due times and begins each builder's next
   line.
 - It applies queued inputs (`universe::Input`: seat taken, inquiry

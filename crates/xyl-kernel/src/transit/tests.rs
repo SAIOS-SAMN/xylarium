@@ -1,7 +1,6 @@
 use super::*;
 use crate::propulsion::Spec;
 use xyl_core::units::Tier;
-use xyl_cosmos::chain::units;
 use xyl_cosmos::manifold::Manifold;
 use xyl_cosmos::package::Si;
 use xyl_cosmos::systems::World;
@@ -125,7 +124,7 @@ fn orbit_gaps_and_voyages_follow_drives_and_wells() {
         mass_ratio: Q::ZERO,
         chain: None,
     };
-    let unit = Dy::from_q(&(&units().r_g_m * &Tier::System.in_rg()));
+    let unit = Dy::from_q(&super::tier_m(Tier::System));
     let half = Q::new(1, 2).unwrap();
     let gap = |all: &[Manifold], a, b, age: &Q| orbit_gap_m(all, a, b, age).unwrap() / unit;
     let close = |x: Dy, want: i64| (x - Dy::int(want)).abs() < Dy::ratio(1, 1000);

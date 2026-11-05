@@ -137,17 +137,10 @@ pub fn landauer(t: Dy) -> Dy {
     t_unit() / t.max(Dy::ONE)
 }
 
-/// Returns a unit body's metabolism (W): Kleiber's law at the mind-bearing
-/// body's mass and the unit pace (`growth::unit_metabolism_w`); the rulers
-/// are not read.
-pub fn unit_body_w(_rul: &Rulers) -> Dy {
-    crate::growth::unit_metabolism_w()
-}
-
 /// The power equivalent of one knowledge unit (W): the metabolism of
-/// `KU_MINDS` unit bodies.
-fn ku_body_w(rul: &Rulers) -> Dy {
-    Dy::int(KU_MINDS) * unit_body_w(rul)
+/// `KU_MINDS` unit bodies (`life::unit_metabolism_w`, xyl-cosmos).
+fn ku_body_w() -> Dy {
+    Dy::int(KU_MINDS) * xyl_cosmos::life::unit_metabolism_w()
 }
 
 // -------------------------------------------------- Mind profile (mind.profile).
@@ -245,12 +238,6 @@ pub fn profile(t: &Traits, ctx: &Ctx) -> Profile {
 }
 
 // ----------------------------------------------------- Life span and forgetting.
-
-/// Returns how long a knower lives (standard years): one generation of the
-/// people (growth.rs).
-pub fn knower_life_yr(traits: &Traits, rul: &Rulers) -> Dy {
-    growth::generation_yr(traits, rul)
-}
 
 /// Returns the yearly share of a people's knowledge that is lost
 /// (knowledge.forgetting): (1 - e^(-1 / life)) x (1 - pooled_keep x
@@ -357,7 +344,7 @@ impl Thinkers {
             impedance: Dy::ONE,
             needs: Needs::of(p),
             profile: profile(&p.traits, ctx),
-            life_yr: knower_life_yr(&p.traits, &rul),
+            life_yr: growth::generation_yr(&p.traits, &rul),
             fluid: Dy::ZERO,
             consciousness: Dy::ZERO,
         }
@@ -387,18 +374,14 @@ impl Effort {
 /// thought is the bodies' power x [`lived_share`] x (1 + collective); free
 /// thought is the bodies' power x the free share 1 - N / N_cap (zero when
 /// the population meets or exceeds the capacity) plus the works' power.
-pub fn effort(t: &Thinkers, rul: &Rulers) -> Effort {
+pub fn effort(t: &Thinkers) -> Effort {
     let depth = landauer(t.body_t)
         * t.impedance.clamp(Dy::ZERO, Dy::ONE)
         * (Dy::ONE + t.consciousness.clamp(Dy::ZERO, Dy::ONE));
-    let per_ku = ku_body_w(rul);
+    let per_ku = ku_body_w();
     let lived = t.bodies_w.max(Dy::ZERO) * lived_share() * (Dy::ONE + t.profile.collective) * depth
         / per_ku;
-    let free_share = if t.capacity.signum() > 0 && t.population.signum() > 0 {
-        (Dy::ONE - t.population / t.capacity).max(Dy::ZERO)
-    } else {
-        Dy::ZERO
-    };
+    let free_share = crate::civ::housing::free_share(t.population, t.capacity);
     let free = (t.bodies_w.max(Dy::ZERO) * free_share + t.works_w.max(Dy::ZERO)) * depth / per_ku;
     Effort { lived, free }
 }
@@ -532,14 +515,13 @@ impl Knowledge {
     /// span's readings; a people with no population produces no thought.
     pub fn step_one(&mut self, i: usize, t: &Thinkers, years: Dy) {
         self.sync(i + 1);
-        let rul = Rulers::default();
         let u = knowledge_unit();
         {
             let s = &mut self.of[i];
             s.fluid = t.fluid.clamp(Dy::ZERO, Dy::ONE);
             let before: Dy = s.stock.iter().copied().sum();
             let e = if t.population.signum() > 0 {
-                effort(t, &rul)
+                effort(t)
             } else {
                 Effort::default()
             };
@@ -602,7 +584,7 @@ mod tests {
             impedance: Dy::ONE,
             needs: Needs::default(),
             profile: profile(t, &ctx),
-            life_yr: knower_life_yr(t, &rul),
+            life_yr: growth::generation_yr(t, &rul),
             fluid: Dy::ZERO,
             consciousness: Dy::ZERO,
         }
@@ -632,30 +614,29 @@ mod tests {
             Shape::Society,
         );
         let big = traits(Dy::int(10), Solvent::Volatile(Species::H2O), Shape::Society);
-        assert!(knower_life_yr(&big, &rul) > knower_life_yr(&small, &rul));
+        assert!(growth::generation_yr(&big, &rul) > growth::generation_yr(&small, &rul));
     }
 
     #[test]
     fn effort_grows_with_power_and_free_housing() {
-        let rul = Rulers::default();
         let t = traits(Dy::ONE, Solvent::Volatile(Species::H2O), Shape::Society);
         // A full world gives only lived thought.
-        let full = effort(&thinkers(Dy::sci(1, 9), &t, Dy::sci(1, 9)), &rul);
+        let full = effort(&thinkers(Dy::sci(1, 9), &t, Dy::sci(1, 9)));
         assert_eq!(full.free, Dy::ZERO);
         assert!(full.lived.signum() > 0);
         // A world feeding twice its numbers frees half its bodies' power for
         // free thought.
-        let half = effort(&thinkers(Dy::sci(1, 9), &t, Dy::sci(2, 9)), &rul);
+        let half = effort(&thinkers(Dy::sci(1, 9), &t, Dy::sci(2, 9)));
         assert!(half.free > full.lived * Dy::int(5));
         // The same numbers of bigger bodies use more power and so produce more
         // thought.
         let big = traits(Dy::int(8), Solvent::Volatile(Species::H2O), Shape::Society);
-        assert!(effort(&thinkers(Dy::sci(1, 9), &big, Dy::sci(1, 9)), &rul).lived > full.lived);
+        assert!(effort(&thinkers(Dy::sci(1, 9), &big, Dy::sci(1, 9))).lived > full.lived);
         // A cold chemistry has a slower metabolism but more bits per joule
         // (Landauer), which offsets the slower pace: the same thought per
         // body of equal mass.
         let cold = traits(Dy::ONE, Solvent::Volatile(Species::CH4), Shape::Society);
-        let c = effort(&thinkers(Dy::sci(1, 9), &cold, Dy::sci(1, 9)), &rul).lived;
+        let c = effort(&thinkers(Dy::sci(1, 9), &cold, Dy::sci(1, 9))).lived;
         assert!(
             (c / full.lived - Dy::ONE).abs() < Dy::ratio(1, 100),
             "cold/warm {}",

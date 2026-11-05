@@ -16,8 +16,9 @@
 //!
 //! Neighbours ([`Heard`]): every other people, at the current separation of
 //! the two worlds (`transit::separation_m`, converted to kpc), whose dawn
-//! lies at least the light delay in the past, so that no neighbour is known
-//! before light could have crossed the separation.
+//! lies at least the light delay (`transit::crossing_years`, light's speed
+//! from the bell and r_g) in the past, so that no neighbour is known before
+//! light could have crossed the separation.
 //!
 //! Returns `None` for a seat that does not exist, is not seated on a people,
 //! or whose people or world cannot be read now. Read-only.
@@ -26,7 +27,7 @@ use crate::growth::Power;
 use crate::seats::{On, Role};
 use crate::universe::Universe;
 use xyl_core::dyadic::Dy;
-use xyl_cosmos::pulse::{c_kpc_per_ring, hear, Hearing, Node, Relay};
+use xyl_cosmos::pulse::{hear, Hearing, Node, Relay};
 use xyl_cosmos::worlds::Heartbeat;
 
 /// A neighbouring people: its name, the separation in kpc and the light delay
@@ -116,14 +117,12 @@ pub fn perceive(
     let On::People(i) = s.on else { return None };
     let p = u.cosmic.peoples.get(i)?;
     let gyr = u.gyr();
+    // The pulse counts in rings: the universe's count is read directly.
+    let at = Dy::from_q(&u.now);
     let (state, media, _) = u.cosmic.world_at(p.star, p.world, gyr)?;
-    let power = u.cosmic.power(p);
-    let here = u.cosmic.place(p.star);
-    // The pulse counts in rings: the time and light speed convert here (a
-    // speed per ring read per Gyr is `rings_of_gyr_dy`, then per year).
-    let at = xyl_cosmos::circuit::rings_of_gyr_dy(gyr);
+    let power = u.cosmic.power(p, gyr);
+    let here = u.cosmic.place(p.star, at);
     let hearing = here.and_then(|x| hear(&x, nodes, relays, at));
-    let c = xyl_cosmos::circuit::rings_of_gyr_dy(c_kpc_per_ring()) / Dy::sci(1, 9);
     let neighbours = u
         .cosmic
         .peoples
@@ -133,13 +132,13 @@ pub fn perceive(
         .filter_map(|(_, q)| {
             // Separation at current positions: two peoples in the same system
             // are separated by their orbital positions, not taken as zero.
-            let at = |x: &crate::cosmic::People| crate::transit::Place {
+            let place = |x: &crate::cosmic::People| crate::transit::Place {
                 star: x.star,
                 world: x.world,
             };
-            let kpc =
-                crate::transit::separation_m(&u.cosmic, at(p), at(q))? / crate::transit::kpc_m();
-            let light_yr = kpc / c;
+            let kpc = crate::transit::separation_m(&u.cosmic, place(p), place(q), at)?
+                / crate::transit::kpc_m();
+            let light_yr = crate::transit::crossing_years(kpc);
             // Heard once light could have crossed the separation since the
             // neighbour's dawn; the factor 10^9 converts Gyr to years.
             ((gyr - q.dawn) * Dy::sci(1, 9) >= light_yr).then(|| Heard {

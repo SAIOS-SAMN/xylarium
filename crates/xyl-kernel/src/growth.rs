@@ -2,8 +2,9 @@
 //! its world rather than read from a game table (docs/civilizations.md).
 //!
 //! Inputs: `cosmic::Traits` (size, solvent), the world's `Body`, `State`
-//! and `Medium` (`xyl_cosmos::life`, `xyl_cosmos::worlds`), and [`Rulers`],
-//! the declared constants (mind-bearing body mass, unit generation, primary
+//! and `Medium` (`xyl_cosmos::life`, `xyl_cosmos::worlds`), and [`Rulers`]:
+//! the mind-bearing body mass and the unit metabolism read from
+//! `xyl_cosmos::life`, and the declared constants (unit generation, primary
 //! production share, trophic share, flux unit).
 //!
 //! - Body ([`body_kg`]): m_b = M_MIND x size (kg).
@@ -17,8 +18,8 @@
 //! - Numbers ([`grow`]): the logistic K / (1 + (K/N - 1) e^(-r t)) in
 //!   closed form, so the result does not depend on step size; above
 //!   capacity it decays back the same way.
-//! - Power ([`power`], [`world_w`]): starlight and internal heat over the
-//!   world's whole surface, and the bodies' total metabolism (W).
+//! - Power ([`power`]): starlight and internal heat over the world's whole
+//!   surface (`life::Body::area_m2`), and the bodies' total metabolism (W).
 //!
 //! What a world houses (capacity) is computed from these in civ/housing.rs.
 
@@ -31,8 +32,8 @@ use xyl_cosmos::worlds::{body_pace, Ctx, Medium};
 /// measured value held until it is derived, and is listed in
 /// docs/roadmap.md (Declared rulers).
 pub struct Rulers {
-    /// The mass of a mind-bearing body (kg), the value of `m_mind_kg` in
-    /// xyl-cosmos `life`.
+    /// The mass of a mind-bearing body (kg), read from xyl-cosmos `life`:
+    /// the body a lineage holding `I_MIND` bits builds (`life::body_kg`).
     pub m_mind: Dy,
     /// The unit body's generation (years), 14.2 yr. It is a declared ruler
     /// until it is derived from the unit body's life history; every
@@ -50,7 +51,7 @@ pub struct Rulers {
 impl Default for Rulers {
     fn default() -> Rulers {
         Rulers {
-            m_mind: Dy::int(10),
+            m_mind: xyl_cosmos::life::body_kg(xyl_cosmos::life::i_mind(), Dy::ZERO, Dy::ZERO),
             generation_yr: Dy::ratio(142, 10),
             eta_primary: Dy::ratio(15, 1000),
             trophic: Dy::ratio(1, 10),
@@ -64,18 +65,15 @@ pub fn body_kg(traits: &Traits, r: &Rulers) -> Dy {
     r.m_mind * traits.size
 }
 
-/// The unit body's metabolism (W), the metabolism of the mind-bearing body
-/// held as a ruler in xyl-cosmos `life` (19.1 W).
-pub fn unit_metabolism_w() -> Dy {
-    xyl_cosmos::life::unit_metabolism_w()
-}
-
-/// A body's metabolism (W): the unit body's metabolism scaled by the size
+/// A body's metabolism (W): the unit body's metabolism
+/// (`life::unit_metabolism_w`, a ruler of xyl-cosmos) scaled by the size
 /// share 2s / (1 + s), s = m_b / M_MIND, and by the body pace of the
 /// people's solvent (`worlds::body_pace`).
 pub fn metabolism_w(traits: &Traits, ctx: &Ctx, r: &Rulers) -> Dy {
     let s = (body_kg(traits, r) / r.m_mind.max(Dy::sci(1, -12))).max(Dy::ZERO);
-    unit_metabolism_w() * (Dy::int(2) * s / (Dy::ONE + s)) * body_pace(traits.solvent, ctx)
+    xyl_cosmos::life::unit_metabolism_w()
+        * (Dy::int(2) * s / (Dy::ONE + s))
+        * body_pace(traits.solvent, ctx)
 }
 
 /// The food power the world offers one link up the biosphere (W): free
@@ -141,18 +139,12 @@ pub struct Power {
     pub bodies_w: Dy,
 }
 
-/// A world's whole surface (m^2), not only its living area.
-fn surface_m2(body: &Body) -> Dy {
-    let unit_r = Dy::from_q(&xyl_cosmos::package::Si::world_radius_m());
-    let r_m = body.radius * unit_r;
-    // Linear area rule against the unit world: A = 4 pi r R_unit.
-    Dy::int(4) * Dy::PI * r_m * unit_r
-}
-
 /// The power available to a people of `numbers` bodies on world `body` in
-/// state `state` (W): the star's light over the whole surface, the world's
-/// heat flow through it, and the bodies' total metabolism under `traits`,
-/// `ctx` and the rulers `r`.
+/// state `state` (W): the star's light over the whole surface
+/// (`Body::area_m2`), the world's heat flow through it, and the bodies'
+/// total metabolism under `traits`, `ctx` and the rulers `r`. Its starlight
+/// and heat are what a people's producers may capture (civ::housing
+/// `feeds_w`).
 pub fn power(
     state: &xyl_cosmos::worlds::State,
     body: &Body,
@@ -161,20 +153,12 @@ pub fn power(
     ctx: &Ctx,
     r: &Rulers,
 ) -> Power {
-    let area = surface_m2(body);
+    let area = body.area_m2();
     Power {
         starlight_w: state.flux.max(Dy::ZERO) * r.flux_w * area,
         heat_w: state.q.max(Dy::ZERO) * area,
         bodies_w: numbers.max(Dy::ZERO) * metabolism_w(traits, ctx, r),
     }
-}
-
-/// The world's starlight over its whole surface plus its internal heat flow
-/// (W): the power a people's producers may capture (civ::housing
-/// `feeds_w`).
-pub fn world_w(state: &xyl_cosmos::worlds::State, body: &Body, r: &Rulers) -> Dy {
-    let area = surface_m2(body);
-    (state.flux.max(Dy::ZERO) * r.flux_w + state.q.max(Dy::ZERO)) * area
 }
 
 #[cfg(test)]

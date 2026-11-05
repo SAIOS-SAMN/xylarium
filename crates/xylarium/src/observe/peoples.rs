@@ -33,7 +33,7 @@ pub(super) fn people(u: &Universe<'_>, n: Option<usize>) -> String {
         "  numbers {} of housing {}, rate {} a year\n",
         p.population, p.capacity, p.rate
     ));
-    if let Some(pw) = u.cosmic.power(p) {
+    if let Some(pw) = u.cosmic.power(p, u.gyr()) {
         out.push_str(&format!(
             "  power: bodies {} W, starlight {} W, heat {} W\n",
             pw.bodies_w, pw.starlight_w, pw.heat_w
@@ -65,7 +65,7 @@ pub(super) fn people(u: &Universe<'_>, n: Option<usize>) -> String {
     if let Some(Some(h)) = u.field.home.get(i) {
         out.push_str(&format!("  home radiation (tuned to): {h}\n"));
     }
-    if let Some((state, media, _)) = u.cosmic.world_at(p.star, p.world, u.cosmic.now) {
+    if let Some((state, media, _)) = u.cosmic.world_at(p.star, p.world, u.gyr()) {
         out.push_str(&format!(
             "  world: surface {} K, {} bar, light {} flux units, age {} Gyr\n",
             state.t_surf, state.p_bar, state.flux, state.age

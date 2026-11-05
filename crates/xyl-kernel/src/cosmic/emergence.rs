@@ -5,22 +5,19 @@
 use super::{Annal, Cosmic, People, Shape, Strategy, Traits, SYLLABLES};
 use xyl_core::dyadic::Dy;
 use xyl_core::Stream;
-use xyl_cosmos::life::{foragers, viable};
+use xyl_cosmos::life::viable;
 use xyl_cosmos::minds::{ancient_window, in_core, Mind};
 use xyl_cosmos::worlds::{best, body_temperature, Ctx, Medium, Region, Solvent, State, Where};
 
 impl Cosmic<'_> {
-    /// Advances deep time to `to` and wakes the minds the forecast schedules by
-    /// then. Peoples' numbers are left to the caller (universe.rs, via
+    /// Wakes the minds the forecast schedules by `to` (Gyr) that have not
+    /// woken. Peoples' numbers are left to the caller (universe.rs, via
     /// civ). Returns the annal lines of what woke.
     pub fn wake(&mut self, to: Dy) -> Vec<String> {
-        if to > self.now {
-            self.now = to;
-        }
-        self.prepare(self.now);
+        self.prepare(to);
         let mut lines = Vec::new();
         while let Some(m) = self.forecast.minds.get(self.next).cloned() {
-            if m.epoch > self.now {
+            if m.epoch > to {
                 break;
             }
             self.next += 1;
@@ -100,7 +97,8 @@ impl Cosmic<'_> {
 
     /// Wakes mind `m` on the world its lineage climbed on, witnessing only
     /// that star's system. The mind is counted silent where the world is
-    /// already held or feeds fewer foragers than a viable people.
+    /// already held or houses fewer bodies of its traits than a viable
+    /// people (civ/housing.rs `houses`, nothing learned).
     fn arise(&mut self, m: &Mind) -> Option<String> {
         self.witness(m.star)?;
         if self
@@ -112,12 +110,6 @@ impl Cosmic<'_> {
             return None;
         }
         let (state, ms, body) = self.world_at(m.star, m.w, m.epoch)?;
-        let fed = foragers(&ms, m.region, &body, &self.ctx);
-        if fed < viable() {
-            // Fewer foragers than a viable people: the world cannot feed one now.
-            self.silent += 1;
-            return None;
-        }
         let strategy = if body.tilt > 23 || body.star_mass < Dy::ratio(1, 2) {
             Strategy::R
         } else {
@@ -127,10 +119,15 @@ impl Cosmic<'_> {
             self.gal.seed,
             &["body".into(), m.star.into(), (m.w as u64).into()],
         );
-        let traits = select(&state, &ms, m.region, strategy, &mut rng, &self.ctx)?;
+        let Some(traits) = select(&state, &ms, m.region, strategy, &mut rng, &self.ctx) else {
+            // No medium in the lineage's region: the world cannot feed it now.
+            self.silent += 1;
+            return None;
+        };
         // Numbers start at the world's capacity for bodies of these traits
         // (growth.rs), with no knowledge yet: foraging alone
-        // (civ/housing.rs `houses` with zero biology and energy mastery).
+        // (civ/housing.rs `houses` with zero biology and energy mastery),
+        // the law the carry reads.
         let rulers = crate::growth::Rulers::default();
         let capacity = crate::civ::housing::houses(
             &traits,
@@ -142,6 +139,12 @@ impl Cosmic<'_> {
             Dy::ZERO,
             Dy::ZERO,
         );
+        if capacity < viable() {
+            // The world houses fewer than a viable people: it cannot feed
+            // one now.
+            self.silent += 1;
+            return None;
+        }
         let rate = crate::growth::growth_per_yr(&traits, &rulers);
         let name = self.name(m);
         // Ancient is measured against the first core-born mind of the
@@ -165,13 +168,6 @@ impl Cosmic<'_> {
             kind: "EMERGENCE",
             text: line.clone(),
         });
-        if capacity.signum() <= 0 {
-            self.annals.push(Annal {
-                epoch: m.epoch,
-                kind: "FALL",
-                text: format!("{name}'s world cannot feed it; it falls at its dawn"),
-            });
-        }
         self.peoples.push(People {
             name,
             star: m.star,
@@ -186,7 +182,7 @@ impl Cosmic<'_> {
             ancient,
             steps: m.steps.clone(),
             setbacks: m.setbacks,
-            fell: (capacity.signum() <= 0).then_some(m.epoch),
+            fell: None,
         });
         Some(line)
     }

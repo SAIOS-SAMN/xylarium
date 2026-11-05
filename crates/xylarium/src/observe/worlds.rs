@@ -2,7 +2,7 @@
 //! reading `worlds N`.
 
 use super::Options;
-use crate::run::show;
+use crate::run::{show, Founded};
 use xyl_core::certified::Encl;
 use xyl_core::dyadic::Dy;
 use xyl_core::units::{Tier, Units};
@@ -12,7 +12,6 @@ use xyl_cosmos::life::Body;
 use xyl_cosmos::manifold::{
     cap_degrees, galaxy_place, manifolds, share, star_cap_degrees, Anchor, Manifold,
 };
-use xyl_cosmos::origin::Origin;
 use xyl_cosmos::systems::System;
 use xyl_cosmos::worlds::{Medium, State};
 use xyl_kernel::cosmic::People;
@@ -46,7 +45,7 @@ pub(super) fn world(u: &Universe<'_>, star: Option<u64>, w: Option<usize>) -> St
         "air / seas / ices                         housing\n"
     ));
     let mut t = born + Dy::ratio(1, 2);
-    while t <= u.cosmic.now + Dy::ratio(1, 100) {
+    while t <= u.gyr() + Dy::ratio(1, 100) {
         if let Some((st, ms, body)) = u.cosmic.world_at(star, w, t) {
             let housing = people
                 .and_then(|p| p.traits.medium(&ms).map(|m| (p, m)))
@@ -77,7 +76,7 @@ pub(super) fn world(u: &Universe<'_>, star: Option<u64>, w: Option<usize>) -> St
     // the star's birth to now.
     let sets = xyl_cosmos::worlds::settings(&u.cosmic.gal, &[star], &wit.system, &wit.star);
     if let Some(set) = sets.get(w) {
-        let age = u.cosmic.now - born;
+        let age = u.gyr() - born;
         for (what, at) in xyl_cosmos::worlds::events(set, age, &u.cosmic.ctx) {
             out.push_str(&format!(
                 "  Event: {what} at {} Gyr after its star's birth ({} Gyr; bracket {})\n",
@@ -178,14 +177,9 @@ fn width(e: &Encl) -> String {
     show(&(&e.hi - &e.lo))
 }
 
-/// Metres in one unit of `tier`.
-fn tier_m(units: &Units, tier: Tier) -> Q {
-    &units.r_g_m * &tier.in_rg()
-}
-
 /// A turn count's fractional part in degrees, printed.
 fn deg(turns: &Encl) -> String {
-    show(&(&turns.mid().frac() * &Q::int(360)))
+    show(&(&turns.mid().frac() * &Q::int(xyl_core::coordinate::DEGREES)))
 }
 
 /// " [name]" of the people living on world `w` of star `n`, or empty.
@@ -229,7 +223,7 @@ pub(super) fn system(u: &Universe<'_>, n: Option<u64>) -> String {
     let units = xyl_cosmos::chain::units();
     let all = manifolds(u.cosmic.gal.seed, &[n], sys, star, &units);
     // The manifolds count age in rings; born and age print in Gyr.
-    let t = xyl_cosmos::circuit::rings_of_gyr_dy(u.cosmic.now);
+    let t = Dy::from_q(&u.now);
     let age = (t - Dy::from_q(&star.born)).to_q();
     let mut out = format!(
         "Star {n}: {} suns, born {} Gyr, age {} Gyr\n",
@@ -244,8 +238,8 @@ pub(super) fn system(u: &Universe<'_>, n: Option<u64>) -> String {
     ));
     for m in &all {
         out.push_str(&match m.anchor {
-            Anchor::Star => planet_line(u, n, sys, m, &all, &age, &units),
-            Anchor::World(h) => moon_line(u, n, m, h, &all, &age, &units),
+            Anchor::Star => planet_line(u, n, sys, m, &all, &age),
+            Anchor::World(h) => moon_line(u, n, m, h, &all, &age),
         });
     }
     out.push_str(&relations(u, n, star, &all, &age, &units));
@@ -261,14 +255,13 @@ fn planet_line(
     m: &Manifold,
     all: &[Manifold],
     age: &Q,
-    units: &Units,
 ) -> String {
     let st = m.stand(age, all);
     // The distance from the anchor is the bearing's radius on its pivots, not
     // a Euclidean vector length.
     let d = Encl::exact(m.bearing(age, all).r);
     let hill = m.reach();
-    let a_au = (&m.a * &tier_m(units, Tier::System))
+    let a_au = (&m.a * &xyl_kernel::transit::tier_m(Tier::System))
         .checked_div(&xyl_cosmos::package::Si::au())
         .unwrap_or(Q::ZERO);
     format!(
@@ -298,12 +291,11 @@ fn moon_line(
     h: usize,
     all: &[Manifold],
     age: &Q,
-    units: &Units,
 ) -> String {
     let st = m.stand(age, all);
     let d = Encl::exact(m.bearing(age, all).r);
     let hill = m.reach();
-    let a_km = (&m.a * &tier_m(units, Tier::Planet))
+    let a_km = (&m.a * &xyl_kernel::transit::tier_m(Tier::Planet))
         .checked_div(&Q::int(1000))
         .unwrap_or(Q::ZERO);
     let host = all.iter().find(|x| x.world == h);
@@ -371,7 +363,7 @@ fn relations(
         }
     }
     if let Some(&a) = planets.first() {
-        out.push_str(&gaps_from(u, n, a, &planets, all, age, units));
+        out.push_str(&gaps_from(u, n, a, &planets, all, age));
     }
     if let Some(moon) = all.iter().find(|m| m.anchor != Anchor::Star) {
         let d = Encl::exact(moon.bearing(age, all).r);
@@ -382,7 +374,7 @@ fn relations(
             width(&d)
         ));
     }
-    let t = xyl_cosmos::circuit::rings_of_gyr_dy(u.cosmic.now);
+    let t = Dy::from_q(&u.now);
     let r = xyl_cosmos::chain::radius();
     let other = u.cosmic.peoples.iter().find(|p| p.star != n);
     if let (Some(&a), Some(o)) = (planets.first(), other) {
@@ -416,7 +408,6 @@ fn gaps_from(
     planets: &[usize],
     all: &[Manifold],
     age: &Q,
-    units: &Units,
 ) -> String {
     let au_m = xyl_cosmos::package::Si::au();
     let mut out = format!(
@@ -429,13 +420,15 @@ fn gaps_from(
     let a_of = |w: usize| {
         all.iter()
             .find(|m| m.world == w)
-            .map(|m| &m.a * &tier_m(units, Tier::System))
+            .map(|m| &m.a * &xyl_kernel::transit::tier_m(Tier::System))
             .unwrap_or(Q::ZERO)
     };
     let au_d = Dy::from_q(&au_m);
     for &b in planets.iter().skip(1) {
         let place = |world| xyl_kernel::transit::Place { star: n, world };
-        if let Some(g) = xyl_kernel::transit::separation_m(&u.cosmic, place(a), place(b)) {
+        if let Some(g) =
+            xyl_kernel::transit::separation_m(&u.cosmic, place(a), place(b), Dy::from_q(&u.now))
+        {
             let flat = (&a_of(a) - &a_of(b))
                 .abs()
                 .checked_div(&au_m)
@@ -569,18 +562,18 @@ fn star_rows(k: u64, st: &Star, sys: &System, planets: &[(Q, Q, bool)]) -> Strin
 /// distribution of neighbouring orbits' ratios, and for the first 12 stars
 /// the chain frame and the planets (orbit in AU, mass in world units).
 pub(super) fn worlds_read(o: &Options, n: usize) -> Result<String, String> {
-    let origin = Origin::of(o.seed).ok_or("no origin")?;
-    let elements = xyl_cosmos::elements::founded(&origin.parent.share())?;
-    let chem = xyl_cosmos::chem::Chemistry::of(&origin).ok_or("no chemistry")?;
+    let founded = Founded::of(o.seed)?;
+    let chem = founded.chemistry()?;
+    let (origin, elements) = (&founded.origin, &founded.elements);
     let (mut counts, mut ratios, mut rows) = (Vec::new(), Vec::new(), String::new());
     let (mut belts, mut moons, mut giants, mut comets) = (0usize, 0usize, 0usize, 0usize);
     let mut bare = Bare::default();
     for k in 0..u64::try_from(n).unwrap_or(0) {
-        let Some(st) = xyl_cosmos::galaxy::star(o.seed, &origin, k) else {
+        let Some(st) = xyl_cosmos::galaxy::star(o.seed, origin, k) else {
             bare.unlit += 1;
             continue;
         };
-        let Some(sys) = xyl_cosmos::systems::system(o.seed, &origin, &[k], &st, &chem, &elements)
+        let Some(sys) = xyl_cosmos::systems::system(o.seed, origin, &[k], &st, &chem, elements)
         else {
             continue;
         };

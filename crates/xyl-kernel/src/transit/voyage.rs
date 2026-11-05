@@ -3,7 +3,7 @@
 //! transfer window within a system ([`window_years`]) and the drive a people
 //! uses ([`best_spec`], [`blended`]).
 
-use super::{kpc_m, year_s};
+use super::{kpc_m, tier_m, year_s};
 use crate::cosmic::Cosmic;
 use crate::propulsion::{delta_v, propellant_per_kg, Spec};
 use xyl_core::dyadic::Dy;
@@ -41,25 +41,21 @@ pub fn escape_speed(w: &World) -> Dy {
 /// taken. Returns None if `gap` refuses.
 pub fn orbit_gap_m(all: &[Manifold], wa: usize, wb: usize, age: &Q) -> Option<Dy> {
     let g = gap(all, wa, wb, age)?;
-    Some(Dy::from_q(
-        &(&(&g * &units().r_g_m) * &Tier::System.in_rg()),
-    ))
+    Some(Dy::from_q(&(&g * &tier_m(Tier::System))))
 }
 
-/// Returns the distance (m) between two places at the current time: within
-/// a system, the gap between the current positions of the orbits
+/// Returns the distance (m) between two places at count `t` (rings): within
+/// a system, the gap between the positions of the orbits then
 /// ([`orbit_gap_m`]); between systems, the arc between the stars. Returns
 /// None if a needed star is not witnessed.
-pub fn separation_m(cosmic: &Cosmic, a: Place, b: Place) -> Option<Dy> {
+pub fn separation_m(cosmic: &Cosmic, a: Place, b: Place, t: Dy) -> Option<Dy> {
     if a.star == b.star {
         let wit = cosmic.systems.get(&a.star)?;
         let all = manifolds(cosmic.gal.seed, &[a.star], &wit.system, &wit.star, &units());
-        // The manifolds count age in rings; `now` (Gyr) converts here.
-        let now = xyl_cosmos::circuit::rings_of_gyr_dy(cosmic.now);
-        let age = (now - Dy::from_q(&wit.star.born)).max(Dy::ZERO).to_q();
+        let age = (t - Dy::from_q(&wit.star.born)).max(Dy::ZERO).to_q();
         return orbit_gap_m(&all, a.world, b.world, &age);
     }
-    Some(cosmic.distance(a.star, b.star)? * kpc_m())
+    Some(cosmic.distance(a.star, b.star, t)? * kpc_m())
 }
 
 /// A voyage made by one drive.
@@ -136,7 +132,7 @@ pub fn window_years(
     let off = (lead - (phase(b, rb) - phase(a, ra))) * Dy::int(rel.signum().into());
     let turns = off - Dy::int(off.trunc_i64()) + if off.signum() < 0 { Dy::ONE } else { Dy::ZERO };
     let wait = turns.max(Dy::ZERO) / rel.abs() * Dy::sci(1, 9);
-    let a_m = &(&a.a * &units().r_g_m) * &a.tier.in_rg();
+    let a_m = &a.a * &tier_m(a.tier);
     let v_orb = Dy::from_q(&(&xyl_cosmos::turning::rad_s(&a.rate) * &a_m));
     Some((wait, v_orb))
 }

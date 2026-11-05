@@ -114,7 +114,14 @@ pub(super) fn world_key(
     w: usize,
     epoch: Dy,
 ) -> Option<(u64, usize, i64)> {
-    let wit = systems.get(&star_n)?;
+    let (born, deg) = life(systems.get(&star_n)?, ctx);
+    Some((star_n, w, degree_of(epoch - born, deg)))
+}
+
+/// A witnessed star's birth and one degree of its life (both Gyr): the one
+/// reading the world cache, [`SystemReader`] and `Cosmic::heartbeat` count
+/// degrees of a star's life by.
+pub(super) fn life(wit: &Witnessed, ctx: &Ctx) -> (Dy, Dy) {
     let born = xyl_cosmos::circuit::gyr_of_rings_dy(Dy::from_q(&wit.star.born));
     let deg = star_degree_gyr(
         &wit.star.sequence(),
@@ -122,7 +129,7 @@ pub(super) fn world_key(
         xyl_cosmos::galaxy::kpc_of_rings_dy(Dy::from_q(&wit.star.r)),
         ctx,
     );
-    Some((star_n, w, degree_of(epoch - born, deg)))
+    (born, deg)
 }
 
 /// Reads a star's worlds at any degree of its life. The worlds' settings are
@@ -146,15 +153,10 @@ impl<'a> SystemReader<'a> {
         star_n: u64,
     ) -> Option<SystemReader<'a>> {
         let wit = systems.get(&star_n)?;
-        let deg = star_degree_gyr(
-            &wit.star.sequence(),
-            wit.star.compactness(),
-            xyl_cosmos::galaxy::kpc_of_rings_dy(Dy::from_q(&wit.star.r)),
-            ctx,
-        );
+        let (born, deg) = life(wit, ctx);
         Some(SystemReader {
             sets: settings(gal, &[star_n], &wit.system, &wit.star),
-            born: xyl_cosmos::circuit::gyr_of_rings_dy(Dy::from_q(&wit.star.born)),
+            born,
             deg,
             ctx,
         })

@@ -108,9 +108,10 @@ another crate. Laws are composed from shares (ratios of the form
   (`circuit::Substrate::found`) and holds it as `Substrate::share`. Status: built.
 - Automorphism of the chain (docs/model.md, The automorphic, synaptic
   chain; #97): `M / (r + M)` is of degree zero in length, so
-  `deficit(k M, k r) = deficit(M, r)` and the flow law of the two pushes
-  is unchanged for every tier dilation `k = 60^p`. Status: built at the law
-  (`shares::tests::deficit_is_invariant_under_tier_dilation`); the chain's
+  `deficit(lambda M, lambda r) = deficit(M, r)` and the flow law of the two
+  pushes is unchanged for every dilation `lambda > 0`; the kernel's tier
+  ladder `60^p` (`units::Tier`, a declared ruler) is one instance. Status: built at the law
+  (`shares::tests::deficit_is_invariant_under_dilation`); the chain's
   links are planned.
 - Isoclinic frame (docs/model.md, The frame, the place and the chain; T18,
   #90): `H_j = H_iso / 5` and `J_j = J / 5` on each of the five planes, so

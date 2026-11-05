@@ -233,7 +233,8 @@ where it belongs to one.
     `proposal`; depends on items 39 and 40;
     [model.md](model.md#the-automorphic-synaptic-chain)). One
     attractor-pair map at every tier, commuting with the tier's dilation
-    (at the law: `xyl_core::shares`, invariant under every tier); a link's
+    (at the law: `xyl_core::shares`, invariant under every dilation, the
+    tier ladder one instance); a link's
     weight its stored turning between planes, its memory the remanence,
     strengthened by passage and weakened by disuse; the pulse carried link
     to link; the council's convergence on the same links (#94).
@@ -731,6 +732,12 @@ layer, each with the quantity that is to derive it.
   the package supplies it. The SI seam (`Si`: the unit world, the reference
   star, the AU, the kpc, c, G, the year and the physical constants) is kept for
   display once each layer reads core units.
+- **Units** (`xyl_core::units::Tier`): the tier ladder, each tier's unit
+  `60^k r_g` (the universe 60^10, the galaxy 60^5, a system 60, a planet
+  60^-2), is declared. Every law is invariant under any dilation between
+  tiers (`shares::tests::deficit_is_invariant_under_dilation`), so the
+  ladder's base is a reading convention, to be replaced by each tier's own
+  dilation as the chain derives it (item 41).
 - **Founding** (`bounce`): The horizon's held share `delta_h = 1/3`
   (`horizon_reach`, so `H = 2M`), the reach where the received share is twice
   the held share, is to be derived from the bounce's geometry; until then the

@@ -1030,12 +1030,14 @@ ancient seats, #94).
     from the deficit `M / (r + M)` (axiom 2). This holds alike for the
     core, a star, a planet, a moon and a nucleon.
   - The map commutes with the change of tier: a link read in one tier and
-    carried by the dilation to another (`manifold::dilation`, `60^k`) is
-    the link read there.
+    carried by the dilation `lambda` to another (`manifold::dilation`) is
+    the link read there. The law holds for any `lambda > 0`; the kernel's
+    tier ladder, `lambda = 60^k` (`units::Tier`), is a declared ruler and
+    one instance of it, and no law names 60.
   - At the law this holds now. The deficit is of degree zero in length, so
-    it and the flow law are invariant under every tier's dilation
+    it and the flow law are invariant under every dilation
     (`xyl_core::shares`, the test
-    `deficit_is_invariant_under_tier_dilation`).
+    `deficit_is_invariant_under_dilation`).
   - The chain fails it today. Tiers hop through SI, frames are rebuilt per
     tier, and homologue galaxies reuse home values (The frame, the place
     and the chain).

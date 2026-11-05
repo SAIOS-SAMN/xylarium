@@ -125,37 +125,35 @@ mod tests {
 
     /// The automorphism of the chain at the law (docs/model.md, The
     /// automorphic, synaptic chain): the deficit is of degree zero in length,
-    /// so reading a hold and a reach in one tier, or both carried to another
-    /// tier by its dilation, gives the same share, exactly; and the pushes it
-    /// gives compose the same way by the flow law.
+    /// so a hold and a reach carried together by any dilation `lambda > 0`
+    /// give the same share, exactly, and the pushes it gives compose the same
+    /// way by the flow law. The kernel's tier ladder (`units::Tier`, a
+    /// declared ruler) is one instance of `lambda`.
     #[test]
-    fn deficit_is_invariant_under_tier_dilation() {
+    fn deficit_is_invariant_under_dilation() {
         use crate::units::Tier;
-        let tiers = [
-            Tier::Universe,
-            Tier::Cluster,
-            Tier::Galaxy,
-            Tier::System,
-            Tier::Planet,
-        ];
+        let mut lambdas = vec![Q::ratio(7, 3), Q::ratio(1, 11), Q::ratio(1000003, 2)];
+        lambdas.extend(
+            [
+                Tier::Universe,
+                Tier::Cluster,
+                Tier::Galaxy,
+                Tier::System,
+                Tier::Planet,
+            ]
+            .map(Tier::in_rg),
+        );
         let pairs = [
             (Q::ratio(1, 1), Q::ratio(3, 1)),
             (Q::ratio(2, 7), Q::ratio(5, 3)),
             (Q::ratio(9, 4), Q::ratio(1, 60)),
         ];
         for (m, r) in &pairs {
-            let held = deficit(m, r).unwrap();
-            for t in tiers {
-                let k = t.in_rg();
-                assert_eq!(deficit(&(m * &k), &(r * &k)).unwrap(), held);
-            }
-            let other = deficit(r, m).unwrap();
-            for t in tiers {
-                let k = t.in_rg();
-                let carried = flow(
-                    &deficit(&(m * &k), &(r * &k)).unwrap(),
-                    &deficit(&(r * &k), &(m * &k)).unwrap(),
-                );
+            let (held, other) = (deficit(m, r).unwrap(), deficit(r, m).unwrap());
+            for k in &lambdas {
+                let (mk, rk) = (m * k, r * k);
+                assert_eq!(deficit(&mk, &rk).unwrap(), held);
+                let carried = flow(&deficit(&mk, &rk).unwrap(), &deficit(&rk, &mk).unwrap());
                 assert_eq!(carried, flow(&held, &other));
             }
         }

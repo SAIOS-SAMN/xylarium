@@ -15,7 +15,7 @@ may change public APIs and the model's laws.
   one attractor-pair map at every tier, commuting with the tier's dilation,
   and links weighted by their history. At the law, the deficit and the flow
   law are invariant under every tier's dilation
-  (`shares::tests::deficit_is_invariant_under_tier_dilation`).
+  (`shares::tests::deficit_is_invariant_under_dilation`).
 
 - Minds in the ancient seats (docs/civilizations.md, docs/network.md,
   roadmap section 4 items 6 to 9, #94): what is built of a mind seated on

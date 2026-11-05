@@ -382,6 +382,13 @@ may change public APIs and the model's laws.
 
 ### Removed
 
+- The out-of-tree derivation screens (Python and a dump crate) are retired.
+  Their readings come from the binary: `xylarium observe universal-core`
+  now reads the pair's holds on both faces (T16), the core's remanence
+  (T19, `circuit::SpinOrbit::remanence`) and the axis-polarity census (T7).
+  The model.md readings cite it; readings that need the pinches built are
+  marked as retired screens to be read on the binary (#79).
+
 - The founding's admission: `Substrate::least_share`, `far_reach`,
   `margin`, `Anchor::margin` and the refounding at a raised spin in
   `cores::substrate_for`. The founding is made once at the drawn spin, and

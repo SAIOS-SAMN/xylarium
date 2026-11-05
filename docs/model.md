@@ -766,8 +766,8 @@ Theorems:
 | T18 | the five isoclinic planes are interchangeable in the multiplicity and the filling, so each holds a fifth of the isoclinic hold and T14's pushes are equal: one isoclinic phase per body; distinct plane phases come only from a link's turning between planes | 8, T6, T7, T14 |
 | T19 | a link's remanence `w = J - (a_0 M_0) M`: per passage `w' = w (1 - m / M) + J (m / M) (1 - rho_c / rho_hold)`; conserved between passages; cleared by a passage of hold `m* = w M / (w + J (rho_c / rho_hold - 1))`; for one release, the remanent share `1 - rho_hold / rho_closed` | 7, 11, T10, T17 |
 
-Reading (seed 7, the gate of roadmap item 32, a screen with float
-logarithms and exact held sets): the universal core holds 0.4352 of the
+Reading (seed 7; a retired floating-point screen with exact held sets, to
+be read on the binary once the pinches are built, #79): the universal core holds 0.4352 of the
 founded mass and its first pinched throat 0.4569; what that throat
 releases (0.108) and the core's three later cohorts (1.7 x 10^-18) are too
 light to close (`a_g > 1`) and stay in the flow as medium. One galactic
@@ -815,8 +815,8 @@ Derived ([#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)); not yet built
 
   The enclosed matter starts at the reach its layer has when the fold
   closes (this replaces T14's starting reach on the throat orbit).
-- **Reading** (seed 7, a screen with float logarithms; the relations are
-  exact): the first pinch encloses 605 layers, 0.5648 of the founded mass;
+- **Reading** (seed 7; a retired floating-point screen, the relations
+  exact; to be read on the binary once the pinches are built, #79): the first pinch encloses 605 layers, 0.5648 of the founded mass;
   the neutral surface lies at `ln r_0 = 17.966` on the axis plane, set by
   the gripping layers (their grip-weighted hold 0.0096 of the founded
   mass); 0.1783 of the founded mass lies inside it, compressed, and 0.3865
@@ -843,7 +843,8 @@ Derived ([#78](https://github.com/SAIOS-SAMN/xylarium/issues/78)); not yet built
   and a layer carried far out by the parent arrives deep and climbs late.
   The new throat's pinches enclose what it releases, and a pinch's cohort
   closes where `a = j' / H <= 1`.
-- **Reading** (seed 7, a screen with float logarithms): eleven throats in
+- **Reading** (seed 7; a retired floating-point screen, to be read on the
+  binary once the pinches are built, #79): eleven throats in
   a chain, the universal core alone holding more than `10^-6` of the
   founded mass. The inversion spreads the tail, layers carried far out,
   over several pinches of the new throat, but those cohorts are too light
@@ -913,27 +914,23 @@ and theorems T2, T8 and T11. Every identity below is exact.
 - **T11 read with the conserved turning.** The parent's degrees per unit
   hold are those of its founded hold, so a pinched cohort of hold `H_g`
   carries `J (H_g / M) (rho_g / rho_hold)` and spins at that over `H_g^2`
-  (T17). The screen of roadmap item 32 had used
+  (T17). The retired screen of roadmap item 32 had used
   the core's retained hold, which understated `a_g` by the factor
-  `M_c / M_0`. With the conserved turning the screen still gives one chain
+  `M_c / M_0`. With the conserved turning that screen still gave one chain
   of throats, with the same held shares.
-- **Reading** (seed 7; a screen: `a_0` exact, the per-face holds by float
-  powers; `/opt/handoff/xylarium-kernel/gate/paired_throat_gate.py`):
+- **Reading** (`xylarium observe universal-core`, seed 7):
   - `a_0 = 381123025677 / 2^40`, about 0.3466.
-  - The 20 closed kinds of 1092 hold `M_c / M_0 = 0.4352`.
-  - Open kinds held by pressure: about `10^-18` on the near face,
-    `10^-42` on the far face, and none on both, as T16 requires.
-  - The orbit (`gate/shear_orbit.py`): the core releases its open kinds in
-    one cohort at its first pinch, after 18.8 echoes. The cohort is
-    0.5648 of the founded hold at separation `rho = -0.646`, against the
-    hold's `-0.798` (the closed kinds' is `-0.995`), so it takes 0.81 of
-    its share of the turning. The spin goes from 0.3466 to `a* = 0.9933`,
-    under the Kerr bound by 0.7%: the universal core is a closed paired
-    throat. In closed form, `a* = a_0 M_0 rho_closed / (rho_hold M_c)`.
-  - Read on the binary (`xylarium observe universal-core`, seed 7): one
-    near-face cohort at 18.81 echoes, its turning share over its hold share
-    0.8095, the core's spin after it 0.993298, closed on both faces; the
-    firmament is the 20 closed kinds, and the books close.
+  - The 20 closed kinds of 1092 hold `M_c / M_0 = 0.4352`, on both faces.
+  - Open kinds held by pressure on the near face only: 1.87e-18 of the
+    founded hold, released by the far face; none on both faces, the faces'
+    product `(3 + a)^2` being 11.2.
+  - The core releases its open kinds in one cohort at its first pinch,
+    after 18.81 echoes. The cohort is 0.5648 of the founded hold at
+    separation `rho = -0.646`, against the hold's `-0.798` (the closed
+    kinds' is `-0.995`), so it takes 0.8095 of its share of the turning.
+    The spin goes from 0.3466 to `a* = 0.9933`, under the Kerr bound by
+    0.7%: the universal core is a closed paired throat. In closed form,
+    `a* = a_0 M_0 rho_closed / (rho_hold M_c)`.
 - **What follows.**
   - **No admission.** The founding reads the orbit in place of the
     reach-based admission, which read the echo's swing (#37). Whether
@@ -1110,12 +1107,11 @@ and the cooling record are planned
     loss.
   - **Closed form.** For one release down to the closed hold, the
     remanent share of the held turning is `1 - rho_hold / rho_closed`.
-  - **Reading** (seed 7, a screen with float logarithms;
-    `/opt/handoff/xylarium-kernel/gate/remanence.py`): `rho_hold = -0.7977`
-    and `rho_closed = -0.9949`, so the universal core's remanent share is
-    0.1982, the same as the orbit gives directly. Per unit of closed hold
-    the core turns 155.64 degrees, of which 30.85 are remanent: the memory
-    its founding left in it.
+  - **Reading** (`xylarium observe universal-core`, seed 7): the universal
+    core's remanent share is 0.1982, with `rho_hold = -0.7977` and
+    `rho_closed = -0.9949`. In the core's units (the closed hold 1) the core
+    turns `360 a* = 357.59` degrees per unit hold, of which 70.88 are
+    remanent: the memory its founding left in it.
 
 The rest of this section records what the pole state's own remanence is to
 answer, the code it builds on and what that code lacks today.

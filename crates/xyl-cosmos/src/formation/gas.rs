@@ -56,7 +56,7 @@ pub(crate) fn cooling(bead: &Bead, unit: &Q, h: &Q, swing: &Q) -> Option<Cooling
         .fold(Q::ZERO, |a, (z, s)| &a + &(s * &emission(*z)));
     let mu = &lambda * &emission;
     // The measure's dimension is n = 1 (a circle in the galaxy's plane)
-    // outside the core's reach of one galaxy ring and n = 2 (the bulge's ball)
+    // outside the core's reach of one galaxy unit and n = 2 (the bulge's ball)
     // within it.
     let n = if reach > Q::ONE { 1 } else { 2 };
     let (cools_in, infall, cloud, clouds, cooled, heat) = collapse(
@@ -92,20 +92,20 @@ pub struct Lighting {
     /// The lit pieces' holding (those that collapse into clouds and light)
     /// over every piece's, in [0, 1].
     pub lit: Q,
-    /// Each piece: inner edge, outer edge (galaxy rings), rings until it
-    /// lights, and its infall's extent (galaxy rings; zero where it never
+    /// Each piece: inner edge, outer edge (galaxy units), rings until it
+    /// lights, and its infall's extent (galaxy units; zero where it never
     /// lights).
     pub pieces: Vec<(Q, Q, Option<i64>, Q)>,
 }
 
 impl Lighting {
-    /// The rings until the gas at reach `r` (galaxy rings) lights: the piece
+    /// The rings until the gas at reach `r` (galaxy units) lights: the piece
     /// covering r, else the nearest piece's; None where that piece never does.
     pub fn cools_in_at(&self, r: &Q) -> Option<i64> {
         self.piece_at(r).and_then(|(_, p)| p.2)
     }
 
-    /// The piece covering reach `r` (galaxy rings), else the nearest: its
+    /// The piece covering reach `r` (galaxy units), else the nearest: its
     /// index and its record.
     pub fn piece_at(&self, r: &Q) -> Option<(usize, &(Q, Q, Option<i64>, Q))> {
         let covering = self

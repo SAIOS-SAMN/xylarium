@@ -129,11 +129,11 @@ pub struct Setting<'a> {
     pub a_au: Dy,
     /// Its birth gas's metals (solar = 1).
     pub z: Dy,
-    /// Its star's home-equivalent reach (galaxy rings, `galaxy::Star::r`),
+    /// Its star's home-equivalent reach (galaxy units, `galaxy::Star::r`),
     /// where its birth gas and the galaxy's crowding are read.
     pub r: Dy,
-    /// Its star's reach about its galactic core (galaxy rings,
-    /// `galaxy::Star::reach_rings`), where the star's life is read.
+    /// Its star's reach about its galactic core (galaxy units,
+    /// `galaxy::Star::reach_units`), where the star's life is read.
     pub reach: Dy,
     /// Its star's compactness, the star's deficit at its rim
     /// (`galaxy::Star::compactness`).

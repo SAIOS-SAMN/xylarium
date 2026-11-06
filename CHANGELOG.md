@@ -207,6 +207,14 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Reaches are read in tier units, never rings (#115, roadmap item 45): the
+  lengths formerly called "core rings" and "galaxy rings" are the cluster
+  unit (`60^7 r_g`) and the galaxy unit (`60^5 r_g`) in docs, comments and
+  `observe` labels, and `galaxy::rings_of_kpc`, `kpc_of_rings` (and their
+  `_dy` forms), `kpc_per_ring` and `Star::reach_rings` are
+  `units_of_kpc`, `kpc_of_units`, `kpc_per_unit` and `Star::reach_units`.
+  No formula changes; `observe universal-core` and `formation` read the
+  same numbers.
 - "Ring" keeps one meaning, the harmonic of the bell, echo and pulse
   (docs/model.md, Units; glossary): the lengths called "core rings" and
   "galaxy rings" are the cluster and galaxy units, to be renamed in code

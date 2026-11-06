@@ -120,7 +120,7 @@ pub fn nodes_among(seed: u64, origin: &Origin, candidates: &[u64]) -> Vec<Node> 
         if !seq.ignites() {
             continue;
         }
-        let life = Dy::from_q(&crate::stars::life(&seq, s.compactness(), s.reach_rings()));
+        let life = Dy::from_q(&crate::stars::life(&seq, s.compactness(), s.reach_units()));
         let born = Dy::from_q(&s.born) + life;
         // Remnant mass: the stellar mass the sample star stands for times
         // the share of the hold no step of its sequence transduced
@@ -132,7 +132,7 @@ pub fn nodes_among(seed: u64, origin: &Origin, candidates: &[u64]) -> Vec<Node> 
             * Dy::from_q(&crate::stars::remnant(
                 &seq,
                 s.compactness(),
-                s.reach_rings(),
+                s.reach_units(),
             ));
         out.push(Node {
             kind: Kind::Stellar(Box::new(s)),

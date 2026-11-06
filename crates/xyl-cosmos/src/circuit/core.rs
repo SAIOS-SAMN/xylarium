@@ -6,7 +6,7 @@
 // `bounce::horizon_reach`, `compound::open` / `compound::hold` for a kind's
 // frames, `formation::emission`, `galaxy::first_star_mass` (the star mass
 // on the chain), and `pole_flux` (poles.rs) with `electron_phase`
-// (weights.rs). Reaches are core rings,
+// (weights.rs). Reaches are cluster units,
 // amounts held frames, times in rings (one ring one bell), rates per ring.
 //
 // - Deficit: `xyl_core::shares::deficit_dy(h, r) = h / (r + h)`, the vacuum's
@@ -180,7 +180,7 @@ pub fn echo() -> Dy {
 /// the throat over one swing, and its rate of leaving (per ring).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Reverberation {
-    /// Reach about the throat (core rings): the kind's spin over its hold.
+    /// Reach about the throat (cluster units): the kind's spin over its hold.
     pub reach: Dy,
     /// Hold enclosed inside the reach: 1 plus the firmament mass nearer the
     /// throat over the founding unit (at least 1).
@@ -197,29 +197,29 @@ pub struct Reverberation {
     pub onset: Option<Dy>,
 }
 
-/// The push on a galaxy: its reach as founded and at t (rings), its recession
-/// (core rings of reach per ring of time) and its light's shift through the
+/// The push on a galaxy: its reach as founded and at t (cluster units), its recession
+/// (cluster units of reach per ring of time) and its light's shift through the
 /// ocean, z = v / c_ocean (positive away: a redshift); its drift, the
 /// vessel's net push (reach per ring), and its swing, the reach the core's
-/// pulse moves it through each echo (core rings, either way).
+/// pulse moves it through each echo (cluster units, either way).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Push {
     /// The galaxy's engine index (see [`Substrate::galaxies`]).
     pub index: u32,
-    /// Reach about the throat as founded (core rings).
+    /// Reach about the throat as founded (cluster units).
     pub reach0: Dy,
-    /// Reach about the throat at t (core rings).
+    /// Reach about the throat at t (cluster units).
     pub reach: Dy,
-    /// Recession rate (core rings of reach per ring), positive away from the
+    /// Recession rate (cluster units of reach per ring), positive away from the
     /// core.
     pub recession: Dy,
     /// Shift of the galaxy's light through the ocean, z = v / c_ocean
     /// (positive: a redshift).
     pub shift: Dy,
-    /// Drift: the vessel's net outflow push (core rings of reach per ring).
+    /// Drift: the vessel's net outflow push (cluster units of reach per ring).
     pub drift: Dy,
     /// Swing: the reach the core's pulse moves the galaxy through each echo
-    /// (core rings, either way).
+    /// (cluster units, either way).
     pub swing: Dy,
 }
 
@@ -816,7 +816,7 @@ impl Substrate {
         })
     }
 
-    /// The pulse's speed along the filament through the ocean (core rings of
+    /// The pulse's speed along the filament through the ocean (cluster units of
     /// reach per ring): the universe's rim crossed in half a bell, light's
     /// speed times the ladder step between the galaxy and cluster tiers
     /// (3600 c).
@@ -839,7 +839,7 @@ impl Substrate {
         (Dy::int(2) * Dy::pi() * s / self.echo()).sin() / (Dy::int(2) * Dy::pi())
     }
 
-    /// The ocean's non-tidal waveform at reach `r` (rings) and `t`: the core's
+    /// The ocean's non-tidal waveform at reach `r` (cluster units) and `t`: the core's
     /// ringing plus the vessel's rate, both taken one pulse delay earlier,
     /// carried at the share the held medium inside the reach holds there,
     /// `H(r, t) / (r + H(r, t))` ([`Substrate::carry`]). At the throat
@@ -857,13 +857,13 @@ impl Substrate {
         (self.ringing(t - delay) + self.rate(t - delay).0) * share
     }
 
-    /// The pulse's delay to reach `r` (rings): half a bell scaled by
+    /// The pulse's delay to reach `r` (cluster units), in rings: half a bell scaled by
     /// `r / rim`, the front crossing the rim in half a bell.
     fn delay(&self, r: Dy) -> Dy {
         bell() / Dy::int(2) * r.max(Dy::ZERO) / Dy::from_q(&self.rim).max(Dy::sci(1, -30))
     }
 
-    /// The hold inside reach `r` (core rings) as founded, in core masses:
+    /// The hold inside reach `r` (cluster units) as founded, in core masses:
     /// the core's own hold, 1, plus the state of every bead nearer the
     /// throat (each bead's mass, in the core's units). The deficit at a reach
     /// is read about the matter enclosed within it (axiom 2), so this is the
@@ -876,7 +876,7 @@ impl Substrate {
             .fold(Q::ONE, |a, b| &a + &b.state)
     }
 
-    /// The ocean's held medium inside reach `r` (core rings) at `t` (rings),
+    /// The ocean's held medium inside reach `r` (cluster units) at `t` (rings),
     /// in core masses: the hold as founded ([`Substrate::held_within`]) less
     /// the share of the core's hold the jet has carried past `r` by `t`. What
     /// leaves the core is carried at the ocean's speed, so the matter that
@@ -915,7 +915,7 @@ impl Substrate {
         (founded - passed / firm).max(Dy::ZERO)
     }
 
-    /// The ocean's carry at reach `r` (core rings) at `t` (rings): what the
+    /// The ocean's carry at reach `r` (cluster units) at `t` (rings): what the
     /// held medium inside `r` holds of the pulse there and where the ocean
     /// moves it. The share is the deficit about the medium,
     /// `delta = H(r, t) / (r + H(r, t))` ([`Substrate::medium`]). The motion
@@ -1001,7 +1001,7 @@ impl Substrate {
     }
 
     /// The tidal waveform across a galaxy at `t`: the waveform's difference
-    /// across its extent `x` (rings) about its reach, A(R - x) - A(R + x) (the
+    /// across its extent `x` (cluster units) about its reach, A(R - x) - A(R + x) (the
     /// bodies' stretch law, one tier up).
     pub fn tide(&self, reach: Dy, x: Dy, t: Dy) -> Dy {
         self.amplitude((reach - x).max(Dy::ZERO), t) - self.amplitude(reach + x, t)

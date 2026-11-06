@@ -4,8 +4,8 @@
 //! Reads `package::Si` and `package::core_kg` (for `units`, the core
 //! hole's `xyl_core::units::Units`), `galaxy::rim_kpc` and
 //! `galaxy::radius_kpc` (from `circuit::anchor`). Lengths are in the galaxy
-//! tier's unit, 60^5 r_g of the core (`Tier::Galaxy`), one galaxy ring;
-//! `galaxy::rings_of_kpc` and `galaxy::kpc_of_rings` convert to and from
+//! tier's unit, 60^5 r_g of the core (`Tier::Galaxy`), one galaxy unit;
+//! `galaxy::units_of_kpc` and `galaxy::kpc_of_units` convert to and from
 //! kiloparsecs.
 //!
 //! A star's place is its arc `reach` from its galaxy's core along the
@@ -41,7 +41,7 @@ pub fn units() -> Units {
 /// The universe's curvature radius in the galaxy tier's unit: the founding's
 /// rim over pi (circuit::anchor).
 pub fn radius() -> Q {
-    crate::galaxy::rings_of_kpc(&crate::galaxy::radius_kpc())
+    crate::galaxy::units_of_kpc(&crate::galaxy::radius_kpc())
 }
 
 /// The radius of a galaxy's sphere (each galaxy an enclosed S^360): the
@@ -50,7 +50,7 @@ pub fn radius() -> Q {
 /// units). The home galaxy's rim is the founding's (circuit::anchor); another
 /// galaxy's rim is that rim times the galaxy's `scale`.
 pub fn galaxy_radius(scale: &Q) -> Q {
-    let rim = crate::galaxy::rings_of_kpc(&(&crate::galaxy::rim_kpc() * scale));
+    let rim = crate::galaxy::units_of_kpc(&(&crate::galaxy::rim_kpc() * scale));
     rim.checked_div(&pi(80).mid()).unwrap_or(Q::ONE)
 }
 
@@ -195,8 +195,8 @@ impl Place {
         }
     }
 
-    /// The exact arc converted to kiloparsecs (`galaxy::kpc_of_rings`).
+    /// The exact arc converted to kiloparsecs (`galaxy::kpc_of_units`).
     pub fn arc_kpc(&self, other: &Place, r: &Q) -> Dy {
-        Dy::from_q(&crate::galaxy::kpc_of_rings(&self.arc(other, r).mid()))
+        Dy::from_q(&crate::galaxy::kpc_of_units(&self.arc(other, r).mid()))
     }
 }

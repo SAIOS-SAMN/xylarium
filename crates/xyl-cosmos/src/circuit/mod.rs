@@ -8,7 +8,7 @@
 //! lighting, `atoms::vessel`, `compound` for each kind's frames, and
 //! `package` for the core's mass and the SI seam. Amounts are in held
 //! frames, universe units (the beads' states sum to the founding unit);
-//! reaches are in core rings about the universal throat, read in the
+//! reaches are in cluster units about the universal throat, read in the
 //! cluster tier (`xyl_core::units::Tier::Cluster`).
 //!
 //! - found.rs: `Substrate::found` assigns every kind its reach, holds the

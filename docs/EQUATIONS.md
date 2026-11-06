@@ -625,7 +625,7 @@ another crate. Laws are composed from shares (ratios of the form
   Status: built.
 - Mass inside (`galaxy::inside_mass`):
   `1 + rings within r / all rings` core masses, with a ring counted by the
-  share of its span inside `r` (galaxy rings). Status: built; to be
+  share of its span inside `r` (galaxy units). Status: built; to be
   replaced by the hold inside an orbit (planned, #116). Its divisor, all
   rings, is taken as the core's state 1; the founded beads total 0.4008
   core masses, so the tier's units await a ruling (#116).
@@ -636,7 +636,7 @@ another crate. Laws are composed from shares (ratios of the form
 - Piece of gas (`formation::cooling`): `lambda = (state / unit) / W`; the
   agitation is `a0 = (p - delta) / p` with `delta = h / (R + h)` and
   `h = 1 + held share`; `e = sum s_z e_z` and `mu = lambda e`; `n = 1`
-  beyond one galaxy ring and `n = 2` otherwise. Status: built.
+  beyond one galaxy unit and `n = 2` otherwise. Status: built.
 - Gathering (`formation::gathered`): `m(w) = (lambda + mu) W share_n(theta)`,
   with `theta = 360 w / (2 (w + R))` degrees on the infall's plane
   (`xyl-core measure::share_turns`).
@@ -659,8 +659,8 @@ another crate. Laws are composed from shares (ratios of the form
 - Lighting (`formation::lights`, `formation::lighting`): a piece lights where
   clouds > 0 and `cooled + heat < 1/2`; `cools_in` is the least over lit
   pieces, and `lit` is the lit holding over all holding. Status: built.
-- A star's reach (`galaxy::Star::reach_rings`): its orbit radius about its
-  galactic core, galaxy rings; the star's class, its system's light and its
+- A star's reach (`galaxy::Star::reach_units`): its orbit radius about its
+  galactic core, galaxy units; the star's class, its system's light and its
   worlds' life and minds all read it. Status: built.
 - First light (`galaxy::birth`): the first light of the piece at the
   star's reach falls at `max(cools_in, 1)` rings; there is none where the
@@ -697,7 +697,7 @@ another crate. Laws are composed from shares (ratios of the form
 - Vertical orbit (`galaxy::vertical`, `galaxy::layer`,
   `galaxy::vertical_frequency`): `nu = omega 2d / (1 + d)` radians per ring
   (turning law about `M(<r)`, crowding `d`);
-  `h = r m / (M(<r) + m)` galaxy rings (`m` the ring's mass,
+  `h = r m / (M(<r) + m)` galaxy units (`m` the ring's mass,
   `galaxy::ring_mass`); `s = t / (1 + t)` with
   `t = age / cooling time` (`galaxy::birth`); `sigma = h nu s 2d / (1 + d)`;
   `vz = -sigma ln(1 - u)`, `A = vz / nu`, period `2 pi / nu`, exposure

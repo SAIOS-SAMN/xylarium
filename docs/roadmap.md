@@ -463,12 +463,12 @@ where it belongs to one.
     `manifold::gap` and `chain::Place::arc`.
 45. **Ring keeps one meaning**
     ([#115](https://github.com/SAIOS-SAMN/xylarium/issues/115), `defect`).
-    "Ring" is the harmonic of the bell, echo and pulse only. The length
-    units read as "core rings" and "galaxy rings" are the cluster unit
-    (`60^7 r_g`) and the galaxy unit (`60^5 r_g`); docs, comments, labels and
-    identifiers are renamed (`rings_of_kpc`, `kpc_of_rings`, `kpc_per_ring`,
-    `Star::reach_rings`), with no formula changed and every reading
-    unchanged but for its unit label. The band sense goes with item 46.
+    "Ring" is the harmonic of the bell, echo and pulse only. Done: the
+    length units formerly read as "core rings" and "galaxy rings" are the
+    cluster unit (`60^7 r_g`) and the galaxy unit (`60^5 r_g`) in docs,
+    comments, labels and identifiers (`galaxy::units_of_kpc`,
+    `galaxy::kpc_of_units`, `galaxy::Star::reach_units`), with no formula
+    changed. The band sense goes with item 46.
 
 ## 1. Founding in the core's units (done)
 
@@ -599,7 +599,7 @@ Landed:
   d)`, `h = r m / (M(<r) + m)`, `s = t / (1 + t)`, `t` the age over the ring's
   cooling time, `sigma = h nu s 2d / (1 + d)`). The layers above read kpc and
   the prototype's stellar-mass unit through the marked boundaries
-  `galaxy::kpc_of_rings`, `galaxy::rings_of_kpc` and
+  `galaxy::kpc_of_units`, `galaxy::units_of_kpc` and
   `galaxy::suns_of_core_masses` / `core_masses_of_suns`; the SI forms of the
   turning law (`turning_si`, read in rad/s by `Si::rad_s`) remain as
   boundaries for the system and body layers.

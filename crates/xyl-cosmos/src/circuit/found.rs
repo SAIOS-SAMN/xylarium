@@ -4,7 +4,7 @@
 // Inputs: the spin, its torsion share (`bounce::torsion_share`, read once), the elements
 // (`elements::Element`), `formation::kinds` and `formation::founding_shells`
 // for the cascade, `atoms::vessel`, and `formation::lighting`. Reaches are
-// core rings; amounts are held frames, universe units.
+// cluster units; amounts are held frames, universe units.
 //
 // Steps: every kind is assigned its reach, spread r (1 +/- s_final). The closed
 // kinds, held on both faces of the paired throat (T16), form the firmament
@@ -43,14 +43,14 @@ pub struct Kind {
 }
 
 /// A bead of the founding, where the cascade's shells pinch: its reach about
-/// the universal throat (core rings), its state (its mass, core masses; the
+/// the universal throat (cluster units), its state (its mass, core masses; the
 /// hold inside its ring is [`Substrate::held_within`] at its reach), its
 /// phase about the throat, and its recipe (the kinds carried into it).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Bead {
     /// The bead's position in the founding's bead order (from 0).
     pub index: u32,
-    /// Reach about the universal throat (core rings): the reach of its most
+    /// Reach about the universal throat (cluster units): the reach of its most
     /// abundant kind.
     pub reach: Q,
     /// State: the bead's mass from its recipe (universe units); the states sum
@@ -61,7 +61,7 @@ pub struct Bead {
     pub phase: Q,
     /// The kinds carried into the bead and their amounts (held frames).
     pub recipe: Mix,
-    /// The bead's span about the throat (core rings): from its run's inner
+    /// The bead's span about the throat (cluster units): from its run's inner
     /// edge or the pinch before it to the pinch after it or its run's outer
     /// edge. Read one tier down, the beads are the home galaxy's rings.
     pub span: (Q, Q),
@@ -76,7 +76,7 @@ pub struct Substrate {
     /// The beads where the cascade's shells pinch; those holding a star
     /// (`Substrate::galaxies`) are galaxies.
     pub beads: Vec<Bead>,
-    /// Reach of the outermost shell (core rings): the rim the pulse crosses.
+    /// Reach of the outermost shell (cluster units): the rim the pulse crosses.
     pub rim: Q,
     /// Everything founded, by mass (universe units): the firmament plus every
     /// bead's recipe (see [`Substrate::holding`]).
@@ -91,7 +91,7 @@ pub struct Substrate {
     /// The home galaxy's lighting (formation.rs, read on these beads one
     /// tier down): the rings until its gas first lights (None: no piece
     /// does), the lit share of its gas, and each piece of gas by reach
-    /// (inner edge, outer edge, galaxy rings) with the rings until it lights.
+    /// (inner edge, outer edge, galaxy units) with the rings until it lights.
     pub lighting: formation::Lighting,
 }
 

@@ -47,6 +47,20 @@ another crate. Laws are composed from shares (ratios of the form
   bounds and refuses readings on two lanes; places (`2;20`, `-1;40`) and
   `coordinate::beat` (whole rings and the phase in degrees) are display
   only. Status: built.
+- Pair reading ([model.md](model.md#pairs-the-pivot-per-plane), #118): for
+  coordinates `a`, `b` of one origin (else refused), read in their lowest
+  common enclosure, the relative frame is `P = P_b^-1 o P_a` (refused
+  where no lawful frame relates them); its reading is a vector over the
+  turning planes, `d_k(a, b)` in exact degrees with winding
+  `K_k = floor(|d_k| / 360)`, one component per plane by its generators
+  (six for founded matter: the axis plane by its exponent, five isoclinic
+  phases), never summed; `d(b, a)` is read with the return's deficit,
+  never assumed equal; closeness is
+  `C2 = sum_k min(w_k, w'_k) (1 - 2 |d_k|) + (1 - m) / 2`,
+  `m = sum_k min(w_k, w'_k)`, `d_k` in turns. A single displayed angle is a
+  certified sector of `P`'s angle, display only. Status: planned; replaces
+  `rotor::angle_between` (`cos = a . b / sqrt(|a|^2 |b|^2)`, one radian
+  enclosure, one unnamed plane).
 
 ## 2. Units and the master frame
 
@@ -814,7 +828,8 @@ another crate. Laws are composed from shares (ratios of the form
   (`xyl_core::rotor::angle_between`), the directions exact, read at its
   midpoint; the rotor's inverse is its conjugate (`Rotor::inverse`). The
   arc on a sphere is that angle times the chord `R sin(s / R)`
-  (`bounce::curved_reach`). Status: built.
+  (`bounce::curved_reach`). Status: built; to be replaced by the pair
+  reading (#118, section 1).
 - Disc-mass scale of the manifold: this scale is not yet built; it is the
   next step (roadmap, Worlds on the manifold chain).
 - Degree of a star's life (`worlds::star_degree_gyr`):

@@ -67,6 +67,66 @@ kind's capture phase is the torsion share turned Z times, whose denominator
 divides the share's, so it never grows. Only drawn values carry a grid,
 the 2^-40 resolution of the draw.
 
+### Pairs: the pivot, per plane
+
+Every reading between two things (a separation, an arc, a closeness, a
+relative phase: every `a, b` or `x, y`) keeps the dimensionality of what it
+relates ([#118](https://github.com/SAIOS-SAMN/xylarium/issues/118), roadmap
+item 47). **Dimensionality** is the number of independent turning planes a
+reading holds as separate, named components, each with its degrees, its
+winding `K` and its return; position coordinates do not count. A frame of
+founded matter holds six: the axis plane (base axes 0-1, read by its
+exponent `D(n)^t`) and the five isoclinic planes (2-3 to 10-11, each a phase
+in Q/Z), with the turning between planes (T18). A reading that returns one
+number for two such frames has collapsed five or more of them.
+
+A pair is read in six steps:
+
+1. **Coordinates, not triples.** `a` and `b` are coordinates,
+   `origin / h : S:G:T:H : K` (LAW-COORDINATE), never bare 3-vectors. Two
+   readings of different origins are refused by name; a pair of one
+   origin is read in its lowest common enclosure (the containment chain).
+2. **The pivot.** The relative frame is found by conjugation, `P_b^-1 o
+   P_a`, the frame that carries one reading onto the other (Mycelium's
+   pivot engine, its relate in iae: `q a q^-1 = b`), and the pair is refused
+   where no lawful frame relates them. What a lawful change of viewpoint can
+   undo is never counted as separation.
+3. **Per plane, never summed.** The relative frame is read plane by plane,
+   each by its generators: the difference in exact degrees with its winding
+   `K` (Mycelium's H lane: a component per turning plane, kept as a
+   vector). No plane stands for another and no sum folds them into one.
+4. **Each turn named.** Every turn in the reading names its axis by its
+   generators, is stated in degrees, has its physics as torsion, and states
+   its return from the deficit at the return's reach (see Turns, above):
+   `d(a, b)` and `d(b, a)` are two readings across the attractor pair,
+   never assumed equal.
+5. **Closeness in shares.** Where a pair is read as how close the two turn,
+   it is Mycelium's two-sided closeness (FORMS shares::closeness),
+   `C2 = sum_k min(w_k, w'_k) (1 - 2 |d_k|) + (1 - m) / 2`, `w_k` each
+   reading's share of its turning on plane `k`, `d_k` the phase difference
+   in turns and `m = sum_k min(w_k, w'_k)`: linear, with no square, root or
+   tangent.
+6. **One geodesic only for display.** Where a single number is shown, it is
+   a certified sector of the relative rotor's angle, read for display,
+   never stored and never decided by.
+
+**What this retires.** `xyl_core::rotor::angle_between` holds one unnamed
+plane in three Euclidean coordinates. Its cosine is `a . b / sqrt(|a|^2
+|b|^2)`, a separation by squares. It returns one radian enclosure through
+`pi` and `asin`, with no axis, no torsion, no winding and no pivot, and it
+normalises both sides, so the hold at each reach is dropped; its test
+asserts `angle(a, b) = angle(b, a)`. It is read by `chain::Place::arc` and
+`manifold::gap`, and through them by `transit::separation_m` (voyages,
+passages, percepts); `pulse::hear` (a flat phasor on one plane) and
+`transit::building`'s `arc` read pairs flat without it. Underneath stand
+26 `[Q; 3]` sites and 12 half-angle `Rotor::about` and `Half`
+constructions. The kernel reads LAW-COORDINATE v1 today; writing its six
+planes onto v4's turning-plane keys (`e+2e+3`, `e+3e+1`, `e+1e+2` and the
+vacuum's `e-ke-l`) is to be agreed with Mycelium and Netstratum with bodies
+addressed by coordinate (roadmap item 40). No shared law changes: the
+deficit, dilation, torsion share, coordinate and T1 to T19 are read as
+stated.
+
 ## 2. Units and the master frame
 
 - Base units are set by the universal core: `G = c = M_core = 1`, so the

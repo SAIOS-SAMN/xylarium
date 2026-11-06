@@ -253,6 +253,18 @@ where it belongs to one.
     degrees per bell advanced in closed form, `K` counted per component, and
     the turning between planes stored as a separate component; composition
     through the generators awaits the turning law (Netstratum docs/117).
+47. **Pairs: the pivot, per plane**
+    ([#118](https://github.com/SAIOS-SAMN/xylarium/issues/118), `defect`,
+    `law`; part of item 40 and #90;
+    [model.md](model.md#pairs-the-pivot-per-plane)). Every pair reading
+    keeps its dimensionality: coordinates of one origin, the relative frame
+    by conjugation, read per plane in degrees with winding and return,
+    closeness by the two-sided form in shares. Retires
+    `xyl_core::rotor::angle_between` and the readings on it
+    (`chain::Place::arc`, `manifold::gap`, `transit::separation_m`), with
+    `pulse::hear` and `transit::building`'s arc; the six planes' writing
+    onto LAW-COORDINATE v4's turning-plane keys is agreed with Mycelium and
+    Netstratum first.
 43. **Scalar collapses**
     ([#107](https://github.com/SAIOS-SAMN/xylarium/issues/107), `defect`,
     `law`;

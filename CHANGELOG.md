@@ -11,6 +11,12 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The pair rule (docs/model.md, Pairs: the pivot, per plane; AGENTS.md;
+  #118, roadmap item 47): every reading between two things keeps its
+  dimensionality (the turning planes it holds as named components) and is
+  read through the pivot, plane by plane in degrees with winding and
+  return; `rotor::angle_between`, one unnamed plane through a square root
+  and asin, is to be retired. Planned; no code changes.
 - The register of scalar collapses (docs/model.md, roadmap item 43, #107):
   50 sites across the five crates and the order of opening them.
 - Embedded minds planned (docs/network.md, roadmap section 4 items 10 to

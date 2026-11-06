@@ -177,21 +177,22 @@ fn galaxies_hold_a_star_under_the_universal_core() {
 fn masses_close_on_the_founding_holding() {
     let _ = crate::genesis::origin();
     let st = structure();
-    // The rings' states sum to the holding; inside the rim the mass is the
-    // universal core plus the whole holding, 2 core masses, and it never
-    // falls outward.
+    // The rings' states sum to the holding (core masses). The mass inside a
+    // reach is the hold inside an orbit: the universal core at the throat,
+    // never falling outward, and past every orbit's apoapsis (each below
+    // twice its reach) the core plus the whole holding.
     let sum = st.rings.iter().fold(Q::ZERO, |a, k| &a + &k.2);
     assert_eq!(sum, st.holding);
     let rim = st.rings.last().map(|k| k.1.clone()).unwrap();
-    assert_eq!(inside_mass(&rim), Q::int(2));
+    let past = &(&Q::int(2) * &rim) + &Q::ONE;
+    assert_eq!(inside_mass(&past), &Q::ONE + &st.holding);
     let mut last = inside_mass(&Q::ZERO);
     assert_eq!(last, Q::ONE);
     for k in &st.rings {
         let m = inside_mass(&k.1);
-        assert!(m >= last);
-        // A ring's mass is its share of the holding, at most what lies
-        // inside its outer edge less the core.
-        assert!(ring_mass(&k.0) <= &m - &Q::ONE);
+        assert!(m >= last && m <= &Q::ONE + &st.holding);
+        // A ring's mass is its state, never more than the whole holding.
+        assert!(ring_mass(&k.0) <= st.holding);
         last = m;
     }
     // The stellar mass is the lit share of one core mass; the nucleus holds

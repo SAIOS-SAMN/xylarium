@@ -9,14 +9,17 @@
 //! core masses (the universal core is 1), times rings after the origin
 //! (one ring one bell, `circuit::anchor`), rates radians per ring.
 //!
-//! - [`Structure`]: each bead is a ring of the galaxy, its span in galaxy
-//!   rings, its state the ring's share of the galaxy's holding. The core's
-//!   reach ([`core_reach`]) is one galaxy unit, where its deficit
-//!   `1 / (r + 1)` is one half; the nucleus ([`nucleus_reach`]) is the
-//!   innermost ring; the reference ring ([`r0`]) holds half the holding.
-//!   [`density`] (crowding against `r0`), [`inside_mass`] and the crowded
-//!   layer's half-thickness ([`layer`]) are read from it. Built once the
-//!   universe is founded.
+//! - [`Structure`]: each bead is a ring of the galaxy (bands, to be
+//!   replaced by the vortex, #121), its span in galaxy units, its state its
+//!   mass in core masses. The core's reach ([`core_reach`]) is one galaxy
+//!   unit, where its deficit `1 / (r + 1)` is one half; the nucleus
+//!   ([`nucleus_reach`]) is the innermost ring; the reference ring ([`r0`])
+//!   holds half the holding. [`density`] (crowding against `r0`) and the
+//!   crowded layer's half-thickness ([`layer`]) are read from it. Built once
+//!   the universe is founded.
+//! - [`inside_mass`]: the hold inside an orbit (#116), the core's 1 plus
+//!   each bead counted by the share of its orbit's swing within the reach
+//!   (`circuit::Substrate::held_within`), in core masses.
 //! - [`star`]: sample star `n`, at most [`SAMPLE_CAP`] per galaxy plus
 //!   [`NUCLEUS_SAMPLE`] from [`NUCLEUS_BASE`], the galactic core in the high
 //!   bits ([`core_of`], [`in_galaxy`]). Placement uses exact irrational
@@ -72,17 +75,17 @@ const GRID_BITS: u32 = 40;
 /// the core's matter, so its structure is the founding's cascade read one
 /// tier down: its rings are the beads, with reaches and spans in the galaxy
 /// tier's unit (60^5 r_g) instead of the cluster's, and each ring's holding
-/// is the bead's state. The core holds the universal state, 1, so the
-/// galaxy's whole holding is the core's and the core's deficit at reach r is
-/// 1 / (r + 1). Masses are core masses: a ring holds its state over the
-/// whole holding. Cached once per process after the universe is founded.
+/// is the bead's state, its mass in core masses. The mass inside a reach is
+/// the hold inside an orbit ([`inside_mass`]), not a sum over these rings.
+/// Cached once per process after the universe is founded.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Structure {
     /// Each ring, inner first: inner and outer edge (galaxy units), state
     /// (the ring's share of the galaxy's holding), state per galaxy unit of
     /// span, and the core's deficit at the ring's reach.
     pub rings: Vec<(Q, Q, Q, Q, Q)>,
-    /// The holding of all rings: the founding unit, equal to the core's state.
+    /// The holding of all rings (core masses): the founding unit, the beads'
+    /// states summed.
     pub holding: Q,
     /// The innermost ring's outer edge (galaxy units): the nucleus.
     pub nucleus: Q,
@@ -321,33 +324,16 @@ pub fn birth(r: &Q) -> Option<Q> {
     Some(Q::int(bells.max(1)))
 }
 
-/// The share of the galaxy's holding inside `r` (galaxy units): the rings'
-/// states within `r` (a ring counted by the share of its span inside) over
-/// the whole holding.
-fn holding_within(st: &Structure, r: &Q) -> Q {
-    let r = r.clone().max(Q::ZERO);
-    let within = st.rings.iter().fold(Q::ZERO, |a, k| {
-        if r >= k.1 {
-            &a + &k.2
-        } else if r > k.0 {
-            let share = (&r - &k.0).checked_div(&(&k.1 - &k.0)).unwrap_or(Q::ZERO);
-            &a + &(&k.2 * &share)
-        } else {
-            a
-        }
-    });
-    within
-        .checked_div(&st.holding.clone().max(Q::ratio(1, 1_000_000_000)))
-        .unwrap_or(Q::ZERO)
-}
-
-/// The home galaxy's mass inside `r` galaxy units (core masses):
-/// `M(<r) = 1 + H(<r) / H`, the universal core's mass 1 plus the rings'
-/// states within `r` (a ring counted by the share of its span inside) over
-/// the whole holding `H`. This mass's deficit sets a star's turning rate
-/// there (`turning`).
+/// The home galaxy's mass inside `r` galaxy units (core masses): the hold
+/// inside an orbit, the universal core's 1 plus each of the founding's beads
+/// (read one tier down as the home galaxy's matter) counted by the share of
+/// its orbit's swing within `r` (`circuit::Substrate::held_within`), one
+/// model for both tiers. This mass's deficit sets a star's turning rate
+/// there (`turning`). One before a founding.
 pub fn inside_mass(r: &Q) -> Q {
-    &Q::ONE + &holding_within(&structure(), r)
+    crate::cores::substrate_for(&crate::circuit::anchor().spin)
+        .map(|s| s.held_within(r))
+        .unwrap_or(Q::ONE)
 }
 
 /// As `inside_mass`, in dyadics (for fast per-pair evaluation).
@@ -355,16 +341,12 @@ pub fn inside_mass_dy(r: Dy) -> Dy {
     Dy::from_q(&inside_mass(&r.to_q()))
 }
 
-/// The mass of the ring containing `r` (core masses): its state over the
-/// whole holding, the ring's share of the galaxy as counted by
-/// [`inside_mass`]. Zero for an empty structure.
+/// The mass of the ring containing `r` (core masses): its state, a bead's
+/// mass in the core's units, as [`inside_mass`] counts it. Zero for an empty
+/// structure.
 pub fn ring_mass(r: &Q) -> Q {
     let st = structure();
-    ring_at(&st, r)
-        .and_then(|k| {
-            k.2.checked_div(&st.holding.clone().max(Q::ratio(1, 1_000_000_000)))
-        })
-        .unwrap_or(Q::ZERO)
+    ring_at(&st, r).map(|k| k.2.clone()).unwrap_or(Q::ZERO)
 }
 
 /// The reach (galaxy units) at which the cumulative holding of the rings

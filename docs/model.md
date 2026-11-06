@@ -591,8 +591,9 @@ on the ocean set the law it carries by.
 
 - **The medium inside a reach** (`Substrate::held_within`,
   `Substrate::medium`). As founded, the hold inside reach `r` (core
-  masses) is the core's own, 1, plus every bead nearer the throat:
-  `H(r) = 1 + sum(states nearer than r)`. Matter the jet throws moves at
+  masses) is the core's own, 1, plus each bead counted by the share of its
+  orbit within `r` (The hold inside an orbit):
+  `H(r) = 1 + sum_b m_b chi_b(r)`. Matter the jet throws moves at
   the ocean's speed, so what left the core by `t - tau(r)` has crossed `r`
   unless it lands on a galaxy within `r`; at `t`,
   `H(r, t) = H(r) - passed(r, t) / F`, with `F` the firmament's founded
@@ -631,8 +632,9 @@ star's orbit (below).
 
 ### The hold inside an orbit
 
-Planned ([#116](https://github.com/SAIOS-SAMN/xylarium/issues/116), roadmap
-item 46). A body is caught in an orbit, never a band, so the hold inside a
+Built ([#116](https://github.com/SAIOS-SAMN/xylarium/issues/116), roadmap
+item 46; `circuit::Substrate::orbits`, `Substrate::held_within`,
+`galaxy::inside_mass`). A body is caught in an orbit, never a band, so the hold inside a
 reach is the share of each nearer orbit that lies within it. Nothing here
 is a new law: the orbit is the throat orbit's form (The ring: the throat
 orbit and the echo's torsion) and the share is the reverberation's swing
@@ -649,12 +651,20 @@ law.
   while the periapsis is beyond `r`, 1 once the apoapsis is within, and
   linear between.
 - **The hold.** `H(r) = 1 + sum_b m_b chi_b(r)`, a share of every orbit and
-  never a step. It replaces the step in `Substrate::held_within`
+  never a step. It replaced the step in `Substrate::held_within`
   (`reach < r`) and, at the galaxy tier, the bands' span share in
   `galaxy::inside_mass`, so one model reads the hold inside a reach at
-  both tiers. The galaxy tier's units await a ruling (#116): `Structure`
-  divides by the bands' whole holding, taken to be the core's state 1,
-  while the founded beads total 0.4008 core masses.
+  both tiers.
+- **The galaxy tier's units.** A bead's state is its mass in core masses
+  (a galactic core's mass is `hole_mass x state`, `cores::founding_of`),
+  and the founded beads total 0.4008 core masses against the core's 1
+  (the held share 0.7139). The bands divided by the bands' holding, taken
+  to be the core's state; that premise does not hold, so both tiers read
+  the hold in core masses: past every orbit the galaxy holds `1 + unit`,
+  1.4008, where the bands read 2. The turning law reads this hold in the
+  core calibre against reaches the founding calibre declares, so its
+  readings stand only once the calibre is ruled (Calibre and dimensional
+  capacity, #123).
 - **What stays.** The deficit, dilation, torsion share, jet map, throat
   crossing, polarity sequence, the coordinate and T1 to T19 are unchanged;
   they are read with this hold as their argument.

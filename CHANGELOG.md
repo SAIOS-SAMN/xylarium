@@ -267,6 +267,16 @@ may change public APIs and the model's laws.
   327) and swing wider (galaxy 23: 2.17e-6 to 5.37e-6 rings an echo);
   galaxies 0 to 18, which have almost nothing nearer, are unchanged, as
   are the lit pieces' cuts (heat moves at 1e-11).
+- Stripping by received turning is T20: a winding's push is the deficit
+  share its enclosed charge keeps at its reach (`Atom::winding_push`), held
+  while the received isoclinic push is at most it and departing after
+  `ln 2 / ln(D(q) / D(delta_w))` echoes beyond (`atoms::departure`). It
+  replaces the cut of a tightness against a turning capped at one. One
+  shielding rule (`atoms::shielded`, the fill law's) now serves the fill,
+  the tightness and the push. `observe bond` prints each winding's push and
+  departure (#107, #103). Held: the received quantity is a carry (#113),
+  and T20 is re-derived on it before it lands.
+
 - A throat's echo is its sheared return at its torsion share (T4, axiom
   7): `bell / (1 - s)` on the near face, `bell / s` on the far
   (`circuit::echo_at`), in place of a fixed two bells. The universal core's

@@ -137,10 +137,18 @@ another crate. Laws are composed from shares (ratios of the form
   `p = (U - W) / (U + W)`, `W = 3Z - U` (`Bond::pole_pushes`), their
   separation `p_a (+) (-p_b)` by the flow law (`Bond::axis_separation`),
   each face's polarity (`Bond::polarities`). Isoclinic planes: each open
-  winding's tightness `(Z - shallower electrons) / n`
-  (`Atom::winding_tightness`) and the share a turning leaves held,
-  `min(1, tau / min(turning, 1))` (`Bond::held`). Calibre: none. Status: built; the graded
-  stripping law is to be derived.
+  winding's tightness `H / n` (`Atom::winding_tightness`), its push and its
+  departure (T20, `Bond::held`). Calibre: none. Status: built.
+- Stripping (T20; `atoms::Atom::winding_push`, `atoms::departure`,
+  `atoms::unpaired_hot`): a winding `(n, l)` encloses
+  `H = Z - (electrons of every other shell m with m (m + 1) < (n + 1)(l + 1))`
+  (`atoms::shielded`) at reach `r = Z (n + 1)(l + 1) / 2`, and pushes
+  `delta_w = H / (r + H)`; under a received isoclinic push `q` it is held
+  while `q <= delta_w`, else it departs after `ln 2 / ln(D(q) / D(delta_w))`
+  echoes, at once for `q >= 1`. Hydrogen 1s: 1/2; oxygen (2, 1): 1/5.
+  Calibre: none (the received `q` in the founding calibre). Status: built;
+  the received quantity is a carry, not a push (#113), and T20 is
+  re-derived on it before it lands.
 - Echo (`circuit::echo_at`; docs/model.md, The ring, the throat orbit and
   the echo's torsion; T4, axiom 7): a throat at torsion share `s` echoes
   after `bell / (1 - s)` on its near face and `bell / s` on its far face;

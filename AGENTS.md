@@ -57,6 +57,11 @@ A module `foo` is `src/foo.rs` or, when split, the directory `src/foo/`
   perturbation; its return is stated with it, read from the gravitational
   density (the deficit at the return's reach), never assumed equal
   ([model.md](docs/model.md#turns-axis-degrees-and-the-return)).
+- Every pair reading (a separation, an arc, a closeness: every `a, b` or
+  `x, y`) keeps its dimensionality: coordinates of one origin, related by
+  the pivot (the relative frame by conjugation), read plane by plane in
+  degrees with each winding and each return, never one scalar, never a
+  square or a root ([model.md](docs/model.md#pairs-the-pivot-per-plane)).
 - One model per quantity: replace in place and delete the old code; never
   add a parallel version (`foo2`, `new_foo`).
 - Derive from lower tiers. An underived constant is a declared ruler and is

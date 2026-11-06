@@ -220,7 +220,16 @@ another crate. Laws are composed from shares (ratios of the form
   passed(r, t) / F`, with `F` the firmament's founded mass and
   `passed(r, t) = sum_k mass(outflow_k(t - tau(r))) L_k(> r)`, `L_k(> r)`
   the landing share of kind `k` bound for galaxies whose delay exceeds
-  `tau(r)`. Status: built.
+  `tau(r)`. Status: built; the step "nearer than r" is replaced by the
+  hold inside an orbit (planned, #116).
+- Hold inside an orbit ([model.md](model.md#the-hold-inside-an-orbit),
+  #116): body `b` (mass `m_b`, reach `a_b`) orbits `h_b = 1 + sum(m_c, c
+  nearer)` with `e = delta_b = h_b / (a_b + h_b)` (LAW-DEFICIT-SHARE),
+  apsides `a_b (1 -/+ delta_b)`; its share inside `r` is
+  `chi_b(r) = clamp((r - a_b (1 - delta_b)) / (2 a_b delta_b), 0, 1)`
+  (`circuit::beyond_share` from the inside); the hold is
+  `H(r) = 1 + sum_b m_b chi_b(r)`. One model for `Substrate::held_within`
+  and `galaxy::inside_mass`. Status: planned.
 - Rim (`Substrate::found`): the rim is `max R (1 + s_final)` over every
   shell. Status: built; replaced by the founding as flow (planned).
 
@@ -608,14 +617,18 @@ another crate. Laws are composed from shares (ratios of the form
   with edges `span x galaxy_kpc` and per-kpc holding `state / width`; the
   core reach is one galaxy unit, the nucleus is the first ring's outer edge,
   and the reference ring is where the cumulative holding crosses one half.
-  Status: built.
+  Status: built; its rings are bands, retired with the hold inside an
+  orbit (#116, #6).
 - Crowding (`galaxy::density`): `lambda_ring / lambda_reference`. Status:
   built.
 - Stellar mass (`galaxy::stellar_mass`): `Lighting::lit` core masses.
   Status: built.
 - Mass inside (`galaxy::inside_mass`):
   `1 + rings within r / all rings` core masses, with a ring counted by the
-  share of its span inside `r` (galaxy rings). Status: built.
+  share of its span inside `r` (galaxy rings). Status: built; to be
+  replaced by the hold inside an orbit (planned, #116). Its divisor, all
+  rings, is taken as the core's state 1; the founded beads total 0.4008
+  core masses, so the tier's units await a ruling (#116).
 - Turning law (`turning::turning`, `turning::turning_dy`):
   `omega = delta(<r) bell / r` radians per ring, with `r` in `r_g`
   (`r Tier::in_rg`), `delta(<r) = M(<r) / (r + M(<r))`, `M` in core masses

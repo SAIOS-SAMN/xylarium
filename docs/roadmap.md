@@ -112,7 +112,8 @@ where it belongs to one.
 
 ### Remediation register
 
-The remediations identified in the audit of 2026-11-06, in dependency order,
+The remediations identified in the audit of 2026-11-06 (index:
+[#138](https://github.com/SAIOS-SAMN/xylarium/issues/138)), in dependency order,
 so that anyone can pick one up: each row names its issue, what it needs
 first and what it unblocks. A row marked **decision** waits on an operator
 ruling; every other row can start once the rows it depends on are merged.

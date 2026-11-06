@@ -265,6 +265,18 @@ where it belongs to one.
     `pulse::hear` and `transit::building`'s arc; the six planes' writing
     onto LAW-COORDINATE v4's turning-plane keys is agreed with Mycelium and
     Netstratum first.
+48. **The vortex**
+    ([#121](https://github.com/SAIOS-SAMN/xylarium/issues/121), `law`,
+    `defect`, `needs-decision`; part of item 40 and #90;
+    [model.md](model.md#the-vortex-core-swirl-twist-writhe-linking)).
+    Re-volumize the flat shapes: founded matter is a vortex (core, swirl,
+    twist, writhe, linking), and every body stands in its parent's. Replaces
+    `galaxy::Structure`'s bands, `galaxy::Orbit`'s circles on drawn planes
+    and `chain::Place`'s points on a 2-sphere; gives item 47's pair reading
+    its object (mutual linking, fibre placement in `CP^5`). Derive first: the
+    core curve between tiers, mutual linking, fibre separation in shares,
+    helicity without its square; T18's equal fifths awaits a ruling.
+    Depends on item 46.
 43. **Scalar collapses**
     ([#107](https://github.com/SAIOS-SAMN/xylarium/issues/107), `defect`,
     `law`;

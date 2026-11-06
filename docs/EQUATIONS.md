@@ -244,6 +244,18 @@ another crate. Laws are composed from shares (ratios of the form
   (`circuit::beyond_share` from the inside); the hold is
   `H(r) = 1 + sum_b m_b chi_b(r)`. One model for `Substrate::held_within`
   and `galaxy::inside_mass`. Status: planned.
+- Vortex ([model.md](model.md#the-vortex-core-swirl-twist-writhe-linking),
+  #121): core the filament, `X(t)`, `t = U / W`; stretching `D(n)^t` along
+  it; circulation about the held medium `Gamma(r) = 2 pi H(r) r / (r +
+  H(r))`; vortex lines the Hopf fibres `S^1 -> S^11 -> CP^5`; twist `n`
+  per echo; writhe `+/-120 n` degrees per echo; `Lk = Tw + Wr` conserved,
+  changing by one only at the pinch, `N* = 3 (4 + a) / (2a)` echoes; a
+  streamline is the throat orbit's sheared ellipse, `e = delta`, apsides
+  `r (1 -/+ delta)`, `360 delta` degrees a traversal. Open: the core
+  curve's shape between tiers, mutual linking `Lk_ij`, fibre separation in
+  `CP^5` in shares, helicity without its `Gamma^2` self term, and T18's
+  equal fifths. Status: planned; replaces `galaxy::Structure` bands,
+  `galaxy::Orbit` circles and `chain::Place` points.
 - Rim (`Substrate::found`): the rim is `max R (1 + s_final)` over every
   shell. Status: built; replaced by the founding as flow (planned).
 

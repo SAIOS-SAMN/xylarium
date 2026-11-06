@@ -11,6 +11,13 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The vortex (docs/model.md, The vortex; EQUATIONS.md; #121, roadmap item
+  48): the shape the flat structures become. Founded matter is a vortex
+  (core the filament, stretching `D(n)^t`, circulation about the held
+  medium, Hopf fibres twisted about the core, writhe, `Lk = Tw + Wr`
+  conserved, reconnection at the pinch), and bands, circles on drawn
+  planes and points on a 2-sphere are to be replaced by it. Planned; the
+  open derivations are listed; no code changes.
 - The pair rule (docs/model.md, Pairs: the pivot, per plane; AGENTS.md;
   #118, roadmap item 47): every reading between two things keeps its
   dimensionality (the turning planes it holds as named components) and is

@@ -599,6 +599,78 @@ law.
   crossing, polarity sequence, the coordinate and T1 to T19 are unchanged;
   they are read with this hold as their argument.
 
+### The vortex: core, swirl, twist, writhe, linking
+
+Planned ([#121](https://github.com/SAIOS-SAMN/xylarium/issues/121), roadmap
+item 48). This section is about the shape, not names. Founded matter is a
+vortex in the medium, and every body stands in its parent's vortex.
+Renaming a band or a unit leaves its shape as it was (#115 renamed and
+changed nothing); this section states the shape the flat structures
+become.
+
+A bivector is a plane at a point, so it cannot hold the shape: it is still
+two axes. The founding already derives a vortex and reads it as two numbers
+at a point, a dilation exponent and one phase:
+
+| Vortex | In the founding | Read today as |
+|---|---|---|
+| Core line | the filament: the pole axis, `X(t)`, `t = U / W`, Z at the origin, Q at infinity, the throat at `t = 1` | a coordinate on one axis |
+| Stretching along the core | the axis plane's dilation `D(n)^t` | one exponent |
+| Swirl about the core | the isoclinic action `e^{i theta}` on C^5; circulation `Gamma(r) = 2 pi H r / (r + H)` about the held medium (The equator, The held medium) | one phase; `Gamma` is never state |
+| Vortex lines | the bands' Hopf fibres in C^6 (Weights on the six planes), circles each linking every other once | not represented |
+| Twist | the torsion the dipole holds, `n` (The antipoles, the shear and the pinch) | a share |
+| Writhe | the residual `n / 3` that flips into writhe, `+/-120 n` degrees per echo (The antipoles, the shear and the pinch) | degrees on all five planes at once |
+| Linking | `Lk = Tw + Wr`, conserved (T10; axiom 11's topological reading) | not carried |
+| Reconnection | the pinch, where `Lk` may change by one after `N* = 3 (4 + a) / (2a)` echoes | a count |
+
+- **Where the dimensions stand.** Circulation is measured on a loop that
+  links the core, so in `n` dimensions a vortex core is `(n - 2)`-
+  dimensional and its loop is one circle. The Hopf fibration
+  `S^1 -> S^11 -> CP^5` places them: the fibre is the circulation loop, and
+  the base `CP^5`, ten real dimensions, is where each fibre stands. A body
+  is therefore not a list of angles (one per axis, plane or generator) but
+  a vortex: its core curve through the medium, with that curve's curvature,
+  torsion and writhe; its circulation about the held medium inside its
+  reach; its fibres' twist about the core; and its linking with every
+  other vortex, a whole number that changes only at a pinch.
+- **Nested vortices.** The anchor chain (core, star, planet, moon) is
+  vortices within vortices. Each body's core is carried along a
+  streamline of its parent's swirl; a cross-tie between siblings is their
+  mutual linking.
+
+**The shapes it replaces.**
+
+| Flat today | Re-volumized |
+|---|---|
+| `galaxy::Structure.rings`: a 1D radial profile of intervals (edges, state, density, deficit) | the galactic core's vortex: swirl `Gamma(r)` about the hold inside an orbit (#116), stretched along its core; matter on streamlines, with no band edges |
+| `galaxy::Orbit`: a circle (radius, a rate in radians, one phase) on a plane set by drawn node and tilt half-angles, with a vertical swing added | a streamline of the parent's swirl: the throat orbit's sheared ellipse (`e = delta`, apsides `r (1 -/+ delta)`, `360 delta` degrees a traversal) on a fibre, its plane carried by the parent's writhe, never drawn |
+| `chain::Place`: a point on a 2-sphere, `reach` with `dir: [Q; 3]` and offsets | a fibre's place in `CP^5`, its phase on the fibre and its reach |
+| `circuit::Bead.span` and the founding shells: intervals of reach | cross-sections of the founding vortex's tube: the share of each kind's fibres inside a reach |
+| `circuit::Kind`'s scalar spin and phase | the kind's circulation and twist |
+| pair readings (#118) | mutual linking `Lk_ij` and the fibres' placement in `CP^5` |
+
+**Derived and open.** Derived: the core (the filament), the stretching
+`D(n)^t`, the circulation from the deficit about the held medium, the
+twist `n`, the writhe `+/-120 n` degrees per echo, the conservation of `Lk`
+and the reconnection count `N*`. Open:
+
+1. the core curve's shape between tiers, its curvature and torsion along
+   the filament (item 40's turning a link carries, from the fold's writhe,
+   T10 and T13);
+2. the mutual linking `Lk_ij` between bodies' vortices (today every body is
+   a separate point);
+3. the separation of two fibres in `CP^5` read linearly in shares (the
+   Fubini-Study angle runs through an inner product and an arccos, so it is
+   not admitted as it stands);
+4. helicity: `sum Gamma_i Gamma_j Lk_ij` carries a `Gamma^2` self term, a
+   square at the root, and is not admitted until it is read without one;
+5. T18's equal fifths: in the vortex, distinct plane phases are distinct
+   windings of the fibres about the core (twist), not five equal angles;
+   whether T18's equal split is lifted awaits a ruling.
+
+No shared law changes: the deficit, dilation, torsion share, flow law,
+coordinate and T1 to T17, T19 are read as stated.
+
 ### The ring: the throat orbit and the echo's torsion
 
 Planned ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)); it replaces the bell as light's round trip to the

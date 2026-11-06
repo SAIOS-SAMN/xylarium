@@ -1,11 +1,56 @@
 # Roadmap
 
-Xylarium is pre-alpha. This roadmap opens with the mathematics the laws are
-built on, then lists the milestones in intended order. Each milestone states
+Xylarium is pre-alpha. This roadmap opens with the path from where the
+universe stands to where it is going, then the mathematics the laws are
+built on, then the milestones in intended order. Each milestone states
 its goal, why it comes where it does, what has landed, what is next, and
 the `xylarium observe` reading that shows it done. Changes are recorded in
 [CHANGELOG.md](../CHANGELOG.md). To build, found and run a universe, see
 the [README](../README.md#quick-start).
+
+## The path
+
+**Where it is going.** A universe whose physics can be changed trivially to
+test a theory (one law or one ruler swapped in its package, founded, and
+compared reading by reading), and in which intelligence is built across
+the cosmos in realms distributed on equal laws, as solar systems and
+collections of constellations in every galaxy.
+
+**Where it stands (2026-11-06).** The founding is sound in the founding calibre:
+the bounce, the elements and atoms, the firmament, the paired core and its
+spin (T16, T17, T19), the ocean's held medium. Above it the physics does not
+hold:
+- Two calibres are mixed in one deficit ([#123](https://github.com/SAIOS-SAMN/xylarium/issues/123)), so stars read deficits
+  of `2.4e-11` and close worlds 240 to 400 pc out ([#129](https://github.com/SAIOS-SAMN/xylarium/issues/129)).
+- Turns are counted in rings and radians ([#127](https://github.com/SAIOS-SAMN/xylarium/issues/127)).
+- Bodies are bands, circles and points, not the vortices the founding
+  derives ([#121](https://github.com/SAIOS-SAMN/xylarium/issues/121)).
+- The five planes are held as one number ([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128)).
+- Earth and Milky Way rulers remain at the SI seam ([#25](https://github.com/SAIOS-SAMN/xylarium/issues/25)).
+- One process holds one universe ([#142](https://github.com/SAIOS-SAMN/xylarium/issues/142)), and no reading compares two.
+
+The audit's remediations are in the Remediation register below (index
+[#138](https://github.com/SAIOS-SAMN/xylarium/issues/138)).
+
+**The stages.** Each is a GitHub milestone, and the
+[project board](https://github.com/orgs/SAIOS-SAMN/projects/1) tracks its
+issues and pull requests. A stage is done when its exit reading is
+witnessed on a live home and checked for magnitude in its calibre.
+
+| Stage | Goal | Exit reading | Issues |
+|---|---|---|---|
+| [M3 Sound physics](https://github.com/SAIOS-SAMN/xylarium/milestone/2) (current) | Every share in one calibre, every reading checked for magnitude, the open rulings made, no mixed or Earth-calibrated entries | `observe universal-core`, `galaxy` and `tiers` read every length and hold in its calibre; worlds stand within the system scale; turns are phases in degrees. Release v0.4.0. | [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123), [#129](https://github.com/SAIOS-SAMN/xylarium/issues/129), [#116](https://github.com/SAIOS-SAMN/xylarium/issues/116) ([#125](https://github.com/SAIOS-SAMN/xylarium/pull/125)), [#134](https://github.com/SAIOS-SAMN/xylarium/issues/134), [#131](https://github.com/SAIOS-SAMN/xylarium/issues/131), [#113](https://github.com/SAIOS-SAMN/xylarium/issues/113) ([#126](https://github.com/SAIOS-SAMN/xylarium/pull/126)), [#127](https://github.com/SAIOS-SAMN/xylarium/issues/127), [#132](https://github.com/SAIOS-SAMN/xylarium/issues/132), [#135](https://github.com/SAIOS-SAMN/xylarium/issues/135), [#137](https://github.com/SAIOS-SAMN/xylarium/issues/137), [#130](https://github.com/SAIOS-SAMN/xylarium/issues/130), [#25](https://github.com/SAIOS-SAMN/xylarium/issues/25), [#43](https://github.com/SAIOS-SAMN/xylarium/issues/43), [#44](https://github.com/SAIOS-SAMN/xylarium/issues/44), [#9](https://github.com/SAIOS-SAMN/xylarium/issues/9), [#10](https://github.com/SAIOS-SAMN/xylarium/issues/10), [#2](https://github.com/SAIOS-SAMN/xylarium/issues/2) |
+| [M4 The vortex universe](https://github.com/SAIOS-SAMN/xylarium/milestone/3) | Founded matter as vortices on streamlines, nested tier in tier; pair readings per plane through the pivot; the founding as flow | Bands, circles and points are gone; every body reads its core, swirl, twist, writhe and linking | [#121](https://github.com/SAIOS-SAMN/xylarium/issues/121), [#128](https://github.com/SAIOS-SAMN/xylarium/issues/128), [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118), [#90](https://github.com/SAIOS-SAMN/xylarium/issues/90), [#60](https://github.com/SAIOS-SAMN/xylarium/issues/60), [#35](https://github.com/SAIOS-SAMN/xylarium/issues/35), [#36](https://github.com/SAIOS-SAMN/xylarium/issues/36), [#37](https://github.com/SAIOS-SAMN/xylarium/issues/37), [#38](https://github.com/SAIOS-SAMN/xylarium/issues/38), [#39](https://github.com/SAIOS-SAMN/xylarium/issues/39), [#40](https://github.com/SAIOS-SAMN/xylarium/issues/40), [#41](https://github.com/SAIOS-SAMN/xylarium/issues/41), [#42](https://github.com/SAIOS-SAMN/xylarium/issues/42), [#107](https://github.com/SAIOS-SAMN/xylarium/issues/107), [#133](https://github.com/SAIOS-SAMN/xylarium/issues/133), [#84](https://github.com/SAIOS-SAMN/xylarium/issues/84), [#97](https://github.com/SAIOS-SAMN/xylarium/issues/97), [#6](https://github.com/SAIOS-SAMN/xylarium/issues/6), [#79](https://github.com/SAIOS-SAMN/xylarium/issues/79), [#11](https://github.com/SAIOS-SAMN/xylarium/issues/11), [#4](https://github.com/SAIOS-SAMN/xylarium/issues/4), [#5](https://github.com/SAIOS-SAMN/xylarium/issues/5) |
+| [M5 Physics as a kit](https://github.com/SAIOS-SAMN/xylarium/milestone/4) | A law or a ruler changed by the package alone; two universes compared by one reading | A package differing in one law founds a universe whose comparison names that law and the readings it moved, with no code edit | [#140](https://github.com/SAIOS-SAMN/xylarium/issues/140), [#141](https://github.com/SAIOS-SAMN/xylarium/issues/141), [#142](https://github.com/SAIOS-SAMN/xylarium/issues/142), [#33](https://github.com/SAIOS-SAMN/xylarium/issues/33), [#136](https://github.com/SAIOS-SAMN/xylarium/issues/136), [#82](https://github.com/SAIOS-SAMN/xylarium/issues/82) |
+| [M6 Realms: systems and constellations](https://github.com/SAIOS-SAMN/xylarium/milestone/5) | Every lit star's system and every constellation read in every galaxy by equal laws; realms as shells of passage networks | Realms form in more than one galaxy, witnessed | [#143](https://github.com/SAIOS-SAMN/xylarium/issues/143), [#7](https://github.com/SAIOS-SAMN/xylarium/issues/7), [#12](https://github.com/SAIOS-SAMN/xylarium/issues/12), [#13](https://github.com/SAIOS-SAMN/xylarium/issues/13), [#14](https://github.com/SAIOS-SAMN/xylarium/issues/14), [#15](https://github.com/SAIOS-SAMN/xylarium/issues/15), [#16](https://github.com/SAIOS-SAMN/xylarium/issues/16), [#17](https://github.com/SAIOS-SAMN/xylarium/issues/17), [#8](https://github.com/SAIOS-SAMN/xylarium/issues/8), [#103](https://github.com/SAIOS-SAMN/xylarium/issues/103) |
+| [M7 Intelligence across the cosmos](https://github.com/SAIOS-SAMN/xylarium/milestone/6) | Life and peoples from the worlds' physics; minds seated in every realm; the hypha link and economies on the passage network | Minds hold seats in realms of more than one galaxy, witnessed | [#18](https://github.com/SAIOS-SAMN/xylarium/issues/18), [#19](https://github.com/SAIOS-SAMN/xylarium/issues/19), [#94](https://github.com/SAIOS-SAMN/xylarium/issues/94), [#108](https://github.com/SAIOS-SAMN/xylarium/issues/108), [#20](https://github.com/SAIOS-SAMN/xylarium/issues/20), [#46](https://github.com/SAIOS-SAMN/xylarium/issues/46) |
+
+The milestones below map onto the stages as follows:
+- 3, Rules from the founding and the galactic cores, is M3.
+- 2, Worlds on the manifold chain, is M6.
+- 4, Seats for minds; 5, The xyl-hypha crate; and 6, Game economies, are M7.
+- The project items (#22, #23, #24) close the v0.4.0 release at the end of
+  M3.
 
 ## Design process
 

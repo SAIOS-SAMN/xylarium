@@ -11,6 +11,16 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The path (docs/roadmap.md, The path): where the universe is going (physics
+  changed by a package to test a theory, intelligence built across the
+  cosmos in realms of solar systems and constellations on equal laws),
+  where it stands, and five stages as GitHub milestones with exit
+  readings: M3 Sound physics (current; release v0.4.0 at its close), M4
+  The vortex universe, M5 Physics as a kit, M6 Realms: systems and
+  constellations, M7 Intelligence across the cosmos. Every open issue and
+  pull request is assigned to a stage and on the project board. New: #140
+  (laws as selectable forms), #141 (comparing two universes), #142 (the
+  anchor per universe), #143 (realms in every galaxy).
 - The remediation register (docs/roadmap.md, Remediation register): every
   remediation found in the audit of 2026-11-06, in dependency order, each
   with its issue (#113, #116, #118, #121, #123, #127 to #137, #107, #25),

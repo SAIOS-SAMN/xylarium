@@ -1,11 +1,11 @@
 //! A star's life in closed form: its transduction, light, main-sequence life, giant
 //! phase and remnant, read at any age without time stepping (docs/model.md).
 //!
-//! Reads `circuit::anchor` (galaxy ring in kpc), `xyl_core::shares::deficit_dy`,
+//! Reads `circuit::anchor` (galaxy unit in kpc), `xyl_core::shares::deficit_dy`,
 //! `circuit::bell` and `echo` (one and two rings), the substrate's firmament
 //! outflow rate (`cores::substrate_for`, per ring), the element table and
 //! `compound` (frames at heat, in `sequence.rs`).
-//! Reach `r` is in galaxy rings (`galaxy::Star::reach_rings`); times are
+//! Reach `r` is in galaxy units (`galaxy::Star::reach_units`); times are
 //! rings of time after the origin (one ring one bell); masses are core
 //! masses and light is power in core units, core masses (times `c^2`,
 //! `c = 1`) per ring. No constant of the Sun enters.
@@ -16,8 +16,10 @@
 //!   `formation::hold_at`). Every star of a cloud shares the rim, so a
 //!   heavier star is more compact (`galaxy::Star::compactness`).
 //! - Transduction (`transduced_per_bell`): the share of the ring it receives that a star
-//!   holds and transduces per bell, `delta x ring_per_bell(r)`, with the
-//!   ring per bell `1 / (pi (r + 1))`.
+//!   holds and transduces per bell, `delta x ring_per_bell(r, 1)`, with the
+//!   ring per bell about a hold `h`, `h / (pi (r + h))`, read about the
+//!   universal core's hold until the galaxy tier's medium is carried
+//!   (roadmap item 44).
 //! - Power (`power`): the hold the transduction transduces per ring,
 //!   `P = m transduced_per_bell(r) / bell`, the mass `m` (core masses) times `c^2`
 //!   (`c = 1`) times the share transduced per bell, one ring.
@@ -56,11 +58,22 @@ use xyl_core::dyadic::Dy;
 use xyl_core::shares::deficit_dy;
 use xyl_core::Q;
 
-/// The pulse's ring delivered at reach `r` over one bell: the waveform's
-/// magnitude integrated over half an echo, `1 / pi`, times the vacuum's share
-/// `1 / (r + 1)`.
-pub fn ring_per_bell(reach: Dy) -> Dy {
-    deficit_dy(Dy::ONE, reach) / Dy::pi()
+/// The pulse's ring delivered at reach `r` over one bell about a hold `h`
+/// (the matter inside the reach, in the core's units): the waveform's
+/// magnitude integrated over half an echo, `1 / pi`, times the share the
+/// hold carries there, `h / (r + h)`. A piece's cut reads it about the
+/// ocean's held medium (`circuit::Substrate::held_within`); a star's life
+/// reads it about the universal core's hold, 1.
+pub fn ring_per_bell(reach: Dy, hold: Dy) -> Dy {
+    deficit_dy(hold, reach) / Dy::pi()
+}
+
+/// The ring per bell a star at reach `r` (galaxy units, about its galactic
+/// core) receives: [`ring_per_bell`] about the universal core's hold, 1.
+/// The galaxy tier's own held medium enters with the received carry
+/// (roadmap item 44).
+fn ring_at(reach: Dy) -> Dy {
+    ring_per_bell(reach, Dy::ONE)
 }
 
 /// The vessel's drift at reach `r` over one bell at `t` rings: `bell q(t)`
@@ -78,7 +91,7 @@ pub fn drift_per_bell(reach: Dy, t: Dy) -> Dy {
 /// the star holds its compactness `delta` (its deficit at its rim,
 /// `disc::rim_share`) of the ring it receives, `delta / (pi (r + 1))`.
 pub fn transduced_per_bell(delta: Dy, reach: Dy) -> Dy {
-    delta.max(Dy::ZERO) * ring_per_bell(reach)
+    delta.max(Dy::ZERO) * ring_at(reach)
 }
 
 /// One step of a star's timeline (rings after its birth): when it starts and
@@ -209,7 +222,7 @@ pub fn suns_of_power(p: &Q, delta: Dy) -> Q {
 /// `1 + pi bell q(t)`, with q read at `born + age`.
 pub fn light(mass: &Q, delta: Dy, reach: Dy, born: Dy, age: Dy) -> Q {
     let mean = power(mass, delta, reach);
-    let drift = drift_per_bell(reach, born + age) / ring_per_bell(reach).max(Dy::sci(1, -300));
+    let drift = drift_per_bell(reach, born + age) / ring_at(reach).max(Dy::sci(1, -300));
     &mean * &(Dy::ONE + drift).to_q()
 }
 
@@ -250,8 +263,9 @@ mod tests {
     fn ring_per_bell_and_flicker_in_bounds() {
         // The ring per bell falls with the vacuum's share and is 1 / pi at
         // r = 0.
-        assert!(ring_per_bell(Dy::ZERO) > ring_per_bell(Dy::int(10)));
-        assert_eq!(ring_per_bell(Dy::ZERO), Dy::ONE / Dy::pi());
+        assert!(ring_at(Dy::ZERO) > ring_at(Dy::int(10)));
+        assert_eq!(ring_at(Dy::ZERO), Dy::ONE / Dy::pi());
+        assert!(ring_per_bell(Dy::int(10), Dy::int(2)) > ring_at(Dy::int(10)));
         // The flicker is at most pi / 2 times the mean.
         assert!(flicker(Dy::ZERO) <= Dy::pi() / Dy::int(2) + Dy::sci(1, -12));
     }

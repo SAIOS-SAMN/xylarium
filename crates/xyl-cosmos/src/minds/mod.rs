@@ -211,7 +211,7 @@ fn star_life(
             + crate::worlds::star_degree_gyr(
                 &star.sequence(),
                 star.compactness(),
-                star.reach_rings(),
+                star.reach_units(),
                 ctx,
             );
         if t0 >= horizon_gyr() {

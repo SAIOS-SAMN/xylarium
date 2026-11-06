@@ -283,7 +283,7 @@ fn ring_star(
     let step = transduction(
         &seq,
         w.star.compactness(),
-        w.star.reach_rings(),
+        w.star.reach_units(),
         to_ring - Dy::from_q(&w.star.born),
     );
     let transduced_out = transduced_share(&seq, step);
@@ -306,7 +306,7 @@ fn ring_star(
         let place = w
             .star
             .place(to_ring, &radius())
-            .standing_off(&(&off * &xyl_cosmos::galaxy::rings_of_kpc(&Q::ONE)));
+            .standing_off(&(&off * &xyl_cosmos::galaxy::units_of_kpc(&Q::ONE)));
         let (delay, d) = path(node, &place, to_ring);
         let k = bell.arrivals(delay, from_ring, to_ring);
         if k == 0 {

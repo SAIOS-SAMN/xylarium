@@ -36,7 +36,7 @@ pub(super) fn core_read(o: &Options, t_rings: Option<Q>) -> Result<String, Strin
             "The substrate at T {} ({} Gyr) (seed {}): founded in {:.1?}; the bell {} Gyr, ",
             "an echo {} Gyr after the core's bounce; {} firmament kinds, ",
             "{} beads ({} hold a sun), ",
-            "rim {} rings\n"
+            "rim {} cluster units\n"
         ),
         at,
         gyr_of_rings_dy(t),
@@ -126,7 +126,7 @@ fn core_state(s: &Substrate, t: Dy) -> String {
     let mut out = format!(
         concat!(
             "  The core: {} of {} firmament kinds reach past the throat over the bell's swing; ",
-            "the rim at {} rings\n"
+            "the rim at {} cluster units\n"
         ),
         leaving,
         rv.len(),
@@ -371,12 +371,24 @@ fn ocean(s: &Substrate, t: Dy) -> String {
     out.push_str(&format!(
         concat!(
             "  The force: the rate leaving the core {} a Gyr in its whole state ",
-            "({} by mass); the ocean's pulse {} rings a Gyr; the waveform at the rim {}\n"
+            "({} by mass); the ocean's pulse {} cluster units a Gyr; the waveform at the rim {}\n"
         ),
         per_gyr(q_state),
         per_gyr(q_mass),
         per_gyr(s.c_ocean()),
         per_gyr(s.amplitude(Dy::from_q(&s.rim), t))
+    ));
+    let rim = s.carry(Dy::from_q(&s.rim), t);
+    out.push_str(&format!(
+        concat!(
+            "  The held medium (the ocean's carry): inside the rim {} core masses at T, ",
+            "carrying {} of the pulse there (about the core alone {}); ",
+            "outward {} per echo (the near face's open share out, the far face's held share back)\n"
+        ),
+        rim.hold,
+        rim.share,
+        xyl_core::shares::deficit_dy(Dy::ONE, Dy::from_q(&s.rim)),
+        show(&rim.outward)
     ));
     out
 }
@@ -388,7 +400,7 @@ fn galaxies(origin: &Origin, s: &Substrate, t: Dy) -> String {
     // converted to galaxy units) over the length one ring of its reach spans
     // (its anchor distance over its reach in rings).
     let shapes = xyl_cosmos::cores::shapes(origin);
-    let kpc = xyl_cosmos::galaxy::rings_of_kpc(&Q::ONE);
+    let kpc = xyl_cosmos::galaxy::units_of_kpc(&Q::ONE);
     let mut out = String::new();
     for g in s.push(t) {
         let shape = shapes.iter().find(|sh| sh.index == g.index);
@@ -402,11 +414,14 @@ fn galaxies(origin: &Origin, s: &Substrate, t: Dy) -> String {
             .unwrap_or(Dy::ZERO);
         let rate = shape.map(|sh| per_gyr(sh.rate)).unwrap_or(Dy::ZERO);
         let cell = shape.map(|sh| sh.place_at(t, &xyl_cosmos::chain::radius()).cell());
+        let carry = s.carry(g.reach0, t);
         out.push_str(&format!(
             concat!(
-                "    galaxy {}: reach {} -> {} rings, recession {} rings a Gyr ",
-                "(drift {}, swing +/- {} rings an echo), shift z {}; ",
-                "circulates {} turns a Gyr, at azimuth {} polar {} deg; tide across it {}\n"
+                "    galaxy {}: reach {} -> {} cluster units, recession {} cluster units a Gyr ",
+                "(drift {}, swing +/- {} cluster units an echo), shift z {}; ",
+                "circulates {} turns a Gyr, at azimuth {} polar {} deg; tide across it {}; ",
+                "the medium inside it {} core masses carries {} of the pulse, turning {} deg ",
+                "a traversal on the isoclinic planes, returned after {} traversals\n"
             ),
             g.index,
             g.reach0,
@@ -420,7 +435,13 @@ fn galaxies(origin: &Origin, s: &Substrate, t: Dy) -> String {
                 .unwrap_or_else(|| "-".into()),
             cell.map(|c| c.polar.to_string())
                 .unwrap_or_else(|| "-".into()),
-            tide
+            tide,
+            carry.hold,
+            carry.share,
+            carry.turning,
+            carry
+                .returns
+                .map_or_else(|| "no".to_string(), |n| n.to_string())
         ));
     }
     out

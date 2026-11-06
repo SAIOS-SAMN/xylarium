@@ -24,15 +24,15 @@ pub fn from_centre_kpc(star: &crate::galaxy::Star, t: Dy) -> Dy {
     // (a path sum, not the hypotenuse).
     let (reach, _, climb) = star.bearing(crate::circuit::rings_of_gyr_dy(t));
     let way = &reach + &climb.abs();
-    Dy::from_q(&crate::galaxy::kpc_of_rings(&way)) / star.scale.max(Dy::sci(1, -9))
+    Dy::from_q(&crate::galaxy::kpc_of_units(&way)) / star.scale.max(Dy::sci(1, -9))
 }
 
 /// Whether a mind was born in the galaxy's core: its star lay within
 /// `galaxy::core_reach` of the core when the mind woke (see
 /// `from_centre_kpc`; the reach is read in kpc through the boundary
-/// `galaxy::kpc_of_rings`).
+/// `galaxy::kpc_of_units`).
 pub fn in_core(m: &Mind) -> bool {
-    m.r_kpc <= Dy::from_q(&crate::galaxy::kpc_of_rings(&crate::galaxy::core_reach()))
+    m.r_kpc <= Dy::from_q(&crate::galaxy::kpc_of_units(&crate::galaxy::core_reach()))
 }
 
 /// The ancients by birth: the minds born in the core that wake within one

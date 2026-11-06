@@ -126,7 +126,7 @@ pub(super) fn life(wit: &Witnessed, ctx: &Ctx) -> (Dy, Dy) {
     let deg = star_degree_gyr(
         &wit.star.sequence(),
         wit.star.compactness(),
-        wit.star.reach_rings(),
+        wit.star.reach_units(),
         ctx,
     );
     (born, deg)

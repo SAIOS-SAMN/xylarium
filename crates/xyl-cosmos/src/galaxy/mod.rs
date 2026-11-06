@@ -5,13 +5,13 @@
 //! lighting (`cores::substrate_for`), `cores::shape` for each galactic core,
 //! `chem::Chemistry::birth_along`, the turning law (`turning`),
 //! `manifold::reach`, `disc::star_hold`, and `xyl_core::measure`. Lengths are
-//! galaxy rings (the galaxy tier's unit, 60^5 r_g, `Tier::Galaxy`), masses
+//! galaxy units (the galaxy tier's unit, 60^5 r_g, `Tier::Galaxy`), masses
 //! core masses (the universal core is 1), times rings after the origin
 //! (one ring one bell, `circuit::anchor`), rates radians per ring.
 //!
 //! - [`Structure`]: each bead is a ring of the galaxy, its span in galaxy
 //!   rings, its state the ring's share of the galaxy's holding. The core's
-//!   reach ([`core_reach`]) is one galaxy ring, where its deficit
+//!   reach ([`core_reach`]) is one galaxy unit, where its deficit
 //!   `1 / (r + 1)` is one half; the nucleus ([`nucleus_reach`]) is the
 //!   innermost ring; the reference ring ([`r0`]) holds half the holding.
 //!   [`density`] (crowding against `r0`), [`inside_mass`] and the crowded
@@ -37,14 +37,14 @@
 //!   star's disc; [`vertical`] its swing through the plane and exposure,
 //!   derived from the turning law, the crowding and the ring structure.
 //!
-//! Boundary (removed as the layers above are converted): [`kpc_of_rings`],
-//! [`rings_of_kpc`] and their dyadic forms convert galaxy rings for the
+//! Boundary (removed as the layers above are converted): [`kpc_of_units`],
+//! [`units_of_kpc`] and their dyadic forms convert galaxy units for the
 //! layers still in kpc; [`suns_of_core_masses`] and [`core_masses_of_suns`]
 //! convert masses for the layers that read star masses in suns (systems,
 //! worlds, life, the kernel); [`rim_kpc`] and [`radius_kpc`] read the anchor in kpc for
 //! `chain` and the display.
 //!
-//! Terms: galaxy ring, manifold (docs/glossary.md).
+//! Terms: galaxy unit, manifold (docs/glossary.md).
 
 mod frame;
 mod star;
@@ -78,18 +78,18 @@ const GRID_BITS: u32 = 40;
 /// whole holding. Cached once per process after the universe is founded.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Structure {
-    /// Each ring, inner first: inner and outer edge (galaxy rings), state
-    /// (the ring's share of the galaxy's holding), state per galaxy ring of
+    /// Each ring, inner first: inner and outer edge (galaxy units), state
+    /// (the ring's share of the galaxy's holding), state per galaxy unit of
     /// span, and the core's deficit at the ring's reach.
     pub rings: Vec<(Q, Q, Q, Q, Q)>,
     /// The holding of all rings: the founding unit, equal to the core's state.
     pub holding: Q,
-    /// The innermost ring's outer edge (galaxy rings): the nucleus.
+    /// The innermost ring's outer edge (galaxy units): the nucleus.
     pub nucleus: Q,
-    /// The reference ring (galaxy rings): the reach holding half the
+    /// The reference ring (galaxy units): the reach holding half the
     /// galaxy's holding.
     pub r0: Q,
-    /// State per galaxy ring at the reference ring.
+    /// State per galaxy unit at the reference ring.
     pub lambda0: Q,
 }
 
@@ -160,7 +160,7 @@ fn structure() -> std::sync::Arc<Structure> {
     built
 }
 
-/// The ring of the structure containing reach `r` (galaxy rings): beyond the
+/// The ring of the structure containing reach `r` (galaxy units): beyond the
 /// rim the outermost ring, inside the innermost ring's inner edge the
 /// innermost. `None` only for an empty structure.
 fn ring_at<'a>(st: &'a Structure, r: &Q) -> Option<&'a (Q, Q, Q, Q, Q)> {
@@ -171,13 +171,13 @@ fn ring_at<'a>(st: &'a Structure, r: &Q) -> Option<&'a (Q, Q, Q, Q, Q)> {
         .or_else(|| st.rings.first())
 }
 
-/// The reference ring (galaxy rings): the reach inside which half the
+/// The reference ring (galaxy units): the reach inside which half the
 /// galaxy's holding lies; chemistry and crowding are read against it.
 pub fn r0() -> Q {
     structure().r0.clone()
 }
 /// The home galaxy's rim (kpc), from the founding (`circuit::anchor`).
-/// Boundary and display: read by `chain` in kpc. In galaxy rings the rim is
+/// Boundary and display: read by `chain` in kpc. In galaxy units the rim is
 /// the anchor's `rim`.
 pub fn rim_kpc() -> Q {
     crate::circuit::anchor().home_rim_kpc
@@ -187,40 +187,40 @@ pub fn rim_kpc() -> Q {
 pub fn radius_kpc() -> Q {
     crate::circuit::anchor().radius_kpc
 }
-/// The core's reach (galaxy rings): out to where the core's deficit
-/// `1 / (r + 1)` is at least one half, one galaxy ring; a star within it is
+/// The core's reach (galaxy units): out to where the core's deficit
+/// `1 / (r + 1)` is at least one half, one galaxy unit; a star within it is
 /// in the core.
 pub fn core_reach() -> Q {
     Q::ONE
 }
-/// The nucleus's reach (galaxy rings): the innermost lit ring's outer edge.
+/// The nucleus's reach (galaxy units): the innermost lit ring's outer edge.
 pub fn nucleus_reach() -> Q {
     structure().nucleus.clone()
 }
 
-/// Kiloparsecs per galaxy ring (`circuit::anchor().galaxy_kpc`, through the
+/// Kiloparsecs per galaxy unit (`circuit::anchor().galaxy_kpc`, through the
 /// SI seam). Boundary.
-fn kpc_per_ring() -> Q {
+fn kpc_per_unit() -> Q {
     crate::circuit::anchor().galaxy_kpc
 }
-/// A reach in galaxy rings, in kpc. Boundary for the layers still in kpc
+/// A reach in galaxy units, in kpc. Boundary for the layers still in kpc
 /// (chemistry, worlds, life, minds, the kernel) and the display; zero before
 /// a founding.
-pub fn kpc_of_rings(rings: &Q) -> Q {
-    rings * &kpc_per_ring()
+pub fn kpc_of_units(rings: &Q) -> Q {
+    rings * &kpc_per_unit()
 }
-/// A reach in kpc, in galaxy rings. Boundary, as [`kpc_of_rings`]; zero
+/// A reach in kpc, in galaxy units. Boundary, as [`kpc_of_units`]; zero
 /// before a founding.
-pub fn rings_of_kpc(kpc: &Q) -> Q {
-    kpc.checked_div(&kpc_per_ring()).unwrap_or(Q::ZERO)
+pub fn units_of_kpc(kpc: &Q) -> Q {
+    kpc.checked_div(&kpc_per_unit()).unwrap_or(Q::ZERO)
 }
-/// [`kpc_of_rings`] in dyadics. Boundary.
-pub fn kpc_of_rings_dy(rings: Dy) -> Dy {
-    rings * Dy::from_q(&kpc_per_ring())
+/// [`kpc_of_units`] in dyadics. Boundary.
+pub fn kpc_of_units_dy(rings: Dy) -> Dy {
+    rings * Dy::from_q(&kpc_per_unit())
 }
-/// [`rings_of_kpc`] in dyadics. Boundary; zero before a founding.
-pub fn rings_of_kpc_dy(kpc: Dy) -> Dy {
-    let k = Dy::from_q(&kpc_per_ring());
+/// [`units_of_kpc`] in dyadics. Boundary; zero before a founding.
+pub fn units_of_kpc_dy(kpc: Dy) -> Dy {
+    let k = Dy::from_q(&kpc_per_unit());
     if k.signum() <= 0 {
         return Dy::ZERO;
     }
@@ -293,7 +293,7 @@ pub fn sample(_origin: &Origin) -> u64 {
     SAMPLE_CAP
 }
 
-/// Crowding at reach `r` (galaxy rings): the holding per galaxy ring of the
+/// Crowding at reach `r` (galaxy units): the holding per galaxy unit of the
 /// ring containing `r` over that of the reference ring. The value is
 /// constant within a ring; beyond the rim the outermost ring is used,
 /// elsewhere the innermost.
@@ -308,9 +308,9 @@ pub fn density(r: &Q) -> Encl {
 }
 
 /// The birth time (rings after the origin, a whole number) of the stars at
-/// reach `r` (galaxy rings) of the home galaxy. The galaxy ring's gas is one
+/// reach `r` (galaxy units) of the home galaxy. The galaxy ring's gas is one
 /// piece of the founding, cooling from the bounce, and collapses once when
-/// the piece lights (`formation::Lighting::cools_in_at`, in galaxy rings), so
+/// the piece lights (`formation::Lighting::cools_in_at`, in galaxy units), so
 /// every star of a galaxy ring is born at the piece's first light, counted
 /// in rings of time (at least one). `None` where the piece never lights, so
 /// no star is placed there.
@@ -321,7 +321,7 @@ pub fn birth(r: &Q) -> Option<Q> {
     Some(Q::int(bells.max(1)))
 }
 
-/// The share of the galaxy's holding inside `r` (galaxy rings): the rings'
+/// The share of the galaxy's holding inside `r` (galaxy units): the rings'
 /// states within `r` (a ring counted by the share of its span inside) over
 /// the whole holding.
 fn holding_within(st: &Structure, r: &Q) -> Q {
@@ -341,7 +341,7 @@ fn holding_within(st: &Structure, r: &Q) -> Q {
         .unwrap_or(Q::ZERO)
 }
 
-/// The home galaxy's mass inside `r` galaxy rings (core masses):
+/// The home galaxy's mass inside `r` galaxy units (core masses):
 /// `M(<r) = 1 + H(<r) / H`, the universal core's mass 1 plus the rings'
 /// states within `r` (a ring counted by the share of its span inside) over
 /// the whole holding `H`. This mass's deficit sets a star's turning rate
@@ -367,7 +367,7 @@ pub fn ring_mass(r: &Q) -> Q {
         .unwrap_or(Q::ZERO)
 }
 
-/// The reach (galaxy rings) at which the cumulative holding of the rings
+/// The reach (galaxy units) at which the cumulative holding of the rings
 /// reaches the share `u` of the total (`u` clamped to [0, 1]), interpolated
 /// linearly within a ring. Only rings whose outer edge is at most `up_to`
 /// count.

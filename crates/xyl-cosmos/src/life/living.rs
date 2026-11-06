@@ -32,11 +32,11 @@ pub struct Chemistry {
 pub struct Home {
     /// The star's birth (Gyr after the origin).
     pub born: Dy,
-    /// The star's home-equivalent reach (galaxy rings, `galaxy::Star::r`),
+    /// The star's home-equivalent reach (galaxy units, `galaxy::Star::r`),
     /// where the galaxy's crowding is read.
     pub r: Dy,
-    /// The star's reach about its galactic core (galaxy rings,
-    /// `galaxy::Star::reach_rings`), where its life is read.
+    /// The star's reach about its galactic core (galaxy units,
+    /// `galaxy::Star::reach_units`), where its life is read.
     pub reach: Dy,
     /// The share of the star's orbit spent inside the crowded plane layer at
     /// the settled age, in \[0, 1\].
@@ -63,7 +63,7 @@ impl Home {
         Home {
             born: crate::circuit::gyr_of_rings_dy(Dy::from_q(&star.born)),
             r: Dy::from_q(&star.r),
-            reach: star.reach_rings(),
+            reach: star.reach_units(),
             exposure: star.exposure(crate::circuit::rings_of_gyr_dy(Dy::from_q(
                 &crate::systems::settled_gyr(),
             ))),

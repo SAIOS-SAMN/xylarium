@@ -11,6 +11,31 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Calibre and dimensional capacity (docs/model.md; glossary; AGENTS.md;
+  CONTRIBUTING.md, Verification; #123, roadmap item 49). A calibre is the
+  pair of units in which a share's reach and hold are both read:
+  tier-bound, conformal, share-preserving; a share across two calibres is
+  not a share. Dimensional capacity (formerly dimensionality) is the number
+  of named components a reading holds, each in its calibre. Every entry of
+  EQUATIONS.md now names its calibre: 56 calibre-free, 51 founding, 10 core
+  (`r_g`), 20 SI seam and 18 mixed. The mixed entries are the defect: the
+  star cut, the star's manifold and the worlds read the founding and core
+  calibres at once (on seed 7, worlds 240 to 400 pc from their star), and
+  the ruling between them is open. Readings are checked for magnitude in
+  their calibre, not only for having moved. No code changes.
+- The vortex (docs/model.md, The vortex; EQUATIONS.md; #121, roadmap item
+  48): the shape the flat structures become. Founded matter is a vortex
+  (core the filament, stretching `D(n)^t`, circulation about the held
+  medium, Hopf fibres twisted about the core, writhe, `Lk = Tw + Wr`
+  conserved, reconnection at the pinch), and bands, circles on drawn
+  planes and points on a 2-sphere are to be replaced by it. Planned; the
+  open derivations are listed; no code changes.
+- The pair rule (docs/model.md, Pairs: the pivot, per plane; AGENTS.md;
+  #118, roadmap item 47): every reading between two things keeps its
+  dimensional capacity (the turning planes it holds as named components) and is
+  read through the pivot, plane by plane in degrees with winding and
+  return; `rotor::angle_between`, one unnamed plane through a square root
+  and asin, is to be retired. Planned; no code changes.
 - The register of scalar collapses (docs/model.md, roadmap item 43, #107):
   50 sites across the five crates and the order of opening them.
 - Embedded minds planned (docs/network.md, roadmap section 4 items 10 to
@@ -207,6 +232,41 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Reaches are read in tier units, never rings (#115, roadmap item 45): the
+  lengths formerly called "core rings" and "galaxy rings" are the cluster
+  unit (`60^7 r_g`) and the galaxy unit (`60^5 r_g`) in docs, comments and
+  `observe` labels, and `galaxy::rings_of_kpc`, `kpc_of_rings` (and their
+  `_dy` forms), `kpc_per_ring` and `Star::reach_rings` are
+  `units_of_kpc`, `kpc_of_units`, `kpc_per_unit` and `Star::reach_units`.
+  No formula changes; `observe universal-core` and `formation` read the
+  same numbers.
+- "Ring" keeps one meaning, the harmonic of the bell, echo and pulse
+  (docs/model.md, Units; glossary): the lengths called "core rings" and
+  "galaxy rings" are the cluster and galaxy units, to be renamed in code
+  (#115, roadmap item 45); bands give way to orbits, with the hold inside a
+  reach read from the share of each nearer orbit's swing within it
+  (docs/model.md and EQUATIONS.md, The hold inside an orbit; #116, roadmap
+  item 46; planned). The units section's echo now reads the sheared return
+  of #112 (`bell / (1 - s)` and `bell / s`), not two bells.
+- The ocean carries what reaches a place, at the share its held medium
+  holds there (docs/model.md, The held medium; roadmap item 44, #113). The hold
+  inside a reach is the core's 1 plus the beads nearer, less the core's
+  share the jet has carried past (`Substrate::held_within`,
+  `Substrate::medium`), in place of the universal state alone. The
+  waveform, a galaxy's circulation and push, and a piece's star cut
+  (`stars::ring_per_bell` now takes the hold) read it; the bead's
+  `inside`, `1 + 2 x` the nearer share with an underived factor, is
+  removed. `Substrate::carry` reads the ocean's motion: outward
+  `s (+) (-(1 - s))` per echo from the echo's two faces, and `360 delta`
+  degrees a traversal on the isoclinic planes from the torsion, returned
+  after `1 / (1 - delta)`. Seed 7, `observe universal-core`: the medium
+  inside the rim 1.4008 core masses, carrying 0.01650 of the pulse there
+  (0.01183 about the core alone), so the waveform at the rim reads 10.88
+  per Gyr (7.80 before); outward 0.1061 per echo; the outer galaxies
+  circulate slower (galaxy 22: 1893 to 1110 turns a Gyr; galaxy 23: 616 to
+  327) and swing wider (galaxy 23: 2.17e-6 to 5.37e-6 rings an echo);
+  galaxies 0 to 18, which have almost nothing nearer, are unchanged, as
+  are the lit pieces' cuts (heat moves at 1e-11).
 - Stripping by received turning is T20: a winding's push is the deficit
   share its enclosed charge keeps at its reach (`Atom::winding_push`), held
   while the received isoclinic push is at most it and departing after
@@ -214,7 +274,8 @@ may change public APIs and the model's laws.
   replaces the cut of a tightness against a turning capped at one. One
   shielding rule (`atoms::shielded`, the fill law's) now serves the fill,
   the tightness and the push. `observe bond` prints each winding's push and
-  departure (#107, #103).
+  departure (#107, #103). Held: the received quantity is a carry (#113),
+  and T20 is re-derived on it before it lands.
 
 - A throat's echo is its sheared return at its torsion share (T4, axiom
   7): `bell / (1 - s)` on the near face, `bell / s` on the far

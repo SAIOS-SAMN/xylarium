@@ -4,7 +4,7 @@
 // Inputs: the spin, its torsion share (`bounce::torsion_share`, read once), the elements
 // (`elements::Element`), `formation::kinds` and `formation::founding_shells`
 // for the cascade, `atoms::vessel`, and `formation::lighting`. Reaches are
-// core rings; amounts are held frames, universe units.
+// cluster units; amounts are held frames, universe units.
 //
 // Steps: every kind is assigned its reach, spread r (1 +/- s_final). The closed
 // kinds, held on both faces of the paired throat (T16), form the firmament
@@ -43,19 +43,16 @@ pub struct Kind {
 }
 
 /// A bead of the founding, where the cascade's shells pinch: its reach about
-/// the universal throat (core rings), the hold inside its ring, its state (its
-/// mass, universe units), its phase about the throat, and its recipe
-/// (the kinds carried into it).
+/// the universal throat (cluster units), its state (its mass, core masses; the
+/// hold inside its ring is [`Substrate::held_within`] at its reach), its
+/// phase about the throat, and its recipe (the kinds carried into it).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Bead {
     /// The bead's position in the founding's bead order (from 0).
     pub index: u32,
-    /// Reach about the universal throat (core rings): the reach of its most
+    /// Reach about the universal throat (cluster units): the reach of its most
     /// abundant kind.
     pub reach: Q,
-    /// Hold inside the bead's ring: 1 plus twice the share of the pushed-out
-    /// mass carried by the beads within it.
-    pub inside: Q,
     /// State: the bead's mass from its recipe (universe units); the states sum
     /// to the founding unit.
     pub state: Q,
@@ -64,7 +61,7 @@ pub struct Bead {
     pub phase: Q,
     /// The kinds carried into the bead and their amounts (held frames).
     pub recipe: Mix,
-    /// The bead's span about the throat (core rings): from its run's inner
+    /// The bead's span about the throat (cluster units): from its run's inner
     /// edge or the pinch before it to the pinch after it or its run's outer
     /// edge. Read one tier down, the beads are the home galaxy's rings.
     pub span: (Q, Q),
@@ -79,7 +76,7 @@ pub struct Substrate {
     /// The beads where the cascade's shells pinch; those holding a star
     /// (`Substrate::galaxies`) are galaxies.
     pub beads: Vec<Bead>,
-    /// Reach of the outermost shell (core rings): the rim the pulse crosses.
+    /// Reach of the outermost shell (cluster units): the rim the pulse crosses.
     pub rim: Q,
     /// Everything founded, by mass (universe units): the firmament plus every
     /// bead's recipe (see [`Substrate::holding`]).
@@ -94,7 +91,7 @@ pub struct Substrate {
     /// The home galaxy's lighting (formation.rs, read on these beads one
     /// tier down): the rings until its gas first lights (None: no piece
     /// does), the lit share of its gas, and each piece of gas by reach
-    /// (inner edge, outer edge, galaxy rings) with the rings until it lights.
+    /// (inner edge, outer edge, galaxy units) with the rings until it lights.
     pub lighting: formation::Lighting,
 }
 
@@ -393,7 +390,7 @@ fn bead_run(
 /// The founded beads: each kind's matter goes whole to the bead whose span
 /// contains its reach (the last span of a run includes its outer edge); a
 /// bead with no state is dropped. Its reach and phase are its most abundant
-/// kind's; `inside` is 1 plus twice the pushed-out share of the beads within.
+/// kind's.
 fn place_beads(
     out: &[(u32, Q, Q)],
     beads: &[Vec<usize>],
@@ -404,11 +401,6 @@ fn place_beads(
         let r = &out[k].2;
         *r >= *a && (*r < *b || (last && *r <= *b))
     };
-    let pushed_out: Q = beads
-        .iter()
-        .flat_map(|b| b.iter())
-        .fold(Q::ZERO, |a, &k| &a + &mass_of(out[k].0, &out[k].1));
-    let mut inner = Q::ZERO;
     let mut found = Vec::new();
     for (index, bead) in beads.iter().enumerate() {
         let mut recipe: Mix = Mix::new();
@@ -429,14 +421,9 @@ fn place_beads(
             .max_by(|&x, &y| out[x].1.cmp(&out[y].1))
             .unwrap_or(bead[0]);
         let (pz, reach) = (out[peak].0, out[peak].2.clone());
-        // The inside hold is 1 + 2 x (pushed-out share of the beads nearer the
-        // throat).
-        let inside = &Q::ONE + &(&Q::int(2) * &inner);
-        inner = &inner + &state.checked_div(&pushed_out).unwrap_or(Q::ZERO);
         found.push(Bead {
             index: u32::try_from(index).unwrap_or(0),
             reach,
-            inside,
             state,
             phase: captured_phase(share, pz),
             recipe,

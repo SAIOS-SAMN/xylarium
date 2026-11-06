@@ -315,7 +315,7 @@ pub enum Transduction {
 }
 
 /// The step a star of sequence `seq` and compactness `delta`
-/// (`galaxy::Star::compactness`) at reach `r` (galaxy rings) is on at `age`
+/// (`galaxy::Star::compactness`) at reach `r` (galaxy units) is on at `age`
 /// rings: the first step whose end (`stars::ends`, from the pulse's transduction of
 /// its hold) lies after the age, `Remnant` once every step has ended, and
 /// `Unlit` where the sequence has no step.

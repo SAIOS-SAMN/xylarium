@@ -163,9 +163,9 @@ impl Network {
             .sample
             .iter()
             // Orbit radii in kpc, through the boundary
-            // `galaxy::kpc_of_rings_dy`.
+            // `galaxy::kpc_of_units_dy`.
             .map(|s| {
-                let r = xyl_cosmos::galaxy::kpc_of_rings_dy(s.star.orbit.radius);
+                let r = xyl_cosmos::galaxy::kpc_of_units_dy(s.star.orbit.radius);
                 (s.star.n, (s.star.core, r))
             })
             .collect();
@@ -437,10 +437,10 @@ impl<'a> Siting<'a> {
             v_e,
             rulers: crate::growth::Rulers::default(),
             c: crate::propulsion::c_m_s(),
-            // One kpc in r_g: the galaxy tier's kpc (`galaxy::rings_of_kpc`) times
+            // One kpc in r_g: the galaxy tier's kpc (`galaxy::units_of_kpc`) times
             // the tier's unit in r_g.
             rg_per_kpc: Dy::from_q(
-                &(&xyl_cosmos::galaxy::rings_of_kpc(&Q::ONE) * &Tier::Galaxy.in_rg()),
+                &(&xyl_cosmos::galaxy::units_of_kpc(&Q::ONE) * &Tier::Galaxy.in_rg()),
             ),
         }
     }

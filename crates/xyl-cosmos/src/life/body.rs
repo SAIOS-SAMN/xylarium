@@ -152,8 +152,8 @@ pub fn foragers(ms: &[Medium], region: Region, body: &Body, ctx: &Ctx) -> Dy {
     Dy::int(50_000) * area * season * med.energy * Dy::ratio(1, 10) / factor.max(Dy::sci(1, -300))
 }
 
-/// A star's main-sequence lifetime (Gyr) at `reach` (galaxy rings, the
-/// star's orbit radius about its core, `galaxy::Star::reach_rings`) for a
+/// A star's main-sequence lifetime (Gyr) at `reach` (galaxy units, the
+/// star's orbit radius about its core, `galaxy::Star::reach_units`) for a
 /// star of transduction sequence `seq` and compactness `delta`: `stars::life`
 /// (its first step) at that reach, times the universe's nuclear scale. Zero
 /// for a star that does not ignite.

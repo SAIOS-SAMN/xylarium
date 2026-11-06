@@ -491,8 +491,8 @@ fn chain_frame(st: &Star) -> String {
         .map(|f| {
             let (regions, belt) =
                 xyl_cosmos::disc::manifold_worlds(&f.star_share, &f.a_disc, &f.tide);
-            // Galaxy rings print in AU and kpc, converted for display.
-            let kpc_of = xyl_cosmos::galaxy::kpc_of_rings;
+            // Galaxy units print in AU and kpc, converted for display.
+            let kpc_of = xyl_cosmos::galaxy::kpc_of_units;
             let au = |rings: &Q| {
                 Dy::from_q(
                     &(&kpc_of(rings) * &xyl_cosmos::package::Si::kpc())
@@ -528,7 +528,7 @@ fn chain_frame(st: &Star) -> String {
             )
         })
         .unwrap_or_else(|| {
-            let r = xyl_cosmos::galaxy::kpc_of_rings(&st.r);
+            let r = xyl_cosmos::galaxy::kpc_of_units(&st.r);
             format!("no frame at {} kpc", Dy::from_q(&r))
         })
 }

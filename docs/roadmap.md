@@ -253,6 +253,44 @@ where it belongs to one.
     degrees per bell advanced in closed form, `K` counted per component, and
     the turning between planes stored as a separate component; composition
     through the generators awaits the turning law (Netstratum docs/117).
+47. **Pairs: the pivot, per plane**
+    ([#118](https://github.com/SAIOS-SAMN/xylarium/issues/118), `defect`,
+    `law`; part of item 40 and #90;
+    [model.md](model.md#pairs-the-pivot-per-plane)). Every pair reading
+    keeps its dimensional capacity: coordinates of one origin in one
+    calibre, the relative frame
+    by conjugation, read per plane in degrees with winding and return,
+    closeness by the two-sided form in shares. Retires
+    `xyl_core::rotor::angle_between` and the readings on it
+    (`chain::Place::arc`, `manifold::gap`, `transit::separation_m`), with
+    `pulse::hear` and `transit::building`'s arc; the six planes' writing
+    onto LAW-COORDINATE v4's turning-plane keys is agreed with Mycelium and
+    Netstratum first.
+48. **The vortex**
+    ([#121](https://github.com/SAIOS-SAMN/xylarium/issues/121), `law`,
+    `defect`, `needs-decision`; part of item 40 and #90;
+    [model.md](model.md#the-vortex-core-swirl-twist-writhe-linking)).
+    Re-volumize the flat shapes: founded matter is a vortex (core, swirl,
+    twist, writhe, linking), and every body stands in its parent's. Replaces
+    `galaxy::Structure`'s bands, `galaxy::Orbit`'s circles on drawn planes
+    and `chain::Place`'s points on a 2-sphere; gives item 47's pair reading
+    its object (mutual linking, fibre placement in `CP^5`). Derive first: the
+    core curve between tiers, mutual linking, fibre separation in shares,
+    helicity without its square; T18's equal fifths awaits a ruling.
+    Depends on item 46.
+49. **Calibre**
+    ([#123](https://github.com/SAIOS-SAMN/xylarium/issues/123), `defect`,
+    `law`, `needs-decision`;
+    [model.md](model.md#calibre-and-dimensional-capacity)). Every share
+    reads its reach and hold in one calibre (tier-bound, conformal,
+    share-preserving), and every equation names its calibre
+    (EQUATIONS.md). Two are built and mixed: the founding calibre (reaches
+    as ratios to the hold, declared cluster units while holds stay in core
+    masses) and the core calibre of the turning law. The star cut, the
+    star's manifold and the worlds read both. Ruling: (A) masses in core
+    masses at every tier, or (B) masses dilate with lengths per tier. Blocks
+    #116 landing (held on `orbit-hold`), item 48's streamlines and item 44
+    step 1.
 43. **Scalar collapses**
     ([#107](https://github.com/SAIOS-SAMN/xylarium/issues/107), `defect`,
     `law`;
@@ -303,6 +341,26 @@ where it belongs to one.
     `xyl_core::shares::deficit` and `stars::fusion_step`; needs the held
     residual as a closed form of the drive's history.
 
+44. **The ocean as a carry** ([#113](https://github.com/SAIOS-SAMN/xylarium/issues/113), `law`;
+    [model.md](model.md#the-held-medium-the-ocean-as-a-carry)). What reaches
+    a place is what the ocean's medium carries there, never a push. Done:
+    the held medium inside a reach (`Substrate::held_within`,
+    `Substrate::medium`: the core's 1, the beads nearer, less what the jet
+    carried past), read by the waveform, a bead's ring hold, a galaxy's
+    circulation and push, and a piece's star cut; the ocean's motion
+    (`Substrate::carry`): outward `s (+) (-(1 - s))` per echo from the
+    echo's faces, `360 delta` degrees a traversal on the isoclinic planes
+    from the torsion. Next, in order: (1) the star's received quantity as a
+    carry, a star's life read about the galaxy tier's own medium
+    (`stars::ring_per_bell` still takes `h = 1` there), the hold inside the
+    star's orbit (item 46, first), and graded
+    stripping (T20, held on `graded-stripping`) re-derived on it; (2) the
+    reverberation's interior hold, `1 + (firmament nearer) / unit`, put on
+    the same footing as `H(r)` (it divides a mass by the beads' total); (3)
+    viscosity `nu(t) = t / (1 + t)` built, replacing the laboratory
+    reference in `bodies::interior`; (4) the pairs the outward carry bears
+    (`p_pair`), the ocean's particles.
+
 ### Galaxy (milestone 3, layer B)
 
 5. **Fluid bands** ([#6](https://github.com/SAIOS-SAMN/xylarium/issues/6),
@@ -311,6 +369,19 @@ where it belongs to one.
    neighbours. Matter is to circulate along the shear of neighbouring orbits,
    bands to blend where the founding's shells overlap, and edges to move with
    their holding. The word "ring" is kept for the bell's unit of time.
+   First step: item 46.
+46. **The hold inside an orbit**
+    ([#116](https://github.com/SAIOS-SAMN/xylarium/issues/116), `law`,
+    `defect`, `needs-decision`;
+    [model.md](model.md#the-hold-inside-an-orbit)). A body is caught in an
+    orbit, never a band: `H(r) = 1 + sum m_b chi_b(r)`, each nearer orbit
+    counted by the share of its swing within `r` (the reverberation's swing
+    law, eccentricity the deficit about the hold inside it). Replaces the
+    step in `Substrate::held_within` and, at the galaxy tier, the bands of
+    `galaxy::Structure` and `inside_mass`, so one model reads both tiers
+    (#43). Needs decision: the galaxy tier's divisor (the bands' holding
+    taken as the core's 1; the beads total 0.4008 core masses). Unblocks
+    item 44 step 1.
 6. **Each galaxy's own structure**
    ([#7](https://github.com/SAIOS-SAMN/xylarium/issues/7), `proposal`). Every
    other galaxy is the home galaxy scaled by its hole mass
@@ -429,6 +500,14 @@ where it belongs to one.
     first issue`). Done: `Rotor::inverse` and the certified
     `rotor::angle_between` replace the `acos` readings in
     `manifold::gap` and `chain::Place::arc`.
+45. **Ring keeps one meaning**
+    ([#115](https://github.com/SAIOS-SAMN/xylarium/issues/115), `defect`).
+    "Ring" is the harmonic of the bell, echo and pulse only. Done: the
+    length units formerly read as "core rings" and "galaxy rings" are the
+    cluster unit (`60^7 r_g`) and the galaxy unit (`60^5 r_g`) in docs,
+    comments, labels and identifiers (`galaxy::units_of_kpc`,
+    `galaxy::kpc_of_units`, `galaxy::Star::reach_units`), with no formula
+    changed. The band sense goes with item 46.
 
 ## 1. Founding in the core's units (done)
 
@@ -559,7 +638,7 @@ Landed:
   d)`, `h = r m / (M(<r) + m)`, `s = t / (1 + t)`, `t` the age over the ring's
   cooling time, `sigma = h nu s 2d / (1 + d)`). The layers above read kpc and
   the prototype's stellar-mass unit through the marked boundaries
-  `galaxy::kpc_of_rings`, `galaxy::rings_of_kpc` and
+  `galaxy::kpc_of_units`, `galaxy::units_of_kpc` and
   `galaxy::suns_of_core_masses` / `core_masses_of_suns`; the SI forms of the
   turning law (`turning_si`, read in rad/s by `Si::rad_s`) remain as
   boundaries for the system and body layers.

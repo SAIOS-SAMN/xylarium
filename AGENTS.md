@@ -57,6 +57,17 @@ A module `foo` is `src/foo.rs` or, when split, the directory `src/foo/`
   perturbation; its return is stated with it, read from the gravitational
   density (the deficit at the return's reach), never assumed equal
   ([model.md](docs/model.md#turns-axis-degrees-and-the-return)).
+- Every share reads its reach and hold in one calibre: tier-bound,
+  conformal (a change of tier dilates both together, never one) and
+  share-preserving; every equation and every reading states its calibre,
+  and a reading is checked for magnitude in it, not only for having moved
+  ([model.md](docs/model.md#calibre-and-dimensional-capacity)).
+- Every pair reading (a separation, an arc, a closeness: every `a, b` or
+  `x, y`) keeps its dimensional capacity: coordinates of one origin, read
+  in one calibre, related by the pivot (the relative frame by
+  conjugation), read plane by plane in degrees with each winding and each
+  return, never one scalar, never a square or a root
+  ([model.md](docs/model.md#pairs-the-pivot-per-plane)).
 - One model per quantity: replace in place and delete the old code; never
   add a parallel version (`foo2`, `new_foo`).
 - Derive from lower tiers. An underived constant is a declared ruler and is

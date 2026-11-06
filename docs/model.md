@@ -53,7 +53,8 @@ of structure (a turning held as form, such as the twist held as torsion)
 or of perturbation (the echo's swing on frames). Its inverse, the return
 trip, is stated with it and is read from the gravitational density the
 return passes through, the deficit `M / (r + M)` at the return's reach
-(axiom 2), across the attractor pair of the faces (T17): never assumed
+(axiom 2), its reach and hold read in one calibre (Calibre and
+dimensional capacity), across the attractor pair of the faces (T17): never assumed
 equal to the outbound turn. Where the code still holds an angle as a
 share of a whole turn, the text gives it in degrees on its plane, and the
 code's change is roadmap item 28.
@@ -67,6 +68,68 @@ kind's capture phase is the torsion share turned Z times, whose denominator
 divides the share's, so it never grows. Only drawn values carry a grid,
 the 2^-40 resolution of the draw.
 
+### Pairs: the pivot, per plane
+
+Every reading between two things (a separation, an arc, a closeness, a
+relative phase: every `a, b` or `x, y`) keeps the dimensional capacity of
+what it relates ([#118](https://github.com/SAIOS-SAMN/xylarium/issues/118),
+roadmap item 47), read in one calibre (Calibre and dimensional capacity).
+**Dimensional capacity** here is the number of independent turning planes a
+reading holds as separate, named components, each with its degrees, its
+winding `K` and its return; position coordinates do not count. A frame of
+founded matter holds six: the axis plane (base axes 0-1, read by its
+exponent `D(n)^t`) and the five isoclinic planes (2-3 to 10-11, each a phase
+in Q/Z), with the turning between planes (T18). A reading that returns one
+number for two such frames has collapsed five or more of them.
+
+A pair is read in six steps:
+
+1. **Coordinates, not triples.** `a` and `b` are coordinates,
+   `origin / h : S:G:T:H : K` (LAW-COORDINATE), never bare 3-vectors. Two
+   readings of different origins are refused by name; a pair of one
+   origin is read in its lowest common enclosure (the containment chain),
+   both in that enclosure's calibre.
+2. **The pivot.** The relative frame is found by conjugation, `P_b^-1 o
+   P_a`, the frame that carries one reading onto the other (Mycelium's
+   pivot engine, its relate in iae: `q a q^-1 = b`), and the pair is refused
+   where no lawful frame relates them. What a lawful change of viewpoint can
+   undo is never counted as separation.
+3. **Per plane, never summed.** The relative frame is read plane by plane,
+   each by its generators: the difference in exact degrees with its winding
+   `K` (Mycelium's H lane: a component per turning plane, kept as a
+   vector). No plane stands for another and no sum folds them into one.
+4. **Each turn named.** Every turn in the reading names its axis by its
+   generators, is stated in degrees, has its physics as torsion, and states
+   its return from the deficit at the return's reach (see Turns, above):
+   `d(a, b)` and `d(b, a)` are two readings across the attractor pair,
+   never assumed equal.
+5. **Closeness in shares.** Where a pair is read as how close the two turn,
+   it is Mycelium's two-sided closeness (FORMS shares::closeness),
+   `C2 = sum_k min(w_k, w'_k) (1 - 2 |d_k|) + (1 - m) / 2`, `w_k` each
+   reading's share of its turning on plane `k`, `d_k` the phase difference
+   in turns and `m = sum_k min(w_k, w'_k)`: linear, with no square, root or
+   tangent.
+6. **One geodesic only for display.** Where a single number is shown, it is
+   a certified sector of the relative rotor's angle, read for display,
+   never stored and never decided by.
+
+**What this retires.** `xyl_core::rotor::angle_between` holds one unnamed
+plane in three Euclidean coordinates. Its cosine is `a . b / sqrt(|a|^2
+|b|^2)`, a separation by squares. It returns one radian enclosure through
+`pi` and `asin`, with no axis, no torsion, no winding and no pivot, and it
+normalises both sides, so the hold at each reach is dropped; its test
+asserts `angle(a, b) = angle(b, a)`. It is read by `chain::Place::arc` and
+`manifold::gap`, and through them by `transit::separation_m` (voyages,
+passages, percepts); `pulse::hear` (a flat phasor on one plane) and
+`transit::building`'s `arc` read pairs flat without it. Underneath stand
+26 `[Q; 3]` sites and 12 half-angle `Rotor::about` and `Half`
+constructions. The kernel reads LAW-COORDINATE v1 today; writing its six
+planes onto v4's turning-plane keys (`e+2e+3`, `e+3e+1`, `e+1e+2` and the
+vacuum's `e-ke-l`) is to be agreed with Mycelium and Netstratum with bodies
+addressed by coordinate (roadmap item 40). No shared law changes: the
+deficit, dilation, torsion share, coordinate and T1 to T19 are read as
+stated.
+
 ## 2. Units and the master frame
 
 - Base units are set by the universal core: `G = c = M_core = 1`, so the
@@ -76,9 +139,10 @@ the 2^-40 resolution of the draw.
   exact power of sixty of `r_g` (`xyl-core units.rs` `Tier::in_rg`):
   universe `60^10`, cluster `60^7`, galaxy `60^5`, system `60` and planet
   `60^-2`. A conversion between tiers multiplies by a power of sixty
-  (`manifold::dilation`) and is exact. The substrate's reaches (core rings)
-  are in cluster units; the home galaxy's rings and every star's reach are
-  in galaxy units.
+  (`manifold::dilation`) and is exact. The substrate's reaches are in
+  cluster units (`60^7 r_g`) and every star's reach in galaxy units
+  (`60^5 r_g`): lengths, never rings
+  ([#115](https://github.com/SAIOS-SAMN/xylarium/issues/115)).
 - The bell (`circuit::anchor`, `Anchor::bell`) is the round-trip time
   of light to the home galaxy's rim, `bell = 2 rim 60^5` in core time
   (`r_g / c`), with the founding's rim read in the galaxy tier's unit. The
@@ -89,11 +153,20 @@ the 2^-40 resolution of the draw.
   (`package::Si::seconds_per_ring`, `bell r_g / c`); `circuit::rings_of_gyr`
   and `gyr_of_rings` convert at the boundaries of layers still counted in
   Gyr and at display.
-- A ring of time is one bell; counts of time (cooling, first light, a star's
-  transduction and life) are whole numbers of rings. An echo is two bells, one
-  ring for each face (near and far) of the paired throat (`circuit::echo`). A
-  one-way crossing to reach `r` takes `(r / rim) bell / 2`, a fraction of a
-  ring.
+- **Ring has one meaning: the harmonic of the bell, echo and pulse.** A
+  ring of time is one bell; counts of time (cooling, first light, a star's
+  transduction and life) are whole numbers of rings, and the ring a place
+  receives per bell (`stars::ring_per_bell`) is that harmonic's share
+  delivered there. A throat's echo is its sheared return at its torsion
+  share `s`: `bell / (1 - s)` on the near face and `bell / s` on the far
+  face, two bells each only at zero spin (`circuit::echo_at`). A one-way
+  crossing to reach `r` takes `(r / rim) bell / 2`, a fraction of a ring.
+  A body is never held in a ring: it is caught in an orbit on the plane of
+  the tier above, and the hold inside a reach is what the orbits nearer
+  carry within it
+  ([The hold inside an orbit](#the-hold-inside-an-orbit),
+  [#116](https://github.com/SAIOS-SAMN/xylarium/issues/116)). The galaxy's
+  bands (`galaxy::Structure`, "rings" in the code) are retired with it.
 - The pulse along the filament (the pole axis; see
   [glossary.md](glossary.md)) crosses the universe's rim in the same half
   bell, so the speed in the ocean (the medium between galaxies) is
@@ -116,6 +189,62 @@ the 2^-40 resolution of the draw.
   which read SI-calibrated constants, do depend on it. Next: the core's mass is
   to be supplied by the package (roadmap, Rules from the founding and the
   galactic cores).
+
+### Calibre and dimensional capacity
+
+Open ([#123](https://github.com/SAIOS-SAMN/xylarium/issues/123), roadmap
+item 49).
+
+- **Calibre.** A calibre is the pair of units in which a share's reach and
+  hold are both read. It is:
+  - **tier-bound**: each tier has one calibre;
+  - **conformal**: a change of tier dilates reach and hold together, by the
+    same power of sixty;
+  - **share-preserving**: `delta(lambda M, lambda R) = delta(M, R)`
+    (`xyl_core::shares::deficit`, tested by
+    `shares::tests::deficit_is_invariant_under_dilation`).
+
+  A share `M / (R + M)` means something only inside one calibre: a reach in
+  one calibre against a hold in another is not a share, whatever number it
+  returns. With `G = c = M_core = 1` a mass is a length, so the core calibre
+  reads both in `r_g`; tier `k`'s calibre reads both in `60^(p_k) r_g`.
+- **Dimensional capacity.** A reading's dimensional capacity is the number of
+  components it holds as named, separate parts, each in its calibre: turning
+  planes by their generators, a vortex's fibres, twist, writhe and linking
+  (The vortex), the coordinate's lanes. Position coordinates do not count.
+  A change of calibre dilates every component together and keeps them all,
+  so capacity is never lost to a change of tier; it is lost only where
+  components are summed into one number, an equal split stands in for their
+  separation, or two calibres are read as one.
+- **Every reading states its calibre.** Each equation in
+  [EQUATIONS.md](EQUATIONS.md) names its calibre: the core calibre (`r_g`),
+  the founding calibre (reaches as ratios to the hold, `R_Z = (K + s) /
+  (w_Z H)`), a tier's calibre, the SI seam, or none for a calibre-free
+  identity. A reading is checked for magnitude in its calibre, not only for
+  having moved (CONTRIBUTING.md, Verification). `observe` is to name the
+  calibre of every length and hold it prints; its labels (cluster units,
+  galaxy units) are corrected with the ruling (#123), since the founding's
+  reaches are labelled cluster units without being read in that calibre.
+- **The calibres in use, and where they mix.** Two are built for one
+  deficit.
+  - The founding calibre (v0.3.0) reads reaches as ratios to the hold. The
+    anchor declared those reaches to be cluster units (`60^7 r_g`) while
+    the holds stayed in core masses. That dilates lengths and not masses,
+    which no calibre allows.
+  - The core calibre (the turning law, 2026-10-31) reads
+    `delta = M / (r Tier::in_rg + M)`.
+
+  The star cut (`ring_per_bell` in the founding calibre with the
+  compactness in the core calibre), the star's manifold and the worlds read
+  both. On seed 7 star 7 reads a deficit of `2.4e-11` about its core, one
+  turn of about `1e7` of the universe's rings, and worlds 240 to 400 pc
+  out.
+- **The ruling it needs.** Either (A) masses stay in core masses at every
+  tier, so the founding's reaches are `r_g` and its placement is
+  re-derived; or (B) masses dilate with lengths per tier, so each tier
+  reads `M_k / (R_k + M_k)` in its calibre and the turning law's `r_g`
+  mix is corrected. Both are single calibres; what neither allows is the
+  present mix.
 
 ## 3. The bounce and the founding
 
@@ -332,7 +461,7 @@ longer holds.
 - The deficit law gives the share that a mass `M` holds at reach `R`, and
   every hold in the model takes its form: `delta(R, M) = M / (R + M)`, with
   received share `1 - delta`. The vacuum's share at reach `R` about a hold
-  `H` is that deficit, the push that the pulse delivers there
+  `H` is that deficit, the share the pulse carries there
   (`xyl_core::shares::deficit_dy`); read at the throat, it is the throat's push,
   `p = delta(H, H) = 1/2` (`circuit::throat_push`). The jet carries the
   throat's torsion share `s = (H + J) / (2H + J)` at each crossing
@@ -369,8 +498,10 @@ longer holds.
   kind's 3Z hold, where the residual is 1. There is one jetstream per held
   kind. Status: partial (read by the observer).
 - The ocean is described by the waveform at reach `r`,
-  `A(r, t) = [cos(2 pi (t - tau) / echo) / echo + q(t - tau)] / (r + 1)`,
-  with `tau = (r / rim) bell / 2` (`Substrate::amplitude`). A galaxy's share
+  `A(r, t) = [cos(2 pi (t - tau) / echo) / echo + q(t - tau)] H / (r + H)`,
+  with `tau = (r / rim) bell / 2` and `H = H(r, t)` the held medium inside
+  the reach (`Substrate::amplitude`; see
+  [The held medium: the ocean as a carry](#the-held-medium-the-ocean-as-a-carry)). A galaxy's share
   of a kind that the jet carries is its pull `h / (r + h)` (`h` its state
   over the mean) times its coherence with the kind's phase,
   `1 - 2 min(d, 1 - d)`, divided by the sum over all galaxies
@@ -392,7 +523,8 @@ longer holds.
   universal core, `state <= 1` (`Substrate::galaxies`): a heavier core would
   hold the universal core rather than circle it. Each galaxy circulates about
   the throat at `1440 delta` degrees per echo on its orbital plane, with
-  `delta = inside / (reach + inside)`. Its plane is set by the repulsion
+  `delta = H / (reach + H)`, `H` the held medium inside its reach
+  (`Substrate::held_within`). Its plane is set by the repulsion
   pivots one tier up (the node by the golden angle about the throat's axis,
   the tilt toward it by the plastic angle's share of the S^360 measure; a
   placement by index, to be replaced, roadmap item 40),
@@ -438,14 +570,172 @@ of its enclosure, and the construction is spherical:
   `X(t) -> X(1 / t)`, swaps the Z pole (held) and the Q pole (open) and
   fixes the throat at `t = 1` (`circuit::axis_antipole`).
 - **Arrival at a reach.** The front's arrival at reach `r` is
-  `(r / rim) bell / 2` after the bounce, and its amplitude falls with the
-  vacuum's share about the universal state, `1 / (r + 1)`
+  `(r / rim) bell / 2` after the bounce, and the share of it carried there
+  is the held medium's deficit, `H(r, t) / (r + H(r, t))`
   (`Substrate::amplitude`). In the galaxy tier the front is carried
   between holes by the relay network (`pulse::relays`): every galactic core
   and stellar remnant passes it on continuous in phase. Next: the relay is
   under review against a single front echoed only at surfaces (cores,
   the firmament, the rim) with the held medium's delay `r + H(<r)`, shared
   with Netstratum (roadmap, milestone 3).
+
+### The held medium: the ocean as a carry
+
+In the founding calibre (Calibre and dimensional capacity; #123). What
+the pulse leaves at a reach is a carry, not a push: the ocean between
+the cores is the medium of what the founding released (the beads, the jet's
+kinds in flight, the electrons' phase they bear), and what reaches a place
+is what that medium carries there. By axiom 2 the share held at reach `r`
+is the deficit about the hold enclosed within `r`, so the elements weighing
+on the ocean set the law it carries by.
+
+- **The medium inside a reach** (`Substrate::held_within`,
+  `Substrate::medium`). As founded, the hold inside reach `r` (core
+  masses) is the core's own, 1, plus every bead nearer the throat:
+  `H(r) = 1 + sum(states nearer than r)`. Matter the jet throws moves at
+  the ocean's speed, so what left the core by `t - tau(r)` has crossed `r`
+  unless it lands on a galaxy within `r`; at `t`,
+  `H(r, t) = H(r) - passed(r, t) / F`, with `F` the firmament's founded
+  mass and `passed(r, t)` the outflow by `t - tau(r)` times its landing
+  share bound beyond `r`. Matter in flight within `r`, and matter taken by
+  a galaxy within it, stays in the medium, so the books close. The same
+  hold is a bead's ring hold (a galaxy's circulation and its push read it);
+  it replaces the bead's `1 + 2 x` the nearer share, whose factor was not
+  derived.
+- **The share carried** (`Substrate::carry`). At `r` the medium carries
+  `delta = H(r, t) / (r + H(r, t))` of the pulse: the waveform's share
+  (`Substrate::amplitude`) and, at a piece's reach, the ring its star cut
+  receives (`stars::ring_per_bell` about `H(r)`). At the throat (`r = 0`)
+  it is 1 whatever the medium. The universal state alone, `1 / (r + 1)`, is
+  the case of an empty ocean.
+- **The motion: outward, from the echo.** The echo's near face carries
+  the open share `s` out and its far face returns the held share `1 - s`,
+  opposed (T4, the attractor pair). Composed by the flow law, the ocean
+  carries `s (+) (-(1 - s)) = (2s - 1) / (1 - s (1 - s))` outward per echo
+  (`Carry::outward`): zero only for a spinless throat, and the same
+  composition as the pair share (see Positrons and the pair share), so the
+  ocean's outward carry and the pairs it bears are one law.
+- **The motion: turning, from the torsion.** Axis: the five isoclinic
+  planes (`bounce::spin_bivector`, T18), each by the same degrees.
+  Degrees: each traversal at `r` advances `360 delta` degrees
+  (`Carry::turning`), the shear's advance read about the medium.
+  Torsion: a degree of structure, the medium's deficit. Return: after
+  `1 / (1 - delta)` traversals (T4, `Carry::returns`), read from the same
+  medium's density at `r`; none at the throat, where the medium holds
+  the whole pulse.
+
+The star tier one down still reads a star's life about the core's hold, 1
+(`stars::ring_per_bell` with `h = 1`); the galaxy tier's own medium enters
+with the received carry (roadmap item 44), read about the hold inside the
+star's orbit (below).
+
+### The hold inside an orbit
+
+Planned ([#116](https://github.com/SAIOS-SAMN/xylarium/issues/116), roadmap
+item 46). A body is caught in an orbit, never a band, so the hold inside a
+reach is the share of each nearer orbit that lies within it. Nothing here
+is a new law: the orbit is the throat orbit's form (The ring: the throat
+orbit and the echo's torsion) and the share is the reverberation's swing
+law.
+
+- **The orbit.** A body `b` of mass `m_b` (core masses) at reach `a_b`
+  orbits the hold inside it, `h_b = 1 + sum(m_c, c nearer than b)`, read
+  inner first as the reverberation reads its kinds. Its eccentricity is the
+  deficit there, `e = delta_b = h_b / (a_b + h_b)`, and it swings between
+  the apsides `a_b (1 - delta_b)` and `a_b (1 + delta_b)`.
+- **The share inside a reach.** The share of the orbit's swing within `r`
+  (`circuit::beyond_share` read from the inside):
+  `chi_b(r) = clamp((r - a_b (1 - delta_b)) / (2 a_b delta_b), 0, 1)`: 0
+  while the periapsis is beyond `r`, 1 once the apoapsis is within, and
+  linear between.
+- **The hold.** `H(r) = 1 + sum_b m_b chi_b(r)`, a share of every orbit and
+  never a step. It replaces the step in `Substrate::held_within`
+  (`reach < r`) and, at the galaxy tier, the bands' span share in
+  `galaxy::inside_mass`, so one model reads the hold inside a reach at
+  both tiers. The galaxy tier's units await a ruling (#116): `Structure`
+  divides by the bands' whole holding, taken to be the core's state 1,
+  while the founded beads total 0.4008 core masses.
+- **What stays.** The deficit, dilation, torsion share, jet map, throat
+  crossing, polarity sequence, the coordinate and T1 to T19 are unchanged;
+  they are read with this hold as their argument.
+
+### The vortex: core, swirl, twist, writhe, linking
+
+Planned ([#121](https://github.com/SAIOS-SAMN/xylarium/issues/121), roadmap
+item 48). This section is about the shape, not names. Founded matter is a
+vortex in the medium, and every body stands in its parent's vortex.
+Renaming a band or a unit leaves its shape as it was (#115 renamed and
+changed nothing); this section states the shape the flat structures
+become.
+
+A bivector is a plane at a point, so it cannot hold the shape: it is still
+two axes. The founding already derives a vortex and reads it as two numbers
+at a point, a dilation exponent and one phase:
+
+| Vortex | In the founding | Read today as |
+|---|---|---|
+| Core line | the filament: the pole axis, `X(t)`, `t = U / W`, Z at the origin, Q at infinity, the throat at `t = 1` | a coordinate on one axis |
+| Stretching along the core | the axis plane's dilation `D(n)^t` | one exponent |
+| Swirl about the core | the isoclinic action `e^{i theta}` on C^5; circulation `Gamma(r) = 2 pi H r / (r + H)` about the held medium (The equator, The held medium) | one phase; `Gamma` is never state |
+| Vortex lines | the bands' Hopf fibres in C^6 (Weights on the six planes), circles each linking every other once | not represented |
+| Twist | the torsion the dipole holds, `n` (The antipoles, the shear and the pinch) | a share |
+| Writhe | the residual `n / 3` that flips into writhe, `+/-120 n` degrees per echo (The antipoles, the shear and the pinch) | degrees on all five planes at once |
+| Linking | `Lk = Tw + Wr`, conserved (T10; axiom 11's topological reading) | not carried |
+| Reconnection | the pinch, where `Lk` may change by one after `N* = 3 (4 + a) / (2a)` echoes | a count |
+
+- **Where the dimensions stand.** Circulation is measured on a loop that
+  links the core, so in `n` dimensions a vortex core is `(n - 2)`-
+  dimensional and its loop is one circle. The Hopf fibration
+  `S^1 -> S^11 -> CP^5` places them: the fibre is the circulation loop, and
+  the base `CP^5`, ten real dimensions, is where each fibre stands. A body
+  is therefore not a list of angles (one per axis, plane or generator) but
+  a vortex: its core curve through the medium, with that curve's curvature,
+  torsion and writhe; its circulation about the held medium inside its
+  reach; its fibres' twist about the core; and its linking with every
+  other vortex, a whole number that changes only at a pinch.
+- **Nested vortices.** The anchor chain (core, star, planet, moon) is
+  vortices within vortices. Each body's core is carried along a
+  streamline of its parent's swirl; a cross-tie between siblings is their
+  mutual linking.
+
+**The shapes it replaces.**
+
+| Flat today | Re-volumized |
+|---|---|
+| `galaxy::Structure.rings`: a 1D radial profile of intervals (edges, state, density, deficit) | the galactic core's vortex: swirl `Gamma(r)` about the hold inside an orbit (#116), stretched along its core; matter on streamlines, with no band edges |
+| `galaxy::Orbit`: a circle (radius, a rate in radians, one phase) on a plane set by drawn node and tilt half-angles, with a vertical swing added | a streamline of the parent's swirl: the throat orbit's sheared ellipse (`e = delta`, apsides `r (1 -/+ delta)`, `360 delta` degrees a traversal) on a fibre, its plane carried by the parent's writhe, never drawn |
+| `chain::Place`: a point on a 2-sphere, `reach` with `dir: [Q; 3]` and offsets | a fibre's place in `CP^5`, its phase on the fibre and its reach |
+| `circuit::Bead.span` and the founding shells: intervals of reach | cross-sections of the founding vortex's tube: the share of each kind's fibres inside a reach |
+| `circuit::Kind`'s scalar spin and phase | the kind's circulation and twist |
+| pair readings (#118) | mutual linking `Lk_ij` and the fibres' placement in `CP^5` |
+
+**Derived and open.** Derived: the core (the filament), the stretching
+`D(n)^t`, the circulation from the deficit about the held medium, the
+twist `n`, the writhe `+/-120 n` degrees per echo, the conservation of `Lk`
+and the reconnection count `N*`. Open:
+
+1. the core curve's shape between tiers, its curvature and torsion along
+   the filament (item 40's turning a link carries, from the fold's writhe,
+   T10 and T13);
+2. the mutual linking `Lk_ij` between bodies' vortices (today every body is
+   a separate point);
+3. the separation of two fibres in `CP^5` read linearly in shares (the
+   Fubini-Study angle runs through an inner product and an arccos, so it is
+   not admitted as it stands);
+4. helicity: `sum Gamma_i Gamma_j Lk_ij` carries a `Gamma^2` self term, a
+   square at the root, and is not admitted until it is read without one;
+5. T18's equal fifths: in the vortex, distinct plane phases are distinct
+   windings of the fibres about the core (twist), not five equal angles;
+   whether T18's equal split is lifted awaits a ruling.
+
+Every vortex quantity is read in one calibre: the circulation's reach and
+held medium together, the core curve's lengths with the holds that bend it,
+and a nested vortex in its parent's calibre dilated conformally, so its
+dimensional capacity (core, swirl, fibres, twist, writhe, linking) is kept
+through every tier.
+
+No shared law changes: the deficit, dilation, torsion share, flow law,
+coordinate and T1 to T17, T19 are read as stated.
 
 ### The ring: the throat orbit and the echo's torsion
 
@@ -1412,8 +1702,8 @@ law, the same at a nucleus, a star and a world:
 - Structure (`galaxy::Structure`): the home galaxy is made of the universal
   core's founded matter, so its structure is the founding's beads re-read in
   the galaxy tier's unit. Its rings are the beads, with their reaches and
-  spans in galaxy rings (60^5 r_g) and their states as their holding. The
-  core's reach is one galaxy ring, where `1 / (r + 1)` is one half
+  spans in galaxy units (60^5 r_g) and their states as their holding. The
+  core's reach is one galaxy unit, where `1 / (r + 1)` is one half
   (`galaxy::core_reach`).
   The nucleus is the innermost ring; the reference ring is the ring within
   which half the holding lies (`galaxy::r0`); crowding is a ring's state per
@@ -1426,7 +1716,7 @@ law, the same at a nucleus, a star and a world:
   r_g / c).
 - Lighting (`formation::cooling`, `formation::collapse`,
   `formation::lighting`): each bead is a piece of gas. Its holding per
-  galaxy ring is `lambda = (state / unit) / W`; its agitation is
+  galaxy unit is `lambda = (state / unit) / W`; its agitation is
   `(p - delta) / p` with `delta = h / (R + h)` and `h = 1 + held share`; its
   emission is `e = sum s_z open_z / hold_z`, and its magnetism is
   `mu = lambda e`. Outside the core's reach the gas is a circle (`n = 1`);
@@ -1444,9 +1734,9 @@ law, the same at a nucleus, a star and a world:
   ignition is under the throat's push. The first stars are the ring count of
   the first lit piece; the lit share is the star efficiency.
 - Reach unit: a star's reach about the core (`Star::r`, `Orbit::radius`) is
-  measured in galaxy rings, the same unit in which its piece was lit; kpc
+  measured in galaxy units, the same unit in which its piece was lit; kpc
   appear only at display and at the marked boundaries of the layers not yet
-  converted (`galaxy::kpc_of_rings`).
+  converted (`galaxy::kpc_of_units`).
 - Placement (`galaxy::star`): sample stars stand for equal shares of the
   stellar mass and are placed along the rings' cumulative holding by
   irrational pivots (the golden, silver, plastic and `sqrt 3 - 1` angles;

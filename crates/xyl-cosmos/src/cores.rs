@@ -249,7 +249,7 @@ fn founding_of(origin: &Origin) -> Option<Arc<Founding>> {
         rate: Dy::ZERO,
     }];
     // A bead's reach about the throat is read in the cluster tier as founded
-    // (one core ring is one cluster unit, circuit::anchor).
+    // (the cluster unit, circuit::anchor).
     for (index, bead) in substrate.galaxies().into_iter().skip(1) {
         let g = bead?;
         let out = g.reach.clone();
@@ -265,9 +265,10 @@ fn founding_of(origin: &Origin) -> Option<Arc<Founding>> {
             crate::galaxy::tilt_of(pivot(&crate::galaxy::plastic_turns())),
             crate::galaxy::node_of(pivot(&crate::galaxy::golden_turns())),
         );
-        // The circulation is rate = 4 delta / echo, delta = inside / (reach + inside).
-        let delta = Dy::from_q(&g.inside)
-            / (Dy::from_q(&g.reach) + Dy::from_q(&g.inside)).max(Dy::sci(1, -300));
+        // The circulation is rate = 4 delta / echo, delta = H / (reach + H)
+        // with H the hold inside the galaxy's reach (`held_within`).
+        let inside = Dy::from_q(&substrate.held_within(&g.reach));
+        let delta = inside / (Dy::from_q(&g.reach) + inside).max(Dy::sci(1, -300));
         let rate = Dy::int(4) * delta / crate::circuit::echo();
         // The place at t = 0 is kept for reference; readings use place_at.
         let dir0 = {

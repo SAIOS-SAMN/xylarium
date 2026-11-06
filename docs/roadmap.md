@@ -313,7 +313,8 @@ where it belongs to one.
     echo's faces, `360 delta` degrees a traversal on the isoclinic planes
     from the torsion. Next, in order: (1) the star's received quantity as a
     carry, a star's life read about the galaxy tier's own medium
-    (`stars::ring_per_bell` still takes `h = 1` there), and graded
+    (`stars::ring_per_bell` still takes `h = 1` there), the hold inside the
+    star's orbit (item 46, first), and graded
     stripping (T20, held on `graded-stripping`) re-derived on it; (2) the
     reverberation's interior hold, `1 + (firmament nearer) / unit`, put on
     the same footing as `H(r)` (it divides a mass by the beads' total); (3)
@@ -329,6 +330,19 @@ where it belongs to one.
    neighbours. Matter is to circulate along the shear of neighbouring orbits,
    bands to blend where the founding's shells overlap, and edges to move with
    their holding. The word "ring" is kept for the bell's unit of time.
+   First step: item 46.
+46. **The hold inside an orbit**
+    ([#116](https://github.com/SAIOS-SAMN/xylarium/issues/116), `law`,
+    `defect`, `needs-decision`;
+    [model.md](model.md#the-hold-inside-an-orbit)). A body is caught in an
+    orbit, never a band: `H(r) = 1 + sum m_b chi_b(r)`, each nearer orbit
+    counted by the share of its swing within `r` (the reverberation's swing
+    law, eccentricity the deficit about the hold inside it). Replaces the
+    step in `Substrate::held_within` and, at the galaxy tier, the bands of
+    `galaxy::Structure` and `inside_mass`, so one model reads both tiers
+    (#43). Needs decision: the galaxy tier's divisor (the bands' holding
+    taken as the core's 1; the beads total 0.4008 core masses). Unblocks
+    item 44 step 1.
 6. **Each galaxy's own structure**
    ([#7](https://github.com/SAIOS-SAMN/xylarium/issues/7), `proposal`). Every
    other galaxy is the home galaxy scaled by its hole mass
@@ -447,6 +461,14 @@ where it belongs to one.
     first issue`). Done: `Rotor::inverse` and the certified
     `rotor::angle_between` replace the `acos` readings in
     `manifold::gap` and `chain::Place::arc`.
+45. **Ring keeps one meaning**
+    ([#115](https://github.com/SAIOS-SAMN/xylarium/issues/115), `defect`).
+    "Ring" is the harmonic of the bell, echo and pulse only. The length
+    units read as "core rings" and "galaxy rings" are the cluster unit
+    (`60^7 r_g`) and the galaxy unit (`60^5 r_g`); docs, comments, labels and
+    identifiers are renamed (`rings_of_kpc`, `kpc_of_rings`, `kpc_per_ring`,
+    `Star::reach_rings`), with no formula changed and every reading
+    unchanged but for its unit label. The band sense goes with item 46.
 
 ## 1. Founding in the core's units (done)
 

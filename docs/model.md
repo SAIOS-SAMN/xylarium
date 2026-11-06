@@ -76,9 +76,12 @@ the 2^-40 resolution of the draw.
   exact power of sixty of `r_g` (`xyl-core units.rs` `Tier::in_rg`):
   universe `60^10`, cluster `60^7`, galaxy `60^5`, system `60` and planet
   `60^-2`. A conversion between tiers multiplies by a power of sixty
-  (`manifold::dilation`) and is exact. The substrate's reaches (core rings)
-  are in cluster units; the home galaxy's rings and every star's reach are
-  in galaxy units.
+  (`manifold::dilation`) and is exact. The substrate's reaches are in
+  cluster units (`60^7 r_g`) and every star's reach in galaxy units
+  (`60^5 r_g`). The code and older text still call these units "core
+  rings" and "galaxy rings"; they are lengths, not rings, and are renamed
+  ([#115](https://github.com/SAIOS-SAMN/xylarium/issues/115), roadmap item
+  45).
 - The bell (`circuit::anchor`, `Anchor::bell`) is the round-trip time
   of light to the home galaxy's rim, `bell = 2 rim 60^5` in core time
   (`r_g / c`), with the founding's rim read in the galaxy tier's unit. The
@@ -89,11 +92,20 @@ the 2^-40 resolution of the draw.
   (`package::Si::seconds_per_ring`, `bell r_g / c`); `circuit::rings_of_gyr`
   and `gyr_of_rings` convert at the boundaries of layers still counted in
   Gyr and at display.
-- A ring of time is one bell; counts of time (cooling, first light, a star's
-  transduction and life) are whole numbers of rings. An echo is two bells, one
-  ring for each face (near and far) of the paired throat (`circuit::echo`). A
-  one-way crossing to reach `r` takes `(r / rim) bell / 2`, a fraction of a
-  ring.
+- **Ring has one meaning: the harmonic of the bell, echo and pulse.** A
+  ring of time is one bell; counts of time (cooling, first light, a star's
+  transduction and life) are whole numbers of rings, and the ring a place
+  receives per bell (`stars::ring_per_bell`) is that harmonic's share
+  delivered there. A throat's echo is its sheared return at its torsion
+  share `s`: `bell / (1 - s)` on the near face and `bell / s` on the far
+  face, two bells each only at zero spin (`circuit::echo_at`). A one-way
+  crossing to reach `r` takes `(r / rim) bell / 2`, a fraction of a ring.
+  A body is never held in a ring: it is caught in an orbit on the plane of
+  the tier above, and the hold inside a reach is what the orbits nearer
+  carry within it
+  ([The hold inside an orbit](#the-hold-inside-an-orbit),
+  [#116](https://github.com/SAIOS-SAMN/xylarium/issues/116)). The galaxy's
+  bands (`galaxy::Structure`, "rings" in the code) are retired with it.
 - The pulse along the filament (the pole axis; see
   [glossary.md](glossary.md)) crosses the universe's rim in the same half
   bell, so the speed in the ocean (the medium between galaxies) is
@@ -496,7 +508,38 @@ on the ocean set the law it carries by.
 
 The star tier one down still reads a star's life about the core's hold, 1
 (`stars::ring_per_bell` with `h = 1`); the galaxy tier's own medium enters
-with the received carry (roadmap item 44).
+with the received carry (roadmap item 44), read about the hold inside the
+star's orbit (below).
+
+### The hold inside an orbit
+
+Planned ([#116](https://github.com/SAIOS-SAMN/xylarium/issues/116), roadmap
+item 46). A body is caught in an orbit, never a band, so the hold inside a
+reach is the share of each nearer orbit that lies within it. Nothing here
+is a new law: the orbit is the throat orbit's form (The ring: the throat
+orbit and the echo's torsion) and the share is the reverberation's swing
+law.
+
+- **The orbit.** A body `b` of mass `m_b` (core masses) at reach `a_b`
+  orbits the hold inside it, `h_b = 1 + sum(m_c, c nearer than b)`, read
+  inner first as the reverberation reads its kinds. Its eccentricity is the
+  deficit there, `e = delta_b = h_b / (a_b + h_b)`, and it swings between
+  the apsides `a_b (1 - delta_b)` and `a_b (1 + delta_b)`.
+- **The share inside a reach.** The share of the orbit's swing within `r`
+  (`circuit::beyond_share` read from the inside):
+  `chi_b(r) = clamp((r - a_b (1 - delta_b)) / (2 a_b delta_b), 0, 1)`: 0
+  while the periapsis is beyond `r`, 1 once the apoapsis is within, and
+  linear between.
+- **The hold.** `H(r) = 1 + sum_b m_b chi_b(r)`, a share of every orbit and
+  never a step. It replaces the step in `Substrate::held_within`
+  (`reach < r`) and, at the galaxy tier, the bands' span share in
+  `galaxy::inside_mass`, so one model reads the hold inside a reach at
+  both tiers. The galaxy tier's units await a ruling (#116): `Structure`
+  divides by the bands' whole holding, taken to be the core's state 1,
+  while the founded beads total 0.4008 core masses.
+- **What stays.** The deficit, dilation, torsion share, jet map, throat
+  crossing, polarity sequence, the coordinate and T1 to T19 are unchanged;
+  they are read with this hold as their argument.
 
 ### The ring: the throat orbit and the echo's torsion
 

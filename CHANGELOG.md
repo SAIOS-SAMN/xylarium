@@ -207,6 +207,14 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- "Ring" keeps one meaning, the harmonic of the bell, echo and pulse
+  (docs/model.md, Units; glossary): the lengths called "core rings" and
+  "galaxy rings" are the cluster and galaxy units, to be renamed in code
+  (#115, roadmap item 45); bands give way to orbits, with the hold inside a
+  reach read from the share of each nearer orbit's swing within it
+  (docs/model.md and EQUATIONS.md, The hold inside an orbit; #116, roadmap
+  item 46; planned). The units section's echo now reads the sheared return
+  of #112 (`bell / (1 - s)` and `bell / s`), not two bells.
 - The ocean carries what reaches a place, at the share its held medium
   holds there (docs/model.md, The held medium; roadmap item 44, #113). The hold
   inside a reach is the core's 1 plus the beads nearer, less the core's

@@ -499,6 +499,14 @@ display, never stored.
   plane advances 180 degrees per traversal and returns after two, the two
   faces of the attractor pair then reading the same density (`s = 1 - s`): the echo is the
   throat orbit's return.
+- **The echo at any spin** (built: `circuit::echo_at`). The near face
+  advances by the torsion share `s` per traversal (axiom 7), so by T4 it
+  returns after `bell / (1 - s)`, and the far face after `bell / s`; the two
+  are equal only at zero spin. Each throat's echo is read at that throat's
+  torsion share: the universal core's founding at the founded share
+  (`circuit::Substrate::echo`), every tier after the core's bounce at the
+  share of its spin then (`circuit::echo`, `Anchor::core_spin`, T17).
+  `xylarium observe universal-core` prints both faces' echoes at each.
 - **The local ring.** At reach `r` about a hold `M`, the local ring is one
   traversal of the orbit at `r`, and every law step at that reach (a turning
   on the orbit's plane, the vacuum's halving of an agitation, a cooling) counts local
@@ -762,7 +770,7 @@ Theorems:
 | T14 | enclosed matter, from the reach its layer has at the pinch (The state at the pinch); in plane `j` it is pushed out at `J_j / (6 H_j + J_j)` per echo, `H_j` the cohort's hold in the plane and `J_j = J / 5` (none on the axis plane) | 2, 3, 7 |
 | T15 | a whole nucleus feels its planes composed, `D_k = D(p_plane)^w_k D(n)^A`, `w_k` its share of turning in the isoclinic planes; held where `D_k <= 1`, else it leaves after `ln 2 / ln D_k` echoes | 3, T14 |
 | T16 | a paired throat's faces dilate an open kind by `D(s) D(n)^A` and `D(s) D(n)^-A`, product `(3 + a)^2`; no open kind is held on both faces; the shared hold is the closed kinds | 3, 5, 9, T2, T8 |
-| T17 | the spin is a sheared orbit over the pinches: a kind's separation is `rho = q ln D(s) - (1 - q) ln D(1 - s)` across the attractor pair; a cohort takes `J (m / M) (rho_cohort / rho_hold)`; a cohort less separated than its hold spins the throat up; the pair closes while `a <= 1` | 3, 7, 9, 11, T2, T10, T16 |
+| T17 | the spin is a sheared orbit over the core's bounces: a kind's separation is `rho = q ln D(s) - (1 - q) ln D(1 - s)` across the attractor pair; a cohort takes `J (m / M) (rho_cohort / rho_hold)`; a cohort less separated than its hold spins the throat up; the pair closes while `a <= 1` | 3, 7, 9, 11, T2, T10, T16 |
 | T18 | the five isoclinic planes are interchangeable in the multiplicity and the filling, so each holds a fifth of the isoclinic hold and T14's pushes are equal: one isoclinic phase per body; distinct plane phases come only from a link's turning between planes | 8, T6, T7, T14 |
 | T19 | a link's remanence `w = J - (a_0 M_0) M`: per passage `w' = w (1 - m / M) + J (m / M) (1 - rho_c / rho_hold)`; conserved between passages; cleared by a passage of hold `m* = w M / (w + J (rho_c / rho_hold - 1))`; for one release, the remanent share `1 - rho_hold / rho_closed` | 7, 11, T10, T17 |
 
@@ -897,10 +905,13 @@ and theorems T2, T8 and T11. Every identity below is exact.
   `a' = J' / M'^2` (axioms 7 and 11); releasing everything takes `J`
   whole. What the pair cannot hold, the residual `n / 3` (T10), is
   friction, not repulsion.
-  - The cohorts leave at the throat's pinches, which are events, not
-    steps. Between pinches each open kind climbs in closed form,
-    `ln t += N* ln(D(s) D(n)^A)`, and the pinch interval
-    `N* = 3 (4 + a) / (2 a)` moves with the spin. That is the orbit's shear.
+  - The cohorts leave at the core's bounces, which are events, not steps.
+    At a core the folds' meeting (T10) is a bounce through the far face,
+    the quantum torsion of the core; a pinch is a fold meeting between
+    gravity wells, where a wormhole opens. Between bounces each open kind
+    climbs in closed form, `ln t += N* ln(D(s) D(n)^A)`, and the bounce
+    interval `N* = 3 (4 + a) / (2 a)` moves with the spin. That is the
+    orbit's shear.
   - A cohort less separated than the hold it leaves takes less than its
     share of the turning and spins the throat up: phase strengthening. One
     more separated spins it down: phase weakening (#84).
@@ -924,7 +935,7 @@ and theorems T2, T8 and T11. Every identity below is exact.
   - Open kinds held by pressure on the near face only: 1.87e-18 of the
     founded hold, released by the far face; none on both faces, the faces'
     product `(3 + a)^2` being 11.2.
-  - The core releases its open kinds in one cohort at its first pinch,
+  - The core releases its open kinds in one cohort at its first bounce,
     after 18.81 echoes. The cohort is 0.5648 of the founded hold at
     separation `rho = -0.646`, against the hold's `-0.798` (the closed
     kinds' is `-0.995`), so it takes 0.8095 of its share of the turning.

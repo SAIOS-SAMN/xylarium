@@ -34,7 +34,9 @@ pub(super) fn core_read(o: &Options, t_rings: Option<Q>) -> Result<String, Strin
     let mut out = format!(
         concat!(
             "The substrate at T {} ({} Gyr) (seed {}): founded in {:.1?}; the bell {} Gyr, ",
-            "an echo {} Gyr; {} firmament kinds, {} beads ({} hold a sun), rim {} rings\n"
+            "an echo {} Gyr after the core's bounce; {} firmament kinds, ",
+            "{} beads ({} hold a sun), ",
+            "rim {} rings\n"
         ),
         at,
         gyr_of_rings_dy(t),
@@ -47,6 +49,32 @@ pub(super) fn core_read(o: &Options, t_rings: Option<Q>) -> Result<String, Strin
         s.galaxies().len() - 1,
         show(&s.rim)
     );
+    // Each face's echo (T4, axiom 7): the near face returns after
+    // bell / (1 - s), the far face after bell / s, at the founded share and
+    // at the share of the spin after the core's bounce.
+    let released =
+        xyl_cosmos::bounce::torsion_share(&Q::ONE, &xyl_cosmos::circuit::anchor().core_spin);
+    let faces = |share: &Q| {
+        let far = Q::ONE
+            .checked_div(share)
+            .map(|x| Dy::from_q(&x))
+            .unwrap_or(Dy::ZERO);
+        (xyl_cosmos::circuit::echo_at(share), far)
+    };
+    let (near0, far0) = faces(&s.share);
+    let (near1, far1) = faces(&released);
+    out.push_str(&format!(
+        concat!(
+            "  The echo (T4): founded at share {}, near face {} rings, far face {} rings; ",
+            "after the core's bounce at share {}, near face {} rings, far face {} rings\n"
+        ),
+        show(&s.share),
+        near0,
+        far0,
+        show(&released),
+        near1,
+        far1
+    ));
     out.push_str(&core_state(&s, t));
     let at_mean: Vec<Option<PoleFlux>> = (0..s.reverb.len())
         .map(|i| s.loop_flux_swung(i, t, Dy::ONE))
@@ -197,7 +225,7 @@ fn core_state(s: &Substrate, t: Dy) -> String {
             "its mean over the first echo {}; the push at the throat {} swung to {} at T\n"
         ),
         s.inbound(t),
-        s.inbound_mean(xyl_cosmos::circuit::echo()),
+        s.inbound_mean(s.echo()),
         xyl_cosmos::circuit::throat_push(),
         s.push_at(Dy::ONE, Dy::ONE, t)
     ));

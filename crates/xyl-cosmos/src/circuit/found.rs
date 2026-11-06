@@ -138,7 +138,7 @@ impl Substrate {
         // they are the firmament, and every open kind leaves.
         let shells: Vec<(u32, Q, Q, bool)> = shells
             .into_iter()
-            .map(|(z, a, r, _)| (z, a, r, crate::compound::open(z) == 0))
+            .map(|(z, a, r)| (z, a, r, crate::compound::open(z) == 0))
             .collect();
         let firmament = firmament_of(&shells, &share);
         // The pushed-out shells are sorted by reach and linked into runs where

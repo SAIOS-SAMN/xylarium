@@ -21,8 +21,22 @@ pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
         .map(|k| (k.z, k.share.clone()))
         .collect();
     let (s_final, shells) = xyl_cosmos::formation::founding_shells(&mix);
-    let held: Vec<u32> = shells.iter().filter(|s| s.3).map(|s| s.0).collect();
-    let out_reach = || shells.iter().filter(|s| !s.3).map(|s| s.2.clone());
+    // The firmament is the closed kinds (T16), held on both faces whatever
+    // the shells' reach test says; the shells give each kind's reach.
+    let mut held: Vec<u32> = shells
+        .iter()
+        .filter(|s| xyl_cosmos::compound::open(s.0) == 0)
+        .map(|s| s.0)
+        .collect();
+    // A kind stands in several shells; the firmament counts each kind once.
+    held.sort_unstable();
+    held.dedup();
+    let out_reach = || {
+        shells
+            .iter()
+            .filter(|s| xyl_cosmos::compound::open(s.0) > 0)
+            .map(|s| s.2.clone())
+    };
     let (near, far) = (out_reach().min(), out_reach().max());
     let rim = shells
         .iter()
@@ -33,7 +47,9 @@ pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
     let mut out = format!(
         concat!(
             "The founding shells: {} kinds, final share {}; ",
-            "held {} kinds (Z {:?}..{:?}); pushed-out reaches {} .. {} rings; rim {} rings\n"
+            "the firmament's closed kinds {} (Z {:?}..{:?}); ",
+            "the open kinds' reaches {} .. {} rings; ",
+            "rim {} rings\n"
         ),
         mix.len(),
         show(&s_final),
@@ -45,9 +61,9 @@ pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
         show(&rim)
     );
     // Shells in order of reach, kinds standing at one reach grouped.
-    let mut by_reach: Vec<&(u32, Q, Q, bool)> = shells.iter().collect();
+    let mut by_reach: Vec<&(u32, Q, Q)> = shells.iter().collect();
     by_reach.sort_by(|a, b| a.2.cmp(&b.2).then(a.0.cmp(&b.0)));
-    let mut groups: Vec<Vec<&(u32, Q, Q, bool)>> = Vec::new();
+    let mut groups: Vec<Vec<&(u32, Q, Q)>> = Vec::new();
     for s in by_reach {
         match groups.last_mut() {
             Some(g) if g.first().is_some_and(|f| f.2 == s.2) => g.push(s),
@@ -64,10 +80,10 @@ pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
             g.len(),
             show(&amount),
             g.first().map(|s| show(&s.2)).unwrap_or_default(),
-            if g.iter().all(|s| s.3) {
-                "held"
+            if g.iter().all(|s| xyl_cosmos::compound::open(s.0) == 0) {
+                "closed, the firmament's"
             } else {
-                "pushed out"
+                "open, released"
             }
         ));
     }
@@ -93,7 +109,7 @@ pub(super) fn founding_read(o: &Options) -> Result<String, String> {
         xyl_cosmos::elements::TOP_Z
     );
     let reach = |z: u32| shells.iter().find(|s| s.0 == z).map(|s| s.2.clone());
-    for (z, _, r, _) in shells.iter().filter(|s| {
+    for (z, _, r) in shells.iter().filter(|s| {
         [
             1, 2, 6, 8, 26, 79, 115, 150, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200,
         ]

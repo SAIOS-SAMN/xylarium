@@ -11,6 +11,18 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Calibre and dimensional capacity (docs/model.md; glossary; AGENTS.md;
+  CONTRIBUTING.md, Verification; #123, roadmap item 49). A calibre is the
+  pair of units in which a share's reach and hold are both read:
+  tier-bound, conformal, share-preserving; a share across two calibres is
+  not a share. Dimensional capacity (formerly dimensionality) is the number
+  of named components a reading holds, each in its calibre. Every entry of
+  EQUATIONS.md now names its calibre: 56 calibre-free, 51 founding, 10 core
+  (`r_g`), 20 SI seam and 18 mixed. The mixed entries are the defect: the
+  star cut, the star's manifold and the worlds read the founding and core
+  calibres at once (on seed 7, worlds 240 to 400 pc from their star), and
+  the ruling between them is open. Readings are checked for magnitude in
+  their calibre, not only for having moved. No code changes.
 - The vortex (docs/model.md, The vortex; EQUATIONS.md; #121, roadmap item
   48): the shape the flat structures become. Founded matter is a vortex
   (core the filament, stretching `D(n)^t`, circulation about the held
@@ -20,7 +32,7 @@ may change public APIs and the model's laws.
   open derivations are listed; no code changes.
 - The pair rule (docs/model.md, Pairs: the pivot, per plane; AGENTS.md;
   #118, roadmap item 47): every reading between two things keeps its
-  dimensionality (the turning planes it holds as named components) and is
+  dimensional capacity (the turning planes it holds as named components) and is
   read through the pivot, plane by plane in degrees with winding and
   return; `rotor::angle_between`, one unnamed plane through a square root
   and asin, is to be retired. Planned; no code changes.

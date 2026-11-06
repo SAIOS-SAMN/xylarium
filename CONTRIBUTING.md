@@ -77,7 +77,14 @@ founded universe share one test genesis; see
 
 A change to a law of the model is also checked on a running universe with
 `xylarium observe`: take one reading before and one after the change, and
-summarise the comparison in the pull request.
+summarise the comparison in the pull request. Check each reading for
+magnitude in its calibre, not only for having moved: state the calibre of
+every length and hold you compare, and say whether the result stands at
+the scale its tier allows (a world at hundreds of parsecs from its star,
+or one turn longer than the universe's ring, is a broken reading, not a
+result). A change keeps every reading's dimensional capacity: no component
+is summed away, split equally or read in a second calibre (docs/model.md,
+Calibre and dimensional capacity).
 
 The optional helper scripts `scripts/heavy` and `scripts/long` serialise
 builds and long runs on shared machines. They need `flock` (util-linux, so

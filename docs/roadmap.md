@@ -257,7 +257,8 @@ where it belongs to one.
     ([#118](https://github.com/SAIOS-SAMN/xylarium/issues/118), `defect`,
     `law`; part of item 40 and #90;
     [model.md](model.md#pairs-the-pivot-per-plane)). Every pair reading
-    keeps its dimensionality: coordinates of one origin, the relative frame
+    keeps its dimensional capacity: coordinates of one origin in one
+    calibre, the relative frame
     by conjugation, read per plane in degrees with winding and return,
     closeness by the two-sided form in shares. Retires
     `xyl_core::rotor::angle_between` and the readings on it
@@ -277,6 +278,19 @@ where it belongs to one.
     core curve between tiers, mutual linking, fibre separation in shares,
     helicity without its square; T18's equal fifths awaits a ruling.
     Depends on item 46.
+49. **Calibre**
+    ([#123](https://github.com/SAIOS-SAMN/xylarium/issues/123), `defect`,
+    `law`, `needs-decision`;
+    [model.md](model.md#calibre-and-dimensional-capacity)). Every share
+    reads its reach and hold in one calibre (tier-bound, conformal,
+    share-preserving), and every equation names its calibre
+    (EQUATIONS.md). Two are built and mixed: the founding calibre (reaches
+    as ratios to the hold, declared cluster units while holds stay in core
+    masses) and the core calibre of the turning law. The star cut, the
+    star's manifold and the worlds read both. Ruling: (A) masses in core
+    masses at every tier, or (B) masses dilate with lengths per tier. Blocks
+    #116 landing (held on `orbit-hold`), item 48's streamlines and item 44
+    step 1.
 43. **Scalar collapses**
     ([#107](https://github.com/SAIOS-SAMN/xylarium/issues/107), `defect`,
     `law`;

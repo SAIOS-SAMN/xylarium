@@ -661,7 +661,10 @@ law.
   (the held share 0.7139). The bands divided by the bands' holding, taken
   to be the core's state; that premise does not hold, so both tiers read
   the hold in core masses: past every orbit the galaxy holds `1 + unit`,
-  1.4008, where the bands read 2.
+  1.4008, where the bands read 2. The turning law reads this hold in the
+  core calibre against reaches the founding calibre declares, so its
+  readings stand only once the calibre is ruled (Calibre and dimensional
+  capacity, #123).
 - **What stays.** The deficit, dilation, torsion share, jet map, throat
   crossing, polarity sequence, the coordinate and T1 to T19 are unchanged;
   they are read with this hold as their argument.

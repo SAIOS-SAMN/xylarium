@@ -3,35 +3,35 @@
 //! pairs that can bind ([`binding_pairs`]) and the constellations they form
 //! ([`constellations`]).
 //!
-//! Boundary: the cosmos reads orbits in galaxy rings, masses in core masses
+//! Boundary: the cosmos reads orbits in galaxy units, masses in core masses
 //! and rates in radians per ring; this module still counts spans in kpc and
 //! masses in suns, converted at [`radius_kpc`], [`rate_at_kpc`] and
-//! [`pair_turning`] (`galaxy::kpc_of_rings_dy`, `galaxy::rings_of_kpc_dy`,
+//! [`pair_turning`] (`galaxy::kpc_of_units_dy`, `galaxy::units_of_kpc_dy`,
 //! `galaxy::core_masses_of_suns`) until the kernel is converted.
 
 use std::collections::BTreeMap;
 use xyl_core::dyadic::Dy;
 use xyl_core::units::Tier;
-use xyl_cosmos::galaxy::{kpc_of_rings_dy, rings_of_kpc_dy, Star};
+use xyl_cosmos::galaxy::{kpc_of_units_dy, units_of_kpc_dy, Star};
 
 /// Returns a star's orbit radius in kpc (boundary).
 fn radius_kpc(s: &Star) -> Dy {
-    kpc_of_rings_dy(s.orbit.radius)
+    kpc_of_units_dy(s.orbit.radius)
 }
 
 /// Returns the galaxy's turning (radians per ring) in the star's galaxy at
 /// `at_kpc` kpc from its core (boundary over `Star::rate_at_dy`).
 fn rate_at_kpc(s: &Star, at_kpc: Dy) -> Dy {
-    s.rate_at_dy(rings_of_kpc_dy(at_kpc))
+    s.rate_at_dy(units_of_kpc_dy(at_kpc))
 }
 
 /// Returns the turning (radians per ring) that a body of `suns` gives a
 /// neighbour `span_kpc` away: the master equation's pair term, the turning
 /// law (`turning::turning_dy`) evaluated at the span (at least 1e-9 kpc),
-/// the mass and span read in core masses and galaxy rings at the boundary.
+/// the mass and span read in core masses and galaxy units at the boundary.
 fn pair_turning(suns: Dy, span_kpc: Dy) -> Dy {
     let m = Dy::from_q(&xyl_cosmos::galaxy::core_masses_of_suns(&suns.to_q()));
-    let span = rings_of_kpc_dy(span_kpc.max(Dy::sci(1, -9)));
+    let span = units_of_kpc_dy(span_kpc.max(Dy::sci(1, -9)));
     xyl_cosmos::turning::turning_dy(m, span, Tier::Galaxy)
 }
 
@@ -149,9 +149,9 @@ impl InPlay {
     /// the vertical swing through the plane at its largest (the vertical
     /// speed read 10 Gyr later, where the share saturates, times the scale).
     pub fn speed_bound(&self, t: Dy) -> Dy {
-        // The cosmos counts in rings and galaxy rings; the rate, the speed
+        // The cosmos counts in rings and galaxy units; the rate, the speed
         // and the age convert at this boundary (a rate per ring read per Gyr
-        // is `rings_of_gyr_dy`, a reach in kpc is `kpc_of_rings_dy`).
+        // is `rings_of_gyr_dy`, a reach in kpc is `kpc_of_units_dy`).
         let rate = xyl_cosmos::circuit::rings_of_gyr_dy(self.star.orbit.rate.abs());
         let circ = rate * radius_kpc(&self.star);
         let born = xyl_cosmos::circuit::gyr_of_rings_dy(Dy::from_q(&self.star.born));
@@ -160,7 +160,7 @@ impl InPlay {
             .star
             .vertical_at(xyl_cosmos::circuit::rings_of_gyr_dy(age))
             .map(|v| {
-                let per_ring = kpc_of_rings_dy(v.vz.abs() * self.star.scale);
+                let per_ring = kpc_of_units_dy(v.vz.abs() * self.star.scale);
                 xyl_cosmos::circuit::rings_of_gyr_dy(per_ring)
             })
             .unwrap_or(Dy::ZERO);

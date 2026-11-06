@@ -2,7 +2,7 @@
 //! and exposure to the crowded layer, in closed form, derived from the
 //! turning law, the crowding and the ring structure. Reaches are galaxy
 //! rings, ages and periods rings, the frequency radians per ring and the
-//! speed galaxy rings per ring.
+//! speed galaxy units per ring.
 //!
 //! - Frequency ([`vertical_frequency`]): `nu(r) = omega(r) 2d / (1 + d)`,
 //!   with `omega` the turning law about the mass inside `r`
@@ -31,9 +31,9 @@ use xyl_core::units::Tier;
 /// occur.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Vertical {
-    /// Amplitude of the swing through the plane (galaxy rings).
+    /// Amplitude of the swing through the plane (galaxy units).
     pub amp: Dy,
-    /// Speed through the plane (galaxy rings per ring).
+    /// Speed through the plane (galaxy units per ring).
     pub vz: Dy,
     /// Period of the oscillation (rings); zero where the plane has no pull.
     pub period: Dy,
@@ -43,8 +43,8 @@ pub struct Vertical {
     pub phase: Dy,
 }
 
-/// The crowding of the ring containing `r` (galaxy rings), as a dyadic: the
-/// ring's holding per galaxy ring over that of the reference ring
+/// The crowding of the ring containing `r` (galaxy units), as a dyadic: the
+/// ring's holding per galaxy unit over that of the reference ring
 /// ([`density`]), 1 at the reference ring and never negative. The one
 /// reading of the crowding on readings (the plane's pull, the worlds'
 /// environment and cosmic rays).
@@ -52,7 +52,7 @@ pub fn crowding(r: Dy) -> Dy {
     Dy::from_q(&density(&r.to_q()).mid()).max(Dy::ZERO)
 }
 
-/// The crowded layer's half-thickness at reach `r` (galaxy rings):
+/// The crowded layer's half-thickness at reach `r` (galaxy units):
 /// `h(r) = r m / (M(<r) + m)`, the deficit share of the ring's mass `m`
 /// (`ring_mass`, core masses) against the mass inside it (`inside_mass`,
 /// core masses), taken of the reach. Zero at a non-positive reach.
@@ -93,7 +93,7 @@ fn heating_share(r: Dy, born: Dy, age: Dy) -> Dy {
     age / (age + cooling)
 }
 
-/// A star's vertical orbit at `r` (galaxy rings), born at `born` and read
+/// A star's vertical orbit at `r` (galaxy units), born at `born` and read
 /// after `age` rings: the uniform draw `u` in [0, 1) sets the speed through
 /// an exponential distribution, and `phase` is the position in the
 /// oscillation (turns). Amplitude and period are zero where the plane has no
@@ -102,7 +102,7 @@ pub fn vertical(r: Dy, born: Dy, age: Dy, u: Dy, phase: Dy) -> Vertical {
     let share = crate::laws::share2(crowding(r));
     let nu = vertical_frequency(r);
     let h = layer(r);
-    // The speed scale is `sigma = h nu s 2d / (1 + d)` (galaxy rings per
+    // The speed scale is `sigma = h nu s 2d / (1 + d)` (galaxy units per
     // ring) and the draw `vz = -sigma ln(1 - u)`, an exponential in place
     // of a Rayleigh root.
     let sigma = h * nu * heating_share(r, born, age) * share;

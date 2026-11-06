@@ -20,7 +20,7 @@ use xyl_core::{Stream, Q};
 /// rate comes from the turning law, exact in radians per ring.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Orbit {
-    /// Orbit radius (galaxy rings), scaled by the galaxy's length scale.
+    /// Orbit radius (galaxy units), scaled by the galaxy's length scale.
     pub radius: Dy,
     /// Turning rate (radians per ring), from the turning law.
     pub rate: Dy,
@@ -61,7 +61,7 @@ impl Orbit {
 pub struct Star {
     /// Index in the galaxy's sample.
     pub n: u64,
-    /// Home-equivalent distance from the core (galaxy rings), exact; sets the
+    /// Home-equivalent distance from the core (galaxy units), exact; sets the
     /// gas conditions the star formed in.
     pub r: Q,
     /// Birth time (rings after the origin), rounded to the grid.
@@ -112,13 +112,13 @@ impl Star {
             .at(self.compactness())
     }
 
-    /// The star's reach about its galactic core (galaxy rings). A star relates
+    /// The star's reach about its galactic core (galaxy units). A star relates
     /// to the core it is anchored on, in the lowest common tier (the
     /// containment chain), so its reach is the orbit radius in its galaxy;
     /// the galaxy's reach about the universal core is one tier up and is not
     /// added to it. Every reading of the star's life (its class, its system's
     /// spec, its worlds' life and minds) reads this reach.
-    pub fn reach_rings(&self) -> Dy {
+    pub fn reach_units(&self) -> Dy {
         self.orbit.radius.max(Dy::ZERO)
     }
 
@@ -138,7 +138,7 @@ impl Star {
         self.r <= core_reach()
     }
 
-    /// Bearing from the star's galactic core at `t` rings (galaxy rings,
+    /// Bearing from the star's galactic core at `t` rings (galaxy units,
     /// relative to the core's place): reach (orbit radius), unit direction
     /// (the plane's frame applied to the phase; exact half-angles), and climb
     /// off the plane (a disc star's vertical swing, zero otherwise).
@@ -187,7 +187,7 @@ impl Star {
     /// The vertical orbit at `age` rings, evaluated at the home-equivalent
     /// radius as in [`Star::bearing`] (`None` for a bulge or nucleus star,
     /// which does not orbit in the disc's plane). Lengths are home-equivalent
-    /// galaxy rings; the star's galaxy scales them by `scale`.
+    /// galaxy units; the star's galaxy scales them by `scale`.
     pub fn vertical_at(&self, age: Dy) -> Option<Vertical> {
         let (r, born) = (Dy::from_q(&self.r), Dy::from_q(&self.born));
         self.orbit
@@ -207,7 +207,7 @@ impl Star {
     /// the universe's age `t`.
     pub fn class(&self, t: Dy) -> Class {
         let delta = self.compactness();
-        let reach = self.reach_rings();
+        let reach = self.reach_units();
         let age = (t - Dy::from_q(&self.born)).max(Dy::ZERO);
         let seq = self.sequence();
         let life = crate::stars::life(&seq, delta, reach);
@@ -286,7 +286,7 @@ impl Class {
 const MASS_BITS: u32 = 64;
 
 /// A sample star's place in its galaxy before scaling: home-equivalent
-/// radius (galaxy rings), population, tilt and node half-angles and initial phase.
+/// radius (galaxy units), population, tilt and node half-angles and initial phase.
 struct Placement {
     radius: Dy,
     pop: Pop,
@@ -343,7 +343,7 @@ fn placement(local: u64, nucleus: bool) -> Placement {
 /// A star's turning rate (radians per ring): the turning law
 /// `omega = delta bell / r` over the home-equivalent mass inside `radius`
 /// (core masses) times the hole ratio, at the scaled radius
-/// `radius x scale` (galaxy rings); both radii are at least 1e-6 galaxy
+/// `radius x scale` (galaxy units); both radii are at least 1e-6 galaxy
 /// rings and rounded down to the 2^-60 grid.
 fn turning_rate(radius: Dy, scale: Dy, mass_ratio: Dy) -> Dy {
     let r_q = down(&radius.max(Dy::sci(1, -6)).to_q(), 60);
@@ -492,7 +492,7 @@ pub(crate) fn node_of(u: Dy) -> (Dy, Dy) {
 }
 
 /// The initial mass function, inverse-transformed at the uniform `u`: a
-/// star's mass (core masses) at reach `r` (galaxy rings) of the home galaxy.
+/// star's mass (core masses) at reach `r` (galaxy units) of the home galaxy.
 ///
 /// The piece at `r` gives one star mass, `m_p = s c` ([`super::piece_star_mass`]:
 /// the share `s` of the piece's infall the star tier's cut holds,

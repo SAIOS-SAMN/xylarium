@@ -48,8 +48,8 @@ pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
         concat!(
             "The founding shells: {} kinds, final share {}; ",
             "the firmament's closed kinds {} (Z {:?}..{:?}); ",
-            "the open kinds' reaches {} .. {} rings; ",
-            "rim {} rings\n"
+            "the open kinds' reaches {} .. {} cluster units; ",
+            "rim {} cluster units\n"
         ),
         mix.len(),
         show(&s_final),
@@ -73,7 +73,7 @@ pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
     for (k, g) in groups.iter().enumerate() {
         let amount = g.iter().fold(Q::ZERO, |a, s| &a + &s.1);
         out.push_str(&format!(
-            "  Shell {}: Z {}..{} ({} kinds), amount {}, reach {} rings, {}\n",
+            "  Shell {}: Z {}..{} ({} kinds), amount {}, reach {} cluster units, {}\n",
             k + 1,
             g.iter().map(|s| s.0).min().unwrap_or(0),
             g.iter().map(|s| s.0).max().unwrap_or(0),
@@ -225,7 +225,7 @@ fn galaxies(shapes: &[Shape], sub: &Substrate) -> String {
         // The first four pieces, lit or not.
         for p in l.pieces.iter().take(4) {
             out.push_str(&format!(
-                "  piece {} to {} rings: lights after {} rings, infall {} rings\n",
+                "  piece {} to {} galaxy units: lights after {} rings, infall {} galaxy units\n",
                 show(&p.0),
                 show(&p.1),
                 p.2.map(|n| n.to_string()).unwrap_or_else(|| "-".into()),
@@ -245,12 +245,13 @@ fn star_tier(p: &(Q, Q, Option<i64>, Q)) -> String {
     let frame = xyl_cosmos::galaxy::piece_star_mass(&mid)
         .and_then(|m| xyl_cosmos::galaxy::disc_frame(&mid, &m));
     let Some(f) = frame else {
-        return format!("  Star tier at {} rings: no cut\n", show(&mid));
+        return format!("  Star tier at {} galaxy units: no cut\n", show(&mid));
     };
     let (worlds, belt) = xyl_cosmos::disc::manifold_worlds(&f.star_share, &f.a_disc, &f.tide);
     format!(
         concat!(
-            "  Star tier at {} rings: tide {}, disc agitation {}; the star {} of its infall ",
+            "  Star tier at {} galaxy units: tide {}, disc agitation {}; ",
+            "the star {} of its infall ",
             "(spin {}, heat {}, over-pressure {}, rim {}, compactness {}); ",
             "its manifold {} of the reach held, {} worlds, belt {}\n"
         ),

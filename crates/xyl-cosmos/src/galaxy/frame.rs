@@ -3,7 +3,7 @@
 //! the star mass a piece's cut gives ([`piece_star_mass`],
 //! [`first_star_mass`]); and the transduction sequence of the piece's held
 //! mixture at the cut's heat ([`piece_sequence`], `stars::Sequence`, cached
-//! with the cut). Reaches are galaxy rings, masses core masses (the
+//! with the cut). Reaches are galaxy units, masses core masses (the
 //! home galaxy's rings hold one core mass together, as in `inside_mass`).
 
 use super::inside_mass;
@@ -11,7 +11,7 @@ use xyl_core::certified::Encl;
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 
-/// The chain's frame for a star's disc at reach `r` (galaxy rings) of the
+/// The chain's frame for a star's disc at reach `r` (galaxy units) of the
 /// home galaxy: its piece of the founding, the infall's extent there, the
 /// share of the infall the star holds, the galaxy's tide at the pinch (the
 /// core-star tie) and the disc's agitation (`disc::star_hold`). The cut is
@@ -20,13 +20,13 @@ use xyl_core::Q;
 pub struct DiscFrame {
     /// The piece's index among the founding's beads.
     pub piece: usize,
-    /// The infall's extent (galaxy rings), the extent of the star-forming
+    /// The infall's extent (galaxy units), the extent of the star-forming
     /// cloud.
     pub infall: Q,
-    /// The star's gathering extent (galaxy rings): the star's mass over the
+    /// The star's gathering extent (galaxy units): the star's mass over the
     /// infall's line density, at most the infall's extent.
     pub extent: Q,
-    /// The star's manifold reach (galaxy rings), the outer edge of its
+    /// The star's manifold reach (galaxy units), the outer edge of its
     /// worlds: the arc
     /// of the star's circle about the core held by the star's mass
     /// (`manifold::reach`, the deficit share `m / (M(<r) + m)` of `2 pi r`).
@@ -50,7 +50,7 @@ type Lit = std::sync::Arc<(crate::disc::StarHold, crate::stars::Sequence)>;
 /// The cuts read so far, by piece index (`None`: the piece does not light).
 type HeldCuts = std::sync::Mutex<std::collections::BTreeMap<usize, Option<Lit>>>;
 
-/// The cut of the home galaxy's piece at reach `r` (galaxy rings), read once
+/// The cut of the home galaxy's piece at reach `r` (galaxy units), read once
 /// per piece and cached: the piece's index, its infall's extent (galaxy
 /// rings), and the cut with its transduction sequence (`stars::Sequence::of` of
 /// the cut's held mixture at its heat). `None` where the founding is absent,
@@ -102,7 +102,7 @@ pub fn piece_sequence(r: &Q) -> Option<crate::stars::Sequence> {
     Some(lit.1.clone())
 }
 
-/// The held core's rim of the piece at reach `r` (galaxy rings): the reach,
+/// The held core's rim of the piece at reach `r` (galaxy units): the reach,
 /// in system-tier units (`60 r_g`), of the loosest kind the piece's transduction
 /// star still holds (`disc::StarHold::rim`). Every star of the piece shares
 /// it, so a heavier star of the piece is more compact. `None` where no piece
@@ -177,7 +177,7 @@ fn first_piece(sub: &crate::circuit::Substrate) -> Option<&(Q, Q, Option<i64>, Q
         .map(|(_, p)| p)
 }
 
-/// The disc's frame at reach `r` (galaxy rings) of the home galaxy for a
+/// The disc's frame at reach `r` (galaxy units) of the home galaxy for a
 /// star of `mass` core masses (see [`DiscFrame`]). The cut is read once per
 /// piece and cached; the gathering extent and manifold reach depend on the
 /// star's mass. `None` where the founding is absent, no piece lies at `r` or
@@ -186,7 +186,7 @@ pub fn disc_frame(r: &Q, mass: &Q) -> Option<DiscFrame> {
     let (piece, infall, lit) = held_cut(r)?;
     let cut = lit.0.clone();
     // `extent = m / (c / w)`, at most the infall's extent `w`: the star's
-    // mass (core masses) over the infall's holding per galaxy ring, `c` the
+    // mass (core masses) over the infall's holding per galaxy unit, `c` the
     // infall's holding in core masses. A star holding the whole held share
     // `s c` gathers the share `s` of the infall's extent.
     let lambda = cut
@@ -195,7 +195,7 @@ pub fn disc_frame(r: &Q, mass: &Q) -> Option<DiscFrame> {
     let extent = mass
         .checked_div(&lambda.max(Q::ratio(1, 1_000_000_000_000)))?
         .min(cut.infall.clone());
-    // Manifold reach (galaxy rings): the deficit share m / (M(<r) + m) of
+    // Manifold reach (galaxy units): the deficit share m / (M(<r) + m) of
     // the circle 2 pi r about the core (`manifold::reach`).
     let inside = inside_mass(r);
     let ratio = mass.checked_div(&inside.max(Q::ratio(1, 1_000_000)))?;
@@ -217,7 +217,7 @@ pub fn disc_frame(r: &Q, mass: &Q) -> Option<DiscFrame> {
 }
 
 /// The star cut of the founding piece `record` (inner edge, outer edge,
-/// rings to light, infall extent; galaxy rings) of `sub`'s lighting: the
+/// rings to light, infall extent; galaxy units) of `sub`'s lighting: the
 /// bead whose span is the piece's, cut at the bead's reach about the
 /// universal core, so the cut is one per piece. `None` where no bead has the
 /// piece's span or the piece does not light.

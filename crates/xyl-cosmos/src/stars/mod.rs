@@ -1,11 +1,11 @@
 //! A star's life in closed form: its transduction, light, main-sequence life, giant
 //! phase and remnant, read at any age without time stepping (docs/model.md).
 //!
-//! Reads `circuit::anchor` (galaxy ring in kpc), `xyl_core::shares::deficit_dy`,
+//! Reads `circuit::anchor` (galaxy unit in kpc), `xyl_core::shares::deficit_dy`,
 //! `circuit::bell` and `echo` (one and two rings), the substrate's firmament
 //! outflow rate (`cores::substrate_for`, per ring), the element table and
 //! `compound` (frames at heat, in `sequence.rs`).
-//! Reach `r` is in galaxy rings (`galaxy::Star::reach_rings`); times are
+//! Reach `r` is in galaxy units (`galaxy::Star::reach_units`); times are
 //! rings of time after the origin (one ring one bell); masses are core
 //! masses and light is power in core units, core masses (times `c^2`,
 //! `c = 1`) per ring. No constant of the Sun enters.
@@ -68,7 +68,7 @@ pub fn ring_per_bell(reach: Dy, hold: Dy) -> Dy {
     deficit_dy(hold, reach) / Dy::pi()
 }
 
-/// The ring per bell a star at reach `r` (galaxy rings, about its galactic
+/// The ring per bell a star at reach `r` (galaxy units, about its galactic
 /// core) receives: [`ring_per_bell`] about the universal core's hold, 1.
 /// The galaxy tier's own held medium enters with the received carry
 /// (roadmap item 44).

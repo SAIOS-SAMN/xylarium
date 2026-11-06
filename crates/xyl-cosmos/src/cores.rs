@@ -249,7 +249,7 @@ fn founding_of(origin: &Origin) -> Option<Arc<Founding>> {
         rate: Dy::ZERO,
     }];
     // A bead's reach about the throat is read in the cluster tier as founded
-    // (one core ring is one cluster unit, circuit::anchor).
+    // (the cluster unit, circuit::anchor).
     for (index, bead) in substrate.galaxies().into_iter().skip(1) {
         let g = bead?;
         let out = g.reach.clone();

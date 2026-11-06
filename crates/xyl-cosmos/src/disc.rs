@@ -4,7 +4,7 @@
 //! Reads `circuit::Bead`, `circuit::throat_push` and the formation helpers
 //! (`cooling`, `lights`, `hold_at`, `pulse_heat`, `vacuum_halving`).
 //! All quantities are exact `Q`: reaches and holdings are shares of the
-//! infall or of the star's manifold, extents are in galaxy rings, heat in
+//! infall or of the star's manifold, extents are in galaxy units, heat in
 //! hydrogen units.
 //!
 //! Outputs:
@@ -58,7 +58,7 @@ pub struct StarHold {
     /// the disc sheds per ring (the released kinds' open frames and the
     /// vacuum's halving).
     pub a_disc: Q,
-    /// The infall's extent (galaxy rings).
+    /// The infall's extent (galaxy units).
     pub infall: Q,
     /// The infall's holding (share of the galaxy's grains).
     pub cloud: Q,

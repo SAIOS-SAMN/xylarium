@@ -16,7 +16,7 @@
 //!   its state over the unit spread over its span, its kinds at its pinch
 //!   with agitation `a = (p - delta) / p`, `p` the throat's push
 //!   (`circuit::throat_push`, 1/2) and `delta = H / (R + H)`. Outside one
-//!   galaxy ring the gas is a circle in the plane (n = 1), within it the
+//!   galaxy unit the gas is a circle in the plane (n = 1), within it the
 //!   bulge's ball (n = 2). Gas inflow from the ocean is not modelled.
 //! - Cooling: two channels per ring, the open frames' emission
 //!   `e = open / hold` (one halving every `ceil(1 / e)` rings) and the

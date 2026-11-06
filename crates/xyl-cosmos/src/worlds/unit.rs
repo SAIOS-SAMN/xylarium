@@ -72,8 +72,8 @@ pub fn unit() -> &'static State {
             lum: Dy::ONE,
             a_au: Dy::ONE,
             z: Dy::ONE,
-            r: crate::galaxy::rings_of_kpc_dy(Dy::int(8)),
-            reach: crate::galaxy::rings_of_kpc_dy(Dy::int(8)),
+            r: crate::galaxy::units_of_kpc_dy(Dy::int(8)),
+            reach: crate::galaxy::units_of_kpc_dy(Dy::int(8)),
             compactness: crate::galaxy::first_star_compactness(),
             sequence: crate::galaxy::first_star_sequence(),
             sources,
@@ -87,7 +87,7 @@ pub fn unit() -> &'static State {
 /// never shorter than one core period. A world changes at its star's pace,
 /// so it is treated as unchanged within a degree. The lifetime is that of a
 /// star of transduction sequence `seq` and compactness `delta` at `reach`
-/// (galaxy rings, `galaxy::Star::reach_rings`) about its core
+/// (galaxy units, `galaxy::Star::reach_units`) about its core
 /// (`life::lifetime`).
 pub fn star_degree_gyr(seq: &crate::stars::Sequence, delta: Dy, reach: Dy, ctx: &Ctx) -> Dy {
     let ring = crate::circuit::gyr_of_rings_dy(crate::pulse::core_period());

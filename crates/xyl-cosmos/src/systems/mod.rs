@@ -106,7 +106,7 @@ impl Spec {
         let power = crate::stars::power(
             &crate::galaxy::core_masses_of_suns(&mass),
             delta,
-            star.reach_rings(),
+            star.reach_units(),
         );
         let lum = crate::stars::suns_of_power(&power, delta);
         Spec { mass, lum }
@@ -271,10 +271,10 @@ pub fn system(
     let (regions, belt_share) =
         crate::disc::manifold_worlds(&frame.star_share, &frame.a_disc, &frame.tide);
     // The worlds' outer edge is the star's manifold reach (AU, from galaxy
-    // rings through the boundary `galaxy::kpc_of_rings`); a world's reach is
+    // rings through the boundary `galaxy::kpc_of_units`); a world's reach is
     // its region's share of it.
     let a_out = dyadic(
-        &(&crate::galaxy::kpc_of_rings(&frame.reach) * &crate::package::Si::kpc())
+        &(&crate::galaxy::kpc_of_units(&frame.reach) * &crate::package::Si::kpc())
             .checked_div(&crate::package::Si::au())
             .unwrap_or(Q::ZERO),
     );

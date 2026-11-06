@@ -138,10 +138,8 @@ stated.
   `60^-2`. A conversion between tiers multiplies by a power of sixty
   (`manifold::dilation`) and is exact. The substrate's reaches are in
   cluster units (`60^7 r_g`) and every star's reach in galaxy units
-  (`60^5 r_g`). The code and older text still call these units "core
-  rings" and "galaxy rings"; they are lengths, not rings, and are renamed
-  ([#115](https://github.com/SAIOS-SAMN/xylarium/issues/115), roadmap item
-  45).
+  (`60^5 r_g`): lengths, never rings
+  ([#115](https://github.com/SAIOS-SAMN/xylarium/issues/115)).
 - The bell (`circuit::anchor`, `Anchor::bell`) is the round-trip time
   of light to the home galaxy's rim, `bell = 2 rim 60^5` in core time
   (`r_g / c`), with the founding's rim read in the galaxy tier's unit. The
@@ -1547,8 +1545,8 @@ law, the same at a nucleus, a star and a world:
 - Structure (`galaxy::Structure`): the home galaxy is made of the universal
   core's founded matter, so its structure is the founding's beads re-read in
   the galaxy tier's unit. Its rings are the beads, with their reaches and
-  spans in galaxy rings (60^5 r_g) and their states as their holding. The
-  core's reach is one galaxy ring, where `1 / (r + 1)` is one half
+  spans in galaxy units (60^5 r_g) and their states as their holding. The
+  core's reach is one galaxy unit, where `1 / (r + 1)` is one half
   (`galaxy::core_reach`).
   The nucleus is the innermost ring; the reference ring is the ring within
   which half the holding lies (`galaxy::r0`); crowding is a ring's state per
@@ -1561,7 +1559,7 @@ law, the same at a nucleus, a star and a world:
   r_g / c).
 - Lighting (`formation::cooling`, `formation::collapse`,
   `formation::lighting`): each bead is a piece of gas. Its holding per
-  galaxy ring is `lambda = (state / unit) / W`; its agitation is
+  galaxy unit is `lambda = (state / unit) / W`; its agitation is
   `(p - delta) / p` with `delta = h / (R + h)` and `h = 1 + held share`; its
   emission is `e = sum s_z open_z / hold_z`, and its magnetism is
   `mu = lambda e`. Outside the core's reach the gas is a circle (`n = 1`);
@@ -1579,9 +1577,9 @@ law, the same at a nucleus, a star and a world:
   ignition is under the throat's push. The first stars are the ring count of
   the first lit piece; the lit share is the star efficiency.
 - Reach unit: a star's reach about the core (`Star::r`, `Orbit::radius`) is
-  measured in galaxy rings, the same unit in which its piece was lit; kpc
+  measured in galaxy units, the same unit in which its piece was lit; kpc
   appear only at display and at the marked boundaries of the layers not yet
-  converted (`galaxy::kpc_of_rings`).
+  converted (`galaxy::kpc_of_units`).
 - Placement (`galaxy::star`): sample stars stand for equal shares of the
   stellar mass and are placed along the rings' cumulative holding by
   irrational pivots (the golden, silver, plastic and `sqrt 3 - 1` angles;

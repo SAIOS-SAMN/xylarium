@@ -78,6 +78,6 @@ pub fn crowd_r0() -> Dy {
 /// star-formation share and the orbit's exposure scale it where it is read
 /// (`life`).
 pub fn cosmic_rays(r: Dy) -> Dy {
-    // `r` is the star's home-equivalent reach (galaxy rings).
+    // `r` is the star's home-equivalent reach (galaxy units).
     crate::galaxy::crowding(r)
 }

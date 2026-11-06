@@ -18,7 +18,7 @@ pub(super) fn galaxy(u: &Universe<'_>) -> String {
     out.push_str(&format!(
         "  r_g = {} m; the galaxy tier's unit 60^5 r_g; 1 kpc = {} of it\n",
         show(&units().r_g_m),
-        show(&xyl_cosmos::galaxy::rings_of_kpc(&Q::ONE))
+        show(&xyl_cosmos::galaxy::units_of_kpc(&Q::ONE))
     ));
     out.push_str(&format!(
         "  the universe's radius = {} galaxy units\n",
@@ -86,14 +86,14 @@ fn star_on_manifold(
     let way = &reach + &climb.abs();
     let height = &(&dir[2] * &reach) + &climb;
     let frac = s.orbit.turns_at(t).to_q().frac();
-    let reach = s.reach_rings();
+    let reach = s.reach_units();
     let age = t - Dy::from_q(&s.born);
     let seq = s.sequence();
-    let radius_kpc = xyl_cosmos::galaxy::kpc_of_rings_dy(s.orbit.radius);
+    let radius_kpc = xyl_cosmos::galaxy::kpc_of_units_dy(s.orbit.radius);
     format!(
         concat!(
             "  star {:>4} of core {} ({} {}): from its core {}, height {}, phase {} deg, ",
-            "radius {} kpc; reach {} rings, life {} Gyr, transduction {:?} at age {} Gyr, ",
+            "radius {} kpc; reach {} galaxy units, life {} Gyr, transduction {:?} at age {} Gyr, ",
             "light {} core masses per ring\n"
         ),
         s.n & ((1u64 << xyl_cosmos::galaxy::CORE_SHIFT) - 1),
@@ -125,10 +125,10 @@ fn rational(s: &str) -> Q {
     xyl_cosmos::elements::decimal(s).unwrap_or(Q::ZERO)
 }
 
-/// A reach given in kpc for display, in galaxy rings (the chemistry's unit
-/// of reach), converted through `galaxy::rings_of_kpc`.
+/// A reach given in kpc for display, in galaxy units (the chemistry's unit
+/// of reach), converted through `galaxy::units_of_kpc`.
 fn rings(kpc: &str) -> Q {
-    xyl_cosmos::galaxy::rings_of_kpc(&rational(kpc))
+    xyl_cosmos::galaxy::units_of_kpc(&rational(kpc))
 }
 
 /// An optional rational, printed, or "-".
@@ -277,7 +277,7 @@ pub(super) fn tiers(o: &Options, n: u64) -> Result<String, String> {
     ));
     // The star about its galaxy's core: reach R and holding H (the r_g of the
     // enclosed mass), both in galaxy echo rings; the count is 1 + R / H.
-    let radius_kpc = xyl_cosmos::galaxy::kpc_of_rings(&star.orbit.radius.to_q());
+    let radius_kpc = xyl_cosmos::galaxy::kpc_of_units(&star.orbit.radius.to_q());
     let r_m = &radius_kpc * &kpc_m;
     // The mass inside is in core masses; the display reads it in kg.
     let inside_suns = xyl_cosmos::galaxy::suns_of_core_masses(

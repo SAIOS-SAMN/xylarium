@@ -250,9 +250,9 @@ impl Chronometry {
     /// The keepers of a founding: the epicenter, then for each galactic core
     /// its hub, deep core, inner mantle and outer rim. The chain starts empty.
     pub fn of(origin: &Origin) -> Chronometry {
-        // One kpc in r_g: the galaxy tier's kpc (`galaxy::rings_of_kpc`) times the
+        // One kpc in r_g: the galaxy tier's kpc (`galaxy::units_of_kpc`) times the
         // tier's unit in r_g; one cluster unit in kpc.
-        let kpc_rg = &xyl_cosmos::galaxy::rings_of_kpc(&Q::ONE) * &Tier::Galaxy.in_rg();
+        let kpc_rg = &xyl_cosmos::galaxy::units_of_kpc(&Q::ONE) * &Tier::Galaxy.in_rg();
         let cluster_kpc = crate::transit::tier_m(Tier::Cluster)
             .checked_div(&xyl_cosmos::package::Si::kpc())
             .unwrap_or(Q::ONE);
@@ -305,9 +305,9 @@ impl Chronometry {
             });
             c.inside.push(Some(0));
             let mut inner = c.keepers.len() - 1;
-            // The shells' reaches are galaxy rings (60^5 r_g); the
+            // The shells' reaches are galaxy units (60^5 r_g); the
             // distances from the epicenter stay in kpc, converted at the
-            // boundary `galaxy::kpc_of_rings`.
+            // boundary `galaxy::kpc_of_units`.
             let ring_rg = Tier::Galaxy.in_rg();
             for (shell, r_home) in [
                 (Shell::Core, xyl_cosmos::galaxy::nucleus_reach()),
@@ -315,7 +315,7 @@ impl Chronometry {
                 (Shell::Rim, xyl_cosmos::circuit::anchor().rim),
             ] {
                 let r_rings = &r_home * &scale;
-                let r = xyl_cosmos::galaxy::kpc_of_rings(&r_rings);
+                let r = xyl_cosmos::galaxy::kpc_of_units(&r_rings);
                 let inside = &xyl_cosmos::galaxy::inside_mass(&r_home) * &s.mass_ratio();
                 let rate = &galaxy_rate * &well(&(&r_rings * &ring_rg), &inside);
                 c.keepers.push(Keeper {

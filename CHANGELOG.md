@@ -207,6 +207,25 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The ocean carries what reaches a place, at the share its held medium
+  holds there (docs/model.md, The held medium; roadmap item 44, #113). The hold
+  inside a reach is the core's 1 plus the beads nearer, less the core's
+  share the jet has carried past (`Substrate::held_within`,
+  `Substrate::medium`), in place of the universal state alone. The
+  waveform, a galaxy's circulation and push, and a piece's star cut
+  (`stars::ring_per_bell` now takes the hold) read it; the bead's
+  `inside`, `1 + 2 x` the nearer share with an underived factor, is
+  removed. `Substrate::carry` reads the ocean's motion: outward
+  `s (+) (-(1 - s))` per echo from the echo's two faces, and `360 delta`
+  degrees a traversal on the isoclinic planes from the torsion, returned
+  after `1 / (1 - delta)`. Seed 7, `observe universal-core`: the medium
+  inside the rim 1.4008 core masses, carrying 0.01650 of the pulse there
+  (0.01183 about the core alone), so the waveform at the rim reads 10.88
+  per Gyr (7.80 before); outward 0.1061 per echo; the outer galaxies
+  circulate slower (galaxy 22: 1893 to 1110 turns a Gyr; galaxy 23: 616 to
+  327) and swing wider (galaxy 23: 2.17e-6 to 5.37e-6 rings an echo);
+  galaxies 0 to 18, which have almost nothing nearer, are unchanged, as
+  are the lit pieces' cuts (heat moves at 1e-11).
 - A throat's echo is its sheared return at its torsion share (T4, axiom
   7): `bell / (1 - s)` on the near face, `bell / s` on the far
   (`circuit::echo_at`), in place of a fixed two bells. The universal core's

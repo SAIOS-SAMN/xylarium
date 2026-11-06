@@ -302,6 +302,25 @@ where it belongs to one.
     `xyl_core::shares::deficit` and `stars::fusion_step`; needs the held
     residual as a closed form of the drive's history.
 
+44. **The ocean as a carry** ([#113](https://github.com/SAIOS-SAMN/xylarium/issues/113), `law`;
+    [model.md](model.md#the-held-medium-the-ocean-as-a-carry)). What reaches
+    a place is what the ocean's medium carries there, never a push. Done:
+    the held medium inside a reach (`Substrate::held_within`,
+    `Substrate::medium`: the core's 1, the beads nearer, less what the jet
+    carried past), read by the waveform, a bead's ring hold, a galaxy's
+    circulation and push, and a piece's star cut; the ocean's motion
+    (`Substrate::carry`): outward `s (+) (-(1 - s))` per echo from the
+    echo's faces, `360 delta` degrees a traversal on the isoclinic planes
+    from the torsion. Next, in order: (1) the star's received quantity as a
+    carry, a star's life read about the galaxy tier's own medium
+    (`stars::ring_per_bell` still takes `h = 1` there), and graded
+    stripping (T20, held on `graded-stripping`) re-derived on it; (2) the
+    reverberation's interior hold, `1 + (firmament nearer) / unit`, put on
+    the same footing as `H(r)` (it divides a mass by the beads' total); (3)
+    viscosity `nu(t) = t / (1 + t)` built, replacing the laboratory
+    reference in `bodies::interior`; (4) the pairs the outward carry bears
+    (`p_pair`), the ocean's particles.
+
 ### Galaxy (milestone 3, layer B)
 
 5. **Fluid bands** ([#6](https://github.com/SAIOS-SAMN/xylarium/issues/6),

@@ -22,7 +22,13 @@
 //   core's spin over its bounces (T17); `loop_flux` composes filament,
 //   vacuum and electron channels.
 // - Ocean: `ocean_shares` and `landing` (pull times `coherence`, over the
-//   sum, so each kind's shares sum to 1); `amplitude`, `tide`, `c_ocean`.
+//   sum, so each kind's shares sum to 1); the held medium inside a reach,
+//   `held_within` as founded (1 plus the beads nearer, core masses) and
+//   `medium` at t (less the core's share the jet carried past the reach);
+//   `carry`, the share the medium carries, H / (r + H), with the ocean's
+//   motion (outward s (+) (-(1 - s)) per echo, 360 H / (r + H) degrees a
+//   traversal on the isoclinic planes); `amplitude` (carried at that
+//   share), `tide`, `c_ocean`.
 // - Galaxies: `galaxies` (beads whose lit holding `lit x state` is at least
 //   one star's mass `m_p` and whose state is at most 1), `intake`,
 //   `composition` (recipe plus intake), `push` (reach, recession, shift,
@@ -31,7 +37,7 @@
 // Every reading is deterministic and closed-form in t; no state is stepped.
 // Terms: bell, echo, coherence, jet, jetstream, landing, inbound echo,
 // admission, books, vacuum's share, throat push, waveform, ocean,
-// reverberation (docs/glossary.md).
+// reverberation, held medium, ocean's carry (docs/glossary.md).
 
 use super::*;
 use xyl_core::dyadic::Dy;
@@ -591,7 +597,6 @@ impl Substrate {
     /// its pull over the sum. The delay is half a bell scaled by reach / rim.
     pub fn ocean_shares(&self) -> Vec<(u32, Dy, Dy)> {
         let mean = Dy::from_q(&self.mean_state());
-        let rim = Dy::from_q(&self.rim).max(Dy::sci(1, -30));
         let pulls: Vec<(u32, Dy, Dy)> = self
             .galaxies()
             .into_iter()
@@ -602,7 +607,7 @@ impl Substrate {
                         Dy::from_q(&b.reach),
                         Dy::from_q(&b.state) / mean.max(Dy::sci(1, -300)),
                     );
-                    (i, deficit_dy(h, r), bell() / Dy::int(2) * r / rim)
+                    (i, deficit_dy(h, r), self.delay(r))
                 }
             })
             .collect();
@@ -627,19 +632,13 @@ impl Substrate {
     /// delay (rings). The home galaxy pulls 1 at phase zero with no delay.
     fn pulls(&self) -> Vec<(u32, Dy, Q, Dy)> {
         let mean = Dy::from_q(&self.mean_state()).max(Dy::sci(1, -300));
-        let rim = Dy::from_q(&self.rim).max(Dy::sci(1, -30));
         self.galaxies()
             .into_iter()
             .map(|(i, b)| match b {
                 None => (i, Dy::ONE, Q::ZERO, Dy::ZERO),
                 Some(b) => {
                     let (r, h) = (Dy::from_q(&b.reach), Dy::from_q(&b.state) / mean);
-                    (
-                        i,
-                        deficit_dy(h, r),
-                        b.phase.clone(),
-                        bell() / Dy::int(2) * r / rim,
-                    )
+                    (i, deficit_dy(h, r), b.phase.clone(), self.delay(r))
                 }
             })
             .collect()
@@ -842,13 +841,112 @@ impl Substrate {
 
     /// The ocean's non-tidal waveform at reach `r` (rings) and `t`: the core's
     /// ringing plus the vessel's rate, both taken one pulse delay earlier,
-    /// falling as the vacuum's share about the universal state, 1 / (r + 1).
+    /// carried at the share the held medium inside the reach holds there,
+    /// `H(r, t) / (r + H(r, t))` ([`Substrate::carry`]). At the throat
+    /// (`r = 0`) the share is 1 whatever the medium.
     pub fn amplitude(&self, r: Dy, t: Dy) -> Dy {
-        let delay = bell() / Dy::int(2) * r / Dy::from_q(&self.rim).max(Dy::sci(1, -30));
+        let delay = self.delay(r);
         if t <= delay {
             return Dy::ZERO;
         }
-        (self.ringing(t - delay) + self.rate(t - delay).0) * deficit_dy(Dy::ONE, r)
+        let share = if r.signum() > 0 {
+            deficit_dy(self.medium(r, t), r)
+        } else {
+            Dy::ONE
+        };
+        (self.ringing(t - delay) + self.rate(t - delay).0) * share
+    }
+
+    /// The pulse's delay to reach `r` (rings): half a bell scaled by
+    /// `r / rim`, the front crossing the rim in half a bell.
+    fn delay(&self, r: Dy) -> Dy {
+        bell() / Dy::int(2) * r.max(Dy::ZERO) / Dy::from_q(&self.rim).max(Dy::sci(1, -30))
+    }
+
+    /// The hold inside reach `r` (core rings) as founded, in core masses:
+    /// the core's own hold, 1, plus the state of every bead nearer the
+    /// throat (each bead's mass, in the core's units). The deficit at a reach
+    /// is read about the matter enclosed within it (axiom 2), so this is the
+    /// hold a bead's ring, a galaxy's circulation and the ocean's carry are
+    /// read about. Exact.
+    pub fn held_within(&self, r: &Q) -> Q {
+        self.beads
+            .iter()
+            .filter(|b| b.reach < *r)
+            .fold(Q::ONE, |a, b| &a + &b.state)
+    }
+
+    /// The ocean's held medium inside reach `r` (core rings) at `t` (rings),
+    /// in core masses: the hold as founded ([`Substrate::held_within`]) less
+    /// the share of the core's hold the jet has carried past `r` by `t`. What
+    /// leaves the core is carried at the ocean's speed, so the matter that
+    /// left by `t - delay(r)` has crossed `r` unless its landing is a galaxy
+    /// within `r` (`landing`): the share bound beyond is subtracted, the
+    /// share bound within stays in the medium, in flight or taken. The books
+    /// close: the medium inside the rim at any `t` is the founded hold less
+    /// what the outermost galaxies have taken.
+    pub fn medium(&self, r: Dy, t: Dy) -> Dy {
+        let founded = Dy::from_q(&self.held_within(&r.max(Dy::ZERO).to_q()));
+        let delay = self.delay(r);
+        if t <= delay {
+            return founded;
+        }
+        let firm = self
+            .firmament
+            .iter()
+            .fold(Dy::ZERO, |a, k| a + Dy::from_q(&mass_of(k.z, &k.amount)));
+        if firm.signum() <= 0 {
+            return founded;
+        }
+        let pulls = self.pulls();
+        let mut passed = Dy::ZERO;
+        for (z, left) in self.outflow(t - delay) {
+            if left.signum() <= 0 {
+                continue;
+            }
+            let beyond = self
+                .landing_over(&pulls, z)
+                .into_iter()
+                .zip(pulls.iter())
+                .filter(|(_, p)| p.3 > delay)
+                .fold(Dy::ZERO, |a, ((_, share), _)| a + share);
+            passed += Dy::from_q(&mass_of(z, &left.to_q())) * beyond;
+        }
+        (founded - passed / firm).max(Dy::ZERO)
+    }
+
+    /// The ocean's carry at reach `r` (core rings) at `t` (rings): what the
+    /// held medium inside `r` holds of the pulse there and where the ocean
+    /// moves it. The share is the deficit about the medium,
+    /// `delta = H(r, t) / (r + H(r, t))` ([`Substrate::medium`]). The motion
+    /// has two parts, from the echo and the torsion. Outward: the echo's near
+    /// face carries the open share `s` out and its far face returns the held
+    /// share `1 - s`, opposed, so the ocean carries `s (+) (-(1 - s))` out per
+    /// echo (the pair share), zero only for a spinless throat. Turning: on the
+    /// five isoclinic planes (`bounce::spin_bivector`, T18) each traversal at
+    /// `r` advances `360 delta` degrees, returned after `1 / (1 - delta)`
+    /// traversals (T4), read from the same medium.
+    pub fn carry(&self, r: Dy, t: Dy) -> Carry {
+        let hold = self.medium(r, t);
+        let share = if r.signum() > 0 {
+            deficit_dy(hold, r)
+        } else {
+            Dy::ONE
+        };
+        let open = &Q::ONE - &self.share;
+        let outward = xyl_core::shares::flow(&self.share, &-&open).unwrap_or(Q::ZERO);
+        let held = Dy::ONE - share;
+        Carry {
+            hold,
+            share,
+            outward,
+            turning: Dy::int(360) * share,
+            returns: if held.signum() > 0 {
+                Some(Dy::ONE / held)
+            } else {
+                None
+            },
+        }
     }
 
     /// The force on every galaxy at `t`, in closed form: push over inertia on
@@ -867,12 +965,13 @@ impl Substrate {
                 let (_, d, delay) = *shares.iter().find(|x| x.0 == i)?;
                 let (r0, inside) = (
                     Dy::from_q(&b.reach),
-                    Dy::from_q(&b.inside).max(Dy::sci(1, -300)),
+                    Dy::from_q(&self.held_within(&b.reach)).max(Dy::sci(1, -300)),
                 );
                 let hold = Dy::from_q(&b.state) / mean;
-                // The gain is delta(r0, 1) d / hold, with delta(r0, 1) = 1 / (r0 + 1)
-                // the vacuum's share at the galaxy's reach about the universal state.
-                let gain = deficit_dy(Dy::ONE, r0) * d / hold.max(Dy::sci(1, -300));
+                // The gain is delta(r0, H) d / hold, with delta(r0, H) the share
+                // the held medium inside the galaxy's reach carries there, as
+                // founded (`held_within`), so the push stays closed in t.
+                let gain = deficit_dy(inside, r0) * d / hold.max(Dy::sci(1, -300));
                 let reached = t > delay;
                 let sent = if reached { t - delay } else { Dy::ZERO };
                 let (ring, rung) = if reached {
@@ -926,6 +1025,24 @@ impl Substrate {
     }
 }
 
+/// The ocean's carry at a reach ([`Substrate::carry`]): the held medium,
+/// the share it holds of the pulse, and the ocean's motion there.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Carry {
+    /// The held medium inside the reach (core masses).
+    pub hold: Dy,
+    /// The share the medium holds there, `hold / (reach + hold)`, in (0, 1].
+    pub share: Dy,
+    /// The share carried outward per echo, `s (+) (-(1 - s))`: the near
+    /// face's open share out composed with the far face's held share back.
+    pub outward: Q,
+    /// Degrees advanced per traversal on each isoclinic plane, `360 share`.
+    pub turning: Dy,
+    /// Traversals until the turning returns, `1 / (1 - share)`; None where
+    /// the medium holds the whole pulse (the throat).
+    pub returns: Option<Dy>,
+}
+
 /// One cohort of the core's spin orbit (T17).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Cohort {
@@ -964,6 +1081,50 @@ pub struct SpinOrbit {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_held_medium_closes_its_books_and_bounds_its_carry() {
+        let origin = crate::genesis::origin();
+        let sub = crate::cores::substrate_for(&origin.parent.spin).unwrap();
+        // As founded the hold inside the throat is the core's alone, it never
+        // falls outward, and past the rim it is the core plus every bead.
+        assert_eq!(sub.held_within(&Q::ZERO), Q::ONE);
+        let mut reaches: Vec<Q> = sub.beads.iter().map(|b| b.reach.clone()).collect();
+        reaches.sort();
+        let held: Vec<Q> = reaches.iter().map(|r| sub.held_within(r)).collect();
+        assert!(held.windows(2).all(|w| w[0] <= w[1]));
+        let past = &sub.rim + &Q::ONE;
+        assert_eq!(sub.held_within(&past), &Q::ONE + &sub.unit());
+        // At the bounce the medium is the founded hold; later it is never
+        // more, never negative, and falls with t. Nothing passes the rim, so
+        // the medium there keeps the whole founded hold (the books close).
+        let rim = Dy::from_q(&sub.rim);
+        let late = [Dy::ZERO, Dy::int(10), Dy::int(1000), Dy::int(100000)];
+        for r in [rim / Dy::int(4), rim / Dy::int(2), rim] {
+            let founded = Dy::from_q(&sub.held_within(&r.to_q()));
+            assert_eq!(sub.medium(r, Dy::ZERO), founded);
+            let m: Vec<Dy> = late.iter().map(|t| sub.medium(r, *t)).collect();
+            assert!(m.iter().all(|x| *x <= founded && x.signum() >= 0));
+            assert!(m.windows(2).all(|w| w[1] <= w[0]));
+        }
+        let beyond = Dy::from_q(&past);
+        for t in late {
+            assert_eq!(sub.medium(beyond, t), Dy::from_q(&sub.held_within(&past)));
+        }
+        // The carry is the whole pulse at the throat and a share in (0, 1)
+        // beyond it, falling outward; its turning is 360 of that share, and
+        // the outward carry has the sign of 2s - 1 and stays below light.
+        let throat = sub.carry(Dy::ZERO, Dy::ZERO);
+        assert_eq!(throat.share, Dy::ONE);
+        assert!(throat.returns.is_none());
+        let near = sub.carry(rim / Dy::int(4), Dy::ZERO);
+        let far = sub.carry(rim, Dy::ZERO);
+        assert!(far.share < near.share && far.share.signum() > 0 && near.share < Dy::ONE);
+        assert_eq!(far.turning, Dy::int(360) * far.share);
+        let tilt = (&Q::int(2) * &sub.share - &Q::ONE).signum();
+        assert_eq!(far.outward.signum(), tilt);
+        assert!(far.outward.abs() < Q::ONE);
+    }
 
     #[test]
     fn the_jet_lands_by_phase_and_leaves_by_the_filaments_count() {

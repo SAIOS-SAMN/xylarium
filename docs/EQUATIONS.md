@@ -211,8 +211,16 @@ another crate. Laws are composed from shares (ratios of the form
   minima. Status: built; replaced by the founding as flow (planned).
 - Bead (`Substrate::found`): the state is the recipe mass; the reach and
   phase are those of the most abundant kind, with phase `360 frac(a Z)`
-  degrees on its plane (`turn(a Z)` in code); and the
-  inside is `1 + 2 sum(inner states / pushed-out mass)`. Status: built; replaced by the founding as flow (planned).
+  degrees on its plane (`turn(a Z)` in code); the hold inside its ring is
+  the held medium at its reach (`Substrate::held_within`). Status: built;
+  replaced by the founding as flow (planned).
+- Held medium (`Substrate::held_within`, `Substrate::medium`): the hold
+  inside reach `r` (core masses) is `H(r) = 1 + sum(states of the beads
+  nearer than r)` as founded, and at `t` it is `H(r, t) = H(r) -
+  passed(r, t) / F`, with `F` the firmament's founded mass and
+  `passed(r, t) = sum_k mass(outflow_k(t - tau(r))) L_k(> r)`, `L_k(> r)`
+  the landing share of kind `k` bound for galaxies whose delay exceeds
+  `tau(r)`. Status: built.
 - Rim (`Substrate::found`): the rim is `max R (1 + s_final)` over every
   shell. Status: built; replaced by the founding as flow (planned).
 
@@ -492,8 +500,16 @@ another crate. Laws are composed from shares (ratios of the form
   crossing (a step running there is cut), fission steps from it; the
   remnant is one less what ran. Status: built.
 - Waveform (`Substrate::amplitude`):
-  `A(r, t) = [cos(2 pi (t - tau) / echo) / echo + q(t - tau)] / (r + 1)`,
-  with `tau = (r / rim) bell / 2`. Status: built.
+  `A(r, t) = [cos(2 pi (t - tau) / echo) / echo + q(t - tau)] H / (r + H)`,
+  with `tau = (r / rim) bell / 2` and `H = H(r, t)` the held medium inside
+  the reach (1 at `r = 0`, where the share is 1). Status: built.
+- Carry (`Substrate::carry`, `circuit::Carry`): at reach `r` the medium
+  carries `delta = H(r, t) / (r + H(r, t))` of the pulse; the ocean
+  carries `s (+) (-(1 - s)) = (2s - 1) / (1 - s (1 - s))` outward per echo
+  (the near face's open share out composed with the far face's held share
+  back; the pair share); and each traversal at `r` turns `360 delta`
+  degrees on each isoclinic plane, returned after `1 / (1 - delta)`
+  traversals. Status: built.
 - Pull and delay (`Substrate::ocean_shares`): the pull is `h / (r + h)` with
   `h = state / mean state` (the home galaxy has 1 at reach 0); a galaxy's
   share is its pull over the sum, and its delay is `tau`. Status: built.
@@ -509,8 +525,10 @@ another crate. Laws are composed from shares (ratios of the form
 - Books (`Substrate::books`): mass is conserved as held + left = founded and
   taken + in flight = left. Status: built.
 - Push on a galaxy (`Substrate::push`):
-  `l(t) = R inside + d [Q(t - tau) + sin(2 pi (t - tau) / echo) / 2 pi] /
-  ((R + 1) H)` and `reach = l / inside`; the recession is `dl/dt / inside`,
+  `l(t) = R inside + d [Q(t - tau) + sin(2 pi (t - tau) / echo) / 2 pi]
+  inside / ((R + inside) h)` and `reach = l / inside`, with `inside =
+  H(R)` the held medium at the galaxy's reach and `h` its state over the
+  mean; the recession is `dl/dt / inside`,
   and the shift is `z = recession / c_ocean`. Status: built.
 - Tide (`Substrate::tide`): `A(R - x, t) - A(R + x, t)`. Status: built.
 - Galaxy selection (`Substrate::holds_a_star`, `Substrate::galaxies`): a
@@ -520,7 +538,7 @@ another crate. Laws are composed from shares (ratios of the form
 - Galactic core mass (`cores::founding_of`): `hole_suns = hole_mass x state`.
   Status: built.
 - Circulation (`cores::founding_of`): the circulation is `1440 delta / echo`
-  degrees per Gyr on the galaxy's orbital plane, with `delta = inside / (reach + inside)`. Status: built.
+  degrees per Gyr on the galaxy's orbital plane, with `delta = H / (reach + H)` and `H = H(reach)` the held medium. Status: built.
 - Galaxy plane (`cores::founding_of`): the node lies at
   `index x` the golden angle about the throat's axis, and the tilt toward
   it holds `index x` the plastic angle's share of the S^360 measure (a
@@ -542,12 +560,14 @@ another crate. Laws are composed from shares (ratios of the form
   `delta(H, H) = 1/2`, the fixed point of `delta -> 1 - delta`; on the pole
   axis the inversion `X(t) -> X(1 / t)` fixes `t = 1`. Status: built.
 - Arrival (`Substrate::amplitude`): `(r / rim) bell / 2` after the bounce,
-  amplitude falling as `1 / (r + 1)`. Relay between holes
+  amplitude carried as `H(r, t) / (r + H(r, t))`. Relay between holes
   (`pulse::relays`): continuity `cos(2 pi detour / wavelength)`. Status:
   built; the single front echoed at surfaces with delay `r + H(<r)` is
   under review (roadmap, milestone 3).
-- Irradiation, held and passed: received `1 / (pi (r + 1))` per bell
-  (`stars::ring_per_bell`); held `delta = M / (R + M)` of it; passed
+- Irradiation, held and passed: received `h / (pi (r + h))` per bell about
+  the hold `h` inside the reach (`stars::ring_per_bell`; a piece's cut
+  about the held medium, a star's life about the core's hold 1 until the
+  galaxy tier's medium is carried, roadmap item 44); held `delta = M / (R + M)` of it; passed
   `1 - delta`; received = held + passed. Status: built for stars
   (`stars::transduced_per_bell`); next for worlds (layer C).
 - Emission: a transducing body returns its held share outward; a star's
@@ -678,7 +698,8 @@ another crate. Laws are composed from shares (ratios of the form
 - Collapse and ignition (`disc::star_hold`): dark cut `s0`, `R0`;
   `delta0 = s0 c / (R0 60 + s0 c)`; transduction per echo `delta0 x turning`;
   settled cut at `p0 = 1 + transduced`. Status: built.
-- Ring per bell (`stars::ring_per_bell`): `1 / (pi (r + 1))`. Status: built.
+- Ring per bell (`stars::ring_per_bell`): `h / (pi (r + h))` about a hold
+  `h`. Status: built.
 - Transduction per bell (`stars::transduced_per_bell`): `delta / (pi (r + 1))`.
   Status: built.
 - Frames at heat (`stars::held_frames`): `u_z(q)` open frames
@@ -717,7 +738,7 @@ another crate. Laws are composed from shares (ratios of the form
 - Flicker (`stars::flicker`): `(pi / 2) |cos(2 pi t / echo)|`. Status:
   built.
 - Star's cut (`disc::star_hold`, `formation::hold_at`): the spin is
-  `h w / (R (R + w))`, the heat is `2 ring_per_bell(r)` and
+  `h w / (R (R + w))`, the heat is `2 ring_per_bell(r, H(r))` and
   `p0 = 1 + 2 transduced_per_bell(r)`; each kind is carried to
   `l = p p0 (e / e_mean)(w_mean / w) + spin` and is held where
   `h* / (l / h* + h*) >= p`, at the largest fixed point `h*` of the held

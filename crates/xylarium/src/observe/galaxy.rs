@@ -46,7 +46,7 @@ pub(super) fn galaxy(u: &Universe<'_>) -> String {
             "the radiation's swing within a bell now {} of its mean\n"
         ),
         delta,
-        xyl_cosmos::stars::ring_per_bell(Dy::ZERO),
+        xyl_cosmos::stars::ring_per_bell(Dy::ZERO, Dy::ONE),
         show(&seq.pole_point),
         seq.steps.len(),
         seq.throat_echoes

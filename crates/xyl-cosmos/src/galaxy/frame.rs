@@ -231,9 +231,11 @@ fn piece_cut(
         .find(|b| b.span.0 == record.0 && b.span.1 == record.1)?;
     let swing = sub.echo_swing();
     // The pulse's turning per echo (two bells) in hydrogen units at the
-    // piece's reach about the universal core; the cut derives the star's
-    // transduction from it and the collapsed star's compactness.
+    // piece's reach about the universal core, carried by the held medium
+    // inside that reach; the cut derives the star's transduction from it and
+    // the collapsed star's compactness.
     let reach = Dy::from_q(&bead.reach).max(Dy::ZERO);
-    let turning = (crate::stars::ring_per_bell(reach) * Dy::int(2)).to_q();
+    let hold = Dy::from_q(&sub.held_within(&bead.reach));
+    let turning = (crate::stars::ring_per_bell(reach, hold) * Dy::int(2)).to_q();
     crate::disc::star_hold(bead, &sub.unit(), &sub.held_share(), &swing, &turning)
 }

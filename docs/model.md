@@ -332,7 +332,7 @@ longer holds.
 - The deficit law gives the share that a mass `M` holds at reach `R`, and
   every hold in the model takes its form: `delta(R, M) = M / (R + M)`, with
   received share `1 - delta`. The vacuum's share at reach `R` about a hold
-  `H` is that deficit, the push that the pulse delivers there
+  `H` is that deficit, the share the pulse carries there
   (`xyl_core::shares::deficit_dy`); read at the throat, it is the throat's push,
   `p = delta(H, H) = 1/2` (`circuit::throat_push`). The jet carries the
   throat's torsion share `s = (H + J) / (2H + J)` at each crossing
@@ -369,8 +369,10 @@ longer holds.
   kind's 3Z hold, where the residual is 1. There is one jetstream per held
   kind. Status: partial (read by the observer).
 - The ocean is described by the waveform at reach `r`,
-  `A(r, t) = [cos(2 pi (t - tau) / echo) / echo + q(t - tau)] / (r + 1)`,
-  with `tau = (r / rim) bell / 2` (`Substrate::amplitude`). A galaxy's share
+  `A(r, t) = [cos(2 pi (t - tau) / echo) / echo + q(t - tau)] H / (r + H)`,
+  with `tau = (r / rim) bell / 2` and `H = H(r, t)` the held medium inside
+  the reach (`Substrate::amplitude`; see
+  [The held medium: the ocean as a carry](#the-held-medium-the-ocean-as-a-carry)). A galaxy's share
   of a kind that the jet carries is its pull `h / (r + h)` (`h` its state
   over the mean) times its coherence with the kind's phase,
   `1 - 2 min(d, 1 - d)`, divided by the sum over all galaxies
@@ -392,7 +394,8 @@ longer holds.
   universal core, `state <= 1` (`Substrate::galaxies`): a heavier core would
   hold the universal core rather than circle it. Each galaxy circulates about
   the throat at `1440 delta` degrees per echo on its orbital plane, with
-  `delta = inside / (reach + inside)`. Its plane is set by the repulsion
+  `delta = H / (reach + H)`, `H` the held medium inside its reach
+  (`Substrate::held_within`). Its plane is set by the repulsion
   pivots one tier up (the node by the golden angle about the throat's axis,
   the tilt toward it by the plastic angle's share of the S^360 measure; a
   placement by index, to be replaced, roadmap item 40),
@@ -438,14 +441,62 @@ of its enclosure, and the construction is spherical:
   `X(t) -> X(1 / t)`, swaps the Z pole (held) and the Q pole (open) and
   fixes the throat at `t = 1` (`circuit::axis_antipole`).
 - **Arrival at a reach.** The front's arrival at reach `r` is
-  `(r / rim) bell / 2` after the bounce, and its amplitude falls with the
-  vacuum's share about the universal state, `1 / (r + 1)`
+  `(r / rim) bell / 2` after the bounce, and the share of it carried there
+  is the held medium's deficit, `H(r, t) / (r + H(r, t))`
   (`Substrate::amplitude`). In the galaxy tier the front is carried
   between holes by the relay network (`pulse::relays`): every galactic core
   and stellar remnant passes it on continuous in phase. Next: the relay is
   under review against a single front echoed only at surfaces (cores,
   the firmament, the rim) with the held medium's delay `r + H(<r)`, shared
   with Netstratum (roadmap, milestone 3).
+
+### The held medium: the ocean as a carry
+
+What the pulse leaves at a reach is a carry, not a push: the ocean between
+the cores is the medium of what the founding released (the beads, the jet's
+kinds in flight, the electrons' phase they bear), and what reaches a place
+is what that medium carries there. By axiom 2 the share held at reach `r`
+is the deficit about the hold enclosed within `r`, so the elements weighing
+on the ocean set the law it carries by.
+
+- **The medium inside a reach** (`Substrate::held_within`,
+  `Substrate::medium`). As founded, the hold inside reach `r` (core
+  masses) is the core's own, 1, plus every bead nearer the throat:
+  `H(r) = 1 + sum(states nearer than r)`. Matter the jet throws moves at
+  the ocean's speed, so what left the core by `t - tau(r)` has crossed `r`
+  unless it lands on a galaxy within `r`; at `t`,
+  `H(r, t) = H(r) - passed(r, t) / F`, with `F` the firmament's founded
+  mass and `passed(r, t)` the outflow by `t - tau(r)` times its landing
+  share bound beyond `r`. Matter in flight within `r`, and matter taken by
+  a galaxy within it, stays in the medium, so the books close. The same
+  hold is a bead's ring hold (a galaxy's circulation and its push read it);
+  it replaces the bead's `1 + 2 x` the nearer share, whose factor was not
+  derived.
+- **The share carried** (`Substrate::carry`). At `r` the medium carries
+  `delta = H(r, t) / (r + H(r, t))` of the pulse: the waveform's share
+  (`Substrate::amplitude`) and, at a piece's reach, the ring its star cut
+  receives (`stars::ring_per_bell` about `H(r)`). At the throat (`r = 0`)
+  it is 1 whatever the medium. The universal state alone, `1 / (r + 1)`, is
+  the case of an empty ocean.
+- **The motion: outward, from the echo.** The echo's near face carries
+  the open share `s` out and its far face returns the held share `1 - s`,
+  opposed (T4, the attractor pair). Composed by the flow law, the ocean
+  carries `s (+) (-(1 - s)) = (2s - 1) / (1 - s (1 - s))` outward per echo
+  (`Carry::outward`): zero only for a spinless throat, and the same
+  composition as the pair share (see Positrons and the pair share), so the
+  ocean's outward carry and the pairs it bears are one law.
+- **The motion: turning, from the torsion.** Axis: the five isoclinic
+  planes (`bounce::spin_bivector`, T18), each by the same degrees.
+  Degrees: each traversal at `r` advances `360 delta` degrees
+  (`Carry::turning`), the shear's advance read about the medium.
+  Torsion: a degree of structure, the medium's deficit. Return: after
+  `1 / (1 - delta)` traversals (T4, `Carry::returns`), read from the same
+  medium's density at `r`; none at the throat, where the medium holds
+  the whole pulse.
+
+The star tier one down still reads a star's life about the core's hold, 1
+(`stars::ring_per_bell` with `h = 1`); the galaxy tier's own medium enters
+with the received carry (roadmap item 44).
 
 ### The ring: the throat orbit and the echo's torsion
 

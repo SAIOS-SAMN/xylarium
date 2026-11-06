@@ -54,7 +54,6 @@ fn encode(s: &Substrate) -> Vec<u8> {
     for b in &s.beads {
         e.u32(b.index)
             .q(&b.reach)
-            .q(&b.inside)
             .q(&b.state)
             .q(&b.phase)
             .q(&b.span.0)
@@ -96,7 +95,7 @@ fn decode(buf: &[u8]) -> Option<Substrate> {
     let n = d.count()?;
     let mut beads = Vec::with_capacity(n);
     for _ in 0..n {
-        let (index, reach, inside, state, phase) = (d.u32()?, d.q()?, d.q()?, d.q()?, d.q()?);
+        let (index, reach, state, phase) = (d.u32()?, d.q()?, d.q()?, d.q()?);
         let span = (d.q()?, d.q()?);
         let m = d.count()?;
         let mut recipe = Mix::new();
@@ -107,7 +106,6 @@ fn decode(buf: &[u8]) -> Option<Substrate> {
         beads.push(Bead {
             index,
             reach,
-            inside,
             state,
             phase,
             recipe,

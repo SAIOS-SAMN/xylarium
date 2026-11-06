@@ -110,6 +110,41 @@ Work on an item goes through a branch and a pull request that cites it.
 Items are listed by area in dependency order; an item's milestone is given
 where it belongs to one.
 
+### Remediation register
+
+The remediations identified in the audit of 2026-11-06, in dependency order,
+so that anyone can pick one up: each row names its issue, what it needs
+first and what it unblocks. A row marked **decision** waits on an operator
+ruling; every other row can start once the rows it depends on are merged.
+Each issue states its sites, its evidence and when it is done. Rules every
+row follows: one calibre per share, dimensional capacity kept, readings
+witnessed on a live home before and after and checked for magnitude
+(AGENTS.md; CONTRIBUTING.md, Verification).
+
+| Order | Issue | Remediation | Needs first | Unblocks |
+|---|---|---|---|---|
+| 0 | [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) | **Decision**: the calibre, (A) masses in core masses at every tier or (B) masses dilating with lengths per tier | | everything below that reads a share across tiers |
+| 0 | [#128](https://github.com/SAIOS-SAMN/xylarium/issues/128) | **Decision**: T18's equal fifths against the attractor pair's separation | | [#128](https://github.com/SAIOS-SAMN/xylarium/issues/128)'s sites, [#121](https://github.com/SAIOS-SAMN/xylarium/issues/121) |
+| 0 | [#137](https://github.com/SAIOS-SAMN/xylarium/issues/137) | **Decision**: pinch or bounce for the core's fold meeting (T10-T14) | | docs wording |
+| 0 | [#136](https://github.com/SAIOS-SAMN/xylarium/issues/136) | **Decisions**: the tube's antipolar face (78.176), the parity lane (78.178), Mycelium's process proposals | | the network readings in [#136](https://github.com/SAIOS-SAMN/xylarium/issues/136) |
+| 1 | [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) | Read every mixed entry (18 in EQUATIONS.md) in one calibre; correct `observe`'s unit labels | the calibre decision | rows 2 to 7 |
+| 2 | [#129](https://github.com/SAIOS-SAMN/xylarium/issues/129) | Worlds 240-400 pc from their star: confirm the cause, read the star's manifold in the system calibre | [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) | world readings |
+| 3 | [#116](https://github.com/SAIOS-SAMN/xylarium/issues/116) ([#125](https://github.com/SAIOS-SAMN/xylarium/pull/125)) | The hold inside an orbit: land the draft with its dev tests and witnessed readings | [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) | [#113](https://github.com/SAIOS-SAMN/xylarium/issues/113) step 1, [#121](https://github.com/SAIOS-SAMN/xylarium/issues/121) |
+| 4 | [#134](https://github.com/SAIOS-SAMN/xylarium/issues/134) | The reverberation's interior hold in one calibre; resolve the double count | [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) | the founding's onsets and rates |
+| 5 | [#131](https://github.com/SAIOS-SAMN/xylarium/issues/131) | The echo share the ocean reads after the core's bounce | | [#133](https://github.com/SAIOS-SAMN/xylarium/issues/133), the carry |
+| 6 | [#113](https://github.com/SAIOS-SAMN/xylarium/issues/113) step 1, then [#126](https://github.com/SAIOS-SAMN/xylarium/pull/126) | A star's received carry about the hold inside its orbit; T20 re-derived on it | [#116](https://github.com/SAIOS-SAMN/xylarium/issues/116), [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) | stripping, chemistry ([#103](https://github.com/SAIOS-SAMN/xylarium/issues/103)) |
+| 7 | [#127](https://github.com/SAIOS-SAMN/xylarium/issues/127) | Turns as phase in degrees with their return, not ring counts or radians | [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) | [#40](https://github.com/SAIOS-SAMN/xylarium/issues/40), [#60](https://github.com/SAIOS-SAMN/xylarium/issues/60) |
+| 8 | [#121](https://github.com/SAIOS-SAMN/xylarium/issues/121) | The vortex: derive the five open items, then replace the bands, circles and points | [#116](https://github.com/SAIOS-SAMN/xylarium/issues/116), [#128](https://github.com/SAIOS-SAMN/xylarium/issues/128) decision | [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118), [#90](https://github.com/SAIOS-SAMN/xylarium/issues/90) |
+| 9 | [#128](https://github.com/SAIOS-SAMN/xylarium/issues/128) | Five planes held as one number: per-plane components at every site; the doc/code mismatches | [#121](https://github.com/SAIOS-SAMN/xylarium/issues/121), the T18 decision | [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118) |
+| 10 | [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118) | Pair readings through the pivot, per plane; retire `rotor::angle_between` | [#121](https://github.com/SAIOS-SAMN/xylarium/issues/121), [#128](https://github.com/SAIOS-SAMN/xylarium/issues/128) | [#90](https://github.com/SAIOS-SAMN/xylarium/issues/90) |
+| 11 | [#132](https://github.com/SAIOS-SAMN/xylarium/issues/132) | Fluidity and viscosity from the frames (LAW-COUPLING 78.175); delete the laboratory viscosity | | worlds' interiors |
+| 12 | [#133](https://github.com/SAIOS-SAMN/xylarium/issues/133) | The pairs the outward carry bears, in the ocean's books | [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123), [#131](https://github.com/SAIOS-SAMN/xylarium/issues/131) | |
+| 13 | [#135](https://github.com/SAIOS-SAMN/xylarium/issues/135) | Name each "push" site for what it is (carry, share or push) | | |
+| 14 | [#107](https://github.com/SAIOS-SAMN/xylarium/issues/107) | The scalar-collapse register: candidates held together, booleans as shares, the parallel leftovers | | |
+| 15 | [#25](https://github.com/SAIOS-SAMN/xylarium/issues/25) | The Earth and Milky Way rulers left at the SI seam (listed on the issue) | | |
+| 16 | [#136](https://github.com/SAIOS-SAMN/xylarium/issues/136) | Fixtures owed to Mycelium and Netstratum: LAW-FIELD 78.171, LAW-COUPLING 78.175, FORMS-COORDINATE v3/v4, pin v0.4.0 ([#82](https://github.com/SAIOS-SAMN/xylarium/issues/82)) | the network decisions for their rows | |
+| any | [#130](https://github.com/SAIOS-SAMN/xylarium/issues/130) | `observe galaxy` forecasts every star's minds first and cannot finish at the default star count | | witnessed galaxy readings, the carried read of a live home |
+
 ### Verification
 
 1. **Readings on `main` against `v0.3.0`**

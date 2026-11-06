@@ -11,6 +11,12 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The remediation register (docs/roadmap.md, Remediation register): every
+  remediation found in the audit of 2026-11-06, in dependency order, each
+  with its issue (#113, #116, #118, #121, #123, #127 to #137, #107, #25),
+  what it needs first and what it unblocks, so that anyone can pick one
+  up. The open draft PRs #125 (the hold inside an orbit) and #126 (T20)
+  are listed with what blocks them.
 - Calibre and dimensional capacity (docs/model.md; glossary; AGENTS.md;
   CONTRIBUTING.md, Verification; #123, roadmap item 49). A calibre is the
   pair of units in which a share's reach and hold are both read:

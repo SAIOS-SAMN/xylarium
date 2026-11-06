@@ -773,6 +773,7 @@ Theorems:
 | T17 | the spin is a sheared orbit over the core's bounces: a kind's separation is `rho = q ln D(s) - (1 - q) ln D(1 - s)` across the attractor pair; a cohort takes `J (m / M) (rho_cohort / rho_hold)`; a cohort less separated than its hold spins the throat up; the pair closes while `a <= 1` | 3, 7, 9, 11, T2, T10, T16 |
 | T18 | the five isoclinic planes are interchangeable in the multiplicity and the filling, so each holds a fifth of the isoclinic hold and T14's pushes are equal: one isoclinic phase per body; distinct plane phases come only from a link's turning between planes | 8, T6, T7, T14 |
 | T19 | a link's remanence `w = J - (a_0 M_0) M`: per passage `w' = w (1 - m / M) + J (m / M) (1 - rho_c / rho_hold)`; conserved between passages; cleared by a passage of hold `m* = w M / (w + J (rho_c / rho_hold - 1))`; for one release, the remanent share `1 - rho_hold / rho_closed` | 7, 11, T10, T17 |
+| T20 | a winding of enclosed charge `H` at reach `r = Z (n + 1)(l + 1) / 2` pushes `delta_w = H / (r + H)`; under a received isoclinic push `q` it is held while `q <= delta_w`, else it departs after `ln 2 / ln(D(q) / D(delta_w))` echoes; hydrogen's winding pushes one half | 2, 3, T8, T15 |
 
 Reading (seed 7; a retired floating-point screen with exact held sets, to
 be read on the binary once the pinches are built, #79): the universal core holds 0.4352 of the
@@ -1169,16 +1170,16 @@ candidates reduced to one by a scalar. Mu and the TUniversal points are
 clean: their lanes are never summed, ordered or compared as one number.
 
 - **The atom and the bond.**
-  - Stripping is all or nothing per band (`atoms::unpaired_hot`), so
-    `compound::stands` is a boolean.
+  - Stripping (opened, T20): each winding is held by its push, the
+    deficit share its enclosed charge keeps at its reach, against the
+    received push by the flow law, and departs after a closed number of
+    echoes once outpushed (`atoms::Atom::winding_push`,
+    `atoms::departure`, `atoms::unpaired_hot`). `compound::stands` still
+    reads whether every winding is held, a boolean.
   - A bond is read across its two faces (opened, `atoms::Bond`): on the
     axis plane each face's pole push and polarity, the pushes composed by
     the flow law; on the isoclinic planes every open winding of each face
-    with its tightness. Its hold rule is still a cut (held whole within
-    a winding's tightness, else tightness over turning, the turning capped
-    at one), so `xylarium observe bond` reads every winding tighter than
-    hydrogen's held whole at any turning: the graded stripping law is to be
-    derived.
+    with its tightness, its push and its departure (T20).
   - The atom's hold sums its modes into one number (`atoms::hold`).
 - **The founding and the stars.**
   - The spin orbit folds each kind's separation into one spread
@@ -1303,6 +1304,24 @@ what the physics produces is read, and the minds of a universe name it
     and a metabolism ruler are tabled (`worlds::media`, `life`); the drives'
     constants are tabled and offered without reading a world's elements
     (`xyl-kernel propulsion`).
+- **T20, stripping by received turning.** A winding is a hold at a reach:
+  the fill law places the winding `(n, l)` at `r = Z (n + 1)(l + 1) / 2` by
+  the ring-density law, `R_n = R_(n-1) + n H`, which counts reach in units
+  of hold, and shields it by the electrons of every other shell inside that
+  reach, so it encloses `H = Z - inside`. By axiom 2 it keeps the deficit
+  share `delta_w = H / (r + H)`, its push: one half for hydrogen's lone
+  winding, the throat's push, and one fifth for oxygen's `(2, 1)`. The
+  received isoclinic turning is a share of a turn per echo, a push of the
+  same kind; the two oppose and compose by the flow law (axiom 3),
+  `D(p) = D(delta_w) / D(q)`. As at the throat (T8, T15) the winding is held
+  while that is at least one, `q <= delta_w`, and otherwise departs after
+  `ln 2 / ln(D(q) / D(delta_w))` echoes; a push of one or more strips every
+  winding at once. Built (`atoms::Atom::winding_push`, `atoms::departure`,
+  `atoms::unpaired_hot`, `atoms::Bond::held`); it replaces a cut that
+  compared a tightness with a turning capped at one, and one shielding rule
+  (`atoms::shielded`) now serves the fill, the tightness and the push. The
+  departing winding takes its open frame, so the pole state moves on the
+  axis plane.
 - **The vents to open.** Each replaces a scalar with the structure the
   physics carries:
   1. **Received turning, not heat.** The pulse a body absorbs is a versor

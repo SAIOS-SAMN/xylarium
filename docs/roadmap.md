@@ -258,8 +258,9 @@ where it belongs to one.
     `law`;
     [model.md](model.md#scalar-collapses-the-register-and-the-order-of-opening)).
     The register of 50 sites where a structured quantity is one number, a
-    graded reading a boolean, or a choice a scalar, and the order of
-    opening: the bond and stripping as graded shares; candidates held
+    graded reading a boolean, or a choice a scalar. Done: received turning
+    by planes, focus as four shares, the bond by its faces, stripping by
+    each winding's push (T20). The order of opening the rest: the bond and stripping as graded shares; candidates held
     together; booleans to shares where they gate existence; relations held
     by tier; lanes and planes kept whole; enclosures kept.
 42. **Chemistry from the elements**

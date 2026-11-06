@@ -29,6 +29,7 @@
 //! heaviest kind below it whose single-nucleon peel releases,
 //! u(z - 1) + 1 - u(z) < 0. Terms: seal, vessel (docs/glossary.md).
 
+use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 
 /// One band: its turning n, its pivot's degree l and the electrons it holds.
@@ -109,17 +110,33 @@ pub struct Atom {
 }
 
 impl Atom {
-    /// How tightly band `b` is held: the charge its windings enclose, Z less
-    /// the electrons of every shallower turning, over its turning `n`, in
-    /// hydrogen units (exact).
+    /// The charge band `b`'s windings enclose, by the fill law's shielding
+    /// ([`shielded`]): Z less the electrons of every other shell that lies
+    /// inside its reach.
+    pub fn winding_hold(&self, b: &Band) -> u32 {
+        let others = self.bands.iter().map(|c| (c.n, c.electrons));
+        self.z.saturating_sub(shielded(others, b.n, b.l))
+    }
+
+    /// How tightly band `b` is held: its enclosed charge over its turning
+    /// `n`, in hydrogen units (exact), the fill law's tightness.
     pub fn winding_tightness(&self, b: &Band) -> Q {
-        let shallower: u32 = self
-            .bands
-            .iter()
-            .filter(|c| c.n < b.n)
-            .map(|c| c.electrons)
-            .sum();
-        Q::new(i64::from(self.z) - i64::from(shallower), i64::from(b.n)).unwrap_or(Q::ZERO)
+        Q::new(i64::from(self.winding_hold(b)), i64::from(b.n)).unwrap_or(Q::ZERO)
+    }
+
+    /// Band `b`'s push (T20): the deficit share its enclosed charge `H`
+    /// keeps at its reach `r = Z (n + 1)(l + 1) / 2`, `H / (r + H)` (axiom 2).
+    /// The fill law counts reach in units of hold (the ring-density law,
+    /// `R_n = R_(n-1) + n H`), so the two are read in one unit. Hydrogen's
+    /// lone winding pushes one half, the throat's push.
+    pub fn winding_push(&self, b: &Band) -> Q {
+        let hold = Q::int(i64::from(self.winding_hold(b)));
+        let reach = Q::new(
+            i64::from(self.z) * i64::from(b.n + 1) * i64::from(b.l + 1),
+            2,
+        )
+        .unwrap_or(Q::ZERO);
+        xyl_core::shares::deficit(&hold, &reach).unwrap_or(Q::ZERO)
     }
 
     /// Every frame paired: the atom bonds nothing.
@@ -196,28 +213,42 @@ impl Received {
     }
 }
 
-/// Stripping by received turning: the isoclinic planes' turning strips every
-/// winding held no more tightly than it. A winding's tightness, in hydrogen
-/// units (hydrogen's lone electron = 1), is (Z - electrons of every shallower
-/// shell) / n; the isoclinic turning, in the same unit, is what the core
-/// receives this echo (capped at 1). Returns the unpaired count of the
-/// remaining windings: stripped hydrogen has none, while heavy kinds keep
-/// their deep windings. With no turning received every atom is whole.
+/// Stripping by received turning (T20): a winding is held while the push
+/// the isoclinic planes receive, `q` (a share of a turn per echo), is at
+/// most the winding's own push `delta_w` ([`Atom::winding_push`]); the two
+/// oppose and compose by the flow law, so past it the winding departs
+/// ([`departure`]). Returns the unpaired count of the windings still held:
+/// with no turning received every atom is whole, and a push of one or more,
+/// outside the flow law's domain, strips every winding.
 pub fn unpaired_hot(z: u32, received: &Received) -> u32 {
-    let heat = &received.isoclinic;
-    if heat.signum() <= 0 {
+    let q = &received.isoclinic;
+    if q.signum() <= 0 {
         return unpaired(z);
     }
-    // The isoclinic turning per echo, capped at one (hydrogen's lone
-    // electron); windings with tightness at most this are stripped.
-    let heat = heat.clone().min(Q::ONE);
-    let heat = &heat;
     let Some(a) = atom(z) else { return 0 };
     a.bands
         .iter()
-        .filter(|b| a.winding_tightness(b) > *heat)
+        .filter(|b| departure(&a.winding_push(b), q).is_none())
         .map(Band::unpaired)
         .sum()
+}
+
+/// The echoes after which a winding of push `delta_w` departs under a
+/// received push `q` (T20): none while `q <= delta_w`, the winding held;
+/// else `ln 2 / ln(D(q) / D(delta_w))` (T15's form at the atomic tier), and
+/// zero, at once, for `q` of one or more. Dyadic logarithms.
+pub fn departure(delta_w: &Q, q: &Q) -> Option<Dy> {
+    if q <= delta_w {
+        return None;
+    }
+    let (Some(dq), Some(dw)) = (
+        xyl_core::shares::dilation(q),
+        xyl_core::shares::dilation(delta_w),
+    ) else {
+        return Some(Dy::ZERO);
+    };
+    let ratio = (Dy::from_q(&dq) / Dy::from_q(&dw)).ln()?;
+    Some(Dy::int(2).ln()? / ratio)
 }
 
 /// The vessel: the band of kinds no passing light shell can grip, derived
@@ -267,6 +298,18 @@ pub fn axis_polarity(z: u32) -> Option<i64> {
     atom(z).map(|a| a.bands.iter().map(Band::axis_polarity).sum())
 }
 
+/// The fill law's shielding of the winding `(n, l)`: the electrons of every
+/// other shell `m` whose `m (m + 1)` lies below the winding's reach
+/// `(n + 1)(l + 1)` (the ring-density law, `Z / 2` cancelled), given the
+/// occupied `(shell, electrons)` pairs.
+fn shielded(occupied: impl Iterator<Item = (u32, u32)>, n: u32, l: u32) -> u32 {
+    let reach = u64::from(n + 1) * u64::from(l + 1);
+    occupied
+        .filter(|&(m, _)| m != n && u64::from(m) * u64::from(m + 1) < reach)
+        .map(|(_, e)| e)
+        .sum()
+}
+
 fn fill(z: u32) -> Atom {
     use std::collections::BTreeMap;
     let mut occ: BTreeMap<(u32, u32), u32> = BTreeMap::new();
@@ -286,11 +329,7 @@ fn fill(z: u32) -> Atom {
                 if have >= 2 * crate::fibres::directions(l) {
                     continue;
                 }
-                let reach = u64::from(n + 1) * u64::from(l + 1);
-                let inside: u32 = (1..=nmax + 1)
-                    .filter(|&m| m != n && u64::from(m) * u64::from(m + 1) < reach)
-                    .map(|m| shell_count(&occ, m))
-                    .sum();
+                let inside = shielded((1..=nmax + 1).map(|m| (m, shell_count(&occ, m))), n, l);
                 let t = Q::new(i64::from(z) - i64::from(inside), i64::from(n)).unwrap_or(Q::ZERO);
                 let better = match &best {
                     None => true,
@@ -359,11 +398,12 @@ pub struct WindingHold {
     pub l: u32,
     /// Its unpaired electrons.
     pub unpaired: u32,
-    /// The share of it held: 1 within its tightness, else its tightness over
-    /// the isoclinic turning (the rule `compound::stands` and
-    /// `atoms::unpaired_hot` cut at; the graded stripping law is still to be
-    /// derived, #107).
-    pub held: Q,
+    /// Its push, the deficit share its enclosed charge keeps at its reach
+    /// ([`Atom::winding_push`]).
+    pub push: Q,
+    /// The echoes after which the received turning strips it ([`departure`]);
+    /// `None` while it is held.
+    pub departs: Option<Dy>,
 }
 
 impl Bond {
@@ -393,23 +433,18 @@ impl Bond {
     /// Each face's open windings and the share of each the isoclinic
     /// turning `received` leaves held.
     pub fn held(&self, received: &Received) -> [Vec<WindingHold>; 2] {
-        let turning = received.isoclinic.clone().min(Q::ONE);
         self.faces.clone().map(|a| {
             a.bands
                 .iter()
                 .filter(|b| b.unpaired() > 0)
                 .map(|b| {
-                    let tight = a.winding_tightness(b);
-                    let held = if turning <= tight {
-                        Q::ONE
-                    } else {
-                        tight.checked_div(&turning).unwrap_or(Q::ONE)
-                    };
+                    let push = a.winding_push(b);
                     WindingHold {
                         n: b.n,
                         l: b.l,
                         unpaired: b.unpaired(),
-                        held,
+                        departs: departure(&push, &received.isoclinic),
+                        push,
                     }
                 })
                 .collect()

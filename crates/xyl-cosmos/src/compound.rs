@@ -202,7 +202,7 @@ mod tests {
         // on the axis plane composed across the pair.
         assert_eq!(bond.faces.clone().map(|a| a.z), [8, 1]);
         for face in bond.held(&crate::atoms::Received::none()) {
-            assert!(!face.is_empty() && face.iter().all(|w| w.held == Q::ONE));
+            assert!(!face.is_empty() && face.iter().all(|w| w.departs.is_none()));
         }
         assert!(bond.axis_separation().is_some());
         // The cluster stands with no turning received; at an isoclinic turning of 1 hydrogen's

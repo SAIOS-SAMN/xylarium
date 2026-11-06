@@ -277,8 +277,9 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
 /// The `bond A B [T]` reading: the bond of atoms `A` and `B` read by its
 /// planes (`atoms::Bond`). On the axis plane, each face's pole push and
 /// polarity and the flow law's composition of the two pushes; on the
-/// isoclinic planes, every open winding of each face with its tightness and
-/// the share of it a received isoclinic turning `T` (default 0) leaves held;
+/// isoclinic planes, every open winding of each face with its tightness, its
+/// push (T20) and, under a received isoclinic push `T` (default 0), whether
+/// it is held or after how many echoes it departs;
 /// between planes, nothing in founded matter (T18).
 pub(super) fn bond_reading(a: u32, b: u32, turning: &Q) -> Result<String, String> {
     let (fa, fb) = (
@@ -314,12 +315,15 @@ pub(super) fn bond_reading(a: u32, b: u32, turning: &Q) -> Result<String, String
             .zip(atom.bands.iter().filter(|x| x.unpaired() > 0))
         {
             out.push_str(&format!(
-                " ({}, {}) {} open, tightness {}, held {};",
+                " ({}, {}) {} open, tightness {}, push {}, {};",
                 w.n,
                 w.l,
                 w.unpaired,
                 crate::run::show(&atom.winding_tightness(band)),
-                crate::run::show(&w.held)
+                crate::run::show(&w.push),
+                w.departs
+                    .map(|e| format!("departs after {e} echoes"))
+                    .unwrap_or_else(|| "held".into())
             ));
         }
         out.push('\n');

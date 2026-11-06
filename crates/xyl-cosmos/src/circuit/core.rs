@@ -223,6 +223,23 @@ pub struct Push {
     pub swing: Dy,
 }
 
+/// The share of an orbit at reach `a` with eccentricity `delta` that lies
+/// within reach `r`: the share of its swing between the apsides
+/// `a (1 - delta)` and `a (1 + delta)` inside `r`, `(r - a (1 - delta)) /
+/// (2 a delta)` clamped to `[0, 1]`; for an orbit with no swing, 1 once its
+/// reach is within `r`. Exact.
+fn orbit_share(a: &Q, delta: &Q, r: &Q) -> Q {
+    let width = &(&Q::int(2) * a) * delta;
+    if width.signum() <= 0 {
+        return if a < r { Q::ONE } else { Q::ZERO };
+    }
+    let lo = a * &(&Q::ONE - delta);
+    (r - &lo)
+        .checked_div(&width)
+        .unwrap_or(Q::ZERO)
+        .clamp(Q::ZERO, Q::ONE)
+}
+
 /// The share of a band swinging between `r (1 - p)` and `r (1 + p)` that lies
 /// past the throat at `h`, averaged over the swing: 0 where the outer edge
 /// stays inside, 1 where the inner edge is already past, and between them
@@ -863,17 +880,38 @@ impl Substrate {
         bell() / Dy::int(2) * r.max(Dy::ZERO) / Dy::from_q(&self.rim).max(Dy::sci(1, -30))
     }
 
+    /// The beads' orbits about the throat, inner first: (reach `a`,
+    /// eccentricity `delta`, mass `m`, core masses). A bead orbits the hold
+    /// inside it, `h = 1 + sum(m, beads nearer)`, read inner first as the
+    /// reverberation reads its kinds, with eccentricity the deficit there,
+    /// `delta = h / (a + h)`, swinging between the apsides `a (1 - delta)`
+    /// and `a (1 + delta)` (the throat orbit, docs/model.md The ring).
+    pub fn orbits(&self) -> Vec<(Q, Q, Q)> {
+        let mut by: Vec<(&Q, &Q)> = self.beads.iter().map(|b| (&b.reach, &b.state)).collect();
+        by.sort_by(|x, y| x.0.cmp(y.0));
+        let mut hold = Q::ONE;
+        let mut out = Vec::with_capacity(by.len());
+        for (a, m) in by {
+            let delta = xyl_core::shares::deficit(&hold, a).unwrap_or(Q::ONE);
+            out.push((a.clone(), delta, m.clone()));
+            hold = &hold + m;
+        }
+        out
+    }
+
     /// The hold inside reach `r` (cluster units) as founded, in core masses:
-    /// the core's own hold, 1, plus the state of every bead nearer the
-    /// throat (each bead's mass, in the core's units). The deficit at a reach
-    /// is read about the matter enclosed within it (axiom 2), so this is the
-    /// hold a bead's ring, a galaxy's circulation and the ocean's carry are
-    /// read about. Exact.
+    /// the core's own hold, 1, plus each bead counted by the share of its
+    /// orbit's swing within `r`, `chi = (r - a (1 - delta)) / (2 a delta)`
+    /// clamped to `[0, 1]` (the reverberation's swing law, `beyond_share`,
+    /// read from the inside). A body is caught in an orbit, never a band: a
+    /// share of every orbit, never a step. The deficit at a reach is read
+    /// about the matter enclosed within it (axiom 2), so this is the hold a
+    /// galaxy's circulation and push, a piece's star cut, the ocean's carry
+    /// and, one tier down, a star's turning are read about. Exact.
     pub fn held_within(&self, r: &Q) -> Q {
-        self.beads
-            .iter()
-            .filter(|b| b.reach < *r)
-            .fold(Q::ONE, |a, b| &a + &b.state)
+        self.orbits().iter().fold(Q::ONE, |held, (a, delta, m)| {
+            &held + &(m * &orbit_share(a, delta, r))
+        })
     }
 
     /// The ocean's held medium inside reach `r` (cluster units) at `t` (rings),
@@ -1093,8 +1131,19 @@ mod tests {
         reaches.sort();
         let held: Vec<Q> = reaches.iter().map(|r| sub.held_within(r)).collect();
         assert!(held.windows(2).all(|w| w[0] <= w[1]));
-        let past = &sub.rim + &Q::ONE;
+        // Past every orbit's apoapsis (each below twice its reach) the hold
+        // is the core plus every bead; inside each bead's periapsis that bead's
+        // orbit adds nothing.
+        let past = &(&Q::int(2) * &sub.rim) + &Q::ONE;
         assert_eq!(sub.held_within(&past), &Q::ONE + &sub.unit());
+        for (a, delta, _) in sub.orbits() {
+            assert!(delta.signum() > 0 && delta < Q::ONE);
+            assert_eq!(
+                orbit_share(&a, &delta, &(&a * &(&Q::ONE - &delta))),
+                Q::ZERO
+            );
+            assert_eq!(orbit_share(&a, &delta, &(&a * &(&Q::ONE + &delta))), Q::ONE);
+        }
         // At the bounce the medium is the founded hold; later it is never
         // more, never negative, and falls with t. Nothing passes the rim, so
         // the medium there keeps the whole founded hold (the books close).

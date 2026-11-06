@@ -220,6 +220,20 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- A body is caught in an orbit, never a band (#116, roadmap item 46): the
+  hold inside a reach is `1 + sum m_b chi_b(r)` core masses, each bead
+  counted by the share of its orbit's swing within the reach (eccentricity
+  the deficit about the hold inside it; `Substrate::orbits`,
+  `Substrate::held_within`), in place of a step at the bead's reach; the
+  galaxy tier reads the same hold (`galaxy::inside_mass`), in place of the
+  bands' span share over their own holding, whose premise (the bands hold
+  the core's 1) did not hold: the beads total 0.4008 core masses, so past
+  every orbit the galaxy holds 1.4008, not 2. `ring_mass` is a bead's state
+  in core masses. Seed 7: galaxy 21's hold 1.0077 to 1.1267 core masses and
+  its circulation 1413 to 1565 turns a Gyr; galaxy 23 hold 1.2971 to
+  1.3489; star 7's deficit about its core 3.29e-11 to 2.43e-11, its turn
+  3.04e10 to 4.12e10 rings, its manifold 10 worlds to 34; star 1's 6 worlds
+  to 8.
 - Reaches are read in tier units, never rings (#115, roadmap item 45): the
   lengths formerly called "core rings" and "galaxy rings" are the cluster
   unit (`60^7 r_g`) and the galaxy unit (`60^5 r_g`) in docs, comments and

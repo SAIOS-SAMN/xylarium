@@ -229,21 +229,21 @@ another crate. Laws are composed from shares (ratios of the form
   the held medium at its reach (`Substrate::held_within`). Status: built;
   replaced by the founding as flow (planned).
 - Held medium (`Substrate::held_within`, `Substrate::medium`): the hold
-  inside reach `r` (core masses) is `H(r) = 1 + sum(states of the beads
-  nearer than r)` as founded, and at `t` it is `H(r, t) = H(r) -
+  inside reach `r` (core masses) is `H(r) = 1 + sum_b m_b chi_b(r)` as
+  founded (the hold inside an orbit, below), and at `t` it is `H(r, t) = H(r) -
   passed(r, t) / F`, with `F` the firmament's founded mass and
   `passed(r, t) = sum_k mass(outflow_k(t - tau(r))) L_k(> r)`, `L_k(> r)`
   the landing share of kind `k` bound for galaxies whose delay exceeds
-  `tau(r)`. Status: built; the step "nearer than r" is replaced by the
-  hold inside an orbit (planned, #116).
+  `tau(r)`. Status: built.
 - Hold inside an orbit ([model.md](model.md#the-hold-inside-an-orbit),
   #116): body `b` (mass `m_b`, reach `a_b`) orbits `h_b = 1 + sum(m_c, c
   nearer)` with `e = delta_b = h_b / (a_b + h_b)` (LAW-DEFICIT-SHARE),
   apsides `a_b (1 -/+ delta_b)`; its share inside `r` is
   `chi_b(r) = clamp((r - a_b (1 - delta_b)) / (2 a_b delta_b), 0, 1)`
   (`circuit::beyond_share` from the inside); the hold is
-  `H(r) = 1 + sum_b m_b chi_b(r)`. One model for `Substrate::held_within`
-  and `galaxy::inside_mass`. Status: planned.
+  `H(r) = 1 + sum_b m_b chi_b(r)`, masses in core masses at both tiers.
+  One model for `Substrate::held_within` (`Substrate::orbits`) and
+  `galaxy::inside_mass`. Status: built.
 - Vortex ([model.md](model.md#the-vortex-core-swirl-twist-writhe-linking),
   #121): core the filament, `X(t)`, `t = U / W`; stretching `D(n)^t` along
   it; circulation about the held medium `Gamma(r) = 2 pi H(r) r / (r +
@@ -649,12 +649,9 @@ another crate. Laws are composed from shares (ratios of the form
   built.
 - Stellar mass (`galaxy::stellar_mass`): `Lighting::lit` core masses.
   Status: built.
-- Mass inside (`galaxy::inside_mass`):
-  `1 + rings within r / all rings` core masses, with a ring counted by the
-  share of its span inside `r` (galaxy units). Status: built; to be
-  replaced by the hold inside an orbit (planned, #116). Its divisor, all
-  rings, is taken as the core's state 1; the founded beads total 0.4008
-  core masses, so the tier's units await a ruling (#116).
+- Mass inside (`galaxy::inside_mass`): the hold inside an orbit,
+  `1 + sum_b m_b chi_b(r)` core masses (section 1, #116), the beads read
+  one tier down. Status: built.
 - Turning law (`turning::turning`, `turning::turning_dy`):
   `omega = delta(<r) bell / r` radians per ring, with `r` in `r_g`
   (`r Tier::in_rg`), `delta(<r) = M(<r) / (r + M(<r))`, `M` in core masses

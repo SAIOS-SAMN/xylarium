@@ -357,16 +357,15 @@ where it belongs to one.
    First step: item 46.
 46. **The hold inside an orbit**
     ([#116](https://github.com/SAIOS-SAMN/xylarium/issues/116), `law`,
-    `defect`, `needs-decision`;
-    [model.md](model.md#the-hold-inside-an-orbit)). A body is caught in an
-    orbit, never a band: `H(r) = 1 + sum m_b chi_b(r)`, each nearer orbit
+    `defect`; [model.md](model.md#the-hold-inside-an-orbit)). Done: a body
+    is caught in an orbit, never a band: `H(r) = 1 + sum m_b chi_b(r)`, each nearer orbit
     counted by the share of its swing within `r` (the reverberation's swing
     law, eccentricity the deficit about the hold inside it). Replaces the
     step in `Substrate::held_within` and, at the galaxy tier, the bands of
     `galaxy::Structure` and `inside_mass`, so one model reads both tiers
-    (#43). Needs decision: the galaxy tier's divisor (the bands' holding
-    taken as the core's 1; the beads total 0.4008 core masses). Unblocks
-    item 44 step 1.
+    (#43), in core masses at both tiers (the bands' divisor, taken as the
+    core's 1, did not hold: the beads total 0.4008). Unblocks item 44
+    step 1.
 6. **Each galaxy's own structure**
    ([#7](https://github.com/SAIOS-SAMN/xylarium/issues/7), `proposal`). Every
    other galaxy is the home galaxy scaled by its hole mass

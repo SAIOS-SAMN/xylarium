@@ -197,6 +197,12 @@ where it belongs to one.
     scalar); the echo's twist `n = a / (4 + a)` moves Q up and Z down about the equator and is
     held by the dipole as torsion, `Q / Z = 1 + a / 2`
     ([model.md](model.md#the-ring-the-throat-orbit-and-the-echos-torsion)).
+    Done: each throat's echo is its sheared return at that throat's
+    torsion share, `bell / (1 - s)` on the near face and `bell / s` on the far
+    (`circuit::echo_at`), the universal core's founding at the founded
+    share and every tier after its bounce at its released spin's. Left:
+    the ring replacing the bell as the unit of time, and the ringing as a
+    per-plane phase rather than one cosine over a period (item 40).
     Replaces the bell as light's round trip to the rim, which the founding
     as flow cannot define. With it, the equator: the inflow `D(-s)` by
     continuity, viscosity `t / (1 + t)` reverting across the throat, the

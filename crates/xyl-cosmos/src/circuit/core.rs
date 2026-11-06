@@ -19,7 +19,7 @@
 // - Core: `Reverberation` per firmament kind; `outflow` empties a kind as
 //   m0 (1 - exp(-rate (t - onset))); `rate`, `state_out`, `books` (held,
 //   left, taken, founded); `inbound`, `inbound_peak`; `spin_orbit`, the
-//   core's spin over its pinches (T17); `loop_flux` composes filament,
+//   core's spin over its bounces (T17); `loop_flux` composes filament,
 //   vacuum and electron channels.
 // - Ocean: `ocean_shares` and `landing` (pull times `coherence`, over the
 //   sum, so each kind's shares sum to 1); `amplitude`, `tide`, `c_ocean`.
@@ -113,7 +113,7 @@ pub fn jet_map(p_c: Dy, p_v: Dy) -> Option<(Dy, Dy)> {
 /// state and never does. The band's `beyond` share sets how much passes once
 /// it has.
 pub fn onset(k: u32, p_v: Dy, s: Dy) -> Option<Dy> {
-    onset_echoes(k, p_v, s).map(|e| e * echo())
+    onset_echoes(k, p_v, s).map(|e| e * echo_at(&s.to_q()))
 }
 
 /// The jet's onset for kind `k` in echoes of its jetstream at vacuum share
@@ -147,13 +147,26 @@ pub fn bell() -> Dy {
     Dy::ONE
 }
 
-/// One echo (rings): the paired throat, the near face's ring and the far
-/// face's - two full bell rings. Time is counted in full rings: one ring is
-/// one bell, the pulse's whole round trip from the throat to the rim and
-/// back; a one-way crossing (a delay to a reach) is half a ring of travel,
-/// not a separate ring.
+/// A throat's echo (rings) at its torsion share `s`: the sheared return of
+/// its near face (T4, `k / (1 - theta)` with the advance per traversal the
+/// torsion share, axiom 7), `bell / (1 - s)`. At zero spin `s = 1/2` and the
+/// echo is two bells; a spinning throat's echo is longer, and its far face
+/// returns after `bell / s`, the two never equal (the attractor pair). Zero
+/// where `s` is not below one.
+pub fn echo_at(s: &Q) -> Dy {
+    let open = &Q::ONE - s;
+    match open.signum() {
+        1 => bell() / Dy::from_q(&open),
+        _ => Dy::ZERO,
+    }
+}
+
+/// The universal core's echo (rings) after its open kinds have left: the
+/// echo at the torsion share of its spin then (`Anchor::core_spin`, T17).
+/// Every tier after the core's bounce reads it; the founding itself reads
+/// the founded share's ([`Substrate::echo`]). Two bells before a founding.
 pub fn echo() -> Dy {
-    bell() * Dy::int(2)
+    echo_at(&crate::bounce::torsion_share(&Q::ONE, &anchor().core_spin))
 }
 
 /// A firmament kind on the substrate: its reach about the throat, the hold
@@ -220,6 +233,13 @@ fn beyond_share(r: Dy, p: Dy, h: Dy) -> Dy {
 }
 
 impl Substrate {
+    /// The universal core's echo (rings) during its founding: the echo at
+    /// the founded torsion share ([`echo_at`] of [`Substrate::share`]),
+    /// before its open kinds leave and its spin turns up (T17).
+    pub fn echo(&self) -> Dy {
+        echo_at(&self.share)
+    }
+
     /// The reverberation of every firmament kind, in founded order, at the
     /// echo's mean (the ring averages to zero over an echo and the vessel's
     /// drift is read at `t` by [`Substrate::beyond_at`]). For each kind:
@@ -270,7 +290,7 @@ impl Substrate {
     /// ring (plus or minus one) and the vessel's drift. The perturbation every
     /// swing carries.
     pub fn inbound(&self, t: Dy) -> Dy {
-        echo() * self.amplitude(Dy::ZERO, t)
+        self.echo() * self.amplitude(Dy::ZERO, t)
     }
 
     /// The inbound echo's mean over the first `t` rings: the ring's integral
@@ -280,21 +300,21 @@ impl Substrate {
         if t.signum() <= 0 {
             return Dy::ZERO;
         }
-        echo() * (self.rung(t) + self.state_out(t)) / t
+        self.echo() * (self.rung(t) + self.state_out(t)) / t
     }
 
     /// The inbound echo's swing over the first echo, `1 + A_in` with `A_in`
     /// the inbound echo's mean over the first echo ([`Self::inbound_mean`]):
     /// the swing the founding's gas and every piece's star cut are heated by.
     pub fn echo_swing(&self) -> Q {
-        &Q::ONE + &self.inbound_mean(echo()).to_q()
+        &Q::ONE + &self.inbound_mean(self.echo()).to_q()
     }
 
     /// The inbound echo's peak: the ring at its crest (one) plus the vessel's
     /// greatest drift, which stands at one of the kinds' onsets (each term
     /// decays from the kind's onset).
     pub fn inbound_peak(&self) -> Dy {
-        let echo = echo();
+        let echo = self.echo();
         let drift = self
             .reverb
             .iter()
@@ -368,7 +388,7 @@ impl Substrate {
         )
     }
 
-    /// The universal core's spin as a sheared orbit over its pinches (T17).
+    /// The universal core's spin as a sheared orbit over its bounces (T17).
     ///
     /// At the bounce every founded kind is at the core, of hold `M` and
     /// turning `J = a M^2`. A kind's frames stand on both faces: its open
@@ -385,12 +405,14 @@ impl Substrate {
     /// polarity `A` is dilated per echo by `D(s) D(n)^A` on the near face;
     /// where that is at most one the near face holds it and the far face
     /// releases it at once. Every other open kind climbs to the throat in
-    /// closed form, `ln t += N* ln(D(s) D(n)^A)` per pinch interval
-    /// `N* = 3 (4 + a) / (2a)`, and leaves in the cohort of the first pinch
-    /// after it arrives. The pinches are events found in closed form; the
+    /// closed form, `ln t += N* ln(D(s) D(n)^A)` per bounce interval
+    /// `N* = 3 (4 + a) / (2a)`, and leaves in the cohort of the first bounce
+    /// after it arrives (at the core the folds' meeting is a bounce through
+    /// the far face, never a pinch). The bounces are events found in closed
+    /// form; the
     /// interval moves with the spin. Logarithms and the separations are
     /// dyadic readings, the holds exact, and each cohort's share of the
-    /// turning is gridded back to `Q`. A spinless core never pinches. `None`
+    /// turning is gridded back to `Q`. A spinless core never bounces a cohort out. `None`
     /// where the founded elements cannot be read.
     pub fn spin_orbit(&self, spin: &Q) -> Option<SpinOrbit> {
         // (kind, hold, ln t, axis polarity) of each founded kind, its hold
@@ -452,7 +474,7 @@ impl Substrate {
             } else {
                 let interval =
                     Dy::from_q(&(&Q::int(3) * &(&Q::int(4) + &a))) / Dy::from_q(&(&Q::int(2) * &a));
-                // The pinch at which each open kind arrives: the least whole
+                // The bounce at which each open kind arrives: the least whole
                 // k with k N* ln(D(s) D(n)^A) >= -ln t.
                 let arrive = |k: &(u32, Q, Dy, i64)| {
                     let rate = near + lnn * Dy::int(k.3);
@@ -808,14 +830,14 @@ impl Substrate {
     /// cos(2 pi s / echo) / echo. Its integral over an echo is zero (the
     /// echo's torque invariant), so it oscillates without drift.
     fn ringing(&self, s: Dy) -> Dy {
-        let echo = echo();
+        let echo = self.echo();
         (Dy::int(2) * Dy::pi() * s / echo).cos() / echo
     }
 
     /// The core's pulse integrated from its arrival to `s` rings after it:
     /// sin(2 pi s / echo) / (2 pi).
     fn rung(&self, s: Dy) -> Dy {
-        (Dy::int(2) * Dy::pi() * s / echo()).sin() / (Dy::int(2) * Dy::pi())
+        (Dy::int(2) * Dy::pi() * s / self.echo()).sin() / (Dy::int(2) * Dy::pi())
     }
 
     /// The ocean's non-tidal waveform at reach `r` (rings) and `t`: the core's
@@ -896,7 +918,7 @@ impl Substrate {
     /// The bounce's pulse at `t` rings (turns): the echoes elapsed by t over the
     /// universe's bell; the fractional part is the atoms' phase.
     pub fn pulse(&self, t: Dy) -> Q {
-        (t.max(Dy::ZERO) / echo())
+        (t.max(Dy::ZERO) / self.echo())
             .to_q()
             .checked_div(&self.t_u())
             .unwrap_or(Q::ZERO)

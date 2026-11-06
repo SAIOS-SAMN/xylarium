@@ -115,6 +115,12 @@ another crate. Laws are composed from shares (ratios of the form
   (`Atom::winding_tightness`) and the share a turning leaves held,
   `min(1, tau / min(turning, 1))` (`Bond::held`). Status: built; the graded
   stripping law is to be derived.
+- Echo (`circuit::echo_at`; docs/model.md, The ring, the throat orbit and
+  the echo's torsion; T4, axiom 7): a throat at torsion share `s` echoes
+  after `bell / (1 - s)` on its near face and `bell / s` on its far face;
+  two bells at zero spin. The universal core's founding reads its founded
+  share (`Substrate::echo`); every tier after its bounce reads the share of
+  its released spin (`circuit::echo`). Status: built.
 - Received turning (`atoms::Received`; docs/model.md, Chemistry from the
   elements; #103): `{ axis, isoclinic }`, the axis plane's push per echo
   (the pole state's dilation, a star's compactness) and the isoclinic
@@ -150,7 +156,8 @@ another crate. Laws are composed from shares (ratios of the form
   `rho = q ln D(s) - (1 - q) ln D(1 - s)`, `q = U / (U + W)`,
   `D(s) = 3 + a`, `D(1 - s) = (6 + a) / (2 + a)` (the far face exchanges
   `q` and `1 - q`); per cohort `J' = J - J (m / M) (rho_cohort / rho_hold)`,
-  `M' = M - m`, `a' = J' / M'^2`, at pinches `N* = 3 (4 + a) / (2a)` apart;
+  `M' = M - m`, `a' = J' / M'^2`, at the core's bounces `N* = 3 (4 + a) /
+  (2a)` echoes apart;
   the pair closes while `a <= 1`. Seed 7: one cohort, 0.5648 of the hold at
   `rho = -0.646` against `-0.798`, giving `a* = 0.9933`. Status: built
   (`circuit::Substrate::spin_orbit`, `atoms::axis_polarity`,

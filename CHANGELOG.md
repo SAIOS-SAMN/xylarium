@@ -207,6 +207,17 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- A throat's echo is its sheared return at its torsion share (T4, axiom
+  7): `bell / (1 - s)` on the near face, `bell / s` on the far
+  (`circuit::echo_at`), in place of a fixed two bells. The universal core's
+  founding reads the founded share (`Substrate::echo`), every tier after
+  its bounce the share of its released spin (`circuit::echo`). The core's
+  release of its open kinds is named its bounce, not a pinch: a pinch is a
+  fold meeting between gravity wells. `founding_shells` no longer returns
+  the retired reach-held flag, and `observe founding` shows the closed
+  kinds as the firmament; `observe universal-core` prints both faces'
+  echoes (#60, #107).
+
 - A bond keeps both atoms whole and is read by planes (`atoms::Bond`): each
   face's pole push and polarity on the axis plane, the pushes composed by
   the flow law, and every open winding of each face on the isoclinic planes

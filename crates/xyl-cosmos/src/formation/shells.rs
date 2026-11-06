@@ -88,12 +88,12 @@ fn carried_reach(push: &Q, w: &Q, h_final: &Q) -> Q {
     )
 }
 
-/// The founding shells: each kind's reach about the
-/// throat, R_z = (K + s_i) / w_z / H, after the filter below, and whether
-/// the throat holds it (R_z (1 + s_final) <= 1). Returns the final share
-/// s_final (each shell spreads R (1 +/- s_final)) and, per kind,
-/// (z, amount, reach, held).
-pub fn founding_shells(mix: &[(u32, Q)]) -> (Q, Vec<(u32, Q, Q, bool)>) {
+/// The founding shells: each kind's reach about the throat,
+/// R_z = (K + s_i) / w_z / H, after the filter below. Returns the final
+/// share s_final (each shell spreads R (1 +/- s_final)) and, per kind,
+/// (z, amount, reach). What the throat holds is not read here: it is the
+/// closed kinds, held on both faces of the paired throat (T16).
+pub fn founding_shells(mix: &[(u32, Q)]) -> (Q, Vec<(u32, Q, Q)>) {
     // The founding runs on mass: amounts are converted from held frames to
     // mass (x mass / hold) for the capture shares, the profile's beads and
     // the carriage's inertia, and converted back on return.
@@ -117,17 +117,9 @@ pub fn founding_shells(mix: &[(u32, Q)]) -> (Q, Vec<(u32, Q, Q, bool)>) {
     let out = place_takes(&released, takes)
         .into_iter()
         .flat_map(|(mix, r)| {
-            let is_held = &r * &(&Q::ONE + &s_final) <= Q::ONE;
             mix.into_iter()
                 .filter(|(_, a)| a.signum() > 0)
-                .map(move |(z, a)| {
-                    (
-                        z,
-                        a.checked_div(&to_mass(z)).unwrap_or(Q::ZERO),
-                        r.clone(),
-                        is_held,
-                    )
-                })
+                .map(move |(z, a)| (z, a.checked_div(&to_mass(z)).unwrap_or(Q::ZERO), r.clone()))
                 .collect::<Vec<_>>()
         })
         .collect();

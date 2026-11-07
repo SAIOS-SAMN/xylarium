@@ -29,8 +29,15 @@ hold:
 - Earth and Milky Way rulers remain at the SI seam ([#25](https://github.com/SAIOS-SAMN/xylarium/issues/25)).
 - One process holds one universe ([#142](https://github.com/SAIOS-SAMN/xylarium/issues/142)), and no reading compares two.
 
-The audit's remediations are in the Remediation register below (index
-[#138](https://github.com/SAIOS-SAMN/xylarium/issues/138)).
+M3 runs in this order. Each issue states its sites, its evidence and when
+it is done.
+1. The calibre in code: [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) (part 1, the turning law; part 2, the mixed
+   entries), then [#129](https://github.com/SAIOS-SAMN/xylarium/issues/129) (worlds), [#145](https://github.com/SAIOS-SAMN/xylarium/issues/145) (star mass) and [#134](https://github.com/SAIOS-SAMN/xylarium/issues/134) (the interior hold).
+2. [#116](https://github.com/SAIOS-SAMN/xylarium/issues/116) (the hold inside an orbit) and [#131](https://github.com/SAIOS-SAMN/xylarium/issues/131) (the ocean's echo share).
+3. [#113](https://github.com/SAIOS-SAMN/xylarium/issues/113) step 1, then T20 on it ([#126](https://github.com/SAIOS-SAMN/xylarium/pull/126)).
+4. [#127](https://github.com/SAIOS-SAMN/xylarium/issues/127) (turns in degrees), [#132](https://github.com/SAIOS-SAMN/xylarium/issues/132) (fluidity), [#135](https://github.com/SAIOS-SAMN/xylarium/issues/135) ("push"), [#137](https://github.com/SAIOS-SAMN/xylarium/issues/137) (pinch to bounce).
+5. [#25](https://github.com/SAIOS-SAMN/xylarium/issues/25) (Earth rulers), [#44](https://github.com/SAIOS-SAMN/xylarium/issues/44) and [#43](https://github.com/SAIOS-SAMN/xylarium/issues/43) (rule breaks, duplicates); [#130](https://github.com/SAIOS-SAMN/xylarium/issues/130) (`observe
+   galaxy`) at any time.
 
 **The stages.** Each is a GitHub milestone, and the
 [project board](https://github.com/orgs/SAIOS-SAMN/projects/1) tracks its
@@ -154,42 +161,6 @@ shown (labels as in the shared standard: `defect`, `proposal`, `track`,
 Work on an item goes through a branch and a pull request that cites it.
 Items are listed by area in dependency order; an item's milestone is given
 where it belongs to one.
-
-### Remediation register
-
-The remediations identified in the audit of 2026-11-06 (index:
-[#138](https://github.com/SAIOS-SAMN/xylarium/issues/138)), in dependency order,
-so that anyone can pick one up: each row names its issue, what it needs
-first and what it unblocks. A row marked **decision** waits on an operator
-ruling; every other row can start once the rows it depends on are merged.
-Each issue states its sites, its evidence and when it is done. Rules every
-row follows: one calibre per share, dimensional capacity kept, readings
-witnessed on a live home before and after and checked for magnitude
-(AGENTS.md; CONTRIBUTING.md, Verification).
-
-| Order | Issue | Remediation | Needs first | Unblocks |
-|---|---|---|---|---|
-| 0 | [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) | **Decision**: the calibre, (A) masses in core masses at every tier or (B) masses dilating with lengths per tier | | everything below that reads a share across tiers |
-| 0 | [#128](https://github.com/SAIOS-SAMN/xylarium/issues/128) | **Decision**: T18's equal fifths against the attractor pair's separation | | [#128](https://github.com/SAIOS-SAMN/xylarium/issues/128)'s sites, [#121](https://github.com/SAIOS-SAMN/xylarium/issues/121) |
-| 0 | [#137](https://github.com/SAIOS-SAMN/xylarium/issues/137) | **Decision**: pinch or bounce for the core's fold meeting (T10-T14) | | docs wording |
-| 0 | [#136](https://github.com/SAIOS-SAMN/xylarium/issues/136) | **Decisions**: the tube's antipolar face (78.176), the parity lane (78.178), Mycelium's process proposals | | the network readings in [#136](https://github.com/SAIOS-SAMN/xylarium/issues/136) |
-| 1 | [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) | Read every mixed entry (18 in EQUATIONS.md) in one calibre; correct `observe`'s unit labels | the calibre decision | rows 2 to 7 |
-| 2 | [#129](https://github.com/SAIOS-SAMN/xylarium/issues/129) | Worlds 240-400 pc from their star: confirm the cause, read the star's manifold in the system calibre | [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) | world readings |
-| 3 | [#116](https://github.com/SAIOS-SAMN/xylarium/issues/116) ([#125](https://github.com/SAIOS-SAMN/xylarium/pull/125)) | The hold inside an orbit: land the draft with its dev tests and witnessed readings | [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) | [#113](https://github.com/SAIOS-SAMN/xylarium/issues/113) step 1, [#121](https://github.com/SAIOS-SAMN/xylarium/issues/121) |
-| 4 | [#134](https://github.com/SAIOS-SAMN/xylarium/issues/134) | The reverberation's interior hold in one calibre; resolve the double count | [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) | the founding's onsets and rates |
-| 5 | [#131](https://github.com/SAIOS-SAMN/xylarium/issues/131) | The echo share the ocean reads after the core's bounce | | [#133](https://github.com/SAIOS-SAMN/xylarium/issues/133), the carry |
-| 6 | [#113](https://github.com/SAIOS-SAMN/xylarium/issues/113) step 1, then [#126](https://github.com/SAIOS-SAMN/xylarium/pull/126) | A star's received carry about the hold inside its orbit; T20 re-derived on it | [#116](https://github.com/SAIOS-SAMN/xylarium/issues/116), [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) | stripping, chemistry ([#103](https://github.com/SAIOS-SAMN/xylarium/issues/103)) |
-| 7 | [#127](https://github.com/SAIOS-SAMN/xylarium/issues/127) | Turns as phase in degrees with their return, not ring counts or radians | [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) | [#40](https://github.com/SAIOS-SAMN/xylarium/issues/40), [#60](https://github.com/SAIOS-SAMN/xylarium/issues/60) |
-| 8 | [#121](https://github.com/SAIOS-SAMN/xylarium/issues/121) | The vortex: derive the five open items, then replace the bands, circles and points | [#116](https://github.com/SAIOS-SAMN/xylarium/issues/116), [#128](https://github.com/SAIOS-SAMN/xylarium/issues/128) decision | [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118), [#90](https://github.com/SAIOS-SAMN/xylarium/issues/90) |
-| 9 | [#128](https://github.com/SAIOS-SAMN/xylarium/issues/128) | Five planes held as one number: per-plane components at every site; the doc/code mismatches | [#121](https://github.com/SAIOS-SAMN/xylarium/issues/121), the T18 decision | [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118) |
-| 10 | [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118) | Pair readings through the pivot, per plane; retire `rotor::angle_between` | [#121](https://github.com/SAIOS-SAMN/xylarium/issues/121), [#128](https://github.com/SAIOS-SAMN/xylarium/issues/128) | [#90](https://github.com/SAIOS-SAMN/xylarium/issues/90) |
-| 11 | [#132](https://github.com/SAIOS-SAMN/xylarium/issues/132) | Fluidity and viscosity from the frames (LAW-COUPLING 78.175); delete the laboratory viscosity | | worlds' interiors |
-| 12 | [#133](https://github.com/SAIOS-SAMN/xylarium/issues/133) | The pairs the outward carry bears, in the ocean's books | [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123), [#131](https://github.com/SAIOS-SAMN/xylarium/issues/131) | |
-| 13 | [#135](https://github.com/SAIOS-SAMN/xylarium/issues/135) | Name each "push" site for what it is (carry, share or push) | | |
-| 14 | [#107](https://github.com/SAIOS-SAMN/xylarium/issues/107) | The scalar-collapse register: candidates held together, booleans as shares, the parallel leftovers | | |
-| 15 | [#25](https://github.com/SAIOS-SAMN/xylarium/issues/25) | The Earth and Milky Way rulers left at the SI seam (listed on the issue) | | |
-| 16 | [#136](https://github.com/SAIOS-SAMN/xylarium/issues/136) | Fixtures owed to Mycelium and Netstratum: LAW-FIELD 78.171, LAW-COUPLING 78.175, FORMS-COORDINATE v3/v4, pin v0.4.0 ([#82](https://github.com/SAIOS-SAMN/xylarium/issues/82)) | the network decisions for their rows | |
-| any | [#130](https://github.com/SAIOS-SAMN/xylarium/issues/130) | `observe galaxy` forecasts every star's minds first and cannot finish at the default star count | | witnessed galaxy readings, the carried read of a live home |
 
 ### Verification
 
@@ -334,44 +305,9 @@ witnessed on a live home before and after and checked for magnitude
     degrees per bell advanced in closed form, `K` counted per component, and
     the turning between planes stored as a separate component; composition
     through the generators awaits the turning law (Netstratum docs/117).
-47. **Pairs: the pivot, per plane**
-    ([#118](https://github.com/SAIOS-SAMN/xylarium/issues/118), `defect`,
-    `law`; part of item 40 and #90;
-    [model.md](model.md#pairs-the-pivot-per-plane)). Every pair reading
-    keeps its dimensional capacity: coordinates of one origin in one
-    calibre, the relative frame
-    by conjugation, read per plane in degrees with winding and return,
-    closeness by the two-sided form in shares. Retires
-    `xyl_core::rotor::angle_between` and the readings on it
-    (`chain::Place::arc`, `manifold::gap`, `transit::separation_m`), with
-    `pulse::hear` and `transit::building`'s arc; the six planes' writing
-    onto LAW-COORDINATE v4's turning-plane keys is agreed with Mycelium and
-    Netstratum first.
-48. **The vortex**
-    ([#121](https://github.com/SAIOS-SAMN/xylarium/issues/121), `law`,
-    `defect`, `needs-decision`; part of item 40 and #90;
-    [model.md](model.md#the-vortex-core-swirl-twist-writhe-linking)).
-    Re-volumize the flat shapes: founded matter is a vortex (core, swirl,
-    twist, writhe, linking), and every body stands in its parent's. Replaces
-    `galaxy::Structure`'s bands, `galaxy::Orbit`'s circles on drawn planes
-    and `chain::Place`'s points on a 2-sphere; gives item 47's pair reading
-    its object (mutual linking, fibre placement in `CP^5`). Derive first: the
-    core curve between tiers, mutual linking, fibre separation in shares,
-    helicity without its square; T18's equal fifths awaits a ruling.
-    Depends on item 46.
-49. **Calibre**
-    ([#123](https://github.com/SAIOS-SAMN/xylarium/issues/123), `defect`,
-    `law`, `needs-decision`;
-    [model.md](model.md#calibre-and-dimensional-capacity)). Every share
-    reads its reach and hold in one calibre (tier-bound, conformal,
-    share-preserving), and every equation names its calibre
-    (EQUATIONS.md). Two are built and mixed: the founding calibre (reaches
-    as ratios to the hold, declared cluster units while holds stay in core
-    masses) and the core calibre of the turning law. The star cut, the
-    star's manifold and the worlds read both. Ruling: (A) masses in core
-    masses at every tier, or (B) masses dilate with lengths per tier. Blocks
-    #116 landing (held on `orbit-hold`), item 48's streamlines and item 44
-    step 1.
+47. **Pairs: the pivot, per plane** ([#118](https://github.com/SAIOS-SAMN/xylarium/issues/118); [model.md](model.md#pairs-the-pivot-per-plane)).)
+48. **The vortex** ([#121](https://github.com/SAIOS-SAMN/xylarium/issues/121); [model.md](model.md#the-vortex-core-swirl-twist-writhe-linking)).)
+49. **Calibre** ([#123](https://github.com/SAIOS-SAMN/xylarium/issues/123), ruled (B); [model.md](model.md#calibre-and-dimensional-capacity)).)
 43. **Scalar collapses**
     ([#107](https://github.com/SAIOS-SAMN/xylarium/issues/107), `defect`,
     `law`;
@@ -421,25 +357,7 @@ witnessed on a live home before and after and checked for magnitude
     `xyl_core::shares::deficit` and `stars::fusion_step`; needs the held
     residual as a closed form of the drive's history.
 
-44. **The ocean as a carry** ([#113](https://github.com/SAIOS-SAMN/xylarium/issues/113), `law`;
-    [model.md](model.md#the-held-medium-the-ocean-as-a-carry)). What reaches
-    a place is what the ocean's medium carries there, never a push. Done:
-    the held medium inside a reach (`Substrate::held_within`,
-    `Substrate::medium`: the core's 1, the beads nearer, less what the jet
-    carried past), read by the waveform, a bead's ring hold, a galaxy's
-    circulation and push, and a piece's star cut; the ocean's motion
-    (`Substrate::carry`): outward `s (+) (-(1 - s))` per echo from the
-    echo's faces, `360 delta` degrees a traversal on the isoclinic planes
-    from the torsion. Next, in order: (1) the star's received quantity as a
-    carry, a star's life read about the galaxy tier's own medium
-    (`stars::ring_per_bell` still takes `h = 1` there), the hold inside the
-    star's orbit (item 46, first), and graded
-    stripping (T20, held on `graded-stripping`) re-derived on it; (2) the
-    reverberation's interior hold, `1 + (firmament nearer) / unit`, put on
-    the same footing as `H(r)` (it divides a mass by the beads' total); (3)
-    viscosity `nu(t) = t / (1 + t)` built, replacing the laboratory
-    reference in `bodies::interior`; (4) the pairs the outward carry bears
-    (`p_pair`), the ocean's particles.
+44. **The ocean as a carry** ([#113](https://github.com/SAIOS-SAMN/xylarium/issues/113); [model.md](model.md#the-held-medium-the-ocean-as-a-carry)). Done: the held medium and the carry. Next: [#113](https://github.com/SAIOS-SAMN/xylarium/issues/113) step 1, [#134](https://github.com/SAIOS-SAMN/xylarium/issues/134), [#132](https://github.com/SAIOS-SAMN/xylarium/issues/132), [#133](https://github.com/SAIOS-SAMN/xylarium/issues/133).)
 
 ### Galaxy (milestone 3, layer B)
 
@@ -450,18 +368,7 @@ witnessed on a live home before and after and checked for magnitude
    bands to blend where the founding's shells overlap, and edges to move with
    their holding. The word "ring" is kept for the bell's unit of time.
    First step: item 46.
-46. **The hold inside an orbit**
-    ([#116](https://github.com/SAIOS-SAMN/xylarium/issues/116), `law`,
-    `defect`, `needs-decision`;
-    [model.md](model.md#the-hold-inside-an-orbit)). A body is caught in an
-    orbit, never a band: `H(r) = 1 + sum m_b chi_b(r)`, each nearer orbit
-    counted by the share of its swing within `r` (the reverberation's swing
-    law, eccentricity the deficit about the hold inside it). Replaces the
-    step in `Substrate::held_within` and, at the galaxy tier, the bands of
-    `galaxy::Structure` and `inside_mass`, so one model reads both tiers
-    (#43). Needs decision: the galaxy tier's divisor (the bands' holding
-    taken as the core's 1; the beads total 0.4008 core masses). Unblocks
-    item 44 step 1.
+46. **The hold inside an orbit** ([#116](https://github.com/SAIOS-SAMN/xylarium/issues/116), draft [#125](https://github.com/SAIOS-SAMN/xylarium/pull/125); [model.md](model.md#the-hold-inside-an-orbit)).)
 6. **Each galaxy's own structure**
    ([#7](https://github.com/SAIOS-SAMN/xylarium/issues/7), `proposal`). Every
    other galaxy is the home galaxy scaled by its hole mass
@@ -580,14 +487,7 @@ witnessed on a live home before and after and checked for magnitude
     first issue`). Done: `Rotor::inverse` and the certified
     `rotor::angle_between` replace the `acos` readings in
     `manifold::gap` and `chain::Place::arc`.
-45. **Ring keeps one meaning**
-    ([#115](https://github.com/SAIOS-SAMN/xylarium/issues/115), `defect`).
-    "Ring" is the harmonic of the bell, echo and pulse only. Done: the
-    length units formerly read as "core rings" and "galaxy rings" are the
-    cluster unit (`60^7 r_g`) and the galaxy unit (`60^5 r_g`) in docs,
-    comments, labels and identifiers (`galaxy::units_of_kpc`,
-    `galaxy::kpc_of_units`, `galaxy::Star::reach_units`), with no formula
-    changed. The band sense goes with item 46.
+45. **Ring keeps one meaning** ([#115](https://github.com/SAIOS-SAMN/xylarium/issues/115), done).)
 
 ## 1. Founding in the core's units (done)
 

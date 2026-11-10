@@ -239,11 +239,11 @@ pub struct Chronometry {
 }
 
 /// The rate of a well of mass `inside_rg` at radius `r_rg` (both in r_g):
-/// r / (r + M), the complement of the deficit share M / (r + M)
-/// (`shares::deficit`), exact; 1 where the deficit is refused (r + M zero or
-/// a negative part).
+/// gravity's divergent face r / (r + M) (`shares::faces`), the antipole of
+/// the deficit M / (r + M); exact; 1 where the faces are refused (r + M zero
+/// or a negative part).
 fn well(r_rg: &Q, inside_rg: &Q) -> Q {
-    &Q::ONE - &xyl_core::shares::deficit(inside_rg, r_rg).unwrap_or(Q::ZERO)
+    xyl_core::shares::faces(inside_rg, r_rg).map_or(Q::ONE, |f| f.divergent)
 }
 
 impl Chronometry {

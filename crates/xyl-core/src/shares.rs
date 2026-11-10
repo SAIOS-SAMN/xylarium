@@ -4,8 +4,16 @@
 //! Inputs: exact rationals ([`Q`]) or dyadic readings ([`Dy`]); a hold and a
 //! reach in one unit, or a push (a share of the turn of what reaches a hold).
 //!
-//! - [`deficit`]: the share a hold `m` keeps of what reaches it at reach `r`,
-//!   `m / (r + m)`; at `r = m` it is one half, the throat's push.
+//! - [`faces`]: gravity's two faces about a hold `m` at reach `r` (docs/model.md,
+//!   Gravity: the deformation about a mass invariant): the convergent face
+//!   `c = m / (r + m)` and the divergent face `d = r / (r + m)`, `c + d = 1`.
+//!   With the pole coordinate `t = r / m`, `c = 1 / (1 + t)` and
+//!   `d = t / (1 + t)`; the antipole, the inversion `t -> 1 / t`, exchanges
+//!   them; their imbalance `p = c - d` is a push with `D(p) = c / d = m / r`;
+//!   at the equator `r = m`, the inversion's fixed circle, they balance at
+//!   one half.
+//! - [`deficit`]: the convergent face, `m / (r + m)`: the share a hold keeps
+//!   of what reaches it.
 //! - [`dilation`]: the dilation per echo of a push `p`, `D(p) = (1 + p) / (1 -
 //!   p)`, for `-1 < p < 1`; `D(-p) = 1 / D(p)`.
 //! - [`flow`]: the composition of two pushes, `x (+) y = (x + y) / (1 + x
@@ -23,13 +31,59 @@
 use crate::dyadic::Dy;
 use crate::Q;
 
-/// The deficit share `m / (r + m)` of a hold `m` at reach `r` (one unit for
-/// both). `None` for a negative hold or reach, or where both are zero.
-pub fn deficit(m: &Q, r: &Q) -> Option<Q> {
+/// Gravity's two faces about a mass invariant: the convergent (held) face and
+/// the divergent (passed) face, antipoles under the inversion `t -> 1 / t`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Faces {
+    /// The convergent face, `m / (r + m)`: the deficit.
+    pub convergent: Q,
+    /// The divergent face, `r / (r + m)`.
+    pub divergent: Q,
+}
+
+impl Faces {
+    /// The pole coordinate `t = r / m = divergent / convergent`; `None` where
+    /// the convergent face is zero (no hold).
+    pub fn pole(&self) -> Option<Q> {
+        self.divergent.checked_div(&self.convergent)
+    }
+
+    /// The faces' imbalance `p = c - d = (1 - t) / (1 + t)`, a push in
+    /// `[-1, 1]`: positive within the equator `r = m`, zero on it, negative
+    /// beyond.
+    /// Its dilation is `c / d = m / r`.
+    pub fn push(&self) -> Q {
+        &self.convergent - &self.divergent
+    }
+
+    /// The antipole: the inversion `t -> 1 / t`, which exchanges the faces.
+    pub fn antipole(&self) -> Faces {
+        Faces {
+            convergent: self.divergent.clone(),
+            divergent: self.convergent.clone(),
+        }
+    }
+}
+
+/// Gravity's two faces about a hold `m` at reach `r` (one calibre for both):
+/// `m / (r + m)` and `r / (r + m)`. `None` for a negative hold or reach, or
+/// where both are zero.
+pub fn faces(m: &Q, r: &Q) -> Option<Faces> {
     if m.signum() < 0 || r.signum() < 0 {
         return None;
     }
-    m.checked_div(&(r + m))
+    let whole = r + m;
+    Some(Faces {
+        convergent: m.checked_div(&whole)?,
+        divergent: r.checked_div(&whole)?,
+    })
+}
+
+/// The deficit share `m / (r + m)` of a hold `m` at reach `r` (one unit for
+/// both): gravity's convergent face ([`faces`]). `None` for a negative hold
+/// or reach, or where both are zero.
+pub fn deficit(m: &Q, r: &Q) -> Option<Q> {
+    faces(m, r).map(|f| f.convergent)
 }
 
 /// The dilation per echo of a push `p`: `(1 + p) / (1 - p)`. `None` for `p`
@@ -70,6 +124,41 @@ pub fn dilation_dy(p: Dy) -> Option<Dy> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_faces_are_antipoles_under_the_inversion() {
+        let cases = [
+            (Q::ratio(1, 1), Q::ratio(3, 1)),
+            (Q::ratio(5, 2), Q::ratio(1, 7)),
+            (Q::ratio(2, 3), Q::ratio(2, 3)),
+            (Q::ratio(9, 4), Q::ratio(11, 5)),
+        ];
+        for (m, r) in &cases {
+            let f = faces(m, r).unwrap();
+            // The faces close: c + d = 1, and c / d = m / r = 1 / t.
+            assert_eq!(&f.convergent + &f.divergent, Q::ONE);
+            assert_eq!(f.pole(), r.checked_div(m));
+            // The inversion r -> m (m / r), t -> 1 / t, exchanges the faces.
+            let image = m * &m.checked_div(r).unwrap();
+            assert_eq!(faces(m, &image).unwrap(), f.antipole());
+            // The imbalance is a push whose dilation is c / d, reversed by
+            // the antipole.
+            let p = f.push();
+            assert_eq!(f.antipole().push(), -p.clone());
+            if p.abs() < Q::ONE {
+                assert_eq!(dilation(&p), f.convergent.checked_div(&f.divergent));
+            }
+            // A change of calibre dilates hold and reach together and keeps
+            // both faces.
+            let l = Q::ratio(60, 1);
+            assert_eq!(faces(&(m * &l), &(r * &l)).unwrap(), f);
+        }
+        // On the equator r = m the faces balance and the antipole fixes them.
+        let throat = faces(&Q::ratio(3, 1), &Q::ratio(3, 1)).unwrap();
+        assert_eq!(throat.push(), Q::ZERO);
+        assert_eq!(throat.antipole(), throat);
+        assert_eq!(faces(&Q::ZERO, &Q::ZERO), None);
+    }
 
     #[test]
     fn the_deficit_is_one_half_where_reach_and_hold_coincide() {

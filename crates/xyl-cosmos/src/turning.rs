@@ -8,7 +8,9 @@
 //! per ring (one ring one bell).
 //!
 //! - Deficit: `xyl_core::shares::deficit` = M(<r) / (r + M(<r)), M and r in
-//!   r_g, exact, at most 1; the same share by which the well slows clocks.
+//!   r_g, exact, at most 1: gravity's convergent face (`shares::faces`),
+//!   whose antipole, the divergent face r / (r + M), is the rate at which
+//!   the well's clocks run.
 //! - Turning ([`turning`] exact, [`turning_dy`] on readings): `omega =
 //!   delta(<r) bell / r` radians per ring, with `r` in r_g and
 //!   `delta = M / (r + M)`. With c = 1 the speed `omega r / bell = delta`

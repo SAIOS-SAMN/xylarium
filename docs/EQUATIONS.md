@@ -736,7 +736,9 @@ another crate. Laws are composed from shares (ratios of the form
   per band `(n, l)` the empty slots, single and paired orientations (room,
   open, held), summing to `cap - Z`, `U` and `2P = Z - U` (built:
   `atoms::Occupancy`, `atoms::band_occupancy`); per plane `2P_k`,
-  `U_k`, `t_k = U_k / 2P_k`; each orientation's winding in ZZ with its side,
+  `U_k`, `t_k = U_k / 2P_k` (built on the axis plane by level `m0`, level
+  multiplicity `C(l - |m0| + 9, 9)`: `atoms::Band::axis_occupancy`,
+  `atoms::axis_sides`; the isoclinic split awaits the spin, #128); each orientation's winding in ZZ with its side,
   held and open its reading mod 2; pairing and stripping as coboundaries,
   the occupancy, the capacity and the windings' total the class; every law
   reading the held count `W` re-read on the capacity; seams

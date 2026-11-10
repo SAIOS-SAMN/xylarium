@@ -1039,7 +1039,15 @@ dimensions.
      (`atoms::tests::the_occupancy_partitions_the_capacity`).
   2. **States per plane.** Each state's weight `m` places it on the six
      planes: `2P_k`, `U_k` and the pole `t_k = U_k / 2P_k` per plane (The
-     six planes). The axis polarity `A`, built, is the axis component.
+     six planes). Built on the axis plane: each band's occupancy by axis
+     level `m0` (`atoms::Band::axis_occupancy`; the level holds
+     `C(l - |m0| + 9, 9)` orientations, singles fill from the Z side, and
+     beyond half full the pairs fill from the Z side and the singles stay on
+     the Q side), and each kind's Z side, neutral level and Q side
+     (`atoms::axis_sides`); the axis polarity `A` reads it. The five
+     isoclinic planes are not split: at rest no state's isoclinic plane is
+     chosen (T6, T7), so their split waits on the spin's per-plane turning
+     ([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128)).
   3. **Windings, not parity.** Each orientation's winding is kept in ZZ
      with its side, Z or Q (the sign of `m0`): a pair's turnings cancel, a
      single electron's carries its sign. Held and open are the winding read
@@ -1075,7 +1083,8 @@ dimensions.
 - **Order of the work.**
   1. States per band (vent 1). Done: their sums equal today's `U` and the
      room, so no reading moved.
-  2. States per plane (vent 2), then windings (vent 3).
+  2. States per plane (vent 2). Done on the axis plane, no reading moved;
+     the isoclinic split waits on the spin (#128). Then windings (vent 3).
   3. The delimiter retired (vent 5): the first vent that moves readings.
   4. Classes (vent 4), with the chain's cohomology ([#150](https://github.com/SAIOS-SAMN/xylarium/issues/150)).
   5. Seams (vent 6) and received turning (vent 7).

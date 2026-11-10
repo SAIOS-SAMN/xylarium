@@ -11,6 +11,14 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The occupancy on the axis plane (#158, vent 2): `atoms::Band::axis_occupancy`
+  places each band's room, open states and pairs by axis level `m0` (the
+  level holds `C(l - |m0| + 9, 9)` orientations; singles fill from the Z
+  side, pairs from the Z side beyond half full), and `atoms::axis_sides`
+  sums each kind's Z side, neutral level and Q side; the axis polarity
+  reads it. Proven over Z 1 to 1700 against the singles-only rule it
+  replaces. `observe seals` prints the sides. The isoclinic planes' split
+  waits on the spin (#128). No reading moves.
 - The capacity's occupancy per band (#158, vent 1): `atoms::Occupancy`
   (room, open states, pairs), `atoms::band_occupancy` over every band an
   atom reaches (empty bands included) and `atoms::occupancy`, their sums,

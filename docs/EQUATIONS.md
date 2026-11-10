@@ -8,7 +8,7 @@ status. The calibre (docs/model.md, Calibre and dimensional capacity) is the
 pair of units its reaches and holds are read in, one of five:
 
 - None: a calibre-free identity, count or algebraic form.
-- Founding: reaches as ratios to the hold, `R_Z = (K + s) / (w_Z H)`, holds
+- Founding: reaches as ratios to the hold, `R_Z = (K + s) / (m_Z H)`, holds
   in core masses (the anchor declares these reaches cluster units).
 - Core (`r_g`): reaches dilated to `r_g` by `Tier::in_rg`, holds in core
   masses.
@@ -232,8 +232,9 @@ another crate. Laws are composed from shares (ratios of the form
   `s_Z = 1/2 held / (held + 1 + held)`, cumulative by Z on mass;
   `K = sum s_Z`; `H = 1 + held_final`; and
   `s_final = 1/2 held_final / (held_final + H)`. Calibre: founding. Status: built; replaced by the founding as flow (planned).
-- Shell reach (`formation::founding_shells`): `R_Z = (K + s_i) / w_Z / H`,
-  with `s_i` the stack's shares and `w_Z = Z + Q`; the spread is
+- Shell reach (`formation::founding_shells`): `R_Z = (K + s_i) / m_Z / H`,
+  with `s_i` the stack's shares and `m_Z = Z + Q` the mass weight
+  (`formation::mass_weight`); the spread is
   `R (1 +/- s_final)`, and a shell is held where `R (1 + s_final) <= 1`.
   Calibre: founding. Status: built; replaced by the founding as flow (planned).
 - Filter (`formation::founding_shells`): the contact is `1/2` for a whole
@@ -314,8 +315,8 @@ another crate. Laws are composed from shares (ratios of the form
     `q` traversals, `q` the denominator of the advance; resonances
     `r_k = (k - 1) M` return after `k`; far-face images `M / (k - 1)`.
   - Ring: the throat orbit's reading at count `t`, `R(t) = (D(n)^t by its
-    exponent; phi_i(t) = t theta_i mod 1 in Q/Z, i = 1..5; whole
-    traversals in Z and each plane's order)`, never one scalar; durations
+    exponent; phi_i(t) = t theta_i mod 1 in QQ/ZZ, i = 1..5; whole
+    traversals in ZZ and each plane's order)`, never one scalar; durations
     (`2 pi M / s` per traversal, in `r_g / c`) are display through a
     certified pi. Turning in degrees per traversal on the orbit's plane:
     `360 (delta(r) / r) (M / s)`,
@@ -323,37 +324,37 @@ another crate. Laws are composed from shares (ratios of the form
   - Local ring at reach `r`: one traversal of the orbit at `r`, lasting
     `s r (r + M) / M^2` core traversals (exact; pi cancels); every law step
     at a reach counts local traversals.
-  - Twist and dipole, spin `a = m / N`, lowest common denominator
-    `L = 4N + m`:
+  - Twist and dipole, spin `a = m / g` (`g` the spin's grid), lowest common
+    denominator `L = 4g + m`:
 
     ```text
-    s   = (2N + m) / L            torsion share (open, Q)
-    n   = m / L                   twist per echo, 2s - 1 = a / (4 + a)
-    Q   = (2N + m) / L            (1 + n) / 2
-    Z   = 2N / L                  (1 - n) / 2
-    Q/Z = (2N + m) / 2N           (1 + n) / (1 - n) = 1 + a / 2
+    s         = (2g + m) / L      torsion share (open, the Q pole)
+    n         = m / L             twist per echo, 2s - 1 = a / (4 + a)
+    s_Q       = (2g + m) / L      (1 + n) / 2
+    s_Z       = 2g / L            (1 - n) / 2
+    s_Q / s_Z = (2g + m) / 2g     (1 + n) / (1 - n) = 1 + a / 2
     ```
 
   - Influence, over `L^2` and powers of two:
 
     ```text
-    dn/da    =  4N^2 / L^2
-    dQ/da    =  2N^2 / L^2  = -dZ/da
-    d(Q/Z)/da = 1/2
-    dD(n)/dn =  L^2 / 8N^2
+    dn/da         =  4g^2 / L^2
+    ds_Q/da       =  2g^2 / L^2  = -ds_Z/da
+    d(s_Q/s_Z)/da = 1/2
+    dD(n)/dn      =  L^2 / 8g^2
     d delta/dr = -M / (r + M)^2,   dD(delta)/dr = -2M / r^2
     ```
 
-  - Seed 7 (`N = 2^40`, `m = 381123025677`,
+  - Seed 7 (`g = 2^40`, `m = 381123025677`,
     `L = 4779169536781`, the denominator of the founding's torsion share):
 
     | Reading | Numerator over `L` |
     |---|---|
     | `n` | `381123025677` |
-    | `Q` | `2580146281229` |
-    | `Z` | `2199023255552` (`2^41`) |
+    | `s_Q` | `2580146281229` |
+    | `s_Z` | `2199023255552` (`2^41`) |
 
-    `Q/Z = 2580146281229 / 2^41`; the core's full return is `L` rings;
+    `s_Q / s_Z = 2580146281229 / 2^41`; the core's full return is `L` rings;
     over `L^2 = 22840461461295518111841961`: `dn/da = 2^82 / L^2`,
     `dQ/da = 2^81 / L^2`; `dD(n)/dn = L^2 / 2^83`.
 
@@ -391,15 +392,15 @@ another crate. Laws are composed from shares (ratios of the form
   - Swirl: `Gamma(r) = 2 pi M r / (r + M)`, the passed share.
   - Viscosity: `nu(t) = t / (1 + t)`, `t = U / W`; reverted
     `nu(1 / t) = 1 - nu(t)`; `nu(1) = 1/2`.
-  - Positron: `R(-x) = -R(x)`, `R = kappa (1 - 2x)`, `x` in Q/Z.
+  - Positron: `R(-x) = -R(x)`, `R = kappa (1 - 2x)`, `x` in QQ/ZZ.
   - Pair share per echo: `p_pair = s (+) (-(1 - s)) = 4n / (3 + n^2) =
     a (4 + a) / (12 + 6a + a^2)`; `D(p_pair) = (3 + a)(2 + a) / (6 + a)`;
     `p_pair / 2` electrons (held face) and `p_pair / 2` positrons (open
     face); 0 spinless, `5/19` at `a = 1`.
-  - Over `a = m / N`: `D(s) = (3N + m) / N`; inflow `(2N + m) / (3N + m)`;
-    `p_pair = m (4N + m) / (12N^2 + 6Nm + m^2)`;
-    `D(p_pair) = (3N + m)(2N + m) / (N (6N + m))`.
-  - Seed 7 (`N = 2^40`, `m = 381123025677`): `D(s) = 3679657909005 / 2^40`;
+  - Over `a = m / g`: `D(s) = (3g + m) / g`; inflow `(2g + m) / (3g + m)`;
+    `p_pair = m (4g + m) / (12g^2 + 6gm + m^2)`;
+    `D(p_pair) = (3g + m)(2g + m) / (g (6g + m))`.
+  - Seed 7 (`g = 2^40`, `m = 381123025677`): `D(s) = 3679657909005 / 2^40`;
     inflow `2580146281229 / 3679657909005`;
     `p_pair = 607150518027107086308579 / 5722219928715645461402851`;
     `D(p_pair) = 3164685223371376273855715 / 2557534705344269187547136`.
@@ -429,7 +430,7 @@ another crate. Laws are composed from shares (ratios of the form
     `D(s)^m0 D(1 - s)^-m0 = D(p_pair)^m0`.
   - Reconciliation: `p_pair = n (+) (n / 3)`; `D(p_pair) = D(n) D(n / 3)`;
     `D(n / 3) = (6 + 2a) / (6 + a)`; flip share per pair per echo
-    `n / 3 = a / (3 (4 + a))`, over `a = m / N`: `m / (3 (4N + m))`.
+    `n / 3 = a / (3 (4 + a))`, over `a = m / g`: `m / (3 (4g + m))`.
   - Linking: per echo `dTw = n/2 - n/2`, `dWr = n/3 - n/3`; relative
     writhe `2 N n / 3`, first whole at `N*`.
   - Pinch: `N* = 3 / (2n) = 3 (4 + a) / (2a)` echoes, at 180 degrees on the isoclinic planes.
@@ -656,10 +657,17 @@ another crate. Laws are composed from shares (ratios of the form
   `3Z/3Q + R` and the Q face `3Q/3Z - R`, `3Q = 3 cap`, swapped by the
   inversion `X(t) -> X(1 / t)` with the sign of `R`; `R` is the faces'
   separation. Calibre: none. Status: planned.
-- Seals as the dipole's equator: `rho_Q = (2Z - cap) / cap = +1` exactly
-  where `Z = cap`, so `3Z = 3Q` (Z 2, 28, 208 and 1092;
-  `atoms::Atom::sealed`), where the faces read `1 + R` and `1 - R`.
-  Calibre: none. Status: built (an identity of built laws).
+- Capacity and balance (`atoms::capacity`, `atoms::balance`): `cap =
+  sum_(n <= n_out) sum_(l < n) 2 d(l)` over the turnings the atom reaches,
+  `3Q = 3 cap`; `R_Q = 6Z - 3 cap`, `rho_Q = (2Z - cap) / cap`. A cluster
+  sums its parts (`circuit::kind_capacity`), a mix its whole nuclei
+  (`circuit::mix_capacity`). Calibre: none. Status: built.
+- Seals as the dipole's equator: `rho_Q = +1` exactly where `Z = cap`, so
+  `3Z = 3Q`, and exactly the sealed kinds (Z 2, 28, 208 and 1092;
+  `atoms::Atom::sealed`), where the faces read `1 + R` and `1 - R`. Every
+  seal is closed (`u = 0`), so its pole point is `t = 0`, the Z pole, not
+  the throat (`t = 1`). Calibre: none. Status: built (identities over Z 1
+  to 1700, `atoms::tests`).
 - Axes (`circuit/axes.rs`): the pulse has one fixed axis, the pole axis
   (base axis 1), and five isoclinic planes on base axes 2-3, 4-5, 6-7, 8-9
   and 10-11 (`circuit::plane_blade`). 180 degrees on each isoclinic plane

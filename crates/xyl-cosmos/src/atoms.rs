@@ -23,7 +23,9 @@
 //! (the two faces whole: each face's pole push on the axis plane composed by
 //! the flow law, each face's polarity, and every open winding held against
 //! the isoclinic turning) and `hold` (a
-//! cluster's light holding from stretches, bends and dipole). `atom` returns
+//! cluster's light holding from stretches, bends and dipole), `capacity`
+//! (`cap`, the room of every turning reached; `3Q = 3 cap`) and `balance`
+//! (`R_Q = 6Z - 3 cap`, `rho_Q = (2Z - cap) / cap`). `atom` returns
 //! None for Z = 0 or a cluster id. Seals fall at Z = 2, 28, 208, 1092;
 //! `vessel` returns (lower, upper): the last seal within `TOP_Z`, and the
 //! heaviest kind below it whose single-nucleon peel releases,
@@ -241,6 +243,28 @@ pub fn vessel() -> Option<(u32, u32)> {
         let lower = (2..upper).filter(|&z| u(z - 1) + 1 - u(z) < 0).max()?;
         Some((lower, upper))
     })
+}
+
+/// A kind's capacity `cap`: the room of every shape of every turning its atom
+/// reaches, `sum_(n <= n_out) sum_(l < n) 2 d(l)` (`Band::room`), so that
+/// `3Q = 3 cap` stands beside the span's `3Z` (docs/model.md, The dipole).
+/// Exact; `None` for z = 0 or a cluster.
+pub fn capacity(z: u32) -> Option<u32> {
+    let a = atom(z)?;
+    (1..=a.outer_n).try_fold(0u32, |acc, n| {
+        (0..n).try_fold(acc, |acc, l| {
+            acc.checked_add(crate::fibres::directions(l).checked_mul(2)?)
+        })
+    })
+}
+
+/// A kind's balance of span against capacity: `R_Q = 6Z - 3 cap` and its
+/// share `rho_Q = (2Z - cap) / cap`, which is `+1` exactly where `Z = cap`,
+/// the dipole's equator `3Z = 3Q`. Exact; `None` for z = 0 or a cluster.
+pub fn balance(z: u32) -> Option<(i64, Q)> {
+    let (z, c) = (i64::from(z), i64::from(capacity(z)?));
+    let excess = 2 * z - c;
+    Some((3 * excess, Q::ratio(excess, c.max(1))))
 }
 
 /// A kind's unpaired count (used by its weight and open share), cached
@@ -496,6 +520,27 @@ pub fn hold(zs: &[u32]) -> Q {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_seals_are_where_the_span_meets_the_capacity() {
+        for z in 1..=crate::elements::TOP_Z {
+            let (Some(a), Some(cap)) = (atom(z), capacity(z)) else {
+                continue;
+            };
+            let (r, rho) = balance(z).unwrap();
+            // The balance is three times the span's excess over the capacity.
+            assert_eq!(r, 3 * (2 * i64::from(z) - i64::from(cap)));
+            // The balance share is +1 exactly where Z = cap, the dipole's
+            // equator 3Z = 3Q.
+            assert_eq!(rho == Q::ONE, z == cap, "Z {z}");
+            // A seal fills its capacity and holds no open frame: its pole
+            // point is the Z pole, t = u / w = 0, not the throat.
+            assert_eq!(a.sealed(), z == cap, "Z {z}");
+            if a.sealed() {
+                assert!(a.closed(), "Z {z}");
+            }
+        }
+    }
 
     #[test]
     fn the_atom_on_s11_closes_where_its_shells_fill() {

@@ -223,8 +223,12 @@ and its Q face, with the electron phase state `R` between them.
   is their separation, the shear between the attractor and the inverse
   attractor, never an equal split.
 - **The equator.** From built laws, the seals (`rho_Q = +1`,
-  `atoms::Atom::sealed`) are exactly where `Z = cap`, that is `3Z = 3Q`.
-  There the faces read `1 + R` and `1 - R` and differ by `R` alone.
+  `atoms::Atom::sealed`) are exactly where `Z = cap`
+  (`atoms::capacity`), that is `3Z = 3Q`. There the faces read `1 + R` and
+  `1 - R` and differ by `R` alone. Every seal is closed, `u = 0`, so the
+  dipole's equator lies at the pole point's Z pole, `t = 0`, not at the
+  throat, `t = 1`: the two ratios are different readings, and the relation
+  between them is open step 1.
 - **Dimensional capacity counts dipoles.** Each named component (a turning
   plane, a lane, a vortex's fibre, twist, writhe or linking) is held as its
   dipole, and a reading of one face holds half of it. The deficit
@@ -246,7 +250,8 @@ and its Q face, with the electron phase state `R` between them.
     radius (`circuit/anchor.rs`).
 - **Open, in order.**
   1. The dipole's relation to the pole point `t = u / w` and the hold
-     `w = 3Z - u`.
+     `w = 3Z - u`: the dipole's equator (`3Z = 3Q`) is the pole point's Z
+     pole (`t = 0`), so neither is the other.
   2. `R` per plane: the pulse is one share of 360 degrees for the five
      isoclinic planes ([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128)).
   3. The founding's output carried per kind as dipoles; the rim placed by
@@ -254,7 +259,12 @@ and its Q face, with the electron phase state `R` between them.
   4. The deficit and the turning law on both faces; then [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) part 2.
 - **The name Q.** The nucleon `Q` is read here as the capacity;
   EQUATIONS.md reads it as the neutron count, and `Q` is also the rational
-  type ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151)).
+  type ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151)). Neither reading reproduces the throat: for seed 7
+  the throat's `s_Q / s_Z` is `1.1733`, while the firmament's whole-nuclei
+  `3Q / 3Z` reads `1.1164` as neutrons and `3.7926` as capacity, and the
+  whole founding's `0.7813` and `4.9354` (`observe seals`). `R` is not in
+  that comparison; the faces with the mix's `R` at the founding's pulse are
+  a further step.
 
 ## 3. The bounce and the founding
 
@@ -689,7 +699,7 @@ display, never stored.
 
   ```text
   R(t) = ( the axis:    D(n)^t, held by its exponent t
-           the planes:  phi_i(t) = t theta_i mod 1, i = 1..5, each in Q/Z
+           the planes:  phi_i(t) = t theta_i mod 1, i = 1..5, each in QQ/ZZ
            the returns: the whole traversals k in Z and each plane's order )
   ```
 
@@ -730,24 +740,26 @@ display, never stored.
   light-time and no SI enters a law.
 - **The twist and the dipole.** With spin `a`, the throat carries the
   torsion share `s = (2 + a) / (4 + a)` on the open side and holds `1 - s`
-  on the held side. Each echo twists the open pole Q up and the held pole Z
-  down about the equator `1/2` by half the twist `n`:
+  on the held side. Each echo twists the open pole's share `s_Q` up and the
+  held pole's share `s_Z` down about the equator `1/2` by half the twist
+  `n`:
 
   ```text
-  n = 2s - 1 = a / (4 + a)        the twist per echo, in Q/Z
-  Q = (1 + n) / 2,  Z = (1 - n) / 2
-  Q / Z = (1 + n) / (1 - n) = D(n) = 1 + a / 2
+  n = 2s - 1 = a / (4 + a)        the twist per echo, in QQ/ZZ
+  s_Q = (1 + n) / 2,  s_Z = (1 - n) / 2
+  s_Q / s_Z = (1 + n) / (1 - n) = D(n) = 1 + a / 2
   ```
 
-  Q moves as the antipole of Z (the inversion `t -> 1 / t` exchanges
-  them), and the dipole keeps the twist as torsion: `Q / Z` depends on the
+  `s_Q` moves as the antipole of `s_Z` (the inversion `t -> 1 / t`
+  exchanges them), and the dipole keeps the twist as torsion: `s_Q / s_Z`
+  depends on the
   spin alone and does not drift into a phase. The twist is the echo's
   residual, held per echo, never summed into the count.
 - **Influence.** The derivatives of the readings in the spin and in the
   reach are exact:
 
   ```text
-  dn/da = 4 / (4 + a)^2,   dQ/da = 2 / (4 + a)^2 = -dZ/da,   d(Q/Z)/da = 1/2
+  dn/da = 4 / (4 + a)^2,   ds_Q/da = 2 / (4 + a)^2 = -ds_Z/da,   d(s_Q/s_Z)/da = 1/2
   dD(n)/dn = 2 / (1 - n)^2
   d delta/dr = -M / (r + M)^2,   dD(delta)/dr = -2M / r^2
   ```
@@ -781,7 +793,7 @@ the flow law, the conservation of counts and the inversion.
   (`t < 1`) slides on the fission side (`t > 1`), and at the throat
   (`t = 1`) both faces read one half.
 - **Positrons.** The electrons' phase state is `R = kappa (1 - 2x)`,
-  `x = frac(p)` in Q/Z (`circuit::weights::electron_phase`). The reversion
+  `x = frac(p)` in QQ/ZZ (`circuit::weights::electron_phase`). The reversion
   runs the echo backwards, `x -> -x`, and `R(-x) = -R(x)`: the positron is
   the electron's phase read through the reversion, with the same
   coherence and the opposite sign. A pair arises at the echo's reversal,
@@ -824,7 +836,7 @@ Z^6, each plane's reading kept, never summed into one number.
   each of the five isoclinic planes. The parts lie in orthogonal planes and commute, so a state's
   reading at a count `t` is a closed form: on the axis the dilation
   `D(n)^(m0 t)`, exact in Q at whole `t`; on the planes the phase
-  `t s (m1 + ... + m5) mod 1`, exact in Q/Z. The state moves on a flat line
+  `t s (m1 + ... + m5) mod 1`, exact in QQ/ZZ. The state moves on a flat line
   of the six-torus inside S^11, curved by the embedding; in each plane a
   circle stretched by the axis's dilation is an ellipse with apsis ratio
   `D`; each plane's rate is the hold's deficit share there.
@@ -961,7 +973,7 @@ Theorems:
 | | Statement | From |
 |---|---|---|
 | T1 | `D(x (+) y) = D(x) D(y)`; continuity `s (+) (-s) = 0`, equatorial inflow `(2 + a) / (3 + a)` | 3, 4 |
-| T2 | `D(s) = 3 + a`; twist `n = a / (4 + a)`; dipole `Q / Z = D(n) = 1 + a / 2` | 3, 7 |
+| T2 | `D(s) = 3 + a`; twist `n = a / (4 + a)`; dipole `s_Q / s_Z = D(n) = 1 + a / 2` | 3, 7 |
 | T3 | orbit about `M`: speed and eccentricity `delta`, apsis ratio `1 + 2M / r`; resonances `(k - 1) M` returning after `k` | 2, 6 |
 | T4 | sheared return `k / (1 - theta)`; the echo the throat orbit's return | 10 |
 | T5 | local ring `s r (r + M) / M^2` core traversals | 10 |

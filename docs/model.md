@@ -339,8 +339,8 @@ invariant, with the holonomy around it conjugate.
 
 ### The six planes: a face per plane
 
-Derived from built laws ([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128), ruled 2026-11-06: separation, not
-equal fifths; [#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), ruled 2026-11-10: two counts named apart), after
+Derived from built laws ([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128), ruled 2026-11-06: separation, never an
+equal split; [#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), ruled 2026-11-10: two counts named apart), after
 Gravity ([#155](https://github.com/SAIOS-SAMN/xylarium/issues/155)). The identities are tested
 (`shares::tests::a_faces_dilation_is_linear_in_its_pole`,
 `turning::tests::t2_is_the_face_law_at_the_horizon`,
@@ -359,6 +359,7 @@ split is not yet built.
   with a pole of that plane, reach over hold on it:
 
   ```text
+  a kind's frames     t   = U / W             the pole point (axiom 9)
   axis plane          t_0 = r / M             gravity's faces (axiom 2)
   isoclinic plane j   t_j = J_j / (6 H_j)     T14: push J_j / (6 H_j + J_j) = d(t_j)
   horizon             t_s = 1 + J / H         the torsion share s = d(t_s) (axiom 7)
@@ -374,13 +375,21 @@ split is not yet built.
   (`M = 1`, `t_s = 1 + a / 2`): `D(s) = 3 + a`, the twist
   `n = d - c = a / (4 + a)`, `D(n) = t_s = s_Q / s_Z`. And T14's plane
   push dilates by `1 + J_j / (3 H_j)`.
-- **Separation.** The five isoclinic planes are interchangeable in every
-  count the founding makes (T6, T7), so at rest their poles coincide and
-  T14's pushes are equal: T18's equal fifths is the case
-  `t_1 = ... = t_5`. Plane `j` is read by `t_j`, from the plane's hold
-  `H_j` and twist `J_j`; the spin's turning on each plane separates them.
-  What moves between planes is twist and hold, and their totals are kept:
-  `sum_j J_j = J`, `sum_j H_j = H_iso` (axioms 4 and 11).
+- **Separation.** No plane's share is set by an equal split. Plane `j`
+  is read by `t_j` from the plane's hold `H_j = sum_k M_k w_kj` (each
+  kind's hold weighted by its share of turning on that plane; Holding in a
+  pinched throat, EQUATIONS.md) and the plane's twist `J_j`. What moves
+  between planes is twist and hold, and their totals are kept:
+  `sum_j J_j = J`, `sum_j H_j = H_iso` (axioms 4 and 11). Without spin
+  (`J = 0`) every `t_j` is zero and nothing turns; a spinless hole does not
+  bounce (axiom 7), so every founded universe separates its planes.
+- **The frame face.** Axiom 9's frames are the same law at one kind: the
+  hold `W = 3Z - U` (`compound::hold`) and the open frames `U`, whole
+  `3Z`. Its convergent face `W / 3Z` is the closed share that drives the
+  capture chain (`elements::closed_share`), its divergent face `U / 3Z`,
+  and its pole `t = U / W` is the pole point; the antipole `t -> 1 / t`
+  exchanges `U` and `W` (axiom 5), and the pole point's throat `U = W` is
+  the face's equator, `3Z = 2W`. `D(U / 3Z) = 1 + 2U / W`.
 - **The transfer.** A state of weight `m` in Z^6, with turning shares
   `w_k = |m_k| / sum_i |m_i|`, feels its planes composed by the flow law
   (T15): its hyperbolic angle is the sum over planes of `w_k ln D_k`, with
@@ -798,8 +807,8 @@ sheared ellipses, `e = delta`, `360 delta` degrees a traversal).
 
 Open: the core curve between tiers; mutual linking `Lk_ij`; the fibres'
 separation in shares (not Fubini-Study's arccos); helicity without its
-`Gamma^2` self term; per-plane twist in place of T18's equal fifths
-([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128), ruled: separation).
+`Gamma^2` self term; per-plane twist by separation
+([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128), ruled).
 
 ### The ring: the throat orbit and the echo's torsion
 
@@ -1127,11 +1136,11 @@ Theorems:
 | T11 | pinched throat's spin `a_g = a_p M_p / H_g` (Kerr, with the parent's degrees of turning per unit hold, `360 a_p M_p`); a cohort with `a_g > 1` does not close and stays as medium | 7, 11 |
 | T12 | stretching pressure `(D(n)^m0 - 1) / (D(n)^m0 + 1)` | 3, T2 |
 | T13 | a pinch encloses the whole cohort released since the last, in every direction | 8, T10 |
-| T14 | enclosed matter, from the reach its layer has at the pinch (The state at the pinch); in plane `j` it is pushed out at `J_j / (6 H_j + J_j)` per echo, `H_j` the cohort's hold in the plane and `J_j = J / 5` (none on the axis plane) | 2, 3, 7 |
+| T14 | enclosed matter, from the reach its layer has at the pinch (The state at the pinch); in plane `j` it is pushed out at `J_j / (6 H_j + J_j)` per echo, `H_j` the cohort's hold in the plane and `J_j` the plane's twist, `sum_j J_j = J` (none on the axis plane) | 2, 3, 7 |
 | T15 | a whole nucleus feels its planes composed, `D_k = D(p_plane)^w_k D(n)^A`, `w_k` its share of turning in the isoclinic planes; held where `D_k <= 1`, else it leaves after `ln 2 / ln D_k` echoes | 3, T14 |
 | T16 | a paired throat's faces dilate an open kind by `D(s) D(n)^A` and `D(s) D(n)^-A`, product `(3 + a)^2`; no open kind is held on both faces; the shared hold is the closed kinds | 3, 5, 9, T2, T8 |
 | T17 | the spin is a sheared orbit over the core's bounces: a kind's separation is `rho = q ln D(s) - (1 - q) ln D(1 - s)` across the attractor pair; a cohort takes `J (m / M) (rho_cohort / rho_hold)`; a cohort less separated than its hold spins the throat up; the pair closes while `a <= 1` | 3, 7, 9, 11, T2, T10, T16 |
-| T18 | the five isoclinic planes are interchangeable in the multiplicity and the filling, so at rest their poles coincide and T14's pushes are equal; plane `j` reads the pole `t_j = J_j / (6 H_j)` by its separation (ruled, #128), so equal fifths is the case of equal poles and distinct plane phases come from the spin's turning on each plane and a link's turning between planes (The six planes) | 8, T6, T7, T14 |
+| T18 | the five isoclinic planes are interchangeable in the multiplicity and the filling (no state's plane is chosen); plane `j` is read by its pole `t_j = J_j / (6 H_j)`, its hold the kinds' turning on it, by separation (ruled, #128), never an equal split; the planes' phases differ by their pushes and by a link's turning between planes (The six planes) | 8, T6, T7, T14 |
 | T19 | a link's remanence `w = J - (a_0 M_0) M`: per passage `w' = w (1 - m / M) + J (m / M) (1 - rho_c / rho_hold)`; conserved between passages; cleared by a passage of hold `m* = w M / (w + J (rho_c / rho_hold - 1))`; for one release, the remanent share `1 - rho_hold / rho_closed` | 7, 11, T10, T17 |
 
 Reading (seed 7; a retired floating-point screen with exact held sets, to
@@ -1370,15 +1379,16 @@ and the order in which that is to be opened up.
     founding makes. The multiplicity `C(q + 4, 4)` (T6) counts the weights
     `(m_1, ..., m_5)` by `sum |m_j|`, and the filling reads the axis levels
     only (T7, T10). No state's plane is chosen.
-  - So each plane holds a fifth of a kind's isoclinic hold,
-    `H_j = H_iso / 5`, and with `J_j = J / 5` the pushes of T14 are equal
-    on all five planes. Each plane advances by one `theta` per echo, which
-    axiom 8 states as the spin turning them together.
-  - Distinct phases on the planes cannot come from the pushes. They come
-    only from a link that turns one plane into another: a body whose
-    planes are turned relative to its parent's.
+  - So no count fixes a plane's share. Plane `j` holds the kinds' turning
+    on it, `H_j = sum_k M_k w_kj`, and carries its part `J_j` of the spin,
+    read by separation (ruled, #128), never an equal split; T14's pushes
+    differ by plane as the poles `t_j` do (The six planes). The spin turns
+    all five planes, each by that plane's advance per echo.
+  - Distinct phases on the planes come from these pushes, plane by plane,
+    and from a link that turns one plane into another: a body whose planes
+    are turned relative to its parent's.
   - A frame is therefore three parts: the axis-plane phase; the isoclinic
-    phase, a sheared orbit (T4); and the turning that carries the body's
+    phases, one per plane, each a sheared orbit (T4); and the turning that carries the body's
     planes into its parent's, the turning between planes of the coordinate's
     holonomic lane. The present node and tilt are that turning restricted
     to one pair of planes.
@@ -1388,7 +1398,7 @@ and the order in which that is to be opened up.
 - **Order of the work.**
   1. One frame carrier over the six planes, composed along the chain, a
      place being its parent's frame acting on the body's own state.
-     T18 settles its shape: an axis-plane phase, one isoclinic phase and
+     T18 settles its shape: an axis-plane phase, the isoclinic phases (one per plane) and
      the turning that carries the body's planes into its parent's.
   2. The chain's tier maps by `manifold::dilation` only, with SI read once
      at the inlet, and relations in the lowest common tier.

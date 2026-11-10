@@ -237,7 +237,10 @@ may change public APIs and the model's laws.
   dilation is linear in its pole (`D(d) = 1 + 2t`, `D(c) = 1 + 2 / t`,
   `D(d - c) = t`); T2 is the face law at the horizon and T14's plane push
   a divergent face (tests in `shares` and `turning`); T18 restated as
-  separation, equal fifths the case of equal poles. Two counts named apart
+  separation, never an equal split (the plane's hold the kinds' turning on
+  it, `J_j` its part of the spin; `J / 5` removed); axiom 9's frames are the
+  same face law (`W / 3Z` the closed share, `t = U / W` the pole point).
+  Two counts named apart
   (#151, ruled): the mass weight `m_Z = Z + Q` (neutrons) is the hold,
   the capacity `cap` the room.
 - Gravity is the topological deformation of the manifold about a mass

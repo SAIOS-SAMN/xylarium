@@ -229,18 +229,24 @@ mod tests {
 
     #[test]
     fn spin_makes_the_white_hole_a_null_source() {
-        let b = Bounce::of(&Q::int(1), &Q::ratio(9, 10), &Q::int(1000), &Q::ratio(1, 5)).unwrap();
+        let b = Bounce::of(
+            &Q::int(1),
+            &xyl_core::ratio!(9, 10),
+            &Q::int(1000),
+            &xyl_core::ratio!(1, 5),
+        )
+        .unwrap();
         // The crossing point lies on the horizon, at the horizon reach.
         assert!(point(&b.at).geo(&b.horizon).scalar_part().is_zero());
         // The far face, the antipode under the planes' half turn, lies on the
         // horizon too, and is not the crossing point.
         assert!(b.far.geo(&b.horizon).scalar_part().is_zero());
         assert!(!b.far.projective_eq(&point(&b.at)));
-        assert_eq!(horizon_reach(&Q::ratio(3, 2)), Q::int(3));
+        assert_eq!(horizon_reach(&xyl_core::ratio!(3, 2)), Q::int(3));
         let n = &b.source.generator;
         assert!(n.geo(n).is_zero() && !n.is_zero(), "null: N^2 = 0");
         let p = point(&b.at);
-        for t in [Q::ratio(1, 7), Q::ratio(2, 5)] {
+        for t in [xyl_core::ratio!(1, 7), xyl_core::ratio!(2, 5)] {
             let s = b.source.sliver(&t);
             assert!(
                 s.sandwich(&p).projective_eq(&p),
@@ -255,7 +261,7 @@ mod tests {
         assert!(Bounce::of(&Q::int(1), &Q::ZERO, &Q::int(1000), &Q::ZERO).is_none());
         assert!(Bounce::of(&Q::int(1), &Q::ONE, &Q::int(1000), &Q::ZERO).is_none());
         // Without an enclosure no horizon is read.
-        assert!(Bounce::of(&Q::int(1), &Q::ratio(9, 10), &Q::ZERO, &Q::ZERO).is_none());
+        assert!(Bounce::of(&Q::int(1), &xyl_core::ratio!(9, 10), &Q::ZERO, &Q::ZERO).is_none());
         // The enclosure's curvature shortens the reach: the curved reach is
         // below the flat reach, and nearer to it the larger the enclosure.
         let flat = horizon_reach(&Q::int(1));

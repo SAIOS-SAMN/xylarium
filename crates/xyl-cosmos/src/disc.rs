@@ -202,7 +202,7 @@ pub fn manifold_worlds(star: &Q, a: &Q, tide: &Q) -> (Vec<(Q, Q)>, Q) {
     for k in 0..360i64 {
         // The degree's outer edge and its midpoint, as shares of the reach.
         let x = star + &(&step * &Q::int(k + 1));
-        let mid = star + &(&step * &Q::ratio(2 * k + 1, 2));
+        let mid = star + &(&step * &xyl_core::ratio!(2 * k + 1, 2));
         m = &m + &dm;
         moment = &moment + &(&mid * &dm);
         let own = m.checked_div(&(star + &m)).unwrap_or(Q::ZERO);

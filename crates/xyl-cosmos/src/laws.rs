@@ -31,10 +31,10 @@ use xyl_core::Q;
 pub fn reference() -> [Q; 4] {
     let alpha_g = Q::from_i128(5906, 10i128.pow(42)).unwrap_or(Q::ZERO);
     [
-        Q::ratio(1_000_000, 137_035_999),
-        Q::ratio(100_000, 183_615_267),
+        xyl_core::ratio!(1_000_000, 137_035_999),
+        xyl_core::ratio!(100_000, 183_615_267),
         alpha_g,
-        Q::ratio(71, 10_000),
+        xyl_core::ratio!(71, 10_000),
     ]
 }
 
@@ -85,7 +85,7 @@ fn pw(x: &Q, n: i64, d: i64) -> Encl {
     if d == 1 && n == -1 {
         return Encl::exact(x.recip().unwrap_or(Q::ZERO));
     }
-    let p = Q::ratio(n.abs(), d);
+    let p = Q::new(n.abs(), d).unwrap_or(Q::ZERO);
     let share = (&(&Q::ONE + &p) * x)
         .checked_div(&(&Q::ONE + &(&p * x)))
         .unwrap_or(Q::ZERO);

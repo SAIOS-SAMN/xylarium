@@ -198,7 +198,7 @@ fn delay_modes(lo: &Q, hi: &Q) -> Vec<(Q, Q)> {
             let tau =
                 Dy::from_q(lo) * (ratio.max(Dy::sci(1, -30)).log() * Dy::ratio(2 * j + 1, 8)).exp();
             let tau = Q::new((tau * Dy::int(1024)).trunc_i64().max(1), 1024).unwrap_or(Q::ONE);
-            (Q::ratio(1, 4), crate::turning::span_in_rings(&tau))
+            (xyl_core::ratio!(1, 4), crate::turning::span_in_rings(&tau))
         })
         .collect()
 }

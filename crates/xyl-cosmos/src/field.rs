@@ -176,7 +176,7 @@ fn drawn_spin(seed: u64, n: u64) -> Q {
     let x =
         xyl_core::Stream::derive(seed, &["stellar hole spin".into(), n.into()]).next_u64() >> 12;
     // (x + 1) / (2^52 + 2) with x < 2^52: strictly inside (0, 1).
-    Q::new(i64::try_from(x).unwrap_or(0) + 1, (1i64 << 52) + 2).unwrap_or(Q::ratio(1, 2))
+    Q::new(i64::try_from(x).unwrap_or(0) + 1, (1i64 << 52) + 2).unwrap_or(xyl_core::ratio!(1, 2))
 }
 
 impl Bell {
@@ -528,7 +528,11 @@ mod tests {
     #[test]
     fn versors_bend_and_rotate_exactly() {
         // Bend: a translation by (1/3, -2, 5/7).
-        let d = [Q::ratio(1, 3), Q::ratio(-2, 1), Q::ratio(5, 7)];
+        let d = [
+            xyl_core::ratio!(1, 3),
+            xyl_core::ratio!(-2, 1),
+            xyl_core::ratio!(5, 7),
+        ];
         assert_eq!(carry(&cga::translator_at(&d), &origin()).unwrap(), d);
         // Rotate: a quarter turn about z (t = 1: 2 atan 1) takes x to +-y.
         let zaxis = [Q::ZERO, Q::ZERO, Q::ONE];
@@ -540,7 +544,7 @@ mod tests {
         // A rational turn (t = 1/2: cos 3/5, sin 4/5) lands on a rational
         // point.
         let r = carry(
-            &rotate(&zaxis, &Q::ratio(1, 2)),
+            &rotate(&zaxis, &xyl_core::ratio!(1, 2)),
             &[Q::int(5), Q::ZERO, Q::ZERO],
         )
         .unwrap();
@@ -588,10 +592,10 @@ mod tests {
         let v = core.received(d);
         let worlds = vec![
             Anchor::on_orbit(&Q::ONE, &Q::ONE),
-            Anchor::on_orbit(&Q::ratio(52, 10), &Q::int(318)),
-            Anchor::on_orbit(&Q::ratio(3, 10), &Q::ratio(1, 20)),
+            Anchor::on_orbit(&xyl_core::ratio!(52, 10), &Q::int(318)),
+            Anchor::on_orbit(&xyl_core::ratio!(3, 10), &xyl_core::ratio!(1, 20)),
         ];
-        let e = core.energy_at(d, &Q::ratio(52, 10));
+        let e = core.energy_at(d, &xyl_core::ratio!(52, 10));
         assert!(e.signum() > 0);
         let a = absorb(&Q::ONE, &h_release(), &worlds, &v, &e).unwrap();
         assert!(

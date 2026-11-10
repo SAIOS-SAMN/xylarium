@@ -77,16 +77,16 @@ fn stars_circle_the_core_and_the_core_holds_its_share() {
         );
     }
     // The mass inside r includes the universal core and grows outward.
-    assert!(inside_mass(&Q::ratio(1, 1000)) >= Q::ONE);
+    assert!(inside_mass(&xyl_core::ratio!(1, 1000)) >= Q::ONE);
     assert!(inside_mass(&crate::circuit::anchor().rim) >= inside_mass(&r0()));
-    assert!(inside_mass(&r0()) > inside_mass(&Q::ratio(1, 1000)));
+    assert!(inside_mass(&r0()) > inside_mass(&xyl_core::ratio!(1, 1000)));
     // The arc from a place to itself is zero; the arc is symmetric and never
     // shorter than the difference between the two reaches.
     let (a, b) = (
         stars[1].place(Dy::int(4), &r),
         stars[2].place(Dy::int(4), &r),
     );
-    assert!(a.arc(&a, &r).mid().abs() < Q::ratio(1, 1_000_000));
+    assert!(a.arc(&a, &r).mid().abs() < xyl_core::ratio!(1, 1_000_000));
     let (ab, ba) = (a.arc(&b, &r).mid(), b.arc(&a, &r).mid());
     assert_eq!(ab, ba);
     assert!(ab >= (&a.reach - &b.reach).abs(), "arc {ab}");
@@ -112,7 +112,7 @@ fn imf_spreads_shares_of_the_piece_star_mass() {
         // piece's star mass at u = 1.
         let mut last = Q::ZERO;
         for k in 1..=20 {
-            let x = share(&Q::ratio(k, 20), r);
+            let x = share(&xyl_core::ratio!(k, 20), r);
             assert!(x > last && x <= Q::ONE, "{x} at {r}");
             last = x;
         }
@@ -127,7 +127,7 @@ fn imf_spreads_shares_of_the_piece_star_mass() {
         lit.iter().max_by(by_crowding).unwrap(),
     );
     for k in 1..20 {
-        let u = Q::ratio(k, 20);
+        let u = xyl_core::ratio!(k, 20);
         assert!(share(&u, most) >= share(&u, least));
     }
     // Every star has a positive mass no greater than its piece's star mass,

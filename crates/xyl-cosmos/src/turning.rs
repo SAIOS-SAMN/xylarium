@@ -202,7 +202,12 @@ mod tests {
         // With the torsion share the divergent face at t_s = 1 + a / 2 (M = 1):
         // D(s) = 1 + 2 t_s = 3 + a, the twist n = d - c = a / (4 + a), and
         // D(n) = t_s = 1 + a / 2 (T2).
-        for a in [Q::ZERO, Q::ratio(1, 3), Q::ratio(2, 5), Q::ONE] {
+        for a in [
+            Q::ZERO,
+            xyl_core::ratio!(1, 3),
+            xyl_core::ratio!(2, 5),
+            Q::ONE,
+        ] {
             let s = crate::bounce::torsion_share(&Q::ONE, &a);
             let f =
                 xyl_core::shares::faces(&Q::ONE, &(&Q::ONE + &a.checked_div(&Q::int(2)).unwrap()))
@@ -219,7 +224,10 @@ mod tests {
     fn t14s_plane_push_is_a_divergent_face() {
         // T14: plane j is pushed out at J_j / (6 H_j + J_j), the divergent
         // face about the hold 6 H_j at reach J_j; its dilation 1 + J_j / (3 H_j).
-        for (h, j) in [(Q::ratio(1, 5), Q::ratio(1, 10)), (Q::ratio(3, 7), Q::ONE)] {
+        for (h, j) in [
+            (xyl_core::ratio!(1, 5), xyl_core::ratio!(1, 10)),
+            (xyl_core::ratio!(3, 7), Q::ONE),
+        ] {
             let six_h = &Q::int(6) * &h;
             let push = j.checked_div(&(&six_h + &j)).unwrap();
             let f = xyl_core::shares::faces(&six_h, &j).unwrap();
@@ -237,9 +245,9 @@ mod tests {
         // horizon's hold H at reach H + J, its pole t = 1 + J / H.
         for (m, a) in [
             (Q::ONE, Q::ZERO),
-            (Q::ONE, Q::ratio(1, 3)),
-            (Q::ratio(5, 2), Q::ratio(7, 9)),
-            (Q::ratio(1, 4), Q::ONE),
+            (Q::ONE, xyl_core::ratio!(1, 3)),
+            (xyl_core::ratio!(5, 2), xyl_core::ratio!(7, 9)),
+            (xyl_core::ratio!(1, 4), Q::ONE),
         ] {
             let h = crate::bounce::horizon_reach(&m);
             let j = &a * &(&m * &m);
@@ -254,10 +262,10 @@ mod tests {
         let _ = crate::genesis::origin();
         let bell = crate::circuit::anchor().bell;
         assert!(bell.signum() > 0, "the founding sets the bell");
-        let m = Q::ratio(3, 2);
+        let m = xyl_core::ratio!(3, 2);
         let mut last: Option<Q> = None;
         for k in 1..=12 {
-            let r = Q::ratio(k, 4);
+            let r = xyl_core::ratio!(k, 4);
             let w = turning(&m, &r, Tier::Galaxy);
             // The speed `omega r / bell` is the deficit share, below light.
             let r_rg = &r * &Tier::Galaxy.in_rg();
@@ -276,11 +284,11 @@ mod tests {
     #[test]
     fn dyadic_and_si_forms_hold_the_core_law() {
         let _ = crate::genesis::origin();
-        let (m, r) = (Q::ratio(5, 4), Q::ratio(7, 3));
+        let (m, r) = (xyl_core::ratio!(5, 4), xyl_core::ratio!(7, 3));
         let exact = turning(&m, &r, Tier::Galaxy);
         let dy = turning_dy(Dy::from_q(&m), Dy::from_q(&r), Tier::Galaxy);
         let gap = (&dy.to_q() - &exact).abs();
-        assert!(gap <= &exact * &Q::ratio(1, 1 << 40), "{gap}");
+        assert!(gap <= &exact * &xyl_core::ratio!(1, 1 << 40), "{gap}");
         // The SI boundary reads the same law: degrees per ring over 180 / pi.
         let units = crate::chain::units();
         let kg = &m * &crate::package::core_kg();
@@ -289,6 +297,6 @@ mod tests {
         let si = turning_si(&kg, &metres);
         let back = (&si * &pi).checked_div(&Q::int(180)).unwrap();
         let gap = (&back - &exact).abs();
-        assert!(gap <= &exact * &Q::ratio(1, 1 << 40), "{gap}");
+        assert!(gap <= &exact * &xyl_core::ratio!(1, 1 << 40), "{gap}");
     }
 }

@@ -12,7 +12,7 @@ pub fn unit() -> &'static State {
     U.get_or_init(|| {
         // The core's share of rock from solar abundances (Lodders 2003): metal
         // (Fe, Ni, S) against silicate (Mg, Si and three O).
-        let core = Q::ratio(63_988, 164_468);
+        let core = xyl_core::ratio!(63_988, 164_468);
         let mantle = &Q::ONE - &core;
         // Ices arrive by cometary delivery across the snow line at unit
         // crowding and metals.

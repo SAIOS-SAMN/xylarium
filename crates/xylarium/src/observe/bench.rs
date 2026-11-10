@@ -115,7 +115,7 @@ fn ratio(a: u32, b: u32) -> String {
     if b == 0 {
         "-".to_string()
     } else {
-        show(&Q::ratio(i64::from(a), i64::from(b)))
+        show(&Q::new(i64::from(a), i64::from(b)).unwrap_or(Q::ZERO))
     }
 }
 

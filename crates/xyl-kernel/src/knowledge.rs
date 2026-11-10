@@ -750,15 +750,26 @@ mod tests {
     /// anything else is refused, and the written form reads back whole.
     #[test]
     fn focus_refuses_shares_out_of_bounds_and_round_trips() {
-        let f = Focus::of([Q::ratio(1, 2), Q::ZERO, Q::ratio(1, 3), Q::ratio(1, 6)]).unwrap();
+        let f = Focus::of([
+            xyl_core::ratio!(1, 2),
+            Q::ZERO,
+            xyl_core::ratio!(1, 3),
+            xyl_core::ratio!(1, 6),
+        ])
+        .unwrap();
         assert_eq!(Focus::parse(&f.written()), Some(f.clone()));
         assert!(!f.is_none() && Focus::none().is_none());
         assert_eq!(
-            Focus::of([Q::ratio(3, 4), Q::ratio(1, 2), Q::ZERO, Q::ZERO]),
+            Focus::of([
+                xyl_core::ratio!(3, 4),
+                xyl_core::ratio!(1, 2),
+                Q::ZERO,
+                Q::ZERO
+            ]),
             None
         );
         assert_eq!(
-            Focus::of([Q::ratio(-1, 4), Q::ZERO, Q::ZERO, Q::ZERO]),
+            Focus::of([xyl_core::ratio!(-1, 4), Q::ZERO, Q::ZERO, Q::ZERO]),
             None
         );
         assert_eq!(Focus::parse("1/2,1/2"), None);

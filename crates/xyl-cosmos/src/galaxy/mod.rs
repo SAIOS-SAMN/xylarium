@@ -132,7 +132,7 @@ fn structure() -> std::sync::Arc<Structure> {
         let nucleus = rings.first().map(|r| r.1.clone()).unwrap_or(Q::ZERO);
         // The reference ring: where the cumulative holding crosses one half,
         // interpolated linearly within the crossing ring.
-        let target = &holding * &Q::ratio(1, 2);
+        let target = &holding * &xyl_core::ratio!(1, 2);
         let mut cum = Q::ZERO;
         let mut r0 = rings.last().map(|r| r.1.clone()).unwrap_or(Q::ONE);
         let mut lambda0 = rings.last().map(|r| r.3.clone()).unwrap_or(Q::ONE);
@@ -302,7 +302,7 @@ pub fn density(r: &Q) -> Encl {
     let lambda = ring_at(&st, r).map(|k| k.3.clone()).unwrap_or(Q::ZERO);
     Encl::exact(
         lambda
-            .checked_div(&st.lambda0.clone().max(Q::ratio(1, 1_000_000_000)))
+            .checked_div(&st.lambda0.clone().max(xyl_core::ratio!(1, 1_000_000_000)))
             .unwrap_or(Q::ZERO),
     )
 }
@@ -337,7 +337,7 @@ fn holding_within(st: &Structure, r: &Q) -> Q {
         }
     });
     within
-        .checked_div(&st.holding.clone().max(Q::ratio(1, 1_000_000_000)))
+        .checked_div(&st.holding.clone().max(xyl_core::ratio!(1, 1_000_000_000)))
         .unwrap_or(Q::ZERO)
 }
 
@@ -362,7 +362,7 @@ pub fn ring_mass(r: &Q) -> Q {
     let st = structure();
     ring_at(&st, r)
         .and_then(|k| {
-            k.2.checked_div(&st.holding.clone().max(Q::ratio(1, 1_000_000_000)))
+            k.2.checked_div(&st.holding.clone().max(xyl_core::ratio!(1, 1_000_000_000)))
         })
         .unwrap_or(Q::ZERO)
 }

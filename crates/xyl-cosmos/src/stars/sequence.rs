@@ -415,18 +415,18 @@ mod tests {
     fn mixtures() -> Vec<Vec<(u32, Q)>> {
         vec![
             hydrogen(),
-            vec![(1, Q::ratio(3, 4)), (2, Q::ratio(1, 4))],
+            vec![(1, xyl_core::ratio!(3, 4)), (2, xyl_core::ratio!(1, 4))],
             vec![
-                (6, Q::ratio(1, 3)),
-                (26, Q::ratio(1, 3)),
-                (92, Q::ratio(1, 3)),
+                (6, xyl_core::ratio!(1, 3)),
+                (26, xyl_core::ratio!(1, 3)),
+                (92, xyl_core::ratio!(1, 3)),
             ],
             vec![(8, Q::ONE)],
         ]
     }
 
     fn heats() -> [crate::atoms::Received; 3] {
-        [Q::ZERO, Q::ratio(1, 3), Q::ONE].map(crate::atoms::Received::isoclinic)
+        [Q::ZERO, xyl_core::ratio!(1, 3), Q::ONE].map(crate::atoms::Received::isoclinic)
     }
 
     #[test]
@@ -456,7 +456,7 @@ mod tests {
     fn pole_point_lies_on_the_z_side() {
         // A kind's open states are at most its charge of its 3Z, so the
         // collective's pole point is at most 1/2.
-        let half = Q::ratio(1, 2);
+        let half = xyl_core::ratio!(1, 2);
         for received in heats() {
             for z in (1..=200).step_by(7) {
                 let t0 = mixture_pole(&[(z, Q::ONE)], &received);

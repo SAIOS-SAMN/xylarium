@@ -273,7 +273,7 @@ mod tests {
     #[test]
     fn power_is_the_transduced_hold_and_life_counts_rings() {
         let _ = crate::genesis::origin();
-        let (m, r) = (Q::ratio(1, 1_000_000), Dy::int(3));
+        let (m, r) = (xyl_core::ratio!(1, 1_000_000), Dy::int(3));
         let rim = Q::ONE;
         let delta = Dy::from_q(&crate::disc::rim_share(&m, &rim));
         // The rim share lies in (0, 1); a heavier star on the same rim is
@@ -301,10 +301,13 @@ mod tests {
         assert!(life(&seq, heavier, r) < main);
         let transduced_by = &main * &transduced_per_bell(delta, r).to_q();
         let gap = (&transduced_by - &seq.steps[0].transduced).abs();
-        assert!(gap < Q::ratio(1, 1_000_000), "{transduced_by}");
+        assert!(gap < xyl_core::ratio!(1, 1_000_000), "{transduced_by}");
         // The boundary reads a one-sun mass at reach 0 as one sun.
         let sun = crate::galaxy::core_masses_of_suns(&Q::ONE);
         let one = suns_of_power(&power(&sun, delta, Dy::ZERO), delta);
-        assert!((&one - &Q::ONE).abs() < Q::ratio(1, 1_000_000), "{one}");
+        assert!(
+            (&one - &Q::ONE).abs() < xyl_core::ratio!(1, 1_000_000),
+            "{one}"
+        );
     }
 }

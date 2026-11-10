@@ -424,7 +424,7 @@ pub fn star(seed: u64, origin: &Origin, n: u64) -> Option<Star> {
     // (0.1 + 0.9 u_comp) times the star's mass.
     let companion = if u_bin < Dy::ratio(1, 3) {
         down(
-            &(&mass * &(&Q::ratio(1, 10) + &(&Q::ratio(9, 10) * &u_comp.to_q()))),
+            &(&mass * &(&xyl_core::ratio!(1, 10) + &(&xyl_core::ratio!(9, 10) * &u_comp.to_q()))),
             GRID_BITS,
         )
     } else {
@@ -461,16 +461,16 @@ pub fn star(seed: u64, origin: &Origin, n: u64) -> Option<Star> {
 /// Their limits are independent over the rationals, so the four sequences
 /// of fractional parts do not fall into step.
 pub(crate) fn golden_turns() -> Q {
-    Q::ratio(63_245_986, 165_580_141)
+    xyl_core::ratio!(63_245_986, 165_580_141)
 }
 fn silver_turns() -> Q {
-    Q::ratio(470_832, 1_136_689)
+    xyl_core::ratio!(470_832, 1_136_689)
 }
 pub(crate) fn plastic_turns() -> Q {
-    Q::ratio(90_342_335_288_610_825, 119_678_113_856_248_465)
+    xyl_core::ratio!(90_342_335_288_610_825, 119_678_113_856_248_465)
 }
 fn third_turns() -> Q {
-    Q::ratio(8_155_103_542_731_753, 11_140_078_609_864_049)
+    xyl_core::ratio!(8_155_103_542_731_753, 11_140_078_609_864_049)
 }
 
 /// A tilt holding `u` of S^360's measure (concentrated toward 90 degrees,

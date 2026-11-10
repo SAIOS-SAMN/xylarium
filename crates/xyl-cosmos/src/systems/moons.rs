@@ -77,11 +77,11 @@ pub(super) fn moons(
         &crate::life::horizon_gyr().to_q(),
     );
     let forced = forced_eccentricities(&settled, anchor, radius_rg, &g_mass);
-    let rho = (&Q::ONE - ice_share) + (ice_share * &Q::ratio(55, 10));
-    let icy = ice_share > &Q::ratio(1, 5);
+    let rho = (&Q::ONE - ice_share) + (ice_share * &xyl_core::ratio!(55, 10));
+    let icy = ice_share > &xyl_core::ratio!(1, 5);
     let mut placed = Q::ZERO;
     for (e, e_forced) in settled.into_iter().zip(forced) {
-        if e.m < Q::ratio(1, 10_000) {
+        if e.m < xyl_core::ratio!(1, 10_000) {
             continue;
         }
         let radius = extent(&(&e.m * &rho.recip().unwrap_or(Q::ONE)));
@@ -223,7 +223,7 @@ pub(super) fn belts(
     // share exp(-env); it condenses at 30 times the outermost reach.
     let comets = (giants_mass.signum() > 0).then(|| {
         let kept = fix(&exp(&-env.clone(), BITS));
-        let mass = &(&(giants_mass * &Q::ratio(1, 10)) * &Q::ratio(5, 100)) * &kept;
+        let mass = &(&(giants_mass * &xyl_core::ratio!(1, 10)) * &xyl_core::ratio!(5, 100)) * &kept;
         let far = orbits
             .iter()
             .map(|(a, _)| a.clone())

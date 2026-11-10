@@ -49,7 +49,7 @@ pub fn love(mass: &Q, radius: &Q, icy: bool) -> Q {
         + &(&Q::int(19) * &mu)
             .checked_div(&(&Q::int(2) * &self_pressure(mass, radius)))
             .unwrap_or(Q::ZERO);
-    on_grid(Q::ratio(3, 2).checked_div(&den).unwrap_or(Q::ZERO))
+    on_grid(xyl_core::ratio!(3, 2).checked_div(&den).unwrap_or(Q::ZERO))
 }
 
 /// The tidal stretch across a body: the change of its host's deficit across
@@ -72,7 +72,7 @@ pub fn circularise_gyr(host_kg: &Q, a_m: &Q, mass: &Q, radius: &Q, icy: bool) ->
     let (m, r) = (mass * &Si::world_mass_kg(), radius * &Si::world_radius_m());
     let n = rad_s(host_kg, a_m);
     let k2 = love(mass, radius, icy);
-    let t = &(&Q::ratio(4, 63) * &Rock::tidal_q().checked_div(&k2).unwrap_or(Q::ZERO))
+    let t = &(&xyl_core::ratio!(4, 63) * &Rock::tidal_q().checked_div(&k2).unwrap_or(Q::ZERO))
         * &m.checked_div(host_kg).unwrap_or(Q::ZERO);
     let rate = &n * &stretch(host_kg, a_m, &r);
     on_grid(
@@ -88,7 +88,7 @@ pub fn circularise_gyr(host_kg: &Q, a_m: &Q, mass: &Q, radius: &Q, icy: bool) ->
 pub fn lock_gyr(host_kg: &Q, a_m: &Q, mass: &Q, radius: &Q, icy: bool, spin0: &Q) -> Q {
     let r = radius * &Si::world_radius_m();
     let k2 = love(mass, radius, icy);
-    let n = rad_s(host_kg, a_m).max(Q::ratio(1, 1 << 60));
+    let n = rad_s(host_kg, a_m).max(xyl_core::ratio!(1, 1 << 60));
     let rigid = (&Rock::inertia() * &Rock::tidal_q())
         .checked_div(&(&(&Q::int(3) * &k2) * &stretch(host_kg, a_m, &r)))
         .unwrap_or(Q::ZERO);
@@ -120,22 +120,23 @@ pub fn orbits(star_kg: &Q, worlds: &[&World], rng: &mut Stream) -> Vec<Orbit> {
             .iter()
             .min()
             .cloned()
-            .map(|x| &x * &Q::ratio(1, 2))
-            .unwrap_or(Q::ratio(9, 10));
+            .map(|x| &x * &xyl_core::ratio!(1, 2))
+            .unwrap_or(xyl_core::ratio!(9, 10));
         // The orbit's shape comes from the settling (systems::settle_about).
         // The birth eccentricity is the settled swing, capped by the gap to
         // the nearest neighbour; the inclination is the swing's deficit
         // angle, swing / (1 + swing) of a quarter turn; node and periapsis
         // are both the settled phase.
         let e0 = w.swing.clone().min(cap);
-        let inc = &(&pi_q() * &Q::ratio(1, 2))
+        let inc = &(&pi_q() * &xyl_core::ratio!(1, 2))
             * &w.swing
                 .checked_div(&(&Q::ONE + &w.swing))
                 .unwrap_or(Q::ZERO);
         let node = w.phase.clone();
         let peri = w.phase.clone();
         let cos_obliquity = &(&Q::int(2) * &Dy::unit(rng.next_u64()).to_q()) - &Q::ONE;
-        let share = &Q::ratio(1, 10) + &(&Q::ratio(4, 10) * &Dy::unit(rng.next_u64()).to_q());
+        let share = &xyl_core::ratio!(1, 10)
+            + &(&xyl_core::ratio!(4, 10) * &Dy::unit(rng.next_u64()).to_q());
         let icy = w.icy();
         let (m, r) = (
             &w.mass * &Si::world_mass_kg(),
@@ -172,7 +173,7 @@ pub fn orbits(star_kg: &Q, worlds: &[&World], rng: &mut Stream) -> Vec<Orbit> {
                         .min(a_au[k].clone())
                         .checked_div(&a_au[n].clone().max(a_au[k].clone()))
                         .unwrap_or(Q::ZERO);
-                    f = f.max(&(&Q::ratio(5, 4) * &ratio) * &out[k].e0);
+                    f = f.max(&(&xyl_core::ratio!(5, 4) * &ratio) * &out[k].e0);
                 }
             }
             f

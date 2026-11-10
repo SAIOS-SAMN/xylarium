@@ -132,7 +132,7 @@ pub(super) fn push_reading(top: usize) -> String {
             Q::int(i64::from(xyl_cosmos::compound::open(z))),
             Q::int(i64::from(xyl_cosmos::compound::hold(z))),
         );
-        let half = Q::ratio(1, 2);
+        let half = xyl_core::ratio!(1, 2);
         let p_built = &half * &open.checked_div(&hold).unwrap_or(Q::ZERO);
         let p_lin = &half * &open.checked_div(&(&open + &hold)).unwrap_or(Q::ZERO);
         let p_z = &half * &q_z.checked_div(&(&a_z + &q_z)).unwrap_or(Q::ZERO);
@@ -212,10 +212,11 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
             continue;
         };
         // The built pole point t = u / w, open states over the held count.
-        let t = Q::ratio(
+        let t = Q::new(
             i64::from(a.unpaired),
             i64::from(xyl_cosmos::compound::hold(z).max(1)),
-        );
+        )
+        .unwrap_or(Q::ZERO);
         let occ = xyl_cosmos::atoms::occupancy(z).unwrap_or_default();
         if a.sealed() {
             sealed.push((z, a.outer_n, cap, t.clone()));
@@ -241,7 +242,7 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
                 if occ.pairs == 0 {
                     "none (no held state)".to_string()
                 } else {
-                    show(&Q::ratio(i64::from(occ.open), i64::from(occ.held())))
+                    show(&Q::new(i64::from(occ.open), i64::from(occ.held())).unwrap_or(Q::ZERO))
                 },
                 a.sealed()
             ));

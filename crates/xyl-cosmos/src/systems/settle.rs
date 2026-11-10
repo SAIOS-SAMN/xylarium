@@ -248,7 +248,7 @@ fn merge_until(b: &mut Vec<Embryo>, pairs: &Pairs, by_settled: Dy) -> Vec<Option
             // The phases meet along the shorter arc between them, weighted
             // by mass: the turn from x to y is read in [-1/2, 1/2).
             phase: {
-                let half = Q::ratio(1, 2);
+                let half = xyl_core::ratio!(1, 2);
                 let turn = &(&(&y.phase - &x.phase) + &half).frac() - &half;
                 let share = y.m.checked_div(&m).unwrap_or(Q::ZERO);
                 dyadic(&(&x.phase + &(&turn * &share))).frac()

@@ -279,6 +279,13 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- `Q::ratio` is replaced by `ratio!(n, d)` (#179, MU-STANDARDS 2.4, rule
+  11). The denominator is a constant checked when the build evaluates it,
+  so a zero denominator fails the build instead of reading zero. The six
+  call sites with a computed denominator read `Q::new` instead. `Q`'s
+  `Small` arithmetic divides through `Q::over_positive`, proved by the
+  invariant that a denominator is positive (a property test). No reading
+  moves.
 - `stars::held_frames` is renamed `stars::held_count`, retiring the last
   code use of "frames" as a count (#172).
 - Axiom 9 restated on capacity, not delimiters (ruled 2026-11-10, #158):

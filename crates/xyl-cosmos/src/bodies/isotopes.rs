@@ -10,30 +10,30 @@ pub fn isotopes() -> [(&'static str, &'static str, Q, Q, Q); 4] {
         (
             "U238",
             "U",
-            Q::ratio(4468, 1000),
-            Q::ratio(946, 10_000_000),
-            Q::ratio(9928, 10_000),
+            xyl_core::ratio!(4468, 1000),
+            xyl_core::ratio!(946, 10_000_000),
+            xyl_core::ratio!(9928, 10_000),
         ),
         (
             "U235",
             "U",
-            Q::ratio(704, 1000),
-            Q::ratio(569, 1_000_000),
-            Q::ratio(72, 10_000),
+            xyl_core::ratio!(704, 1000),
+            xyl_core::ratio!(569, 1_000_000),
+            xyl_core::ratio!(72, 10_000),
         ),
         (
             "Th232",
             "Th",
-            Q::ratio(1405, 100),
-            Q::ratio(264, 10_000_000),
+            xyl_core::ratio!(1405, 100),
+            xyl_core::ratio!(264, 10_000_000),
             Q::ONE,
         ),
         (
             "K40",
             "K",
-            Q::ratio(1248, 1000),
-            Q::ratio(292, 10_000_000),
-            Q::ratio(117, 1_000_000),
+            xyl_core::ratio!(1248, 1000),
+            xyl_core::ratio!(292, 10_000_000),
+            xyl_core::ratio!(117, 1_000_000),
         ),
     ]
 }
@@ -66,7 +66,7 @@ pub fn half_life(i: usize, sc: &Scales) -> Dy {
 /// inventories (`isotopes`) and its star's activity are measured, and at
 /// which the unit world is read (`worlds::unit`). A declared ruler.
 pub fn unit_age_gyr() -> Q {
-    Q::ratio(457, 100)
+    xyl_core::ratio!(457, 100)
 }
 
 /// A world's heat sources: each isotope's mass (kg) at its star's birth.
@@ -105,7 +105,7 @@ pub fn made_and_kept(tau: &Q, tau_f: &Q, span: &Q) -> Q {
     let made = (&Q::ONE - &ex(&-(&lf * span)))
         .checked_div(&lf)
         .unwrap_or(Q::ONE);
-    let kept = if (&li - &lf).abs() < Q::ratio(1, 1_000_000_000) {
+    let kept = if (&li - &lf).abs() < xyl_core::ratio!(1, 1_000_000_000) {
         span * &ex(&-(&li * span))
     } else {
         (&ex(&-(&lf * span)) - &ex(&-(&li * span)))
@@ -113,7 +113,7 @@ pub fn made_and_kept(tau: &Q, tau_f: &Q, span: &Q) -> Q {
             .unwrap_or(Q::ZERO)
     };
     on_grid(
-        kept.checked_div(&made.max(Q::ratio(1, 1_000_000_000_000)))
+        kept.checked_div(&made.max(xyl_core::ratio!(1, 1_000_000_000_000)))
             .unwrap_or(Q::ZERO),
     )
 }
@@ -130,11 +130,15 @@ pub fn kept(tau_f: &Q, t1: &Q, born: &Q, sc: &Scales) -> [Q; 4] {
     let mut out: [Q; 4] = Default::default();
     for (i, (_, _, half, _, _)) in isotopes().iter().enumerate() {
         let tau0 = half.checked_div(&ln2).unwrap_or(Q::ONE);
-        let sun = made_and_kept(&tau0, &Q::ratio(6997, 1000), &Q::ratio(89, 10));
+        let sun = made_and_kept(
+            &tau0,
+            &xyl_core::ratio!(6997, 1000),
+            &xyl_core::ratio!(89, 10),
+        );
         let tau = half_life(i, sc).to_q().checked_div(&ln2).unwrap_or(Q::ONE);
         let here = made_and_kept(&tau, tau_f, &(born - t1));
         out[i] = on_grid(
-            here.checked_div(&sun.max(Q::ratio(1, 1_000_000_000_000)))
+            here.checked_div(&sun.max(xyl_core::ratio!(1, 1_000_000_000_000)))
                 .unwrap_or(Q::ZERO),
         );
     }

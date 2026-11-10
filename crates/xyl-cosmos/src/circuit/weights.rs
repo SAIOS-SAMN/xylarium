@@ -60,7 +60,7 @@ pub fn mass_number(z: u32) -> Option<u32> {
                 .unwrap_or_default()
                 .iter()
                 .filter_map(|e| {
-                    let a = (&e.a + &Q::ratio(1, 2)).floor_i128()?;
+                    let a = (&e.a + &xyl_core::ratio!(1, 2)).floor_i128()?;
                     let a = u32::try_from(a).ok().filter(|&a| a > 0)?;
                     Some((e.z, a))
                 })
@@ -141,10 +141,11 @@ pub fn electron_phase(k: u32, p: &Q) -> Q {
     }
     let c = crate::fibres::grow(charge);
     let (num, den) = c.kappa();
-    let kappa = Q::ratio(
+    let kappa = Q::new(
         i64::try_from(num).unwrap_or(0),
         i64::try_from(den).unwrap_or(1),
-    );
+    )
+    .unwrap_or(Q::ZERO);
     &kappa * &(&Q::ONE - &(&Q::int(2) * &p.frac()))
 }
 

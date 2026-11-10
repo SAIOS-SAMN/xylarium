@@ -30,7 +30,34 @@ use num_rational::BigRational;
 use num_traits::{One, Signed, ToPrimitive, Zero};
 use std::cmp::Ordering;
 use std::fmt;
+use std::num::{NonZeroI128, NonZeroI64};
 use std::ops::{Add, Mul, Neg, Sub};
+
+/// A ratio written in code, `ratio!(n, d)`: an exact [`Q`] whose denominator
+/// `d` is a constant expression checked when the build evaluates it, so a
+/// zero denominator fails the build and never runs. The numerator may be any
+/// `i64` expression. A computed denominator is read with [`Q::new`], which
+/// refuses zero.
+#[macro_export]
+macro_rules! ratio {
+    ($n:expr, $d:expr $(,)?) => {
+        $crate::q::Q::written($n, const { $crate::q::written_denominator($d) })
+    };
+}
+
+/// The denominator of a written ratio, evaluated in the `const` block of
+/// [`ratio!`](crate::ratio): a zero stops the build there.
+#[doc(hidden)]
+#[expect(
+    clippy::panic,
+    reason = "evaluated only at build time inside ratio!: a zero denominator fails the build"
+)]
+pub const fn written_denominator(d: i64) -> NonZeroI64 {
+    match NonZeroI64::new(d) {
+        Some(d) => d,
+        None => panic!("a written ratio has a nonzero denominator"),
+    }
+}
 
 /// An exact rational number in canonical form: lowest terms, positive
 /// denominator, held in machine words while it fits `i64` and on the heap
@@ -94,19 +121,31 @@ impl Q {
         Q::from_i128(i128::from(n), i128::from(d))
     }
 
-    /// `n / d`, zero when `d` is zero (as [`crate::dyadic::Dy::ratio`]). For
-    /// constant ratios written in code; use [`Q::new`] where a zero
-    /// denominator must be refused.
-    pub fn ratio(n: i64, d: i64) -> Q {
-        Q::new(n, d).unwrap_or(Q::ZERO)
+    /// `n / d` over a denominator that cannot be zero: the written ratios of
+    /// [`ratio!`](crate::ratio), whose denominator is checked when the build
+    /// evaluates it. Use [`Q::new`] where the denominator is computed.
+    pub fn written(n: i64, d: NonZeroI64) -> Q {
+        Q::reduced(i128::from(n), NonZeroI128::from(d))
     }
 
     /// `n / d` from wide parts, reduced; held as `Big` only if it does not fit
     /// `Small`. Returns `None` when `d` is zero.
     pub fn from_i128(n: i128, d: i128) -> Option<Q> {
-        if d == 0 {
-            return None;
-        }
+        NonZeroI128::new(d).map(|d| Q::reduced(n, d))
+    }
+
+    /// `n / (b d)` for the denominators `b` and `d` of two `Small` operands.
+    /// Q's invariant holds every `Small` denominator positive
+    /// (`tests::q_denominator_is_positive_after_every_operation`), so their
+    /// product is positive and the zero branch is never taken.
+    fn over_positive(n: i128, b: i128, d: i128) -> Q {
+        NonZeroI128::new(b * d).map_or(Q::ZERO, |den| Q::reduced(n, den))
+    }
+
+    /// `n / d` over a nonzero denominator, reduced; held as `Big` only if it
+    /// does not fit `Small`.
+    fn reduced(n: i128, d: NonZeroI128) -> Q {
+        let d = d.get();
         let neg = (n < 0) != (d < 0);
         let (un, ud) = (n.unsigned_abs(), d.unsigned_abs());
         let g = gcd_u128(un, ud).max(1);
@@ -124,7 +163,7 @@ impl Q {
             };
             n.map(|n| (n, d))
         });
-        Some(match small {
+        match small {
             Some((n, d)) => Q::Small { n, d },
             None => {
                 let bn = if neg {
@@ -134,7 +173,7 @@ impl Q {
                 };
                 Q::Big(Box::new(BigRational::new_raw(bn, BigInt::from(ud))))
             }
-        })
+        }
     }
 
     /// The canonical form of an arbitrary big ratio: reduced, then held as
@@ -322,7 +361,11 @@ pub(crate) fn dyadic(n: BigInt, e: u64) -> Q {
     if n.is_zero() {
         return Q::ZERO;
     }
-    let tz = n.trailing_zeros().unwrap_or(0).min(e);
+    // A nonzero integer has a lowest set bit.
+    let Some(tz) = n.trailing_zeros() else {
+        return Q::ZERO;
+    };
+    let tz = tz.min(e);
     Q::from_reduced(BigRational::new_raw(n >> tz, BigInt::one() << (e - tz)))
 }
 
@@ -378,7 +421,7 @@ impl Add for &Q {
         small_or_big!(
             self,
             rhs,
-            |a, b, c, d| Q::from_i128(a * d + c * b, b * d).unwrap_or(Q::ZERO),
+            |a, b, c, d| Q::over_positive(a * d + c * b, b, d),
             |x, y| x + y
         )
     }
@@ -394,7 +437,7 @@ impl Sub for &Q {
         small_or_big!(
             self,
             rhs,
-            |a, b, c, d| Q::from_i128(a * d - c * b, b * d).unwrap_or(Q::ZERO),
+            |a, b, c, d| Q::over_positive(a * d - c * b, b, d),
             |x, y| x - y
         )
     }
@@ -409,7 +452,7 @@ impl Mul for &Q {
         small_or_big!(
             self,
             rhs,
-            |a, b, c, d| Q::from_i128(a * c, b * d).unwrap_or(Q::ZERO),
+            |a, b, c, d| Q::over_positive(a * c, b, d),
             |x, y| x * y
         )
     }
@@ -520,6 +563,29 @@ mod tests {
 
     fn big(n: i64, d: i64) -> BigRational {
         BigRational::new(BigInt::from(n), BigInt::from(d))
+    }
+
+    proptest! {
+        /// Every operation leaves the denominator positive: the invariant
+        /// `Q::over_positive` reads, on small and promoted operands alike.
+        #[test]
+        fn q_denominator_is_positive_after_every_operation(
+            a in -1_000_000i64..1_000_000, b in 1i64..1_000_000,
+            c in -1_000_000i64..1_000_000, d in 1i64..1_000_000,
+            k in 0u32..70,
+        ) {
+            let x = Q::new(a, b).unwrap();
+            let y = &Q::new(c, -d).unwrap() * &Q::int(1i64 << (k % 62));
+            for r in [&x + &y, &x - &y, &x * &y, -&y] {
+                prop_assert!(r.denom() > BigInt::zero(), "{r}");
+            }
+        }
+    }
+
+    #[test]
+    fn ratio_equals_new_over_written_denominator() {
+        assert_eq!(crate::ratio!(6, -4), Q::new(-3, 2).unwrap());
+        assert_eq!(crate::ratio!(-7, 1 << 40), Q::new(-7, 1 << 40).unwrap());
     }
 
     #[test]

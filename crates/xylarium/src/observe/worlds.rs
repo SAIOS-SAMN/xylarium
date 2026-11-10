@@ -434,7 +434,7 @@ fn gaps_from(
                 .checked_div(&au_m)
                 .unwrap_or(Q::ZERO);
             let later = |yr: i64| {
-                let at = age + &Q::ratio(yr, 1_000_000_000);
+                let at = age + &xyl_core::ratio!(yr, 1_000_000_000);
                 xyl_kernel::transit::orbit_gap_m(all, a, b, &at)
                     .map(|x| (x / au_d).to_string())
                     .unwrap_or_default()

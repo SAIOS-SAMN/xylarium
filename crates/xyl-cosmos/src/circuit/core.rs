@@ -456,7 +456,7 @@ impl Substrate {
             ) else {
                 break;
             };
-            let lnn = Dy::from_q(&(&Q::ONE + &(&a * &Q::ratio(1, 2))))
+            let lnn = Dy::from_q(&(&Q::ONE + &(&a * &xyl_core::ratio!(1, 2))))
                 .ln()
                 .unwrap_or(Dy::ZERO);
             let separation = |z: u32, far: bool| {
@@ -1131,14 +1131,17 @@ mod tests {
         // Coherence is 1 in phase, 0 opposed and one half a quarter turn apart,
         // measured the shorter way round in either direction.
         assert_eq!(coherence(&Q::ZERO, &Q::ZERO), Dy::ONE);
-        assert_eq!(coherence(&Q::ZERO, &Q::ratio(1, 2)), Dy::ZERO);
-        assert_eq!(coherence(&Q::ZERO, &Q::ratio(1, 4)), Dy::ratio(1, 2));
+        assert_eq!(coherence(&Q::ZERO, &xyl_core::ratio!(1, 2)), Dy::ZERO);
         assert_eq!(
-            coherence(&Q::ratio(9, 10), &Q::ratio(1, 10)),
+            coherence(&Q::ZERO, &xyl_core::ratio!(1, 4)),
+            Dy::ratio(1, 2)
+        );
+        assert_eq!(
+            coherence(&xyl_core::ratio!(9, 10), &xyl_core::ratio!(1, 10)),
             Dy::ratio(3, 5)
         );
         assert_eq!(
-            coherence(&Q::ratio(1, 10), &Q::ratio(9, 10)),
+            coherence(&xyl_core::ratio!(1, 10), &xyl_core::ratio!(9, 10)),
             Dy::ratio(3, 5)
         );
         // The throat's push is the vacuum's share where reach and hold
@@ -1146,7 +1149,10 @@ mod tests {
         // throat and four at the extremal spin's torsion share, three fifths.
         assert_eq!(throat_push(), Dy::ratio(1, 2));
         assert_eq!(dilation_dy(Dy::ratio(1, 2)), Some(Dy::int(3)));
-        assert_eq!(xyl_core::shares::dilation(&Q::ratio(3, 5)), Some(Q::int(4)));
+        assert_eq!(
+            xyl_core::shares::dilation(&xyl_core::ratio!(3, 5)),
+            Some(Q::int(4))
+        );
         assert!((dilation_dy(Dy::ratio(3, 5)).unwrap() - Dy::int(4)).abs() < Dy::sci(1, -15));
         // A band inside the throat stays, one outside leaves, and between them
         // the share is linear.

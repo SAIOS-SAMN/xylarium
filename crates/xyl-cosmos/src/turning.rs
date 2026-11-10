@@ -198,6 +198,24 @@ mod tests {
     use super::*;
 
     #[test]
+    fn the_torsion_share_is_gravitys_divergent_face() {
+        // Axiom 7, s = (H + J) / (2H + J), is the divergent face about the
+        // horizon's hold H at reach H + J, its pole t = 1 + J / H.
+        for (m, a) in [
+            (Q::ONE, Q::ZERO),
+            (Q::ONE, Q::ratio(1, 3)),
+            (Q::ratio(5, 2), Q::ratio(7, 9)),
+            (Q::ratio(1, 4), Q::ONE),
+        ] {
+            let h = crate::bounce::horizon_reach(&m);
+            let j = &a * &(&m * &m);
+            let f = xyl_core::shares::faces(&h, &(&h + &j)).unwrap();
+            assert_eq!(crate::bounce::torsion_share(&m, &a), f.divergent);
+            assert_eq!(f.pole(), Some(&Q::ONE + &j.checked_div(&h).unwrap()));
+        }
+    }
+
+    #[test]
     fn turning_stays_below_light_and_falls_outward() {
         let _ = crate::genesis::origin();
         let bell = crate::circuit::anchor().bell;

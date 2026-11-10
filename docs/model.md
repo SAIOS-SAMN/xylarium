@@ -295,7 +295,9 @@ invariant, with the holonomy around it conjugate.
 - **The imbalance as a push.** `p = c - d = (1 - t) / (1 + t)` is a push
   with `D(p) = c / d = M / r`; the antipole reverses it, `p -> -p`, which is
   the flow law's `D(-p) = 1 / D(p)` (axiom 3). It is positive within
-  `r = M`, zero on it, negative beyond.
+  `r = M`, zero on it, negative beyond. Exactly, at every reach,
+  `p = 2c - 1 = 1 - 2d`: every reading of the imbalance is one face read
+  linearly.
 - **The equator.** `t = 1`, `r = M`: the antipole's fixed circle, where
   `c = d = 1/2` and `p = 0`. It is where the invariant is read as a reach:
   a change of calibre moves the circle with `r` and `M` together and keeps
@@ -305,6 +307,18 @@ invariant, with the holonomy around it conjugate.
   `-360 d` degrees (an excess angle, outward, hyperbolic). The antipole
   makes them conjugate: the divergent turn at `t` is minus the convergent
   turn at `1 / t`.
+- **One class, two representatives.** Since `-360 d = -360 + 360 c`, the
+  two turns are the same element of QQ/ZZ (Winding and phase): they differ
+  by `360 (c + d) = 360`, one whole turn. A body reads that one class, not
+  the sum of the two: its winding is `-1` (the divergent representative's
+  whole turn, the orbit's own revolution) and its phase is `360 c`, the
+  shear T3 reads (`360 delta`). Adding the faces would count the one
+  deficit twice; no reading changes.
+- **The torsion share is the divergent face.** Axiom 7,
+  `s = (H + J) / (2H + J)`, is `d` with the horizon's hold `H` at reach
+  `H + J`, its pole `t = 1 + J / H = 1 + a / 2 = s_Q / s_Z`
+  (`turning::tests`). The spin needs no second model: it is gravity's open
+  face at the horizon.
 - **Holonomy** ([#150](https://github.com/SAIOS-SAMN/xylarium/issues/150)). `c` changes with `r`, so it is the
   deformation's reading at a loop, not the loop-independent class: the
   class is `M`, read where the faces balance. A loop's holonomy is inward
@@ -315,11 +329,9 @@ invariant, with the holonomy around it conjugate.
 - **Open, in order.**
   1. The invariant's count ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151)) and its reading as enclosed
      curvature (Gauss-Bonnet) on the containment manifolds.
-  2. How a body reads both faces at once: the composition of `+360 c` and
-     `-360 d` on its plane (the shear, The ring, today reads `360 delta`).
-  3. How each manifold of the chain deforms about its invariant, as the
+  2. How each manifold of the chain deforms about its invariant, as the
      vortex's core and swirl ([#121](https://github.com/SAIOS-SAMN/xylarium/issues/121)), never placed.
-  4. The turning law, the wells and the calibre ([#123](https://github.com/SAIOS-SAMN/xylarium/issues/123)) read on the
+  3. The turning law, the wells and the calibre ([#123](https://github.com/SAIOS-SAMN/xylarium/issues/123)) read on the
      deformed manifold; draft #152 rebuilt on it.
 
 ## 3. The bounce and the founding

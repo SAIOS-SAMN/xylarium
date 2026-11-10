@@ -331,9 +331,11 @@ where it belongs to one.
     [model.md](model.md#gravity-the-deformation-about-a-mass-invariant)).
     Done: the two faces and the antipole (`xyl_core::shares::faces`), the
     turning law reading the convergent face and the wells the divergent;
-    the observer's `tiers` prints both faces and the pole coordinate. Next:
-    the faces' composition on a body's plane, the invariant's count (#151),
-    the manifold's deformation (#121), then #123 on it.
+    the observer's `tiers` prints both faces and the pole coordinate;
+    `p = 2c - 1`; the faces' turns one class in QQ/ZZ (winding `-1`, phase
+    `360 c`, T3 unchanged); the torsion share as the divergent face. Next:
+    the invariant's count (#151), the manifold's deformation as share
+    transfer across the six planes (#121, #128), then #123 on it.
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`, `needs-decision`): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

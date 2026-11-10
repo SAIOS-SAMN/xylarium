@@ -73,6 +73,17 @@ another crate. Laws are composed from shares (ratios of the form
   certified sector of `P`'s angle, display only. Calibre: none. Status: planned; replaces
   `rotor::angle_between` (`cos = a . b / sqrt(|a|^2 |b|^2)`, one radian
   enclosure, one unnamed plane).
+- Winding and phase ([model.md](model.md#winding-and-phase-the-diophantine-split), #149):
+  a turn `a` in QQ, in turns (degrees over 360), is held as `(K, phi)`
+  with `K = floor(a)` in ZZ and `phi = a - K` in QQ/ZZ,
+  `0 -> ZZ -> QQ -> QQ/ZZ -> 0`; a resonance is the carried `(p, q)` of its
+  advance in lowest terms. Calibre: none. Status: planned.
+- Cohomology of the chain ([model.md](model.md#cohomology-pairs-loops-and-the-books), #150):
+  0-cochains the bodies' dipoles per plane, 1-cochains the pairs' pivots
+  `P_b^-1 o P_a` as `(K, phi)` per plane; a pair of one origin is the
+  coboundary of its two states; a loop's cocycle condition is that its
+  relations compose to the identity, and its holonomy is the class it
+  holds when they do not. Calibre: none. Status: planned.
 
 ## 2. Units and the master frame
 
@@ -641,6 +652,14 @@ another crate. Laws are composed from shares (ratios of the form
   pole axis at `t = open / hold`, with the Z pole at the origin `e_o`, the Q
   pole at the point at infinity `e_inf` and the throat at `t = 1`; the
   inversion is `X(t) -> X(1 / t)` (`circuit::axis_antipole`). Calibre: none. Status: built.
+- Dipole ([model.md](model.md#the-dipole-3z3q-and-3q3z-across-r), #148): the Z face
+  `3Z/3Q + R` and the Q face `3Q/3Z - R`, `3Q = 3 cap`, swapped by the
+  inversion `X(t) -> X(1 / t)` with the sign of `R`; `R` is the faces'
+  separation. Calibre: none. Status: planned.
+- Seals as the dipole's equator: `rho_Q = (2Z - cap) / cap = +1` exactly
+  where `Z = cap`, so `3Z = 3Q` (Z 2, 28, 208 and 1092;
+  `atoms::Atom::sealed`), where the faces read `1 + R` and `1 - R`.
+  Calibre: none. Status: built (an identity of built laws).
 - Axes (`circuit/axes.rs`): the pulse has one fixed axis, the pole axis
   (base axis 1), and five isoclinic planes on base axes 2-3, 4-5, 6-7, 8-9
   and 10-11 (`circuit::plane_blade`). 180 degrees on each isoclinic plane

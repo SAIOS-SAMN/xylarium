@@ -79,7 +79,8 @@ and reads both in one calibre:
 2. Their relative frame is found by conjugation, `P_b^-1 o P_a`
    (Mycelium's pivot engine), and refused where none relates them.
 3. It is read per turning plane, by generator, in exact degrees with its
-   winding `K`; never summed. The vortex ([#121](https://github.com/SAIOS-SAMN/xylarium/issues/121)) gives the pair its
+   winding `K` (in ZZ) and its phase (in QQ/ZZ; Winding and phase);
+   never summed. The vortex ([#121](https://github.com/SAIOS-SAMN/xylarium/issues/121)) gives the pair its
    object: mutual linking and the fibres' placement in `CP^5`.
 4. `d(a, b)` and `d(b, a)` are read across the attractor pair, each return
    from the deficit at its reach, never assumed equal.
@@ -89,6 +90,36 @@ and reads both in one calibre:
 
 It retires `rotor::angle_between`, one unnamed plane through
 `a . b / sqrt(|a|^2 |b|^2)` and asin; its readers are listed on [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118).
+
+### Winding and phase: the Diophantine split
+
+Planned ([#149](https://github.com/SAIOS-SAMN/xylarium/issues/149)). The model's integer relations are Diophantine: integer
+counts related exactly, held in the rationals (QQ) and read back to the
+integers (ZZ) where a relation closes.
+
+- **Built.**
+  - Nucleons: the span `3Z`, the hold `w = 3Z - u`, the capacity
+    `cap = sum_n sum_(l < n) 2 d(l)` and the balance `R_Q = 6Z - 3Q`. The
+    seals solve `Z = cap` (Z 2, 28, 208 and 1092). The pole point
+    `t = u / w` is a ratio of integers.
+  - Orbits: an orbit returns after `q` traversals, `q` the denominator of
+    its advance in lowest terms (The ring, Resonance).
+  - Settling: the first continued-fraction convergent `p / q` of the phase
+    step with `|s - p/q| N q <= 1` (`systems::settle_about`).
+  - Placement: four turns held as convergents of their recurrences,
+    independent over QQ (`golden_turns`).
+- **The split.** A turn held in QQ, in degrees over 360, splits by
+  `0 -> ZZ -> QQ -> QQ/ZZ -> 0` into its winding `K` (in ZZ, whole turns)
+  and its phase (in QQ/ZZ, the degrees within the turn). Both are carried,
+  never merged: a ring count or a value in radians merges them, `frac`
+  drops the winding, and with pi no advance is a rational part of a turn.
+  `coordinate::beat` keeps both on the T lane.
+- **Calibre-free.** A change of calibre multiplies by a rational, `60^p`,
+  and keeps every relation in QQ: `u / w`, `p / q` and a dipole's faces
+  (The dipole, section 2).
+- **Where it is collapsed.** The turning law gives radians per ring
+  ([#127](https://github.com/SAIOS-SAMN/xylarium/issues/127)); `settle::period` rebuilds `p / q` from a dyadic step instead
+  of carrying it from the laws that produce it.
 
 ## 2. Units and the master frame
 
@@ -168,12 +199,62 @@ Ruled (B) on 2026-11-06 ([#123](https://github.com/SAIOS-SAMN/xylarium/issues/12
   named, separate parts (turning planes, a vortex's fibres, twist, writhe
   and linking, the coordinate's lanes), each in its calibre. A change of
   calibre keeps them; summing, an equal split or two calibres read as one
-  loses them.
+  loses them. Each component is held as a dipole (The dipole: 3Z/3Q and
+  3Q/3Z across R).
 - **Every equation names its calibre** in [EQUATIONS.md](EQUATIONS.md), and
   every reading is checked for magnitude in its calibre, not only for
   having moved (CONTRIBUTING.md, Verification).
 - **Open**: the entries tagged mixed in EQUATIONS.md, the star's own mass
-  ([#145](https://github.com/SAIOS-SAMN/xylarium/issues/145)) and the bead's reading at two tiers ([#36](https://github.com/SAIOS-SAMN/xylarium/issues/36)).
+  ([#145](https://github.com/SAIOS-SAMN/xylarium/issues/145)) and the bead's reading at two tiers ([#36](https://github.com/SAIOS-SAMN/xylarium/issues/36)). Part 1 in scalar form is on draft [#152](https://github.com/SAIOS-SAMN/xylarium/pull/152),
+  blocked by [#148](https://github.com/SAIOS-SAMN/xylarium/issues/148): it reads one face of the dipole.
+
+### The dipole: 3Z/3Q and 3Q/3Z across R
+
+Planned ([#148](https://github.com/SAIOS-SAMN/xylarium/issues/148)). Every component of a reading is a dipole: its Z face
+and its Q face, with the electron phase state `R` between them.
+
+- **The faces.** The Z face reads `3Z/3Q + R` and the Q face
+  `3Q/3Z - R`: `3Z` the span, `3Q` the capacity (`3 cap`), and
+  `R = kappa (1 - 2 frac(p))` in `[-kappa, kappa]`
+  (`circuit::electron_phase`). The vacuum's inversion `X(t) -> X(1/t)`
+  swaps the faces and the pulse's hemisphere flips `R` with them: `+R` on
+  the Z face and `-R` on the Q face, and the reverse after the inversion.
+- **The separation.** At `R = 0` the faces are each other's inverse. `R`
+  is their separation, the shear between the attractor and the inverse
+  attractor, never an equal split.
+- **The equator.** From built laws, the seals (`rho_Q = +1`,
+  `atoms::Atom::sealed`) are exactly where `Z = cap`, that is `3Z = 3Q`.
+  There the faces read `1 + R` and `1 - R` and differ by `R` alone.
+- **Dimensional capacity counts dipoles.** Each named component (a turning
+  plane, a lane, a vortex's fibre, twist, writhe or linking) is held as its
+  dipole, and a reading of one face holds half of it. The deficit
+  `M / (r + M)` is the held face's share and `1 - delta` the other; a site
+  that reads one of them alone loses the other.
+- **Calibre-free.** `3Z/3Q` is a ratio of integers and `R` is rational
+  (Winding and phase, section 1). A change of calibre, the dilator
+  `D(60^p)`, fixes both poles and keeps the faces. A calibre question
+  arises only when one pole's absolute size is read alone, as a hold in
+  core masses or a reach in `r_g`.
+- **Where one face is read today.**
+  - The turning law and chronometry's wells each take one face of the
+    deficit.
+  - The founding's holds (`galaxy::inside_mass`, `turning::home_mass`) are
+    read as one magnitude, so the scalar part 1 of [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) (draft
+    [#152](https://github.com/SAIOS-SAMN/xylarium/pull/152)) reads the core's hold as 1 in both the galaxy and the
+    cluster calibre ([#36](https://github.com/SAIOS-SAMN/xylarium/issues/36)).
+  - The anchor reads one rim at `60^5` for the bell and at `60^7` for the
+    radius (`circuit/anchor.rs`).
+- **Open, in order.**
+  1. The dipole's relation to the pole point `t = u / w` and the hold
+     `w = 3Z - u`.
+  2. `R` per plane: the pulse is one share of 360 degrees for the five
+     isoclinic planes ([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128)).
+  3. The founding's output carried per kind as dipoles; the rim placed by
+     the containment chain (dilator, frame and cap), not by an exponent.
+  4. The deficit and the turning law on both faces; then [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) part 2.
+- **The name Q.** The nucleon `Q` is read here as the capacity;
+  EQUATIONS.md reads it as the neutron count, and `Q` is also the rational
+  type ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151)).
 
 ## 3. The bounce and the founding
 
@@ -1217,6 +1298,37 @@ ancient seats, #94).
      never stepped.
   4. The pulse carried along the links.
   5. The council's convergence on the same links.
+
+### Cohomology: pairs, loops and the books
+
+Planned ([#150](https://github.com/SAIOS-SAMN/xylarium/issues/150)), after The dipole ([#148](https://github.com/SAIOS-SAMN/xylarium/issues/148)), Winding and phase
+([#149](https://github.com/SAIOS-SAMN/xylarium/issues/149)) and Pairs ([#118](https://github.com/SAIOS-SAMN/xylarium/issues/118)).
+
+- **The complex.** On the containment chain (core, star, planet, moon,
+  nucleon; its links and cross-ties, The frame, the place and the chain):
+  - 0-cochains: each body's state, its dipoles per plane;
+  - 1-cochains: each pair's relation through the pivot `P_b^-1 o P_a`, per
+    plane, as a winding in ZZ and a phase in QQ/ZZ, on both faces.
+- **Coboundary.** A pair read from two states of one origin is the
+  coboundary of those states: the two ends fix its relation.
+- **Cocycle.** Around a loop of the chain the relations compose to the
+  identity. The books' closing at the pole (`circuit/poles.rs`: the
+  composed channel versors equal the observed one projectively) is this
+  condition.
+- **Holonomy.** What a loop holds when it does not close is its first
+  cohomology: the twist held as torsion, a link's remanence (T19), the
+  echo's sheared return. Its ZZ part is the winding and its QQ/ZZ part the
+  phase; `0 -> ZZ -> QQ -> QQ/ZZ -> 0` connects a phase that accumulates to
+  whole turns with the winding it becomes.
+- **The integer invariant.** The vortex's `Lk = Tw + Wr` (The vortex) is
+  the integer a closed loop keeps.
+- **Obstruction.** A loop that fails to close where no holonomy is held is
+  a defect: broken is unbalanced.
+- **Open.** The coefficients (dipoles under the geometric product, or
+  windings and phases added); the 2-cells (the cross-ties, [#90](https://github.com/SAIOS-SAMN/xylarium/issues/90)); the
+  relation to the automorphic, synaptic chain ([#97](https://github.com/SAIOS-SAMN/xylarium/issues/97)); where the
+  mathematics lives (`xyl-core`, or the hypha SDK as a law shared with
+  Mycelium and Netstratum).
 
 ### Phase weakening and phase strengthening
 

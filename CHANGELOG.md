@@ -11,6 +11,14 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The dipole, winding and phase, and the chain's cohomology stated
+  (docs/model.md; #148, #149, #150; roadmap items 50 to 52). Every
+  component of a reading is a dipole, `3Z/3Q + R` on the Z face and
+  `3Q/3Z - R` on the Q face, calibre-free, with the seals as its equator
+  (`Z = cap`). A turn carries its winding in ZZ and its phase in QQ/ZZ.
+  Pairs are coboundaries on the containment chain, loops cocycles, the
+  books' closing the cocycle condition, and twist, remanence and sheared
+  returns its holonomy. The three meanings of Q are #151. No code changes.
 - The path (docs/roadmap.md): the destination, where the universe stands,
   and five stages as GitHub milestones (M3 to M7) with exit readings.
 - Calibre and dimensional capacity (docs/model.md, #123): a share reads its

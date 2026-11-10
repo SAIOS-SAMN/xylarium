@@ -224,7 +224,7 @@ pub fn units_of_kpc_dy(kpc: Dy) -> Dy {
     if k.signum() <= 0 {
         return Dy::ZERO;
     }
-    kpc / k
+    kpc.div(&k).unwrap_or_default()
 }
 /// A mass in core masses, in suns, through the declared core mass
 /// (`package::hole_mass`). Boundary for the layers that read star masses in

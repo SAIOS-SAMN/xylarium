@@ -44,8 +44,8 @@ pub(super) fn world(u: &Universe<'_>, star: Option<u64>, w: Option<usize>) -> St
         "  Gyr      surface K   bar          field        ",
         "air / seas / ices                         housing\n"
     ));
-    let mut t = born + Dy::ratio(1, 2);
-    while t <= u.gyr() + Dy::ratio(1, 100) {
+    let mut t = born + xyl_core::dyadic!(1, 2);
+    while t <= u.gyr() + xyl_core::dyadic!(1, 100) {
         if let Some((st, ms, body)) = u.cosmic.world_at(star, w, t) {
             let housing = people
                 .and_then(|p| p.traits.medium(&ms).map(|m| (p, m)))
@@ -436,12 +436,12 @@ fn gaps_from(
             let later = |yr: i64| {
                 let at = age + &xyl_core::ratio!(yr, 1_000_000_000);
                 xyl_kernel::transit::orbit_gap_m(all, a, b, &at)
-                    .map(|x| (x / au_d).to_string())
+                    .map(|x| (x.div(&au_d).unwrap_or_default()).to_string())
                     .unwrap_or_default()
             };
             out.push_str(&format!(
                 "  to world {b}: {}, {}, {} ({})\n",
-                g / au_d,
+                g.div(&au_d).unwrap_or_default(),
                 later(1),
                 later(5),
                 show(&flat)

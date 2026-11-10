@@ -88,7 +88,8 @@ impl Gauges {
         let instinct = deficit_dy(housing, numbers);
         let intelligence =
             (k.mastery(Domain::Energy) + k.mastery(Domain::Materials) + k.mastery(Domain::Biology))
-                / Dy::int(3);
+                .div(&(Dy::int(3)))
+                .unwrap_or_default();
         let sentience = k.mastery(Domain::Information);
         let consciousness = housing::free_share(numbers, housing);
         let gamma = ((Dy::ONE + instinct)
@@ -96,7 +97,8 @@ impl Gauges {
             * (Dy::ONE + sentience)
             * (Dy::ONE + consciousness)
             - Dy::ONE)
-            / Dy::int(15);
+            .div(&(Dy::int(15)))
+            .unwrap_or_default();
         Gauges {
             instinct,
             intelligence,
@@ -221,7 +223,7 @@ impl Civilizations {
                 )
             })
             .collect();
-        let half = Dy::ratio(1, 2);
+        let half = xyl_core::dyadic!(1, 2);
         for i in 0..count {
             if spans[i].is_none() {
                 continue;
@@ -377,7 +379,9 @@ impl Civilizations {
             return;
         }
         let numbers = cosmic.peoples[i].population;
-        let emigrants = (h / Dy::int(2)).max(viable).min(numbers / Dy::int(2));
+        let emigrants = (h.div(&(Dy::int(2))).unwrap_or_default())
+            .max(viable)
+            .min(numbers.div(&(Dy::int(2))).unwrap_or_default());
         if emigrants >= viable && numbers - emigrants >= viable {
             if let Some(d) = self.settle(cosmic, i, w, emigrants, span.to) {
                 acts.push(Act::Settle {
@@ -507,7 +511,8 @@ impl Civilizations {
             .get(i)
             .map(|k| (k.forgetting, k.weights))
             .unwrap_or((Dy::ZERO, [Dy::ZERO; 4]));
-        let fade = ((Dy::ONE - forget.clamp(Dy::ZERO, Dy::ratio(999, 1000))).log() * years).exp();
+        let fade =
+            ((Dy::ONE - forget.clamp(Dy::ZERO, xyl_core::dyadic!(999, 1000))).log() * years).exp();
         let now_yr = to * Dy::sci(1, 9);
         let gen = crate::growth::generation_yr(&p.traits, &Rulers::default());
         // The domain with the largest effort weight, and its share of the
@@ -521,7 +526,7 @@ impl Civilizations {
                 (
                     d,
                     if total.signum() > 0 {
-                        w / total
+                        w.div(&total).unwrap_or_default()
                     } else {
                         Dy::ZERO
                     },
@@ -561,7 +566,7 @@ impl Civilizations {
                 ),
             };
             cosmic.annals.push(Annal {
-                epoch: t.at_yr / Dy::sci(1, 9),
+                epoch: t.at_yr.div(&(Dy::sci(1, 9))).unwrap_or_default(),
                 kind: "EMINENT",
                 text: format!("{who}, is remembered for {}", t.title),
             });

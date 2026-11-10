@@ -170,19 +170,19 @@ pub const KU_MINDS: i64 = 1000;
 /// The share of every member's thought that living adds to the people's
 /// knowledge (lived thought). Declared ruler.
 pub fn lived_share() -> Dy {
-    Dy::ratio(1, 20)
+    xyl_core::dyadic!(1, 20)
 }
 
 /// The floor of undirected inquiry: the weight every domain receives for free
 /// thought before needs and focus. Declared ruler.
 pub fn curiosity() -> Dy {
-    Dy::ratio(1, 4)
+    xyl_core::dyadic!(1, 4)
 }
 
 /// The share of forgetting that pooling spares a fully collective people
 /// (collective = 1). Declared ruler.
 pub fn pooled_keep() -> Dy {
-    Dy::ratio(1, 2)
+    xyl_core::dyadic!(1, 2)
 }
 
 // ---------------------------------------------------------- Experience and cost.
@@ -191,7 +191,17 @@ pub fn pooled_keep() -> Dy {
 /// 1 / (1 + ln(1 + x / U)) with U = [`knowledge_unit`], which is 1 with no
 /// experience and falls toward 0; negative experience is read as zero.
 pub fn wright(experience: Dy) -> Dy {
-    Dy::ONE / (Dy::ONE + (Dy::ONE + experience.max(Dy::ZERO) / knowledge_unit()).log())
+    (Dy::ONE)
+        .div(
+            &(Dy::ONE
+                + (Dy::ONE
+                    + experience
+                        .max(Dy::ZERO)
+                        .div(&knowledge_unit())
+                        .unwrap_or_default())
+                .log()),
+        )
+        .unwrap_or_default()
 }
 
 /// Returns the mastery that `experience` yields, 1 - [`wright`], in [0, 1);
@@ -208,7 +218,7 @@ pub fn mastery(experience: Dy) -> Dy {
 /// temperature `t` (K) relative to the unit temperature, with T floored at
 /// 1 K.
 pub fn landauer(t: Dy) -> Dy {
-    t_unit() / t.max(Dy::ONE)
+    t_unit().div(&t.max(Dy::ONE)).unwrap_or_default()
 }
 
 /// The power equivalent of one knowledge unit (W): the metabolism of
@@ -224,16 +234,36 @@ fn ku_body_w() -> Dy {
 /// 2. Declared rulers.
 fn sense_weights(sense: &str) -> ByDomain {
     match sense {
-        "chemistry" => [Dy::ratio(1, 8), Dy::ratio(3, 4), Dy::ONE, Dy::ratio(1, 8)],
-        "heat and pressure" => [
-            Dy::ratio(3, 4),
-            Dy::ratio(3, 4),
-            Dy::ratio(3, 8),
-            Dy::ratio(1, 8),
+        "chemistry" => [
+            xyl_core::dyadic!(1, 8),
+            xyl_core::dyadic!(3, 4),
+            Dy::ONE,
+            xyl_core::dyadic!(1, 8),
         ],
-        "heat" => [Dy::ONE, Dy::ratio(3, 4), Dy::ratio(1, 8), Dy::ratio(1, 8)],
-        "fields" => [Dy::ONE, Dy::ratio(1, 8), Dy::ratio(1, 8), Dy::ratio(3, 4)],
-        _ => [Dy::ratio(1, 2), Dy::ratio(1, 4), Dy::ratio(1, 4), Dy::ONE],
+        "heat and pressure" => [
+            xyl_core::dyadic!(3, 4),
+            xyl_core::dyadic!(3, 4),
+            xyl_core::dyadic!(3, 8),
+            xyl_core::dyadic!(1, 8),
+        ],
+        "heat" => [
+            Dy::ONE,
+            xyl_core::dyadic!(3, 4),
+            xyl_core::dyadic!(1, 8),
+            xyl_core::dyadic!(1, 8),
+        ],
+        "fields" => [
+            Dy::ONE,
+            xyl_core::dyadic!(1, 8),
+            xyl_core::dyadic!(1, 8),
+            xyl_core::dyadic!(3, 4),
+        ],
+        _ => [
+            xyl_core::dyadic!(1, 2),
+            xyl_core::dyadic!(1, 4),
+            xyl_core::dyadic!(1, 4),
+            Dy::ONE,
+        ],
     }
 }
 
@@ -267,40 +297,48 @@ pub struct Profile {
 pub fn profile(t: &Traits, ctx: &Ctx) -> Profile {
     let aquatic = matches!(t.form, "swimming" | "drifting") || t.dark || t.at == Where::UnderIce;
     let shape_w = match t.shape {
-        Shape::Superorganism => Dy::ratio(3, 2),
-        Shape::Distributed => Dy::ratio(3, 4),
-        Shape::Society => Dy::ratio(1, 2),
+        Shape::Superorganism => xyl_core::dyadic!(3, 2),
+        Shape::Distributed => xyl_core::dyadic!(3, 4),
+        Shape::Society => xyl_core::dyadic!(1, 2),
     };
     let collective = (t.social * shape_w).min(Dy::ONE);
     let mut distributed = Dy::ZERO;
     if matches!(t.shape, Shape::Distributed | Shape::Superorganism) {
-        distributed += Dy::ratio(3, 5);
+        distributed += xyl_core::dyadic!(3, 5);
     }
     if matches!(t.form, "swimming" | "drifting" | "low and many-limbed") {
-        distributed += Dy::ratio(2, 5);
+        distributed += xyl_core::dyadic!(2, 5);
     }
     let distributed = distributed.min(Dy::ONE);
     let plastic = ((if aquatic {
-        Dy::ratio(1, 2)
+        xyl_core::dyadic!(1, 2)
     } else {
-        Dy::ratio(1, 10)
+        xyl_core::dyadic!(1, 10)
     }) + (if t.strategy == Strategy::R {
-        Dy::ratio(3, 10)
+        xyl_core::dyadic!(3, 10)
     } else {
         Dy::ZERO
-    }) + Dy::ratio(1, 5) * distributed)
+    }) + xyl_core::dyadic!(1, 5) * distributed)
         .min(Dy::ONE);
     let legible = if t.solvent == Solvent::Plasma {
         Dy::ZERO
     } else {
         let eps0 = xyl_cosmos::life::fidelity(t.solvent, t.body_t, ctx);
-        ((xyl_cosmos::life::bits_per_monomer() / eps0.max(Dy::sci(1, -300))).log()
-            / xyl_cosmos::life::i_mind().log())
+        (((xyl_cosmos::life::bits_per_monomer())
+            .div(&eps0.max(Dy::sci(1, -300)))
+            .unwrap_or_default())
+        .log()
+        .div(&(xyl_cosmos::life::i_mind().log()))
+        .unwrap_or_default())
         .clamp(Dy::ZERO, Dy::ONE)
     };
     let w = sense_weights(t.sense);
     let total: Dy = w.iter().copied().sum();
-    let affinity = w.map(|x| Dy::int(4) * x / total.max(Dy::sci(1, -9)));
+    let affinity = w.map(|x| {
+        (Dy::int(4) * x)
+            .div(&total.max(Dy::sci(1, -9)))
+            .unwrap_or_default()
+    });
     Profile {
         collective,
         distributed,
@@ -318,7 +356,10 @@ pub fn profile(t: &Traits, ctx: &Ctx) -> Profile {
 /// collective), with knowers dying at the rate 1 / life and the loss reduced
 /// for a collective.
 pub fn forgetting(life_yr: Dy, collective: Dy) -> Dy {
-    let keep = (-(Dy::ONE / life_yr.max(Dy::ratio(1, 1000)))).exp();
+    let keep = (-((Dy::ONE)
+        .div(&life_yr.max(xyl_core::dyadic!(1, 1000)))
+        .unwrap_or_default()))
+    .exp();
     let pooled = Dy::ONE - pooled_keep() * collective.clamp(Dy::ZERO, Dy::ONE);
     ((Dy::ONE - keep) * pooled).clamp(Dy::ZERO, Dy::ONE)
 }
@@ -346,7 +387,7 @@ impl Needs {
     /// population exceeds the capacity; the other needs are zero.
     pub fn of(p: &People) -> Needs {
         let hunger = if p.population > p.capacity && p.population.signum() > 0 {
-            Dy::ONE - p.capacity / p.population
+            Dy::ONE - p.capacity.div(&p.population).unwrap_or_default()
         } else {
             Dy::ZERO
         };
@@ -453,10 +494,14 @@ pub fn effort(t: &Thinkers) -> Effort {
         * t.impedance.clamp(Dy::ZERO, Dy::ONE)
         * (Dy::ONE + t.consciousness.clamp(Dy::ZERO, Dy::ONE));
     let per_ku = ku_body_w();
-    let lived = t.bodies_w.max(Dy::ZERO) * lived_share() * (Dy::ONE + t.profile.collective) * depth
-        / per_ku;
+    let lived =
+        (t.bodies_w.max(Dy::ZERO) * lived_share() * (Dy::ONE + t.profile.collective) * depth)
+            .div(&per_ku)
+            .unwrap_or_default();
     let free_share = crate::civ::housing::free_share(t.population, t.capacity);
-    let free = (t.bodies_w.max(Dy::ZERO) * free_share + t.works_w.max(Dy::ZERO)) * depth / per_ku;
+    let free = ((t.bodies_w.max(Dy::ZERO) * free_share + t.works_w.max(Dy::ZERO)) * depth)
+        .div(&per_ku)
+        .unwrap_or_default();
     Effort { lived, free }
 }
 
@@ -470,8 +515,12 @@ pub fn directed(e: &Effort, t: &Thinkers, focus: &Focus) -> (ByDomain, ByDomain)
     let wsum: Dy = weights.iter().copied().sum();
     let asum: Dy = t.profile.affinity.iter().copied().sum();
     let out = std::array::from_fn(|i| {
-        e.lived * t.profile.affinity[i] / asum.max(Dy::sci(1, -9))
-            + e.free * weights[i] / wsum.max(Dy::sci(1, -9))
+        (e.lived * t.profile.affinity[i])
+            .div(&asum.max(Dy::sci(1, -9)))
+            .unwrap_or_default()
+            + (e.free * weights[i])
+                .div(&wsum.max(Dy::sci(1, -9)))
+                .unwrap_or_default()
     });
     (out, weights)
 }
@@ -492,14 +541,14 @@ pub fn advance(stock_ku: Dy, e_ku: Dy, lam: Dy, years: Dy) -> Dy {
     if lam.signum() <= 0 {
         return k0 + e * years;
     }
-    let settled = e / lam;
+    let settled = e.div(&lam).unwrap_or_default();
     settled + (k0 - settled) * (-(lam * years)).exp()
 }
 
 /// Returns the continuous rate lam = -ln(1 - share) of a yearly share lost,
 /// with the share clamped to [0, 0.999999].
 pub fn rate(share: Dy) -> Dy {
-    -(Dy::ONE - share.clamp(Dy::ZERO, Dy::ratio(999_999, 1_000_000))).log()
+    -(Dy::ONE - share.clamp(Dy::ZERO, xyl_core::dyadic!(999_999, 1_000_000))).log()
 }
 
 // ----------------------------------------------------------------------- Stocks.
@@ -607,7 +656,10 @@ impl Knowledge {
             s.forgetting = share;
             let after: Dy = s.stock.iter().copied().sum();
             if years.signum() > 0 {
-                s.growth = ((after + u) / (before + u)).log() / years;
+                s.growth = ((after + u).div(&(before + u)).unwrap_or_default())
+                    .log()
+                    .div(&years)
+                    .unwrap_or_default();
             }
             let lived = e.lived * years;
             let free = e.free * years;
@@ -634,7 +686,7 @@ mod tests {
             sense: "light",
             form: "walking",
             hands: "grasping limbs",
-            social: Dy::ratio(1, 2),
+            social: xyl_core::dyadic!(1, 2),
             shape,
             size,
         }
@@ -664,7 +716,7 @@ mod tests {
         if lam.signum() <= 0 {
             return Dy::ZERO;
         }
-        e_ku.max(Dy::ZERO) / lam
+        e_ku.max(Dy::ZERO).div(&lam).unwrap_or_default()
     }
 
     #[test]
@@ -677,7 +729,7 @@ mod tests {
         // Bigger bodies live longer (their generations are longer).
         let rul = Rulers::default();
         let small = traits(
-            Dy::ratio(1, 10),
+            xyl_core::dyadic!(1, 10),
             Solvent::Volatile(Species::H2O),
             Shape::Society,
         );
@@ -706,24 +758,27 @@ mod tests {
         let cold = traits(Dy::ONE, Solvent::Volatile(Species::CH4), Shape::Society);
         let c = effort(&thinkers(Dy::sci(1, 9), &cold, Dy::sci(1, 9))).lived;
         assert!(
-            (c / full.lived - Dy::ONE).abs() < Dy::ratio(1, 100),
+            (c.div(&full.lived).unwrap_or_default() - Dy::ONE).abs() < xyl_core::dyadic!(1, 100),
             "cold/warm {}",
-            c / full.lived
+            c.div(&full.lived).unwrap_or_default()
         );
         // The closed form: one span and the same span in a hundred pieces
         // agree to the grid, and the stock settles at the fixed point.
-        let lam = rate(Dy::ratio(15, 100));
+        let lam = rate(xyl_core::dyadic!(15, 100));
         let coarse = advance(Dy::ZERO, Dy::sci(1, 6), lam, Dy::int(100));
         let mut fine = Dy::ZERO;
         for _ in 0..100 {
             fine = advance(fine, Dy::sci(1, 6), lam, Dy::ONE);
         }
         assert!(
-            (coarse / fine - Dy::ONE).abs() < Dy::sci(1, -9),
+            (coarse.div(&fine).unwrap_or_default() - Dy::ONE).abs() < Dy::sci(1, -9),
             "coarse {coarse} fine {fine}"
         );
         let far = advance(Dy::ZERO, Dy::sci(1, 6), lam, Dy::int(100_000));
-        assert!((far / settled(Dy::sci(1, 6), lam) - Dy::ONE).abs() < Dy::sci(1, -9));
+        assert!(
+            (far.div(&settled(Dy::sci(1, 6), lam)).unwrap_or_default() - Dy::ONE).abs()
+                < Dy::sci(1, -9)
+        );
     }
 
     #[test]

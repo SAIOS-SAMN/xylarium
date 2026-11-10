@@ -63,7 +63,10 @@ pub fn unit() -> &'static State {
         let mut sources: [Q; 4] = Default::default();
         for (i, conc) in today.iter().enumerate() {
             let half = bodies::isotopes()[i].2.clone();
-            let back = (unit_age * xyl_core::dyadic::ln2() / Dy::from_q(&half)).exp();
+            let back = ((unit_age * xyl_core::dyadic::ln2())
+                .div(&(Dy::from_q(&half)))
+                .unwrap_or_default())
+            .exp();
             sources[i] = (mantle_kg * *conc * back).to_q();
         }
         let set = Setting {
@@ -91,14 +94,16 @@ pub fn unit() -> &'static State {
 /// (`life::lifetime`).
 pub fn star_degree_gyr(seq: &crate::stars::Sequence, delta: Dy, reach: Dy, ctx: &Ctx) -> Dy {
     let ring = crate::circuit::gyr_of_rings_dy(crate::pulse::core_period());
-    (crate::life::lifetime(seq, delta, reach, ctx) / Dy::int(360))
-        .max(ring)
-        .max(Dy::sci(1, -12))
+    ((crate::life::lifetime(seq, delta, reach, ctx))
+        .div(&(Dy::int(360)))
+        .unwrap_or_default())
+    .max(ring)
+    .max(Dy::sci(1, -12))
 }
 
 /// The degree of its star's life an age (Gyr) lies nearest.
 pub fn degree_of(age: Dy, degree_gyr: Dy) -> i64 {
-    (age / degree_gyr + Dy::ratio(1, 2)).trunc_i64()
+    (age.div(&degree_gyr).unwrap_or_default() + xyl_core::dyadic!(1, 2)).trunc_i64()
 }
 
 /// The age (Gyr) at a degree of its star's life.

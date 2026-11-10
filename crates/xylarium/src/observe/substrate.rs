@@ -9,7 +9,8 @@ use xyl_cosmos::origin::Origin;
 
 /// A rate per ring read per Gyr, for display only.
 fn per_gyr(x: Dy) -> Dy {
-    x / gyr_of_rings_dy(Dy::ONE).max(Dy::sci(1, -300))
+    x.div(&gyr_of_rings_dy(Dy::ONE).max(Dy::sci(1, -300)))
+        .unwrap_or_default()
 }
 
 /// The `universal-core [R]` reading, the substrate `t_rings` rings of the

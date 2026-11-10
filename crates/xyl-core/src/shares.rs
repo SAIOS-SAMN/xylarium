@@ -104,13 +104,15 @@ pub fn flow(x: &Q, y: &Q) -> Option<Q> {
     (x + y).checked_div(&(&Q::ONE + &(x * y)))
 }
 
-/// [`deficit`] on readings: `m / (r + m)`, zero for a non-positive hold, and
-/// a negative reach read at the throat (zero).
+/// [`deficit`] on readings: `m / (r + m)`, zero for a non-positive hold (a
+/// hold of nothing holds no share), and a negative reach read at the throat
+/// (zero).
 pub fn deficit_dy(m: Dy, r: Dy) -> Dy {
     if m.signum() <= 0 {
         return Dy::ZERO;
     }
-    m / (r.max(Dy::ZERO) + m)
+    // With m positive and the reach at least zero, `r + m` is positive.
+    m.div(&(r.max(Dy::ZERO) + m)).map_or(Dy::ZERO, |d| d)
 }
 
 /// [`dilation`] on readings. `None` for `p` outside `(-1, 1)`.
@@ -118,7 +120,7 @@ pub fn dilation_dy(p: Dy) -> Option<Dy> {
     if p.abs() >= Dy::ONE {
         return None;
     }
-    Some((Dy::ONE + p) / (Dy::ONE - p))
+    (Dy::ONE + p).div(&(Dy::ONE - p))
 }
 
 #[cfg(test)]

@@ -147,40 +147,40 @@ fn constants() -> &'static Constants {
         // CH4 are photolysed within years, 0.03 of a Sun's flux times its
         // bond-breaking share of about 6.5 percent times a middle-aged
         // activity of 1.4. Titan, at about 0.01, keeps its methane.
-        photolysis_uv: Dy::sci(3, -2) * Dy::sci(65, -3) * Dy::ratio(14, 10),
+        photolysis_uv: Dy::sci(3, -2) * Dy::sci(65, -3) * xyl_core::dyadic!(14, 10),
         strip_rate: Dy::sci(2, -6),
-        transport_bar: Dy::ratio(1, 10),
-        hot_ev: Dy::ratio(5, 2),
-        weather_e_k: Dy::ratio(23, 2),
+        transport_bar: xyl_core::dyadic!(1, 10),
+        hot_ev: xyl_core::dyadic!(5, 2),
+        weather_e_k: xyl_core::dyadic!(23, 2),
         weather_scale: Dy::sci(1, -3),
         jeans_hold: Dy::int(15),
         thermosphere: Dy::int(4),
-        runaway_flux: Dy::ratio(282, 340),
+        runaway_flux: xyl_core::dyadic!(282, 340),
         // Provisional: calibrated so that the unit world reads near 288 K
         // (it reads 286 K).
-        greenhouse_tau: Dy::ratio(31, 5),
+        greenhouse_tau: xyl_core::dyadic!(31, 5),
         melt_k: Dy::int(1400),
         giant_plasma_mass: Dy::int(10),
         solvent_barrier: Dy::int(25),
         strong_kt: Dy::int(40),
         weak_kt: Dy::int(10),
-        geo_flux: Dy::sci(87, -3) / Dy::int(340),
+        geo_flux: (Dy::sci(87, -3)).div(&(Dy::int(340))).unwrap_or_default(),
         heat_unit_w: Dy::sci(87, -3)
             * Dy::int(4)
             * Dy::pi()
             * Dy::from_q(&crate::package::Si::world_radius_m())
             * Dy::from_q(&crate::package::Si::world_radius_m()),
-        giant_flux: Dy::ratio(54, 10) / Dy::int(340),
+        giant_flux: xyl_core::dyadic!(54, 10).over(xyl_core::nonzero!(340)),
         plasma_window: Dy::sci(2, -3),
-        photo_low: Dy::ratio(2, 5),
+        photo_low: xyl_core::dyadic!(2, 5),
         unit_g: Dy::sci(981, -2),
         latent_rock: Dy::sci(4, 5),
-        magma_degas: Dy::ratio(9, 10),
+        magma_degas: xyl_core::dyadic!(9, 10),
         m_h_kg: Dy::from_q(&crate::package::Si::m_h_kg()),
         ev_j: Dy::from_q(&crate::package::Si::ev_j()),
         k_ice: Dy::int(567),
-        covalent_ev: Dy::ratio(36, 10),
-        silicate_ev: Dy::ratio(46, 10),
+        covalent_ev: xyl_core::dyadic!(36, 10),
+        silicate_ev: xyl_core::dyadic!(46, 10),
         melt_network_ev: Dy::ONE,
         faraday: Dy::from_q(&crate::package::Si::faraday()),
     })

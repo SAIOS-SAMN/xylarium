@@ -15,9 +15,18 @@ fn phases_follow_their_diagrams() {
         // point, liquid between the triple point and the boiling point, gas
         // above the boiling point, and supercritical past the critical point.
         let p = d.pref;
-        assert_eq!(ctx.phase(s, d.tt / Dy::int(2), p), Phase::Solid);
-        assert_eq!(ctx.phase(s, (d.tt + d.tb) / Dy::int(2), p), Phase::Liquid);
-        assert_eq!(ctx.phase(s, (d.tb + d.tc) / Dy::int(2), p), Phase::Gas);
+        assert_eq!(
+            ctx.phase(s, d.tt.div(&(Dy::int(2))).unwrap_or_default(), p),
+            Phase::Solid
+        );
+        assert_eq!(
+            ctx.phase(s, (d.tt + d.tb).div(&(Dy::int(2))).unwrap_or_default(), p),
+            Phase::Liquid
+        );
+        assert_eq!(
+            ctx.phase(s, (d.tb + d.tc).div(&(Dy::int(2))).unwrap_or_default(), p),
+            Phase::Gas
+        );
         assert_eq!(
             ctx.phase(s, d.tc * Dy::int(2), d.pc * Dy::int(2)),
             Phase::Supercritical
@@ -30,7 +39,7 @@ fn phases_follow_their_diagrams() {
             "boils at {b} vs {}",
             d.tb
         );
-        assert!(ctx.boiling(s, p / Dy::int(10)) < b);
+        assert!(ctx.boiling(s, p.div(&(Dy::int(10))).unwrap_or_default()) < b);
         // The saturation pressure at the triple point is the triple pressure.
         assert!((ctx.saturation(s, d.tt) - d.pt).abs() < Dy::sci(1, -12));
     }
@@ -127,7 +136,7 @@ fn surface_temperature_falls_with_distance() {
         };
         build(&set, Dy::int(3), &ctx)
     };
-    let (close, far) = (at(Dy::ratio(2, 5)), at(Dy::int(5)));
+    let (close, far) = (at(xyl_core::dyadic!(2, 5)), at(Dy::int(5)));
     assert!(
         close.t_surf > far.t_surf,
         "{} vs {}",

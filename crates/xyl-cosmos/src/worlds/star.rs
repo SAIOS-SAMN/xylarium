@@ -8,7 +8,7 @@ use super::*;
 /// small stars (`star_mass` in the universe's stellar unit).
 pub fn activity(star_mass: Dy, age: Dy) -> Dy {
     // The spin-down rate k is linear in stellar mass, at least 1/20.
-    let spin_down = star_mass.max(Dy::ratio(1, 20));
+    let spin_down = star_mass.max(xyl_core::dyadic!(1, 20));
     Dy::ONE + Dy::int(9) * (-(age.max(Dy::ZERO) * spin_down)).exp()
 }
 
@@ -16,9 +16,11 @@ pub fn activity(star_mass: Dy, age: Dy) -> Dy {
 /// `age` (Gyr x activity), the integral of `activity`:
 /// `t + 9 (1 - exp(-t k)) / k`.
 pub fn wind_dose(star_mass: Dy, age: Dy) -> Dy {
-    let kk = star_mass.max(Dy::ratio(1, 20));
+    let kk = star_mass.max(xyl_core::dyadic!(1, 20));
     let t = age.max(Dy::ZERO);
-    t + Dy::int(9) * (Dy::ONE - (-(t * kk)).exp()) / kk
+    t + (Dy::int(9) * (Dy::ONE - (-(t * kk)).exp()))
+        .div(&kk)
+        .unwrap_or_default()
 }
 
 /// The share of a star's light carried above `x` kT: its light counted by
@@ -54,9 +56,10 @@ pub struct Band {
 pub fn band(t_eff: Dy, sc: &Scales) -> Band {
     let bond = constants().covalent_ev * sc.chem;
     let kt = constants().kb_ev * t_eff.max(Dy::ONE);
-    let hi = planck_above(bond / kt);
+    let hi = planck_above(bond.div(&kt).unwrap_or_default());
     Band {
-        drive: (planck_above(constants().photo_low * bond / kt) - hi).max(Dy::ZERO),
+        drive: (planck_above((constants().photo_low * bond).div(&kt).unwrap_or_default()) - hi)
+            .max(Dy::ZERO),
         brk: hi,
     }
 }
@@ -67,7 +70,7 @@ pub fn band(t_eff: Dy, sc: &Scales) -> Band {
 /// against this crowding; [`cosmic_rays`] is read relative to it, so it
 /// enters only through that calibration.
 pub fn crowd_r0() -> Dy {
-    Dy::ratio(1, 10) * Dy::int(600)
+    xyl_core::dyadic!(1, 10) * Dy::int(600)
 }
 
 /// The galaxy's cosmic-ray flux where a system circles, relative to the

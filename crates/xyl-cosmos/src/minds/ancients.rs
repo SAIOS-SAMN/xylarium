@@ -24,7 +24,9 @@ pub fn from_centre_kpc(star: &crate::galaxy::Star, t: Dy) -> Dy {
     // (a path sum, not the hypotenuse).
     let (reach, _, climb) = star.bearing(crate::circuit::rings_of_gyr_dy(t));
     let way = &reach + &climb.abs();
-    Dy::from_q(&crate::galaxy::kpc_of_units(&way)) / star.scale.max(Dy::sci(1, -9))
+    (Dy::from_q(&crate::galaxy::kpc_of_units(&way)))
+        .div(&star.scale.max(Dy::sci(1, -9)))
+        .unwrap_or_default()
 }
 
 /// Whether a mind was born in the galaxy's core: its star lay within

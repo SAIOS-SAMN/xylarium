@@ -140,9 +140,9 @@ impl Traits {
     /// A reading of the traits for the annals (words from the measures; the
     /// measures are the traits).
     pub fn describe(&self) -> String {
-        let word = if self.size < Dy::ratio(1, 20) {
+        let word = if self.size < xyl_core::dyadic!(1, 20) {
             "tiny"
-        } else if self.size < Dy::ratio(1, 2) {
+        } else if self.size < xyl_core::dyadic!(1, 2) {
             "small"
         } else if self.size < Dy::int(2) {
             "middling"

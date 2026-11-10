@@ -120,8 +120,8 @@ pub fn chemistries(ms: &[Medium], body: &Body, home: &Home, ctx: &Ctx) -> Vec<Ch
         .collect();
     // A lit medium's window closes at 0.9 of the star's lifetime, as the
     // star's rising luminosity on the giant branch evaporates the seas.
-    let star_end =
-        home.born + lifetime(&home.sequence, home.compactness, home.reach, ctx) * Dy::ratio(9, 10);
+    let star_end = home.born
+        + lifetime(&home.sequence, home.compactness, home.reach, ctx) * xyl_core::dyadic!(9, 10);
     let crowd = worlds::cosmic_rays(home.r) * home.exposure;
     let area = body.area_m2();
     let mut out = Vec::new();
@@ -223,7 +223,7 @@ pub fn lineage(key: &[u64], chems: &[Chemistry], seeded: &[(Region, Dy)]) -> Opt
         // The sterilising pulse comes at its expected time, the hazard's
         // reciprocal after the start.
         let steril = if ch.hazard.signum() > 0 && horizon > t0 {
-            let at = t0 + Dy::ONE / ch.hazard;
+            let at = t0 + (Dy::ONE).div(&ch.hazard).unwrap_or_default();
             (at < horizon).then_some(at)
         } else {
             None
@@ -248,8 +248,9 @@ pub fn lineage(key: &[u64], chems: &[Chemistry], seeded: &[(Region, Dy)]) -> Opt
             seeded: arrives.is_some_and(|a| got.times.first() == Some(&a.max(t0))),
             steps: got.times,
         };
-        let share = Dy::int(i64::try_from(rec.steps.len()).unwrap_or(0))
-            / Dy::int(i64::try_from(rec.n.max(1)).unwrap_or(1));
+        let share = (Dy::int(i64::try_from(rec.steps.len()).unwrap_or(0)))
+            .div(&(Dy::int(i64::try_from(rec.n.max(1)).unwrap_or(1))))
+            .unwrap_or_default();
         let k = (
             rec.mind(),
             share,
@@ -385,14 +386,14 @@ fn arrivals(living: &[Living], first: &[Option<Lineage>]) -> Vec<Vec<(Region, Dy
                 .find(|c| c.region == lin.region)
                 .and_then(|c| c.ladder.steps.first().map(|st| (c.ladder.dormant, st.bits)))
                 .map(|(dormant, bits)| {
-                    let monomers = bits / bits_per_monomer();
+                    let monomers = bits.div(&bits_per_monomer()).unwrap_or_default();
                     (-(dormant * monomers * transit * constants().gyr_s).min(Dy::int(200))).exp()
                 })
                 .unwrap_or(Dy::ZERO);
             if survival <= Dy::ZERO {
                 continue;
             }
-            let when = t1 + transit / survival;
+            let when = t1 + transit.div(&survival).unwrap_or_default();
             match arr.iter_mut().find(|(rg, _)| *rg == lin.region) {
                 Some(slot) => slot.1 = slot.1.min(when),
                 None => arr.push((lin.region, when)),
@@ -408,13 +409,10 @@ fn arrivals(living: &[Living], first: &[Option<Lineage>]) -> Vec<Vec<(Region, Dy
 /// (`worlds::star_degree_gyr`). It is used to judge
 /// what a mind arising at that epoch can live on.
 pub fn world_at(set: &Setting, born: Dy, epoch: Dy, ctx: &Ctx) -> Vec<Medium> {
-    let quarters = ((epoch - born) * Dy::int(4) + Dy::ratio(1, 2)).trunc_i64();
-    let age = (Dy::int(quarters) / Dy::int(4)).max(worlds::star_degree_gyr(
-        &set.sequence,
-        set.compactness,
-        set.reach,
-        ctx,
-    ));
+    let quarters = ((epoch - born) * Dy::int(4) + xyl_core::dyadic!(1, 2)).trunc_i64();
+    let age = ((Dy::int(quarters)).div(&(Dy::int(4))).unwrap_or_default()).max(
+        worlds::star_degree_gyr(&set.sequence, set.compactness, set.reach, ctx),
+    );
     let state = build(set, age, ctx);
     media(&state, set.z, ctx)
 }

@@ -236,7 +236,7 @@ pub(super) fn bench_read(seed: u64, lo: u32, hi: u32) -> Result<String, String> 
     let needs: Vec<String> = CANDIDATES
         .iter()
         .zip(&trials)
-        .map(|(name, t)| format!("{name} {}", -(t.log() / ln2)))
+        .map(|(name, t)| format!("{name} {}", -(t.log().div(&ln2).unwrap_or_default())))
         .collect();
     out.push_str(&format!(
         "Bits to the vessel's top (Z{vessel_top}) under each closed share: built {bits}; {}\n",

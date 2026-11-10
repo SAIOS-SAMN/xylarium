@@ -65,7 +65,7 @@ pub fn layer(r: Dy) -> Dy {
     if (inside + m).signum() <= 0 {
         return Dy::ZERO;
     }
-    r * m / (inside + m)
+    (r * m).div(&(inside + m)).unwrap_or_default()
 }
 
 /// The plane's oscillation frequency at `r` (radians per ring):
@@ -90,7 +90,7 @@ fn heating_share(r: Dy, born: Dy, age: Dy) -> Dy {
         .map(|b| Dy::from_q(&b))
         .unwrap_or(born)
         .max(Dy::ONE);
-    age / (age + cooling)
+    age.div(&(age + cooling)).unwrap_or_default()
 }
 
 /// A star's vertical orbit at `r` (galaxy units), born at `born` and read
@@ -108,7 +108,10 @@ pub fn vertical(r: Dy, born: Dy, age: Dy, u: Dy, phase: Dy) -> Vertical {
     let sigma = h * nu * heating_share(r, born, age) * share;
     let vz = sigma * -(Dy::ONE - u).max(Dy::sci(1, -12)).log();
     let (amp, period) = if nu.signum() > 0 {
-        (vz / nu, Dy::int(2) * Dy::pi() / nu)
+        (
+            vz.div(&nu).unwrap_or_default(),
+            (Dy::int(2) * Dy::pi()).div(&nu).unwrap_or_default(),
+        )
     } else {
         (Dy::ZERO, Dy::ZERO)
     };
@@ -119,7 +122,9 @@ pub fn vertical(r: Dy, born: Dy, age: Dy, u: Dy, phase: Dy) -> Vertical {
     } else {
         // The share is `atan(h / A)` over the quarter turn, avoiding the root
         // of 1 - x^2 in asin(h / A).
-        (h / amp).atan() * Dy::int(2) / Dy::pi()
+        ((h.div(&amp).unwrap_or_default()).atan() * Dy::int(2))
+            .div(&(Dy::pi()))
+            .unwrap_or_default()
     };
     Vertical {
         amp,

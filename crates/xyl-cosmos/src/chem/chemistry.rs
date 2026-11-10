@@ -25,17 +25,21 @@ fn formed_by(s: &ExpSum, t: Dy) -> Dy {
                 for _ in 0..p {
                     tp = tp * t;
                 }
-                return c * tp / Dy::int(i64::from(p) + 1);
+                return (c * tp)
+                    .div(&(Dy::int(i64::from(p) + 1)))
+                    .unwrap_or_default();
             }
             // The series sum_(j<=p) (k t)^j / j!, and p! / k^(p+1).
             let (mut series, mut each, mut fact, mut kp) = (Dy::ONE, Dy::ONE, Dy::ONE, k);
             for j in 1..=p {
-                each = each * k * t / Dy::int(i64::from(j));
+                each = (each * k * t)
+                    .div(&(Dy::int(i64::from(j))))
+                    .unwrap_or_default();
                 series += each;
                 fact = fact * Dy::int(i64::from(j));
                 kp = kp * k;
             }
-            c * fact / kp * (Dy::ONE - (-(k * t)).exp() * series)
+            (c * fact).div(&kp).unwrap_or_default() * (Dy::ONE - (-(k * t)).exp() * series)
         })
         .sum()
 }
@@ -131,7 +135,7 @@ impl Chemistry {
         let target = c0 + u.max(Dy::ZERO).min(Dy::ONE) * (c1 - c0);
         let (mut lo, mut hi) = (t0, top);
         for _ in 0..48 {
-            let mid = (lo + hi) / Dy::int(2);
+            let mid = (lo + hi).div(&(Dy::int(2))).unwrap_or_default();
             if formed_by(&ring.sfr, mid) < target {
                 lo = mid;
             } else {

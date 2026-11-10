@@ -46,8 +46,10 @@ pub struct Quote {
 /// Returns the floor (J per passage): the lane's cost not yet paid back,
 /// divided by last year's passages (at least one).
 pub fn floor(lane: &Lane) -> Dy {
-    (lane.cost_j - lane.collected_j).max(Dy::ZERO)
-        / Dy::int(i64::try_from(lane.last_year.max(1)).unwrap_or(i64::MAX))
+    (lane.cost_j - lane.collected_j)
+        .max(Dy::ZERO)
+        .div(&(Dy::int(i64::try_from(lane.last_year.max(1)).unwrap_or(i64::MAX))))
+        .unwrap_or_default()
 }
 
 /// Returns the ceiling (J): what the lane saves the passer. With a way round
@@ -75,7 +77,7 @@ pub fn quote(
     let c = ceiling(around_hops, lane_hops, hop_value, cargo_value);
     let toll = match handling {
         Handling::Open => f.min(c),
-        _ => c.min(f + (c - f).max(Dy::ZERO) / Dy::int(2)),
+        _ => c.min(f + (c - f).max(Dy::ZERO).div(&(Dy::int(2))).unwrap_or_default()),
     };
     Quote {
         floor: f,
@@ -89,7 +91,7 @@ pub fn quote(
 /// least one lane length counted.
 pub fn tithe(passage: Dy, span: Dy, lane_len: Dy) -> Dy {
     let hops = if lane_len.signum() > 0 {
-        span / lane_len
+        span.div(&lane_len).unwrap_or_default()
     } else {
         Dy::ONE
     };

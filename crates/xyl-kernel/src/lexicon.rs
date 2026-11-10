@@ -184,11 +184,11 @@ mod tests {
             people: "Kazi".into(),
             ancient: false,
             gyr: Dy::int(14),
-            dawn: Dy::ratio(366, 100),
+            dawn: xyl_core::dyadic!(366, 100),
             traits: String::new(),
             numbers: Dy::sci(39, 11),
             capacity: Dy::sci(39, 11),
-            growth_per_yr: Dy::ratio(1, 10),
+            growth_per_yr: xyl_core::dyadic!(1, 10),
             power: None,
             surface_k: Dy::int(288),
             pressure_bar: Dy::ONE,
@@ -196,13 +196,13 @@ mod tests {
             media: vec![MediumSeen {
                 solvent: "H2O",
                 t_k: Dy::int(288),
-                energy: Dy::ratio(1, 2),
+                energy: xyl_core::dyadic!(1, 2),
             }],
             heartbeat: None,
             hearing: None,
             neighbours: vec![Heard {
                 people: "Thsha".into(),
-                kpc: Dy::ratio(1, 4),
+                kpc: xyl_core::dyadic!(1, 4),
                 light_yr: Dy::int(815),
             }],
             annals: vec![],
@@ -215,7 +215,7 @@ mod tests {
                 kind: PEOPLE,
                 values: vec![
                     Value::Flag(false),
-                    Value::Q(Dy::ratio(366, 100).to_q()),
+                    Value::Q(xyl_core::dyadic!(366, 100).to_q()),
                     Value::Q(Q::int(14))
                 ]
             }

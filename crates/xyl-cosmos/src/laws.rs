@@ -103,7 +103,7 @@ fn pw(x: &Q, n: i64, d: i64) -> Encl {
 /// metabolism, pressure, the dynamo) read it.
 pub(crate) fn share2(x: Dy) -> Dy {
     let x = x.max(Dy::ZERO);
-    Dy::int(2) * x / (Dy::ONE + x)
+    (Dy::int(2) * x).div(&(Dy::ONE + x)).unwrap_or_default()
 }
 
 fn prod(parts: &[Encl]) -> Encl {

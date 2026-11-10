@@ -195,8 +195,8 @@ fn delay_modes(lo: &Q, hi: &Q) -> Vec<(Q, Q)> {
         .map(|j| {
             // The e-fold times `tau_j = lo (hi / lo)^((2j + 1) / 8)` are log-even
             // across the window.
-            let tau =
-                Dy::from_q(lo) * (ratio.max(Dy::sci(1, -30)).log() * Dy::ratio(2 * j + 1, 8)).exp();
+            let tau = Dy::from_q(lo)
+                * (ratio.max(Dy::sci(1, -30)).log() * xyl_core::dyadic!(2 * j + 1, 8)).exp();
             let tau = Q::new((tau * Dy::int(1024)).trunc_i64().max(1), 1024).unwrap_or(Q::ONE);
             (xyl_core::ratio!(1, 4), crate::turning::span_in_rings(&tau))
         })

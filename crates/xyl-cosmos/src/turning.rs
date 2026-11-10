@@ -100,7 +100,9 @@ pub fn turning_dy(inside: Dy, r: Dy, tier: Tier) -> Dy {
         return Dy::ZERO;
     }
     let r_rg = r * Dy::from_q(&tier.in_rg());
-    bell * deficit_dy(inside, r_rg) / r_rg
+    (bell * deficit_dy(inside, r_rg))
+        .div(&r_rg)
+        .unwrap_or_default()
 }
 
 /// `inside_kg` kilograms and `r_m` metres in core masses and r_g (boundary).

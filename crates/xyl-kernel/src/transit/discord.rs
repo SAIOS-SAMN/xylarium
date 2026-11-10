@@ -63,7 +63,7 @@ impl Network {
             .fold(Dy::ZERO, |a, l| a + l.cost_j);
         let all = folded + lawful + own_j.max(Dy::ZERO);
         if all.signum() > 0 {
-            folded / all
+            folded.div(&all).unwrap_or_default()
         } else {
             Dy::ZERO
         }
@@ -96,7 +96,10 @@ impl Network {
         let c = crate::propulsion::c_m_s();
         let worth = reach.is_some_and(|s| {
             let span_m = s * kpc_m();
-            let speed = (span_m / (gen_yr * year_s()).max(Dy::ONE)).min(c);
+            let speed = (span_m
+                .div(&(gen_yr * year_s()).max(Dy::ONE))
+                .unwrap_or_default())
+            .min(c);
             speed > c - v_e.clamp(Dy::ZERO, c)
         });
         if !cosmic.gal.sc.ftl || self.holds_mouth(p.star) || !worth || at <= since {
@@ -105,7 +108,9 @@ impl Network {
             }
             return Dy::ZERO;
         }
-        let folds = (at - since) * Dy::sci(1, 9) / gen_yr.max(Dy::ONE);
+        let folds = ((at - since) * Dy::sci(1, 9))
+            .div(&gen_yr.max(Dy::ONE))
+            .unwrap_or_default();
         let energy = folds * passage_j(body_kg, v_e);
         self.folds.insert(i, (entry.0 + energy, at));
         energy
@@ -165,7 +170,7 @@ impl Network {
             let e = shut.entry(c.key()).or_insert(Dy::ZERO);
             *e = Dy::ONE - (Dy::ONE - *e) * (Dy::ONE - d.clamp(Dy::ZERO, Dy::ONE));
         }
-        let half = Dy::ratio(1, 2);
+        let half = xyl_core::dyadic!(1, 2);
         for (&k, &q) in &shut {
             let was = self.quarantine.get(&k).copied().unwrap_or(Dy::ZERO);
             if was < half && q >= half {

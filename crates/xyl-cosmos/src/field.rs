@@ -166,7 +166,7 @@ pub struct Bell {
 /// extent of M / M_core under the body measure (`elements::extent`, used in
 /// place of (M / M_core)^(1/3)).
 pub fn pitch_kpc(mass: Dy) -> Dy {
-    let ratio = (mass / Dy::from_q(&hole_mass())).max(Dy::sci(1, -30));
+    let ratio = (mass.div(&(Dy::from_q(&hole_mass()))).unwrap_or_default()).max(Dy::sci(1, -30));
     wavelength_kpc() * Dy::from_q(&crate::elements::extent(&ratio.to_q()))
 }
 
@@ -205,7 +205,7 @@ impl Bell {
         };
         let pitch = pitch_kpc(node.mass);
         let pitch_kpc = grid(pitch);
-        let period = grid(pitch / c_kpc_per_ring());
+        let period = grid(pitch.div(&c_kpc_per_ring()).unwrap_or_default());
         let mass = grid(node.mass);
         let light = &mass * &hole_light_per_star_mass();
         Bell {
@@ -233,7 +233,7 @@ impl Bell {
             if since.signum() < 0 {
                 -1
             } else {
-                (since / period).trunc_i64()
+                (since.div(&period).unwrap_or_default()).trunc_i64()
             }
         };
         u64::try_from(ring(to) - ring(from)).unwrap_or(0)
@@ -246,11 +246,17 @@ impl Bell {
     pub fn received(&self, d_kpc: Dy) -> Mv {
         // The hole's r_g: the core's r_g times the hole's mass over the
         // core's.
-        let rg_kpc = Dy::from_q(&crate::chain::units().r_g_m)
-            / Dy::from_q(&crate::package::Si::kpc())
-            * Dy::from_q(&self.mass)
-            / Dy::from_q(&hole_mass());
-        let t = grid(Dy::from_q(&self.spin) * rg_kpc / d_kpc.max(Dy::sci(1, -9)));
+        let rg_kpc = ((Dy::from_q(&crate::chain::units().r_g_m))
+            .div(&(Dy::from_q(&crate::package::Si::kpc())))
+            .unwrap_or_default()
+            * Dy::from_q(&self.mass))
+        .div(&(Dy::from_q(&hole_mass())))
+        .unwrap_or_default();
+        let t = grid(
+            (Dy::from_q(&self.spin) * rg_kpc)
+                .div(&d_kpc.max(Dy::sci(1, -9)))
+                .unwrap_or_default(),
+        );
         // The axis length in first degree (sum of |components|, no root).
         let norm = self
             .axis
@@ -258,9 +264,11 @@ impl Bell {
             .fold(Dy::ZERO, |s, x| s + Dy::from_q(x).abs());
         let angle = Dy::int(2) * (Dy::from_q(&t) * norm).atan();
         // The screw's translation for this turn, in AU, along the axis.
-        let shift = Dy::from_q(&self.pitch_kpc) * Dy::from_q(&au_per_kpc()) * angle
-            / (Dy::int(2) * Dy::pi())
-            / norm.max(Dy::sci(1, -30));
+        let shift = (Dy::from_q(&self.pitch_kpc) * Dy::from_q(&au_per_kpc()) * angle)
+            .div(&(Dy::int(2) * Dy::pi()))
+            .unwrap_or_default()
+            .div(&norm.max(Dy::sci(1, -30)))
+            .unwrap_or_default();
         let along = [
             grid(shift * Dy::from_q(&self.axis[0])),
             grid(shift * Dy::from_q(&self.axis[1])),
@@ -294,7 +302,7 @@ pub fn path(node: &Node, place: &Place, t: Dy) -> (Dy, Dy) {
     if c.signum() <= 0 {
         return (Dy::ZERO, d);
     }
-    (d / c, d)
+    (d.div(&c).unwrap_or_default(), d)
 }
 
 // ------------------------------------------------------------ The star transduces.
@@ -568,8 +576,8 @@ mod tests {
         // Arrivals are counted in closed form: a period's span holds one ring.
         let b = &bs[0];
         let period = Dy::from_q(&b.period);
-        let delay = Dy::ratio(1, 4);
-        let t0 = Dy::int(10) * period + delay + period / Dy::int(2);
+        let delay = xyl_core::dyadic!(1, 4);
+        let t0 = Dy::int(10) * period + delay + period.div(&(Dy::int(2))).unwrap_or_default();
         let one = b.arrivals(delay, t0, t0 + period);
         assert_eq!(one, 1, "one period, one ring");
         assert_eq!(b.arrivals(delay, t0, t0 + period * Dy::int(10)), 10);
@@ -674,7 +682,9 @@ mod tests {
         let mut start = Q::ZERO;
         for (i, end) in ends.iter().enumerate() {
             if *end > start {
-                let mid = Dy::from_q(&(&start + end)) / Dy::int(2);
+                let mid = (Dy::from_q(&(&start + end)))
+                    .div(&(Dy::int(2)))
+                    .unwrap_or_default();
                 assert_eq!(
                     transduction(&seq, delta, Dy::ZERO, mid),
                     Transduction::Step(i)

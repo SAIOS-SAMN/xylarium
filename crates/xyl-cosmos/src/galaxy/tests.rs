@@ -67,9 +67,9 @@ fn stars_circle_the_core_and_the_core_holds_its_share() {
     if nuc.is_empty() {
         assert!(birth(&Q::ZERO).is_none(), "the nucleus never lights");
     } else {
-        assert!(nuc
-            .iter()
-            .any(|s| height(s, Dy::int(3)) > s.orbit.radius / Dy::int(10)));
+        assert!(nuc.iter().any(
+            |s| height(s, Dy::int(3)) > s.orbit.radius.div(&(Dy::int(10))).unwrap_or_default()
+        ));
         assert!(
             nuc.iter()
                 .all(|s| s.pop == Pop::Nucleus && s.orbit.radius.to_q() <= nucleus_reach()),

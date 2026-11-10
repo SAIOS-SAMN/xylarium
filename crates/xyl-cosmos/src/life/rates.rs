@@ -14,14 +14,19 @@ pub fn strikes_per_gyr(debris: Dy, body: &Body) -> Dy {
         &body.star_mass.max(Dy::sci(1, -9)).to_q(),
         &body.a_au.max(Dy::sci(1, -9)).to_q(),
     ))) * Dy::sci(1, 9);
-    let orbits = Dy::sci(1, 9) / year.max(Dy::sci(1, -12));
+    let orbits = (Dy::sci(1, 9))
+        .div(&year.max(Dy::sci(1, -12)))
+        .unwrap_or_default();
     // The share R / (2 pi a), with the radius (world radii) and the orbit
     // (AU) both converted to metres.
-    let reach = body.radius * Dy::from_q(&crate::package::Si::world_radius_m())
-        / (Dy::int(2)
-            * Dy::pi()
-            * body.a_au.max(Dy::sci(1, -9))
-            * Dy::from_q(&crate::package::Si::au()));
+    let reach = (body.radius * Dy::from_q(&crate::package::Si::world_radius_m()))
+        .div(
+            &(Dy::int(2)
+                * Dy::pi()
+                * body.a_au.max(Dy::sci(1, -9))
+                * Dy::from_q(&crate::package::Si::au())),
+        )
+        .unwrap_or_default();
     debris.clamp(Dy::ZERO, Dy::ONE) * orbits * reach
 }
 
@@ -34,7 +39,11 @@ pub fn sterilise_per_gyr(crowd: Dy, dark: bool) -> Dy {
     if dark {
         Dy::ZERO
     } else {
-        constants().sterilise_at_r0 / Dy::int(10) * crowd.max(Dy::ZERO)
+        constants()
+            .sterilise_at_r0
+            .div(&(Dy::int(10)))
+            .unwrap_or_default()
+            * crowd.max(Dy::ZERO)
     }
 }
 
@@ -46,7 +55,10 @@ pub fn fidelity(s: Solvent, t: Dy, ctx: &Ctx) -> Dy {
     if weak.signum() <= 0 {
         return Dy::ONE;
     }
-    (-(constants().discrimination * weak / (worlds::kb_ev() * t.max(Dy::ONE)))).exp()
+    (-((constants().discrimination * weak)
+        .div(&(worlds::kb_ev() * t.max(Dy::ONE)))
+        .unwrap_or_default()))
+    .exp()
 }
 
 /// The chance `eps0` that a pattern held in a plasma's field topology is
@@ -55,15 +67,19 @@ pub fn fidelity(s: Solvent, t: Dy, ctx: &Ctx) -> Dy {
 /// that a bonded copy uses. The chance is small only where `E_B` exceeds
 /// `kT`.
 pub fn field_fidelity(field_ev: Dy, t: Dy) -> Dy {
-    (-(constants().discrimination * field_ev.max(Dy::ZERO) / (worlds::kb_ev() * t.max(Dy::ONE))))
-        .exp()
+    (-((constants().discrimination * field_ev.max(Dy::ZERO))
+        .div(&(worlds::kb_ev() * t.max(Dy::ONE)))
+        .unwrap_or_default()))
+    .exp()
 }
 
 /// The monomers a copier adds per second, `(kT / h) e^-barrier` with the
 /// solvent barrier in units of `kT` (corresponding states), times the
 /// `richness` of building material at hand.
 pub fn copy_rate(t: Dy, richness: Dy) -> Dy {
-    constants().kb_j * t.max(Dy::ONE) / constants().h_j
+    (constants().kb_j * t.max(Dy::ONE))
+        .div(&constants().h_j)
+        .unwrap_or_default()
         * (-worlds::solvent_barrier()).exp()
         * richness.max(Dy::ZERO)
 }
@@ -78,7 +94,11 @@ pub fn decay_rate(s: Solvent, t: Dy, k_copy: Dy, ctx: &Ctx) -> Dy {
     let kt = worlds::kb_ev() * t;
     let strong = worlds::strong_bond_ev(s, &ctx.sc);
     let held = (strong - worlds::weak_bond_ev(s, ctx)).max(Dy::ZERO);
-    k_copy * (-(held / kt)).exp() + constants().kb_j * t / constants().h_j * (-(strong / kt)).exp()
+    k_copy * (-(held.div(&kt).unwrap_or_default())).exp()
+        + (constants().kb_j * t)
+            .div(&constants().h_j)
+            .unwrap_or_default()
+            * (-(strong.div(&kt).unwrap_or_default())).exp()
 }
 
 /// The body mass (kg) a lineage holding `bits` builds: a cell's mass at or
@@ -89,7 +109,10 @@ pub fn body_kg(bits: Dy, bits_cell: Dy, kg_cell: Dy) -> Dy {
     if bits <= bits_cell || c.i_mind <= bits_cell {
         return kg_cell;
     }
-    let share = ((bits - bits_cell) / (c.i_mind - bits_cell)).min(Dy::ONE);
+    let share = ((bits - bits_cell)
+        .div(&(c.i_mind - bits_cell))
+        .unwrap_or_default())
+    .min(Dy::ONE);
     kg_cell + (c.m_mind_kg - kg_cell).max(Dy::ZERO) * share
 }
 
@@ -98,7 +121,7 @@ pub fn body_kg(bits: Dy, bits_cell: Dy, kg_cell: Dy) -> Dy {
 /// of mass ratio `s` to the unit body is this value times `2s / (1 + s)`, at
 /// the pace of the body's chemistry (`worlds::body_pace`).
 pub fn unit_metabolism_w() -> Dy {
-    Dy::ratio(191, 10)
+    xyl_core::dyadic!(191, 10)
 }
 
 /// The cell's bits, generation time (s) and mass (kg), read once per ladder.
@@ -115,8 +138,11 @@ pub(super) struct Gen {
 /// fast one is built.
 pub(super) fn generation_of(bits: Dy, g: &Gen) -> Dy {
     let body = body_kg(bits, g.bits_cell, g.kg_cell);
-    let cells = (body / g.kg_cell.max(Dy::sci(1, -300))).max(Dy::ONE);
-    g.t_cell * (Dy::ONE + cells.log() / Dy::int(2).log())
+    let cells = (body
+        .div(&g.kg_cell.max(Dy::sci(1, -300)))
+        .unwrap_or_default())
+    .max(Dy::ONE);
+    g.t_cell * (Dy::ONE + cells.log().div(&(Dy::int(2).log())).unwrap_or_default())
 }
 
 /// The bits selection writes per generation in a population of `pop`:
@@ -124,9 +150,11 @@ pub(super) fn generation_of(bits: Dy, g: &Gen) -> Dy {
 /// excess of 1/2, capped at MacKay's one bit.
 pub fn bits_per_generation(pop: Dy, b: Dy) -> Dy {
     let e = Dy::ONE.exp();
-    constants()
-        .bits_per_generation
-        .min(b * constants().reproductive_excess / pop.max(e).log())
+    constants().bits_per_generation.min(
+        (b * constants().reproductive_excess)
+            .div(&pop.max(e).log())
+            .unwrap_or_default(),
+    )
 }
 
 /// The seconds needed to write from `lo` to `hi` bits at `rate` bits per
@@ -140,12 +168,14 @@ pub(super) fn fill_s(lo: Dy, hi: Dy, g: &Gen, b: Dy, kc: Dy, rate: Dy) -> Dy {
     let mut lo = lo;
     if lo < bits_cell {
         let top = hi.min(bits_cell);
-        out += (top - lo) * ((top + lo) / Dy::int(2)) / (b * kc);
+        out += ((top - lo) * ((top + lo).div(&(Dy::int(2))).unwrap_or_default()))
+            .div(&(b * kc))
+            .unwrap_or_default();
         lo = top;
     }
     if hi > lo {
-        let mid = (lo + hi) / Dy::int(2);
+        let mid = (lo + hi).div(&(Dy::int(2))).unwrap_or_default();
         out += (hi - lo) * generation_of(mid, g);
     }
-    out / rate
+    out.div(&rate).unwrap_or_default()
 }

@@ -136,8 +136,9 @@ pub fn perceive(
                 star: x.star,
                 world: x.world,
             };
-            let kpc = crate::transit::separation_m(&u.cosmic, place(p), place(q), at)?
-                / crate::transit::kpc_m();
+            let kpc = (crate::transit::separation_m(&u.cosmic, place(p), place(q), at)?)
+                .div(&(crate::transit::kpc_m()))
+                .unwrap_or_default();
             let light_yr = crate::transit::crossing_years(kpc);
             // Heard once light could have crossed the separation since the
             // neighbour's dawn; the factor 10^9 converts Gyr to years.

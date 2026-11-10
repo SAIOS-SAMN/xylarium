@@ -17,12 +17,14 @@
 //! whose quantities span 10^-12 to 10^30 keeps 62 bits of precision at every
 //! scale.
 //!
-//! Precision: + - x / round toward zero to 62 bits (relative error below
-//! 2^-61). `exp`, `ln`, `sqrt` and `pow` are evaluated in 62-bit fixed point
-//! after range reduction, accurate to within 2^-55 relative. `div`, `sqrt`,
-//! `ln` and `pow` return `None` outside their domain; the `/` operator,
-//! `ratio`, `root` and `powf` return zero there, and `log` returns
-//! `-200 ln 2`. `from_bits` refuses a value not in normal form.
+//! Precision: + - x and division round toward zero to 62 bits (relative
+//! error below 2^-61). `exp`, `ln`, `sqrt` and `pow` are evaluated in 62-bit
+//! fixed point after range reduction, accurate to within 2^-55 relative.
+//! There is no `/` operator: `div` refuses a zero divisor (`None`), and
+//! `over` divides by a nonzero integer (`nonzero!`, `dyadic!` for a written
+//! ratio, both checked at build time). `sqrt`, `ln` and `pow` return `None`
+//! outside their domain; `root` and `powf` return zero there, and `log`
+//! returns `-200 ln 2`. `from_bits` refuses a value not in normal form.
 //! Where a decision must be proven rather than computed, use `certified`
 //! enclosures instead.
 //!
@@ -45,18 +47,38 @@ const HALF_TOP: i128 = 1 << (MANT - 1);
 /// use xyl_core::Q;
 /// use xyl_core::dyadic::Dy;
 ///
-/// let quarter = Dy::ratio(1, 4);
-/// assert_eq!(quarter.to_q(), Q::new(1, 4).unwrap_or_default()); // Exact.
-/// assert!(Dy::ratio(1, 3) < Dy::ratio(1, 2));
+/// let quarter = xyl_core::dyadic!(1, 4);
+/// assert_eq!(Some(quarter.to_q()), Q::new(1, 4)); // Exact.
+/// assert!(xyl_core::dyadic!(1, 3) < xyl_core::dyadic!(1, 2));
 /// // 1/3 is rounded toward zero, so three of them stay below one.
-/// assert!(Dy::ratio(1, 3) * Dy::int(3) < Dy::ONE);
-/// assert_eq!(Dy::ratio(1, 0), Dy::ZERO);
+/// assert!(xyl_core::dyadic!(1, 3) * Dy::int(3) < Dy::ONE);
+/// // A zero divisor is refused; a written zero denominator fails the build.
 /// assert_eq!(Dy::int(2).div(&Dy::ZERO), None);
 /// ```
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Dy {
     m: i64,
     e: i32,
+}
+
+/// A nonzero integer constant written in code, checked when the build
+/// evaluates it: `nonzero!(10)` is a `NonZeroI64`, and a zero fails the
+/// build.
+#[macro_export]
+macro_rules! nonzero {
+    ($d:expr) => {
+        const { $crate::q::written_denominator($d) }
+    };
+}
+
+/// A ratio written in code as a reading, `dyadic!(n, d)`: `n / d` rounded
+/// toward zero to 62 bits, its denominator checked at build time
+/// ([`nonzero!`](crate::nonzero)).
+#[macro_export]
+macro_rules! dyadic {
+    ($n:expr, $d:expr $(,)?) => {
+        $crate::dyadic::Dy::int($n).over($crate::nonzero!($d))
+    };
 }
 
 fn norm(m: i128, e: i64) -> Dy {
@@ -310,9 +332,12 @@ impl Dy {
     /// One, exact.
     pub const ONE: Dy = Dy { m: 1 << 61, e: -61 };
 
-    /// `n / d`, rounded toward zero to 62 bits (zero when `d` is zero).
-    pub fn ratio(n: i64, d: i64) -> Dy {
-        Dy::int(n) / Dy::int(d)
+    /// `self / d` for a nonzero integer divisor, rounded toward zero to 62
+    /// bits. `Dy::int` of a nonzero integer is nonzero
+    /// (`tests::over_agrees_with_div_for_every_nonzero_divisor`), so the zero
+    /// branch is never taken.
+    pub fn over(&self, d: std::num::NonZeroI64) -> Dy {
+        self.div(&Dy::int(d.get())).map_or(Dy::ZERO, |q| q)
     }
 
     /// `mant x 10^exp10`: a measured constant written as a scientific literal.
@@ -321,16 +346,20 @@ impl Dy {
         let mut x = Dy::int(mant);
         let ten = Dy::int(10);
         for _ in 0..exp10.unsigned_abs() {
-            x = if exp10 > 0 { x * ten } else { x / ten };
+            x = if exp10 > 0 {
+                x * ten
+            } else {
+                x.over(crate::nonzero!(10))
+            };
         }
         x
     }
 
-    /// `x^n` for an integer power, by repeated squaring; a negative power
-    /// uses `1 / x` (zero when `x` is zero).
-    pub fn powi(&self, n: i32) -> Dy {
-        let mut base = if n < 0 { Dy::ONE / *self } else { *self };
-        let mut k = n.unsigned_abs();
+    /// `x^n` for a natural power, by repeated squaring. A negative power is
+    /// `Dy::ONE.div(&x.powi(n))`, which refuses zero.
+    pub fn powi(&self, n: u32) -> Dy {
+        let mut base = *self;
+        let mut k = n;
         let mut acc = Dy::ONE;
         while k > 0 {
             if k & 1 == 1 {
@@ -403,12 +432,15 @@ impl Dy {
     /// `(sin x, cos x)`: reduced by the nearest whole number of quarter turns
     /// to |r| <= pi/4, then the Taylor series in 62-bit fixed point.
     pub fn sin_cos(&self) -> (Dy, Dy) {
-        let half_pi = Dy::pi() * Dy::ratio(1, 2);
-        let q = (*self / half_pi
+        // The constant pi is positive (`tests::pi_is_positive`), so the quarter-turn count
+        // always reads.
+        let half_pi = Dy::pi() * crate::dyadic!(1, 2);
+        let quarters = self.div(&half_pi).map_or(Dy::ZERO, |q| q);
+        let q = (quarters
             + if self.m >= 0 {
-                Dy::ratio(1, 2)
+                crate::dyadic!(1, 2)
             } else {
-                Dy::ratio(-1, 2)
+                crate::dyadic!(-1, 2)
             })
         .trunc_i64();
         let r = *self - Dy::int(q) * half_pi;
@@ -448,18 +480,23 @@ impl Dy {
     /// most twice) by `atan x = 2 atan(x / (1 + sqrt(1 + x^2)))` until
     /// |x| <= 1/5, then the alternating series.
     pub fn atan(&self) -> Dy {
-        if self.m == 0 {
+        // The inverse refuses only zero, whose arctangent is zero.
+        let Some(inverse) = Dy::ONE.div(self) else {
             return Dy::ZERO;
-        }
+        };
         if self.abs() > Dy::ONE {
-            let h = Dy::pi() * Dy::ratio(1, 2);
-            let inner = (Dy::ONE / *self).atan();
+            let h = Dy::pi() * crate::dyadic!(1, 2);
+            let inner = inverse.atan();
             return if self.m > 0 { h - inner } else { -h - inner };
         }
         let mut x = *self;
         let mut scale = 1i64;
-        while x.abs() > Dy::ratio(1, 5) {
-            x = x / (Dy::ONE + (Dy::ONE + x * x).root());
+        while x.abs() > crate::dyadic!(1, 5) {
+            // The half-angle divisor `1 + sqrt(1 + x^2)` is at least one.
+            let Some(half) = x.div(&(Dy::ONE + (Dy::ONE + x * x).root())) else {
+                break;
+            };
+            x = half;
             scale *= 2;
         }
         let Some(f) = to_fixed(&x) else {
@@ -480,10 +517,11 @@ impl Dy {
     pub fn acos(&self) -> Dy {
         let x = Dy::clamp(*self, -Dy::ONE, Dy::ONE);
         let s = (Dy::ONE - x * x).max(Dy::ZERO).root();
-        if x.m == 0 {
-            return Dy::pi() * Dy::ratio(1, 2);
-        }
-        let a = (s / x).atan();
+        // The ratio refuses only x = 0, where the angle is a quarter turn.
+        let Some(t) = s.div(&x) else {
+            return Dy::pi() * crate::dyadic!(1, 2);
+        };
+        let a = t.atan();
         if x.m > 0 {
             a
         } else {
@@ -540,13 +578,6 @@ impl std::ops::Mul for Dy {
 
 /// Division rounded toward zero; `x / 0` is 0. Callers that must detect a
 /// zero denominator use `Dy::div`.
-impl std::ops::Div for Dy {
-    type Output = Dy;
-    fn div(self, o: Dy) -> Dy {
-        Dy::div(&self, &o).unwrap_or(Dy::ZERO)
-    }
-}
-
 impl std::ops::Neg for Dy {
     type Output = Dy;
     fn neg(self) -> Dy {
@@ -583,14 +614,14 @@ impl std::fmt::Display for Dy {
         let ten = Dy::int(10);
         let mut e10 = 0i32;
         while x >= Dy::int(10) {
-            x = x / ten;
+            x = x.over(crate::nonzero!(10));
             e10 += 1;
         }
         while x < Dy::ONE {
             x = x * ten;
             e10 -= 1;
         }
-        let digits = (x * Dy::sci(1, 11) + Dy::ratio(1, 2))
+        let digits = (x * Dy::sci(1, 11) + crate::dyadic!(1, 2))
             .trunc_i64()
             .min(999_999_999_999);
         let s = digits.to_string();
@@ -668,6 +699,29 @@ impl Ord for Dy {
 mod tests {
     use super::*;
 
+    /// The constant pi reads positive, so the quarter turns of `sin_cos` always read.
+    #[test]
+    fn pi_is_positive() {
+        assert!(Dy::pi().signum() > 0);
+    }
+
+    proptest::proptest! {
+        /// Dividing by a nonzero integer agrees with `div` by its reading:
+        /// `Dy::int` of a nonzero integer is nonzero, so `over` never takes
+        /// its zero branch.
+        #[test]
+        fn over_agrees_with_div_for_every_nonzero_divisor(
+            n in -1_000_000_000i64..1_000_000_000,
+            d in 1i64..1_000_000_000,
+            neg in proptest::bool::ANY,
+        ) {
+            let d = if neg { -d } else { d };
+            let nz = std::num::NonZeroI64::new(d).unwrap();
+            proptest::prop_assert!(!Dy::int(d).is_zero());
+            proptest::prop_assert_eq!(Dy::int(n).over(nz), Dy::int(n).div(&Dy::int(d)).unwrap());
+        }
+    }
+
     fn near(a: &Dy, want: &str, tol: &str) -> bool {
         let a = a.to_q();
         let want = dec(want);
@@ -729,44 +783,59 @@ mod tests {
             Q::from_i128(5_972_000_000_000_000_000_000_000, 1).unwrap()
         );
         assert_eq!(Dy::int(3).powi(4).to_q(), Q::int(81));
-        assert_eq!(Dy::int(2).powi(-3).to_q(), Q::new(1, 8).unwrap());
+        assert_eq!(
+            Dy::ONE.div(&Dy::int(2).powi(3)).unwrap().to_q(),
+            Q::new(1, 8).unwrap()
+        );
         assert!(near(
-            &Dy::int(27).powf(Dy::ratio(1, 3)),
+            &Dy::int(27).powf(crate::dyadic!(1, 3)),
             "3",
             "0.00000000000001"
         ));
-        assert_eq!(Dy::int(1) / Dy::ZERO, Dy::ZERO);
-        assert_eq!(Dy::ratio(7, 2).trunc_i64(), 3);
-        assert_eq!(Dy::ratio(-7, 2).trunc_i64(), -3);
+        assert_eq!(Dy::int(1).div(&Dy::ZERO), None);
+        assert_eq!(crate::dyadic!(7, 2).trunc_i64(), 3);
+        assert_eq!(crate::dyadic!(-7, 2).trunc_i64(), -3);
         // An angle just past -pi/4, where the quarter-turn reduction changes:
         // the sine is negative and the cosine positive.
-        let (s, c) = Dy::ratio(-63, 80).sin_cos();
+        let (s, c) = crate::dyadic!(-63, 80).sin_cos();
         assert!(s < Dy::ZERO && c > Dy::ZERO);
         assert_eq!(format!("{}", Dy::int(-1234)), "-1.23400000000e3");
-        assert_eq!(Dy::ratio(5, 3).grid(4).to_q(), Q::new(26, 16).unwrap());
+        assert_eq!(crate::dyadic!(5, 3).grid(4).to_q(), Q::new(26, 16).unwrap());
     }
 
     #[test]
     fn trigonometry_and_gamma() {
         let tol = "0.00000000000001";
-        assert!(near(&Dy::ratio(1, 2).sin(), "0.47942553860420300027", tol));
-        assert!(near(&Dy::ratio(1, 2).cos(), "0.87758256189037271612", tol));
+        assert!(near(
+            &crate::dyadic!(1, 2).sin(),
+            "0.47942553860420300027",
+            tol
+        ));
+        assert!(near(
+            &crate::dyadic!(1, 2).cos(),
+            "0.87758256189037271612",
+            tol
+        ));
         assert!(near(&Dy::int(3).sin(), "0.14112000805986722210", tol));
         assert!(near(&Dy::int(-5).cos(), "0.28366218546322626447", tol));
         assert!(near(&Dy::int(2).atan(), "1.10714871779409050302", tol));
         assert!(near(
-            &Dy::ratio(-1, 3).atan(),
+            &crate::dyadic!(-1, 3).atan(),
             "-0.32175055439664219340",
             tol
         ));
-        assert!(near(&Dy::ratio(1, 4).acos(), "1.31811607165281796574", tol));
         assert!(near(
-            &Dy::ratio(-3, 4).acos(),
+            &crate::dyadic!(1, 4).acos(),
+            "1.31811607165281796574",
+            tol
+        ));
+        assert!(near(
+            &crate::dyadic!(-3, 4).acos(),
             "2.41885840577637762338",
             tol
         ));
         assert_eq!(Dy::unit(0), Dy::ZERO);
-        let x = Dy::ratio(-22, 7);
+        let x = crate::dyadic!(-22, 7);
         let (m, e) = x.to_bits();
         assert_eq!(Dy::from_bits(m, e), Some(x));
         assert_eq!(Dy::from_bits(m / 2, e + 1), None);

@@ -268,8 +268,12 @@ fn founding_of(origin: &Origin) -> Option<Arc<Founding>> {
         // The circulation is rate = 4 delta / echo, delta = H / (reach + H)
         // with H the hold inside the galaxy's reach (`held_within`).
         let inside = Dy::from_q(&substrate.held_within(&g.reach));
-        let delta = inside / (Dy::from_q(&g.reach) + inside).max(Dy::sci(1, -300));
-        let rate = Dy::int(4) * delta / crate::circuit::echo();
+        let delta = inside
+            .div(&(Dy::from_q(&g.reach) + inside).max(Dy::sci(1, -300)))
+            .unwrap_or_default();
+        let rate = (Dy::int(4) * delta)
+            .div(&(crate::circuit::echo()))
+            .unwrap_or_default();
         // The place at t = 0 is kept for reference; readings use place_at.
         let dir0 = {
             use xyl_core::rotor::{Half, Rotor};

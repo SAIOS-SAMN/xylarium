@@ -478,15 +478,15 @@ mod tests {
         let deltas = [
             Dy::sci(1, -6),
             Dy::sci(1, -3),
-            Dy::ratio(1, 10),
-            Dy::ratio(1, 2),
+            xyl_core::dyadic!(1, 10),
+            xyl_core::dyadic!(1, 2),
         ];
         let n: Vec<Dy> = deltas.iter().map(|d| throat(&t0, *d).unwrap()).collect();
         assert!(n.windows(2).all(|w| w[1] < w[0]), "{n:?}");
         // A collective with nothing open has no pole state and no crossing.
-        assert!(throat(&Q::ZERO, Dy::ratio(1, 10)).is_none());
+        assert!(throat(&Q::ZERO, xyl_core::dyadic!(1, 10)).is_none());
         assert!(throat(&t0, Dy::ZERO).is_none());
-        assert_eq!(throat(&Q::ONE, Dy::ratio(1, 10)), Some(Dy::ZERO));
+        assert_eq!(throat(&Q::ONE, xyl_core::dyadic!(1, 10)), Some(Dy::ZERO));
     }
 
     #[test]
@@ -522,7 +522,7 @@ mod tests {
         let seq = Sequence::of(&[(water, Q::ONE)], &crate::atoms::Received::none());
         assert!(!seq.ignites());
         assert_eq!(seq.remnant, Q::ONE);
-        let delta = Dy::ratio(1, 10);
+        let delta = xyl_core::dyadic!(1, 10);
         let age = Dy::ONE;
         assert_eq!(
             crate::field::transduction(&seq, delta, Dy::ZERO, age),

@@ -182,9 +182,17 @@ impl Network {
         };
         let mouth = self.reach_of(k).unwrap_or(Dy::ONE);
         let cost = tithe(passage_j(body, v_e), arc, mouth);
-        let voyage = arc * kpc_m() / cruise / year_s();
-        let paid = cost / spare_w / year_s();
-        let due = start + voyage.max(paid) / Dy::sci(1, 9);
+        let voyage = (arc * kpc_m())
+            .div(&cruise)
+            .unwrap_or_default()
+            .div(&year_s())
+            .unwrap_or_default();
+        let paid = cost
+            .div(&spare_w)
+            .unwrap_or_default()
+            .div(&year_s())
+            .unwrap_or_default();
+        let due = start + voyage.max(paid).div(&(Dy::sci(1, 9))).unwrap_or_default();
         self.works.insert(
             key,
             Ley {
@@ -299,7 +307,7 @@ fn in_tune_stars(cosmic: &Cosmic, discord: &BTreeMap<usize, Dy>) -> Vec<u64> {
         .filter(|(i, p)| {
             !p.ancient
                 && p.population.signum() > 0
-                && discord.get(i).is_none_or(|d| *d < Dy::ratio(1, 2))
+                && discord.get(i).is_none_or(|d| *d < xyl_core::dyadic!(1, 2))
         })
         .map(|(_, p)| p.star)
         .collect()
@@ -489,7 +497,7 @@ impl<'a> Siting<'a> {
     /// `arc` kpc, for a passer of mass `body` (kg) and generation `gen` (s).
     fn worth(&self, body: Dy, gen: Dy, arc: Dy, m: u64, k: u64) -> Dy {
         let c = self.c;
-        let voyage = c * (arc * kpc_m() / gen.max(Dy::ONE)).min(c);
+        let voyage = c * ((arc * kpc_m()).div(&gen.max(Dy::ONE)).unwrap_or_default()).min(c);
         body * (c * c * (self.well(m) + self.well(k)) + voyage) - self.toll(body, arc, k)
     }
 

@@ -31,7 +31,9 @@ use xyl_cosmos::worlds::{Ctx, Medium, State};
 /// The number of bodies housed: the power fed, `capacity_w` (W), over the
 /// power one body transduces, `metabolism_w` (W, floored at 1e-12).
 pub fn housing(capacity_w: Dy, metabolism_w: Dy) -> Dy {
-    capacity_w / metabolism_w.max(Dy::sci(1, -12))
+    capacity_w
+        .div(&metabolism_w.max(Dy::sci(1, -12)))
+        .unwrap_or_default()
 }
 
 /// What a medium yields to a people at biology `mastery` (W):
@@ -40,7 +42,10 @@ pub fn housing(capacity_w: Dy, metabolism_w: Dy) -> Dy {
 /// primary producers fix at mastery 1.
 pub fn harvest_w(med: &Medium, body: &Body, rulers: &Rulers, mastery: Dy) -> Dy {
     let forage = growth::food_w(med, body, rulers);
-    let down = Dy::ONE / rulers.trophic.max(Dy::sci(1, -6)) - Dy::ONE;
+    let down = (Dy::ONE)
+        .div(&rulers.trophic.max(Dy::sci(1, -6)))
+        .unwrap_or_default()
+        - Dy::ONE;
     forage * (Dy::ONE + down * mastery.clamp(Dy::ZERO, Dy::ONE))
 }
 
@@ -96,7 +101,7 @@ pub fn houses(
 /// `1 - numbers / housing`, clamped to [0, 1]; zero where nothing is housed.
 pub fn free_share(numbers: Dy, housing: Dy) -> Dy {
     if housing.signum() > 0 {
-        (Dy::ONE - numbers / housing).clamp(Dy::ZERO, Dy::ONE)
+        (Dy::ONE - numbers.div(&housing).unwrap_or_default()).clamp(Dy::ZERO, Dy::ONE)
     } else {
         Dy::ZERO
     }

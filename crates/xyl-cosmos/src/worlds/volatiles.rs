@@ -346,11 +346,11 @@ impl Ctx {
     /// it boils at its triple temperature at its triple pressure, never below.
     fn liquid_curve(&self, s: Species) -> Vec<(Dy, Dy)> {
         let d = self.diagram(s);
-        let mut pts = vec![(Dy::ONE / d.tt, d.pt.log())];
+        let mut pts = vec![((Dy::ONE).div(&d.tt).unwrap_or_default(), d.pt.log())];
         if d.tb > d.tt && d.tb < d.tc {
-            pts.push((Dy::ONE / d.tb, d.pref.log()));
+            pts.push(((Dy::ONE).div(&d.tb).unwrap_or_default(), d.pref.log()));
         }
-        pts.push((Dy::ONE / d.tc, d.pc.log()));
+        pts.push(((Dy::ONE).div(&d.tc).unwrap_or_default(), d.pc.log()));
         pts
     }
 
@@ -370,7 +370,9 @@ impl Ctx {
         for w in pts.windows(2) {
             let ((x1, l1), (x2, l2)) = (w[0], w[1]);
             if lp <= l2 {
-                return Dy::ONE / (x1 + (lp - l1) * (x2 - x1) / (l2 - l1));
+                return (Dy::ONE)
+                    .div(&(x1 + ((lp - l1) * (x2 - x1)).div(&(l2 - l1)).unwrap_or_default()))
+                    .unwrap_or_default();
             }
         }
         d.tc
@@ -383,18 +385,21 @@ impl Ctx {
         let d = self.diagram(s);
         if t < d.tt {
             return d.pt
-                * (d.l_kj * Dy::int(1000) / constants().r_gas
-                    * (Dy::ONE / d.tt - Dy::ONE / t.max(Dy::ONE)))
+                * ((d.l_kj * Dy::int(1000))
+                    .div(&constants().r_gas)
+                    .unwrap_or_default()
+                    * ((Dy::ONE).div(&d.tt).unwrap_or_default()
+                        - (Dy::ONE).div(&t.max(Dy::ONE)).unwrap_or_default()))
                 .exp();
         }
         // Above the critical point there is no liquid: the last curve
         // segment is extrapolated, so the pressure keeps rising with T.
-        let x = Dy::ONE / t;
+        let x = (Dy::ONE).div(&t).unwrap_or_default();
         let pts = self.liquid_curve(s);
         for w in pts.windows(2) {
             let ((x1, l1), (x2, l2)) = (w[0], w[1]);
             if x >= x2 || w[1] == pts[pts.len() - 1] {
-                return (l1 + (x - x1) * (l2 - l1) / (x2 - x1)).exp();
+                return (l1 + ((x - x1) * (l2 - l1)).div(&(x2 - x1)).unwrap_or_default()).exp();
             }
         }
         d.pc

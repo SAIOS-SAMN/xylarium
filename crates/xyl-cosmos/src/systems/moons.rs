@@ -67,8 +67,10 @@ pub(super) fn moons(
         })
         .collect();
     let (r_g, core_kg) = rg_units();
-    let anchor = Dy::from_q(&g_mass) * Dy::from_q(&crate::package::Si::world_mass_kg()) / core_kg;
-    let radius_rg = Dy::from_q(&r_m) / r_g;
+    let anchor = (Dy::from_q(&g_mass) * Dy::from_q(&crate::package::Si::world_mass_kg()))
+        .div(&core_kg)
+        .unwrap_or_default();
+    let radius_rg = (Dy::from_q(&r_m)).div(&r_g).unwrap_or_default();
     let settled = settle_about(
         embryos,
         anchor,
@@ -119,7 +121,7 @@ fn forced_eccentricities(settled: &[Embryo], anchor: Dy, radius_rg: Dy, g_mass: 
     // its unit, is read.
     let rate = |a_r: &Q| {
         let a = Dy::from_q(a_r) * radius_rg;
-        crate::turning::turning_dy(anchor, a / sixty(), Tier::System)
+        crate::turning::turning_dy(anchor, a.div(&sixty()).unwrap_or_default(), Tier::System)
     };
     (0..settled.len())
         .map(|k| {
@@ -127,19 +129,29 @@ fn forced_eccentricities(settled: &[Embryo], anchor: Dy, radius_rg: Dy, g_mass: 
             for j in [k.checked_sub(1), Some(k + 1)].into_iter().flatten() {
                 let Some(nb) = settled.get(j) else { continue };
                 let (w1, w2) = (rate(&settled[k].a), rate(&nb.a));
-                let ratio = w1.min(w2) / w1.max(w2);
-                let p = (ratio / (Dy::ONE - ratio).max(Dy::sci(1, -12)))
-                    .trunc_i64()
-                    .max(1);
+                let ratio = w1.min(w2).div(&w1.max(w2)).unwrap_or_default();
+                let p = (ratio
+                    .div(&(Dy::ONE - ratio).max(Dy::sci(1, -12)))
+                    .unwrap_or_default())
+                .trunc_i64()
+                .max(1);
                 let near = [p - 1, p, p + 1]
                     .iter()
                     .filter(|&&x| x >= 1)
-                    .map(|&x| (ratio - Dy::int(x) / Dy::int(x + 1)).abs())
+                    .map(|&x| {
+                        (ratio - (Dy::int(x)).div(&(Dy::int(x + 1))).unwrap_or_default()).abs()
+                    })
                     .fold(Dy::ONE, Dy::min)
                     .max(Dy::sci(1, -3));
-                f = f.max(Dy::from_q(&nb.m) / Dy::from_q(g_mass) / near);
+                f = f.max(
+                    (Dy::from_q(&nb.m))
+                        .div(&(Dy::from_q(g_mass)))
+                        .unwrap_or_default()
+                        .div(&near)
+                        .unwrap_or_default(),
+                );
             }
-            f.min(Dy::ratio(1, 10)).to_q()
+            f.min(xyl_core::dyadic!(1, 10)).to_q()
         })
         .collect()
 }

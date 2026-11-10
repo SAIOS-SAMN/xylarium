@@ -19,20 +19,27 @@ pub fn growing_share(tilt_deg: i64) -> Dy {
 /// insolation is `h0 sin(phi) sin(dec) + cos(phi) cos(dec) sin(h0)`, with
 /// `h0` the sunset hour angle and `dec = tilt x sin(2 pi (d + 1/2) / 48)`.
 pub(super) fn growing(deg: i64) -> Dy {
-    let eps = Dy::int(deg) * Dy::pi() / Dy::int(180);
+    let eps = (Dy::int(deg) * Dy::pi())
+        .div(&(Dy::int(180)))
+        .unwrap_or_default();
     let days = 48i64;
     let (mut total, mut weight) = (Dy::ZERO, Dy::ZERO);
     for i in 0..9i64 {
-        let phi = Dy::int(5 + 10 * i) * Dy::pi() / Dy::int(180);
+        let phi = (Dy::int(5 + 10 * i) * Dy::pi())
+            .div(&(Dy::int(180)))
+            .unwrap_or_default();
         let (sp, cp) = phi.sin_cos();
         let mut qs = Vec::with_capacity(48);
         for d in 0..days {
             let dec = eps
-                * (Dy::int(2) * Dy::pi() * (Dy::int(d) + Dy::ratio(1, 2)) / Dy::int(days)).sin();
+                * ((Dy::int(2) * Dy::pi() * (Dy::int(d) + xyl_core::dyadic!(1, 2)))
+                    .div(&(Dy::int(days)))
+                    .unwrap_or_default())
+                .sin();
             let (sd, cd) = dec.sin_cos();
             // The sunset hour angle obeys cos(h0) = -tan(phi) tan(dec); polar
             // day and polar night clamp h0 to pi and 0.
-            let x = -(sp / cp) * (sd / cd);
+            let x = -(sp.div(&cp).unwrap_or_default()) * (sd.div(&cd).unwrap_or_default());
             let h0 = if x >= Dy::ONE {
                 Dy::ZERO
             } else if x <= -Dy::ONE {
@@ -42,12 +49,20 @@ pub(super) fn growing(deg: i64) -> Dy {
             };
             qs.push((h0 * sp * sd + cp * cd * h0.sin()).max(Dy::ZERO));
         }
-        let mean = qs.iter().copied().sum::<Dy>() / Dy::int(days);
+        let mean = (qs.iter().copied().sum::<Dy>())
+            .div(&(Dy::int(days)))
+            .unwrap_or_default();
         let grow = if mean.signum() > 0 {
-            Dy::int(
-                i64::try_from(qs.iter().filter(|&&q| q >= mean * Dy::ratio(1, 2)).count())
-                    .unwrap_or(0),
-            ) / Dy::int(days)
+            (Dy::int(
+                i64::try_from(
+                    qs.iter()
+                        .filter(|&&q| q >= mean * xyl_core::dyadic!(1, 2))
+                        .count(),
+                )
+                .unwrap_or(0),
+            ))
+            .div(&(Dy::int(days)))
+            .unwrap_or_default()
         } else {
             Dy::ZERO
         };
@@ -55,7 +70,12 @@ pub(super) fn growing(deg: i64) -> Dy {
         weight += cp;
     }
     // The share is rounded to a thousandth.
-    Dy::int((total / weight * Dy::int(1000) + Dy::ratio(1, 2)).trunc_i64()) / Dy::int(1000)
+    (Dy::int(
+        (total.div(&weight).unwrap_or_default() * Dy::int(1000) + xyl_core::dyadic!(1, 2))
+            .trunc_i64(),
+    ))
+    .div(&(Dy::int(1000)))
+    .unwrap_or_default()
 }
 
 /// The properties of a world's body that its life and foragers depend on.
@@ -91,12 +111,14 @@ impl Body {
             None => (false, Dy::ONE),
         };
         let obl = cos.acos();
-        let tilt = obl.min(Dy::pi() - obl) * Dy::int(180) / Dy::pi();
+        let tilt = (obl.min(Dy::pi() - obl) * Dy::int(180))
+            .div(&(Dy::pi()))
+            .unwrap_or_default();
         Body {
             radius: Dy::from_q(&set.world.radius),
             giant: set.world.giant,
             locked,
-            tilt: (tilt + Dy::ratio(1, 2)).trunc_i64(),
+            tilt: (tilt + xyl_core::dyadic!(1, 2)).trunc_i64(),
             a_au: Dy::from_q(&set.world.a),
             star_lum: set.lum,
             star_mass: set.star_mass,
@@ -128,28 +150,36 @@ pub fn foragers(ms: &[Medium], region: Region, body: &Body, ctx: &Ctx) -> Dy {
     };
     let area = body.radius * med.band;
     let season = if body.locked {
-        Dy::ratio(1, 2)
+        xyl_core::dyadic!(1, 2)
     } else {
         growing_share(body.tilt)
     };
-    let gravity = body.radius * if body.giant { Dy::ratio(1, 4) } else { Dy::ONE };
-    let r_strategist = body.tilt > 23 || body.star_mass < Dy::ratio(1, 2);
+    let gravity = body.radius
+        * if body.giant {
+            xyl_core::dyadic!(1, 4)
+        } else {
+            Dy::ONE
+        };
+    let r_strategist = body.tilt > 23 || body.star_mass < xyl_core::dyadic!(1, 2);
     // Body mass relative to a K-strategist's on a unit world is the ratio of
     // the fertility ceilings (r 2.5, K 1.2) over the world's gravity (a
     // giant's surface gravity is taken as a quarter of its radius);
     // metabolism scales as 2m / (1 + m).
     let ceiling = if r_strategist {
-        Dy::ratio(5, 2)
+        xyl_core::dyadic!(5, 2)
     } else {
-        Dy::ratio(6, 5)
+        xyl_core::dyadic!(6, 5)
     };
-    let mut mass = Dy::ratio(6, 5) / ceiling;
+    let mut mass = xyl_core::dyadic!(6, 5).div(&ceiling).unwrap_or_default();
     if region != Region::Plasmic {
-        mass = mass / gravity.max(Dy::sci(1, -3));
+        mass = mass.div(&gravity.max(Dy::sci(1, -3))).unwrap_or_default();
     }
-    let factor =
-        crate::laws::share2(mass) * worlds::body_temperature(med.solvent, ctx) / worlds::t_unit();
-    Dy::int(50_000) * area * season * med.energy * Dy::ratio(1, 10) / factor.max(Dy::sci(1, -300))
+    let factor = (crate::laws::share2(mass) * worlds::body_temperature(med.solvent, ctx))
+        .div(&(worlds::t_unit()))
+        .unwrap_or_default();
+    (Dy::int(50_000) * area * season * med.energy * xyl_core::dyadic!(1, 10))
+        .div(&factor.max(Dy::sci(1, -300)))
+        .unwrap_or_default()
 }
 
 /// A star's main-sequence lifetime (Gyr) at `reach` (galaxy units, the

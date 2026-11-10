@@ -361,6 +361,16 @@ where it belongs to one.
     (`atoms::axis_weights`); no reading moved. Next: vent 5 (the delimiter
     retired, the first to move readings); the isoclinic split and signs
     with the spin (#128).
+57. **The board: a blank S^360 universe** ([#162](https://github.com/SAIOS-SAMN/xylarium/issues/162), `track`, `proposal`, M5;
+    [board.md](board.md)). An empty enclosure where cores, stars and worlds
+    are placed as conformal spheres about their anchors, nuclei of each
+    kind are added or removed, and the built laws read the result in
+    seconds, with no founding; a ledger of edits on the T lane, run under
+    `run::Link` for agents on the hypha. Phases: B1 the substrate bench
+    (#163, first: the bench for #158's remaining vents), B2 the board home
+    and ledger (#164, after #142), B3 bodies as spheres (#165), B4 elements
+    on a body (#166), B5 substrate trials as data (#167, with #140), B6 the
+    board on the hypha (#168).
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

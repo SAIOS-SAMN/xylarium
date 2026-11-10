@@ -11,6 +11,11 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The board's design (docs/board.md, #162): a blank S^360 universe with
+  no founding, where cores, stars and worlds are placed as conformal
+  spheres about their anchors and nuclei of each kind are added or
+  removed, read by the built laws; scoped in phases B1 to B6 (#163 to
+  #168), the substrate bench first.
 - Axis weights in ZZ (#158, vent 3): `atoms::axis_weights` gives a kind's
   open states' axis weight `sum m0 U_m0` (the polarity `A`) and its held
   states' `sum 2 m0 P_m0`: a pair cancels its twist charge on the

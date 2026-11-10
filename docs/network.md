@@ -58,9 +58,12 @@ repository.
 - **Dependencies.** `mycelium-sdk` pinned by git tag (`v0.3.0`), and
   `xyl-core`, `xyl-cosmos`, `xyl-kernel` and `xylarium` by relative path to
   the kernel checkout.
-- **Status against v0.4.0-rc.1.** Not built: the release changes the wire
-  (`0x0200`) and the law version (5), so the uplink cannot speak to a
-  v0.4.0 hypha until it is moved (#82). The SDK's own conformance suite,
+- **Status against v0.4.0-rc.1.** Not built: v0.4.0 changes act layouts
+  and addresses within wire `0x0200` and law version 5 (`ACT_LAWS` modes 7
+  and 8 become the clause register, signed by reconstruction; word, chart
+  and task addresses change), so the uplink cannot speak to a v0.4.0
+  hypha until it is moved (#82). The version numbers do not tell the two
+  apart: a v0.3.0 peer is not refused by its version. The SDK's own conformance suite,
   run from this host with the kernel profile against Mycelium's test mesh,
   conforms in process and on the network (2026-11-10). That run signs
   with a scratch test voice: it is not a xylarium signing.

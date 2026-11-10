@@ -619,7 +619,7 @@ mod tests {
 
     fn dec(s: &str) -> Q {
         // A decimal literal as an exact rational.
-        let (int, frac) = s.split_once('.').unwrap_or((s, ""));
+        let (int, frac) = s.split_once('.').map_or((s, ""), |p| p);
         let den = 10i128.pow(u32::try_from(frac.len()).unwrap());
         let num: i128 = format!("{int}{frac}").parse().unwrap();
         Q::from_i128(num, den).unwrap()

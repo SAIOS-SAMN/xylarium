@@ -810,7 +810,7 @@ mod tests {
     }
 
     fn dec(s: &str) -> Q {
-        let (int, frac) = s.split_once('.').unwrap_or((s, ""));
+        let (int, frac) = s.split_once('.').map_or((s, ""), |p| p);
         let neg = int.starts_with('-');
         let digits = format!("{}{frac}", int.trim_start_matches('-'));
         let n: i128 = digits.parse().unwrap();

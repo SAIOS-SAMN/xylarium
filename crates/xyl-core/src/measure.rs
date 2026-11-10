@@ -27,7 +27,6 @@
 //! about 90 degrees.
 
 use crate::dyadic::Dy;
-use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
 /// The dimension of the universe's sphere, `S^360`.
@@ -53,9 +52,16 @@ fn rung(n: u32, lo: Dy, hi: Dy) -> Dy {
 /// The ladder of S^n: the measure held below each rung of the half turn,
 /// the last the whole.
 fn ladder(n: u32) -> Arc<Vec<Dy>> {
-    static L: OnceLock<Mutex<BTreeMap<u32, Arc<Vec<Dy>>>>> = OnceLock::new();
-    let map = L.get_or_init(Default::default);
-    if let Some(l) = map.lock().ok().and_then(|m| m.get(&n).cloned()) {
+    // Each sphere's ladder is read once, keyed by its dimension.
+    static L: OnceLock<Mutex<Vec<(u32, Arc<Vec<Dy>>)>>> = OnceLock::new();
+    let held_by = L.get_or_init(Default::default);
+    let read = |n: u32| {
+        held_by
+            .lock()
+            .ok()
+            .and_then(|m| m.iter().find(|(k, _)| *k == n).map(|(_, l)| l.clone()))
+    };
+    if let Some(l) = read(n) {
         return l;
     }
     let step = Dy::pi().over(crate::nonzero!(RUNGS as i64));
@@ -68,8 +74,10 @@ fn ladder(n: u32) -> Arc<Vec<Dy>> {
         held.push(sum);
     }
     let l = Arc::new(held);
-    if let Ok(mut m) = map.lock() {
-        m.insert(n, l.clone());
+    if let Ok(mut m) = held_by.lock() {
+        if !m.iter().any(|(k, _)| *k == n) {
+            m.push((n, l.clone()));
+        }
     }
     l
 }

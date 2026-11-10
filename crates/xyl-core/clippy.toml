@@ -1,0 +1,84 @@
+# MU-STANDARDS 4.2 (Mycelium v0.4.0-rc.1), adopted for xyl-core (#179): the
+# pattern rules of the laws, as lints, with Mycelium's table and reasons.
+# Each rule is denied here in the commit that cleared its sites. Clippy reads
+# this file for xyl-core alone; the other crates adopt the table in their own
+# tier. An allowance is an #[expect] at its site naming the rule and why
+# (MU-STANDARDS 4.3); the watch (watch.rs) is the one instrument that reads
+# wall time.
+
+# Tests assert; the abort rules of 2.4 bind cognition, not a claim.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+
+disallowed-types = [
+    { path = "std::collections::HashMap", reason = "law 2, rule 9: a key is a canonical coordinate in a Keyed trie, never a hash bucket" },
+    { path = "std::collections::BTreeMap", reason = "law 2, rule 9: a key is a canonical coordinate in a Keyed trie" },
+    { path = "std::collections::HashSet", reason = "law 2, rule 9: presence is read from a Keyed set" },
+    { path = "std::collections::BTreeSet", reason = "law 2, rule 9: presence is read from a Keyed set" },
+    { path = "std::time::Instant", reason = "law 9: the clock is the receipt chain's k and the height, never wall time" },
+    { path = "std::time::SystemTime", reason = "law 9: the clock is the receipt chain's k and the height" },
+    { path = "std::time::Duration", reason = "law 9: an extent is measured in strokes and heights" },
+]
+
+disallowed-methods = [
+    { path = "blake3::hash", reason = "law 2: identity is content written out, not a digest of it" },
+    { path = "blake3::Hasher::new", reason = "law 2: identity is content written out, not a digest of it" },
+
+    # Rule 4 is REVIEW DISCIPLINE FOR ENGINE CODE (Concordance 1.10): the
+    # engine never picks silently by a scalar. It never limits a mind: a
+    # comparison a mind's rule states (largest, rank, majority, in an order
+    # it names, ties included) carries an #[expect] citing Concordance 1.10.
+    { path = "core::iter::Iterator::max", reason = "rule 4 (engine code): nothing is chosen silently by a scalar; read the fibre, or cite Concordance 1.10 for a comparison a mind states" },
+    { path = "core::iter::Iterator::min", reason = "rule 4 (engine code): nothing is chosen silently by a scalar; read the fibre, or cite Concordance 1.10 for a comparison a mind states" },
+    { path = "core::iter::Iterator::max_by", reason = "rule 4 (engine code): nothing is chosen silently by a scalar" },
+    { path = "core::iter::Iterator::min_by", reason = "rule 4 (engine code): nothing is chosen silently by a scalar" },
+    { path = "core::iter::Iterator::max_by_key", reason = "rule 4 (engine code): nothing is chosen silently by a scalar" },
+    { path = "core::iter::Iterator::min_by_key", reason = "rule 4 (engine code): nothing is chosen silently by a scalar" },
+
+    # §4.2's sort family. An ORDER IS A CHOICE at every position, not only
+    # at the extremum: a sort by a canonical key is the key's own order and
+    # stands with its reason; a sort by anything measured ranks lanes
+    # against each other and is rule 4's, exactly as `min_by_key` is — in
+    # ENGINE code. An order a mind's rule names is Concordance 1.10's.
+    { path = "slice::sort_by", reason = "rule 4 (engine code): an order is a choice at every position; sort by a canonical key, never silently by a measurement" },
+    { path = "slice::sort_by_key", reason = "rule 4 (engine code): an order is a choice at every position" },
+    { path = "slice::sort_unstable_by", reason = "rule 4 (engine code): an order is a choice at every position" },
+    { path = "slice::sort_unstable_by_key", reason = "rule 4 (engine code): an order is a choice at every position" },
+
+    { path = "core::option::Option::unwrap_or", reason = "rule 11: exact or refused; a missing value is a refusal, never a default" },
+    { path = "core::option::Option::unwrap_or_else", reason = "rule 11: exact or refused" },
+    { path = "core::option::Option::unwrap_or_default", reason = "rule 11: exact or refused" },
+    { path = "core::result::Result::unwrap_or", reason = "rule 11: exact or refused" },
+    { path = "core::result::Result::unwrap_or_else", reason = "rule 11: exact or refused" },
+    { path = "core::result::Result::unwrap_or_default", reason = "rule 11: exact or refused" },
+    { path = "u8::saturating_sub", reason = "rule 11: a floor at zero is an invented value; measure or refuse" },
+    { path = "u16::saturating_sub", reason = "rule 11: a floor at zero is an invented value" },
+    { path = "u32::saturating_sub", reason = "rule 11: a floor at zero is an invented value" },
+    { path = "u64::saturating_sub", reason = "rule 11: a floor at zero is an invented value" },
+    { path = "usize::saturating_sub", reason = "rule 11: a floor at zero is an invented value" },
+    # Rule 15. A MEMBER BY POSITION IS A CHOICE. The question at each site
+    # is whether the order is CONTENT or ARRIVAL: a canonical key order, a
+    # wire tag's own offset, a slice pattern on the value just pushed, the
+    # head of a FIFO drain, and a content extremum such as a bounding box
+    # are the first four cases the order is content; anything else takes a
+    # member because it arrived there, and that is a choice.
+    { path = "slice::first", reason = "rule 15: a member by position is a choice; is the order content or arrival?" },
+    { path = "slice::last", reason = "rule 15: a member by position is a choice" },
+    { path = "core::iter::Iterator::nth", reason = "rule 15: a member by position is a choice" },
+
+    # STD1 (rule 11). A SUM PINNED AT ITS CARRIER IS A CEILING: checked and
+    # refused by name, or proved by a stated invariant — one per event in one
+    # process, MEASURE_BOUND, holonomic_fits — under `#[expect]`.
+    { path = "u8::saturating_add", reason = "rule 11: a ceiling is an invented value; check and refuse, or prove the bound" },
+    { path = "u16::saturating_add", reason = "rule 11: a ceiling is an invented value" },
+    { path = "u32::saturating_add", reason = "rule 11: a ceiling is an invented value" },
+    { path = "u64::saturating_add", reason = "rule 11: a ceiling is an invented value" },
+    { path = "usize::saturating_add", reason = "rule 11: a ceiling is an invented value" },
+
+    { path = "u8::saturating_mul", reason = "rule 11: a ceiling is an invented value" },
+    { path = "u16::saturating_mul", reason = "rule 11: a ceiling is an invented value" },
+    { path = "u32::saturating_mul", reason = "rule 11: a ceiling is an invented value" },
+    { path = "u64::saturating_mul", reason = "rule 11: a ceiling is an invented value" },
+    { path = "usize::saturating_mul", reason = "rule 11: a ceiling is an invented value" },
+]

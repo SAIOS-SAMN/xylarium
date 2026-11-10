@@ -117,6 +117,10 @@ pub struct Mv<const NEG: usize = EM> {
 
 impl<const NEG: usize> Mv<NEG> {
     fn of_terms(mut terms: Vec<(usize, Q)>) -> Mv<NEG> {
+        #[expect(
+            clippy::disallowed_methods,
+            reason = "rule 4: a sort by the canonical key, the blade's mask, is the key's own order"
+        )]
         terms.sort_unstable_by_key(|(m, _)| *m);
         let mut c: Vec<(usize, Q)> = Vec::with_capacity(terms.len());
         for (m, v) in terms {

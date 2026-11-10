@@ -114,8 +114,31 @@ another crate. Laws are composed from shares (ratios of the form
 ## 3. The bounce and the founding
 
 - Deficit law (`xyl_core::shares::deficit`, `deficit_dy`):
-  `delta(R, M) = M / (R + M)`, and the received share is `1 - delta`.
-  Calibre: none. Status: built.
+  `delta(R, M) = M / (R + M)`, gravity's convergent face; the received
+  share `1 - delta` is its divergent face. Calibre: none. Status: built.
+- Gravity's faces ([model.md](model.md#gravity-the-deformation-about-a-mass-invariant),
+  #155; `xyl_core::shares::faces`, `shares::Faces`): with `t = r / M`,
+  convergent `c = M / (r + M) = 1 / (1 + t)`, divergent
+  `d = r / (r + M) = t / (1 + t)`; `c + d = 1`, `c / d = 1 / t`
+  (`Faces::pole`). Calibre: none (a ratio). Status: built.
+- Gravity's antipole (`Faces::antipole`, `Faces::push`): the inversion
+  `t -> 1 / t`, `r -> M (M / r)`, gives `c(1 / t) = d(t)`; the imbalance
+  `p = c - d = (1 - t) / (1 + t)` has `D(p) = c / d = M / r` and goes to
+  `-p`, so `D(-p) = 1 / D(p)`; the equator `r = M` is fixed, `c = d = 1/2`,
+  `p = 0`; exactly `p = 2c - 1 = 1 - 2d`. Calibre: none. Status: built (identities,
+  `shares::tests::the_faces_are_antipoles_under_the_inversion`).
+- Turns on the faces (#155): `+360 c` degrees per traversal on the
+  convergent face (deficit angle, inward), `-360 d` on the divergent face
+  (excess angle, outward); the divergent turn at `t` is minus the
+  convergent turn at `1 / t`. They are one element of QQ/ZZ:
+  `-360 d = -360 + 360 c`, differing by the whole turn `360 (c + d) = 360`.
+  A body reads winding `-1` and phase `360 c` (T3's `360 delta`), never
+  their sum. Calibre: none. Status: derived; no reading changes.
+- Torsion share as a face (axiom 7; `bounce::torsion_share`):
+  `s = (H + J) / (2H + J)` is the divergent face about the hold `H` at
+  reach `H + J`, pole `t = 1 + J / H = 1 + a / 2 = s_Q / s_Z`. Calibre:
+  none. Status: built (identity,
+  `turning::tests::the_torsion_share_is_gravitys_divergent_face`).
 - Dilation and flow law (`xyl_core::shares::dilation`, `flow`):
   `D(p) = (1 + p) / (1 - p)` for `-1 < p < 1`; `x (+) y = (x + y) / (1 + x
   y)`; `D(x (+) y) = D(x) D(y)`. Calibre: none. Status: built.
@@ -925,7 +948,7 @@ the Xylarium function is the implementation. The ids are proposals.
 
 | Proposed id | Form | Shell proposed | Xylarium implementation |
 |---|---|---|---|
-| LAW-DEFICIT-SHARE | `delta = M / (r + M)` | core | `xyl_core::shares::deficit` |
+| LAW-DEFICIT-SHARE | `delta = M / (r + M)`, the convergent face; `1 - delta` the divergent face | core | `xyl_core::shares::deficit`, `xyl_core::shares::faces` |
 | LAW-DILATION | `D(p) = (1 + p) / (1 - p)`, `p` in `(-1, 1)` | core | `xyl_core::shares::dilation` |
 | LAW-TORSION-SHARE | `s(H, J) = (H + J) / (2H + J)`, `H` the horizon reach and `J` the spin's share, both stated by the universe | core | `bounce::torsion_share` |
 | LAW-JET-MAP | `t -> a t + b`, `a = D(p_c) / (1 - p_v)`, `b = p_v / (1 - p_v)` | Xylarium | `circuit::jet_map` |

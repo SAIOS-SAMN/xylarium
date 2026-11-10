@@ -289,14 +289,24 @@ pub(super) fn tiers(o: &Options, n: u64) -> Result<String, String> {
         rg(&inside).checked_div(&ring_g).unwrap_or(Q::ZERO),
     );
     let count = &Q::ONE + &reach.checked_div(&hold).unwrap_or(Q::ZERO);
+    // Gravity's two faces about the hold: the count is 1 + t = 1 / c.
+    let faces = xyl_core::shares::faces(&hold, &reach);
     out.push_str(&format!(
         concat!(
-            "Star {} about its core: reach {} kpc, deficit {}, ",
+            "Star {} about its core: reach {} kpc, convergent face (deficit) {}, ",
+            "divergent face {}, pole t {}, ",
             "its turn {} rings of its galaxy's echo = {} yr\n"
         ),
         n,
         Dy::from_q(&radius_kpc),
-        show(&xyl_core::shares::deficit(&hold, &reach).unwrap_or(Q::ZERO)),
+        show(&faces.as_ref().map_or(Q::ZERO, |f| f.convergent.clone())),
+        show(&faces.as_ref().map_or(Q::ZERO, |f| f.divergent.clone())),
+        show(
+            &faces
+                .as_ref()
+                .and_then(xyl_core::shares::Faces::pole)
+                .unwrap_or(Q::ZERO)
+        ),
         show(&count),
         show(&years(&(&count * &ring_g)))
     ));

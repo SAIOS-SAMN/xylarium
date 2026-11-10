@@ -231,6 +231,19 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Gravity is the topological deformation of the manifold about a mass
+  invariant, with convergence and divergence as antipoles (ruled
+  2026-11-10, #155; docs/model.md, Gravity; axioms 2 and 5 restated).
+  `xyl_core::shares::faces` gives both faces, `c = M / (r + M)` and
+  `d = r / (r + M)` (`t = r / M`); `Faces::antipole` (the inversion
+  `t -> 1 / t`), `Faces::push` (`p = c - d`, `D(p) = M / r`) and
+  `Faces::pole`; `deficit` is the convergent face, chronometry's well the
+  divergent face; `observe tiers` prints both faces and `t`. Derived:
+  `p = 2c - 1 = 1 - 2d`; the faces' turns `+360 c` and `-360 d` are one
+  element of QQ/ZZ, differing by one whole turn, so a body reads winding
+  `-1` and phase `360 c` (T3's shear, unchanged); the torsion share
+  (axiom 7) is the divergent face about `H` at reach `H + J`, pole
+  `1 + a / 2`. No reading changes value.
 - Names (#151): phases in the rationals mod the integers are written
   `QQ/ZZ`; the throat's pole shares `s_Q`, `s_Z` (were `Q`, `Z`); the
   spin's grid `g` (was `N`); the founding's mass weight `m_Z = Z + Q` (was

@@ -8,7 +8,9 @@
 //! per ring (one ring one bell).
 //!
 //! - Deficit: `xyl_core::shares::deficit` = M(<r) / (r + M(<r)), M and r in
-//!   r_g, exact, at most 1; the same share by which the well slows clocks.
+//!   r_g, exact, at most 1: gravity's convergent face (`shares::faces`),
+//!   whose antipole, the divergent face r / (r + M), is the rate at which
+//!   the well's clocks run.
 //! - Turning ([`turning`] exact, [`turning_dy`] on readings): `omega =
 //!   delta(<r) bell / r` radians per ring, with `r` in r_g and
 //!   `delta = M / (r + M)`. With c = 1 the speed `omega r / bell = delta`
@@ -194,6 +196,24 @@ pub fn rigidity(icy: bool) -> Q {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_torsion_share_is_gravitys_divergent_face() {
+        // Axiom 7, s = (H + J) / (2H + J), is the divergent face about the
+        // horizon's hold H at reach H + J, its pole t = 1 + J / H.
+        for (m, a) in [
+            (Q::ONE, Q::ZERO),
+            (Q::ONE, Q::ratio(1, 3)),
+            (Q::ratio(5, 2), Q::ratio(7, 9)),
+            (Q::ratio(1, 4), Q::ONE),
+        ] {
+            let h = crate::bounce::horizon_reach(&m);
+            let j = &a * &(&m * &m);
+            let f = xyl_core::shares::faces(&h, &(&h + &j)).unwrap();
+            assert_eq!(crate::bounce::torsion_share(&m, &a), f.divergent);
+            assert_eq!(f.pole(), Some(&Q::ONE + &j.checked_div(&h).unwrap()));
+        }
+    }
 
     #[test]
     fn turning_stays_below_light_and_falls_outward() {

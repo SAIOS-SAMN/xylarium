@@ -266,6 +266,74 @@ and its Q face, with the electron phase state `R` between them.
   that comparison; the faces with the mix's `R` at the founding's pulse are
   a further step.
 
+### Gravity: the deformation about a mass invariant
+
+Ruled 2026-11-10 ([#155](https://github.com/SAIOS-SAMN/xylarium/issues/155)): gravity is the topological deformation of the
+manifold itself around a mass invariant, and it produces convergence and
+divergence as antipoles. The antipole is not an opposing force, a reversed
+vector or a negative mass: it is the dual deformation about the same
+invariant, with the holonomy around it conjugate.
+
+- **The invariant.** The mass invariant `M` is what the deformation keeps:
+  a count of whole nuclei and frames (axiom 4), exact and calibre-free.
+  Which nucleon `Q` enters it is [#151](https://github.com/SAIOS-SAMN/xylarium/issues/151).
+- **The pole coordinate.** At reach `r` the deformation is read by
+  `t = r / M`, reach over hold (open over held, as the pole point is). It
+  is a ratio, so every reading below is calibre-free.
+- **The two faces** (`xyl_core::shares::faces`):
+
+  ```text
+  convergent face   c = M / (r + M) = 1 / (1 + t)     the deficit (axiom 2)
+  divergent face    d = r / (r + M) = t / (1 + t)     c + d = 1,  c / d = 1 / t
+  ```
+
+  The convergent face is held (the Z side); the divergent face is passed
+  (the Q side). The turning law reads the convergent face; the well's
+  clocks run at the divergent face (chronometry).
+- **The antipole.** The inversion (axiom 5) `t -> 1 / t`, that is
+  `r -> M (M / r)`, exchanges the faces: `c(1 / t) = d(t)`.
+- **The imbalance as a push.** `p = c - d = (1 - t) / (1 + t)` is a push
+  with `D(p) = c / d = M / r`; the antipole reverses it, `p -> -p`, which is
+  the flow law's `D(-p) = 1 / D(p)` (axiom 3). It is positive within
+  `r = M`, zero on it, negative beyond. Exactly, at every reach,
+  `p = 2c - 1 = 1 - 2d`: every reading of the imbalance is one face read
+  linearly.
+- **The equator.** `t = 1`, `r = M`: the antipole's fixed circle, where
+  `c = d = 1/2` and `p = 0`. It is where the invariant is read as a reach:
+  a change of calibre moves the circle with `r` and `M` together and keeps
+  both faces.
+- **In angles.** The convergent face's turn per traversal is `+360 c`
+  degrees (a deficit angle, inward, elliptic); the divergent face's is
+  `-360 d` degrees (an excess angle, outward, hyperbolic). The antipole
+  makes them conjugate: the divergent turn at `t` is minus the convergent
+  turn at `1 / t`.
+- **One class, two representatives.** Since `-360 d = -360 + 360 c`, the
+  two turns are the same element of QQ/ZZ (Winding and phase): they differ
+  by `360 (c + d) = 360`, one whole turn. A body reads that one class, not
+  the sum of the two: its winding is `-1` (the divergent representative's
+  whole turn, the orbit's own revolution) and its phase is `360 c`, the
+  shear T3 reads (`360 delta`). Adding the faces would count the one
+  deficit twice; no reading changes.
+- **The torsion share is the divergent face.** Axiom 7,
+  `s = (H + J) / (2H + J)`, is `d` with the horizon's hold `H` at reach
+  `H + J`, its pole `t = 1 + J / H = 1 + a / 2 = s_Q / s_Z`
+  (`turning::tests`). The spin needs no second model: it is gravity's open
+  face at the horizon.
+- **Holonomy** ([#150](https://github.com/SAIOS-SAMN/xylarium/issues/150)). `c` changes with `r`, so it is the
+  deformation's reading at a loop, not the loop-independent class: the
+  class is `M`, read where the faces balance. A loop's holonomy is inward
+  on the convergent face and outward on the divergent face.
+- **No repulsion.** A body on the divergent face is not pushed: it follows
+  the manifold's flare. The focusing and defocusing of geodesics name the
+  two faces; their squared form is not a law here.
+- **Open, in order.**
+  1. The invariant's count ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151)) and its reading as enclosed
+     curvature (Gauss-Bonnet) on the containment manifolds.
+  2. How each manifold of the chain deforms about its invariant, as the
+     vortex's core and swirl ([#121](https://github.com/SAIOS-SAMN/xylarium/issues/121)), never placed.
+  3. The turning law, the wells and the calibre ([#123](https://github.com/SAIOS-SAMN/xylarium/issues/123)) read on the
+     deformed manifold; draft #152 rebuilt on it.
+
 ## 3. The bounce and the founding
 
 ### The bounce (`bounce.rs`)
@@ -947,14 +1015,18 @@ Axioms:
 1. **Exactness.** Counts are in Z, angles in degrees modulo 360 on a named
    plane, everything else exact in Q; an irrational is a certified enclosure, never stored; no rational is
    rounded.
-2. **Deficit.** A hold `M` at reach `r` keeps `M / (r + M)` of what reaches
-   it.
+2. **Deficit.** Gravity is the topological deformation of the manifold
+   about a mass invariant `M`: at reach `r` its convergent face keeps
+   `M / (r + M)` of what reaches it and its divergent face passes
+   `r / (r + M)` (Gravity: the deformation about a mass invariant).
 3. **Flow.** Pushes compose as `x (+) y = (x + y) / (1 + x y)`;
    `D(p) = (1 + p) / (1 - p)`.
 4. **Conservation.** Nuclei and frames are conserved; mass is a reading of
    the counts.
 5. **Inversion.** `t -> 1 / t` exchanges the Z and Q poles; `x -> -x`
-   reverses a phase.
+   reverses a phase. On gravity's faces, `t = r / M`, it is the antipole:
+   it exchanges the convergent and divergent faces and fixes the equator
+   `r = M`.
 6. **Horizon.** `R_h(M) = 2M`, the held share one third.
 7. **Torsion.** `s = (R_h + J) / (2 R_h + J)`, `J = a M^2`.
 8. **Six planes.** R^12 = C^6: the axis plane and five isoclinic planes,

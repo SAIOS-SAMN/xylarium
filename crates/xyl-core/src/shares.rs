@@ -126,6 +126,26 @@ mod tests {
     use super::*;
 
     #[test]
+    fn a_faces_dilation_is_linear_in_its_pole() {
+        for t in [
+            Q::ratio(1, 9),
+            Q::ratio(1, 1),
+            Q::ratio(3, 2),
+            Q::ratio(7, 1),
+        ] {
+            let f = faces(&Q::ONE, &t).unwrap();
+            // D(d) = 1 + 2t, D(c) = 1 + 2 / t, D(d - c) = t: no square, no root.
+            let two = Q::int(2);
+            assert_eq!(dilation(&f.divergent), Some(&Q::ONE + &(&two * &t)));
+            assert_eq!(
+                dilation(&f.convergent),
+                Some(&Q::ONE + &two.checked_div(&t).unwrap())
+            );
+            assert_eq!(dilation(&-f.push()), Some(t.clone()));
+        }
+    }
+
+    #[test]
     fn the_faces_are_antipoles_under_the_inversion() {
         let cases = [
             (Q::ratio(1, 1), Q::ratio(3, 1)),

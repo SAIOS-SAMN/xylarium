@@ -139,6 +139,25 @@ another crate. Laws are composed from shares (ratios of the form
   reach `H + J`, pole `t = 1 + J / H = 1 + a / 2 = s_Q / s_Z`. Calibre:
   none. Status: built (identity,
   `turning::tests::the_torsion_share_is_gravitys_divergent_face`).
+- Face dilations ([model.md](model.md#the-six-planes-a-face-per-plane)):
+  `D(d(t)) = 1 + 2t`, `D(c(t)) = 1 + 2 / t`, `D(d - c) = t`; linear in the
+  pole. Calibre: none. Status: built (identity,
+  `shares::tests::a_faces_dilation_is_linear_in_its_pole`).
+- T2 at the horizon: `s = d(t_s)`, `t_s = 1 + a / 2` (`M = 1`):
+  `D(s) = 3 + a`, `n = d - c = a / (4 + a)`, `D(n) = t_s`. Calibre: none.
+  Status: built (identity, `turning::tests::t2_is_the_face_law_at_the_horizon`).
+- Plane faces (#128): plane `j` reads `t_j = J_j / (6 H_j)`; T14's push
+  `J_j / (6 H_j + J_j) = d(t_j)` dilates by `1 + J_j / (3 H_j)`; the axis
+  plane reads `t_0 = r / M`. Separation: a pole per plane, `t_j` distinct, totals
+  `sum_j J_j = J`, `sum_j H_j = H_iso`; equal fifths is `t_1 = ... = t_5`.
+  Calibre: none. Status: identity built
+  (`turning::tests::t14s_plane_push_is_a_divergent_face`); the per-plane
+  split planned.
+- Share transfer (T15, #128): a state of weight `m` with shares
+  `w_k = |m_k| / sum_i |m_i|` composes its planes' hyperbolic angles,
+  `sum_k w_k ln D_k` with `D_j = 1 + 2 t_j`, and `D(n)^A` for its axis
+  polarity; each `ln D_k` a certified enclosure. Calibre: none. Status:
+  planned.
 - Dilation and flow law (`xyl_core::shares::dilation`, `flow`):
   `D(p) = (1 + p) / (1 - p)` for `-1 < p < 1`; `x (+) y = (x + y) / (1 + x
   y)`; `D(x (+) y) = D(x) D(y)`. Calibre: none. Status: built.
@@ -666,7 +685,8 @@ another crate. Laws are composed from shares (ratios of the form
   proton count and `Q` the neutron count (the mass number
   `A = floor(a + 1/2)` less the charge, `circuit::mass_number`,
   from the element table; a cluster sums its parts), and a kind weighs
-  `Z + Q` nucleons. Calibre: none. Status: built.
+  `Z + Q` nucleons, the mass weight `m_Z` (ruled #151: the hold; the
+  capacity `cap` is named apart). Calibre: none. Status: built.
 - Electron phase state (`circuit::electron_phase`):
   `R = kappa (1 - 2 frac(p))` in `[-kappa, kappa]`, with `p` the bounce's
   pulse as a share of 360 degrees on the isoclinic planes and `kappa` the electrons' coherence on S^11 (`fibres`,

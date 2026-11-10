@@ -231,6 +231,15 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The six planes, a face per plane (#128, #121; docs/model.md): each plane
+  reads gravity's face law with its own pole (`t_0 = r / M`,
+  `t_j = J_j / (6 H_j)`, the horizon's `t_s = 1 + J / H`); a face's
+  dilation is linear in its pole (`D(d) = 1 + 2t`, `D(c) = 1 + 2 / t`,
+  `D(d - c) = t`); T2 is the face law at the horizon and T14's plane push
+  a divergent face (tests in `shares` and `turning`); T18 restated as
+  separation, equal fifths the case of equal poles. Two counts named apart
+  (#151, ruled): the mass weight `m_Z = Z + Q` (neutrons) is the hold,
+  the capacity `cap` the room.
 - Gravity is the topological deformation of the manifold about a mass
   invariant, with convergence and divergence as antipoles (ruled
   2026-11-10, #155; docs/model.md, Gravity; axioms 2 and 5 restated).

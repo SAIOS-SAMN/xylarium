@@ -257,9 +257,12 @@ and its Q face, with the electron phase state `R` between them.
   3. The founding's output carried per kind as dipoles; the rim placed by
      the containment chain (dilator, frame and cap), not by an exponent.
   4. The deficit and the turning law on both faces; then [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) part 2.
-- **The name Q.** The nucleon `Q` is read here as the capacity;
-  EQUATIONS.md reads it as the neutron count, and `Q` is also the rational
-  type ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151)). Neither reading reproduces the throat: for seed 7
+- **The name Q.** Ruled 2026-11-10 ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151)): two counts, named apart.
+  The nucleon `Q` is the neutron count, and the mass weight
+  `m_Z = Z + Q` is the hold that inertia, gravity and the founding read;
+  the dipole's Q side is the capacity, `3Q = 3 cap` here, the room
+  (The six planes: a face per plane). `Q` in backticks is also the
+  rational type. Neither reading reproduces the throat: for seed 7
   the throat's `s_Q / s_Z` is `1.1733`, while the firmament's whole-nuclei
   `3Q / 3Z` reads `1.1164` as neutrons and `3.7926` as capacity, and the
   whole founding's `0.7813` and `4.9354` (`observe seals`). `R` is not in
@@ -333,6 +336,73 @@ invariant, with the holonomy around it conjugate.
      vortex's core and swirl ([#121](https://github.com/SAIOS-SAMN/xylarium/issues/121)), never placed.
   3. The turning law, the wells and the calibre ([#123](https://github.com/SAIOS-SAMN/xylarium/issues/123)) read on the
      deformed manifold; draft #152 rebuilt on it.
+
+### The six planes: a face per plane
+
+Derived from built laws ([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128), ruled 2026-11-06: separation, not
+equal fifths; [#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), ruled 2026-11-10: two counts named apart), after
+Gravity ([#155](https://github.com/SAIOS-SAMN/xylarium/issues/155)). The identities are tested
+(`shares::tests::a_faces_dilation_is_linear_in_its_pole`,
+`turning::tests::t2_is_the_face_law_at_the_horizon`,
+`turning::tests::t14s_plane_push_is_a_divergent_face`); the per-plane
+split is not yet built.
+
+- **Two counts.** The mass weight `m_Z = Z + Q` (`formation::mass_weight`,
+  `Q` the neutron count) is the hold: inertia, gravity's invariant and the
+  founding's reach `R_Z = (K + s) / (m_Z H)` read it. The capacity `cap`
+  (`atoms::capacity`) is the room: the dipole's Q side and the seals'
+  equator. Counting empty room as hold would put the outermost turning's
+  envelope in the mass (from Z 28 to Z 33 the capacity runs 28, 1092,
+  4550). The axis plane reads the hold; the five isoclinic planes bound
+  the room.
+- **A face per plane.** Each of the six planes reads gravity's face law
+  with a pole of that plane, reach over hold on it:
+
+  ```text
+  axis plane          t_0 = r / M             gravity's faces (axiom 2)
+  isoclinic plane j   t_j = J_j / (6 H_j)     T14: push J_j / (6 H_j + J_j) = d(t_j)
+  horizon             t_s = 1 + J / H         the torsion share s = d(t_s) (axiom 7)
+  ```
+
+- **Dilation is linear in the pole.** For every face,
+
+  ```text
+  D(d(t)) = 1 + 2t,   D(c(t)) = 1 + 2 / t,   D(d - c) = t
+  ```
+
+  with no square and no root. So T2 is the face law at the horizon
+  (`M = 1`, `t_s = 1 + a / 2`): `D(s) = 3 + a`, the twist
+  `n = d - c = a / (4 + a)`, `D(n) = t_s = s_Q / s_Z`. And T14's plane
+  push dilates by `1 + J_j / (3 H_j)`.
+- **Separation.** The five isoclinic planes are interchangeable in every
+  count the founding makes (T6, T7), so at rest their poles coincide and
+  T14's pushes are equal: T18's equal fifths is the case
+  `t_1 = ... = t_5`. Plane `j` is read by `t_j`, from the plane's hold
+  `H_j` and twist `J_j`; the spin's turning on each plane separates them.
+  What moves between planes is twist and hold, and their totals are kept:
+  `sum_j J_j = J`, `sum_j H_j = H_iso` (axioms 4 and 11).
+- **The transfer.** A state of weight `m` in Z^6, with turning shares
+  `w_k = |m_k| / sum_i |m_i|`, feels its planes composed by the flow law
+  (T15): its hyperbolic angle is the sum over planes of `w_k ln D_k`, with
+  `D_0` the axis plane's and `D_j = 1 + 2 t_j` on the isoclinic planes,
+  and `D(n)^A` for its axis polarity. The angles add because the planes
+  are orthogonal and commute; each `ln D_k` is a certified enclosure,
+  never stored.
+- **Deformation** ([#121](https://github.com/SAIOS-SAMN/xylarium/issues/121)). A manifold of the chain deforms about its
+  invariant as its poles move: on the axis plane by its reach about its
+  hold, on each isoclinic plane by the twist and hold moved into it. A
+  change of calibre dilates reach and hold together on every plane and
+  keeps every `t_k`, so the deformation reads the same in every tier.
+- **Open, in order.**
+  1. The per-plane split of `J` and `H` from the spin: `bounce::spin_bivector`
+     gives every blade the full spin ([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128)).
+  2. The axis plane's own count: a band's harmonics carry an axis weight
+     `m0` too, so how the room divides between the axis and the isoclinic
+     planes is to be read from the weights (Weights on the six planes).
+  3. The poles as the vortex's windings of its fibres about the core
+     ([#121](https://github.com/SAIOS-SAMN/xylarium/issues/121)).
+  4. The turning law and the calibre ([#123](https://github.com/SAIOS-SAMN/xylarium/issues/123)) on per-plane poles; #152
+     rebuilt on them.
 
 ## 3. The bounce and the founding
 
@@ -1045,7 +1115,7 @@ Theorems:
 | | Statement | From |
 |---|---|---|
 | T1 | `D(x (+) y) = D(x) D(y)`; continuity `s (+) (-s) = 0`, equatorial inflow `(2 + a) / (3 + a)` | 3, 4 |
-| T2 | `D(s) = 3 + a`; twist `n = a / (4 + a)`; dipole `s_Q / s_Z = D(n) = 1 + a / 2` | 3, 7 |
+| T2 | `D(s) = 3 + a`; twist `n = a / (4 + a)`; dipole `s_Q / s_Z = D(n) = 1 + a / 2`: the face law at the horizon's pole `t_s = 1 + a / 2` | 3, 7 |
 | T3 | orbit about `M`: speed and eccentricity `delta`, apsis ratio `1 + 2M / r`; resonances `(k - 1) M` returning after `k` | 2, 6 |
 | T4 | sheared return `k / (1 - theta)`; the echo the throat orbit's return | 10 |
 | T5 | local ring `s r (r + M) / M^2` core traversals | 10 |
@@ -1061,7 +1131,7 @@ Theorems:
 | T15 | a whole nucleus feels its planes composed, `D_k = D(p_plane)^w_k D(n)^A`, `w_k` its share of turning in the isoclinic planes; held where `D_k <= 1`, else it leaves after `ln 2 / ln D_k` echoes | 3, T14 |
 | T16 | a paired throat's faces dilate an open kind by `D(s) D(n)^A` and `D(s) D(n)^-A`, product `(3 + a)^2`; no open kind is held on both faces; the shared hold is the closed kinds | 3, 5, 9, T2, T8 |
 | T17 | the spin is a sheared orbit over the core's bounces: a kind's separation is `rho = q ln D(s) - (1 - q) ln D(1 - s)` across the attractor pair; a cohort takes `J (m / M) (rho_cohort / rho_hold)`; a cohort less separated than its hold spins the throat up; the pair closes while `a <= 1` | 3, 7, 9, 11, T2, T10, T16 |
-| T18 | the five isoclinic planes are interchangeable in the multiplicity and the filling, so each holds a fifth of the isoclinic hold and T14's pushes are equal: one isoclinic phase per body; distinct plane phases come only from a link's turning between planes | 8, T6, T7, T14 |
+| T18 | the five isoclinic planes are interchangeable in the multiplicity and the filling, so at rest their poles coincide and T14's pushes are equal; plane `j` reads the pole `t_j = J_j / (6 H_j)` by its separation (ruled, #128), so equal fifths is the case of equal poles and distinct plane phases come from the spin's turning on each plane and a link's turning between planes (The six planes) | 8, T6, T7, T14 |
 | T19 | a link's remanence `w = J - (a_0 M_0) M`: per passage `w' = w (1 - m / M) + J (m / M) (1 - rho_c / rho_hold)`; conserved between passages; cleared by a passage of hold `m* = w M / (w + J (rho_c / rho_hold - 1))`; for one release, the remanent share `1 - rho_hold / rho_closed` | 7, 11, T10, T17 |
 
 Reading (seed 7; a retired floating-point screen with exact held sets, to

@@ -48,16 +48,18 @@ The uplink is the one program that links Mycelium. It is built on
 `mycelium-sdk` and on this workspace's crates, and lives outside this
 repository.
 
-- **Where.** A separate git repository, `xylarium-uplink`, kept beside the
-  kernel checkout. It is private and not yet published or hosted remotely;
-  it is to be published with Mycelium's shared libraries.
+- **Where.** A separate private repository,
+  [SAIOS-SAMN/xylarium-uplink](https://github.com/SAIOS-SAMN/xylarium-uplink),
+  with its own AGENTS.md, CONTRIBUTING.md and CHANGELOG; it is to be
+  published with Mycelium's shared libraries.
 - **What.** One crate, `xyl-uplink`: the ancients' house on a hypha, the
   universal clock, the upward ledger, the endowment and the domain
   commands (`xyl-uplink run` for live play with the house as a
   `run::Link`, `xyl-uplink found-universe` to found a domain).
 - **Dependencies.** `mycelium-sdk` pinned by git tag (`v0.3.0`), and
-  `xyl-core`, `xyl-cosmos`, `xyl-kernel` and `xylarium` by relative path to
-  the kernel checkout.
+  `xyl-core`, `xyl-cosmos`, `xyl-kernel` and `xylarium` pinned by git
+  revision of this repository. A kernel change the uplink needs lands here
+  first; the uplink then moves its pin.
 - **Status against v0.4.0-rc.1.** Not built: v0.4.0 changes act layouts
   and addresses within wire `0x0200` and law version 5 (`ACT_LAWS` modes 7
   and 8 become the clause register, signed by reconstruction; word, chart
@@ -74,11 +76,10 @@ repository.
   network clause, which a hosted domain's crossings need, so it is read
   first (#136). Enabling or vetoing the kernel clauses is the operator's
   decision.
-- **Standards.** The uplink is to follow the same layout and process as
-  this repository and Mycelium: a hosted repository, the shared commit
-  identity, dependencies on the kernel by git rather than by path,
-  AGENTS.md, CONTRIBUTING.md, a CHANGELOG, and the same checks
-  ([#175](https://github.com/SAIOS-SAMN/xylarium/issues/175)).
+- **Standards.** The uplink follows this repository's process: changes by
+  pull request under the shared identity, and the same checks (fmt,
+  clippy `-D warnings`, tests)
+  ([#175](https://github.com/SAIOS-SAMN/xylarium/issues/175), done).
 
 ## The Link seam
 

@@ -393,15 +393,17 @@ impl ExpSum {
 /// once.
 #[derive(Default)]
 pub struct Grown {
-    at: std::collections::BTreeMap<Q, Encl>,
+    at: Vec<(Q, Encl)>,
 }
 
 impl Grown {
     fn of(&mut self, rate: &Q, t: &Q) -> Encl {
-        self.at
-            .entry(rate.clone())
-            .or_insert_with(|| Boost::e(Q::ONE, -rate.clone()).grown(t))
-            .clone()
+        if let Some((_, e)) = self.at.iter().find(|(r, _)| r == rate) {
+            return e.clone();
+        }
+        let e = Boost::e(Q::ONE, -rate.clone()).grown(t);
+        self.at.push((rate.clone(), e.clone()));
+        e
     }
 }
 

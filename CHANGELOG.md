@@ -279,6 +279,14 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- xyl-core adopts MU-STANDARDS 4.2 in full (#179):
+  `crates/xyl-core/clippy.toml` denies Mycelium's table, which is maps
+  (law 2, rule 9), wall time (law 9), choice by a scalar (rule 4), invented
+  values (rule 11) and members by position (rule 15). The memos of
+  `measure` and `motion` are keyed lists. `cga`'s sort by blade mask
+  carries its rule-4 reason. The watch (`watch.rs`), the one instrument,
+  shows an unread value as `-` instead of zero, with item-level
+  `#[expect]`s for wall time. No reading moves.
 - `xyl-core` clears its rule-11 sites outside `watch` (#179, MU-STANDARDS
   rule 11, exact or refused): no `unwrap_or`, `unwrap_or_else`,
   `unwrap_or_default` or unsigned `saturating_*` remains. `Dy::log`,

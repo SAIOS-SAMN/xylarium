@@ -73,7 +73,9 @@ pub const AXES: usize = 1 + 2 * crate::circuit::PLANES;
 /// half-angle (xyl_core::rotor::Half). The pole axis (axis 1) is left to the
 /// filament; the planes carry the turning.
 pub fn crossing(centre: &[Q], x: &Q, psi: &Q) -> Vec<Q> {
-    let (c, s) = xyl_core::rotor::Half::of_turns(psi, 60).cos_sin();
+    let (c, s) = xyl_core::rotor::Half::of_turns(psi, 60)
+        .cos_sin()
+        .unwrap_or((Q::ONE, Q::ZERO));
     let mut at: Vec<Q> = centre.to_vec();
     at.resize(AXES, Q::ZERO);
     at[1] = &at[1] + &(x * &c);

@@ -146,7 +146,13 @@ fn tanh(x: Dy) -> Dy {
 /// speed. A ratio below one is taken as one.
 pub fn delta_v(v_e: Dy, ratio: Dy) -> Dy {
     let c = c_m_s();
-    c * tanh(v_e.div(&c).unwrap_or_default() * ratio.max(Dy::ONE).log())
+    c * tanh(
+        v_e.div(&c).unwrap_or_default()
+            * ratio
+                .max(Dy::ONE)
+                .ln()
+                .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2()),
+    )
 }
 
 /// The propellant transduced per kg of dry mass at this mass ratio (kg per kg):
@@ -217,7 +223,10 @@ mod tests {
         // The speed change matches Tsiolkovsky at low speed and stays below
         // c at high speed.
         let dv = delta_v(chem, Dy::int(MASS_RATIO));
-        let tsiolkovsky = chem * Dy::int(MASS_RATIO).log();
+        let tsiolkovsky = chem
+            * Dy::int(MASS_RATIO)
+                .ln()
+                .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2());
         assert!(
             (dv - tsiolkovsky).abs() < tsiolkovsky.div(&(Dy::int(1_000_000))).unwrap_or_default(),
             "{dv} vs {tsiolkovsky}"

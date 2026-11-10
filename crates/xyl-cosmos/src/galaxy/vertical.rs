@@ -106,7 +106,11 @@ pub fn vertical(r: Dy, born: Dy, age: Dy, u: Dy, phase: Dy) -> Vertical {
     // ring) and the draw `vz = -sigma ln(1 - u)`, an exponential in place
     // of a Rayleigh root.
     let sigma = h * nu * heating_share(r, born, age) * share;
-    let vz = sigma * -(Dy::ONE - u).max(Dy::sci(1, -12)).log();
+    let vz = sigma
+        * -(Dy::ONE - u)
+            .max(Dy::sci(1, -12))
+            .ln()
+            .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2());
     let (amp, period) = if nu.signum() > 0 {
         (
             vz.div(&nu).unwrap_or_default(),

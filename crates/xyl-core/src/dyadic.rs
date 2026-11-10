@@ -23,8 +23,9 @@
 //! There is no `/` operator: `div` refuses a zero divisor (`None`), and
 //! `over` divides by a nonzero integer (`nonzero!`, `dyadic!` for a written
 //! ratio, both checked at build time). `sqrt`, `ln` and `pow` return `None`
-//! outside their domain; `root` and `powf` return zero there, and `log`
-//! returns `-200 ln 2`. `from_bits` refuses a value not in normal form.
+//! outside their domain, and `trunc_i64` a whole part past `i64`; `exp`
+//! saturates past `2^63` halvings. `from_bits` refuses a value not in normal
+//! form.
 //! Where a decision must be proven rather than computed, use `certified`
 //! enclosures instead.
 //!
@@ -96,8 +97,16 @@ fn norm(m: i128, e: i64) -> Dy {
         a <<= 1;
         e -= 1;
     }
-    let mi = i64::try_from(a).unwrap_or(i64::MAX);
-    let ei = i32::try_from(e.clamp(i64::from(i32::MIN), i64::from(i32::MAX))).unwrap_or(0);
+    // The loops above leave `2^61 <= a < 2^62`, and the exponent is clamped
+    // to the range of `i32`, so neither narrowing loses a bit.
+    #[expect(
+        clippy::cast_possible_truncation,
+        reason = "normalised: the mantissa is below 2^62 and the exponent clamped to i32"
+    )]
+    let (mi, ei) = (
+        a as i64,
+        e.clamp(i64::from(i32::MIN), i64::from(i32::MAX)) as i32,
+    );
     Dy {
         m: if neg { -mi } else { mi },
         e: ei,
@@ -135,15 +144,26 @@ impl Dy {
             return Dy::ZERO;
         }
         let (n, d) = (r.numer().clone(), r.denom().clone());
-        // The shift `s` is chosen so that `n * 2^s / d` has about 62 bits.
-        let bits = |x: &BigInt| i64::try_from(x.abs().bits()).unwrap_or(0);
-        let s = i64::from(MANT) + 1 - (bits(&n) - bits(&d));
+        // The shift `s` is chosen so that `n * 2^s / d` has about 62 bits:
+        // with `2^(b-1) <= |x| < 2^b` for `b` bits, the quotient is below
+        // `2^(b_n + s - b_d + 1) = 2^64`.
+        let bits = |x: &BigInt| i128::from(x.abs().bits());
+        let s = i128::from(MANT) + 1 - (bits(&n) - bits(&d));
         let scaled = if s >= 0 {
-            (n << usize::try_from(s).unwrap_or(0)) / d
+            (n << s.unsigned_abs()) / d
         } else {
-            (n >> usize::try_from(-s).unwrap_or(0)) / d
+            (n >> s.unsigned_abs()) / d
         };
-        norm(scaled.to_i128().unwrap_or(0), -s)
+        // A rational held in memory has fewer than 2^63 bits, so the
+        // exponent fits i64 before `norm` clamps it to i32.
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "clamped to the range of i64 on the same line"
+        )]
+        let e = (-s).clamp(i128::from(i64::MIN), i128::from(i64::MAX)) as i64;
+        // The quotient is below 2^64 in magnitude (above), so it fits i128
+        // (`tests::from_q_holds_every_rational_to_62_bits`).
+        scaled.to_i128().map_or(Dy::ZERO, |m| norm(m, e))
     }
 
     /// This dyadic as the exact rational it is.
@@ -152,10 +172,11 @@ impl Dy {
             return Q::ZERO;
         }
         let m = BigInt::from(self.m);
+        let shift = self.e.unsigned_abs();
         let r = if self.e >= 0 {
-            BigRational::from_integer(m << usize::try_from(self.e).unwrap_or(0))
+            BigRational::from_integer(m << shift)
         } else {
-            BigRational::new(m, BigInt::one() << usize::try_from(-self.e).unwrap_or(0))
+            BigRational::new(m, BigInt::one() << shift)
         };
         Q::from_big(r)
     }
@@ -285,32 +306,32 @@ impl Dy {
     }
 
     /// `e^x`, by range reduction to `x = k ln 2 + r` and the Taylor series of
-    /// `e^r` in fixed point.
+    /// `e^r` in fixed point. Past `2^63` halvings (`|x| > 2^63 ln 2`, about
+    /// `6.4 x 10^18`) the result saturates to a very large value or to zero.
     pub fn exp(&self) -> Dy {
         if self.m == 0 {
             return Dy::int(1);
         }
-        // The argument in 2^-62 fixed point; for |x| >= 2^64 the result
-        // saturates to a very large value or to zero.
-        let fx = to_fixed(self);
-        let Some(fx) = fx else {
-            return if self.m > 0 {
-                Dy {
-                    m: i64::MAX >> 1,
-                    e: i32::MAX / 2,
-                }
-            } else {
-                Dy::ZERO
-            };
+        let saturated = if self.m > 0 {
+            Dy {
+                m: i64::MAX >> 1,
+                e: i32::MAX / 2,
+            }
+        } else {
+            Dy::ZERO
+        };
+        // The argument in 2^-62 fixed point, which holds |x| < 2^64.
+        let Some(fx) = to_fixed(self) else {
+            return saturated;
         };
         let l2 = ln2_fixed();
         // `x = k ln2 + r` with `k` the nearest integer, so |r| <= ln2/2.
         let k = (fx + (if fx >= 0 { l2 / 2 } else { -l2 / 2 })) / l2;
         let r = fx - k * l2;
-        norm(
-            exp_fixed(r),
-            -i64::from(MANT) + i64::try_from(k).unwrap_or(0),
-        )
+        let Ok(k) = i64::try_from(k) else {
+            return saturated;
+        };
+        norm(exp_fixed(r), -i64::from(MANT) + k)
     }
 
     /// `x^y` for positive x: `exp(y ln x)`; `None` for x <= 0 (unless y == 0).
@@ -371,42 +392,20 @@ impl Dy {
         acc
     }
 
-    /// `x^p` for positive x, zero otherwise (the physical models' convention:
-    /// a non-positive base contributes nothing).
-    pub fn powf(&self, p: Dy) -> Dy {
-        if self.m <= 0 {
-            return Dy::ZERO;
-        }
-        self.pow(&p).unwrap_or(Dy::ZERO)
-    }
-
-    /// `sqrt(x)` for x >= 0, zero otherwise.
-    pub fn root(&self) -> Dy {
-        self.sqrt().unwrap_or(Dy::ZERO)
-    }
-
-    /// `ln(x)` for x > 0; for x <= 0 the log of the least positive dyadic the
-    /// models use (2^-200), so a vanishing quantity has a very negative log.
-    pub fn log(&self) -> Dy {
-        self.ln().unwrap_or_else(|| Dy::int(-200) * ln2())
-    }
-
     /// The value limited to `[lo, hi]` (`max(lo)` then `min(hi)`, so `hi`
     /// wins when `lo > hi`).
     pub fn clamp(self, lo: Dy, hi: Dy) -> Dy {
         self.max(lo).min(hi)
     }
 
-    /// The nearest integer toward zero, saturating.
-    pub fn trunc_i64(&self) -> i64 {
-        to_fixed(self)
-            .map(|f| {
-                // An arithmetic shift floors; a negative value is shifted by
-                // its magnitude so that the result rounds toward zero.
-                let whole = if f < 0 { -((-f) >> MANT) } else { f >> MANT };
-                i64::try_from(whole).unwrap_or(if self.m > 0 { i64::MAX } else { i64::MIN })
-            })
-            .unwrap_or(if self.m > 0 { i64::MAX } else { i64::MIN })
+    /// The nearest integer toward zero; `None` when it does not fit `i64`
+    /// (`|x| >= 2^63`).
+    pub fn trunc_i64(&self) -> Option<i64> {
+        let f = to_fixed(self)?;
+        // An arithmetic shift floors; a negative value is shifted by its
+        // magnitude so that the result rounds toward zero.
+        let whole = if f < 0 { -((-f) >> MANT) } else { f >> MANT };
+        i64::try_from(whole).ok()
     }
 
     /// Rounded to a grid of 2^-bits (toward minus infinity): for values that
@@ -436,13 +435,22 @@ impl Dy {
         // always reads.
         let half_pi = Dy::pi() * crate::dyadic!(1, 2);
         let quarters = self.div(&half_pi).map_or(Dy::ZERO, |q| q);
-        let q = (quarters
+        // Past 2^63 quarter turns (|x| above about 1.4 x 10^19 rad, where one
+        // unit of the 62-bit mantissa is wider than a turn, so the angle no
+        // longer reads) the count is held at the bound of `i64`, as the
+        // reduction has always read it.
+        let q = match (quarters
             + if self.m >= 0 {
                 crate::dyadic!(1, 2)
             } else {
                 crate::dyadic!(-1, 2)
             })
-        .trunc_i64();
+        .trunc_i64()
+        {
+            Some(q) => q,
+            None if self.m >= 0 => i64::MAX,
+            None => i64::MIN,
+        };
         let r = *self - Dy::int(q) * half_pi;
         let Some(f) = to_fixed(&r) else {
             return (Dy::ZERO, Dy::ONE);
@@ -492,8 +500,9 @@ impl Dy {
         let mut x = *self;
         let mut scale = 1i64;
         while x.abs() > crate::dyadic!(1, 5) {
-            // The half-angle divisor `1 + sqrt(1 + x^2)` is at least one.
-            let Some(half) = x.div(&(Dy::ONE + (Dy::ONE + x * x).root())) else {
+            // The radicand `1 + x^2` is at least one, so its root reads, and
+            // the half-angle divisor `1 + sqrt(1 + x^2)` is at least one.
+            let Some(half) = (Dy::ONE + x * x).sqrt().and_then(|r| x.div(&(Dy::ONE + r))) else {
                 break;
             };
             x = half;
@@ -516,9 +525,14 @@ impl Dy {
     /// `acos x` for x in [-1, 1] (clamped): `atan2(sqrt(1 - x^2), x)`.
     pub fn acos(&self) -> Dy {
         let x = Dy::clamp(*self, -Dy::ONE, Dy::ONE);
-        let s = (Dy::ONE - x * x).max(Dy::ZERO).root();
-        // The ratio refuses only x = 0, where the angle is a quarter turn.
-        let Some(t) = s.div(&x) else {
+        // The radicand is held at or above zero, so its root reads
+        // (`tests::sqrt_reads_every_value_held_at_or_above_zero`); the ratio
+        // refuses only x = 0, where the angle is a quarter turn.
+        let Some(t) = (Dy::ONE - x * x)
+            .max(Dy::ZERO)
+            .sqrt()
+            .and_then(|s| s.div(&x))
+        else {
             return Dy::pi() * crate::dyadic!(1, 2);
         };
         let a = t.atan();
@@ -576,8 +590,6 @@ impl std::ops::Mul for Dy {
     }
 }
 
-/// Division rounded toward zero; `x / 0` is 0. Callers that must detect a
-/// zero denominator use `Dy::div`.
 impl std::ops::Neg for Dy {
     type Output = Dy;
     fn neg(self) -> Dy {
@@ -621,9 +633,10 @@ impl std::fmt::Display for Dy {
             x = x * ten;
             e10 -= 1;
         }
+        // The scaled value lies in [10^11, 10^12], which `i64` holds.
         let digits = (x * Dy::sci(1, 11) + crate::dyadic!(1, 2))
             .trunc_i64()
-            .min(999_999_999_999);
+            .map_or(999_999_999_999, |d| d.min(999_999_999_999));
         let s = digits.to_string();
         let (a, b) = s.split_at(1);
         write!(f, "{}{a}.{b}e{e10}", if neg { "-" } else { "" })
@@ -649,7 +662,9 @@ fn to_fixed(x: &Dy) -> Option<i128> {
 /// the certified enclosure `certified::ln2`.
 fn ln2_fixed() -> i128 {
     static L: OnceLock<i128> = OnceLock::new();
-    *L.get_or_init(|| to_fixed(&Dy::from_q(&crate::certified::ln2(80).lo)).unwrap_or(0))
+    // The constant ln 2 is below one, so its fixed point fits
+    // (`tests::ln2_fits_the_fixed_point`).
+    *L.get_or_init(|| to_fixed(&Dy::from_q(&crate::certified::ln2(80).lo)).map_or(0, |f| f))
 }
 
 /// `atanh(z)` for |z| <= 1/3 in 2^-62 fixed point: `sum z^(2k+1) / (2k+1)`.
@@ -703,6 +718,72 @@ mod tests {
     #[test]
     fn pi_is_positive() {
         assert!(Dy::pi().signum() > 0);
+    }
+
+    /// The constant ln 2 is below one, so its 2^-62 fixed point fits and
+    /// `ln2_fixed` never takes its zero branch.
+    #[test]
+    fn ln2_fits_the_fixed_point() {
+        let l = Dy::from_q(&crate::certified::ln2(80).lo);
+        assert!(l > Dy::ZERO && l < Dy::ONE);
+        assert!(to_fixed(&l).is_some());
+        assert!(ln2_fixed() > 0);
+    }
+
+    /// The root of any value held at or above zero reads, so `acos` and
+    /// `atan` never take a refusal of `sqrt`.
+    #[test]
+    fn sqrt_reads_every_value_held_at_or_above_zero() {
+        for x in [
+            -Dy::sci(1, 30),
+            -Dy::ONE,
+            Dy::ZERO,
+            crate::dyadic!(1, 7),
+            Dy::sci(3, 20),
+        ] {
+            assert!(x.max(Dy::ZERO).sqrt().is_some());
+            assert!((Dy::ONE + x * x).sqrt().is_some());
+        }
+    }
+
+    /// `exp` saturates past 2^63 halvings in either direction, and below
+    /// that keeps growing with its argument.
+    #[test]
+    fn exp_saturates_past_the_halvings_i64_holds() {
+        let top = Dy::sci(7, 18).exp();
+        assert_eq!(top, Dy::sci(1, 19).exp());
+        assert!(top > Dy::sci(1, 300));
+        assert_eq!(Dy::sci(-7, 18).exp(), Dy::ZERO);
+        assert_eq!(Dy::sci(-1, 30).exp(), Dy::ZERO);
+        assert!(Dy::int(40).exp() < Dy::int(41).exp());
+    }
+
+    proptest::proptest! {
+        /// Every rational, however wide its parts, is held by `from_q` to 62
+        /// bits: nonzero when it is nonzero, with the same sign, and within
+        /// 2^-60 of it relatively, so the quotient always fits `i128`.
+        #[test]
+        fn from_q_holds_every_rational_to_62_bits(
+            n in proptest::num::i64::ANY,
+            d in 1i64..i64::MAX,
+            k in 0u32..200,
+            up in proptest::bool::ANY,
+        ) {
+            let s = &Q::new(n, d).unwrap()
+                * &if up {
+                    Q::from_big(BigRational::from_integer(BigInt::one() << k))
+                } else {
+                    Q::from_big(BigRational::new(BigInt::one(), BigInt::one() << k))
+                };
+            let x = Dy::from_q(&s);
+            proptest::prop_assert_eq!(x.signum(), s.signum());
+            if !s.is_zero() {
+                let err = (&x.to_q() - &s).abs();
+                let ulp = Q::from_big(BigRational::new(BigInt::one(), BigInt::one() << 60));
+                let tol = &s.abs() * &ulp;
+                proptest::prop_assert!(err <= tol);
+            }
+        }
     }
 
     proptest::proptest! {
@@ -788,13 +869,17 @@ mod tests {
             Q::new(1, 8).unwrap()
         );
         assert!(near(
-            &Dy::int(27).powf(crate::dyadic!(1, 3)),
+            &Dy::int(27).pow(&crate::dyadic!(1, 3)).unwrap(),
             "3",
             "0.00000000000001"
         ));
         assert_eq!(Dy::int(1).div(&Dy::ZERO), None);
-        assert_eq!(crate::dyadic!(7, 2).trunc_i64(), 3);
-        assert_eq!(crate::dyadic!(-7, 2).trunc_i64(), -3);
+        assert_eq!(crate::dyadic!(7, 2).trunc_i64(), Some(3));
+        assert_eq!(crate::dyadic!(-7, 2).trunc_i64(), Some(-3));
+        // A whole part past `i64` is refused, not saturated.
+        assert_eq!(Dy::sci(1, 19).trunc_i64(), None);
+        assert_eq!(Dy::sci(-1, 19).trunc_i64(), None);
+        assert_eq!(Dy::sci(9, 18).trunc_i64(), Some(9_000_000_000_000_000_000));
         // An angle just past -pi/4, where the quarter-turn reduction changes:
         // the sine is negative and the cosine positive.
         let (s, c) = crate::dyadic!(-63, 80).sin_cos();

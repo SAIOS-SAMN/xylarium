@@ -9,7 +9,8 @@
 //! - [`Half`], a half-angle held as its direction `(c, s)` at any scale (its
 //!   tangent `s / c`, including `c = 0`, a half-angle of a quarter turn):
 //!   `compose` adds angles and `cos_sin` gives the whole angle's cosine and
-//!   sine exactly (the share of a sphere within an angle is `measure`'s).
+//!   sine exactly, refusing (`None`) the zero direction `(0, 0)`, which holds
+//!   no angle (the share of a sphere within an angle is `measure`'s).
 //! - [`Rotor`], a rational quaternion `(w, x, y, z)` at any scale, the even
 //!   part of Cl(3): `about(k, h)` turns about axis `k`, `then_after` composes
 //!   by multiplication, `inverse` is the conjugate, and `apply` turns an
@@ -53,7 +54,7 @@ impl Half {
     /// time), held as the rational direction of its half fixed on a grid of
     /// 2^-bits: the frame is then exactly that drawn direction.
     pub fn of_turns(turns: &Q, bits: u32) -> Half {
-        let half = turns.checked_div(&Q::int(2)).unwrap_or(Q::ZERO);
+        let half = turns.over(crate::nonzero!(2));
         let (c, s) = cos_sin_turns(&Encl::exact(half));
         Half {
             c: down(&c.mid(), bits),
@@ -75,16 +76,13 @@ impl Half {
     }
 
     /// The whole angle's cosine and sine, exact:
-    /// `((c^2 - s^2) / n, 2 c s / n)` with `n = c^2 + s^2`.
-    pub fn cos_sin(&self) -> (Q, Q) {
+    /// `((c^2 - s^2) / n, 2 c s / n)` with `n = c^2 + s^2`. `None` for the
+    /// zero direction `(0, 0)`, which holds no angle.
+    pub fn cos_sin(&self) -> Option<(Q, Q)> {
         let n = self.norm();
-        let cos = (&(&self.c * &self.c) - &(&self.s * &self.s))
-            .checked_div(&n)
-            .unwrap_or(Q::ONE);
-        let sin = (&Q::int(2) * &(&self.c * &self.s))
-            .checked_div(&n)
-            .unwrap_or(Q::ZERO);
-        (cos, sin)
+        let cos = (&(&self.c * &self.c) - &(&self.s * &self.s)).checked_div(&n)?;
+        let sin = (&Q::int(2) * &(&self.c * &self.s)).checked_div(&n)?;
+        Some((cos, sin))
     }
 }
 
@@ -164,14 +162,14 @@ impl Rotor {
         };
         let u = [self.x.clone(), self.y.clone(), self.z.clone()];
         let n = &(&(&self.w * &self.w) + &(&u[0] * &u[0])) + &(&(&u[1] * &u[1]) + &(&u[2] * &u[2]));
+        // The zero rotor has no turn: it leaves `v`, as its zero bivector
+        // part (`t = 0`) does in the formula.
+        let Some(inv) = n.recip() else {
+            return v.clone();
+        };
         let t = cross(&u, v).map(|c| c.scale(2));
         let ut = cross(&u, &t);
-        std::array::from_fn(|i| {
-            let k = (&(&self.w * &t[i]) + &ut[i])
-                .checked_div(&n)
-                .unwrap_or(Q::ZERO);
-            &v[i] + &k
-        })
+        std::array::from_fn(|i| &v[i] + &(&(&(&self.w * &t[i]) + &ut[i]) * &inv))
     }
 
     /// An enclosed vector turned by the rotor: its exact midpoint turned
@@ -183,8 +181,7 @@ impl Rotor {
         let rad = v
             .iter()
             .fold(Q::ZERO, |acc, e| &acc + &(&e.hi - &e.lo))
-            .checked_div(&Q::int(2))
-            .unwrap_or(Q::ZERO);
+            .over(crate::nonzero!(2));
         let turned = self.turn(&mid);
         std::array::from_fn(|i| Encl {
             lo: &turned[i] - &rad,
@@ -226,7 +223,13 @@ mod tests {
         // Two right angles compose to a half turn: cos -1, sin 0.
         let right = Half::of_t(Q::ONE);
         let half_turn = right.compose(&right);
-        assert_eq!(half_turn.cos_sin(), (-Q::ONE, Q::ZERO));
+        assert_eq!(half_turn.cos_sin(), Some((-Q::ONE, Q::ZERO)));
+        // The zero direction holds no angle and is refused.
+        let none = Half {
+            c: Q::ZERO,
+            s: Q::ZERO,
+        };
+        assert_eq!(none.cos_sin(), None);
         // A quarter turn about z, then one about x, carries x to y and then y
         // to z.
         let r = Rotor::about(0, &right).then_after(&Rotor::about(2, &right));

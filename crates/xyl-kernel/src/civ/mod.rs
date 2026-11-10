@@ -511,8 +511,11 @@ impl Civilizations {
             .get(i)
             .map(|k| (k.forgetting, k.weights))
             .unwrap_or((Dy::ZERO, [Dy::ZERO; 4]));
-        let fade =
-            ((Dy::ONE - forget.clamp(Dy::ZERO, xyl_core::dyadic!(999, 1000))).log() * years).exp();
+        let fade = ((Dy::ONE - forget.clamp(Dy::ZERO, xyl_core::dyadic!(999, 1000)))
+            .ln()
+            .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2())
+            * years)
+            .exp();
         let now_yr = to * Dy::sci(1, 9);
         let gen = crate::growth::generation_yr(&p.traits, &Rulers::default());
         // The domain with the largest effort weight, and its share of the
@@ -598,7 +601,13 @@ fn coin(seed: u64, star: u64, world: usize, at_yr: Dy, act: &str) -> String {
             "eminent".into(),
             star.into(),
             (world as u64).into(),
-            u64::try_from(at_yr.trunc_i64()).unwrap_or(0).into(),
+            u64::try_from(at_yr.trunc_i64().unwrap_or(if at_yr.signum() > 0 {
+                i64::MAX
+            } else {
+                i64::MIN
+            }))
+            .unwrap_or(0)
+            .into(),
             act.into(),
         ],
     );

@@ -142,7 +142,17 @@ pub(super) fn generation_of(bits: Dy, g: &Gen) -> Dy {
         .div(&g.kg_cell.max(Dy::sci(1, -300)))
         .unwrap_or_default())
     .max(Dy::ONE);
-    g.t_cell * (Dy::ONE + cells.log().div(&(Dy::int(2).log())).unwrap_or_default())
+    g.t_cell
+        * (Dy::ONE
+            + cells
+                .ln()
+                .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2())
+                .div(
+                    &(Dy::int(2).ln().unwrap_or_else(|| {
+                        xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2()
+                    })),
+                )
+                .unwrap_or_default())
 }
 
 /// The bits selection writes per generation in a population of `pop`:
@@ -152,7 +162,11 @@ pub fn bits_per_generation(pop: Dy, b: Dy) -> Dy {
     let e = Dy::ONE.exp();
     constants().bits_per_generation.min(
         (b * constants().reproductive_excess)
-            .div(&pop.max(e).log())
+            .div(
+                &pop.max(e)
+                    .ln()
+                    .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2()),
+            )
             .unwrap_or_default(),
     )
 }

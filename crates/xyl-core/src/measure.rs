@@ -91,9 +91,13 @@ pub fn share_turns(n: u32, theta: Dy) -> Dy {
     // both positive (`tests::ladder_whole_and_step_are_positive`), so neither
     // division takes its zero branch.
     let rungs = rad.div(&step).map_or(Dy::ZERO, |r| r);
-    let i = usize::try_from(rungs.trunc_i64())
-        .unwrap_or(0)
-        .min(RUNGS - 1);
+    // The angle is clamped to the half turn, so `rungs` lies in [0, RUNGS]
+    // and its whole part reads as an index
+    // (`tests::share_turns_reads_every_angle_of_the_half_turn`).
+    let Some(i) = rungs.trunc_i64().and_then(|r| usize::try_from(r).ok()) else {
+        return Dy::ZERO;
+    };
+    let i = i.min(RUNGS - 1);
     let lo = step * Dy::int(i as i64);
     (l[i] + rung(n, lo, rad))
         .div(&whole)
@@ -140,5 +144,24 @@ mod tests {
         for n in 1..=12 {
             assert!(ladder(n)[RUNGS].signum() > 0, "S^{n}");
         }
+    }
+
+    /// Every angle of the half turn, and every angle clamped to it, reads a
+    /// rung index: the share is in [0, 1] and never decreases with the
+    /// angle, so `share_turns` never takes its refusal branch.
+    #[test]
+    fn share_turns_reads_every_angle_of_the_half_turn() {
+        let n = 3;
+        assert_eq!(share_turns(n, Dy::ZERO), Dy::ZERO);
+        let mut last = Dy::ZERO;
+        for k in -2..=66 {
+            let s = share_turns(n, Dy::int(k).over(crate::nonzero!(128)));
+            assert!(
+                s >= last && s <= Dy::ONE + crate::dyadic!(1, 1_000_000),
+                "{k}"
+            );
+            last = s;
+        }
+        assert!(share_turns(n, crate::dyadic!(1, 2)) > crate::dyadic!(999_999, 1_000_000));
     }
 }

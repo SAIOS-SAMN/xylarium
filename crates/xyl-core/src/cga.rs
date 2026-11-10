@@ -87,7 +87,7 @@ pub fn base_axis(i: usize) -> Option<usize> {
 }
 
 fn half() -> Q {
-    Q::new(1, 2).unwrap_or(Q::ONE)
+    crate::ratio!(1, 2)
 }
 
 /// The sign of reordering the generators of `a` past those of `b`: the
@@ -168,11 +168,12 @@ impl<const NEG: usize> Mv<NEG> {
 
     /// The coefficient of one blade (zero where absent).
     pub fn coeff(&self, mask: usize) -> Q {
+        // The multivector is the sparse sum of its blades: a blade absent
+        // from the sum has coefficient zero by the representation's law.
         self.c
             .iter()
             .find(|(m, _)| *m == mask)
-            .map(|(_, v)| v.clone())
-            .unwrap_or(Q::ZERO)
+            .map_or(Q::ZERO, |(_, v)| v.clone())
     }
 
     /// The grade-0 coefficient.

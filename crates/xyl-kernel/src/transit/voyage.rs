@@ -151,7 +151,12 @@ pub fn window_years(
             .div(&(Dy::int(360)))
             .unwrap_or_default();
     let off = (lead - (phase(b, rb) - phase(a, ra))) * Dy::int(rel.signum().into());
-    let turns = off - Dy::int(off.trunc_i64()) + if off.signum() < 0 { Dy::ONE } else { Dy::ZERO };
+    let turns = off
+        - Dy::int(
+            off.trunc_i64()
+                .unwrap_or(if off.signum() > 0 { i64::MAX } else { i64::MIN }),
+        )
+        + if off.signum() < 0 { Dy::ONE } else { Dy::ZERO };
     let wait = turns.max(Dy::ZERO).div(&rel.abs()).unwrap_or_default() * Dy::sci(1, 9);
     let a_m = &a.a * &tier_m(a.tier);
     let v_orb = Dy::from_q(&(&xyl_cosmos::package::Si::rad_s(&a.rate) * &a_m));

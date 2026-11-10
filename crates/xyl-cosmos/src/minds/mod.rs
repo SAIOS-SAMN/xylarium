@@ -186,7 +186,9 @@ fn expect(l: &life::Living, born: Dy, t0: Dy, curve: &mut [Dy], ctx: &Ctx) {
 /// The first curve point at or after `t` (Gyr): ceil(t / curve_step).
 fn ceil_points(t: Dy) -> usize {
     let x = t.div(&curve_step()).unwrap_or_default();
-    let f = x.trunc_i64();
+    let f = x
+        .trunc_i64()
+        .unwrap_or(if x.signum() > 0 { i64::MAX } else { i64::MIN });
     let c = if Dy::int(f) < x { f + 1 } else { f };
     usize::try_from(c.max(0)).unwrap_or(0)
 }

@@ -342,7 +342,18 @@ pub fn valley_a(z: u32) -> Option<u32> {
                 * Dy::from_q(&crate::elements::extent(
                     &Q::new(5 * i64::from(z), 200).unwrap_or(Q::ONE),
                 )));
-    let mut a = u32::try_from(guess.trunc_i64().max(0)).ok()?.clamp(lo, hi);
+    let mut a = u32::try_from(
+        guess
+            .trunc_i64()
+            .unwrap_or(if guess.signum() > 0 {
+                i64::MAX
+            } else {
+                i64::MIN
+            })
+            .max(0),
+    )
+    .ok()?
+    .clamp(lo, hi);
     let mut here = miss(a)?;
     loop {
         if a > lo {

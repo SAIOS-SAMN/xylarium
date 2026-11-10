@@ -62,7 +62,9 @@ pub(super) fn settle(b: Vec<Embryo>, star_suns: &Q, settled: &Q) -> Vec<Embryo> 
 fn period(s: Dy, n: Dy) -> i64 {
     let (mut x, mut h0, mut h1, mut k0, mut k1) = (s, 0i64, 1i64, 1i64, 0i64);
     for _ in 0..48 {
-        let a = x.trunc_i64();
+        let a = x
+            .trunc_i64()
+            .unwrap_or(if x.signum() > 0 { i64::MAX } else { i64::MIN });
         (h0, h1) = (h1, a.saturating_mul(h1).saturating_add(h0));
         (k0, k1) = (k1, a.saturating_mul(k1).saturating_add(k0));
         if k1 > 0
@@ -128,15 +130,29 @@ impl Pairs<'_> {
                 .unwrap_or_default();
         let n = gyr * self.per_gyr * dw;
         let s = w1.max(w2).div(&dw).unwrap_or_default();
-        let s = s - Dy::int(s.trunc_i64());
+        let s =
+            s - Dy::int(
+                s.trunc_i64()
+                    .unwrap_or(if s.signum() > 0 { i64::MAX } else { i64::MIN }),
+            );
         let q = period(s, n.max(Dy::ONE));
         let off = Dy::int(q) * Dy::from_q(&(&y.phase - &x.phase));
-        let mut f = off - Dy::int(off.trunc_i64());
+        let mut f = off
+            - Dy::int(off.trunc_i64().unwrap_or(if off.signum() > 0 {
+                i64::MAX
+            } else {
+                i64::MIN
+            }));
         if f.signum() < 0 {
             f += Dy::ONE;
         }
         let c = (Dy::ONE - Dy::int(2) * f).abs();
-        let whole = Dy::int((n.div(&(Dy::int(q))).unwrap_or_default()).trunc_i64());
+        let laps = n.div(&(Dy::int(q))).unwrap_or_default();
+        let whole = Dy::int(laps.trunc_i64().unwrap_or(if laps.signum() > 0 {
+            i64::MAX
+        } else {
+            i64::MIN
+        }));
         let rest = n - whole * Dy::int(q);
         eps * (whole * c + rest)
     }

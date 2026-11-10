@@ -139,7 +139,8 @@ pub fn shell_km(q: Dy, t_surf: Dy, t_melt: Dy) -> Option<Dy> {
                 .max(Dy::ONE)
                 .div(&t_surf.min(t_melt).max(Dy::ONE))
                 .unwrap_or_default())
-            .log())
+            .ln()
+            .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2()))
         .div(&q)
         .unwrap_or_default()
         .div(&(Dy::int(1000)))
@@ -381,9 +382,14 @@ pub fn richness(w: &State, s: Solvent, t: Dy, z: Dy, ctx: &Ctx) -> Dy {
                 .exp()),
         )
         .unwrap_or_default();
-    let x = ((weak_bond_ev(s, ctx).div(&kt).unwrap_or_default()).log() - c.weak_kt.log())
-        .div(&xyl_core::dyadic!(3, 5))
-        .unwrap_or_default();
+    let x = ((weak_bond_ev(s, ctx).div(&kt).unwrap_or_default())
+        .ln()
+        .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2())
+        - c.weak_kt
+            .ln()
+            .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2()))
+    .div(&xyl_core::dyadic!(3, 5))
+    .unwrap_or_default();
     let weak = (-x.abs()).exp();
     share * strong * weak
 }

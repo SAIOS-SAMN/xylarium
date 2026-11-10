@@ -264,9 +264,19 @@ pub fn climb(
         }
         times.push(t);
     }
+    let held = setbacks.min(Dy::sci(4, 9));
     Climb {
         times,
-        setbacks: u32::try_from(setbacks.min(Dy::sci(4, 9)).trunc_i64().max(0)).unwrap_or(u32::MAX),
+        setbacks: u32::try_from(
+            held.trunc_i64()
+                .unwrap_or(if held.signum() > 0 {
+                    i64::MAX
+                } else {
+                    i64::MIN
+                })
+                .max(0),
+        )
+        .unwrap_or(u32::MAX),
     }
 }
 

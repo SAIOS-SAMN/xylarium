@@ -409,7 +409,12 @@ fn arrivals(living: &[Living], first: &[Option<Lineage>]) -> Vec<Vec<(Region, Dy
 /// (`worlds::star_degree_gyr`). It is used to judge
 /// what a mind arising at that epoch can live on.
 pub fn world_at(set: &Setting, born: Dy, epoch: Dy, ctx: &Ctx) -> Vec<Medium> {
-    let quarters = ((epoch - born) * Dy::int(4) + xyl_core::dyadic!(1, 2)).trunc_i64();
+    let span = (epoch - born) * Dy::int(4) + xyl_core::dyadic!(1, 2);
+    let quarters = span.trunc_i64().unwrap_or(if span.signum() > 0 {
+        i64::MAX
+    } else {
+        i64::MIN
+    });
     let age = ((Dy::int(quarters)).div(&(Dy::int(4))).unwrap_or_default()).max(
         worlds::star_degree_gyr(&set.sequence, set.compactness, set.reach, ctx),
     );

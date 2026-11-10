@@ -253,7 +253,9 @@ fn founding_of(origin: &Origin) -> Option<Arc<Founding>> {
     for (index, bead) in substrate.galaxies().into_iter().skip(1) {
         let g = bead?;
         let out = g.reach.clone();
-        let (cs, sn) = xyl_core::rotor::Half::of_turns(&g.phase, 60).cos_sin();
+        let (cs, sn) = xyl_core::rotor::Half::of_turns(&g.phase, 60)
+            .cos_sin()
+            .unwrap_or((Q::ONE, Q::ZERO));
         // The hole mass is hole_suns = M_core x state: a bead's state is its
         // mass in units of the universal core's state (1).
         let hole_suns = &crate::package::hole_mass() * &g.state;

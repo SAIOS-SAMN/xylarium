@@ -232,11 +232,21 @@ pub(super) fn bench_read(seed: u64, lo: u32, hi: u32) -> Result<String, String> 
     // The bits each chain needs to carry one nucleus of the vessel's top
     // kind: -log2 of its unfloored count per hydrogen, a reading (the
     // floored chain can need a bit more, as `elements::founding_bits` does).
-    let ln2 = Dy::int(2).log();
+    let ln2 = Dy::int(2)
+        .ln()
+        .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2());
     let needs: Vec<String> = CANDIDATES
         .iter()
         .zip(&trials)
-        .map(|(name, t)| format!("{name} {}", -(t.log().div(&ln2).unwrap_or_default())))
+        .map(|(name, t)| {
+            format!(
+                "{name} {}",
+                -(t.ln()
+                    .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2())
+                    .div(&ln2)
+                    .unwrap_or_default())
+            )
+        })
         .collect();
     out.push_str(&format!(
         "Bits to the vessel's top (Z{vessel_top}) under each closed share: built {bits}; {}\n",

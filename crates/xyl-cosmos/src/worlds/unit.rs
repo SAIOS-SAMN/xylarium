@@ -103,7 +103,12 @@ pub fn star_degree_gyr(seq: &crate::stars::Sequence, delta: Dy, reach: Dy, ctx: 
 
 /// The degree of its star's life an age (Gyr) lies nearest.
 pub fn degree_of(age: Dy, degree_gyr: Dy) -> i64 {
-    (age.div(&degree_gyr).unwrap_or_default() + xyl_core::dyadic!(1, 2)).trunc_i64()
+    let degrees = age.div(&degree_gyr).unwrap_or_default() + xyl_core::dyadic!(1, 2);
+    degrees.trunc_i64().unwrap_or(if degrees.signum() > 0 {
+        i64::MAX
+    } else {
+        i64::MIN
+    })
 }
 
 /// The age (Gyr) at a degree of its star's life.

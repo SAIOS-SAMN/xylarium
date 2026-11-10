@@ -278,10 +278,17 @@ impl Class {
         }
         let x = self
             .compactness
-            .log()
-            .div(&(Dy::int(10).log()))
+            .ln()
+            .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2())
+            .div(
+                &(Dy::int(10)
+                    .ln()
+                    .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2())),
+            )
             .unwrap_or_default();
-        let t = x.trunc_i64();
+        let t = x
+            .trunc_i64()
+            .unwrap_or(if x.signum() > 0 { i64::MAX } else { i64::MIN });
         Some(if Dy::int(t) > x { t - 1 } else { t })
     }
 }

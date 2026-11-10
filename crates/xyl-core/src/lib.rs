@@ -5,7 +5,7 @@
 //! ([`certified::Encl`]) for roots and transcendentals, and dyadic rationals
 //! ([`dyadic::Dy`]) for bounded intermediate readings. The modules:
 //!
-//! - [`q`]: the rational type; [`certified`]: enclosures; [`dyadic`]: `Dy`;
+//! - [`q`]: the rational type; [`certified`]: enclosures; [`dyadic`](mod@dyadic): `Dy`;
 //! - [`cga`]: the conformal geometric algebra `Cl(n+1, 1)` over `Q`;
 //!   [`rotor`]: rational half-angles and quaternion rotors;
 //! - [`units`]: the unit ladder anchored at the universal core

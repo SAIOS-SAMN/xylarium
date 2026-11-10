@@ -103,11 +103,10 @@ impl Boost {
         // A decay past 4096 halvings (or e-folds) is below 2^-4096 and is
         // returned as the enclosure [0, 2^-4096].
         let far = Q::int(4096);
-        let floor = two_to(-4096).unwrap_or(Q::ZERO);
         if x < -far.clone() {
             return Encl {
                 lo: Q::ZERO,
-                hi: floor,
+                hi: dyadic(BigInt::one(), 4096),
             };
         }
         if x > far {
@@ -123,7 +122,13 @@ impl Boost {
             }
             Base::E => {
                 // The first `k` whose remainder is certainly non-negative.
-                let mut k = x.checked_div(&l2.hi).map(|q| q.floor()).unwrap_or_default();
+                // The bound on ln 2 is positive, so the quotient reads; were it
+                // not to, the rapidity goes through `exp_of` whole, as past
+                // 4096.
+                let Some(q) = x.checked_div(&l2.hi) else {
+                    return exp_of(&Encl::exact(x).mul(&self.efolds()), FIXED);
+                };
+                let mut k = q.floor();
                 let mut r = Encl::exact(x.clone()).sub(&whole(&k).mul(&l2));
                 if r.lo.signum() < 0 {
                     k -= 1;
@@ -318,22 +323,21 @@ impl ExpSum {
         for t in &self.terms {
             let a = k - &t.rate;
             let m = t.power;
-            if a.is_zero() {
+            let Some(inv) = a.recip() else {
+                // The resonant term, `a = 0`. The power is unsigned, so the
+                // divisor `m + 1` is at least one
+                // (`tests::a_resonant_relaxation_integrates_the_power`).
+                let next = std::num::NonZeroI64::new(i64::from(m) + 1);
                 out.push(Term {
                     coef: t
                         .coef
-                        .mul(&Encl::exact(
-                            Q::ONE
-                                .checked_div(&Q::int(i64::from(m) + 1))
-                                .unwrap_or(Q::ONE),
-                        ))
+                        .mul(&Encl::exact(next.map_or(Q::ONE, |d| Q::ONE.over(d))))
                         .outward(KEEP),
                     power: m + 1,
                     rate: k.clone(),
                 });
                 continue;
-            }
-            let inv = Q::ONE.checked_div(&a).unwrap_or(Q::ZERO);
+            };
             // The falling factorial m!/(m-i)! and (1/a)^(i+1), both exact.
             let (mut fall, mut pow) = (Q::ONE, inv.clone());
             for i in 0..=m {
@@ -406,6 +410,31 @@ mod tests {
     use super::*;
     use crate::certified::exp;
 
+    /// A relaxation at a term's own rate integrates its power: the term
+    /// `c t^m e^(-k t)` relaxed at `k` is `c t^(m+1) / (m+1) e^(-k t)`, so
+    /// `(m + 1)` times the new coefficient is the old one and the divisor
+    /// `m + 1` is never zero.
+    #[test]
+    fn a_resonant_relaxation_integrates_the_power() {
+        let k = crate::ratio!(3, 7);
+        for m in [0u32, 1, 4, 11] {
+            let c = Encl::exact(crate::ratio!(5, 2));
+            let s = ExpSum {
+                terms: vec![Term {
+                    coef: c.clone(),
+                    power: m,
+                    rate: k.clone(),
+                }],
+            };
+            let r = s.relaxed(&k);
+            assert_eq!(r.terms.len(), 1);
+            let t = &r.terms[0];
+            assert_eq!((t.power, &t.rate), (m + 1, &k));
+            let back = t.coef.mul(&Encl::exact(Q::int(i64::from(m) + 1)));
+            assert!(back.contains(&c.lo), "m = {m}");
+        }
+    }
+
     #[test]
     fn a_mode_grown_and_its_reverse_compose_to_one() {
         for (n, d) in [(1, 3), (-7, 2), (250, 1), (-3000, 7), (2, 1)] {
@@ -427,6 +456,10 @@ mod tests {
             let direct = exp(&x, 80);
             assert!(e.lo <= direct.hi && direct.lo <= e.hi);
         }
+        // A rapidity past -4096 is held as the bound [0, 2^-4096].
+        let far = Boost::halving(Q::ONE, Q::int(-5000)).grown(&Q::ONE);
+        assert_eq!(far.lo, Q::ZERO);
+        assert_eq!(far.hi, two_to(-4096).unwrap());
         // Whole halvings are exact powers of two.
         assert_eq!(
             Boost::halving(Q::ONE, Q::int(-5)).grown(&Q::ONE),

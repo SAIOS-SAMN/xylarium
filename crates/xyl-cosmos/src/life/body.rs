@@ -70,10 +70,12 @@ pub(super) fn growing(deg: i64) -> Dy {
         weight += cp;
     }
     // The share is rounded to a thousandth.
-    (Dy::int(
-        (total.div(&weight).unwrap_or_default() * Dy::int(1000) + xyl_core::dyadic!(1, 2))
-            .trunc_i64(),
-    ))
+    let milli = total.div(&weight).unwrap_or_default() * Dy::int(1000) + xyl_core::dyadic!(1, 2);
+    (Dy::int(milli.trunc_i64().unwrap_or(if milli.signum() > 0 {
+        i64::MAX
+    } else {
+        i64::MIN
+    })))
     .div(&(Dy::int(1000)))
     .unwrap_or_default()
 }
@@ -113,12 +115,17 @@ impl Body {
         let obl = cos.acos();
         let tilt = (obl.min(Dy::pi() - obl) * Dy::int(180))
             .div(&(Dy::pi()))
-            .unwrap_or_default();
+            .unwrap_or_default()
+            + xyl_core::dyadic!(1, 2);
         Body {
             radius: Dy::from_q(&set.world.radius),
             giant: set.world.giant,
             locked,
-            tilt: (tilt + xyl_core::dyadic!(1, 2)).trunc_i64(),
+            tilt: tilt.trunc_i64().unwrap_or(if tilt.signum() > 0 {
+                i64::MAX
+            } else {
+                i64::MIN
+            }),
             a_au: Dy::from_q(&set.world.a),
             star_lum: set.lum,
             star_mass: set.star_mass,

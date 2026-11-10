@@ -61,11 +61,10 @@ impl Tier {
     pub fn in_rg(self) -> Q {
         let p = self.power();
         let sixty = Q::int(60);
-        let up = (0..p.unsigned_abs()).fold(Q::ONE, |acc, _| &acc * &sixty);
         if p >= 0 {
-            up
+            (0..p.unsigned_abs()).fold(Q::ONE, |acc, _| &acc * &sixty)
         } else {
-            Q::ONE.checked_div(&up).unwrap_or(Q::ZERO)
+            (0..p.unsigned_abs()).fold(Q::ONE, |acc, _| acc.over(crate::nonzero!(60)))
         }
     }
 }

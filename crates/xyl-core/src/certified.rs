@@ -9,8 +9,8 @@
 //! `sqrt`, `exp`, `exp_of`, `ln`, `ln2`, `pi`, `powq`, `cos_sin_turns` (angle
 //! in turns), `asin_small` and `asin_any`; `fixed_bounds`, a rational in
 //! 128-bit units of `2^-FIXED` (`FIXED` = 60) for the fixed-point series of
-//! the circular functions; and `down` / `up`, rounding to the grid of
-//! `2^-bits`.
+//! the circular functions, refused (`None`) where a bound does not fit
+//! `i128`; and `down` / `up`, rounding to the grid of `2^-bits`.
 //!
 //! Invariants:
 //! - every series is summed with an explicit bound on its remainder;
@@ -20,7 +20,7 @@
 //!   result;
 //! - out-of-domain input is refused with `None`: `sqrt` of a negative, `ln`
 //!   and `powq` of a non-positive value (except `powq` with `p = 0`), `recip`
-//!   of an interval holding zero;
+//!   of an interval holding zero, `fixed_bounds` of a value past `i128`;
 //! - no floating point is used, so the same inputs give the same enclosure on
 //!   every machine.
 //!
@@ -123,15 +123,16 @@ impl Encl {
                 Encl { lo: a, hi: b }
             };
         }
-        let c = [
+        let (a, b, c, d) = (
             &self.lo * &o.lo,
             &self.lo * &o.hi,
             &self.hi * &o.lo,
             &self.hi * &o.hi,
-        ];
-        let lo = c.iter().min().cloned().unwrap_or(Q::ZERO);
-        let hi = c.iter().max().cloned().unwrap_or(Q::ZERO);
-        Encl { lo, hi }
+        );
+        Encl {
+            lo: a.clone().min(b.clone()).min(c.clone()).min(d.clone()),
+            hi: a.max(b).max(c).max(d),
+        }
     }
 
     /// The reciprocal of an enclosure that excludes zero; `None` otherwise.
@@ -193,16 +194,20 @@ pub fn sqrt(x: &Q, bits: u32) -> Option<Encl> {
 /// `1 / exp(-x)`.
 pub fn exp(x: &Q, bits: u32) -> Encl {
     if x.signum() < 0 {
-        return exp(&-x.clone(), bits + 2)
-            .recip()
-            .unwrap_or_else(|| Encl::exact(Q::ZERO))
-            .outward(bits + 16);
+        // The exponential of a positive argument is at least one (its series
+        // starts at one and every term is positive), so the enclosure
+        // excludes zero and its reciprocal reads
+        // (`tests::exp_of_a_non_negative_argument_is_at_least_one`).
+        let Some(r) = exp(&-x.clone(), bits + 2).recip() else {
+            return Encl::exact(Q::ZERO);
+        };
+        return r.outward(bits + 16);
     }
-    let half = Q::new(1, 2).unwrap_or(Q::ZERO);
+    let half = crate::ratio!(1, 2);
     let mut halvings = 0u32;
     let mut y = x.clone();
     while y > half {
-        y = y.checked_div(&Q::int(2)).unwrap_or(Q::ZERO);
+        y = y.over(crate::nonzero!(2));
         halvings += 1;
     }
     let g = bits + 24 + halvings;
@@ -213,13 +218,13 @@ pub fn exp(x: &Q, bits: u32) -> Encl {
     let tiny = Q::from_big(BigRational::new(BigInt::one(), pow2(g - 8)));
     let (mut slo, mut shi) = (Q::ZERO, Q::ZERO);
     let (mut tlo, mut thi) = (Q::ONE, Q::ONE);
-    let mut i: i64 = 0;
-    loop {
+    // The term index counts from one, so each divisor is nonzero by
+    // construction.
+    for i in (1..).filter_map(std::num::NonZeroI64::new) {
         slo = down(&(&slo + &tlo), g);
         shi = up(&(&shi + &thi), g);
-        i += 1;
-        tlo = down(&(&tlo * &ylo).checked_div(&Q::int(i)).unwrap_or(Q::ZERO), g);
-        thi = up(&(&thi * &yhi).checked_div(&Q::int(i)).unwrap_or(Q::ZERO), g);
+        tlo = down(&(&tlo * &ylo).over(i), g);
+        thi = up(&(&thi * &yhi).over(i), g);
         if thi < tiny {
             break;
         }
@@ -253,16 +258,18 @@ fn atanh(z: &Q, bits: u32) -> Encl {
     let tiny = Q::from_big(BigRational::new(BigInt::one(), pow2(g - 8)));
     let (mut plo, mut phi) = (zlo, zhi);
     let (mut slo, mut shi) = (Q::ZERO, Q::ZERO);
-    let mut k: i64 = 0;
-    loop {
-        let tlo = down(&plo.checked_div(&Q::int(2 * k + 1)).unwrap_or(Q::ZERO), g);
-        let thi = up(&phi.checked_div(&Q::int(2 * k + 1)).unwrap_or(Q::ZERO), g);
+    // The odd divisors 2k + 1 are nonzero by construction.
+    for odd in (1..).step_by(2).filter_map(std::num::NonZeroI64::new) {
+        let tlo = down(&plo.over(odd), g);
+        let thi = up(&phi.over(odd), g);
         if thi < tiny {
-            let tail = up(
-                &thi.checked_div(&(&Q::ONE - &z2hi))
-                    .unwrap_or_else(|| thi.clone()),
-                g,
-            );
+            // For `z <= 1/3` the bound on `z^2` is below one, so the tail's
+            // divisor `1 - z^2` is positive
+            // (`tests::atanh_tail_ratio_is_positive_on_the_domain`).
+            let tail = match thi.checked_div(&(&Q::ONE - &z2hi)) {
+                Some(t) => up(&t, g),
+                None => up(&thi, g),
+            };
             return Encl {
                 lo: slo,
                 hi: &shi + &tail,
@@ -273,7 +280,11 @@ fn atanh(z: &Q, bits: u32) -> Encl {
         shi = up(&(&shi + &thi), g);
         plo = down(&(&plo * &z2lo), g);
         phi = up(&(&phi * &z2hi), g);
-        k += 1;
+    }
+    // The odd numbers do not run out before the terms fall below `tiny`.
+    Encl {
+        lo: Q::ZERO,
+        hi: Q::ONE,
     }
 }
 
@@ -285,9 +296,10 @@ fn atan_small(x: &Q, bits: u32) -> Encl {
     let x2 = x * x;
     let mut power = x.clone();
     let mut sum = Q::ZERO;
-    let mut k: i64 = 0;
-    loop {
-        let t = power.checked_div(&Q::int(2 * k + 1)).unwrap_or(Q::ZERO);
+    let mut add = true;
+    // The odd divisors 2k + 1 are nonzero by construction.
+    for odd in (1..).step_by(2).filter_map(std::num::NonZeroI64::new) {
+        let t = power.over(odd);
         if t.abs() < tiny {
             let tail = t.abs();
             return Encl {
@@ -296,16 +308,22 @@ fn atan_small(x: &Q, bits: u32) -> Encl {
             }
             .outward(bits);
         }
-        sum = if k % 2 == 0 { &sum + &t } else { &sum - &t };
+        sum = if add { &sum + &t } else { &sum - &t };
+        add = !add;
         power = &power * &x2;
-        k += 1;
+    }
+    // The odd numbers do not run out before the terms fall below `tiny`;
+    // `|atan x| <= |x|` encloses the value in any case.
+    Encl {
+        lo: -x.abs(),
+        hi: x.abs(),
     }
 }
 
 /// `pi`, by Machin's formula `16 atan(1/5) - 4 atan(1/239)`.
 pub fn pi(bits: u32) -> Encl {
-    let a = atan_small(&Q::new(1, 5).unwrap_or(Q::ZERO), bits + 8);
-    let b = atan_small(&Q::new(1, 239).unwrap_or(Q::ZERO), bits + 8);
+    let a = atan_small(&crate::ratio!(1, 5), bits + 8);
+    let b = atan_small(&crate::ratio!(1, 239), bits + 8);
     a.mul(&Encl::exact(Q::int(16)))
         .sub(&b.mul(&Encl::exact(Q::int(4))))
         .outward(bits + 4)
@@ -313,7 +331,7 @@ pub fn pi(bits: u32) -> Encl {
 
 /// `ln 2`, enclosed as `2 atanh(1/3)`.
 pub fn ln2(bits: u32) -> Encl {
-    let a = atanh(&Q::new(1, 3).unwrap_or(Q::ZERO), bits + 4);
+    let a = atanh(&crate::ratio!(1, 3), bits + 4);
     a.add(&a)
 }
 
@@ -357,16 +375,17 @@ pub fn exp_of(x: &Encl, bits: u32) -> Encl {
 /// [`asin_small`]: values in units of `2^-60`.
 pub const FIXED: u32 = 60;
 
-/// `q` in units of `2^-60`, rounded down and up.
-pub fn fixed_bounds(q: &Q) -> (i128, i128) {
+/// `q` in units of `2^-60`, rounded down and up. `None` when a bound does
+/// not fit `i128` (`|q| >= 2^67`).
+pub fn fixed_bounds(q: &Q) -> Option<(i128, i128)> {
     let n = q.numer() << FIXED;
     let d = q.denom();
     let lo = n.div_floor(&d);
     let hi = n.div_ceil(&d);
-    (
-        num_traits::ToPrimitive::to_i128(&lo).unwrap_or(i128::MIN),
-        num_traits::ToPrimitive::to_i128(&hi).unwrap_or(i128::MAX),
-    )
+    Some((
+        num_traits::ToPrimitive::to_i128(&lo)?,
+        num_traits::ToPrimitive::to_i128(&hi)?,
+    ))
 }
 
 /// Enclosures of the cosine and sine of an angle given in turns (fractions
@@ -410,51 +429,64 @@ pub fn cos_sin_turns(t: &Encl) -> (Encl, Encl) {
                 hi: f_hi,
             }),
         ];
+        let [a, b, c] = &parts;
         let hull = |pick: fn(&(Encl, Encl)) -> &Encl| Encl {
-            lo: parts
-                .iter()
-                .map(|p| pick(p).lo.clone())
-                .min()
-                .unwrap_or(Q::int(-1)),
-            hi: parts
-                .iter()
-                .map(|p| pick(p).hi.clone())
-                .max()
-                .unwrap_or(Q::ONE),
+            lo: pick(a)
+                .lo
+                .clone()
+                .min(pick(b).lo.clone())
+                .min(pick(c).lo.clone()),
+            hi: pick(a)
+                .hi
+                .clone()
+                .max(pick(b).hi.clone())
+                .max(pick(c).hi.clone()),
         };
         return (hull(|p| &p.0), hull(|p| &p.1));
     }
-    let quad = num_traits::ToPrimitive::to_i64(&q_lo).unwrap_or(0);
-    let q4 = Q::from_reduced(BigRational::new(q_lo, BigInt::from(4)));
-    let two_pi = two_pi_fixed();
-    let y_lo = (fixed_bounds(&(&f_lo - &q4)).0 * two_pi.0) >> FIXED;
-    let y_hi = ((fixed_bounds(&(&f_hi - &q4)).1 * two_pi.1) >> FIXED) + 1;
+    let q4 = Q::from_reduced(BigRational::new(q_lo.clone(), BigInt::from(4)));
+    // The remainders lie in [0, 1/4) turn and 2 pi is below 7, so every
+    // fixed-point bound fits; were one not to, the unit interval still
+    // encloses both values.
+    let (Some(two_pi), Some((y_lo, _)), Some((_, y_hi))) = (
+        two_pi_fixed(),
+        fixed_bounds(&(&f_lo - &q4)),
+        fixed_bounds(&(&f_hi - &q4)),
+    ) else {
+        return (unit.clone(), unit);
+    };
+    let y_lo = (y_lo * two_pi.0) >> FIXED;
+    let y_hi = ((y_hi * two_pi.1) >> FIXED) + 1;
     let (s_lo, s_hi) = (alternating(y_lo, true).0, alternating(y_hi, true).1);
     let (c_lo, c_hi) = (alternating(y_hi, false).0, alternating(y_lo, false).1);
     let one: i128 = 1 << FIXED;
     let e = |lo: i128, hi: i128| Encl {
-        lo: Q::from_i128(lo.max(-one), one).unwrap_or(Q::ZERO),
-        hi: Q::from_i128(hi.min(one), one).unwrap_or(Q::ZERO),
+        lo: dyadic(BigInt::from(lo.max(-one)), u64::from(FIXED)),
+        hi: dyadic(BigInt::from(hi.min(one)), u64::from(FIXED)),
     };
     let (s, c) = (e(s_lo, s_hi), e(c_lo, c_hi));
-    match quad {
-        0 => (c, s),
-        1 => (s.neg(), c),
-        2 => (c.neg(), s.neg()),
-        _ => (s, c.neg()),
+    // The quadrant is `floor(4 f)` for `f` in [0, 1), so 0 to 3; any other
+    // reading is enclosed by the unit interval.
+    match num_traits::ToPrimitive::to_i64(&q_lo) {
+        Some(0) => (c, s),
+        Some(1) => (s.neg(), c),
+        Some(2) => (c.neg(), s.neg()),
+        Some(3) => (s, c.neg()),
+        _ => (unit.clone(), unit),
     }
 }
 
-/// Lower and upper bounds of 2 pi in units of 2^-60, computed once.
-fn two_pi_fixed() -> (i128, i128) {
-    static P: std::sync::OnceLock<(i128, i128)> = std::sync::OnceLock::new();
+/// Lower and upper bounds of 2 pi in units of 2^-60, computed once. `None`
+/// only if they did not fit `i128`, which 2 pi below 7 does.
+fn two_pi_fixed() -> Option<(i128, i128)> {
+    static P: std::sync::OnceLock<Option<(i128, i128)>> = std::sync::OnceLock::new();
     *P.get_or_init(|| {
         let p = pi(100);
         let two = Q::int(2);
-        (
-            fixed_bounds(&(&p.lo * &two)).0,
-            fixed_bounds(&(&p.hi * &two)).1,
-        )
+        Some((
+            fixed_bounds(&(&p.lo * &two))?.0,
+            fixed_bounds(&(&p.hi * &two))?.1,
+        ))
     })
 }
 
@@ -486,12 +518,12 @@ fn alternating(x: i128, odd: bool) -> (i128, i128) {
 /// and multiplied by the exact bounds of `x`, which keeps the relative
 /// precision for small `x`. Outside the domain the result is `[0, 2]`.
 pub fn asin_small(x: &Encl) -> Encl {
-    let half = Q::new(1, 2).unwrap_or(Q::ZERO);
-    if x.lo.signum() < 0 || x.hi > half {
-        return Encl {
-            lo: Q::ZERO,
-            hi: Q::int(2),
-        };
+    let outside = Encl {
+        lo: Q::ZERO,
+        hi: Q::int(2),
+    };
+    if x.lo.signum() < 0 || x.hi > crate::ratio!(1, 2) {
+        return outside;
     }
     let one: i128 = 1 << FIXED;
     let factor = |x2: i128, up: bool| -> i128 {
@@ -508,13 +540,17 @@ pub fn asin_small(x: &Encl) -> Encl {
             sum += term;
         }
     };
-    let (sq_lo, sq_hi) = (
-        fixed_bounds(&(&x.lo * &x.lo)).0,
-        fixed_bounds(&(&x.hi * &x.hi)).1,
-    );
+    // The squares are at most 1/4 on the domain, so their fixed-point
+    // bounds fit.
+    let (Some((sq_lo, _)), Some((_, sq_hi))) = (
+        fixed_bounds(&(&x.lo * &x.lo)),
+        fixed_bounds(&(&x.hi * &x.hi)),
+    ) else {
+        return outside;
+    };
     let f = Encl {
-        lo: Q::from_i128(factor(sq_lo, false), one).unwrap_or(Q::ONE),
-        hi: Q::from_i128(factor(sq_hi, true), one).unwrap_or(Q::ONE),
+        lo: dyadic(BigInt::from(factor(sq_lo, false)), u64::from(FIXED)),
+        hi: dyadic(BigInt::from(factor(sq_hi, true)), u64::from(FIXED)),
     };
     Encl {
         lo: &x.lo * &f.lo,
@@ -527,15 +563,14 @@ pub fn asin_small(x: &Encl) -> Encl {
 /// on the certified sine, each bound a turn whose sine certainly lies on the
 /// bound's side of `x`. Bounds of `x` outside [0, 1] are clamped.
 pub fn asin_any(x: &Encl) -> Encl {
-    let half = Q::new(1, 2).unwrap_or(Q::ZERO);
-    if x.hi <= half && x.lo.signum() >= 0 {
+    if x.hi <= crate::ratio!(1, 2) && x.lo.signum() >= 0 {
         return asin_small(x);
     }
-    let quarter = Q::new(1, 4).unwrap_or(Q::ZERO);
+    let quarter = crate::ratio!(1, 4);
     let bound = |target: &Q, below: bool| -> Q {
         let (mut lo, mut hi) = (Q::ZERO, quarter.clone());
         for _ in 0..56 {
-            let mid = (&lo + &hi).checked_div(&Q::int(2)).unwrap_or(Q::ZERO);
+            let mid = (&lo + &hi).over(crate::nonzero!(2));
             let s = cos_sin_turns(&Encl::exact(mid.clone())).1;
             // For the lower bound, `lo` moves up while the sine is certainly
             // below the target; for the upper, `hi` moves down while it is
@@ -623,6 +658,63 @@ mod tests {
         // Negative arguments: exp(-3) exp(3) encloses 1.
         let p = exp(&Q::int(-3), 80).mul(&exp(&Q::int(3), 80));
         assert!(p.contains(&Q::ONE));
+    }
+
+    /// The exponential of a non-negative argument is at least one, so the
+    /// reciprocal `exp` takes for a negative argument always reads.
+    #[test]
+    fn exp_of_a_non_negative_argument_is_at_least_one() {
+        for (n, d) in [(0, 1), (1, 1000), (1, 2), (3, 1), (250, 1), (4097, 3)] {
+            let e = exp(&Q::new(n, d).unwrap(), 64);
+            assert!(e.lo >= Q::ONE && e.recip().is_some(), "{n}/{d}");
+            let back = exp(&Q::new(-n, d).unwrap(), 64);
+            assert!(back.lo.signum() > 0 || n > 0);
+            assert!(back.hi <= Q::ONE);
+        }
+    }
+
+    /// On the domain `0 <= z <= 1/3` the bound on `z^2` stays below one at
+    /// every grid `atanh` uses, so its tail divisor `1 - z^2` is positive.
+    #[test]
+    fn atanh_tail_ratio_is_positive_on_the_domain() {
+        let z = crate::ratio!(1, 3);
+        for bits in [16, 64, 80, 120] {
+            let g = bits + 16;
+            let zhi = up(&z, g);
+            let z2hi = up(&(&zhi * &zhi), g);
+            assert!((&Q::ONE - &z2hi).signum() > 0, "{bits}");
+            // The enclosure atanh reads at the edge of its domain is ordered.
+            let a = atanh(&z, bits);
+            assert!(a.lo <= a.hi && a.lo.signum() > 0);
+        }
+    }
+
+    /// A value whose fixed-point bounds do not fit `i128` is refused, and
+    /// one that fits reads its floor and ceiling.
+    #[test]
+    fn fixed_bounds_refuse_what_i128_cannot_hold() {
+        let one = 1i128 << FIXED;
+        assert_eq!(fixed_bounds(&Q::ONE), Some((one, one)));
+        let third = fixed_bounds(&crate::ratio!(1, 3)).unwrap();
+        assert_eq!(third.1 - third.0, 1);
+        let huge = &Q::int(i64::MAX) * &Q::int(1 << 10);
+        assert_eq!(fixed_bounds(&huge), None);
+    }
+
+    /// The sine and cosine of a turn in each quadrant carry the quadrant's
+    /// signs, and both lie in [-1, 1].
+    #[test]
+    fn cos_sin_turns_reads_every_quadrant() {
+        let signs = [(1, 1), (-1, 1), (-1, -1), (1, -1)];
+        for (q, (cs, ss)) in signs.into_iter().enumerate() {
+            let t = Q::new(8 * i64::try_from(q).unwrap() + 1, 32).unwrap();
+            let (c, s) = cos_sin_turns(&Encl::exact(t));
+            assert!(c.lo.signum() == cs && c.hi.signum() == cs, "{q}");
+            assert!(s.lo.signum() == ss && s.hi.signum() == ss, "{q}");
+            for e in [&c, &s] {
+                assert!(e.lo >= Q::int(-1) && e.hi <= Q::ONE);
+            }
+        }
     }
 
     #[test]

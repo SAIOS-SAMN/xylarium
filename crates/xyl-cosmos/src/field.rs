@@ -233,7 +233,12 @@ impl Bell {
             if since.signum() < 0 {
                 -1
             } else {
-                (since.div(&period).unwrap_or_default()).trunc_i64()
+                let rings = since.div(&period).unwrap_or_default();
+                rings.trunc_i64().unwrap_or(if rings.signum() > 0 {
+                    i64::MAX
+                } else {
+                    i64::MIN
+                })
             }
         };
         u64::try_from(ring(to) - ring(from)).unwrap_or(0)

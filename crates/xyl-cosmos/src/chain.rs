@@ -182,12 +182,23 @@ impl Place {
             -half
         };
         let deg = |rad: Dy| (rad * Dy::int(180)).div(&(Dy::pi())).unwrap_or_default();
-        let mut az_deg = deg(az).trunc_i64();
+        let az_d = deg(az);
+        let mut az_deg = az_d.trunc_i64().unwrap_or(if az_d.signum() > 0 {
+            i64::MAX
+        } else {
+            i64::MIN
+        });
         if az_deg < 0 {
             az_deg += 360;
         }
-        let polar = deg(z.clamp(Dy::int(-1), Dy::ONE).acos())
+        let polar_d = deg(z.clamp(Dy::int(-1), Dy::ONE).acos());
+        let polar = polar_d
             .trunc_i64()
+            .unwrap_or(if polar_d.signum() > 0 {
+                i64::MAX
+            } else {
+                i64::MIN
+            })
             .clamp(0, 180);
         Cell {
             galaxy: self.galaxy,

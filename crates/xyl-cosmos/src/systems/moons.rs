@@ -130,11 +130,13 @@ fn forced_eccentricities(settled: &[Embryo], anchor: Dy, radius_rg: Dy, g_mass: 
                 let Some(nb) = settled.get(j) else { continue };
                 let (w1, w2) = (rate(&settled[k].a), rate(&nb.a));
                 let ratio = w1.min(w2).div(&w1.max(w2)).unwrap_or_default();
-                let p = (ratio
+                let pr = ratio
                     .div(&(Dy::ONE - ratio).max(Dy::sci(1, -12)))
-                    .unwrap_or_default())
-                .trunc_i64()
-                .max(1);
+                    .unwrap_or_default();
+                let p = pr
+                    .trunc_i64()
+                    .unwrap_or(if pr.signum() > 0 { i64::MAX } else { i64::MIN })
+                    .max(1);
                 let near = [p - 1, p, p + 1]
                     .iter()
                     .filter(|&&x| x >= 1)

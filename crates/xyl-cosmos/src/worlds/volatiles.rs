@@ -346,11 +346,24 @@ impl Ctx {
     /// it boils at its triple temperature at its triple pressure, never below.
     fn liquid_curve(&self, s: Species) -> Vec<(Dy, Dy)> {
         let d = self.diagram(s);
-        let mut pts = vec![((Dy::ONE).div(&d.tt).unwrap_or_default(), d.pt.log())];
+        let mut pts = vec![(
+            (Dy::ONE).div(&d.tt).unwrap_or_default(),
+            d.pt.ln()
+                .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2()),
+        )];
         if d.tb > d.tt && d.tb < d.tc {
-            pts.push(((Dy::ONE).div(&d.tb).unwrap_or_default(), d.pref.log()));
+            pts.push((
+                (Dy::ONE).div(&d.tb).unwrap_or_default(),
+                d.pref
+                    .ln()
+                    .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2()),
+            ));
         }
-        pts.push(((Dy::ONE).div(&d.tc).unwrap_or_default(), d.pc.log()));
+        pts.push((
+            (Dy::ONE).div(&d.tc).unwrap_or_default(),
+            d.pc.ln()
+                .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2()),
+        ));
         pts
     }
 
@@ -365,7 +378,9 @@ impl Ctx {
         if p_bar >= d.pc {
             return d.tc;
         }
-        let lp = p_bar.log();
+        let lp = p_bar
+            .ln()
+            .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2());
         let pts = self.liquid_curve(s);
         for w in pts.windows(2) {
             let ((x1, l1), (x2, l2)) = (w[0], w[1]);

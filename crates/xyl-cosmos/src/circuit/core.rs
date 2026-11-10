@@ -88,8 +88,12 @@ pub fn throat_crossing(t0: Dy, a: Dy, b: Dy) -> Option<Dy> {
     }
     Some(
         ((far.div(&near).unwrap_or_default())
-            .log()
-            .div(&a.log())
+            .ln()
+            .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2())
+            .div(
+                &a.ln()
+                    .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2()),
+            )
             .unwrap_or_default())
         .max(Dy::ZERO),
     )
@@ -1233,9 +1237,15 @@ mod tests {
         let s = xyl_core::dyadic!(1, 2);
         assert!(onset_echoes(2, Dy::ZERO, s).is_none());
         let h = onset_echoes(1, Dy::ZERO, s).unwrap();
-        let expect = (Dy::int(2).log())
-            .div(&(Dy::int(3).log()))
-            .unwrap_or_default();
+        let expect = (Dy::int(2)
+            .ln()
+            .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2()))
+        .div(
+            &(Dy::int(3)
+                .ln()
+                .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2())),
+        )
+        .unwrap_or_default();
         assert!((h - expect).abs() < Dy::sci(1, -9), "{h} vs {expect}");
         // The vacuum leg and a greater torsion share both bring it earlier.
         assert!(onset_echoes(1, xyl_core::dyadic!(1, 10), s).unwrap() < h);
@@ -1261,7 +1271,10 @@ mod tests {
         // within ln(W / U) / ln D(s) echoes, the bound of the jet map
         // t -> a t with a = D(s).
         for s in [xyl_core::dyadic!(1, 2), xyl_core::dyadic!(3, 5)] {
-            let ln_d = dilation_dy(s).unwrap().log();
+            let ln_d = dilation_dy(s)
+                .unwrap()
+                .ln()
+                .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2());
             for z in 1..=crate::elements::TOP_Z {
                 if crate::compound::is_cluster(z) {
                     continue;
@@ -1276,7 +1289,8 @@ mod tests {
                 let bound = (((Dy::int(i64::from(w)))
                     .div(&(Dy::int(i64::from(u))))
                     .unwrap_or_default())
-                .log()
+                .ln()
+                .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2())
                 .max(Dy::ZERO))
                 .div(&ln_d)
                 .unwrap_or_default();

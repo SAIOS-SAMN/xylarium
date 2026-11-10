@@ -89,19 +89,18 @@ impl Enc {
 /// borrowed byte slice. Every reader returns `None` when the bytes run out or
 /// do not form a valid value.
 pub struct Dec<'a> {
-    buf: &'a [u8],
-    at: usize,
+    /// The bytes not yet read.
+    rest: &'a [u8],
 }
 
 impl<'a> Dec<'a> {
     /// A decoder positioned at the start of `buf`.
     pub fn new(buf: &'a [u8]) -> Self {
-        Dec { buf, at: 0 }
+        Dec { rest: buf }
     }
     fn take(&mut self, n: usize) -> Option<&'a [u8]> {
-        let end = self.at.checked_add(n)?;
-        let s = self.buf.get(self.at..end)?;
-        self.at = end;
+        let (s, rest) = self.rest.split_at_checked(n)?;
+        self.rest = rest;
         Some(s)
     }
     fn arr<const N: usize>(&mut self) -> Option<[u8; N]> {
@@ -143,7 +142,7 @@ impl<'a> Dec<'a> {
     /// decoder allocate more than the snapshot holds.
     pub fn count(&mut self) -> Option<usize> {
         let n = usize::try_from(self.u64()?).ok()?;
-        (n <= self.buf.len().saturating_sub(self.at)).then_some(n)
+        (n <= self.rest.len()).then_some(n)
     }
     /// Reads a length-prefixed string. Returns `None` when the length
     /// exceeds the remaining bytes or the bytes are not valid UTF-8.
@@ -189,12 +188,12 @@ impl<'a> Dec<'a> {
     }
     /// The bytes not yet read.
     pub fn rest(&self) -> &'a [u8] {
-        self.buf.get(self.at..).unwrap_or(&[])
+        self.rest
     }
 
     /// Whether every byte has been read.
     pub fn done(&self) -> bool {
-        self.at == self.buf.len()
+        self.rest.is_empty()
     }
 }
 
@@ -235,5 +234,16 @@ mod tests {
             short.q(),
         );
         assert_eq!(short.q(), None);
+        // The bytes not yet read are the tail of the buffer, and a count
+        // larger than they hold is refused.
+        let mut d = Dec::new(&e.buf);
+        assert_eq!(d.u8(), Some(7));
+        assert_eq!(d.rest(), &e.buf[1..]);
+        assert!(!d.done());
+        let mut lie = Enc::new();
+        lie.u64(9).u8(1);
+        assert_eq!(Dec::new(&lie.buf).count(), None);
+        assert_eq!(Dec::new(&[]).rest(), &[] as &[u8]);
+        assert!(Dec::new(&[]).done());
     }
 }

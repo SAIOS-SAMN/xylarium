@@ -6,7 +6,8 @@
 //!
 //! Outputs: [`Q`], a ratio in lowest terms with a positive denominator, with
 //! `+ - *` and negation on references, ordering, `floor`, `frac`, `recip`,
-//! [`Q::checked_div`], `min`/`max`, and [`Q::put_bytes`], its canonical byte
+//! [`Q::checked_div`], [`Q::over`] (exact division by a nonzero integer),
+//! `min`/`max`, and [`Q::put_bytes`], its canonical byte
 //! form for fingerprints and codecs.
 //!
 //! Representation: while numerator and denominator fit in `i64`, a `Q` is two
@@ -303,6 +304,14 @@ impl Q {
             ),
             _ => Some(Q::from_big(self.to_big() / rhs.to_big())),
         }
+    }
+
+    /// `self / d` for a nonzero integer divisor, exact: `self` times the
+    /// written ratio `1 / d`. A constant divisor is written with
+    /// [`nonzero!`](crate::nonzero); a computed one is read with
+    /// `NonZeroI64::new`, which refuses zero.
+    pub fn over(&self, d: NonZeroI64) -> Q {
+        self * &Q::written(1, d)
     }
 
     /// `self * k` for an integer `k`.
@@ -617,6 +626,20 @@ mod tests {
         let n = -&m;
         assert!(!is_small(&n));
         assert_eq!(-&n, m);
+    }
+
+    proptest! {
+        /// Dividing by a nonzero integer is the exact quotient `checked_div`
+        /// reads, in the same canonical form.
+        #[test]
+        fn over_agrees_with_checked_div(
+            a in any::<i64>(), b in 1i64.., d in any::<i64>(),
+        ) {
+            let x = Q::new(a, b).unwrap();
+            if let Some(nz) = NonZeroI64::new(d) {
+                prop_assert_eq!(x.over(nz), x.checked_div(&Q::int(d)).unwrap());
+            }
+        }
     }
 
     #[test]

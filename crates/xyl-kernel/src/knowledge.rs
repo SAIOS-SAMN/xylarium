@@ -199,7 +199,8 @@ pub fn wright(experience: Dy) -> Dy {
                         .max(Dy::ZERO)
                         .div(&knowledge_unit())
                         .unwrap_or_default())
-                .log()),
+                .ln()
+                .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2())),
         )
         .unwrap_or_default()
 }
@@ -327,8 +328,13 @@ pub fn profile(t: &Traits, ctx: &Ctx) -> Profile {
         (((xyl_cosmos::life::bits_per_monomer())
             .div(&eps0.max(Dy::sci(1, -300)))
             .unwrap_or_default())
-        .log()
-        .div(&(xyl_cosmos::life::i_mind().log()))
+        .ln()
+        .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2())
+        .div(
+            &(xyl_cosmos::life::i_mind()
+                .ln()
+                .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2())),
+        )
         .unwrap_or_default())
         .clamp(Dy::ZERO, Dy::ONE)
     };
@@ -548,7 +554,9 @@ pub fn advance(stock_ku: Dy, e_ku: Dy, lam: Dy, years: Dy) -> Dy {
 /// Returns the continuous rate lam = -ln(1 - share) of a yearly share lost,
 /// with the share clamped to [0, 0.999999].
 pub fn rate(share: Dy) -> Dy {
-    -(Dy::ONE - share.clamp(Dy::ZERO, xyl_core::dyadic!(999_999, 1_000_000))).log()
+    -(Dy::ONE - share.clamp(Dy::ZERO, xyl_core::dyadic!(999_999, 1_000_000)))
+        .ln()
+        .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2())
 }
 
 // ----------------------------------------------------------------------- Stocks.
@@ -657,7 +665,8 @@ impl Knowledge {
             let after: Dy = s.stock.iter().copied().sum();
             if years.signum() > 0 {
                 s.growth = ((after + u).div(&(before + u)).unwrap_or_default())
-                    .log()
+                    .ln()
+                    .unwrap_or_else(|| xyl_core::dyadic::Dy::int(-200) * xyl_core::dyadic::ln2())
                     .div(&years)
                     .unwrap_or_default();
             }

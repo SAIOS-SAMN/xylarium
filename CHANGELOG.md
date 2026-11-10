@@ -279,6 +279,21 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- `xyl-core` clears its rule-11 sites outside `watch` (#179, MU-STANDARDS
+  rule 11, exact or refused): no `unwrap_or`, `unwrap_or_else`,
+  `unwrap_or_default` or unsigned `saturating_*` remains. `Dy::log`,
+  `Dy::root` and `Dy::powf`, which read a default outside their domain,
+  are removed; `ln`, `sqrt` and `pow` refuse there. `Dy::trunc_i64`
+  returns `None` for a whole part past `i64` instead of saturating;
+  `rotor::Half::cos_sin` refuses the zero direction; and
+  `certified::fixed_bounds` refuses a value past `i128`. `Q::over` divides
+  exactly by a nonzero integer, and loop divisors are nonzero by
+  construction. `Dy::exp` saturates past `2^63` halvings (`|x|` above
+  about `6.4 x 10^18`), where it read `e^r` for the reduced remainder
+  alone. In `xyl-cosmos`, `xyl-kernel` and `xylarium` the old defaults
+  are written out at each call site (`ln().unwrap_or_else(..)`, the
+  saturated `trunc_i64`, the direction `(1, 0)`) for those crates'
+  rule-11 pass. No reading moves.
 - `Dy` has no `/` operator (#179, MU-STANDARDS 2.4, rule 11): it returned
   zero for a zero divisor. `Dy::div` refuses a zero divisor, and
   `Dy::over` divides by a nonzero integer. `nonzero!(d)` and `dyadic!(n, d)`

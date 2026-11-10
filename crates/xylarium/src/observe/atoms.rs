@@ -27,7 +27,7 @@ use xyl_cosmos::origin::Origin;
 pub(super) fn bonding(top: usize) -> String {
     const CONTACT: u32 = 8;
     let mut out = String::from(
-        "Z: Q, Q_Z -> form (contacts c, grip G, conduction sigma, locked surface frames)\n",
+        "Z: Q, Q_Z -> form (contacts c, grip G, conduction sigma, locked surface states)\n",
     );
     let mut tally: BTreeMap<&str, Vec<u32>> = BTreeMap::new();
     let mut flowing: Vec<(Q, u32)> = Vec::new();
@@ -211,11 +211,12 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
         ) else {
             continue;
         };
-        // The pole point t = u / w, open over held count.
+        // The built pole point t = u / w, open states over the held count.
         let t = Q::ratio(
             i64::from(a.unpaired),
             i64::from(xyl_cosmos::compound::hold(z).max(1)),
         );
+        let occ = xyl_cosmos::atoms::occupancy(z).unwrap_or_default();
         if a.sealed() {
             sealed.push((z, a.outer_n, cap, t.clone()));
         }
@@ -223,7 +224,8 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
             rows.push_str(&format!(
                 concat!(
                     "  Z{:>5}: turning {} capacity {} -> 3Z {} 3Q {} R_Q {} rho_Q {} ",
-                    "(open frames {}, pole point t {}, sealed {})\n"
+                    "(room E {}, open states U {}, held states 2P {}; ",
+                    "pole point t = U / W {} built, U / 2P {}; sealed {})\n"
                 ),
                 z,
                 a.outer_n,
@@ -232,8 +234,15 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
                 3 * cap,
                 r_q,
                 show(&rho),
-                a.unpaired,
+                occ.room,
+                occ.open,
+                occ.held(),
                 show(&t),
+                if occ.pairs == 0 {
+                    "none (no held state)".to_string()
+                } else {
+                    show(&Q::ratio(i64::from(occ.open), i64::from(occ.held())))
+                },
                 a.sealed()
             ));
         }

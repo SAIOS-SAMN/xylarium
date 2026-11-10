@@ -25,7 +25,9 @@
 //! the isoclinic turning) and `hold` (a
 //! cluster's light holding from stretches, bends and dipole), `capacity`
 //! (`cap`, the room of every turning reached; `3Q = 3 cap`) and `balance`
-//! (`R_Q = 6Z - 3 cap`, `rho_Q = (2Z - cap) / cap`). `atom` returns
+//! (`R_Q = 6Z - 3 cap`, `rho_Q = (2Z - cap) / cap`), and `occupancy` /
+//! `band_occupancy` (axiom 9: each band's room, open states and pairs, over
+//! every band reached; `cap = E + U + 2P`). `atom` returns
 //! None for Z = 0 or a cluster id. Seals fall at Z = 2, 28, 208, 1092;
 //! `vessel` returns (lower, upper): the last seal within `TOP_Z`, and the
 //! heaviest kind below it whose single-nucleon peel releases,
@@ -45,20 +47,71 @@ pub struct Band {
     pub electrons: u32,
 }
 
+/// A share of a kind's capacity on the capacity's account (axiom 9,
+/// docs/model.md, The capacity's occupancy): its empty slots, its open states
+/// (single orientations) and its pairs (paired orientations), so that
+/// `capacity = room + open + 2 pairs`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Occupancy {
+    /// Empty slots: the room `E`.
+    pub room: u32,
+    /// Single orientations: the open states `U`.
+    pub open: u32,
+    /// Paired orientations `P`; the held states are `2P`.
+    pub pairs: u32,
+}
+
+impl Occupancy {
+    /// The held states, `2P`.
+    pub fn held(&self) -> u32 {
+        2 * self.pairs
+    }
+
+    /// The occupied states, `U + 2P`: the electrons.
+    pub fn occupied(&self) -> u32 {
+        self.open + self.held()
+    }
+
+    /// The capacity, `E + U + 2P`.
+    pub fn capacity(&self) -> u32 {
+        self.room + self.occupied()
+    }
+
+    /// Two occupancies summed.
+    pub fn plus(self, o: Occupancy) -> Occupancy {
+        Occupancy {
+            room: self.room + o.room,
+            open: self.open + o.open,
+            pairs: self.pairs + o.pairs,
+        }
+    }
+}
+
 impl Band {
     /// Capacity: one counter-turning pair along each orientation's fibre.
     pub fn room(&self) -> u32 {
         2 * crate::fibres::directions(self.l)
     }
 
-    /// Unpaired electrons: free orientations fill first, then pairs.
-    pub fn unpaired(&self) -> u32 {
-        let frames = crate::fibres::directions(self.l);
-        if self.electrons <= frames {
-            self.electrons
-        } else {
-            self.room() - self.electrons
+    /// The band's occupancy: free orientations fill singly before pairing,
+    /// so up to `d(l)` electrons are all open; beyond, `e - d` orientations
+    /// are paired and `2d - e` stay single. The empty slots are the room
+    /// left.
+    pub fn occupancy(&self) -> Occupancy {
+        let d = crate::fibres::directions(self.l);
+        let e = self.electrons.min(self.room());
+        let (open, pairs) = if e <= d { (e, 0) } else { (2 * d - e, e - d) };
+        Occupancy {
+            room: self.room() - e,
+            open,
+            pairs,
         }
+    }
+
+    /// Unpaired electrons, the band's open states: free orientations fill
+    /// first, then pairs ([`Band::occupancy`]).
+    pub fn unpaired(&self) -> u32 {
+        self.occupancy().open
     }
 }
 
@@ -256,6 +309,39 @@ pub fn capacity(z: u32) -> Option<u32> {
             acc.checked_add(crate::fibres::directions(l).checked_mul(2)?)
         })
     })
+}
+
+/// A kind's occupancy band by band over every band its atom reaches, every
+/// `(n, l)` with `n <= n_out` in order, an empty band holding all its room:
+/// the capacity's account (axiom 9) before any law sums it. `None` for z = 0
+/// or a cluster.
+pub fn band_occupancy(z: u32) -> Option<Vec<(Band, Occupancy)>> {
+    let a = atom(z)?;
+    Some(
+        (1..=a.outer_n)
+            .flat_map(|n| (0..n).map(move |l| (n, l)))
+            .map(|(n, l)| {
+                let b = a
+                    .bands
+                    .iter()
+                    .find(|b| b.n == n && b.l == l)
+                    .copied()
+                    .unwrap_or(Band { n, l, electrons: 0 });
+                (b, b.occupancy())
+            })
+            .collect(),
+    )
+}
+
+/// A kind's occupancy summed over its bands: the room `E = cap - Z`, the
+/// open states `U` and the pairs `P`, `cap = E + U + 2P` (axiom 9). `None`
+/// for z = 0 or a cluster.
+pub fn occupancy(z: u32) -> Option<Occupancy> {
+    Some(
+        band_occupancy(z)?
+            .iter()
+            .fold(Occupancy::default(), |acc, (_, o)| acc.plus(*o)),
+    )
 }
 
 /// A kind's balance of span against capacity: `R_Q = 6Z - 3 cap` and its
@@ -520,6 +606,30 @@ pub fn hold(zs: &[u32]) -> Q {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_occupancy_partitions_the_capacity() {
+        for z in 1..=crate::elements::TOP_Z {
+            let (Some(a), Some(o), Some(cap)) = (atom(z), occupancy(z), capacity(z)) else {
+                continue;
+            };
+            // The capacity is E + U + 2P, the electrons U + 2P, the open states
+            // the atom's unpaired count and the room cap - Z.
+            assert_eq!(o.capacity(), cap, "Z {z}");
+            assert_eq!(o.occupied(), z, "Z {z}");
+            assert_eq!(o.open, a.unpaired, "Z {z}");
+            assert_eq!(o.open, unpaired(z), "Z {z}");
+            assert_eq!(o.room, cap - z, "Z {z}");
+            // Each band partitions the band's room; a seal has no room and no
+            // open state.
+            for (b, ob) in band_occupancy(z).unwrap() {
+                assert_eq!(ob.capacity(), b.room(), "Z {z} band {}{}", b.n, b.l);
+            }
+            if a.sealed() {
+                assert_eq!((o.room, o.open), (0, 0), "Z {z}");
+            }
+        }
+    }
 
     #[test]
     fn the_seals_are_where_the_span_meets_the_capacity() {

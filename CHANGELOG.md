@@ -11,6 +11,14 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The capacity's occupancy per band (#158, vent 1): `atoms::Occupancy`
+  (room, open states, pairs), `atoms::band_occupancy` over every band an
+  atom reaches (empty bands included) and `atoms::occupancy`, their sums,
+  `cap = E + U + 2P`; `atoms::Band::unpaired` reads it. `observe seals`
+  prints each kind's room, open and held states and both pole readings
+  (the built `U / W` and the capacity's `U / 2P`). Proven over Z 1 to 1700:
+  the occupancy partitions the capacity and its open states are the
+  unpaired count. No reading moves.
 - The capacity's occupancy, the vents to open (docs/model.md; #158;
   roadmap item 56): `W = 3Z - U` and `U` keep two counts of the atom's
   bands, planes and fibre windings, the winding read mod 2. Seven vents

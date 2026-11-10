@@ -353,7 +353,9 @@ where it belongs to one.
     delimiter to retire. Vents: states per band, per plane, windings in ZZ,
     classes (pairing and stripping as coboundaries), the delimiter retired
     (every law reading `W`), seams per band and plane, received turning per
-    plane and band.
+    plane and band. Done: vent 1, the occupancy per band and per kind
+    (`atoms::occupancy`), the unpaired count read from it; no reading moved.
+    Next: vent 2 (states per plane, the in-band filling by weight), vent 3.
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

@@ -1199,10 +1199,10 @@ mod tests {
                 let (u, w) = (crate::compound::open(z), crate::compound::hold(z));
                 let onset = onset_echoes(z, Dy::ZERO, s);
                 if u == 0 || w == 0 {
-                    assert!(onset.is_none(), "Z{z} has no open frames and no onset");
+                    assert!(onset.is_none(), "Z{z} has no open states and no onset");
                     continue;
                 }
-                let n = onset.unwrap_or_else(|| panic!("Z{z} has open frames and an onset"));
+                let n = onset.unwrap_or_else(|| panic!("Z{z} has open states and an onset"));
                 let bound = (Dy::int(i64::from(w)) / Dy::int(i64::from(u)))
                     .log()
                     .max(Dy::ZERO)

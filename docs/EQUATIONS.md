@@ -157,7 +157,10 @@ another crate. Laws are composed from shares (ratios of the form
   `E = cap - Z`, the open states `U` (`compound::open`), the held states
   `2P = Z - U`; shares against the capacity: occupancy `Z / cap = 3Z / 3Q`,
   held `2P / cap`, open `U / cap`, room `E / cap`. Calibre: none. Status:
-  planned (#158); the code reads the held count `W = 3Z - U`.
+  partly built (#158): the partition `cap = E + U + 2P` per band and per
+  kind (`atoms::band_occupancy`, `atoms::occupancy`, identity over Z 1 to
+  1700); the shares and the pole planned, the code reading the held count
+  `W = 3Z - U`.
 - Capacity face (axiom 9): convergent `2P / Z`, divergent `U / Z`, pole
   `t = U / 2P`, `D(U / Z) = 1 + U / P`; the antipole exchanges held and
   open; the equator `U = 2P`. Built in its place: the held count's face,
@@ -731,7 +734,8 @@ another crate. Laws are composed from shares (ratios of the form
   and `1/q` for odd `q` (`circuit::antinode`). Calibre: none. Status: built.
 - The capacity's occupancy, opened ([model.md](model.md#the-capacitys-occupancy-the-vents-to-open), #158):
   per band `(n, l)` the empty slots, single and paired orientations (room,
-  open, held), summing to `cap - Z`, `U` and `2P = Z - U`; per plane `2P_k`,
+  open, held), summing to `cap - Z`, `U` and `2P = Z - U` (built:
+  `atoms::Occupancy`, `atoms::band_occupancy`); per plane `2P_k`,
   `U_k`, `t_k = U_k / 2P_k`; each orientation's winding in ZZ with its side,
   held and open its reading mod 2; pairing and stripping as coboundaries,
   the occupancy, the capacity and the windings' total the class; every law

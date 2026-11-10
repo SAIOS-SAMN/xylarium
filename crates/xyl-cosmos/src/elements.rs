@@ -172,7 +172,7 @@ pub const TOP_Z: u32 = 1700;
 
 /// The closed share of a capture that makes kind `z`: its hold over its
 /// span, `compound::hold(z) / 3Z = (3Z - unpaired) / 3Z`.
-fn closed_share(z: u32) -> Q {
+pub fn closed_share(z: u32) -> Q {
     Q::int(i64::from(crate::compound::hold(z)))
         .checked_div(&Q::int(3 * i64::from(z)))
         .unwrap_or(Q::ZERO)

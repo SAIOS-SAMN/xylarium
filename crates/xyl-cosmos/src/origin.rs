@@ -7,7 +7,7 @@
 //! founding. Units are the parent's (unit mass).
 //!
 //! One value is drawn: the parent's Kerr spin, uniform on (0, 1) and fixed
-//! on the 2^-40 grid ([`GRID_BITS`], [`clamp_spin`]). `cores::substrate_for`
+//! on the 2^-40 grid ([`GRID_BITS`], [`clamp_spin`], [`drawn_spin`]). `cores::substrate_for`
 //! floors it at the least spin whose torsion share holds the firmament
 //! whole (the furthest held kind's reach over the rim, swung by the inbound
 //! echo's peak). Everything else is read off the founding: the rim, the bell
@@ -84,16 +84,23 @@ fn open_unit(rng: &mut Stream) -> Q {
     )))
 }
 
+/// The parent's Kerr spin drawn from `seed`, on the 2^-40 grid: the one
+/// value the origin draws. Read without founding anything, so a reading of
+/// the substrate alone (the torsion share, the capture chain) needs no
+/// founding.
+pub fn drawn_spin(seed: u64) -> Q {
+    open_unit(&mut Stream::derive(seed, &["big origin".into()]))
+}
+
 impl Origin {
     /// The origin of `seed`'s universe.
     pub fn of(seed: u64) -> Option<Origin> {
-        let mut rng = Stream::derive(seed, &["big origin".into()]);
         // The parent has unit mass in the parent's units and a Kerr spin drawn
-        // from the seed, floored at the least spin that keeps the firmament
-        // whole; its horizon is read in the S^360 enclosure (the founding's
-        // radius in r_g, circuit::anchor). The founding depends only on the
-        // spin, through the torsion share, so the spin is registered first.
-        crate::circuit::register_spin(&open_unit(&mut rng));
+        // from the seed; its horizon is read in the S^360 enclosure (the
+        // founding's radius in r_g, circuit::anchor). The founding depends
+        // only on the spin, through the torsion share, so the spin is
+        // registered first.
+        crate::circuit::register_spin(&drawn_spin(seed));
         let anchor = crate::circuit::anchor();
         let substrate = crate::cores::substrate_for(&anchor.spin)?;
         // The founding bounce is read at pulse phase zero.

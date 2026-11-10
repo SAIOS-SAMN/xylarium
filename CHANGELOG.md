@@ -11,6 +11,13 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The substrate bench (#163, board B1): `observe bench [LO] [HI]` reads
+  the substrate alone, with no founding and no cache. Per kind it prints
+  the occupancy, the held count and closed share, the capture's step per
+  band, the pole `U / W` and `U / 2P`, the emission, and the chain's count
+  per hydrogen. Then the founding bits and the seals' counts. The seed's
+  spin is read by `origin::drawn_spin`. Every capture adds one electron
+  over the bands it changes, proven over Z 1 to 1700.
 - The board's design (docs/board.md, #162): a blank S^360 universe with
   no founding, where cores, stars and worlds are placed as conformal
   spheres about their anchors and nuclei of each kind are added or

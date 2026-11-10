@@ -57,7 +57,7 @@ pub fn ladder(m: &Medium, area_m2: Dy, ctx: &Ctx) -> Option<Ladder> {
     } else {
         fidelity(m.solvent, m.t, ctx)
     };
-    if eps0 >= Dy::ratio(1, 2) {
+    if eps0 >= xyl_core::dyadic!(1, 2) {
         // At eps0 >= 1/2 a copy carries no information.
         return None;
     }
@@ -70,15 +70,20 @@ pub fn ladder(m: &Medium, area_m2: Dy, ctx: &Ctx) -> Option<Ladder> {
     let power = m.energy.max(Dy::ZERO) * c.flux_w * area_m2;
     // A plasma's pattern decays by reconnection at k_copy exp(-E_B / kT).
     let r_decay = if plasma {
-        kc * (-(m.field_ev.max(Dy::ZERO) / (worlds::kb_ev() * m.t.max(Dy::ONE)))).exp()
+        kc * (-(m
+            .field_ev
+            .max(Dy::ZERO)
+            .div(&(worlds::kb_ev() * m.t.max(Dy::ONE)))
+            .unwrap_or_default()))
+        .exp()
     } else {
         decay_rate(m.solvent, m.t, kc, ctx)
     };
-    let bits_cell = b / eps0;
-    let t_cell = bits_cell / (b * kc);
+    let bits_cell = b.div(&eps0).unwrap_or_default();
+    let t_cell = bits_cell.div(&(b * kc)).unwrap_or_default();
     // Monomers are built from the solvent's molecules (backbone_amu).
     let bond_kg = backbone_amu(m.solvent) * c.amu_kg * ctx.sc.proton;
-    let kg_cell = bits_cell / b * c.body_per_monomer * bond_kg;
+    let kg_cell = bits_cell.div(&b).unwrap_or_default() * c.body_per_monomer * bond_kg;
     let g = Gen {
         bits_cell,
         t_cell,
@@ -95,41 +100,47 @@ pub fn ladder(m: &Medium, area_m2: Dy, ctx: &Ctx) -> Option<Ladder> {
     let mut prev = Dy::ZERO;
     let gen_of = |target: Dy| -> Dy {
         if target <= bits_cell {
-            target / (b * kc)
+            target.div(&(b * kc)).unwrap_or_default()
         } else {
             generation_of(target, &g)
         }
     };
     for s in 0..MAX_RUNGS {
-        let power_s = i32::try_from(s + 1).unwrap_or(1);
+        let power_s = u32::try_from(s + 1).unwrap_or(1);
         let mut err = eps0;
         let mut gen_s = Dy::ZERO;
         // The error eps and the generation time depend on each other through
         // the body built; three fixed-point passes resolve them.
         for _ in 0..3 {
-            let cap = b / err.powi(power_s);
+            let cap = b.div(&err.powi(power_s)).unwrap_or_default();
             gen_s = gen_of(cap.min(c.i_mind));
             err = eps0 + r_decay * gen_s;
         }
-        if err >= Dy::ratio(1, 2) {
+        if err >= xyl_core::dyadic!(1, 2) {
             // At eps >= 1/2 no further rung holds information.
             return Some(lad);
         }
-        let cap = b / err.powi(power_s);
+        let cap = b.div(&err.powi(power_s)).unwrap_or_default();
         if cap <= prev {
             return Some(lad);
         }
         let target = cap.min(c.i_mind);
-        let monomers = target / b;
+        let monomers = target.div(&b).unwrap_or_default();
         let body = body_kg(target, bits_cell, kg_cell);
         // The population is the power reaching the medium over the bond
         // energy of one body built per generation.
-        let pop = power * gen_s / (body / bond_kg * strong).max(Dy::sci(1, -300));
+        let pop = (power * gen_s)
+            .div(&(body.div(&bond_kg).unwrap_or_default() * strong).max(Dy::sci(1, -300)))
+            .unwrap_or_default();
         let gain = (pop * err.powi(power_s) * monomers).min(Dy::ONE);
         if gain.signum() <= 0 {
             return Some(lad);
         }
-        let mean = fill_s(prev, target, &g, b, kc, bits_per_generation(pop, b)) / gain / c.gyr_s;
+        let mean = fill_s(prev, target, &g, b, kc, bits_per_generation(pop, b))
+            .div(&gain)
+            .unwrap_or_default()
+            .div(&c.gyr_s)
+            .unwrap_or_default();
         lad.steps.push(Step {
             bits: target,
             mean_gyr: mean,
@@ -156,8 +167,11 @@ fn dormant_rate(m: &Medium, ctx: &Ctx) -> Dy {
     }
     let c = constants();
     let t = m.t.max(Dy::ONE);
-    c.kb_j * t / c.h_j
-        * (-(worlds::strong_bond_ev(m.solvent, &ctx.sc) / (worlds::kb_ev() * t))).exp()
+    (c.kb_j * t).div(&c.h_j).unwrap_or_default()
+        * (-((worlds::strong_bond_ev(m.solvent, &ctx.sc))
+            .div(&(worlds::kb_ev() * t))
+            .unwrap_or_default()))
+        .exp()
 }
 
 /// The mass of a monomer's building block in a solvent (amu): the solvent's
@@ -242,7 +256,7 @@ pub fn climb(
             // overflow.
             let x = (mu * mean).min(Dy::int(60));
             let grown = x.exp() - Dy::ONE;
-            t += grown / mu;
+            t += grown.div(&mu).unwrap_or_default();
             setbacks += grown;
         }
         if past(t) {
@@ -266,10 +280,15 @@ pub fn transfer_gyr(target: &Body) -> Dy {
         &target.star_mass.max(Dy::sci(1, -9)).to_q(),
         &target.a_au.max(Dy::sci(1, -9)).to_q(),
     ))) * Dy::sci(1, 9);
-    let reach = target.radius * Dy::from_q(&crate::package::Si::world_radius_m())
-        / (Dy::int(2)
-            * Dy::pi()
-            * target.a_au.max(Dy::sci(1, -9))
-            * Dy::from_q(&crate::package::Si::au()));
-    year / reach.max(Dy::sci(1, -30)) / Dy::sci(1, 9)
+    let reach = (target.radius * Dy::from_q(&crate::package::Si::world_radius_m()))
+        .div(
+            &(Dy::int(2)
+                * Dy::pi()
+                * target.a_au.max(Dy::sci(1, -9))
+                * Dy::from_q(&crate::package::Si::au())),
+        )
+        .unwrap_or_default();
+    (year.div(&reach.max(Dy::sci(1, -30))).unwrap_or_default())
+        .div(&(Dy::sci(1, 9)))
+        .unwrap_or_default()
 }

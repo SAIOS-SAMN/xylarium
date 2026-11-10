@@ -93,12 +93,16 @@ pub fn kpc_m() -> Dy {
 
 /// Returns one year in seconds: one Gyr in seconds divided by 10^9.
 pub fn year_s() -> Dy {
-    Dy::from_q(&Si::gyr_s()) / Dy::sci(1, 9)
+    (Dy::from_q(&Si::gyr_s()))
+        .div(&(Dy::sci(1, 9)))
+        .unwrap_or_default()
 }
 
 /// Converts a speed `m_s` in m/s to kpc per Gyr.
 pub fn kpc_per_gyr(m_s: Dy) -> Dy {
-    m_s * Dy::from_q(&Si::gyr_s()) / kpc_m()
+    (m_s * Dy::from_q(&Si::gyr_s()))
+        .div(&kpc_m())
+        .unwrap_or_default()
 }
 
 /// Returns a passage's energy (J), which depends on the builder's drive

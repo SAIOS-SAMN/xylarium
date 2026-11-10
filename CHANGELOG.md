@@ -279,6 +279,24 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- `Dy` has no `/` operator (#179, MU-STANDARDS 2.4, rule 11): it returned
+  zero for a zero divisor. `Dy::div` refuses a zero divisor, and
+  `Dy::over` divides by a nonzero integer. `nonzero!(d)` and `dyadic!(n, d)`
+  replace `Dy::ratio`, with the denominator checked at build time. In
+  `xyl-core` each division is decided: a zero divisor where the law has a
+  value (atan 0, acos 0, a hold of nothing), a divisor proved positive
+  where it cannot be zero (pi, the measure of a sphere, `1 + sqrt(1 + x^2)`),
+  and a refusal otherwise (`powi` takes a natural power). In `xyl-cosmos`,
+  `xyl-kernel` and `xylarium` every division is written out as
+  `a.div(&b).unwrap_or_default()`, so its zero default is visible at the
+  site for that crate's rule-11 pass. No reading moves.
+- `Q::ratio` is replaced by `ratio!(n, d)` (#179, MU-STANDARDS 2.4, rule
+  11). The denominator is a constant checked when the build evaluates it,
+  so a zero denominator fails the build instead of reading zero. The six
+  call sites with a computed denominator read `Q::new` instead. `Q`'s
+  `Small` arithmetic divides through `Q::over_positive`, proved by the
+  invariant that a denominator is positive (a property test). No reading
+  moves.
 - `stars::held_frames` is renamed `stars::held_count`, retiring the last
   code use of "frames" as a count (#172).
 - Axiom 9 restated on capacity, not delimiters (ruled 2026-11-10, #158):

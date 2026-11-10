@@ -67,8 +67,10 @@ pub(super) fn moons(
         })
         .collect();
     let (r_g, core_kg) = rg_units();
-    let anchor = Dy::from_q(&g_mass) * Dy::from_q(&crate::package::Si::world_mass_kg()) / core_kg;
-    let radius_rg = Dy::from_q(&r_m) / r_g;
+    let anchor = (Dy::from_q(&g_mass) * Dy::from_q(&crate::package::Si::world_mass_kg()))
+        .div(&core_kg)
+        .unwrap_or_default();
+    let radius_rg = (Dy::from_q(&r_m)).div(&r_g).unwrap_or_default();
     let settled = settle_about(
         embryos,
         anchor,
@@ -77,11 +79,11 @@ pub(super) fn moons(
         &crate::life::horizon_gyr().to_q(),
     );
     let forced = forced_eccentricities(&settled, anchor, radius_rg, &g_mass);
-    let rho = (&Q::ONE - ice_share) + (ice_share * &Q::ratio(55, 10));
-    let icy = ice_share > &Q::ratio(1, 5);
+    let rho = (&Q::ONE - ice_share) + (ice_share * &xyl_core::ratio!(55, 10));
+    let icy = ice_share > &xyl_core::ratio!(1, 5);
     let mut placed = Q::ZERO;
     for (e, e_forced) in settled.into_iter().zip(forced) {
-        if e.m < Q::ratio(1, 10_000) {
+        if e.m < xyl_core::ratio!(1, 10_000) {
             continue;
         }
         let radius = extent(&(&e.m * &rho.recip().unwrap_or(Q::ONE)));
@@ -119,7 +121,7 @@ fn forced_eccentricities(settled: &[Embryo], anchor: Dy, radius_rg: Dy, g_mass: 
     // its unit, is read.
     let rate = |a_r: &Q| {
         let a = Dy::from_q(a_r) * radius_rg;
-        crate::turning::turning_dy(anchor, a / sixty(), Tier::System)
+        crate::turning::turning_dy(anchor, a.div(&sixty()).unwrap_or_default(), Tier::System)
     };
     (0..settled.len())
         .map(|k| {
@@ -127,19 +129,29 @@ fn forced_eccentricities(settled: &[Embryo], anchor: Dy, radius_rg: Dy, g_mass: 
             for j in [k.checked_sub(1), Some(k + 1)].into_iter().flatten() {
                 let Some(nb) = settled.get(j) else { continue };
                 let (w1, w2) = (rate(&settled[k].a), rate(&nb.a));
-                let ratio = w1.min(w2) / w1.max(w2);
-                let p = (ratio / (Dy::ONE - ratio).max(Dy::sci(1, -12)))
-                    .trunc_i64()
-                    .max(1);
+                let ratio = w1.min(w2).div(&w1.max(w2)).unwrap_or_default();
+                let p = (ratio
+                    .div(&(Dy::ONE - ratio).max(Dy::sci(1, -12)))
+                    .unwrap_or_default())
+                .trunc_i64()
+                .max(1);
                 let near = [p - 1, p, p + 1]
                     .iter()
                     .filter(|&&x| x >= 1)
-                    .map(|&x| (ratio - Dy::int(x) / Dy::int(x + 1)).abs())
+                    .map(|&x| {
+                        (ratio - (Dy::int(x)).div(&(Dy::int(x + 1))).unwrap_or_default()).abs()
+                    })
                     .fold(Dy::ONE, Dy::min)
                     .max(Dy::sci(1, -3));
-                f = f.max(Dy::from_q(&nb.m) / Dy::from_q(g_mass) / near);
+                f = f.max(
+                    (Dy::from_q(&nb.m))
+                        .div(&(Dy::from_q(g_mass)))
+                        .unwrap_or_default()
+                        .div(&near)
+                        .unwrap_or_default(),
+                );
             }
-            f.min(Dy::ratio(1, 10)).to_q()
+            f.min(xyl_core::dyadic!(1, 10)).to_q()
         })
         .collect()
 }
@@ -223,7 +235,7 @@ pub(super) fn belts(
     // share exp(-env); it condenses at 30 times the outermost reach.
     let comets = (giants_mass.signum() > 0).then(|| {
         let kept = fix(&exp(&-env.clone(), BITS));
-        let mass = &(&(giants_mass * &Q::ratio(1, 10)) * &Q::ratio(5, 100)) * &kept;
+        let mass = &(&(giants_mass * &xyl_core::ratio!(1, 10)) * &xyl_core::ratio!(5, 100)) * &kept;
         let far = orbits
             .iter()
             .map(|(a, _)| a.clone())

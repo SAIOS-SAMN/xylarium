@@ -26,7 +26,7 @@ use xyl_core::Q;
 fn landing(reach: &Q, j: usize) -> ([Q; RINGS], Q) {
     let dr = Rulers::dr();
     let r = ring_mid(j).max(&dr * &decimal("0.5").unwrap_or(Q::ZERO));
-    let l = &(&r * &Q::ratio(7, 22)) * reach;
+    let l = &(&r * &xyl_core::ratio!(7, 22)) * reach;
     let (from, to) = (&r - &l, &r + &l);
     let width = &to - &from;
     let share = |lo: Q, hi: Q| -> Q {

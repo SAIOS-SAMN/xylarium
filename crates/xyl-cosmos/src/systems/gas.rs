@@ -70,9 +70,9 @@ pub(super) const ICES: [Ice; 6] = [
 /// The share of a cooling nebula's carbon held as species `sp`.
 pub(super) fn carbon_as(sp: &str) -> Q {
     match sp {
-        "CO" => Q::ratio(1, 2),
-        "CO2" => Q::ratio(1, 5),
-        "CH4" => Q::ratio(3, 10),
+        "CO" => xyl_core::ratio!(1, 2),
+        "CO2" => xyl_core::ratio!(1, 5),
+        "CH4" => xyl_core::ratio!(3, 10),
         _ => Q::ZERO,
     }
 }
@@ -80,7 +80,7 @@ pub(super) fn carbon_as(sp: &str) -> Q {
 /// The share of a cooling nebula's nitrogen held as species `sp`.
 pub(super) fn nitrogen_as(sp: &str) -> Q {
     match sp {
-        "NH3" | "N2" => Q::ratio(1, 2),
+        "NH3" | "N2" => xyl_core::ratio!(1, 2),
         _ => Q::ZERO,
     }
 }

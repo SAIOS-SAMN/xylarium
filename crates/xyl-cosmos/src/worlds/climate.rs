@@ -7,7 +7,7 @@ use super::*;
 /// with the sine taken from the angle (not sqrt(1 - cos^2)).
 pub fn polar_share(cos_obliquity: Dy) -> Dy {
     let sin = cos_obliquity.clamp(-Dy::ONE, Dy::ONE).acos().sin().abs();
-    (Dy::int(4) * sin / Dy::pi()).min(Dy::ONE)
+    ((Dy::int(4) * sin).div(&(Dy::pi())).unwrap_or_default()).min(Dy::ONE)
 }
 
 /// What a world's climate is solved from.
@@ -52,10 +52,16 @@ impl Climate {
             let balance = constants().weather_scale
                 * self.hpm
                 * self.hpm
-                * (-(Dy::int(2) * (t - tt) / (constants().weather_e_k * ctx.sc.chem))).exp();
+                * (-((Dy::int(2) * (t - tt))
+                    .div(&(constants().weather_e_k * ctx.sc.chem))
+                    .unwrap_or_default()))
+                .exp();
             air.set(
                 Species::CO2,
-                co2.min((balance / open.max(Dy::sci(1, -9))).max(Dy::sci(1, -6))),
+                co2.min(
+                    (balance.div(&open.max(Dy::sci(1, -9))).unwrap_or_default())
+                        .max(Dy::sci(1, -6)),
+                ),
             );
             seas.remove(Species::CO2);
         }
@@ -67,8 +73,14 @@ impl Climate {
     /// atmosphere carries more heat poleward. Any CO2, N2, CH4 or NH3 above
     /// saturation at the pole's temperature condenses into the seas.
     fn cold_trap(&self, air: &mut Mix, seas: &mut Mix, t: Dy, ctx: &Ctx) {
-        let carry = air.total() / constants().transport_bar;
-        let t_pole = t * ((self.polar + carry) / (Dy::ONE + carry));
+        let carry = air
+            .total()
+            .div(&constants().transport_bar)
+            .unwrap_or_default();
+        let t_pole = t
+            * ((self.polar + carry)
+                .div(&(Dy::ONE + carry))
+                .unwrap_or_default());
         for s in [Species::CO2, Species::N2, Species::CH4, Species::NH3] {
             if let Some(a) = air.get(s) {
                 let cap = ctx.saturation(s, t_pole);
@@ -104,9 +116,11 @@ impl Climate {
             .map(|(_, v)| v)
             .sum();
         let albedo = if icy.signum() > 0 {
-            Dy::ratio(3, 10) + Dy::ratio(2, 5) * (icy / (icy + Dy::ONE)).clamp(Dy::ZERO, Dy::ONE)
+            xyl_core::dyadic!(3, 10)
+                + xyl_core::dyadic!(2, 5)
+                    * (icy.div(&(icy + Dy::ONE)).unwrap_or_default()).clamp(Dy::ZERO, Dy::ONE)
         } else {
-            Dy::ratio(3, 10)
+            xyl_core::dyadic!(3, 10)
         };
         let albedo = mixed.map_or(albedo, |(f, a_iced)| {
             albedo + f * (a_iced - albedo).max(Dy::ZERO)
@@ -118,10 +132,17 @@ impl Climate {
         // h = tau / (1 + tau) < 1, and the surface is warmer by 1 + 3/4 h.
         let t_eq = constants().t_unit * self.flux * (Dy::ONE - albedo);
         let air_total = air.total().max(Dy::sci(1, -9));
-        let tau =
-            constants().greenhouse_tau * gh * ctx.sc.atom * (air_total / (air_total + Dy::ONE));
-        let held = tau / (Dy::ONE + tau);
-        (t_eq * (Dy::ONE + Dy::ratio(3, 4) * held), air, seas, albedo)
+        let tau = constants().greenhouse_tau
+            * gh
+            * ctx.sc.atom
+            * (air_total.div(&(air_total + Dy::ONE)).unwrap_or_default());
+        let held = tau.div(&(Dy::ONE + tau)).unwrap_or_default();
+        (
+            t_eq * (Dy::ONE + xyl_core::dyadic!(3, 4) * held),
+            air,
+            seas,
+            albedo,
+        )
     }
 
     /// Surface temperature, pressure, air, seas, albedo and frozen shares: the
@@ -130,8 +151,8 @@ impl Climate {
     /// in steps of 8 percent and refines the crossing by bisection.
     pub(super) fn solve(&self, gas: &Mix, ctx: &Ctx) -> (Dy, Dy, Mix, Mix, Dy, Mix) {
         let runaway = constants().runaway_flux * ctx.sc.chem;
-        let base = constants().t_unit * self.flux * Dy::ratio(3, 10);
-        let step = Dy::ratio(108, 100);
+        let base = constants().t_unit * self.flux * xyl_core::dyadic!(3, 10);
+        let step = xyl_core::dyadic!(108, 100);
         let mut grid = Vec::with_capacity(40);
         let mut t = base.max(Dy::int(15));
         for _ in 0..40 {
@@ -158,7 +179,7 @@ impl Climate {
                 }
                 let (mut lo, mut hi) = (grid[i - 1], grid[i]);
                 for _ in 0..16 {
-                    let mid = (lo + hi) * Dy::ratio(1, 2);
+                    let mid = (lo + hi) * xyl_core::dyadic!(1, 2);
                     if (self.model(gas, mid, ctx).0 - mid).signum() >= 0 {
                         lo = mid;
                     } else {
@@ -182,7 +203,7 @@ impl Climate {
                     if at(Dy::ZERO).signum() < 0 && at(Dy::ONE).signum() >= 0 {
                         let (mut f_lo, mut f_hi) = (Dy::ZERO, Dy::ONE);
                         for _ in 0..24 {
-                            let mid = (f_lo + f_hi) * Dy::ratio(1, 2);
+                            let mid = (f_lo + f_hi) * xyl_core::dyadic!(1, 2);
                             if at(mid).signum() < 0 {
                                 f_lo = mid;
                             } else {

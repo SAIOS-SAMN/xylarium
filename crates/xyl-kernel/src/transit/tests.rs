@@ -99,11 +99,17 @@ fn orbit_gaps_and_voyages_follow_drives_and_wells() {
     let esc = escape_speed(&unit_world);
     let c = crate::propulsion::c_m_s();
     let (m, r) = (
-        Dy::from_q(&(&Si::g() * &Si::world_mass_kg())) / (c * c),
+        (Dy::from_q(&(&Si::g() * &Si::world_mass_kg())))
+            .div(&(c * c))
+            .unwrap_or_default(),
         Dy::from_q(&Si::world_radius_m()),
     );
     assert!(
-        (esc / (c * m / (r + m)) - Dy::ONE).abs() < Dy::sci(1, -9),
+        (esc.div(&((c * m).div(&(r + m)).unwrap_or_default()))
+            .unwrap_or_default()
+            - Dy::ONE)
+            .abs()
+            < Dy::sci(1, -9),
         "escape {esc}"
     );
     // Orbits: the current position of each, read as turns and reaches. Two
@@ -126,8 +132,13 @@ fn orbit_gaps_and_voyages_follow_drives_and_wells() {
     };
     let unit = Dy::from_q(&super::tier_m(Tier::System));
     let half = Q::new(1, 2).unwrap();
-    let gap = |all: &[Manifold], a, b, age: &Q| orbit_gap_m(all, a, b, age).unwrap() / unit;
-    let close = |x: Dy, want: i64| (x - Dy::int(want)).abs() < Dy::ratio(1, 1000);
+    let gap = |all: &[Manifold], a, b, age: &Q| {
+        orbit_gap_m(all, a, b, age)
+            .unwrap()
+            .div(&unit)
+            .unwrap_or_default()
+    };
+    let close = |x: Dy, want: i64| (x - Dy::int(want)).abs() < xyl_core::dyadic!(1, 1000);
     let inline = vec![
         ring(0, Anchor::Star, Tier::System, 1, Q::ZERO),
         ring(1, Anchor::Star, Tier::System, 5, Q::ZERO),
@@ -136,7 +147,7 @@ fn orbit_gaps_and_voyages_follow_drives_and_wells() {
     // Opposite, the way round is half a turn swept at the inner reach (pi)
     // plus the climb (4), not the chord through the star.
     let pi_plus_4 = Dy::from_q(&xyl_core::certified::pi(80).mid()) + Dy::int(4);
-    let near = |x: Dy, want: Dy| (x - want).abs() < Dy::ratio(1, 1000);
+    let near = |x: Dy, want: Dy| (x - want).abs() < xyl_core::dyadic!(1, 1000);
     let opposite = vec![
         ring(0, Anchor::Star, Tier::System, 1, Q::ZERO),
         ring(1, Anchor::Star, Tier::System, 5, half.clone()),
@@ -153,7 +164,7 @@ fn orbit_gaps_and_voyages_follow_drives_and_wells() {
         ring(1, Anchor::World(0), Tier::Planet, 60, Q::ZERO),
     ];
     let k = Dy::from_q(&xyl_cosmos::manifold::dilation(Tier::Planet, Tier::System));
-    assert!((gap(&moon, 0, 1, &Q::ZERO) - Dy::int(60) * k).abs() < Dy::ratio(1, 1_000_000));
+    assert!((gap(&moon, 0, 1, &Q::ZERO) - Dy::int(60) * k).abs() < xyl_core::dyadic!(1, 1_000_000));
     // Drive and well are compared in one law, c delta: the speed change of a
     // chemical drive at mass ratio 10 is below the unit world's escape
     // speed, so it cannot climb out.
@@ -173,7 +184,7 @@ fn orbit_gaps_and_voyages_follow_drives_and_wells() {
     // longer span.
     let fusion = spec(Drive::Fusion);
     let near = voyage(&fusion, r, esc, Dy::int(4) * au_m()).expect("fusion climbs out");
-    let pc = kpc_m() / Dy::int(1000);
+    let pc = kpc_m().div(&(Dy::int(1000))).unwrap_or_default();
     let far = voyage(&fusion, r, esc, pc).unwrap();
     assert!(far.years > near.years, "{} vs {}", far.years, near.years);
     // It is also faster than the chemical drive over the same span.

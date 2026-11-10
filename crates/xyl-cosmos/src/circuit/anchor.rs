@@ -224,7 +224,7 @@ pub fn rings_of_gyr_dy(gyr: Dy) -> Dy {
     if g.signum() <= 0 {
         return Dy::ZERO;
     }
-    gyr / g
+    gyr.div(&g).unwrap_or_default()
 }
 
 /// A count of rings as a time in Gyr, as a `Dy` at a seam. A temporary

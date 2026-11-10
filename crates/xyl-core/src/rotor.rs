@@ -209,7 +209,7 @@ pub fn angle_between(a: &[Q; 3], b: &[Q; 3], bits: u32) -> Option<crate::certifi
     }
     let len = sqrt(&(&na * &nb), bits)?;
     let cos = Encl::exact(dot.clone()).mul(&len.recip()?);
-    let quarter = pi(bits).mul(&Encl::exact(Q::ratio(1, 2)));
+    let quarter = pi(bits).mul(&Encl::exact(crate::ratio!(1, 2)));
     Some(if dot.signum() >= 0 {
         quarter.sub(&asin_any(&cos))
     } else {
@@ -237,7 +237,7 @@ mod tests {
         let s = Rotor {
             w: Q::int(2),
             x: Q::int(1),
-            y: Q::ratio(-1, 3),
+            y: crate::ratio!(-1, 3),
             z: Q::int(5),
         };
         let v = e(3, -4, 7);
@@ -248,19 +248,19 @@ mod tests {
         // An enclosed vector's turn encloses the turn of every point in it.
         let wide = [
             Encl {
-                lo: Q::ratio(29, 10),
+                lo: crate::ratio!(29, 10),
                 hi: Q::int(3),
             },
             Encl::exact(Q::int(-4)),
             Encl {
                 lo: Q::int(7),
-                hi: Q::ratio(71, 10),
+                hi: crate::ratio!(71, 10),
             },
         ];
         let out = s.apply(&wide);
         for p in [
             e(3, -4, 7),
-            [Q::ratio(29, 10), Q::int(-4), Q::ratio(71, 10)].map(Encl::exact),
+            [crate::ratio!(29, 10), Q::int(-4), crate::ratio!(71, 10)].map(Encl::exact),
         ] {
             let at = s.apply(&p);
             assert!((0..3).all(|i| out[i].contains(&at[i].lo)));
@@ -272,7 +272,7 @@ mod tests {
         let r = Rotor {
             w: Q::int(2),
             x: Q::int(1),
-            y: Q::ratio(-1, 3),
+            y: crate::ratio!(-1, 3),
             z: Q::int(5),
         };
         let n = &(&(&r.w * &r.w) + &(&r.x * &r.x)) + &(&(&r.y * &r.y) + &(&r.z * &r.z));
@@ -285,10 +285,10 @@ mod tests {
     fn the_angle_between_directions_is_enclosed() {
         let q = |a: i64, b: i64, c: i64| [Q::int(a), Q::int(b), Q::int(c)];
         let pi = crate::certified::pi(64);
-        let half = pi.mul(&crate::certified::Encl::exact(Q::ratio(1, 2)));
+        let half = pi.mul(&crate::certified::Encl::exact(crate::ratio!(1, 2)));
         // Parallel, perpendicular and opposed, at any lengths.
         let same = angle_between(&q(2, 0, 0), &q(5, 0, 0), 64).unwrap();
-        assert!(same.contains(&Q::ZERO) || same.hi < Q::ratio(1, 1_000_000));
+        assert!(same.contains(&Q::ZERO) || same.hi < crate::ratio!(1, 1_000_000));
         let right = angle_between(&q(1, 0, 0), &q(0, 3, 0), 64).unwrap();
         assert!(right.lo <= half.hi && half.lo <= right.hi);
         let back = angle_between(&q(1, 0, 0), &q(-4, 0, 0), 64).unwrap();

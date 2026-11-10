@@ -52,9 +52,9 @@ impl Default for Rulers {
     fn default() -> Rulers {
         Rulers {
             m_mind: xyl_cosmos::life::body_kg(xyl_cosmos::life::i_mind(), Dy::ZERO, Dy::ZERO),
-            generation_yr: Dy::ratio(142, 10),
-            eta_primary: Dy::ratio(15, 1000),
-            trophic: Dy::ratio(1, 10),
+            generation_yr: xyl_core::dyadic!(142, 10),
+            eta_primary: xyl_core::dyadic!(15, 1000),
+            trophic: xyl_core::dyadic!(1, 10),
             flux_w: Dy::int(340),
         }
     }
@@ -70,9 +70,12 @@ pub fn body_kg(traits: &Traits, r: &Rulers) -> Dy {
 /// share 2s / (1 + s), s = m_b / M_MIND, and by the body pace of the
 /// people's solvent (`worlds::body_pace`).
 pub fn metabolism_w(traits: &Traits, ctx: &Ctx, r: &Rulers) -> Dy {
-    let s = (body_kg(traits, r) / r.m_mind.max(Dy::sci(1, -12))).max(Dy::ZERO);
+    let s = (body_kg(traits, r)
+        .div(&r.m_mind.max(Dy::sci(1, -12)))
+        .unwrap_or_default())
+    .max(Dy::ZERO);
     xyl_cosmos::life::unit_metabolism_w()
-        * (Dy::int(2) * s / (Dy::ONE + s))
+        * ((Dy::int(2) * s).div(&(Dy::ONE + s)).unwrap_or_default())
         * body_pace(traits.solvent, ctx)
 }
 
@@ -82,7 +85,7 @@ pub fn metabolism_w(traits: &Traits, ctx: &Ctx, r: &Rulers) -> Dy {
 /// tidally locked world).
 pub fn food_w(med: &Medium, body: &Body, r: &Rulers) -> Dy {
     let season = if body.locked {
-        Dy::ratio(1, 2)
+        xyl_core::dyadic!(1, 2)
     } else {
         growing_share(body.tilt)
     };
@@ -98,14 +101,19 @@ pub fn food_w(med: &Medium, body: &Body, r: &Rulers) -> Dy {
 /// A generation (years): the unit body's (`Rulers::generation_yr`) scaled by
 /// the size share 2s / (1 + s).
 pub fn generation_yr(traits: &Traits, r: &Rulers) -> Dy {
-    let s = (body_kg(traits, r) / r.m_mind.max(Dy::sci(1, -12))).max(Dy::ZERO);
-    r.generation_yr * (Dy::int(2) * s / (Dy::ONE + s))
+    let s = (body_kg(traits, r)
+        .div(&r.m_mind.max(Dy::sci(1, -12)))
+        .unwrap_or_default())
+    .max(Dy::ZERO);
+    r.generation_yr * ((Dy::int(2) * s).div(&(Dy::ONE + s)).unwrap_or_default())
 }
 
 /// A people's natural growth rate (per year): one e-fold per generation,
 /// `r = 1 / generation_yr`.
 pub fn growth_per_yr(traits: &Traits, r: &Rulers) -> Dy {
-    Dy::ONE / generation_yr(traits, r).max(Dy::sci(1, -9))
+    (Dy::ONE)
+        .div(&generation_yr(traits, r).max(Dy::sci(1, -9)))
+        .unwrap_or_default()
 }
 
 /// Numbers after `years` from `now`, toward the capacity `cap`, by the
@@ -122,7 +130,8 @@ pub fn grow(now: Dy, cap: Dy, rate: Dy, years: Dy) -> Dy {
     if x.signum() <= 0 {
         return now;
     }
-    cap / (Dy::ONE + (cap / now - Dy::ONE) * (-x).exp())
+    cap.div(&(Dy::ONE + (cap.div(&now).unwrap_or_default() - Dy::ONE) * (-x).exp()))
+        .unwrap_or_default()
 }
 
 /// The power a world offers a people's works and the power the people's
@@ -177,7 +186,7 @@ mod tests {
             sense: "light",
             form: "walking",
             hands: "grasping limbs",
-            social: Dy::ratio(1, 2),
+            social: xyl_core::dyadic!(1, 2),
             shape: Shape::Society,
             size,
         }

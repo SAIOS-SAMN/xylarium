@@ -57,7 +57,7 @@ pub fn binding_at(a: &Star, ma: Dy, b: &Star, mb: Dy, rate0: Dy, span_kpc: Dy) -
     if both.signum() <= 0 {
         Dy::ZERO
     } else {
-        turn / both
+        turn.div(&both).unwrap_or_default()
     }
 }
 
@@ -66,14 +66,14 @@ pub fn binding_at(a: &Star, ma: Dy, b: &Star, mb: Dy, rate0: Dy, span_kpc: Dy) -
 /// [0, r] with r the orbit radius (at least 1e-3 kpc). Returns r when the
 /// share at r is still at least one half.
 pub fn binding_reach(s: &Star, m: Dy) -> Dy {
-    let half = Dy::ratio(1, 2);
+    let half = xyl_core::dyadic!(1, 2);
     let rate0 = s.orbit.rate;
     let (mut lo, mut hi) = (Dy::ZERO, radius_kpc(s).max(Dy::sci(1, -3)));
     if binding_at(s, m, s, m, rate0, hi) >= half {
         return hi;
     }
     for _ in 0..40 {
-        let mid = (lo + hi) / Dy::int(2);
+        let mid = (lo + hi).div(&(Dy::int(2))).unwrap_or_default();
         if binding_at(s, m, s, m, rate0, mid) >= half {
             lo = mid;
         } else {
@@ -190,8 +190,9 @@ pub fn in_play(seed: u64, origin: &xyl_cosmos::origin::Origin, limit: u64) -> Ve
             })
             .filter(|st| sight.opens(st))
             .collect();
-        let w = Dy::int(i64::try_from(sample).unwrap_or(i64::MAX))
-            / Dy::int(i64::try_from(stars.len().max(1)).unwrap_or(1));
+        let w = (Dy::int(i64::try_from(sample).unwrap_or(i64::MAX)))
+            .div(&(Dy::int(i64::try_from(stars.len().max(1)).unwrap_or(1))))
+            .unwrap_or_default();
         out.extend(stars.into_iter().map(|st| {
             // The stellar mass stood for is in core masses; this layer reads
             // it in suns (boundary `galaxy::suns_of_core_masses`).
@@ -211,7 +212,7 @@ pub fn in_play(seed: u64, origin: &xyl_cosmos::origin::Origin, limit: u64) -> Ve
 /// 1000 kpc) and refined by 24 bisections. Returns (i, j, s_ij) with indices
 /// into `stars`.
 pub fn binding_pairs(stars: &[InPlay]) -> Vec<(usize, usize, Dy)> {
-    let half = Dy::ratio(1, 2);
+    let half = xyl_core::dyadic!(1, 2);
     let mut order: Vec<usize> = (0..stars.len()).collect();
     order.sort_by_key(|&a| {
         (
@@ -241,7 +242,7 @@ pub fn binding_pairs(stars: &[InPlay]) -> Vec<(usize, usize, Dy)> {
                 hi = hi * Dy::int(2);
             }
             for _ in 0..24 {
-                let mid = (lo + hi) / Dy::int(2);
+                let mid = (lo + hi).div(&(Dy::int(2))).unwrap_or_default();
                 if bind(mid) >= half {
                     lo = mid;
                 } else {

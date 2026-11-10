@@ -110,7 +110,7 @@ impl Cosmic<'_> {
             return None;
         }
         let (state, ms, body) = self.world_at(m.star, m.w, m.epoch)?;
-        let strategy = if body.tilt > 23 || body.star_mass < Dy::ratio(1, 2) {
+        let strategy = if body.tilt > 23 || body.star_mass < xyl_core::dyadic!(1, 2) {
             Strategy::R
         } else {
             Strategy::K
@@ -273,9 +273,9 @@ pub fn select(
         "drifting"
     } else if dark || med.at == Where::UnderIce {
         "swimming"
-    } else if g > Dy::ratio(3, 2) {
+    } else if g > xyl_core::dyadic!(3, 2) {
         "low and many-limbed"
-    } else if g < Dy::ratio(1, 2) {
+    } else if g < xyl_core::dyadic!(1, 2) {
         "tall and slender"
     } else {
         "walking"
@@ -283,18 +283,18 @@ pub fn select(
     let u = Dy::unit(rng.next_u64());
     let social =
         (u + if strategy == Strategy::R {
-            Dy::ratio(3, 10)
+            xyl_core::dyadic!(3, 10)
         } else {
             Dy::ZERO
-        } + if med.energy < Dy::ratio(1, 10) {
-            Dy::ratio(1, 5)
+        } + if med.energy < xyl_core::dyadic!(1, 10) {
+            xyl_core::dyadic!(1, 5)
         } else {
             Dy::ZERO
-        } - Dy::ratio(1, 4))
+        } - xyl_core::dyadic!(1, 4))
         .clamp(Dy::ZERO, Dy::ONE);
-    let shape = if social > Dy::ratio(3, 4) && strategy == Strategy::R {
+    let shape = if social > xyl_core::dyadic!(3, 4) && strategy == Strategy::R {
         Shape::Superorganism
-    } else if plasma || (dark && med.pace < Dy::ratio(1, 20)) {
+    } else if plasma || (dark && med.pace < xyl_core::dyadic!(1, 20)) {
         Shape::Distributed
     } else {
         Shape::Society
@@ -313,13 +313,13 @@ pub fn select(
     // `1.2 / ceiling` with the strategies' size rulers (r 2.5, K 1.2),
     // divided by the world's gravity g (floored at 0.001) except in plasma.
     let ceiling = if strategy == Strategy::R {
-        Dy::ratio(5, 2)
+        xyl_core::dyadic!(5, 2)
     } else {
-        Dy::ratio(6, 5)
+        xyl_core::dyadic!(6, 5)
     };
-    let mut size = Dy::ratio(6, 5) / ceiling;
+    let mut size = xyl_core::dyadic!(6, 5).div(&ceiling).unwrap_or_default();
     if !plasma {
-        size = size / g.max(Dy::sci(1, -3));
+        size = size.div(&g.max(Dy::sci(1, -3))).unwrap_or_default();
     }
     Some(Traits {
         strategy,

@@ -95,7 +95,7 @@ impl Rock {
     }
     /// Moment-of-inertia factor I / (M R^2), dimensionless (0.33).
     pub fn inertia() -> Q {
-        Q::ratio(33, 100)
+        xyl_core::ratio!(33, 100)
     }
 }
 

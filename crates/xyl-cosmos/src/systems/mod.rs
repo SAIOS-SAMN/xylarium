@@ -101,7 +101,7 @@ impl Spec {
     /// ring) are read in suns (`galaxy::suns_of_core_masses`,
     /// `stars::suns_of_power`) until this layer is converted.
     pub fn of(star: &Star) -> Spec {
-        let mass = crate::galaxy::suns_of_core_masses(&star.mass).max(Q::ratio(1, 10_000));
+        let mass = crate::galaxy::suns_of_core_masses(&star.mass).max(xyl_core::ratio!(1, 10_000));
         let delta = star.compactness();
         let power = crate::stars::power(
             &crate::galaxy::core_masses_of_suns(&mass),
@@ -180,7 +180,7 @@ impl World {
     /// ([`World::ice_share`]), so ice's rigidity holds its shape and tides.
     /// The one icy test.
     pub fn icy(&self) -> bool {
-        self.ice_share() > Q::ratio(1, 5)
+        self.ice_share() > xyl_core::ratio!(1, 5)
     }
 }
 
@@ -288,7 +288,12 @@ pub fn system(
             .unwrap_or(Q::ZERO);
     let infall_solids = dyadic(
         &(&star_earths
-            .checked_div(&frame.star_share.clone().max(Q::ratio(1, 1_000_000_000)))
+            .checked_div(
+                &frame
+                    .star_share
+                    .clone()
+                    .max(xyl_core::ratio!(1, 1_000_000_000)),
+            )
             .unwrap_or(Q::ZERO)
             * &(&z * &crate::chem::Rulers::reference_metallicity())),
     );
@@ -479,14 +484,14 @@ fn planet(
     let (core_share, mut ices) = gas.solids(&t_form);
     let has_water = ices.iter().any(|(s, _)| *s == "H2O");
     if !has_water {
-        let late = &(&Q::ratio(1, 10_000) * env) * z;
+        let late = &(&xyl_core::ratio!(1, 10_000) * env) * z;
         ices = vec![
             ("H2O", late.clone()),
-            ("CO2", &late * &Q::ratio(1, 10)),
-            ("CO", &late * &Q::ratio(1, 10)),
-            ("CH4", &late * &Q::ratio(1, 100)),
-            ("NH3", &late * &Q::ratio(1, 100)),
-            ("N2", &late * &Q::ratio(5, 1000)),
+            ("CO2", &late * &xyl_core::ratio!(1, 10)),
+            ("CO", &late * &xyl_core::ratio!(1, 10)),
+            ("CH4", &late * &xyl_core::ratio!(1, 100)),
+            ("NH3", &late * &xyl_core::ratio!(1, 100)),
+            ("N2", &late * &xyl_core::ratio!(5, 1000)),
         ];
     }
     let ices: Vec<(&str, Q)> = if has_water {
@@ -506,14 +511,16 @@ fn planet(
         .checked_div(&crate::package::Si::au())
         .unwrap_or(Q::ZERO);
     let period = (&oq * &(&oq + &m_au)).checked_div(&(&Q::ONE + &m_au))?;
-    let grow = period
-        .checked_div(&Q::int(25))?
-        .checked_div(&sigma1.checked_div(&Q::int(10))?.max(Q::ratio(1, 1_000_000)))?;
+    let grow = period.checked_div(&Q::int(25))?.checked_div(
+        &sigma1
+            .checked_div(&Q::int(10))?
+            .max(xyl_core::ratio!(1, 1_000_000)),
+    )?;
     let keep = fix(&exp(&-(grow.checked_div(&Q::int(3))?), BITS));
     if core >= Q::int(10) {
         let gathering = core.checked_div(&(&core + &Q::int(10)))?;
         envelope = dyadic(
-            &(&(&(&(&core * &keep) * &gathering) * &Q::ratio(56, 10))
+            &(&(&(&(&core * &keep) * &gathering) * &xyl_core::ratio!(56, 10))
                 * &spec.mass.clone().min(Q::ONE)),
         );
     }
@@ -524,7 +531,7 @@ fn planet(
         &(&Q::int(11) * &(&Q::ONE - &fix(&exp(&-(total.checked_div(&Q::int(30))?), BITS))))
             + &extent(&core)
     } else {
-        &extent(&core) * &(&Q::ONE + &(&Q::ratio(4, 10) * &ice_share))
+        &extent(&core) * &(&Q::ONE + &(&xyl_core::ratio!(4, 10) * &ice_share))
     };
     let rock = &core * &(&Q::ONE - &ice_share);
     let (c_mass, m_mass) = (&rock * &core_share, &rock * &(&Q::ONE - &core_share));
@@ -539,7 +546,7 @@ fn planet(
             )
         })
         .collect();
-    let icy = ice_share > Q::ratio(1, 5);
+    let icy = ice_share > xyl_core::ratio!(1, 5);
     if !is_world(&total, &radius, icy) {
         return Some(None);
     }

@@ -64,13 +64,15 @@ impl Path {
         let w = if locked {
             mean
         } else {
-            let frac = t / self.lock_gyr.max(Dy::sci(1, -12));
+            let frac = t
+                .div(&self.lock_gyr.max(Dy::sci(1, -12)))
+                .unwrap_or_default();
             self.spin0 - (self.spin0 - mean) * frac
         };
         let two_pi = Dy::int(2) * Dy::pi();
         Heartbeat {
-            day_s: two_pi / w.max(Dy::sci(1, -12)),
-            year_s: two_pi / mean.max(Dy::sci(1, -30)),
+            day_s: two_pi.div(&w.max(Dy::sci(1, -12))).unwrap_or_default(),
+            year_s: two_pi.div(&mean.max(Dy::sci(1, -30))).unwrap_or_default(),
             locked,
         }
     }
@@ -248,8 +250,11 @@ pub struct State {
 /// in the universe's stellar scales (not M^0.8, not the fourth root of
 /// L / R^2).
 pub fn star_t(star_mass: Dy, lum: Dy, sc: &Scales) -> Dy {
-    let radius = (star_mass / sc.star_mass).max(Dy::ratio(2, 25)) * sc.star_radius;
-    Dy::int(5772) * lum.max(Dy::sci(1, -9)) / radius
+    let radius = (star_mass.div(&sc.star_mass).unwrap_or_default()).max(xyl_core::dyadic!(2, 25))
+        * sc.star_radius;
+    (Dy::int(5772) * lum.max(Dy::sci(1, -9)))
+        .div(&radius)
+        .unwrap_or_default()
 }
 
 /// The climate's solved state: surface temperature (K), pressure (bar), air,
@@ -270,7 +275,7 @@ pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
     let w = set.world;
     let (mass, radius, flux, ices) = (blank.mass, blank.radius, blank.flux, blank.ices);
     let t_eq0 = blank.t_surf;
-    let star_rel = set.star_mass / sc.star_mass;
+    let star_rel = set.star_mass.div(&sc.star_mass).unwrap_or_default();
     // Interior heat sources: isotopes, formation heat and tides from the
     // host.
     let icy = w.icy();
@@ -279,16 +284,19 @@ pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
         .map(|p| p.tide(mass, radius, icy))
         .unwrap_or_default();
     let inside = bodies::interior(w, &set.sources, age, t_eq0, &tide, sc);
-    let heat = inside.heat_w / c.heat_unit_w;
+    let heat = inside.heat_w.div(&c.heat_unit_w).unwrap_or_default();
     // Degassed share: the magma ocean releases `magma_degas` of the mantle
     // share that accretion melted, (3/5) G M / R over the sensible plus latent
     // heat of rock (capped at 1); convection then releases the rest at the
     // rate it processes the mantle: 1 - (1 - 0.9 melted) exp(-processed).
-    let gm_r = c.gm_over_r_unit * mass / radius.max(Dy::sci(1, -6));
-    let accreted = Dy::ratio(3, 5) * gm_r;
+    let gm_r = (c.gm_over_r_unit * mass)
+        .div(&radius.max(Dy::sci(1, -6)))
+        .unwrap_or_default();
+    let accreted = xyl_core::dyadic!(3, 5) * gm_r;
     let melted = (accreted
-        / (bodies::cp_rock() * bodies::liquidus_k() * sc.chem + c.latent_rock * sc.chem))
-        .min(Dy::ONE);
+        .div(&(bodies::cp_rock() * bodies::liquidus_k() * sc.chem + c.latent_rock * sc.chem))
+        .unwrap_or_default())
+    .min(Dy::ONE);
     let out = Dy::ONE - (Dy::ONE - c.magma_degas * melted) * (-inside.processed).exp();
     let field = inside.field;
     let act = activity(star_rel, age);
@@ -301,7 +309,7 @@ pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
         * if field.signum() > 0 {
             Dy::ONE
         } else {
-            Dy::ratio(3, 2)
+            xyl_core::dyadic!(3, 2)
         };
     let mut gas = jeans_held(&ices, gm_r, t_exo, out, sc);
     photolyse(&mut gas, flux * band(blank.star_t, sc).brk * act);
@@ -309,18 +317,26 @@ pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
     // over the world's mass. A broken fragment escapes with weight
     // exp(-E_b / E_hot), with E_b = bind_ev x the fragment's mass, bind_ev =
     // 2 m_H G M / R in eV, and E_hot the fragments' kinetic energy of a few eV.
-    let wind = c.strip_rate * flux * wind_dose(star_rel, age) / mass.max(Dy::sci(1, -6));
-    let bind_ev = gm_r * Dy::int(2) * c.m_h_kg * sc.proton / c.ev_j;
-    let g = mass / (radius.max(Dy::sci(1, -6)) * radius.max(Dy::sci(1, -6)));
-    let to_bar = c.g_unit_pa_per_massfrac * mass * g
-        / (radius.max(Dy::sci(1, -6)) * radius.max(Dy::sci(1, -6)))
-        / c.bar;
-    let hpm = heat / mass.max(Dy::sci(1, -6));
+    let wind = (c.strip_rate * flux * wind_dose(star_rel, age))
+        .div(&mass.max(Dy::sci(1, -6)))
+        .unwrap_or_default();
+    let bind_ev = (gm_r * Dy::int(2) * c.m_h_kg * sc.proton)
+        .div(&c.ev_j)
+        .unwrap_or_default();
+    let g = mass
+        .div(&(radius.max(Dy::sci(1, -6)) * radius.max(Dy::sci(1, -6))))
+        .unwrap_or_default();
+    let to_bar = (c.g_unit_pa_per_massfrac * mass * g)
+        .div(&(radius.max(Dy::sci(1, -6)) * radius.max(Dy::sci(1, -6))))
+        .unwrap_or_default()
+        .div(&c.bar)
+        .unwrap_or_default();
+    let hpm = heat.div(&mass.max(Dy::sci(1, -6))).unwrap_or_default();
     let hot = c.hot_ev * sc.chem;
     let cos_obl = set
         .path
         .map(|p| p.cos_obliquity_at(age))
-        .unwrap_or(Dy::ratio(7071, 10000));
+        .unwrap_or(xyl_core::dyadic!(7071, 10000));
     let polar = polar_share(cos_obl);
     let held0 = gas.total();
     let clim = Climate {
@@ -352,19 +368,19 @@ pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
         wind,
         t_exo,
         escaped: if held0.signum() > 0 {
-            Dy::ONE - gas.total() / held0
+            Dy::ONE - gas.total().div(&held0).unwrap_or_default()
         } else {
             Dy::ZERO
         },
         air_escaped: if air0.signum() > 0 {
-            (Dy::ONE - p_bar / air0).max(Dy::ZERO)
+            (Dy::ONE - p_bar.div(&air0).unwrap_or_default()).max(Dy::ZERO)
         } else {
             Dy::ZERO
         },
         albedo,
         g,
         // The air column attenuates light as exp(-p / 10 bar).
-        light: flux * (Dy::ONE - albedo) * (-(Dy::ratio(1, 10) * p_bar)).exp(),
+        light: flux * (Dy::ONE - albedo) * (-(xyl_core::dyadic!(1, 10) * p_bar)).exp(),
         ..blank
     }
 }
@@ -378,27 +394,31 @@ fn radiated(set: &Setting, age: Dy, ctx: &Ctx) -> State {
     let w = set.world;
     let (mass, radius) = (Dy::from_q(&w.mass), Dy::from_q(&w.radius));
     let a_au = set.a_au.max(Dy::sci(1, -6));
-    let star_rel = set.star_mass / sc.star_mass;
+    let star_rel = set.star_mass.div(&sc.star_mass).unwrap_or_default();
     let star_t = star_t(set.star_mass, set.lum, sc);
     let e_now = set.path.map(|p| p.e(age)).unwrap_or(Dy::ZERO);
     // The flux is L / a, with L the star's mean light over the bell
     // (stars.rs); the variation within a bell is read by stars::flicker and
     // does not enter the climate.
-    let flux = set.lum / a_au;
-    let t_form = c.t_unit * set.lum / a_au;
+    let flux = set.lum.div(&a_au).unwrap_or_default();
+    let t_form = (c.t_unit * set.lum).div(&a_au).unwrap_or_default();
     // The galactic environment and the cosmic rays both follow the crowding
     // of the star's ring (`galaxy::crowding`).
     let cr = cosmic_rays(set.r);
     let env = cr;
     let unit_age = Dy::from_q(&bodies::unit_age_gyr());
-    let sw = activity(star_rel, age) / activity(Dy::ONE, unit_age) / a_au;
+    let sw = activity(star_rel, age)
+        .div(&activity(Dy::ONE, unit_age))
+        .unwrap_or_default()
+        .div(&a_au)
+        .unwrap_or_default();
     let mut ices = Mix::default();
     for (name, f) in &w.ices {
         if let Some(s) = Species::of(name) {
             ices.set(s, Dy::from_q(f));
         }
     }
-    let t_eq0 = c.t_unit * flux * Dy::ratio(7, 10);
+    let t_eq0 = c.t_unit * flux * xyl_core::dyadic!(7, 10);
     State {
         age,
         giant: w.giant,
@@ -429,7 +449,7 @@ fn radiated(set: &Setting, age: Dy, ctx: &Ctx) -> State {
         air_escaped: Dy::ZERO,
         env,
         star_t,
-        albedo: Dy::ratio(3, 10),
+        albedo: xyl_core::dyadic!(3, 10),
         e: e_now,
         g: Dy::ZERO,
         cr,
@@ -446,8 +466,13 @@ fn jeans_held(ices: &Mix, gm_r: Dy, t_exo: Dy, out: Dy, sc: &Scales) -> Mix {
     let c = constants();
     let mut gas = Mix::default();
     for (s, f) in ices.iter() {
-        let lam = gm_r * s.mu() / (c.k_over_mh / sc.proton * t_exo.max(Dy::ONE));
-        let held = ((lam - Dy::int(2)) / (c.jeans_hold - Dy::int(2))).clamp(Dy::ZERO, Dy::ONE);
+        let lam = (gm_r * s.mu())
+            .div(&(c.k_over_mh.div(&sc.proton).unwrap_or_default() * t_exo.max(Dy::ONE)))
+            .unwrap_or_default();
+        let held = ((lam - Dy::int(2))
+            .div(&(c.jeans_hold - Dy::int(2)))
+            .unwrap_or_default())
+        .clamp(Dy::ZERO, Dy::ONE);
         gas.set(s, f * out * held);
     }
     gas
@@ -460,9 +485,9 @@ fn photolyse(gas: &mut Mix, uv: Dy) {
         return;
     }
     for (from, to, ratio) in [
-        (Species::NH3, Species::N2, Dy::ratio(28, 34)),
-        (Species::CH4, Species::CO2, Dy::ratio(44, 16)),
-        (Species::CO, Species::CO2, Dy::ratio(44, 28)),
+        (Species::NH3, Species::N2, xyl_core::dyadic!(28, 34)),
+        (Species::CH4, Species::CO2, xyl_core::dyadic!(44, 16)),
+        (Species::CO, Species::CO2, xyl_core::dyadic!(44, 28)),
     ] {
         if let Some(v) = gas.remove(from) {
             gas.set(to, gas.amount(to) + v * ratio);
@@ -490,9 +515,14 @@ fn strip_by_wind(
         .map(|(s, _)| s.fragment())
         .min()
         .unwrap_or(Dy::ONE);
-    let reach = wind * (-(bind_ev * lightest / hot)).exp();
+    let reach = wind * (-((bind_ev * lightest).div(&hot).unwrap_or_default())).exp();
     let mut budget = wind;
-    for share in [Dy::ratio(1, 4), Dy::ratio(1, 3), Dy::ratio(1, 2), Dy::ONE] {
+    for share in [
+        xyl_core::dyadic!(1, 4),
+        xyl_core::dyadic!(1, 3),
+        xyl_core::dyadic!(1, 2),
+        Dy::ONE,
+    ] {
         let air = &solved.2;
         if budget.signum() <= 0 || air.is_empty() || reach < Dy::sci(1, -4) * gas.total() {
             break;
@@ -504,13 +534,16 @@ fn strip_by_wind(
                 if !gas.has(s) {
                     continue;
                 }
-                let broken = spend * pp / total;
-                let escape = (-(bind_ev * s.fragment() / hot)).exp();
+                let broken = (spend * pp).div(&total).unwrap_or_default();
+                let escape = (-((bind_ev * s.fragment()).div(&hot).unwrap_or_default())).exp();
                 let have = gas.amount(s);
                 gas.set(
                     s,
                     have - have
-                        .min(pp / clim.to_bar.max(Dy::sci(1, -12)))
+                        .min(
+                            pp.div(&clim.to_bar.max(Dy::sci(1, -12)))
+                                .unwrap_or_default(),
+                        )
                         .min(broken * escape),
                 );
             }

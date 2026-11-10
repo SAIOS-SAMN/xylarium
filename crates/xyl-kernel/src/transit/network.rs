@@ -88,12 +88,13 @@ pub struct Network {
 /// time across a mouth of that width: the throat shortens any span to the
 /// mouth's width, so no light time is charged for the span itself.
 pub fn crossing_years(reach_kpc: Dy) -> Dy {
-    let c =
-        xyl_cosmos::circuit::rings_of_gyr_dy(xyl_cosmos::pulse::c_kpc_per_ring()) / Dy::sci(1, 9);
+    let c = (xyl_cosmos::circuit::rings_of_gyr_dy(xyl_cosmos::pulse::c_kpc_per_ring()))
+        .div(&(Dy::sci(1, 9)))
+        .unwrap_or_default();
     if c.signum() <= 0 {
         return Dy::ZERO;
     }
-    reach_kpc / c
+    reach_kpc.div(&c).unwrap_or_default()
 }
 
 impl Network {
@@ -133,7 +134,11 @@ impl Network {
                 .sample
                 .iter()
                 .find(|s| s.star.core == w.star.core)
-                .map(|p| p.suns / p.star.stands_for.max(Dy::sci(1, -30)))
+                .map(|p| {
+                    p.suns
+                        .div(&p.star.stands_for.max(Dy::sci(1, -30)))
+                        .unwrap_or_default()
+                })
                 .unwrap_or_else(|| Dy::from_q(&xyl_cosmos::galaxy::suns_of_core_masses(&Q::ONE)));
             self.sample
                 .push(InPlay::of(w.star.clone(), w.star.stands_for * ratio));
@@ -180,7 +185,7 @@ impl Network {
             self.bound[k] = now;
             let v = speeds[&i] + speeds[&j];
             let wait = if v.signum() > 0 {
-                (arc - span).abs() / v
+                (arc - span).abs().div(&v).unwrap_or_default()
             } else {
                 Dy::sci(1, 3)
             };

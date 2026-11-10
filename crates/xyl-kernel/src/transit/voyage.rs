@@ -78,7 +78,10 @@ pub struct Voyage {
 /// speed `escape`: half of the speed change bought by the mass ratio beyond
 /// the escape speed (the other half brakes), and zero if none remains.
 pub fn cruise_speed(spec: &Spec, ratio: Dy, escape: Dy) -> Dy {
-    ((delta_v(spec.v_e, ratio) - escape) / Dy::int(2)).max(Dy::ZERO)
+    ((delta_v(spec.v_e, ratio) - escape)
+        .div(&(Dy::int(2)))
+        .unwrap_or_default())
+    .max(Dy::ZERO)
 }
 
 /// Returns a voyage of `dist_m` metres out of a well of escape speed
@@ -88,7 +91,12 @@ pub fn voyage(spec: &Spec, ratio: Dy, escape: Dy, dist_m: Dy) -> Option<Voyage> 
     if cruise.signum() <= 0 {
         return None;
     }
-    let years = dist_m.max(Dy::ZERO) / cruise / year_s();
+    let years = dist_m
+        .max(Dy::ZERO)
+        .div(&cruise)
+        .unwrap_or_default()
+        .div(&year_s())
+        .unwrap_or_default();
     Some(Voyage {
         years,
         cruise,
@@ -99,7 +107,9 @@ pub fn voyage(spec: &Spec, ratio: Dy, escape: Dy, dist_m: Dy) -> Option<Voyage> 
 /// Returns the greatest distance (kpc) a drive covers within `years` after
 /// leaving a well of escape speed `escape`.
 pub fn reach_kpc(spec: &Spec, ratio: Dy, escape: Dy, years: Dy) -> Dy {
-    cruise_speed(spec, ratio, escape) * years * year_s() / kpc_m()
+    (cruise_speed(spec, ratio, escape) * years * year_s())
+        .div(&kpc_m())
+        .unwrap_or_default()
 }
 
 /// Returns the transfer window between worlds `wa` and `wb` of one system.
@@ -126,16 +136,23 @@ pub fn window_years(
     // The manifolds' rates are per ring; read per Gyr at this boundary.
     let per = |m: &Manifold| xyl_cosmos::circuit::rings_of_gyr_dy(Dy::from_q(&m.rate));
     let (ra, rb) = (per(a), per(b));
-    let rel = (rb - ra) / Dy::int(360);
+    let rel = (rb - ra).div(&(Dy::int(360))).unwrap_or_default();
     if rel.signum() == 0 {
         return None;
     }
     let age = Dy::from_q(age);
-    let phase = |m: &Manifold, r: Dy| Dy::from_q(&m.m0) + r * age / Dy::int(360);
-    let lead = Dy::ratio(1, 2) - rb * leg_years / Dy::sci(1, 9) / Dy::int(360);
+    let phase = |m: &Manifold, r: Dy| {
+        Dy::from_q(&m.m0) + (r * age).div(&(Dy::int(360))).unwrap_or_default()
+    };
+    let lead = xyl_core::dyadic!(1, 2)
+        - (rb * leg_years)
+            .div(&(Dy::sci(1, 9)))
+            .unwrap_or_default()
+            .div(&(Dy::int(360)))
+            .unwrap_or_default();
     let off = (lead - (phase(b, rb) - phase(a, ra))) * Dy::int(rel.signum().into());
     let turns = off - Dy::int(off.trunc_i64()) + if off.signum() < 0 { Dy::ONE } else { Dy::ZERO };
-    let wait = turns.max(Dy::ZERO) / rel.abs() * Dy::sci(1, 9);
+    let wait = turns.max(Dy::ZERO).div(&rel.abs()).unwrap_or_default() * Dy::sci(1, 9);
     let a_m = &a.a * &tier_m(a.tier);
     let v_orb = Dy::from_q(&(&xyl_cosmos::package::Si::rad_s(&a.rate) * &a_m));
     Some((wait, v_orb))
@@ -148,7 +165,7 @@ pub fn window_years(
 pub fn blended(lo: &Spec, hi: &Spec, share: Dy) -> Spec {
     let s = share.clamp(Dy::ZERO, Dy::ONE);
     Spec {
-        drive: if s > Dy::ratio(1, 2) {
+        drive: if s > xyl_core::dyadic!(1, 2) {
             hi.drive
         } else {
             lo.drive

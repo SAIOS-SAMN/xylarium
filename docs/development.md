@@ -37,8 +37,10 @@ The following conventions apply in addition to `rustfmt` (run
   A closure longer than a few lines becomes a named function.
 - **Names.** Items are named for what they compute (`stellar_mass`,
   `manifold_worlds`), not by single letters. Numbers are built with the
-  shared constructors - `Q::int`, `Q::ratio`, `Q::new` (checked),
-  `Dy::int`, `Dy::ratio`, `Dy::sci`, `elements::decimal` - never with
+  shared constructors - `Q::int`, `ratio!` (a written ratio, its denominator
+  checked at build time), `Q::new` (checked),
+  `Dy::int`, `dyadic!` (a written ratio as a reading), `Dy::sci`,
+  `elements::decimal` - never with
   private one-letter wrappers. Single-letter bindings are for the symbols of
   a formula written in the comment above them (`m`, `r`, `delta`).
 - **Comments.** A `//` comment says why the code does what it does, or

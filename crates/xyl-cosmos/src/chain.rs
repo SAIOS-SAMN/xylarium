@@ -170,17 +170,18 @@ impl Place {
     pub fn cell(&self) -> Cell {
         let d = |q: &Q| Dy::from_q(q);
         let (x, y, z) = (d(&self.dir[0]), d(&self.dir[1]), d(&self.dir[2]));
-        let half = Dy::pi() / Dy::int(2);
+        let half = (Dy::pi()).div(&(Dy::int(2))).unwrap_or_default();
         let az = if x.signum() > 0 {
-            (y / x).atan()
+            (y.div(&x).unwrap_or_default()).atan()
         } else if x.signum() < 0 {
-            (y / x).atan() + if y.signum() >= 0 { Dy::pi() } else { -Dy::pi() }
+            (y.div(&x).unwrap_or_default()).atan()
+                + if y.signum() >= 0 { Dy::pi() } else { -Dy::pi() }
         } else if y.signum() >= 0 {
             half
         } else {
             -half
         };
-        let deg = |rad: Dy| rad * Dy::int(180) / Dy::pi();
+        let deg = |rad: Dy| (rad * Dy::int(180)).div(&(Dy::pi())).unwrap_or_default();
         let mut az_deg = deg(az).trunc_i64();
         if az_deg < 0 {
             az_deg += 360;

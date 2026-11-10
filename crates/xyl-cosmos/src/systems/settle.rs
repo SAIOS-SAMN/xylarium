@@ -35,14 +35,18 @@ pub(super) fn sixty() -> Dy {
 
 /// A planet's reach a (AU) in r_g.
 pub(super) fn planet_reach(a: &Q) -> Dy {
-    Dy::from_q(a) * Dy::from_q(&crate::package::Si::au()) / rg_units().0
+    (Dy::from_q(a) * Dy::from_q(&crate::package::Si::au()))
+        .div(&rg_units().0)
+        .unwrap_or_default()
 }
 
 /// Settles a star's disc (see [`settle_about`]) with the star as anchor:
 /// swings at the settled age, merge ages out to life's horizon.
 pub(super) fn settle(b: Vec<Embryo>, star_suns: &Q, settled: &Q) -> Vec<Embryo> {
     let (_, core_kg) = rg_units();
-    let anchor = Dy::from_q(star_suns) * Dy::from_q(&crate::package::Si::star_mass_kg()) / core_kg;
+    let anchor = (Dy::from_q(star_suns) * Dy::from_q(&crate::package::Si::star_mass_kg()))
+        .div(&core_kg)
+        .unwrap_or_default();
     settle_about(
         b,
         anchor,
@@ -61,14 +65,17 @@ fn period(s: Dy, n: Dy) -> i64 {
         let a = x.trunc_i64();
         (h0, h1) = (h1, a.saturating_mul(h1).saturating_add(h0));
         (k0, k1) = (k1, a.saturating_mul(k1).saturating_add(k0));
-        if k1 > 0 && (s - Dy::int(h1) / Dy::int(k1)).abs() * n * Dy::int(k1) <= Dy::ONE {
+        if k1 > 0
+            && (s - (Dy::int(h1)).div(&(Dy::int(k1))).unwrap_or_default()).abs() * n * Dy::int(k1)
+                <= Dy::ONE
+        {
             return k1;
         }
         let fr = x - Dy::int(a);
         if fr <= Dy::sci(1, -15) {
             return k1.max(1);
         }
-        x = Dy::ONE / fr;
+        x = (Dy::ONE).div(&fr).unwrap_or_default();
     }
     k1.max(1)
 }
@@ -92,7 +99,11 @@ impl Pairs<'_> {
     /// The turning law about the anchor at reach `a` (r_g), radians per
     /// ring (`turning::turning_dy`).
     fn omega(&self, a: Dy) -> Dy {
-        crate::turning::turning_dy(self.anchor, a / sixty(), Tier::System)
+        crate::turning::turning_dy(
+            self.anchor,
+            a.div(&sixty()).unwrap_or_default(),
+            Tier::System,
+        )
     }
 
     /// A pair's kick over `gyr`: `eps (floor(N / q) c + N mod q)`, the
@@ -111,9 +122,12 @@ impl Pairs<'_> {
             return Dy::ZERO;
         }
         // The pair's own turning law across its gap, over the rates' gap.
-        let eps = crate::turning::turning_dy(mm, r / sixty(), Tier::System) / dw;
+        let eps =
+            (crate::turning::turning_dy(mm, r.div(&sixty()).unwrap_or_default(), Tier::System))
+                .div(&dw)
+                .unwrap_or_default();
         let n = gyr * self.per_gyr * dw;
-        let s = w1.max(w2) / dw;
+        let s = w1.max(w2).div(&dw).unwrap_or_default();
         let s = s - Dy::int(s.trunc_i64());
         let q = period(s, n.max(Dy::ONE));
         let off = Dy::int(q) * Dy::from_q(&(&y.phase - &x.phase));
@@ -122,7 +136,7 @@ impl Pairs<'_> {
             f += Dy::ONE;
         }
         let c = (Dy::ONE - Dy::int(2) * f).abs();
-        let whole = Dy::int((n / Dy::int(q)).trunc_i64());
+        let whole = Dy::int((n.div(&(Dy::int(q))).unwrap_or_default()).trunc_i64());
         let rest = n - whole * Dy::int(q);
         eps * (whole * c + rest)
     }
@@ -135,7 +149,9 @@ impl Pairs<'_> {
         if r.is_zero() {
             return Dy::int(2);
         }
-        self.kick(x, y, gyr) * a1.min(a2) / r
+        (self.kick(x, y, gyr) * a1.min(a2))
+            .div(&r)
+            .unwrap_or_default()
     }
 
     /// The first age at which the pair merges, by 48 bisection steps out to
@@ -146,7 +162,7 @@ impl Pairs<'_> {
         }
         let (mut lo, mut hi) = (Dy::ZERO, self.top);
         for _ in 0..48 {
-            let mid = (lo + hi) / Dy::int(2);
+            let mid = (lo + hi).div(&(Dy::int(2))).unwrap_or_default();
             if self.score(x, y, mid) >= Dy::ONE {
                 hi = mid;
             } else {
@@ -196,7 +212,9 @@ pub(super) fn settle_about(
     let pairs = Pairs {
         anchor,
         reach,
-        unit_world: Dy::from_q(&crate::package::Si::world_mass_kg()) / core_kg,
+        unit_world: (Dy::from_q(&crate::package::Si::world_mass_kg()))
+            .div(&core_kg)
+            .unwrap_or_default(),
         per_gyr: crate::circuit::rings_of_gyr_dy(Dy::ONE),
         top: Dy::from_q(horizon),
     };
@@ -248,7 +266,7 @@ fn merge_until(b: &mut Vec<Embryo>, pairs: &Pairs, by_settled: Dy) -> Vec<Option
             // The phases meet along the shorter arc between them, weighted
             // by mass: the turn from x to y is read in [-1/2, 1/2).
             phase: {
-                let half = Q::ratio(1, 2);
+                let half = xyl_core::ratio!(1, 2);
                 let turn = &(&(&y.phase - &x.phase) + &half).frac() - &half;
                 let share = y.m.checked_div(&m).unwrap_or(Q::ZERO);
                 dyadic(&(&x.phase + &(&turn * &share))).frac()
@@ -285,7 +303,7 @@ fn set_swings(b: &mut [Embryo], pairs: &Pairs, at: Dy) {
                 };
                 let inner = (pairs.reach)(&x.a).min((pairs.reach)(&y.a));
                 let own = (pairs.reach)(&b[i].a).max(Dy::sci(1, -30));
-                s = s.max(pairs.kick(x, y, at) * inner / own);
+                s = s.max((pairs.kick(x, y, at) * inner).div(&own).unwrap_or_default());
             }
             dyadic(&s.min(Dy::ONE).to_q())
         })

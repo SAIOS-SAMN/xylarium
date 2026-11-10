@@ -65,7 +65,7 @@ use xyl_core::Q;
 /// ocean's held medium (`circuit::Substrate::held_within`); a star's life
 /// reads it about the universal core's hold, 1.
 pub fn ring_per_bell(reach: Dy, hold: Dy) -> Dy {
-    deficit_dy(hold, reach) / Dy::pi()
+    deficit_dy(hold, reach).div(&(Dy::pi())).unwrap_or_default()
 }
 
 /// The ring per bell a star at reach `r` (galaxy units, about its galactic
@@ -178,7 +178,7 @@ fn rings_to_transduce(share: &Q, delta: Dy, reach: Dy) -> Q {
     if transduced.signum() <= 0 || crate::circuit::anchor().rim.signum() <= 0 {
         return Q::ZERO;
     }
-    (Dy::from_q(share) / transduced * crate::circuit::bell()).to_q()
+    ((Dy::from_q(share)).div(&transduced).unwrap_or_default() * crate::circuit::bell()).to_q()
 }
 
 /// A star's main-sequence life (rings) at reach `r` for compactness `delta`:
@@ -198,7 +198,9 @@ pub fn life(seq: &Sequence, delta: Dy, reach: Dy) -> Q {
 /// with `m` the star's mass (core masses) and `delta` its compactness. Zero
 /// for a non-positive mass.
 pub fn power(mass: &Q, delta: Dy, reach: Dy) -> Q {
-    let share = transduced_per_bell(delta, reach) / crate::circuit::bell();
+    let share = transduced_per_bell(delta, reach)
+        .div(&(crate::circuit::bell()))
+        .unwrap_or_default();
     (&mass.clone().max(Q::ZERO) * &share.to_q()).max(Q::ZERO)
 }
 
@@ -222,7 +224,9 @@ pub fn suns_of_power(p: &Q, delta: Dy) -> Q {
 /// `1 + pi bell q(t)`, with q read at `born + age`.
 pub fn light(mass: &Q, delta: Dy, reach: Dy, born: Dy, age: Dy) -> Q {
     let mean = power(mass, delta, reach);
-    let drift = drift_per_bell(reach, born + age) / ring_at(reach).max(Dy::sci(1, -300));
+    let drift = drift_per_bell(reach, born + age)
+        .div(&ring_at(reach).max(Dy::sci(1, -300)))
+        .unwrap_or_default();
     &mean * &(Dy::ONE + drift).to_q()
 }
 
@@ -235,7 +239,10 @@ pub fn flicker(t: Dy) -> Dy {
     if echo.signum() <= 0 || crate::circuit::anchor().rim.signum() <= 0 {
         return Dy::ONE;
     }
-    Dy::pi() / Dy::int(2) * (Dy::int(2) * Dy::pi() * t / echo).cos().abs()
+    (Dy::pi()).div(&(Dy::int(2))).unwrap_or_default()
+        * ((Dy::int(2) * Dy::pi() * t).div(&echo).unwrap_or_default())
+            .cos()
+            .abs()
 }
 
 /// The share of a star's first step transduced by `age` rings at reach `r`
@@ -264,16 +271,22 @@ mod tests {
         // The ring per bell falls with the vacuum's share and is 1 / pi at
         // r = 0.
         assert!(ring_at(Dy::ZERO) > ring_at(Dy::int(10)));
-        assert_eq!(ring_at(Dy::ZERO), Dy::ONE / Dy::pi());
+        assert_eq!(
+            ring_at(Dy::ZERO),
+            (Dy::ONE).div(&(Dy::pi())).unwrap_or_default()
+        );
         assert!(ring_per_bell(Dy::int(10), Dy::int(2)) > ring_at(Dy::int(10)));
         // The flicker is at most pi / 2 times the mean.
-        assert!(flicker(Dy::ZERO) <= Dy::pi() / Dy::int(2) + Dy::sci(1, -12));
+        assert!(
+            flicker(Dy::ZERO)
+                <= (Dy::pi()).div(&(Dy::int(2))).unwrap_or_default() + Dy::sci(1, -12)
+        );
     }
 
     #[test]
     fn power_is_the_transduced_hold_and_life_counts_rings() {
         let _ = crate::genesis::origin();
-        let (m, r) = (Q::ratio(1, 1_000_000), Dy::int(3));
+        let (m, r) = (xyl_core::ratio!(1, 1_000_000), Dy::int(3));
         let rim = Q::ONE;
         let delta = Dy::from_q(&crate::disc::rim_share(&m, &rim));
         // The rim share lies in (0, 1); a heavier star on the same rim is
@@ -301,10 +314,13 @@ mod tests {
         assert!(life(&seq, heavier, r) < main);
         let transduced_by = &main * &transduced_per_bell(delta, r).to_q();
         let gap = (&transduced_by - &seq.steps[0].transduced).abs();
-        assert!(gap < Q::ratio(1, 1_000_000), "{transduced_by}");
+        assert!(gap < xyl_core::ratio!(1, 1_000_000), "{transduced_by}");
         // The boundary reads a one-sun mass at reach 0 as one sun.
         let sun = crate::galaxy::core_masses_of_suns(&Q::ONE);
         let one = suns_of_power(&power(&sun, delta, Dy::ZERO), delta);
-        assert!((&one - &Q::ONE).abs() < Q::ratio(1, 1_000_000), "{one}");
+        assert!(
+            (&one - &Q::ONE).abs() < xyl_core::ratio!(1, 1_000_000),
+            "{one}"
+        );
     }
 }

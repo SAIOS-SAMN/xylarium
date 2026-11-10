@@ -7,18 +7,22 @@ fn schedule_encoding_round_trips_and_refuses_damage() {
     let m = Mind {
         star: 4130,
         w: 1,
-        epoch: Dy::ratio(157, 100),
+        epoch: xyl_core::dyadic!(157, 100),
         region: Region::Cryogenic,
-        star_mass: Dy::ratio(3, 2),
-        r_kpc: Dy::ratio(17, 10),
-        steps: vec![Dy::ratio(14, 10), Dy::ratio(15, 10), Dy::ratio(157, 100)],
+        star_mass: xyl_core::dyadic!(3, 2),
+        r_kpc: xyl_core::dyadic!(17, 10),
+        steps: vec![
+            xyl_core::dyadic!(14, 10),
+            xyl_core::dyadic!(15, 10),
+            xyl_core::dyadic!(157, 100),
+        ],
         setbacks: 2,
         seeded: false,
         fed_settled: true,
     };
     let s = Schedule {
         minds: vec![m],
-        curve: vec![Dy::ZERO, Dy::ratio(1, 64)],
+        curve: vec![Dy::ZERO, xyl_core::dyadic!(1, 64)],
         limits: Limits {
             worlds: 9,
             minds: 1,

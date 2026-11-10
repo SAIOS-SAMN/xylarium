@@ -191,17 +191,17 @@ pub fn disc_frame(r: &Q, mass: &Q) -> Option<DiscFrame> {
     // `s c` gathers the share `s` of the infall's extent.
     let lambda = cut
         .cloud
-        .checked_div(&cut.infall.clone().max(Q::ratio(1, 1_000_000_000)))?;
+        .checked_div(&cut.infall.clone().max(xyl_core::ratio!(1, 1_000_000_000)))?;
     let extent = mass
-        .checked_div(&lambda.max(Q::ratio(1, 1_000_000_000_000)))?
+        .checked_div(&lambda.max(xyl_core::ratio!(1, 1_000_000_000_000)))?
         .min(cut.infall.clone());
     // Manifold reach (galaxy units): the deficit share m / (M(<r) + m) of
     // the circle 2 pi r about the core (`manifold::reach`).
     let inside = inside_mass(r);
-    let ratio = mass.checked_div(&inside.max(Q::ratio(1, 1_000_000)))?;
+    let ratio = mass.checked_div(&inside.max(xyl_core::ratio!(1, 1_000_000)))?;
     let reach = crate::manifold::reach(&Encl::exact(r.clone()), &ratio).mid();
     let star_share = extent
-        .checked_div(&reach.clone().max(Q::ratio(1, 1_000_000_000_000)))
+        .checked_div(&reach.clone().max(xyl_core::ratio!(1, 1_000_000_000_000)))
         .unwrap_or(Q::ONE)
         .min(Q::ONE);
     Some(DiscFrame {

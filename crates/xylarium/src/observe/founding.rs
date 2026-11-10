@@ -120,7 +120,7 @@ pub(super) fn founding_read(o: &Options) -> Result<String, String> {
         out.push_str(&format!(
             "  Z{z:>5}: reach {}  Q/3Z {}\n",
             show(r),
-            show(&Q::ratio(i64::from(q), 3 * i64::from(*z)))
+            show(&Q::new(i64::from(q), 3 * i64::from(*z)).unwrap_or(Q::ZERO))
         ));
     }
     if let (Some(r115), Some(rtop)) = (reach(115), reach(top)) {

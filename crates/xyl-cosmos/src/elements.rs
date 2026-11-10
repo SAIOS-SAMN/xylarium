@@ -337,8 +337,8 @@ pub fn valley_a(z: u32) -> Option<u32> {
     // a tie.
     let (lo, hi) = (2 * z, 3 * z);
     let guess = Dy::int(i64::from(z))
-        * (Dy::ratio(198, 100)
-            + Dy::ratio(334, 1000)
+        * (xyl_core::dyadic!(198, 100)
+            + xyl_core::dyadic!(334, 1000)
                 * Dy::from_q(&crate::elements::extent(
                     &Q::new(5 * i64::from(z), 200).unwrap_or(Q::ONE),
                 )));

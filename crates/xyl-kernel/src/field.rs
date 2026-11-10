@@ -87,7 +87,9 @@ impl Books {
     /// pulse or when `now` is not later than it.
     pub fn per_year(&self, now: Dy) -> Dy {
         match self.since {
-            Some(t) if now > t => Dy::from_q(&self.energy_in) / ((now - t) * Dy::sci(1, 9)),
+            Some(t) if now > t => (Dy::from_q(&self.energy_in))
+                .div(&((now - t) * Dy::sci(1, 9)))
+                .unwrap_or_default(),
             _ => Dy::ZERO,
         }
     }
@@ -214,7 +216,7 @@ impl Field {
             return Dy::ZERO;
         };
         let a = Dy::from_q(&world.a).max(Dy::sci(1, -6));
-        b.per_year(now) / a
+        b.per_year(now).div(&a).unwrap_or_default()
     }
 
     /// Returns a people's environment factor from `radiation` over `years`,
@@ -235,11 +237,11 @@ impl Field {
             Some(h) => h,
         };
         let env = if radiation > home {
-            home / radiation
+            home.div(&radiation).unwrap_or_default()
         } else {
             Dy::ONE
         };
-        let keep = (-(years / gen_yr.max(Dy::sci(1, -6)))).exp();
+        let keep = (-(years.div(&gen_yr.max(Dy::sci(1, -6))).unwrap_or_default())).exp();
         self.home[people] = Some(home * keep + radiation * (Dy::ONE - keep));
         env
     }
@@ -356,10 +358,10 @@ mod tests {
             Dy::ONE
         );
         let e = f.environment(0, Dy::int(8), Dy::sci(1, -9), Dy::int(25));
-        assert!((e - Dy::ratio(1, 2)).abs() < Dy::sci(1, -6), "{e}");
+        assert!((e - xyl_core::dyadic!(1, 2)).abs() < Dy::sci(1, -6), "{e}");
         // Over many generations the home radiation moves to the new radiation.
         f.environment(0, Dy::int(8), Dy::int(10_000), Dy::int(25));
         let e = f.environment(0, Dy::int(8), Dy::sci(1, -9), Dy::int(25));
-        assert!(e > Dy::ratio(99, 100), "adapted: {e}");
+        assert!(e > xyl_core::dyadic!(99, 100), "adapted: {e}");
     }
 }

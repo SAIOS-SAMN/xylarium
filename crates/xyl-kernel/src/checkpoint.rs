@@ -694,41 +694,52 @@ mod tests {
     #[test]
     fn checkpoint_text_round_trips_exactly() {
         let c = Checkpoint {
-            at: Q::ratio(143_078_729_920, 1_000_000),
+            at: xyl_core::ratio!(143_078_729_920, 1_000_000),
             holders: vec![(3, Holder::Mind([7; 32])), (5, Holder::Player("x0".into()))],
             peoples: vec![Held {
                 index: 2,
                 tag: tag("Zimarol"),
-                population: Q::ratio(108_971, 1),
-                capacity: Q::ratio(3, 7),
-                stock: Some([Q::ratio(1, 3), Q::ZERO, Q::ratio(2, 9), Q::ONE]),
-                focus: Focus::of([Q::ZERO, Q::ratio(3, 4), Q::ratio(1, 8), Q::ZERO]).unwrap(),
-                home: Some(Q::ratio(5, 11)),
+                population: xyl_core::ratio!(108_971, 1),
+                capacity: xyl_core::ratio!(3, 7),
+                stock: Some([
+                    xyl_core::ratio!(1, 3),
+                    Q::ZERO,
+                    xyl_core::ratio!(2, 9),
+                    Q::ONE,
+                ]),
+                focus: Focus::of([
+                    Q::ZERO,
+                    xyl_core::ratio!(3, 4),
+                    xyl_core::ratio!(1, 8),
+                    Q::ZERO,
+                ])
+                .unwrap(),
+                home: Some(xyl_core::ratio!(5, 11)),
             }],
             inputs: vec![
                 (
-                    Q::ratio(1, 2),
+                    xyl_core::ratio!(1, 2),
                     Input::Take {
                         seat: 3,
                         mind: [7; 32],
                     },
                 ),
                 (
-                    Q::ratio(2, 3),
+                    xyl_core::ratio!(2, 3),
                     Input::Focus {
                         seat: 3,
                         focus: Focus::none(),
                     },
                 ),
                 (
-                    Q::ratio(3, 4),
+                    xyl_core::ratio!(3, 4),
                     Input::Move {
                         people: 2,
                         world: 5,
                     },
                 ),
                 (
-                    Q::ratio(7, 9),
+                    xyl_core::ratio!(7, 9),
                     Input::Handle {
                         seat: 4,
                         a: 9,
@@ -737,17 +748,17 @@ mod tests {
                     },
                 ),
                 (
-                    Q::ratio(4, 5),
+                    xyl_core::ratio!(4, 5),
                     Input::Settle {
                         parent: 2,
                         world: 6,
-                        emigrants: Q::ratio(1001, 2),
+                        emigrants: xyl_core::ratio!(1001, 2),
                     },
                 ),
             ],
             commits: vec![
-                (Q::ratio(1, 2), None),
-                (Q::ratio(2, 3), Some(point(41, [7, 3, 0, 9], 2))),
+                (xyl_core::ratio!(1, 2), None),
+                (xyl_core::ratio!(2, 3), Some(point(41, [7, 3, 0, 9], 2))),
             ],
             anchor: Some(point(30, [5, 2, 0, 8], 1)),
             lines: vec![
@@ -756,8 +767,8 @@ mod tests {
                     9,
                     2,
                     tag("Zimarol"),
-                    Q::ratio(51, 4),
-                    Q::ratio(7, 1),
+                    xyl_core::ratio!(51, 4),
+                    xyl_core::ratio!(7, 1),
                     false,
                 ),
                 (
@@ -765,25 +776,30 @@ mod tests {
                     11,
                     2,
                     tag("Zimarol"),
-                    Q::ratio(53, 4),
-                    Q::ratio(3, 1),
+                    xyl_core::ratio!(53, 4),
+                    xyl_core::ratio!(3, 1),
                     true,
                 ),
             ],
             handling: vec![(9, 11, crate::transit::Handling::Guarded)],
-            folds: vec![(2, tag("Zimarol"), Q::ratio(5_000_000, 1), Q::ratio(13, 1))],
+            folds: vec![(
+                2,
+                tag("Zimarol"),
+                xyl_core::ratio!(5_000_000, 1),
+                xyl_core::ratio!(13, 1),
+            )],
             eminent: vec![(
                 2,
                 tag("Zimarol"),
                 crate::civ::history::Eminent {
                     name: "Kathol".into(),
                     domain: Domain::Energy,
-                    lead: Dy::ratio(3, 8),
+                    lead: xyl_core::dyadic!(3, 8),
                     held: crate::civ::history::Held::Person,
                     title: "the settling of world 6".into(),
                     born_yr: Dy::int(1_000),
                     dies_yr: Dy::int(1_070),
-                    memory: Dy::ratio(3, 4),
+                    memory: xyl_core::dyadic!(3, 4),
                     dead: true,
                 },
             )],
@@ -819,7 +835,7 @@ mod tests {
         // Two points differing only in an exact lane give different chain
         // bytes.
         let mut q = p.clone();
-        q.lanes[2] = Q::ratio(1, 3);
+        q.lanes[2] = xyl_core::ratio!(1, 3);
         assert_ne!(p.bytes(), q.bytes());
     }
 
@@ -844,7 +860,7 @@ mod tests {
         );
         assert_eq!(
             (d[1].from_h, d[1].to_h, d[1].dilation.clone()),
-            (13, 16, Q::ratio(10, 3))
+            (13, 16, xyl_core::ratio!(10, 3))
         );
         // Each segment's rings over its heights is its dilation.
         for s in &d {

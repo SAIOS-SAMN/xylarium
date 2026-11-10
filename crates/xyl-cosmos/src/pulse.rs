@@ -221,7 +221,10 @@ pub fn relays(nodes: &[Node], t: Dy) -> Vec<Relay> {
             None => from_core[i],
         };
         let detour = route - from_core[i];
-        let continuity = (Dy::int(2) * Dy::pi() * detour / lambda).cos();
+        let continuity = ((Dy::int(2) * Dy::pi() * detour)
+            .div(&lambda)
+            .unwrap_or_default())
+        .cos();
         out[i] = Relay {
             from,
             route,
@@ -244,11 +247,14 @@ pub fn hear(place: &Place, nodes: &[Node], relays: &[Relay], t: Dy) -> Option<He
         }
         let d = place.arc_kpc(&node.place(t, &r), &r).max(Dy::sci(1, -6));
         // Weight I = M / d (first degree, in place of M / d^2).
-        let i = node.mass / d;
+        let i = node.mass.div(&d).unwrap_or_default();
         // Path: the route along the relay chain to this node, plus the arc
         // from it to the place.
         let path = relays.get(k).map(|r| r.route).unwrap_or(Dy::ZERO) + d;
-        let (s, c) = (Dy::int(2) * Dy::pi() * path / lambda).sin_cos();
+        let (s, c) = ((Dy::int(2) * Dy::pi() * path)
+            .div(&lambda)
+            .unwrap_or_default())
+        .sin_cos();
         sum += i;
         re += i * c;
         im += i * s;
@@ -260,16 +266,16 @@ pub fn hear(place: &Place, nodes: &[Node], relays: &[Relay], t: Dy) -> Option<He
     // The phasor sum's length from its phase: re cos(phi) + im sin(phi), with
     // phi the sum's angle (avoids the root of re^2 + im^2).
     let phi = if re.signum() == 0 {
-        Dy::pi() * Dy::ratio(1, 2) * Dy::int(i64::from(im.signum()))
+        Dy::pi() * xyl_core::dyadic!(1, 2) * Dy::int(i64::from(im.signum()))
     } else {
-        (im / re).atan() + if re.signum() < 0 { Dy::pi() } else { Dy::ZERO }
+        (im.div(&re).unwrap_or_default()).atan() + if re.signum() < 0 { Dy::pi() } else { Dy::ZERO }
     };
     let (s, c) = phi.sin_cos();
     let length = (re * c + im * s).abs();
     Some(Hearing {
         dominant: k,
-        dominance: top / sum,
-        coherence: length / sum,
+        dominance: top.div(&sum).unwrap_or_default(),
+        coherence: length.div(&sum).unwrap_or_default(),
         intensity: sum,
     })
 }

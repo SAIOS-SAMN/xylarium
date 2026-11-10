@@ -38,11 +38,11 @@ const GRID_BITS: u32 = 40;
 /// The share of infalling matter that crosses the horizon (the rest is held
 /// in the accretion flow outside it).
 pub fn horizon_share() -> Q {
-    Q::ratio(1, 10)
+    xyl_core::ratio!(1, 10)
 }
 /// The share of crossing matter radiated as light on the way in.
 pub fn efficiency() -> Q {
-    Q::ratio(1, 10)
+    xyl_core::ratio!(1, 10)
 }
 /// The throat's far face: the persistent central engine of the universe on
 /// the other side.
@@ -241,7 +241,7 @@ mod tests {
     fn books_conserved_and_jets_drain_reservoir() {
         let mut c = Core::new(
             Q::int(4_000_000),
-            &Q::ratio(7, 10),
+            &xyl_core::ratio!(7, 10),
             &Q::int(1_000_000_000),
             &Q::ZERO,
             &Q::int(100),
@@ -257,7 +257,7 @@ mod tests {
         let back = c.run(&Q::int(100));
         // One e-fold returns 1 - 1/e of the reservoir, to the grid.
         assert!(
-            back > &r0 * &Q::ratio(632, 1000) && back < &r0 * &Q::ratio(633, 1000),
+            back > &r0 * &xyl_core::ratio!(632, 1000) && back < &r0 * &xyl_core::ratio!(633, 1000),
             "{back}"
         );
         c.arrive(&Q::int(3));
@@ -273,7 +273,7 @@ mod tests {
             c.far_run(&Q::int(100)).unwrap();
         }
         assert!(
-            c.conserved() && c.far.held < Q::ratio(1, 1000),
+            c.conserved() && c.far.held < xyl_core::ratio!(1, 1000),
             "the throat passes matter through: {}",
             c.far.held
         );
@@ -294,7 +294,7 @@ mod tests {
     fn far_seed_depends_on_capture_order() {
         let mut a = Core::new(
             Q::int(10),
-            &Q::ratio(1, 2),
+            &xyl_core::ratio!(1, 2),
             &Q::int(1_000_000),
             &Q::ZERO,
             &Q::int(100),
@@ -302,7 +302,7 @@ mod tests {
         .unwrap();
         let mut b = Core::new(
             Q::int(10),
-            &Q::ratio(1, 2),
+            &xyl_core::ratio!(1, 2),
             &Q::int(1_000_000),
             &Q::ZERO,
             &Q::int(100),

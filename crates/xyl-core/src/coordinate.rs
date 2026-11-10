@@ -202,55 +202,62 @@ mod tests {
     /// gives the stated index, bounds and writing.
     #[test]
     fn sector_equals_law_coordinate_fixture_2() {
-        let third_less = &Q::ratio(1, 3) - &Q::from_i128(1, 10i128.pow(15)).unwrap();
+        let third_less = &crate::ratio!(1, 3) - &Q::from_i128(1, 10i128.pow(15)).unwrap();
         let rows: [(Q, u32, i128, Q, Q, &str); 8] = [
-            (Q::ratio(7, 3), 0, 2, Q::ratio(2, 1), Q::ratio(3, 1), "2"),
             (
-                Q::ratio(7, 3),
+                crate::ratio!(7, 3),
+                0,
+                2,
+                crate::ratio!(2, 1),
+                crate::ratio!(3, 1),
+                "2",
+            ),
+            (
+                crate::ratio!(7, 3),
                 1,
                 140,
-                Q::ratio(7, 3),
-                Q::ratio(47, 20),
+                crate::ratio!(7, 3),
+                crate::ratio!(47, 20),
                 "2;20",
             ),
             (
-                Q::ratio(7, 3),
+                crate::ratio!(7, 3),
                 2,
                 8400,
-                Q::ratio(7, 3),
-                Q::ratio(8401, 3600),
+                crate::ratio!(7, 3),
+                crate::ratio!(8401, 3600),
                 "2;20,00",
             ),
             (
-                Q::ratio(1, 7),
+                crate::ratio!(1, 7),
                 3,
                 30857,
-                Q::ratio(30857, 216000),
-                Q::ratio(5143, 36000),
+                crate::ratio!(30857, 216000),
+                crate::ratio!(5143, 36000),
                 "0;08,34,17",
             ),
             (
-                Q::ratio(360, 7),
+                crate::ratio!(360, 7),
                 2,
                 185142,
-                Q::ratio(30857, 600),
-                Q::ratio(185143, 3600),
+                crate::ratio!(30857, 600),
+                crate::ratio!(185143, 3600),
                 "51;25,42",
             ),
             (
-                Q::ratio(-1, 3),
+                crate::ratio!(-1, 3),
                 1,
                 -20,
-                Q::ratio(-1, 3),
-                Q::ratio(-19, 60),
+                crate::ratio!(-1, 3),
+                crate::ratio!(-19, 60),
                 "-1;40",
             ),
             (
-                Q::ratio(-1, 7),
+                crate::ratio!(-1, 7),
                 1,
                 -9,
-                Q::ratio(-3, 20),
-                Q::ratio(-2, 15),
+                crate::ratio!(-3, 20),
+                crate::ratio!(-2, 15),
                 "-1;51",
             ),
             (
@@ -258,7 +265,7 @@ mod tests {
                 6,
                 15551999999,
                 Q::from_i128(15551999999, 46656000000).unwrap(),
-                Q::ratio(1, 3),
+                crate::ratio!(1, 3),
                 "0;19,59,59,59,59,59",
             ),
         ];
@@ -275,11 +282,11 @@ mod tests {
     #[test]
     fn sector_nests_in_coarser_sector() {
         for v in [
-            Q::ratio(1, 7),
-            Q::ratio(-22, 7),
-            Q::ratio(7, 3),
-            Q::ratio(0, 1),
-            Q::ratio(-1, 3),
+            crate::ratio!(1, 7),
+            crate::ratio!(-22, 7),
+            crate::ratio!(7, 3),
+            crate::ratio!(0, 1),
+            crate::ratio!(-1, 3),
         ] {
             for d in 0..5 {
                 let (outer, inner) = (Sector::of(&v, d).unwrap(), Sector::of(&v, d + 1).unwrap());
@@ -294,16 +301,16 @@ mod tests {
     /// a sector's exact bounds.
     #[test]
     fn within_equals_law_coordinate_fixture_4() {
-        let other = Reading::of(Lane::S, &Q::ratio(1, 3));
-        let fine = &Q::ratio(1, 3) + &Q::from_i128(1, 3 * 60i128.pow(6)).unwrap();
-        let below = &Q::ratio(1, 3) - &Q::from_i128(1, 10i128.pow(15)).unwrap();
+        let other = Reading::of(Lane::S, &crate::ratio!(1, 3));
+        let fine = &crate::ratio!(1, 3) + &Q::from_i128(1, 3 * 60i128.pow(6)).unwrap();
+        let below = &crate::ratio!(1, 3) - &Q::from_i128(1, 10i128.pow(15)).unwrap();
         for (s, d, side) in [
-            (Q::ratio(1, 3), 1, Side::Within),
-            (Q::ratio(7, 20), 1, Side::Above),
+            (crate::ratio!(1, 3), 1, Side::Within),
+            (crate::ratio!(7, 20), 1, Side::Above),
             (below, 1, Side::Below),
             (fine, 6, Side::Within),
-            (Q::ratio(2, 5), 0, Side::Within),
-            (Q::ratio(2, 5), 1, Side::Above),
+            (crate::ratio!(2, 5), 0, Side::Within),
+            (crate::ratio!(2, 5), 1, Side::Above),
         ] {
             assert_eq!(Reading::of(Lane::S, &s).within(&other, d), Ok(side));
         }
@@ -313,8 +320,8 @@ mod tests {
     #[test]
     fn within_refuses_lanes_that_differ() {
         let (s, t) = (
-            Reading::of(Lane::S, &Q::ratio(1, 3)),
-            Reading::of(Lane::T, &Q::ratio(1, 3)),
+            Reading::of(Lane::S, &crate::ratio!(1, 3)),
+            Reading::of(Lane::T, &crate::ratio!(1, 3)),
         );
         assert_eq!(
             s.within(&t, 1),
@@ -329,7 +336,7 @@ mod tests {
     #[test]
     fn sector_refuses_index_past_word() {
         assert_eq!(
-            Sector::of(&Q::ratio(1, 3), 40),
+            Sector::of(&crate::ratio!(1, 3), 40),
             Err(CoordinateRefusal::Unbounded { depth: 40 })
         );
     }
@@ -337,6 +344,6 @@ mod tests {
     /// The beat keeps the whole rings and writes the ring's phase in degrees.
     #[test]
     fn beat_writes_rings_and_phase_in_degrees() {
-        assert_eq!(beat(&Q::ratio(9, 4), 2).unwrap(), "2/90;00,00");
+        assert_eq!(beat(&crate::ratio!(9, 4), 2).unwrap(), "2/90;00,00");
     }
 }

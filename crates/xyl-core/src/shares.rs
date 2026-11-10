@@ -104,13 +104,15 @@ pub fn flow(x: &Q, y: &Q) -> Option<Q> {
     (x + y).checked_div(&(&Q::ONE + &(x * y)))
 }
 
-/// [`deficit`] on readings: `m / (r + m)`, zero for a non-positive hold, and
-/// a negative reach read at the throat (zero).
+/// [`deficit`] on readings: `m / (r + m)`, zero for a non-positive hold (a
+/// hold of nothing holds no share), and a negative reach read at the throat
+/// (zero).
 pub fn deficit_dy(m: Dy, r: Dy) -> Dy {
     if m.signum() <= 0 {
         return Dy::ZERO;
     }
-    m / (r.max(Dy::ZERO) + m)
+    // With m positive and the reach at least zero, `r + m` is positive.
+    m.div(&(r.max(Dy::ZERO) + m)).map_or(Dy::ZERO, |d| d)
 }
 
 /// [`dilation`] on readings. `None` for `p` outside `(-1, 1)`.
@@ -118,7 +120,7 @@ pub fn dilation_dy(p: Dy) -> Option<Dy> {
     if p.abs() >= Dy::ONE {
         return None;
     }
-    Some((Dy::ONE + p) / (Dy::ONE - p))
+    (Dy::ONE + p).div(&(Dy::ONE - p))
 }
 
 #[cfg(test)]
@@ -128,10 +130,10 @@ mod tests {
     #[test]
     fn a_faces_dilation_is_linear_in_its_pole() {
         for t in [
-            Q::ratio(1, 9),
-            Q::ratio(1, 1),
-            Q::ratio(3, 2),
-            Q::ratio(7, 1),
+            crate::ratio!(1, 9),
+            crate::ratio!(1, 1),
+            crate::ratio!(3, 2),
+            crate::ratio!(7, 1),
         ] {
             let f = faces(&Q::ONE, &t).unwrap();
             // D(d) = 1 + 2t, D(c) = 1 + 2 / t, D(d - c) = t: no square, no root.
@@ -148,10 +150,10 @@ mod tests {
     #[test]
     fn the_faces_are_antipoles_under_the_inversion() {
         let cases = [
-            (Q::ratio(1, 1), Q::ratio(3, 1)),
-            (Q::ratio(5, 2), Q::ratio(1, 7)),
-            (Q::ratio(2, 3), Q::ratio(2, 3)),
-            (Q::ratio(9, 4), Q::ratio(11, 5)),
+            (crate::ratio!(1, 1), crate::ratio!(3, 1)),
+            (crate::ratio!(5, 2), crate::ratio!(1, 7)),
+            (crate::ratio!(2, 3), crate::ratio!(2, 3)),
+            (crate::ratio!(9, 4), crate::ratio!(11, 5)),
         ];
         for (m, r) in &cases {
             let f = faces(m, r).unwrap();
@@ -170,11 +172,11 @@ mod tests {
             }
             // A change of calibre dilates hold and reach together and keeps
             // both faces.
-            let l = Q::ratio(60, 1);
+            let l = crate::ratio!(60, 1);
             assert_eq!(faces(&(m * &l), &(r * &l)).unwrap(), f);
         }
         // On the equator r = m the faces balance and the antipole fixes them.
-        let throat = faces(&Q::ratio(3, 1), &Q::ratio(3, 1)).unwrap();
+        let throat = faces(&crate::ratio!(3, 1), &crate::ratio!(3, 1)).unwrap();
         assert_eq!(throat.push(), Q::ZERO);
         assert_eq!(throat.antipole(), throat);
         assert_eq!(faces(&Q::ZERO, &Q::ZERO), None);
@@ -183,23 +185,23 @@ mod tests {
     #[test]
     fn the_deficit_is_one_half_where_reach_and_hold_coincide() {
         assert_eq!(
-            deficit(&Q::ratio(3, 1), &Q::ratio(3, 1)),
-            Some(Q::ratio(1, 2))
+            deficit(&crate::ratio!(3, 1), &crate::ratio!(3, 1)),
+            Some(crate::ratio!(1, 2))
         );
-        assert_eq!(deficit(&Q::ZERO, &Q::ratio(4, 1)), Some(Q::ZERO));
+        assert_eq!(deficit(&Q::ZERO, &crate::ratio!(4, 1)), Some(Q::ZERO));
         assert_eq!(deficit(&Q::ZERO, &Q::ZERO), None);
-        assert_eq!(deficit(&Q::ratio(-1, 1), &Q::ratio(1, 1)), None);
+        assert_eq!(deficit(&crate::ratio!(-1, 1), &crate::ratio!(1, 1)), None);
     }
 
     #[test]
     fn the_dilation_turns_the_flow_law_into_a_product() {
         let pushes = [
-            Q::ratio(0, 1),
-            Q::ratio(1, 2),
-            Q::ratio(1, 3),
-            Q::ratio(-1, 4),
-            Q::ratio(5, 7),
-            Q::ratio(-2, 3),
+            crate::ratio!(0, 1),
+            crate::ratio!(1, 2),
+            crate::ratio!(1, 3),
+            crate::ratio!(-1, 4),
+            crate::ratio!(5, 7),
+            crate::ratio!(-2, 3),
         ];
         for x in &pushes {
             for y in &pushes {
@@ -215,7 +217,7 @@ mod tests {
             );
         }
         assert_eq!(dilation(&Q::ONE), None);
-        assert_eq!(flow(&Q::ratio(1, 1), &Q::ratio(1, 2)), None);
+        assert_eq!(flow(&crate::ratio!(1, 1), &crate::ratio!(1, 2)), None);
     }
 
     #[test]
@@ -223,8 +225,16 @@ mod tests {
         // The continuum's push against the vacuum's is the hold difference
         // over the reach and both holds.
         for (h, m, r) in [
-            (Q::ratio(3, 1), Q::ratio(1, 1), Q::ratio(5, 1)),
-            (Q::ratio(1, 2), Q::ratio(2, 1), Q::ratio(7, 3)),
+            (
+                crate::ratio!(3, 1),
+                crate::ratio!(1, 1),
+                crate::ratio!(5, 1),
+            ),
+            (
+                crate::ratio!(1, 2),
+                crate::ratio!(2, 1),
+                crate::ratio!(7, 3),
+            ),
         ] {
             let (p_c, p_v) = (deficit(&h, &r).unwrap(), deficit(&m, &r).unwrap());
             let net = flow(&p_c, &-p_v).unwrap();
@@ -241,7 +251,11 @@ mod tests {
     #[test]
     fn deficit_is_invariant_under_dilation() {
         use crate::units::Tier;
-        let mut lambdas = vec![Q::ratio(7, 3), Q::ratio(1, 11), Q::ratio(1000003, 2)];
+        let mut lambdas = vec![
+            crate::ratio!(7, 3),
+            crate::ratio!(1, 11),
+            crate::ratio!(1000003, 2),
+        ];
         lambdas.extend(
             [
                 Tier::Universe,
@@ -253,9 +267,9 @@ mod tests {
             .map(Tier::in_rg),
         );
         let pairs = [
-            (Q::ratio(1, 1), Q::ratio(3, 1)),
-            (Q::ratio(2, 7), Q::ratio(5, 3)),
-            (Q::ratio(9, 4), Q::ratio(1, 60)),
+            (crate::ratio!(1, 1), crate::ratio!(3, 1)),
+            (crate::ratio!(2, 7), crate::ratio!(5, 3)),
+            (crate::ratio!(9, 4), crate::ratio!(1, 60)),
         ];
         for (m, r) in &pairs {
             let (held, other) = (deficit(m, r).unwrap(), deficit(r, m).unwrap());

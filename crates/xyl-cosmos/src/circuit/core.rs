@@ -81,12 +81,18 @@ pub fn throat_crossing(t0: Dy, a: Dy, b: Dy) -> Option<Dy> {
     if a <= Dy::ONE {
         return None;
     }
-    let fixed = b / (Dy::ONE - a);
+    let fixed = b.div(&(Dy::ONE - a)).unwrap_or_default();
     let (far, near) = (Dy::ONE - fixed, t0 - fixed);
     if near.signum() <= 0 || far.signum() <= 0 {
         return None;
     }
-    Some(((far / near).log() / a.log()).max(Dy::ZERO))
+    Some(
+        ((far.div(&near).unwrap_or_default())
+            .log()
+            .div(&a.log())
+            .unwrap_or_default())
+        .max(Dy::ZERO),
+    )
 }
 
 /// The jetstream's mean echo map for a holder that holds the push `p_c` on
@@ -107,7 +113,10 @@ pub fn jet_map(p_c: Dy, p_v: Dy) -> Option<(Dy, Dy)> {
         return None;
     }
     let keep = Dy::ONE - p_v;
-    Some((rho / keep, p_v / keep))
+    Some((
+        rho.div(&keep).unwrap_or_default(),
+        p_v.div(&keep).unwrap_or_default(),
+    ))
 }
 
 /// The jet's onset for kind `k` (rings) under the vacuum share `p_v` its band
@@ -130,7 +139,9 @@ pub fn onset_echoes(k: u32, p_v: Dy, s: Dy) -> Option<Dy> {
     if open == 0 || hold == 0 {
         return None;
     }
-    let t = Dy::int(i64::from(open)) / Dy::int(i64::from(hold));
+    let t = (Dy::int(i64::from(open)))
+        .div(&(Dy::int(i64::from(hold))))
+        .unwrap_or_default();
     let (a, b) = jet_map(s, p_v)?;
     throat_crossing(t, a, b)
 }
@@ -162,7 +173,7 @@ pub fn bell() -> Dy {
 pub fn echo_at(s: &Q) -> Dy {
     let open = &Q::ONE - s;
     match open.signum() {
-        1 => bell() / Dy::from_q(&open),
+        1 => bell().div(&(Dy::from_q(&open))).unwrap_or_default(),
         _ => Dy::ZERO,
     }
 }
@@ -235,7 +246,10 @@ fn beyond_share(r: Dy, p: Dy, h: Dy) -> Dy {
     if inner >= h {
         return Dy::ONE;
     }
-    ((outer - h) / (outer - inner).max(Dy::sci(1, -300))).clamp(Dy::ZERO, Dy::ONE)
+    ((outer - h)
+        .div(&(outer - inner).max(Dy::sci(1, -300)))
+        .unwrap_or_default())
+    .clamp(Dy::ZERO, Dy::ONE)
 }
 
 impl Substrate {
@@ -270,11 +284,11 @@ impl Substrate {
             self.firmament.len()
         ];
         let mut inside = Dy::ZERO;
-        let nu = Dy::ONE / bell();
+        let nu = (Dy::ONE).div(&bell()).unwrap_or_default();
         for i in order {
             let k = &self.firmament[i];
-            let h = Dy::ONE + inside / unit;
-            let r = Dy::from_q(&k.spin) / h;
+            let h = Dy::ONE + inside.div(&unit).unwrap_or_default();
+            let r = (Dy::from_q(&k.spin)).div(&h).unwrap_or_default();
             let delta = deficit_dy(h, r);
             let beyond = beyond_share(r, delta, h);
             out[i] = Reverberation {
@@ -306,7 +320,9 @@ impl Substrate {
         if t.signum() <= 0 {
             return Dy::ZERO;
         }
-        self.echo() * (self.rung(t) + self.state_out(t)) / t
+        (self.echo() * (self.rung(t) + self.state_out(t)))
+            .div(&t)
+            .unwrap_or_default()
     }
 
     /// The inbound echo's swing over the first echo, `1 + A_in` with `A_in`
@@ -438,7 +454,9 @@ impl Substrate {
                 if u == 0 {
                     return Some((z, m, Dy::ZERO, 0));
                 }
-                let t = Dy::from_q(&Q::int(i64::from(u))) / Dy::from_q(&Q::int(i64::from(w)));
+                let t = (Dy::from_q(&Q::int(i64::from(u))))
+                    .div(&(Dy::from_q(&Q::int(i64::from(w)))))
+                    .unwrap_or_default();
                 Some((z, m, t.ln()?, crate::atoms::axis_polarity(z)?))
             })
             .collect();
@@ -456,12 +474,14 @@ impl Substrate {
             ) else {
                 break;
             };
-            let lnn = Dy::from_q(&(&Q::ONE + &(&a * &Q::ratio(1, 2))))
+            let lnn = Dy::from_q(&(&Q::ONE + &(&a * &xyl_core::ratio!(1, 2))))
                 .ln()
                 .unwrap_or(Dy::ZERO);
             let separation = |z: u32, far: bool| {
                 let (u, w) = (crate::compound::open(z), crate::compound::hold(z));
-                let q = Dy::from_q(&Q::int(i64::from(u))) / Dy::from_q(&Q::int(i64::from(u + w)));
+                let q = (Dy::from_q(&Q::int(i64::from(u))))
+                    .div(&(Dy::from_q(&Q::int(i64::from(u + w)))))
+                    .unwrap_or_default();
                 let q = if far { Dy::ONE - q } else { q };
                 q * near - (Dy::ONE - q) * anti
             };
@@ -478,8 +498,9 @@ impl Substrate {
                 kinds = stay;
                 (out, true, Dy::ZERO)
             } else {
-                let interval =
-                    Dy::from_q(&(&Q::int(3) * &(&Q::int(4) + &a))) / Dy::from_q(&(&Q::int(2) * &a));
+                let interval = (Dy::from_q(&(&Q::int(3) * &(&Q::int(4) + &a))))
+                    .div(&(Dy::from_q(&(&Q::int(2) * &a))))
+                    .unwrap_or_default();
                 // The bounce at which each open kind arrives: the least whole
                 // k with k N* ln(D(s) D(n)^A) >= -ln t.
                 let arrive = |k: &(u32, Q, Dy, i64)| {
@@ -487,7 +508,7 @@ impl Substrate {
                     if !open(k) || rate.signum() <= 0 {
                         return None;
                     }
-                    let need = (-k.2 / (interval * rate)).to_q();
+                    let need = ((-k.2).div(&(interval * rate)).unwrap_or_default()).to_q();
                     let whole = i64::try_from(-(-&need).floor_i128()?).ok()?;
                     Some(whole.max(1))
                 };
@@ -513,8 +534,11 @@ impl Substrate {
             let all: Vec<_> = out.iter().chain(kinds.iter()).cloned().collect();
             let m = out.iter().fold(Q::ZERO, |s, k| &s + &k.1);
             // The cohort's separation over the hold's, each mass-weighted.
-            let per = |sum: Dy, of: &Q| sum / Dy::from_q(of);
-            let share = (per(spread(&out, far), &m) / per(spread(&all, false), &hold)).to_q();
+            let per = |sum: Dy, of: &Q| sum.div(&(Dy::from_q(of))).unwrap_or_default();
+            let share = (per(spread(&out, far), &m)
+                .div(&per(spread(&all, false), &hold))
+                .unwrap_or_default())
+            .to_q();
             let taken = &(&turning * &m.checked_div(&hold).unwrap_or(Q::ZERO)) * &share;
             turning = &turning - &xyl_core::certified::down(&taken, 64);
             hold = &hold - &m;
@@ -605,7 +629,9 @@ impl Substrate {
                 Some(b) => {
                     let (r, h) = (
                         Dy::from_q(&b.reach),
-                        Dy::from_q(&b.state) / mean.max(Dy::sci(1, -300)),
+                        (Dy::from_q(&b.state))
+                            .div(&mean.max(Dy::sci(1, -300)))
+                            .unwrap_or_default(),
                     );
                     (i, deficit_dy(h, r), self.delay(r))
                 }
@@ -617,7 +643,7 @@ impl Substrate {
             .max(Dy::sci(1, -300));
         pulls
             .into_iter()
-            .map(|(i, d, delay)| (i, d / sum, delay))
+            .map(|(i, d, delay)| (i, d.div(&sum).unwrap_or_default(), delay))
             .collect()
     }
 
@@ -637,7 +663,10 @@ impl Substrate {
             .map(|(i, b)| match b {
                 None => (i, Dy::ONE, Q::ZERO, Dy::ZERO),
                 Some(b) => {
-                    let (r, h) = (Dy::from_q(&b.reach), Dy::from_q(&b.state) / mean);
+                    let (r, h) = (
+                        Dy::from_q(&b.reach),
+                        (Dy::from_q(&b.state)).div(&mean).unwrap_or_default(),
+                    );
                     (i, deficit_dy(h, r), b.phase.clone(), self.delay(r))
                 }
             })
@@ -656,13 +685,19 @@ impl Substrate {
             .collect();
         let sum = tuned.iter().fold(Dy::ZERO, |a, x| a + x.1);
         if sum.signum() > 0 {
-            return tuned.into_iter().map(|(i, d)| (i, d / sum)).collect();
+            return tuned
+                .into_iter()
+                .map(|(i, d)| (i, d.div(&sum).unwrap_or_default()))
+                .collect();
         }
         let plain = pulls
             .iter()
             .fold(Dy::ZERO, |a, x| a + x.1)
             .max(Dy::sci(1, -300));
-        pulls.iter().map(|(i, d, _, _)| (*i, *d / plain)).collect()
+        pulls
+            .iter()
+            .map(|(i, d, _, _)| (*i, (*d).div(&plain).unwrap_or_default()))
+            .collect()
     }
 
     /// The landing of kind `k` (see `landing_over`), with each galaxy's delay.
@@ -821,7 +856,9 @@ impl Substrate {
     /// speed times the ladder step between the galaxy and cluster tiers
     /// (3600 c).
     pub fn c_ocean(&self) -> Dy {
-        Dy::from_q(&self.rim) / (bell() / Dy::int(2))
+        (Dy::from_q(&self.rim))
+            .div(&(bell().div(&(Dy::int(2))).unwrap_or_default()))
+            .unwrap_or_default()
     }
 
     /// The core's pulse in the ocean, per ring, at `s` rings after reaching a
@@ -830,13 +867,21 @@ impl Substrate {
     /// echo's torque invariant), so it oscillates without drift.
     fn ringing(&self, s: Dy) -> Dy {
         let echo = self.echo();
-        (Dy::int(2) * Dy::pi() * s / echo).cos() / echo
+        ((Dy::int(2) * Dy::pi() * s).div(&echo).unwrap_or_default())
+            .cos()
+            .div(&echo)
+            .unwrap_or_default()
     }
 
     /// The core's pulse integrated from its arrival to `s` rings after it:
     /// sin(2 pi s / echo) / (2 pi).
     fn rung(&self, s: Dy) -> Dy {
-        (Dy::int(2) * Dy::pi() * s / self.echo()).sin() / (Dy::int(2) * Dy::pi())
+        ((Dy::int(2) * Dy::pi() * s)
+            .div(&self.echo())
+            .unwrap_or_default())
+        .sin()
+        .div(&(Dy::int(2) * Dy::pi()))
+        .unwrap_or_default()
     }
 
     /// The ocean's non-tidal waveform at reach `r` (cluster units) and `t`: the core's
@@ -860,7 +905,9 @@ impl Substrate {
     /// The pulse's delay to reach `r` (cluster units), in rings: half a bell scaled by
     /// `r / rim`, the front crossing the rim in half a bell.
     fn delay(&self, r: Dy) -> Dy {
-        bell() / Dy::int(2) * r.max(Dy::ZERO) / Dy::from_q(&self.rim).max(Dy::sci(1, -30))
+        (bell().div(&(Dy::int(2))).unwrap_or_default() * r.max(Dy::ZERO))
+            .div(&(Dy::from_q(&self.rim).max(Dy::sci(1, -30))))
+            .unwrap_or_default()
     }
 
     /// The hold inside reach `r` (cluster units) as founded, in core masses:
@@ -912,7 +959,7 @@ impl Substrate {
                 .fold(Dy::ZERO, |a, ((_, share), _)| a + share);
             passed += Dy::from_q(&mass_of(z, &left.to_q())) * beyond;
         }
-        (founded - passed / firm).max(Dy::ZERO)
+        (founded - passed.div(&firm).unwrap_or_default()).max(Dy::ZERO)
     }
 
     /// The ocean's carry at reach `r` (cluster units) at `t` (rings): what the
@@ -942,7 +989,7 @@ impl Substrate {
             outward,
             turning: Dy::int(360) * share,
             returns: if held.signum() > 0 {
-                Some(Dy::ONE / held)
+                Some((Dy::ONE).div(&held).unwrap_or_default())
             } else {
                 None
             },
@@ -967,11 +1014,13 @@ impl Substrate {
                     Dy::from_q(&b.reach),
                     Dy::from_q(&self.held_within(&b.reach)).max(Dy::sci(1, -300)),
                 );
-                let hold = Dy::from_q(&b.state) / mean;
+                let hold = (Dy::from_q(&b.state)).div(&mean).unwrap_or_default();
                 // The gain is delta(r0, H) d / hold, with delta(r0, H) the share
                 // the held medium inside the galaxy's reach carries there, as
                 // founded (`held_within`), so the push stays closed in t.
-                let gain = deficit_dy(inside, r0) * d / hold.max(Dy::sci(1, -300));
+                let gain = (deficit_dy(inside, r0) * d)
+                    .div(&hold.max(Dy::sci(1, -300)))
+                    .unwrap_or_default();
                 let reached = t > delay;
                 let sent = if reached { t - delay } else { Dy::ZERO };
                 let (ring, rung) = if reached {
@@ -980,19 +1029,22 @@ impl Substrate {
                     (Dy::ZERO, Dy::ZERO)
                 };
                 let spin = r0 * inside + gain * (self.state_out(sent) + rung);
-                let drift = gain * self.rate(sent).0 / inside;
-                let recession = drift + gain * ring / inside;
+                let drift = (gain * self.rate(sent).0).div(&inside).unwrap_or_default();
+                let recession = drift + (gain * ring).div(&inside).unwrap_or_default();
                 let swing = if reached {
-                    gain / (Dy::int(2) * Dy::pi()) / inside
+                    gain.div(&(Dy::int(2) * Dy::pi()))
+                        .unwrap_or_default()
+                        .div(&inside)
+                        .unwrap_or_default()
                 } else {
                     Dy::ZERO
                 };
                 Some(Push {
                     index: i,
                     reach0: r0,
-                    reach: spin / inside,
+                    reach: spin.div(&inside).unwrap_or_default(),
                     recession,
-                    shift: recession / c,
+                    shift: recession.div(&c).unwrap_or_default(),
                     drift,
                     swing,
                 })
@@ -1017,7 +1069,7 @@ impl Substrate {
     /// The bounce's pulse at `t` rings (turns): the echoes elapsed by t over the
     /// universe's bell; the fractional part is the atoms' phase.
     pub fn pulse(&self, t: Dy) -> Q {
-        (t.max(Dy::ZERO) / self.echo())
+        (t.max(Dy::ZERO).div(&self.echo()).unwrap_or_default())
             .to_q()
             .checked_div(&self.t_u())
             .unwrap_or(Q::ZERO)
@@ -1100,7 +1152,11 @@ mod tests {
         // the medium there keeps the whole founded hold (the books close).
         let rim = Dy::from_q(&sub.rim);
         let late = [Dy::ZERO, Dy::int(10), Dy::int(1000), Dy::int(100000)];
-        for r in [rim / Dy::int(4), rim / Dy::int(2), rim] {
+        for r in [
+            rim.div(&(Dy::int(4))).unwrap_or_default(),
+            rim.div(&(Dy::int(2))).unwrap_or_default(),
+            rim,
+        ] {
             let founded = Dy::from_q(&sub.held_within(&r.to_q()));
             assert_eq!(sub.medium(r, Dy::ZERO), founded);
             let m: Vec<Dy> = late.iter().map(|t| sub.medium(r, *t)).collect();
@@ -1117,7 +1173,7 @@ mod tests {
         let throat = sub.carry(Dy::ZERO, Dy::ZERO);
         assert_eq!(throat.share, Dy::ONE);
         assert!(throat.returns.is_none());
-        let near = sub.carry(rim / Dy::int(4), Dy::ZERO);
+        let near = sub.carry(rim.div(&(Dy::int(4))).unwrap_or_default(), Dy::ZERO);
         let far = sub.carry(rim, Dy::ZERO);
         assert!(far.share < near.share && far.share.signum() > 0 && near.share < Dy::ONE);
         assert_eq!(far.turning, Dy::int(360) * far.share);
@@ -1131,54 +1187,68 @@ mod tests {
         // Coherence is 1 in phase, 0 opposed and one half a quarter turn apart,
         // measured the shorter way round in either direction.
         assert_eq!(coherence(&Q::ZERO, &Q::ZERO), Dy::ONE);
-        assert_eq!(coherence(&Q::ZERO, &Q::ratio(1, 2)), Dy::ZERO);
-        assert_eq!(coherence(&Q::ZERO, &Q::ratio(1, 4)), Dy::ratio(1, 2));
+        assert_eq!(coherence(&Q::ZERO, &xyl_core::ratio!(1, 2)), Dy::ZERO);
         assert_eq!(
-            coherence(&Q::ratio(9, 10), &Q::ratio(1, 10)),
-            Dy::ratio(3, 5)
+            coherence(&Q::ZERO, &xyl_core::ratio!(1, 4)),
+            xyl_core::dyadic!(1, 2)
         );
         assert_eq!(
-            coherence(&Q::ratio(1, 10), &Q::ratio(9, 10)),
-            Dy::ratio(3, 5)
+            coherence(&xyl_core::ratio!(9, 10), &xyl_core::ratio!(1, 10)),
+            xyl_core::dyadic!(3, 5)
+        );
+        assert_eq!(
+            coherence(&xyl_core::ratio!(1, 10), &xyl_core::ratio!(9, 10)),
+            xyl_core::dyadic!(3, 5)
         );
         // The throat's push is the vacuum's share where reach and hold
         // coincide, one half; the jet's dilation is three for a spinless
         // throat and four at the extremal spin's torsion share, three fifths.
-        assert_eq!(throat_push(), Dy::ratio(1, 2));
-        assert_eq!(dilation_dy(Dy::ratio(1, 2)), Some(Dy::int(3)));
-        assert_eq!(xyl_core::shares::dilation(&Q::ratio(3, 5)), Some(Q::int(4)));
-        assert!((dilation_dy(Dy::ratio(3, 5)).unwrap() - Dy::int(4)).abs() < Dy::sci(1, -15));
+        assert_eq!(throat_push(), xyl_core::dyadic!(1, 2));
+        assert_eq!(dilation_dy(xyl_core::dyadic!(1, 2)), Some(Dy::int(3)));
+        assert_eq!(
+            xyl_core::shares::dilation(&xyl_core::ratio!(3, 5)),
+            Some(Q::int(4))
+        );
+        assert!(
+            (dilation_dy(xyl_core::dyadic!(3, 5)).unwrap() - Dy::int(4)).abs() < Dy::sci(1, -15)
+        );
         // A band inside the throat stays, one outside leaves, and between them
         // the share is linear.
         assert_eq!(
-            beyond_share(Dy::ratio(1, 4), Dy::ratio(1, 2), Dy::ONE),
+            beyond_share(xyl_core::dyadic!(1, 4), xyl_core::dyadic!(1, 2), Dy::ONE),
             Dy::ZERO
         );
-        assert_eq!(beyond_share(Dy::int(4), Dy::ratio(1, 2), Dy::ONE), Dy::ONE);
         assert_eq!(
-            beyond_share(Dy::ONE, Dy::ratio(1, 2), Dy::ONE),
-            Dy::ratio(1, 2)
+            beyond_share(Dy::int(4), xyl_core::dyadic!(1, 2), Dy::ONE),
+            Dy::ONE
+        );
+        assert_eq!(
+            beyond_share(Dy::ONE, xyl_core::dyadic!(1, 2), Dy::ONE),
+            xyl_core::dyadic!(1, 2)
         );
         // A sealed kind (helium) never reaches the throat; hydrogen, one open
         // state over two closed, reaches it after ln 2 / ln D(s) echoes on the
         // continuum alone; the smaller a kind's open share, the later its
         // onset.
-        let s = Dy::ratio(1, 2);
+        let s = xyl_core::dyadic!(1, 2);
         assert!(onset_echoes(2, Dy::ZERO, s).is_none());
         let h = onset_echoes(1, Dy::ZERO, s).unwrap();
-        let expect = Dy::int(2).log() / Dy::int(3).log();
+        let expect = (Dy::int(2).log())
+            .div(&(Dy::int(3).log()))
+            .unwrap_or_default();
         assert!((h - expect).abs() < Dy::sci(1, -9), "{h} vs {expect}");
         // The vacuum leg and a greater torsion share both bring it earlier.
-        assert!(onset_echoes(1, Dy::ratio(1, 10), s).unwrap() < h);
-        assert!(onset_echoes(1, Dy::ZERO, Dy::ratio(3, 5)).unwrap() < h);
+        assert!(onset_echoes(1, xyl_core::dyadic!(1, 10), s).unwrap() < h);
+        assert!(onset_echoes(1, Dy::ZERO, xyl_core::dyadic!(3, 5)).unwrap() < h);
         let (li, o) = (
             onset_echoes(3, Dy::ZERO, s).unwrap(),
             onset_echoes(8, Dy::ZERO, s).unwrap(),
         );
         assert!(li >= Dy::ZERO && o >= Dy::ZERO);
         let share = |k: u32| {
-            Dy::int(i64::from(crate::compound::open(k)))
-                / Dy::int(i64::from(crate::compound::hold(k)))
+            (Dy::int(i64::from(crate::compound::open(k))))
+                .div(&(Dy::int(i64::from(crate::compound::hold(k)))))
+                .unwrap_or_default()
         };
         assert_eq!(li > o, share(3) < share(8));
     }
@@ -1190,7 +1260,7 @@ mod tests {
         // no open states has no onset; every other kind crosses the throat
         // within ln(W / U) / ln D(s) echoes, the bound of the jet map
         // t -> a t with a = D(s).
-        for s in [Dy::ratio(1, 2), Dy::ratio(3, 5)] {
+        for s in [xyl_core::dyadic!(1, 2), xyl_core::dyadic!(3, 5)] {
             let ln_d = dilation_dy(s).unwrap().log();
             for z in 1..=crate::elements::TOP_Z {
                 if crate::compound::is_cluster(z) {
@@ -1203,10 +1273,13 @@ mod tests {
                     continue;
                 }
                 let n = onset.unwrap_or_else(|| panic!("Z{z} has open states and an onset"));
-                let bound = (Dy::int(i64::from(w)) / Dy::int(i64::from(u)))
-                    .log()
-                    .max(Dy::ZERO)
-                    / ln_d;
+                let bound = (((Dy::int(i64::from(w)))
+                    .div(&(Dy::int(i64::from(u))))
+                    .unwrap_or_default())
+                .log()
+                .max(Dy::ZERO))
+                .div(&ln_d)
+                .unwrap_or_default();
                 assert!(n <= bound + Dy::sci(1, -9), "Z{z}: {n} within {bound}");
             }
         }

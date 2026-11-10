@@ -129,7 +129,7 @@ impl Star {
     /// radius this is the stored `orbit.rate`; read that instead.
     pub fn rate_at_dy(&self, own: Dy) -> Dy {
         let scale = self.scale.max(Dy::sci(1, -12));
-        let inside = super::inside_mass_dy(own / scale) * self.mass_ratio;
+        let inside = super::inside_mass_dy(own.div(&scale).unwrap_or_default()) * self.mass_ratio;
         crate::turning::turning_dy(inside, own, Tier::Galaxy)
     }
 
@@ -276,7 +276,11 @@ impl Class {
         if self.compactness.signum() <= 0 {
             return None;
         }
-        let x = self.compactness.log() / Dy::int(10).log();
+        let x = self
+            .compactness
+            .log()
+            .div(&(Dy::int(10).log()))
+            .unwrap_or_default();
         let t = x.trunc_i64();
         Some(if Dy::int(t) > x { t - 1 } else { t })
     }
@@ -360,9 +364,13 @@ fn turning_rate(radius: Dy, scale: Dy, mass_ratio: Dy) -> Dy {
 /// population's sample size.
 fn stands_for(origin: &Origin, nucleus: bool) -> Dy {
     if nucleus {
-        Dy::from_q(&nucleus_mass()) / Dy::int(i64::try_from(NUCLEUS_SAMPLE).unwrap_or(1))
+        (Dy::from_q(&nucleus_mass()))
+            .div(&(Dy::int(i64::try_from(NUCLEUS_SAMPLE).unwrap_or(1))))
+            .unwrap_or_default()
     } else {
-        Dy::from_q(&stellar_mass()) / Dy::int(i64::try_from(sample(origin)).unwrap_or(1))
+        (Dy::from_q(&stellar_mass()))
+            .div(&(Dy::int(i64::try_from(sample(origin)).unwrap_or(1))))
+            .unwrap_or_default()
     }
 }
 
@@ -422,9 +430,9 @@ pub fn star(seed: u64, origin: &Origin, n: u64) -> Option<Star> {
     }
     // For u_bin < 1/3 the star is a binary, with companion mass
     // (0.1 + 0.9 u_comp) times the star's mass.
-    let companion = if u_bin < Dy::ratio(1, 3) {
+    let companion = if u_bin < xyl_core::dyadic!(1, 3) {
         down(
-            &(&mass * &(&Q::ratio(1, 10) + &(&Q::ratio(9, 10) * &u_comp.to_q()))),
+            &(&mass * &(&xyl_core::ratio!(1, 10) + &(&xyl_core::ratio!(9, 10) * &u_comp.to_q()))),
             GRID_BITS,
         )
     } else {
@@ -461,16 +469,16 @@ pub fn star(seed: u64, origin: &Origin, n: u64) -> Option<Star> {
 /// Their limits are independent over the rationals, so the four sequences
 /// of fractional parts do not fall into step.
 pub(crate) fn golden_turns() -> Q {
-    Q::ratio(63_245_986, 165_580_141)
+    xyl_core::ratio!(63_245_986, 165_580_141)
 }
 fn silver_turns() -> Q {
-    Q::ratio(470_832, 1_136_689)
+    xyl_core::ratio!(470_832, 1_136_689)
 }
 pub(crate) fn plastic_turns() -> Q {
-    Q::ratio(90_342_335_288_610_825, 119_678_113_856_248_465)
+    xyl_core::ratio!(90_342_335_288_610_825, 119_678_113_856_248_465)
 }
 fn third_turns() -> Q {
-    Q::ratio(8_155_103_542_731_753, 11_140_078_609_864_049)
+    xyl_core::ratio!(8_155_103_542_731_753, 11_140_078_609_864_049)
 }
 
 /// A tilt holding `u` of S^360's measure (concentrated toward 90 degrees,

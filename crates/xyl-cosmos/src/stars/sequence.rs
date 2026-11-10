@@ -415,18 +415,18 @@ mod tests {
     fn mixtures() -> Vec<Vec<(u32, Q)>> {
         vec![
             hydrogen(),
-            vec![(1, Q::ratio(3, 4)), (2, Q::ratio(1, 4))],
+            vec![(1, xyl_core::ratio!(3, 4)), (2, xyl_core::ratio!(1, 4))],
             vec![
-                (6, Q::ratio(1, 3)),
-                (26, Q::ratio(1, 3)),
-                (92, Q::ratio(1, 3)),
+                (6, xyl_core::ratio!(1, 3)),
+                (26, xyl_core::ratio!(1, 3)),
+                (92, xyl_core::ratio!(1, 3)),
             ],
             vec![(8, Q::ONE)],
         ]
     }
 
     fn heats() -> [crate::atoms::Received; 3] {
-        [Q::ZERO, Q::ratio(1, 3), Q::ONE].map(crate::atoms::Received::isoclinic)
+        [Q::ZERO, xyl_core::ratio!(1, 3), Q::ONE].map(crate::atoms::Received::isoclinic)
     }
 
     #[test]
@@ -456,7 +456,7 @@ mod tests {
     fn pole_point_lies_on_the_z_side() {
         // A kind's open states are at most its charge of its 3Z, so the
         // collective's pole point is at most 1/2.
-        let half = Q::ratio(1, 2);
+        let half = xyl_core::ratio!(1, 2);
         for received in heats() {
             for z in (1..=200).step_by(7) {
                 let t0 = mixture_pole(&[(z, Q::ONE)], &received);
@@ -478,15 +478,15 @@ mod tests {
         let deltas = [
             Dy::sci(1, -6),
             Dy::sci(1, -3),
-            Dy::ratio(1, 10),
-            Dy::ratio(1, 2),
+            xyl_core::dyadic!(1, 10),
+            xyl_core::dyadic!(1, 2),
         ];
         let n: Vec<Dy> = deltas.iter().map(|d| throat(&t0, *d).unwrap()).collect();
         assert!(n.windows(2).all(|w| w[1] < w[0]), "{n:?}");
         // A collective with nothing open has no pole state and no crossing.
-        assert!(throat(&Q::ZERO, Dy::ratio(1, 10)).is_none());
+        assert!(throat(&Q::ZERO, xyl_core::dyadic!(1, 10)).is_none());
         assert!(throat(&t0, Dy::ZERO).is_none());
-        assert_eq!(throat(&Q::ONE, Dy::ratio(1, 10)), Some(Dy::ZERO));
+        assert_eq!(throat(&Q::ONE, xyl_core::dyadic!(1, 10)), Some(Dy::ZERO));
     }
 
     #[test]
@@ -522,7 +522,7 @@ mod tests {
         let seq = Sequence::of(&[(water, Q::ONE)], &crate::atoms::Received::none());
         assert!(!seq.ignites());
         assert_eq!(seq.remnant, Q::ONE);
-        let delta = Dy::ratio(1, 10);
+        let delta = xyl_core::dyadic!(1, 10);
         let age = Dy::ONE;
         assert_eq!(
             crate::field::transduction(&seq, delta, Dy::ZERO, age),

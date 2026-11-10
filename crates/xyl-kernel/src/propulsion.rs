@@ -95,9 +95,10 @@ pub fn fusion_share(elements: &[xyl_cosmos::elements::Element]) -> Dy {
             .map(|e| Dy::from_q(&e.a))
     };
     match (a("H"), a("He")) {
-        (Some(h), Some(he)) if h.signum() > 0 => {
-            ((Dy::int(4) * h - he) / (Dy::int(4) * h)).max(Dy::ZERO)
-        }
+        (Some(h), Some(he)) if h.signum() > 0 => ((Dy::int(4) * h - he)
+            .div(&(Dy::int(4) * h))
+            .unwrap_or_default())
+        .max(Dy::ZERO),
         _ => Dy::ZERO,
     }
 }
@@ -117,7 +118,9 @@ pub fn energy_per_kg(
                 Solvent::Volatile(s) => s.mu(),
                 _ => Dy::int(CHEM_EXHAUST_AMU),
             };
-            covalent_ev(sc) * Dy::from_q(&Si::ev_j()) / (amu * Dy::from_q(&Si::amu_kg()))
+            (covalent_ev(sc) * Dy::from_q(&Si::ev_j()))
+                .div(&(amu * Dy::from_q(&Si::amu_kg())))
+                .unwrap_or_default()
         }
         Drive::Fission => Dy::sci(FISSION_SHARE.0, FISSION_SHARE.1) * sc.nuclear * c2,
         Drive::Fusion => fusion_share(elements) * sc.nuclear * c2,
@@ -128,14 +131,14 @@ pub fn energy_per_kg(
 /// Exhaust speed (m/s): the turning law's speed v_e = e / c for the energy
 /// `e_per_kg`, capped at c.
 pub fn exhaust_speed(e_per_kg: Dy) -> Dy {
-    (e_per_kg.max(Dy::ZERO) / c_m_s()).min(c_m_s())
+    (e_per_kg.max(Dy::ZERO).div(&c_m_s()).unwrap_or_default()).min(c_m_s())
 }
 
 /// The hyperbolic tangent, tanh x = (1 - e^(-2x)) / (1 + e^(-2x)), computed
 /// from exp; a negative x is clamped to zero.
 fn tanh(x: Dy) -> Dy {
     let e = (Dy::int(-2) * x.max(Dy::ZERO)).exp();
-    (Dy::ONE - e) / (Dy::ONE + e)
+    (Dy::ONE - e).div(&(Dy::ONE + e)).unwrap_or_default()
 }
 
 /// The speed change a mass ratio gives (m/s): the relativistic rocket,
@@ -143,7 +146,7 @@ fn tanh(x: Dy) -> Dy {
 /// speed. A ratio below one is taken as one.
 pub fn delta_v(v_e: Dy, ratio: Dy) -> Dy {
     let c = c_m_s();
-    c * tanh(v_e / c * ratio.max(Dy::ONE).log())
+    c * tanh(v_e.div(&c).unwrap_or_default() * ratio.max(Dy::ONE).log())
 }
 
 /// The propellant transduced per kg of dry mass at this mass ratio (kg per kg):
@@ -216,7 +219,7 @@ mod tests {
         let dv = delta_v(chem, Dy::int(MASS_RATIO));
         let tsiolkovsky = chem * Dy::int(MASS_RATIO).log();
         assert!(
-            (dv - tsiolkovsky).abs() < tsiolkovsky / Dy::int(1_000_000),
+            (dv - tsiolkovsky).abs() < tsiolkovsky.div(&(Dy::int(1_000_000))).unwrap_or_default(),
             "{dv} vs {tsiolkovsky}"
         );
         assert!(delta_v(anni, Dy::int(MASS_RATIO)) < c);

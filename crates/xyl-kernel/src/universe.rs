@@ -310,7 +310,7 @@ impl<'g> Universe<'g> {
                 (p.population.signum() > 0).then(|| {
                     (
                         self.network.holds_mouth(p.star),
-                        self.network.shut_of(p.star) >= Dy::ratio(1, 2),
+                        self.network.shut_of(p.star) >= xyl_core::dyadic!(1, 2),
                     )
                 })
             })
@@ -565,12 +565,19 @@ impl<'g> Universe<'g> {
                 .iter()
                 .filter(|p| p.population.signum() > 0)
                 .map(|p| {
-                    (Dy::ONE / p.rate.max(Dy::sci(1, -12)))
-                        .min(crate::growth::generation_yr(&p.traits, &rulers))
+                    ((Dy::ONE)
+                        .div(&p.rate.max(Dy::sci(1, -12)))
+                        .unwrap_or_default())
+                    .min(crate::growth::generation_yr(&p.traits, &rulers))
                 })
                 .min();
             let piece = turning
-                .map(|yr| yr / Dy::int(10) / Dy::sci(1, 9))
+                .map(|yr| {
+                    yr.div(&(Dy::int(10)))
+                        .unwrap_or_default()
+                        .div(&(Dy::sci(1, 9)))
+                        .unwrap_or_default()
+                })
                 .unwrap_or(to - at)
                 .max(Dy::sci(1, -12))
                 .min(to - at);

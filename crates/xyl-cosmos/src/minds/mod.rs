@@ -48,7 +48,7 @@ pub use kept::*;
 
 /// The interval between points of the expectation curve (Gyr).
 pub fn curve_step() -> Dy {
-    Dy::ratio(1, 4)
+    xyl_core::dyadic!(1, 4)
 }
 
 /// The number of curve points: 0 Gyr to the 30 Gyr horizon in curve steps.
@@ -159,7 +159,7 @@ fn expect(l: &life::Living, born: Dy, t0: Dy, curve: &mut [Dy], ctx: &Ctx) {
             .map(|e| e.min(horizon_gyr()))
             .unwrap_or_else(horizon_gyr);
         let steril = if ch.hazard.signum() > 0 && horizon > t0 {
-            let at = t0 + Dy::ONE / ch.hazard;
+            let at = t0 + (Dy::ONE).div(&ch.hazard).unwrap_or_default();
             (at < horizon).then_some(at)
         } else {
             None
@@ -185,7 +185,7 @@ fn expect(l: &life::Living, born: Dy, t0: Dy, curve: &mut [Dy], ctx: &Ctx) {
 
 /// The first curve point at or after `t` (Gyr): ceil(t / curve_step).
 fn ceil_points(t: Dy) -> usize {
-    let x = t / curve_step();
+    let x = t.div(&curve_step()).unwrap_or_default();
     let f = x.trunc_i64();
     let c = if Dy::int(f) < x { f + 1 } else { f };
     usize::try_from(c.max(0)).unwrap_or(0)

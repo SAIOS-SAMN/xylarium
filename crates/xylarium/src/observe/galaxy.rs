@@ -413,7 +413,7 @@ fn reference_probe(u: &Universe<'_>, n: usize, share: &Q, t: Dy) -> String {
         };
         let at = st.r.checked_div(&rim).unwrap_or(Q::ZERO);
         let class = st.class(t);
-        if (&at - share).abs() > Q::ratio(1, 20)
+        if (&at - share).abs() > xyl_core::ratio!(1, 20)
             || class.step != xyl_cosmos::field::Transduction::Step(0)
         {
             continue;
@@ -448,5 +448,5 @@ fn reference_probe(u: &Universe<'_>, n: usize, share: &Q, t: Dy) -> String {
 /// rim), or the reference default.
 pub(super) fn probe_share(arg: Option<&String>) -> Q {
     arg.and_then(|a| xyl_cosmos::elements::decimal(a))
-        .unwrap_or_else(|| Q::ratio(REFERENCE_REACH.0, REFERENCE_REACH.1))
+        .unwrap_or_else(|| xyl_core::ratio!(REFERENCE_REACH.0, REFERENCE_REACH.1))
 }

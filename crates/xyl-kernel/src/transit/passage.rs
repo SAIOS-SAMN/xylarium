@@ -49,14 +49,19 @@ impl Network {
                 .max(Dy::ZERO)
                 .to_q();
             let wait = window_years(&all, a.world, b.world, &age, years)
-                .map(|(w, v)| w * v / (v + cruise))
+                .map(|(w, v)| (w * v).div(&(v + cruise)).unwrap_or_default())
                 .unwrap_or(Dy::ZERO);
             return Some(years + wait);
         }
         let (ca, cb) = (*self.of.get(&a.star)?, *self.of.get(&b.star)?);
         let star_leg = |x: u64, y: u64| {
-            self.arc_at(x, y, t)
-                .map(|arc| arc * kpc_m() / cruise / year_s())
+            self.arc_at(x, y, t).map(|arc| {
+                (arc * kpc_m())
+                    .div(&cruise)
+                    .unwrap_or_default()
+                    .div(&year_s())
+                    .unwrap_or_default()
+            })
         };
         if ca == cb {
             return star_leg(a.star, b.star);
@@ -81,7 +86,9 @@ impl Network {
             edges.push((
                 l.from,
                 l.to,
-                crossing_years(self.reach_of(l.to).unwrap_or(Dy::ZERO)) / open,
+                crossing_years(self.reach_of(l.to).unwrap_or(Dy::ZERO))
+                    .div(&open)
+                    .unwrap_or_default(),
             ));
         }
         let mut by_c: BTreeMap<usize, Vec<u64>> = BTreeMap::new();

@@ -92,7 +92,7 @@ impl Lab {
             k_core: Dy::int(40),
             alpha_core: Dy::sci(1, -5),
             l_iron: Dy::sci(75, 4),
-            freeze_span: Dy::ratio(37, 100),
+            freeze_span: xyl_core::dyadic!(37, 100),
         })
     }
 }
@@ -117,8 +117,9 @@ pub fn rho_rock() -> Dy {
 
 pub(super) fn viscosity(t: Dy, sc: &Scales) -> Dy {
     let l = Lab::get();
-    let x =
-        l.creep_ea * sc.chem / l.r_gas * (Dy::ONE / t.max(Dy::ONE) - Dy::ONE / (l.t_ref * sc.chem));
+    let x = (l.creep_ea * sc.chem).div(&l.r_gas).unwrap_or_default()
+        * ((Dy::ONE).div(&t.max(Dy::ONE)).unwrap_or_default()
+            - (Dy::ONE).div(&(l.t_ref * sc.chem)).unwrap_or_default());
     l.eta_ref * x.min(Dy::int(200)).exp()
 }
 
@@ -131,7 +132,10 @@ pub(super) fn boundary_m() -> Dy {
 /// A layer's mobility, `1 + eta_ref / eta`: near 1 for a cold, stiff layer,
 /// 2 at the reference viscosity, rising steeply as the layer warms.
 pub(super) fn mobility(layer: Dy, sc: &Scales) -> Dy {
-    Dy::ONE + Lab::get().eta_ref / viscosity(layer, sc).max(Dy::sci(1, -30))
+    Dy::ONE
+        + (Lab::get().eta_ref)
+            .div(&viscosity(layer, sc).max(Dy::sci(1, -30)))
+            .unwrap_or_default()
 }
 
 /// Heat flux (W/m^2) a convecting layer at `hot` passes to `cold`:
@@ -143,7 +147,9 @@ pub(super) fn conv_flux(hot: Dy, cold: Dy, grav: Dy, layer: Dy, sc: &Scales) -> 
     if dt.signum() <= 0 || grav.signum() <= 0 {
         return Dy::ZERO;
     }
-    l.k_rock * dt * (grav / l.unit_world_gravity()) * mobility(layer, sc) / boundary_m()
+    (l.k_rock * dt * (grav.div(&l.unit_world_gravity()).unwrap_or_default()) * mobility(layer, sc))
+        .div(&boundary_m())
+        .unwrap_or_default()
 }
 
 /// The mantle's convective loss and its thermostat for one world.
@@ -170,12 +176,19 @@ impl Thermostat<'_> {
     /// with A the surface area and dT = T - t_surf.
     fn dq(&self, t_int: Dy) -> Dy {
         let l = Lab::get();
-        let ea = l.creep_ea * self.sc.chem / l.r_gas;
+        let ea = (l.creep_ea * self.sc.chem)
+            .div(&l.r_gas)
+            .unwrap_or_default();
         let mob = mobility(t_int, self.sc);
         let dt = (t_int - self.t_surf).max(Dy::ZERO);
-        l.k_rock * (self.grav / l.unit_world_gravity()) / boundary_m()
+        (l.k_rock * (self.grav.div(&l.unit_world_gravity()).unwrap_or_default()))
+            .div(&boundary_m())
+            .unwrap_or_default()
             * self.area
-            * (mob + dt * (mob - Dy::ONE) * (ea / t_int.max(Dy::ONE)) / t_int.max(Dy::ONE))
+            * (mob
+                + (dt * (mob - Dy::ONE) * (ea.div(&t_int.max(Dy::ONE)).unwrap_or_default()))
+                    .div(&t_int.max(Dy::ONE))
+                    .unwrap_or_default())
     }
 
     /// The T in \[t_surf, t_top\] with q_out(T) = `h`, or `t_top` when even
@@ -194,11 +207,13 @@ impl Thermostat<'_> {
             } else {
                 lo = t;
             }
-            let newton = t - miss / self.dq(t).max(Dy::sci(1, -30));
+            let newton = t - miss
+                .div(&self.dq(t).max(Dy::sci(1, -30)))
+                .unwrap_or_default();
             let next = if newton > lo && newton < hi {
                 newton
             } else {
-                (lo + hi) * Dy::ratio(1, 2)
+                (lo + hi) * xyl_core::dyadic!(1, 2)
             };
             if (next - t).abs() < Dy::sci(1, -3) || hi - lo < Dy::sci(1, -3) {
                 return next;
@@ -221,7 +236,10 @@ fn radiogenic(sources: &[Q; 4], sc: &Scales) -> Modes {
             .zip(sources.iter())
             .map(|((i, (_, _, half, w, _)), kg)| {
                 let th = half_life(i, sc);
-                let amp = Dy::from_q(kg) * Dy::from_q(w) * (Dy::from_q(half) / th) * sc.nuclear;
+                let amp = Dy::from_q(kg)
+                    * Dy::from_q(w)
+                    * ((Dy::from_q(half)).div(&th).unwrap_or_default())
+                    * sc.nuclear;
                 Boost::halving(
                     amp.to_q(),
                     -Q::ONE.checked_div(&th.to_q()).unwrap_or(Q::ZERO),
@@ -236,8 +254,9 @@ fn radiogenic(sources: &[Q; 4], sc: &Scales) -> Modes {
 /// rho_rock / (rho_core x the density scale).
 fn core_radius(m_core: Dy, sc: &Scales) -> Dy {
     let l = Lab::get();
-    let rock_equiv =
-        m_core / l.world_mass_kg * l.rho_rock / (l.rho_core * sc.density).max(Dy::sci(1, -9));
+    let rock_equiv = (m_core.div(&l.world_mass_kg).unwrap_or_default() * l.rho_rock)
+        .div(&(l.rho_core * sc.density).max(Dy::sci(1, -9)))
+        .unwrap_or_default();
     Dy::from_q(&crate::elements::extent(&rock_equiv.to_q())) * l.world_radius_m
 }
 
@@ -261,19 +280,31 @@ fn core_heat(
     let l = Lab::get();
     let gyr = l.gyr_s;
     let excess = |layer: Dy| -> Dy {
-        let k_b = a_core * l.k_rock * (g_core / l.unit_world_gravity()) * mobility(layer, sc)
-            / boundary_m();
-        let c = k_b * gyr / cap_core.max(Dy::ONE);
+        let k_b = (a_core
+            * l.k_rock
+            * (g_core.div(&l.unit_world_gravity()).unwrap_or_default())
+            * mobility(layer, sc))
+        .div(&boundary_m())
+        .unwrap_or_default();
+        let c = (k_b * gyr).div(&cap_core.max(Dy::ONE)).unwrap_or_default();
         let formation = delta0 * (-(c * age.max(Dy::ZERO))).exp();
-        let following = cap_core * adiabat * cooling / k_b.max(Dy::sci(1, -30));
+        let following = (cap_core * adiabat * cooling)
+            .div(&k_b.max(Dy::sci(1, -30)))
+            .unwrap_or_default();
         formation + following
     };
     let first = excess(base);
-    let delta = excess(base + first * Dy::ratio(1, 2));
+    let delta = excess(base + first * xyl_core::dyadic!(1, 2));
     let t_core = base + delta;
     (
         t_core,
-        conv_flux(t_core, base, g_core, base + delta * Dy::ratio(1, 2), sc) * a_core,
+        conv_flux(
+            t_core,
+            base,
+            g_core,
+            base + delta * xyl_core::dyadic!(1, 2),
+            sc,
+        ) * a_core,
     )
 }
 
@@ -298,16 +329,30 @@ fn mantle_temperature(
     let reg0 = thermostat.regulated(made_birth);
     let reg = thermostat.regulated(made_now);
     let q_slope = thermostat.dq(reg).max(Dy::sci(1, -30));
-    let lag = ((cap_mantle / q_slope) * (-slope / q_slope))
-        .max(Dy::ZERO)
-        .min((t_melt - reg).max(Dy::ZERO));
-    let tau0 = cap_mantle / thermostat.dq(reg0).max(Dy::sci(1, -30)) / gyr;
-    let transient = (t0 - reg0) * (-(age.max(Dy::ZERO) / tau0.max(Dy::sci(1, -12)))).exp();
+    let lag = ((cap_mantle.div(&q_slope).unwrap_or_default())
+        * ((-slope).div(&q_slope).unwrap_or_default()))
+    .max(Dy::ZERO)
+    .min((t_melt - reg).max(Dy::ZERO));
+    let tau0 = cap_mantle
+        .div(&thermostat.dq(reg0).max(Dy::sci(1, -30)))
+        .unwrap_or_default()
+        .div(&gyr)
+        .unwrap_or_default();
+    let transient = (t0 - reg0)
+        * (-(age
+            .max(Dy::ZERO)
+            .div(&tau0.max(Dy::sci(1, -12)))
+            .unwrap_or_default()))
+        .exp();
     let t_int = (reg + lag + transient)
         .min(thermostat.t_top)
         .max(thermostat.t_surf);
-    let cooling = (-(slope / thermostat.dq(reg).max(Dy::sci(1, -30)))
-        + transient / (tau0 * gyr).max(Dy::sci(1, -30)))
+    let cooling = (-(slope
+        .div(&thermostat.dq(reg).max(Dy::sci(1, -30)))
+        .unwrap_or_default())
+        + transient
+            .div(&(tau0 * gyr).max(Dy::sci(1, -30)))
+            .unwrap_or_default())
     .max(Dy::ZERO);
     (t_int, cooling)
 }
@@ -344,9 +389,13 @@ fn shape(world: &World, sc: &Scales) -> Shape {
     let r_m = radius * l.world_radius_m;
     let four_pi = Dy::int(4) * Dy::pi();
     let area = four_pi * r_m * l.world_radius_m;
-    let grav = l.unit_world_gravity() * mass / radius.max(Dy::sci(1, -6));
+    let grav = (l.unit_world_gravity() * mass)
+        .div(&radius.max(Dy::sci(1, -6)))
+        .unwrap_or_default();
     let envelope = Dy::from_q(&world.layers[3]);
-    let core_share = Dy::from_q(&world.layers[0]) / (Dy::ONE - envelope).max(Dy::sci(1, -9));
+    let core_share = (Dy::from_q(&world.layers[0]))
+        .div(&(Dy::ONE - envelope).max(Dy::sci(1, -9)))
+        .unwrap_or_default();
     let m_core = m_kg * core_share.max(Dy::ZERO);
     let mantle = m_kg - m_core;
     let has_core = m_core.signum() > 0;
@@ -357,7 +406,9 @@ fn shape(world: &World, sc: &Scales) -> Shape {
     };
     let a_core = four_pi * r_core * l.world_radius_m;
     let g_core = if r_core.signum() > 0 {
-        l.unit_world_gravity() * (m_core / l.world_mass_kg) / (r_core / l.world_radius_m)
+        (l.unit_world_gravity() * (m_core.div(&l.world_mass_kg).unwrap_or_default()))
+            .div(&(r_core.div(&l.world_radius_m).unwrap_or_default()))
+            .unwrap_or_default()
     } else {
         Dy::ZERO
     };
@@ -417,22 +468,35 @@ pub fn interior(
     let cap_mantle = mantle * l.cp_rock;
     // Rock's melting point is the liquidus times 1/2 + m / (1 + m), which is
     // 1 for the unit world.
-    let t_melt = l.liquidus * sc.chem * (Dy::ratio(1, 2) + mass / (Dy::ONE + mass));
+    let t_melt = l.liquidus
+        * sc.chem
+        * (xyl_core::dyadic!(1, 2) + mass.div(&(Dy::ONE + mass)).unwrap_or_default());
     let thermostat = Thermostat {
         t_surf,
-        t_top: t_melt * Dy::ratio(6, 5),
+        t_top: t_melt * xyl_core::dyadic!(6, 5),
         grav,
         area,
         sc,
     };
     // The central pressure is p = m / R (1 for the unit world); iron's
     // melting point is the iron liquidus times 2 p / (1 + p).
-    let press = (mass / radius.max(Dy::sci(1, -3))).max(Dy::sci(1, -4));
+    let press = (mass.div(&radius.max(Dy::sci(1, -3))).unwrap_or_default()).max(Dy::sci(1, -4));
     let t_liq_core = l.iron_liquidus * sc.chem * crate::laws::share2(press);
-    let cap_core = m_core * (l.cp_iron + l.l_iron / (l.freeze_span * t_liq_core));
+    let cap_core = m_core
+        * (l.cp_iron
+            + l.l_iron
+                .div(&(l.freeze_span * t_liq_core))
+                .unwrap_or_default());
     let depth = (r_m - r_core).max(Dy::ZERO);
-    let adiabat =
-        (l.alpha / (Dy::ONE + l.rho_rock * grav * depth / l.bulk) * grav * depth / l.cp_rock).exp();
+    let adiabat = ((l
+        .alpha
+        .div(&(Dy::ONE + (l.rho_rock * grav * depth).div(&l.bulk).unwrap_or_default()))
+        .unwrap_or_default()
+        * grav
+        * depth)
+        .div(&l.cp_rock)
+        .unwrap_or_default())
+    .exp();
     let heat = radiogenic(sources, sc).plus(tide);
     let dy = |e: xyl_core::certified::Encl| Dy::from_q(&e.mid());
     // The heat is read once at the world's age and once at its birth.
@@ -445,7 +509,7 @@ pub fn interior(
         &thermostat,
         made_birth,
         made_now,
-        dy(now.slope()) / gyr,
+        dy(now.slope()).div(&gyr).unwrap_or_default(),
         cap_mantle,
         t_melt,
         age,
@@ -468,7 +532,10 @@ pub fn interior(
         + cap_mantle * (t0 - t_int)
         + cap_core * (t_liq_core - t_core).max(Dy::ZERO);
     let span = (t_melt - t_surf).max(Dy::ONE);
-    let processed = passed.max(Dy::ZERO) / (mantle * l.cp_rock * span).max(Dy::ONE);
+    let processed = passed
+        .max(Dy::ZERO)
+        .div(&(mantle * l.cp_rock * span).max(Dy::ONE))
+        .unwrap_or_default();
     let h_tide = dy(tide.value(&age.max(Dy::ZERO).to_q()));
     let h_rad = made_now - h_tide;
     let q_total = if age.signum() > 0 {
@@ -479,24 +546,29 @@ pub fn interior(
     // The outflow is at least the heat made: a world heated faster than
     // convection carries the heat out melts.
     let heat_w = q_total.max(h_rad + h_tide);
-    let q_ad = l.k_core * l.alpha_core * g_core * t_core / l.cp_iron;
+    let q_ad = (l.k_core * l.alpha_core * g_core * t_core)
+        .div(&l.cp_iron)
+        .unwrap_or_default();
     let q_cmb_area = if a_core.signum() > 0 {
-        q_cmb / a_core
+        q_cmb.div(&a_core).unwrap_or_default()
     } else {
         Dy::ZERO
     };
     let field = if !has_core || q_ad.signum() <= 0 {
         Dy::ZERO
     } else {
-        (q_cmb_area / q_ad - Dy::ONE).clamp(Dy::ZERO, Dy::ONE)
+        (q_cmb_area.div(&q_ad).unwrap_or_default() - Dy::ONE).clamp(Dy::ZERO, Dy::ONE)
     };
     Interior {
         t_int,
         t_core,
-        q: heat_w / area,
-        q_rad: h_rad / area,
-        q_sec: (heat_w - h_rad - h_tide).max(Dy::ZERO) / area,
-        q_tide: h_tide / area,
+        q: heat_w.div(&area).unwrap_or_default(),
+        q_rad: h_rad.div(&area).unwrap_or_default(),
+        q_sec: (heat_w - h_rad - h_tide)
+            .max(Dy::ZERO)
+            .div(&area)
+            .unwrap_or_default(),
+        q_tide: h_tide.div(&area).unwrap_or_default(),
         q_cmb: q_cmb_area,
         q_ad,
         r_core,
@@ -520,8 +592,12 @@ pub fn tidal_w(host_kg: Dy, a_m: Dy, e: Dy, mass: Dy, radius: Dy, icy: bool) -> 
     let n = Dy::from_q(&rad_s(&host_kg.to_q(), &a_m.to_q()));
     let k2 = Dy::from_q(&love(&mass.to_q(), &radius.to_q(), icy));
     let st = Dy::from_q(&stretch(&host_kg.to_q(), &a_m.to_q(), &r.to_q()));
-    Dy::ratio(21, 2) * k2 / Dy::int(100)
-        * (l.g * host_kg * mass * l.world_mass_kg / a_m)
+    (xyl_core::dyadic!(21, 2) * k2)
+        .div(&(Dy::int(100)))
+        .unwrap_or_default()
+        * ((l.g * host_kg * mass * l.world_mass_kg)
+            .div(&a_m)
+            .unwrap_or_default())
         * n
         * e
         * st
@@ -533,5 +609,5 @@ pub fn eccentricity(e0: Dy, e_forced: Dy, tau_e: Dy, t: Dy) -> Dy {
     if tau_e.signum() <= 0 {
         return e_forced;
     }
-    e_forced + (e0 - e_forced) * (-(t.max(Dy::ZERO) / tau_e)).exp()
+    e_forced + (e0 - e_forced) * (-(t.max(Dy::ZERO).div(&tau_e).unwrap_or_default())).exp()
 }

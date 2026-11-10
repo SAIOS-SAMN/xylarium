@@ -421,7 +421,7 @@ pub fn occupancy(z: u32) -> Option<Occupancy> {
 pub fn balance(z: u32) -> Option<(i64, Q)> {
     let (z, c) = (i64::from(z), i64::from(capacity(z)?));
     let excess = 2 * z - c;
-    Some((3 * excess, Q::ratio(excess, c.max(1))))
+    Some((3 * excess, Q::new(excess, c.max(1)).unwrap_or(Q::ZERO)))
 }
 
 /// A kind's unpaired count (used by its weight and open share), cached

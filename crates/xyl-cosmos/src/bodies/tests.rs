@@ -6,7 +6,7 @@ fn rocky_world() -> World {
     let elements = crate::elements::table().unwrap();
     let mut el = vec![Q::ZERO; elements.len()];
     // A mantle of two thirds of the mass carries U, Th and K.
-    let mantle = Q::ratio(2, 3);
+    let mantle = xyl_core::ratio!(2, 3);
     let set = |el: &mut Vec<Q>, s: &str, share: &str| {
         let i = elements.iter().position(|e| e.sym == s).unwrap();
         el[i] = &mantle * &crate::elements::decimal(share).unwrap_or(Q::ZERO);
@@ -21,7 +21,12 @@ fn rocky_world() -> World {
         giant: false,
         host: None,
         a_host_radii: None,
-        layers: [Q::ratio(1, 3), Q::ratio(2, 3), Q::ZERO, Q::ZERO],
+        layers: [
+            xyl_core::ratio!(1, 3),
+            xyl_core::ratio!(2, 3),
+            Q::ZERO,
+            Q::ZERO,
+        ],
         elements: el,
         mantle: Vec::new(),
         ices: Vec::new(),
@@ -40,7 +45,7 @@ fn closer_world_locks_sooner_with_shorter_year() {
     let sun = Si::star_mass_kg();
     let mut rng = Stream::derive(1, &["orbits".into()]);
     let close = World {
-        a: Q::ratio(3, 10),
+        a: xyl_core::ratio!(3, 10),
         ..w.clone()
     };
     let far = World {
@@ -53,7 +58,7 @@ fn closer_world_locks_sooner_with_shorter_year() {
         "the closer world locks sooner"
     );
     assert!(
-        os[0].e0 <= Q::ratio(9, 10)
+        os[0].e0 <= xyl_core::ratio!(9, 10)
             && os[0].cos_obliquity >= -Q::ONE
             && os[0].cos_obliquity <= Q::ONE
     );

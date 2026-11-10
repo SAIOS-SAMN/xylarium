@@ -265,7 +265,7 @@ impl Manifold {
             Encl::exact(Q::int(2)).mul(&cm).mul(&sm),
         );
         let a = Encl::exact(self.a.clone());
-        let half_e = ecc.mul(&Encl::exact(Q::ratio(1, 2)));
+        let half_e = ecc.mul(&Encl::exact(xyl_core::ratio!(1, 2)));
         let x = a.mul(&cm.add(&half_e.mul(&c2.sub(&Encl::exact(Q::int(3))))));
         let y = a.mul(&sm.add(&half_e.mul(&s2)));
         // The twist over time (uniform in degrees), then the plane's frame
@@ -383,7 +383,7 @@ fn frame_of(inc: &Q, node: &Q, peri: &Q) -> Rotor {
 /// turn; that cone holds `measure::share_turns(n, turns)` of the sphere.
 /// Taken from the angle, without cosines or roots, as an enclosure.
 fn cone_share(n: u32, x: &Encl) -> Encl {
-    let half = Q::ratio(1, 2);
+    let half = xyl_core::ratio!(1, 2);
     let turns = |q: &Q, up: bool| {
         let t = x_turns(q, up).max(Q::ZERO).min(half.clone());
         Dy::from_q(&t)
@@ -428,7 +428,7 @@ pub fn share(n: u32, d: &Encl, reach: &Encl) -> Encl {
         let s = cone_share(n, &out(d, reach));
         Encl::exact(Q::ONE).sub(&s)
     } else {
-        let half = Q::ratio(1, 2);
+        let half = xyl_core::ratio!(1, 2);
         let (a, b) = (
             cone_share(n, &out(reach, d)),
             Encl::exact(Q::ONE).sub(&cone_share(n, &out(d, reach))),

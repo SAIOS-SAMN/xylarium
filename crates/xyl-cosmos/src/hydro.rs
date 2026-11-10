@@ -32,7 +32,7 @@ use xyl_core::dyadic::Dy;
 /// The unit world's magnetopause distance in unit-world radii (subsolar, quiet
 /// wind).
 fn unit_world_standoff() -> Dy {
-    Dy::ratio(101, 10)
+    xyl_core::dyadic!(101, 10)
 }
 
 fn power(w: &State) -> Dy {
@@ -52,13 +52,15 @@ fn moment_against(w: &State, u: &State) -> Dy {
     if p.signum() <= 0 || rc.signum() <= 0 || pu.signum() <= 0 || ru.signum() <= 0 {
         return Dy::ZERO;
     }
-    share2(p / pu) * (rc / ru)
+    share2(p.div(&pu).unwrap_or_default()) * (rc.div(&ru).unwrap_or_default())
 }
 
 /// The dipole field at the surface: the moment over the world's radius, in the
 /// unit world's units.
 pub fn surface_field(w: &State) -> Dy {
-    moment(w) / w.radius.max(Dy::sci(1, -6))
+    moment(w)
+        .div(&w.radius.max(Dy::sci(1, -6)))
+        .unwrap_or_default()
 }
 
 /// The magnetopause standoff distance in world radii: 10.1 times the share
@@ -69,7 +71,7 @@ pub fn standoff(w: &State, pressure: Dy) -> Dy {
     if b.signum() <= 0 {
         return Dy::ZERO;
     }
-    unit_world_standoff() * share2(b / pressure.max(Dy::sci(1, -12)))
+    unit_world_standoff() * share2(b.div(&pressure.max(Dy::sci(1, -12))).unwrap_or_default())
 }
 
 /// The share of the world's sky that the stellar wind reaches: `R / r_mp`,
@@ -79,7 +81,7 @@ pub fn exposure(w: &State, pressure: Dy) -> Dy {
     if rr <= Dy::ONE {
         Dy::ONE
     } else {
-        Dy::ONE / rr
+        (Dy::ONE).div(&rr).unwrap_or_default()
     }
 }
 
@@ -88,8 +90,15 @@ pub fn exposure(w: &State, pressure: Dy) -> Dy {
 /// the passing share is `1 / (1 + 1.7 R_c / 4 GV)`.
 fn gcr_through_field(w: &State) -> Dy {
     let radius = w.radius.max(Dy::sci(1, -6));
-    let cutoff = Dy::int(6) * moment(w) / radius;
-    Dy::ONE / (Dy::ONE + Dy::ratio(17, 10) * cutoff / Dy::int(4))
+    let cutoff = (Dy::int(6) * moment(w)).div(&radius).unwrap_or_default();
+    (Dy::ONE)
+        .div(
+            &(Dy::ONE
+                + (xyl_core::dyadic!(17, 10) * cutoff)
+                    .div(&(Dy::int(4)))
+                    .unwrap_or_default()),
+        )
+        .unwrap_or_default()
 }
 
 /// The share that passes the air's column: `exp(-column / 185 g/cm^2)`, the
@@ -97,8 +106,8 @@ fn gcr_through_field(w: &State) -> Dy {
 /// The 185 g/cm^2 attenuation length includes the secondary cascade.
 fn through_air(w: &State) -> Dy {
     let g = if w.g.signum() > 0 { w.g } else { Dy::ONE }.max(Dy::sci(1, -6));
-    let column = Dy::int(1033) * w.p_bar / g;
-    (-(column / Dy::int(185))).exp()
+    let column = (Dy::int(1033) * w.p_bar).div(&g).unwrap_or_default();
+    (-(column.div(&(Dy::int(185))).unwrap_or_default())).exp()
 }
 
 /// The particle power reaching a world's surface (W/m^2): the stellar wind
@@ -120,7 +129,9 @@ pub fn particle_power(w: &State) -> Dy {
 /// (a yield of G ~ 2 per 100 eV at ~1.5 eV each), divided by the 340 W/m^2
 /// flux unit.
 pub fn radiolysis(w: &State) -> Dy {
-    Dy::ratio(3, 100) * particle_power(w) / Dy::int(340)
+    (xyl_core::dyadic!(3, 100) * particle_power(w))
+        .div(&(Dy::int(340)))
+        .unwrap_or_default()
 }
 
 fn dose_raw(w: &State, pressure: Dy, galactic: Dy) -> Dy {
@@ -139,7 +150,9 @@ pub fn dose(w: &State, pressure: Dy, galactic: Dy) -> Dy {
         g: Dy::ONE,
         ..unit().clone()
     };
-    dose_raw(w, pressure, galactic) / dose_raw(&u, Dy::ONE, Dy::ONE).max(Dy::sci(1, -12))
+    dose_raw(w, pressure, galactic)
+        .div(&dose_raw(&u, Dy::ONE, Dy::ONE).max(Dy::sci(1, -12)))
+        .unwrap_or_default()
 }
 
 #[cfg(test)]
@@ -157,7 +170,7 @@ mod tests {
         // the wind reaches; it is below 1 for a magnetised world.
         let e = exposure(u, Dy::ONE);
         assert!(
-            (e - Dy::ONE / r1).abs() < e * Dy::sci(1, -9),
+            (e - (Dy::ONE).div(&r1).unwrap_or_default()).abs() < e * Dy::sci(1, -9),
             "exposure {e}"
         );
         assert!(e > Dy::ZERO && e < Dy::ONE, "exposure {e}");

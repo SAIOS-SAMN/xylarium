@@ -109,7 +109,9 @@ pub struct Medium {
 pub fn geothermal(w: &State) -> Dy {
     // The heat is divided by the radius, not its square, because the surface
     // area is linear in radius in the interior model.
-    constants().geo_flux * w.heat / w.radius.max(Dy::sci(1, -6))
+    (constants().geo_flux * w.heat)
+        .div(&w.radius.max(Dy::sci(1, -6)))
+        .unwrap_or_default()
 }
 
 /// The work the world's heat can do for a chemistry at `t_medium` (flux
@@ -120,7 +122,7 @@ pub fn free_heat(w: &State, t_medium: Dy) -> Dy {
     } else {
         t_medium
     };
-    geothermal(w) * (Dy::ONE - t_medium / t_hot.max(Dy::ONE))
+    geothermal(w) * (Dy::ONE - t_medium.div(&t_hot.max(Dy::ONE)).unwrap_or_default())
 }
 
 /// The thickness (km) of an ice shell whose base sits at its melting point,
@@ -132,9 +134,16 @@ pub fn shell_km(q: Dy, t_surf: Dy, t_melt: Dy) -> Option<Dy> {
         return None;
     }
     Some(
-        constants().k_ice * (t_melt.max(Dy::ONE) / t_surf.min(t_melt).max(Dy::ONE)).log()
-            / q
-            / Dy::int(1000),
+        (constants().k_ice
+            * (t_melt
+                .max(Dy::ONE)
+                .div(&t_surf.min(t_melt).max(Dy::ONE))
+                .unwrap_or_default())
+            .log())
+        .div(&q)
+        .unwrap_or_default()
+        .div(&(Dy::int(1000)))
+        .unwrap_or_default(),
     )
 }
 
@@ -175,9 +184,11 @@ pub(super) fn solvents(w: &State, ctx: &Ctx) -> Vec<(Solvent, Where, Dy, Dy, Dy,
                 } else {
                     Dy::ZERO
                 };
-            let layer_km = amount * c.bar
-                / (c.unit_g * w.g.max(Dy::sci(1, -6)) * Dy::int(1000))
-                / Dy::int(1000);
+            let layer_km = (amount * c.bar)
+                .div(&(c.unit_g * w.g.max(Dy::sci(1, -6)) * Dy::int(1000)))
+                .unwrap_or_default()
+                .div(&(Dy::int(1000)))
+                .unwrap_or_default();
             let q = if w.q.signum() > 0 {
                 w.q
             } else {
@@ -221,7 +232,11 @@ pub(super) fn solvents(w: &State, ctx: &Ctx) -> Vec<(Solvent, Where, Dy, Dy, Dy,
         ));
     }
     if w.giant && w.mass >= c.giant_plasma_mass {
-        let energy = c.giant_flux * (w.mass / Dy::int(318)) * (Dy::int(11) / w.radius.max(Dy::ONE));
+        let energy = c.giant_flux
+            * (w.mass.div(&(Dy::int(318))).unwrap_or_default())
+            * ((Dy::int(11))
+                .div(&w.radius.max(Dy::ONE))
+                .unwrap_or_default());
         out.push((
             Solvent::Plasma,
             Where::Deep,
@@ -250,7 +265,7 @@ pub fn mid(s: Solvent, ctx: &Ctx) -> Dy {
             // A solvent that sublimes at the reference pressure is liquid only
             // under higher pressure, up to the critical point.
             let top = if d.tb > d.tt { d.tb } else { d.tc };
-            (d.tt + top.min(d.tc)) * Dy::ratio(1, 2)
+            (d.tt + top.min(d.tc)) * xyl_core::dyadic!(1, 2)
         }
     }
 }
@@ -268,11 +283,13 @@ pub fn pace(s: Solvent, t: Dy, ctx: &Ctx) -> Dy {
         if t > d.tc {
             // A supercritical fluid has no liquid range, so the barrier term
             // is dropped.
-            return t / constants().t_unit;
+            return t.div(&constants().t_unit).unwrap_or_default();
         }
         t = t.max(d.tt);
     }
-    (t / constants().t_unit) * (constants().solvent_barrier * (Dy::ONE - m / t.max(Dy::ONE))).exp()
+    (t.div(&constants().t_unit).unwrap_or_default())
+        * (constants().solvent_barrier * (Dy::ONE - m.div(&t.max(Dy::ONE)).unwrap_or_default()))
+            .exp()
 }
 
 /// A minded body's temperature (K): the middle of its solvent's range, where
@@ -284,7 +301,7 @@ pub fn body_temperature(s: Solvent, ctx: &Ctx) -> Dy {
 /// The pace of a minded body's chemistry: its body temperature (see
 /// [`body_temperature`]) over the unit temperature.
 pub fn body_pace(s: Solvent, ctx: &Ctx) -> Dy {
-    mid(s, ctx) / constants().t_unit
+    mid(s, ctx).div(&constants().t_unit).unwrap_or_default()
 }
 
 /// The region of chemistry space a medium falls in: plasma is plasmic; a
@@ -322,7 +339,9 @@ pub fn weak_bond_ev(s: Solvent, ctx: &Ctx) -> Dy {
     match s {
         Solvent::Melt => constants().melt_network_ev * ctx.sc.chem,
         Solvent::Plasma => Dy::ZERO,
-        Solvent::Volatile(v) => ctx.diagram(v).l_kj * Dy::int(1000) / constants().faraday,
+        Solvent::Volatile(v) => (ctx.diagram(v).l_kj * Dy::int(1000))
+            .div(&constants().faraday)
+            .unwrap_or_default(),
     }
 }
 
@@ -342,7 +361,7 @@ pub fn richness(w: &State, s: Solvent, t: Dy, z: Dy, ctx: &Ctx) -> Dy {
     if has(Species::NH3) || has(Species::N2) || w.air.has(Species::N2) {
         elements += Dy::ONE;
     }
-    let share = (elements / Dy::int(4)).clamp(Dy::ZERO, Dy::ONE);
+    let share = (elements.div(&(Dy::int(4))).unwrap_or_default()).clamp(Dy::ZERO, Dy::ONE);
     if s == Solvent::Plasma {
         // A plasma has no bonds; its structure is carried by fields.
         return share * c.plasma_window;
@@ -353,8 +372,18 @@ pub fn richness(w: &State, s: Solvent, t: Dy, z: Dy, ctx: &Ctx) -> Dy {
     } else {
         c.covalent_ev
     } * ctx.sc.chem;
-    let strong = Dy::ONE / (Dy::ONE + (-((strong_ev / kt - c.strong_kt) / Dy::int(4))).exp());
-    let x = ((weak_bond_ev(s, ctx) / kt).log() - c.weak_kt.log()) / Dy::ratio(3, 5);
+    let strong = (Dy::ONE)
+        .div(
+            &(Dy::ONE
+                + (-((strong_ev.div(&kt).unwrap_or_default() - c.strong_kt)
+                    .div(&(Dy::int(4)))
+                    .unwrap_or_default()))
+                .exp()),
+        )
+        .unwrap_or_default();
+    let x = ((weak_bond_ev(s, ctx).div(&kt).unwrap_or_default()).log() - c.weak_kt.log())
+        .div(&xyl_core::dyadic!(3, 5))
+        .unwrap_or_default();
     let weak = (-x.abs()).exp();
     share * strong * weak
 }
@@ -420,7 +449,7 @@ pub fn living_band(w: &State, s: Solvent, ctx: &Ctx) -> Dy {
             Dy::ZERO
         };
     }
-    let at = |t: Dy| ((t - w.t_surf) / span).clamp(Dy::ZERO, Dy::ONE);
+    let at = |t: Dy| ((t - w.t_surf).div(&span).unwrap_or_default()).clamp(Dy::ZERO, Dy::ONE);
     (at(hi) - at(lo)).max(Dy::ZERO)
 }
 

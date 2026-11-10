@@ -90,7 +90,7 @@ fn constants() -> &'static Constants {
         bits_per_monomer: Dy::int(2),
         // Discrimination d: a partner is distinguished by one contact, half
         // the solvent's cohesion per molecule (declared).
-        discrimination: Dy::ratio(1, 2),
+        discrimination: xyl_core::dyadic!(1, 2),
         // Open rulers, to be derived from each world's chemistry: the
         // information a mind's blueprint holds (bits), the body built per
         // monomer of genome, and the mass of a mind-bearing body (kg).
@@ -99,10 +99,10 @@ fn constants() -> &'static Constants {
         m_mind_kg: Dy::int(10),
         amu_kg: Dy::from_q(&crate::package::Si::amu_kg()),
         bits_per_generation: Dy::ONE,
-        reproductive_excess: Dy::ratio(1, 2),
+        reproductive_excess: xyl_core::dyadic!(1, 2),
         // Open ruler: the chance that a dying star's pulse sterilises an open
         // surface over 10 Gyr where the cosmic-ray crowd is 1.
-        sterilise_at_r0: Dy::ratio(1, 10),
+        sterilise_at_r0: xyl_core::dyadic!(1, 10),
     })
 }
 

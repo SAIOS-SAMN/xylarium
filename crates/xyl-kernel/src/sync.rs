@@ -52,7 +52,8 @@ pub fn living(u: &Universe<'_>) -> Vec<(usize, Step)> {
             let learn = k.effort.total();
             let forget = k.forgetting * held;
             s.z = (learn + forget > Dy::ZERO).then(|| deficit_dy(learn, forget));
-            s.r = (learn + forget > Dy::ZERO).then(|| (learn - forget) / (learn + forget));
+            s.r = (learn + forget > Dy::ZERO)
+                .then(|| (learn - forget).div(&(learn + forget)).unwrap_or_default());
         }
         if let Some(g) = u.civ.gauges.get(i) {
             s.frozen = Some(g.sentience * (Dy::ONE - g.consciousness));

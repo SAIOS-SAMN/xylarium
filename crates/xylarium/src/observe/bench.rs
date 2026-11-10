@@ -115,7 +115,7 @@ fn ratio(a: u32, b: u32) -> String {
     if b == 0 {
         "-".to_string()
     } else {
-        show(&Q::ratio(i64::from(a), i64::from(b)))
+        show(&Q::new(i64::from(a), i64::from(b)).unwrap_or(Q::ZERO))
     }
 }
 
@@ -236,7 +236,7 @@ pub(super) fn bench_read(seed: u64, lo: u32, hi: u32) -> Result<String, String> 
     let needs: Vec<String> = CANDIDATES
         .iter()
         .zip(&trials)
-        .map(|(name, t)| format!("{name} {}", -(t.log() / ln2)))
+        .map(|(name, t)| format!("{name} {}", -(t.log().div(&ln2).unwrap_or_default())))
         .collect();
     out.push_str(&format!(
         "Bits to the vessel's top (Z{vessel_top}) under each closed share: built {bits}; {}\n",

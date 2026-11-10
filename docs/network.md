@@ -1,9 +1,12 @@
 # Mycelium integration
 
-[Mycelium](https://github.com/SAIOS-SAMN/mycelium) is a separate public project;
-Xylarium will integrate against its tagged release `v0.3.0`, the stable
-contract the projects on the network pin to (its `mycelium-sdk` crate, the
-wire version and act table, and the shared physics library's law ids). The
+[Mycelium](https://github.com/SAIOS-SAMN/mycelium) is a separate public project.
+Xylarium integrates against its tagged releases, the stable contract the
+projects on the network pin to (its `mycelium-sdk` crate, the wire version
+and act table, and the shared physics library's law ids). The uplink is
+pinned to `v0.3.0`; `v0.4.0-rc.1` (wire `0x0200`, law version 5) is tagged
+and the move to it is open
+([#82](https://github.com/SAIOS-SAMN/xylarium/issues/82)). The
 network Mycelium
 runs is called the [hypha](glossary.md). This document describes Xylarium's side
 of the integration only. The design of Mycelium is documented in the Mycelium
@@ -38,6 +41,41 @@ a universe to the hypha is not part of this repository. Without an uplink,
   and the founding's census kind by kind (`Substrate::census`). The founding
   digest covers only the files the founding is derived from, so a change to a
   layer above the founding keeps the genesis.
+
+## The uplink
+
+The uplink is the one program that links Mycelium. It is built on
+`mycelium-sdk` and on this workspace's crates, and lives outside this
+repository.
+
+- **Where.** A separate git repository, `xylarium-uplink`, kept beside the
+  kernel checkout. It is private and not yet published or hosted remotely;
+  it is to be published with Mycelium's shared libraries.
+- **What.** One crate, `xyl-uplink`: the ancients' house on a hypha, the
+  universal clock, the upward ledger, the endowment and the domain
+  commands (`xyl-uplink run` for live play with the house as a
+  `run::Link`, `xyl-uplink found-universe` to found a domain).
+- **Dependencies.** `mycelium-sdk` pinned by git tag (`v0.3.0`), and
+  `xyl-core`, `xyl-cosmos`, `xyl-kernel` and `xylarium` by relative path to
+  the kernel checkout.
+- **Status against v0.4.0-rc.1.** Not built: the release changes the wire
+  (`0x0200`) and the law version (5), so the uplink cannot speak to a
+  v0.4.0 hypha until it is moved (#82). The SDK's own conformance suite,
+  run from this host with the kernel profile against Mycelium's test mesh,
+  conforms in process and on the network (2026-11-10). That run signs
+  with a scratch test voice: it is not a xylarium signing.
+- **Signing the Concordance.** A kernel signs a clause by presenting its
+  own reconstruction of each fixture under its key. Xylarium has signed
+  none: it implements LAW-COORDINATE at v1 only, and has no FORMS-PASSAGE
+  v4, FORMS-COUPLING or FORMS-TURNING reading. FORMS-PASSAGE v4 is a
+  network clause, which a hosted domain's crossings need, so it is read
+  first (#136). Enabling or vetoing the kernel clauses is the operator's
+  decision.
+- **Standards.** The uplink is to follow the same layout and process as
+  this repository and Mycelium: a hosted repository, the shared commit
+  identity, dependencies on the kernel by git rather than by path,
+  AGENTS.md, CONTRIBUTING.md, a CHANGELOG, and the same checks
+  ([#175](https://github.com/SAIOS-SAMN/xylarium/issues/175)).
 
 ## The Link seam
 
@@ -201,6 +239,8 @@ in-game costs (ley lines, tolls, folds) are kept in physical units.
    network, each mouth is to carry a freshness in final-point advances, and
    crossings are to be applied at an anchor so that their reconciliation
    closes.
-5. **A `xyl-hypha` crate.** A workspace crate pinned to Mycelium `v0.3.0`
-   by git tag that implements `run::Link` over the `mycelium-sdk` session is
-   planned ([#21](https://github.com/SAIOS-SAMN/xylarium/issues/21)).
+5. **The uplink on v0.4.0.** Move the uplink's pin to `mycelium-sdk`
+   v0.4.0 and pass the kernel profile's conformance read from the uplink
+   itself ([#82](https://github.com/SAIOS-SAMN/xylarium/issues/82)); the
+   uplink implements `run::Link` over the SDK session outside this
+   workspace (#21, closed).

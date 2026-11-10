@@ -28,9 +28,12 @@ fn rate_at_kpc(s: &Star, at_kpc: Dy) -> Dy {
 /// Returns the turning (radians per ring) that a body of `suns` gives a
 /// neighbour `span_kpc` away: the master equation's pair term, the turning
 /// law (`turning::turning_dy`) evaluated at the span (at least 1e-9 kpc),
-/// the mass and span read in core masses and galaxy units at the boundary.
+/// the mass read in core masses at the boundary and both read in the galaxy
+/// tier's calibre (`Tier::hold_of_core`).
 fn pair_turning(suns: Dy, span_kpc: Dy) -> Dy {
-    let m = Dy::from_q(&xyl_cosmos::galaxy::core_masses_of_suns(&suns.to_q()));
+    let m = Dy::from_q(
+        &Tier::Galaxy.hold_of_core(&xyl_cosmos::galaxy::core_masses_of_suns(&suns.to_q())),
+    );
     let span = units_of_kpc_dy(span_kpc.max(Dy::sci(1, -9)));
     xyl_cosmos::turning::turning_dy(m, span, Tier::Galaxy)
 }

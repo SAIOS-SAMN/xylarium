@@ -214,6 +214,15 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The turning law reads its hold in the tier's calibre (#123 part 1,
+  ruling (B)): `turning::turning` and `turning_dy` take a hold in the
+  tier's calibre and dilate hold and reach together to `r_g` for the rate;
+  `xyl_core::units::Tier::hold_of_core` brings a core-mass hold (suns or
+  kilograms at the SI seam) into a tier as `M / 60^p`. The systems'
+  settling and forced eccentricities, the constellations' pair turning and
+  chronometry's galaxy wells read so. The galaxy's own rates
+  (`galaxy::inside_mass`, the founding's hold) are now read in the galaxy
+  calibre, not against a reach in `r_g`.
 - Reaches are read in tier units (cluster and galaxy units), never rings
   (#115); no formula changed.
 - "Ring" means only the bell's harmonic (docs/model.md, Units); the

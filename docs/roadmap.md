@@ -31,7 +31,7 @@ hold:
 
 M3 runs in this order. Each issue states its sites, its evidence and when
 it is done.
-1. The calibre in code: [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) (part 1, the turning law; part 2, the mixed
+1. The calibre in code: [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) (part 1, the turning law, built; part 2, the mixed
    entries), then [#129](https://github.com/SAIOS-SAMN/xylarium/issues/129) (worlds), [#145](https://github.com/SAIOS-SAMN/xylarium/issues/145) (star mass) and [#134](https://github.com/SAIOS-SAMN/xylarium/issues/134) (the interior hold).
 2. [#116](https://github.com/SAIOS-SAMN/xylarium/issues/116) (the hold inside an orbit) and [#131](https://github.com/SAIOS-SAMN/xylarium/issues/131) (the ocean's echo share).
 3. [#113](https://github.com/SAIOS-SAMN/xylarium/issues/113) step 1, then T20 on it ([#126](https://github.com/SAIOS-SAMN/xylarium/pull/126)).

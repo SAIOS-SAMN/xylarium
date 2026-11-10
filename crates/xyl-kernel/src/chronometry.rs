@@ -238,21 +238,19 @@ pub struct Chronometry {
     pub anchor: Option<Point>,
 }
 
-/// The rate of a well of mass `inside_rg` at radius `r_rg` (both in r_g):
+/// The rate of a well of hold `inside` at radius `r`, both in one calibre:
 /// r / (r + M), the complement of the deficit share M / (r + M)
 /// (`shares::deficit`), exact; 1 where the deficit is refused (r + M zero or
 /// a negative part).
-fn well(r_rg: &Q, inside_rg: &Q) -> Q {
-    &Q::ONE - &xyl_core::shares::deficit(inside_rg, r_rg).unwrap_or(Q::ZERO)
+fn well(r: &Q, inside: &Q) -> Q {
+    &Q::ONE - &xyl_core::shares::deficit(inside, r).unwrap_or(Q::ZERO)
 }
 
 impl Chronometry {
     /// The keepers of a founding: the epicenter, then for each galactic core
     /// its hub, deep core, inner mantle and outer rim. The chain starts empty.
     pub fn of(origin: &Origin) -> Chronometry {
-        // One kpc in r_g: the galaxy tier's kpc (`galaxy::units_of_kpc`) times the
-        // tier's unit in r_g; one cluster unit in kpc.
-        let kpc_rg = &xyl_cosmos::galaxy::units_of_kpc(&Q::ONE) * &Tier::Galaxy.in_rg();
+        // One cluster unit in kpc.
         let cluster_kpc = crate::transit::tier_m(Tier::Cluster)
             .checked_div(&xyl_cosmos::package::Si::kpc())
             .unwrap_or(Q::ONE);
@@ -291,8 +289,9 @@ impl Chronometry {
                 .iter()
                 .filter(|o| o.index != s.index && dist(o) < d)
                 .fold(Q::ZERO, |a, o| &a + &mass(o));
-            // Masses are core masses (r_g of the core, G = c = 1).
-            let galaxy_rate = well(&(&d * &kpc_rg), &nearer);
+            // The well is read in the cluster tier's calibre: the core's reach
+            // in cluster units against the founding's holds.
+            let galaxy_rate = well(&s.reach, &nearer);
             let scale = s.scale().to_q();
             // The hub is the galactic core, counting in the galaxy's echo.
             c.keepers.push(Keeper {
@@ -308,7 +307,6 @@ impl Chronometry {
             // The shells' reaches are galaxy units (60^5 r_g); the
             // distances from the epicenter stay in kpc, converted at the
             // boundary `galaxy::kpc_of_units`.
-            let ring_rg = Tier::Galaxy.in_rg();
             for (shell, r_home) in [
                 (Shell::Core, xyl_cosmos::galaxy::nucleus_reach()),
                 (Shell::Mantle, xyl_cosmos::galaxy::core_reach()),
@@ -317,7 +315,9 @@ impl Chronometry {
                 let r_rings = &r_home * &scale;
                 let r = xyl_cosmos::galaxy::kpc_of_units(&r_rings);
                 let inside = &xyl_cosmos::galaxy::inside_mass(&r_home) * &s.mass_ratio();
-                let rate = &galaxy_rate * &well(&(&r_rings * &ring_rg), &inside);
+                // Read in the galaxy tier's calibre: the shell's reach in
+                // galaxy units against the hold inside it.
+                let rate = &galaxy_rate * &well(&r_rings, &inside);
                 c.keepers.push(Keeper {
                     galaxy: Some(s.index),
                     shell,

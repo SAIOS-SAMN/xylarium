@@ -28,7 +28,8 @@ pub(super) fn rg_units() -> (Dy, Dy) {
 }
 
 /// The system tier's unit in r_g (60, `Tier::System`): the settling holds
-/// its reaches in r_g and reads the turning law in that tier.
+/// its reaches and its holds (core masses) in r_g, and reads the turning law
+/// in that tier's calibre, both divided by it.
 pub(super) fn sixty() -> Dy {
     Dy::from_q(&Tier::System.in_rg())
 }
@@ -92,7 +93,7 @@ impl Pairs<'_> {
     /// The turning law about the anchor at reach `a` (r_g), radians per
     /// ring (`turning::turning_dy`).
     fn omega(&self, a: Dy) -> Dy {
-        crate::turning::turning_dy(self.anchor, a / sixty(), Tier::System)
+        crate::turning::turning_dy(self.anchor / sixty(), a / sixty(), Tier::System)
     }
 
     /// A pair's kick over `gyr`: `eps (floor(N / q) c + N mod q)`, the
@@ -111,7 +112,7 @@ impl Pairs<'_> {
             return Dy::ZERO;
         }
         // The pair's own turning law across its gap, over the rates' gap.
-        let eps = crate::turning::turning_dy(mm, r / sixty(), Tier::System) / dw;
+        let eps = crate::turning::turning_dy(mm / sixty(), r / sixty(), Tier::System) / dw;
         let n = gyr * self.per_gyr * dw;
         let s = w1.max(w2) / dw;
         let s = s - Dy::int(s.trunc_i64());

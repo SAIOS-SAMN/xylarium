@@ -162,8 +162,12 @@ Ruled (B) on 2026-11-06 ([#123](https://github.com/SAIOS-SAMN/xylarium/issues/12
   `60^(p_k) r_g`.
 - **The ruling (B)**: masses dilate with lengths per tier. Each tier reads
   `M_k / (R_k + M_k)`; a hold given in core masses (from suns or kilograms
-  at the SI seam) enters tier `k` as `M_core / 60^(p_k)`; a hold the
-  founding gives is already in its tier's calibre.
+  at the SI seam) enters tier `k` as `M_core / 60^(p_k)`
+  (`xyl_core::units::Tier::hold_of_core`); a hold the founding gives is
+  already in its tier's calibre. Part 1 is built: the turning law
+  (`turning::turning`, `turning::turning_dy`), the systems' settling and
+  forced eccentricities, the constellations' pair turning and
+  chronometry's wells read their holds in the tier's calibre.
 - **Dimensional capacity**: the number of components a reading holds as
   named, separate parts (turning planes, a vortex's fibres, twist, writhe
   and linking, the coordinate's lanes), each in its calibre. A change of
@@ -172,7 +176,9 @@ Ruled (B) on 2026-11-06 ([#123](https://github.com/SAIOS-SAMN/xylarium/issues/12
 - **Every equation names its calibre** in [EQUATIONS.md](EQUATIONS.md), and
   every reading is checked for magnitude in its calibre, not only for
   having moved (CONTRIBUTING.md, Verification).
-- **Open**: the entries tagged mixed in EQUATIONS.md, the star's own mass
+- **Open (part 2)**: the entries tagged mixed in EQUATIONS.md (the star's
+  compactness and ignition, the cut, the manifold and the worlds,
+  [#129](https://github.com/SAIOS-SAMN/xylarium/issues/129)), the star's own mass
   ([#145](https://github.com/SAIOS-SAMN/xylarium/issues/145)) and the bead's reading at two tiers ([#36](https://github.com/SAIOS-SAMN/xylarium/issues/36)).
 
 ## 3. The bounce and the founding

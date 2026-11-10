@@ -119,7 +119,7 @@ fn forced_eccentricities(settled: &[Embryo], anchor: Dy, radius_rg: Dy, g_mass: 
     // its unit, is read.
     let rate = |a_r: &Q| {
         let a = Dy::from_q(a_r) * radius_rg;
-        crate::turning::turning_dy(anchor, a / sixty(), Tier::System)
+        crate::turning::turning_dy(anchor / sixty(), a / sixty(), Tier::System)
     };
     (0..settled.len())
         .map(|k| {

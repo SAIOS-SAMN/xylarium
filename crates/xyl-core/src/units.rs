@@ -57,6 +57,15 @@ impl Tier {
         }
     }
 
+    /// A hold of `core` core masses read in this tier's calibre: reach and
+    /// hold dilate together (docs/model.md, Calibre and dimensional
+    /// capacity), so a core mass, one `r_g` of length, is `1 / in_rg` of the
+    /// tier's unit. Exact; the share `M / (R + M)` of a hold and a reach read
+    /// in one calibre is the same in every calibre.
+    pub fn hold_of_core(self, core: &Q) -> Q {
+        core.checked_div(&self.in_rg()).unwrap_or(Q::ZERO)
+    }
+
     /// The tier's unit in `r_g`: 60 raised to the tier's power, exact.
     pub fn in_rg(self) -> Q {
         let p = self.power();
@@ -89,5 +98,30 @@ impl Units {
     /// A length in metres, read in a tier's unit. `None` where `r_g` is zero.
     pub fn in_tier(&self, metres: &Q, tier: Tier) -> Option<Q> {
         metres.checked_div(&(&self.r_g_m * &tier.in_rg()))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_hold_read_in_any_calibre_keeps_its_share() {
+        // A hold of 3/2 core masses at 7/3 r_g keeps its share in every tier's
+        // calibre, its reach and hold dilated together.
+        let (core, r_rg) = (Q::ratio(3, 2), Q::ratio(7, 3));
+        let share = crate::shares::deficit(&core, &r_rg);
+        for tier in [
+            Tier::Universe,
+            Tier::Cluster,
+            Tier::Galaxy,
+            Tier::System,
+            Tier::Planet,
+        ] {
+            let hold = tier.hold_of_core(&core);
+            let reach = r_rg.checked_div(&tier.in_rg()).unwrap();
+            assert_eq!(crate::shares::deficit(&hold, &reach), share);
+            assert_eq!(&hold * &tier.in_rg(), core);
+        }
     }
 }

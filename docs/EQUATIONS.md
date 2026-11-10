@@ -668,9 +668,11 @@ another crate. Laws are composed from shares (ratios of the form
   rings, is taken as the core's state 1; the founded beads total 0.4008
   core masses, so the tier's units await a ruling (#116).
 - Turning law (`turning::turning`, `turning::turning_dy`):
-  `omega = delta(<r) bell / r` radians per ring, with `r` in `r_g`
-  (`r Tier::in_rg`), `delta(<r) = M(<r) / (r + M(<r))`, `M` in core masses
-  and `bell` in `r_g / c` (`Anchor::bell`). Calibre: core (`r_g`). Status: built.
+  `omega = delta(<r) bell / r` radians per ring, with
+  `delta(<r) = M(<r) / (r + M(<r))` read in the tier's calibre (`M` the hold
+  in that calibre, a core-mass hold entering as `M / 60^p`,
+  `Tier::hold_of_core`), `r` dilated to `r_g` for the rate and `bell` in
+  `r_g / c` (`Anchor::bell`). Calibre: the tier's. Status: built.
 - Piece of gas (`formation::cooling`): `lambda = (state / unit) / W`; the
   agitation is `a0 = (p - delta) / p` with `delta = h / (R + h)` and
   `h = 1 + held share`; `e = sum s_z e_z` and `mu = lambda e`; `n = 1`
@@ -739,7 +741,7 @@ another crate. Laws are composed from shares (ratios of the form
   `galaxy::ring_mass`); `s = t / (1 + t)` with
   `t = age / cooling time` (`galaxy::birth`); `sigma = h nu s 2d / (1 + d)`;
   `vz = -sigma ln(1 - u)`, `A = vz / nu`, period `2 pi / nu`, exposure
-  `atan(h / A) / (pi / 2)` where `A > h`, else 1. Calibre: core (`r_g`). Status: built.
+  `atan(h / A) / (pi / 2)` where `A > h`, else 1. Calibre: the tier's. Status: built.
 
 ## 6. Stars and systems
 
@@ -818,13 +820,14 @@ another crate. Laws are composed from shares (ratios of the form
   holds at least 10 world masses, by a declared gathering law. Calibre: SI seam. Status:
   placeholder.
 - Settling rate (`systems::settle_about`): the turning law
-  `omega(A) = bell [M / (A + M)] / A` per ring with `A` in `r_g`
-  (`turning::turning_dy`). Calibre: core (`r_g`). Status: built.
+  `omega(A) = bell [M / (A + M)] / A` per ring, the star's hold and the
+  reach both read in the system tier's calibre (`M / 60`, `A / 60`;
+  `turning::turning_dy`), the same share as in `r_g`. Calibre: the tier's. Status: built.
 - Kick (`systems::settle_about`): `eps = omega_m(r) / |dw|`, the turning law
   about the pair's mass `m` across its gap `r` (`turning::turning_dy`), and
   `N = age |dw|` with the age in rings (`circuit::rings_of_gyr_dy`); `q` is the least continued-fraction denominator with
   `|s - p/q| N q <= 1`, `c = |1 - 2 frac(q psi_0)|`, and the swing is
-  `eps (floor(N / q) c + N mod q)`. Calibre: core (`r_g`). Status: built.
+  `eps (floor(N / q) c + N mod q)`. Calibre: the tier's. Status: built.
 - Merge (`systems::settle_about`): the merge age is the first age with
   `swing x inner / gap >= 1`, found by 48 halvings to the 30 Gyr horizon;
   merges by the settled age (3 Gyr) combine mass, reach and phase

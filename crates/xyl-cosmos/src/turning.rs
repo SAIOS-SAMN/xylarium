@@ -1,17 +1,23 @@
 //! The turning law (docs/model.md): the rate at which a body turns about
 //! its anchor, from the deficit of the mass inside its radius.
 //!
-//! Units: G = c = M_core = 1. Lengths are in a tier's unit
-//! (`xyl_core::units::Tier`) and converted to r_g of the universal core by
-//! `Tier::in_rg`; masses are in core masses (the universal core is 1); the
-//! bell is `circuit::anchor().bell`, in units of r_g / c; rates are radians
-//! per ring (one ring one bell).
+//! Units: G = c = M_core = 1. A tier's turning reads its reach and its hold
+//! in that tier's calibre (`xyl_core::units::Tier`; docs/model.md, Calibre
+//! and dimensional capacity): both in the tier's unit, `60^p r_g`, dilated
+//! together, so the share is the same in every calibre. A hold that starts
+//! in core masses (from suns or kilograms at the SI seam) is read in the
+//! tier's calibre by `Tier::hold_of_core`; a hold the founding gives (the
+//! hold inside an orbit, `galaxy::inside_mass`) is already in it. The bell
+//! is `circuit::anchor().bell`, in units of r_g / c; rates are radians per
+//! ring (one ring one bell).
 //!
 //! - Deficit: `xyl_core::shares::deficit` = M(<r) / (r + M(<r)), M and r in
-//!   r_g, exact, at most 1; the same share by which the well slows clocks.
+//!   one calibre, exact, at most 1; the same share by which the well slows
+//!   clocks.
 //! - Turning ([`turning`] exact, [`turning_dy`] on readings): `omega =
-//!   delta(<r) bell / r` radians per ring, with `r` in r_g and
-//!   `delta = M / (r + M)`. With c = 1 the speed `omega r / bell = delta`
+//!   delta(<r) bell / r` radians per ring, with `delta = M / (r + M)` read in
+//!   the tier's calibre and `r` dilated to r_g for the rate (the bell is in
+//!   r_g / c). With c = 1 the speed `omega r / bell = delta`
 //!   stays below light; the same law applies at every tier. Far from a point
 //!   mass `delta` goes as M / r. These are the law's two forms, one per
 //!   carrier; every other rate reads one of them.
@@ -59,10 +65,11 @@ fn turning_rg(inside: &Q, r_rg: &Q) -> Q {
 }
 
 /// The turning law, exact: the rate in radians per ring of a body at `r`
-/// units of `tier` about `inside` core masses, `omega = delta bell / r` with
-/// `r` read in r_g (`r Tier::in_rg`), `delta = M / (r + M)` the deficit
-/// share and `bell` the ring in r_g / c (`circuit::anchor().bell`). A
-/// non-positive radius, or no founding, gives zero.
+/// units of `tier` about a hold `inside` in that tier's calibre,
+/// `omega = delta bell / r`, with `delta = M / (r + M)` read in the tier's
+/// calibre, `r` dilated to r_g for the rate (`r Tier::in_rg`) and `bell` the
+/// ring in r_g / c (`circuit::anchor().bell`). A non-positive radius, or no
+/// founding, gives zero.
 ///
 /// # Examples
 ///
@@ -74,11 +81,11 @@ fn turning_rg(inside: &Q, r_rg: &Q) -> Q {
 /// assert_eq!(xyl_cosmos::turning::turning(&Q::ONE, &Q::ZERO, Tier::Galaxy), Q::ZERO);
 /// ```
 pub fn turning(inside: &Q, r: &Q, tier: Tier) -> Q {
-    turning_rg(inside, &(r * &tier.in_rg()))
+    turning_rg(&(inside * &tier.in_rg()), &(r * &tier.in_rg()))
 }
 
 /// The turning law in dyadics, for per-pair evaluation: radians per ring at
-/// `r` units of `tier` about `inside` core masses, `omega = delta bell / r`
+/// `r` units of `tier` about a hold `inside` in that tier's calibre, `omega = delta bell / r`
 /// as in [`turning`], the deficit read by `xyl_core::shares::deficit_dy`. A
 /// non-positive radius, or no founding, gives zero.
 pub fn turning_dy(inside: Dy, r: Dy, tier: Tier) -> Dy {
@@ -97,8 +104,9 @@ pub fn turning_dy(inside: Dy, r: Dy, tier: Tier) -> Dy {
     if r.signum() <= 0 {
         return Dy::ZERO;
     }
-    let r_rg = r * Dy::from_q(&tier.in_rg());
-    bell * deficit_dy(inside, r_rg) / r_rg
+    let unit = Dy::from_q(&tier.in_rg());
+    let r_rg = r * unit;
+    bell * deficit_dy(inside * unit, r_rg) / r_rg
 }
 
 /// `inside_kg` kilograms and `r_m` metres in core masses and r_g (boundary).
@@ -205,10 +213,13 @@ mod tests {
         for k in 1..=12 {
             let r = Q::ratio(k, 4);
             let w = turning(&m, &r, Tier::Galaxy);
-            // The speed `omega r / bell` is the deficit share, below light.
-            let r_rg = &r * &Tier::Galaxy.in_rg();
+            // The speed `omega r / bell` is the deficit share read in the
+            // tier's calibre, the same as in r_g with both dilated.
+            let unit = Tier::Galaxy.in_rg();
+            let r_rg = &r * &unit;
             let v = (&w * &r_rg).checked_div(&bell).unwrap();
-            assert_eq!(Some(v.clone()), deficit(&m, &r_rg));
+            assert_eq!(Some(v.clone()), deficit(&m, &r));
+            assert_eq!(deficit(&m, &r), deficit(&(&m * &unit), &r_rg));
             assert!(v > Q::ZERO && v < Q::ONE);
             // The rate falls outward about a fixed mass.
             if let Some(prev) = last {
@@ -229,7 +240,9 @@ mod tests {
         assert!(gap <= &exact * &Q::ratio(1, 1 << 40), "{gap}");
         // The SI boundary reads the same law: degrees per ring over 180 / pi.
         let units = crate::chain::units();
-        let kg = &m * &crate::package::core_kg();
+        // The SI side carries the hold in core masses: the tier's hold times
+        // the tier's unit in r_g.
+        let kg = &(&m * &Tier::Galaxy.in_rg()) * &crate::package::core_kg();
         let metres = &(&r * &Tier::Galaxy.in_rg()) * &units.r_g_m;
         let pi = xyl_core::certified::pi(80).mid();
         let si = turning_si(&kg, &metres);

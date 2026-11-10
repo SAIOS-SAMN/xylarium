@@ -124,7 +124,8 @@ impl Star {
 
     /// The galaxy's turning rate (radians per ring) at radius `own` (galaxy
     /// rings) in the star's galaxy: the turning law over the home-equivalent
-    /// mass inside times the hole ratio (core masses), as for the star's
+    /// mass inside times the hole ratio (the founding's hold, already in the
+    /// galaxy tier's calibre), as for the star's
     /// orbital rate (used for constellation shear). At the star's own orbit
     /// radius this is the stored `orbit.rate`; read that instead.
     pub fn rate_at_dy(&self, own: Dy) -> Dy {
@@ -342,7 +343,7 @@ fn placement(local: u64, nucleus: bool) -> Placement {
 
 /// A star's turning rate (radians per ring): the turning law
 /// `omega = delta bell / r` over the home-equivalent mass inside `radius`
-/// (core masses) times the hole ratio, at the scaled radius
+/// (the founding's hold, in the galaxy tier's calibre) times the hole ratio, at the scaled radius
 /// `radius x scale` (galaxy units); both radii are at least 1e-6 galaxy
 /// rings and rounded down to the 2^-60 grid.
 fn turning_rate(radius: Dy, scale: Dy, mass_ratio: Dy) -> Dy {

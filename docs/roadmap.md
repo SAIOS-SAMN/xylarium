@@ -356,8 +356,11 @@ where it belongs to one.
     plane and band. Done: vent 1, the occupancy per band and per kind
     (`atoms::occupancy`), the unpaired count read from it; no reading moved.
     Vent 2 on the axis plane: occupancy by axis level and side
-    (`atoms::axis_sides`), the polarity read from it; no reading moved. Next:
-    vent 3 (windings in ZZ); the isoclinic split with the spin (#128).
+    (`atoms::axis_sides`), the polarity read from it; vent 3 on the axis
+    plane: the open and held states' axis weights in ZZ
+    (`atoms::axis_weights`); no reading moved. Next: vent 5 (the delimiter
+    retired, the first to move readings); the isoclinic split and signs
+    with the spin (#128).
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

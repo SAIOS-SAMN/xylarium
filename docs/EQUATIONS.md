@@ -738,8 +738,10 @@ another crate. Laws are composed from shares (ratios of the form
   `atoms::Occupancy`, `atoms::band_occupancy`); per plane `2P_k`,
   `U_k`, `t_k = U_k / 2P_k` (built on the axis plane by level `m0`, level
   multiplicity `C(l - |m0| + 9, 9)`: `atoms::Band::axis_occupancy`,
-  `atoms::axis_sides`; the isoclinic split awaits the spin, #128); each orientation's winding in ZZ with its side,
-  held and open its reading mod 2; pairing and stripping as coboundaries,
+  `atoms::axis_sides`; the isoclinic split awaits the spin, #128); the axis weights in ZZ, open `sum m0 U_m0 = A` and held
+  `sum 2 m0 P_m0` (built, `atoms::axis_weights`; per band `-2 A_b` at
+  least half full, `0` below), held and open the
+  isoclinic winding read mod 2; pairing and stripping as coboundaries,
   the occupancy, the capacity and the windings' total the class; every law
   reading the held count `W` re-read on the capacity; seams
   `u(z - 1) + 1 - u(z) < 0` read per band and plane. Calibre: none. Status:

@@ -245,16 +245,23 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
                 },
                 a.sealed()
             ));
-            if let Some(sides) = xyl_cosmos::atoms::axis_sides(z) {
+            if let (Some(sides), Some(weights)) = (
+                xyl_cosmos::atoms::axis_sides(z),
+                xyl_cosmos::atoms::axis_weights(z),
+            ) {
                 let side = |o: &xyl_cosmos::atoms::Occupancy| {
                     format!("E {} U {} 2P {}", o.room, o.open, o.held())
                 };
                 rows.push_str(&format!(
-                    "         axis plane: Z side ({}), neutral ({}), Q side ({}); polarity A {}\n",
+                    concat!(
+                        "         axis plane: Z side ({}), neutral ({}), Q side ({}); ",
+                        "weights: open (A) {}, held {}\n"
+                    ),
                     side(&sides[0]),
                     side(&sides[1]),
                     side(&sides[2]),
-                    xyl_cosmos::atoms::axis_polarity(z).unwrap_or(0)
+                    weights.0,
+                    weights.1
                 ));
             }
         }

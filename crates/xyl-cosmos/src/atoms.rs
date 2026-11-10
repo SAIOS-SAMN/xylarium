@@ -28,7 +28,8 @@
 //! (`R_Q = 6Z - 3 cap`, `rho_Q = (2Z - cap) / cap`), and `occupancy` /
 //! `band_occupancy` (axiom 9: each band's room, open states and pairs, over
 //! every band reached; `cap = E + U + 2P`), `Band::axis_occupancy` and
-//! `axis_sides` (the axis plane by level `m0` and by side). `atom` returns
+//! `axis_sides` (the axis plane by level `m0` and by side), and `axis_weights`
+//! (the open and held states' axis weights in ZZ). `atom` returns
 //! None for Z = 0 or a cluster id. Seals fall at Z = 2, 28, 208, 1092;
 //! `vessel` returns (lower, upper): the last seal within `TOP_Z`, and the
 //! heaviest kind below it whose single-nucleon peel releases,
@@ -157,14 +158,37 @@ impl Band {
             .collect()
     }
 
-    /// The band's axis polarity (T7): the sum of the axis weights `m0` of its
-    /// open states, read from [`Band::axis_occupancy`].
-    pub fn axis_polarity(&self) -> i64 {
+    /// The band's axis weights in ZZ (#158, vent 3): its open states' axis
+    /// weight `sum m0 U_m0` and its held states' `sum 2 m0 P_m0`. A pair is a
+    /// state and its plane antipode, so its twist charges cancel on the
+    /// isoclinic planes, but its two electrons share the level `m0` and weigh
+    /// `2 m0` on the axis plane.
+    pub fn axis_weights(&self) -> (i64, i64) {
         self.axis_occupancy()
             .iter()
-            .map(|(m0, o)| m0 * i64::from(o.open))
-            .sum()
+            .fold((0, 0), |(open, held), (m0, o)| {
+                (
+                    open + m0 * i64::from(o.open),
+                    held + m0 * i64::from(o.held()),
+                )
+            })
     }
+
+    /// The band's axis polarity (T7): the axis weight of its open states
+    /// ([`Band::axis_weights`]).
+    pub fn axis_polarity(&self) -> i64 {
+        self.axis_weights().0
+    }
+}
+
+/// A kind's axis weights in ZZ over every band it reaches (#158, vent 3):
+/// the open states' `sum m0 U_m0`, which is the axis polarity `A`, and the
+/// held states' `sum 2 m0 P_m0`. `None` for z = 0 or a cluster.
+pub fn axis_weights(z: u32) -> Option<(i64, i64)> {
+    Some(band_occupancy(z)?.iter().fold((0, 0), |(o, h), (b, _)| {
+        let (bo, bh) = b.axis_weights();
+        (o + bo, h + bh)
+    }))
 }
 
 /// A kind's occupancy on the axis plane by side, summed over every band it
@@ -697,11 +721,33 @@ mod tests {
                     let orientations = choose(u64::from(b.l) - m0.unsigned_abs() + 9, 9);
                     assert_eq!(u64::from(lo.capacity()), 2 * orientations, "Z {z}");
                 }
+                // At least half full, every orientation holds one electron and
+                // the levels are symmetric, so the held weight is minus twice
+                // the open weight; below half full there is no pair.
+                let (open_b, held_b) = b.axis_weights();
+                if b.electrons >= crate::fibres::directions(b.l) {
+                    assert_eq!(held_b, -2 * open_b, "Z {z} band {}{}", b.n, b.l);
+                } else {
+                    assert_eq!(held_b, 0, "Z {z} band {}{}", b.n, b.l);
+                }
             }
             // The axis occupancy reproduces the polarity counted by singles
             // alone (the rule before the occupancy, kept here as a reference).
             for (b, _) in &bands {
                 assert_eq!(b.axis_polarity(), polarity_by_singles(b), "Z {z}");
+            }
+            // The open weight is the polarity; the occupied states' weight is
+            // the sum of the two; a seal is balanced on the axis.
+            let (open_w, held_w) = axis_weights(z).unwrap();
+            assert_eq!(Some(open_w), axis_polarity(z), "Z {z}");
+            let occupied_w: i64 = bands
+                .iter()
+                .flat_map(|(b, _)| b.axis_occupancy())
+                .map(|(m0, lo)| m0 * i64::from(lo.occupied()))
+                .sum();
+            assert_eq!(open_w + held_w, occupied_w, "Z {z}");
+            if atom(z).is_some_and(|a| a.sealed()) {
+                assert_eq!((open_w, held_w), (0, 0), "Z {z}");
             }
             // The sides sum to the kind, and the axis polarity is the open
             // states' axis weight.

@@ -1021,7 +1021,10 @@ capacity (`atoms::Atom`, `atoms::capacity`): bands `(n, l)`, each
 orientation empty, single or paired; each state's weight `m` in Z^6 over
 the six planes; each orientation a Hopf fibre over `CP^5`. Held and open
 keep only whether a fibre's turnings cancel, a counter-turning pair, or
-not, a single electron: the winding in ZZ read mod 2. The bands, the
+not, a single electron: on the isoclinic planes, the winding in ZZ read
+mod 2 (a pair is a state and its plane antipode, twist charges `c` and
+`-c`); on the axis plane a pair does not cancel, its two electrons
+sharing the level `m0`. The bands, the
 planes, the signed windings and the room are gone before any law reads
 them, so the manifold's topology and its cohomology are read as two
 dimensions.
@@ -1048,10 +1051,17 @@ dimensions.
      isoclinic planes are not split: at rest no state's isoclinic plane is
      chosen (T6, T7), so their split waits on the spin's per-plane turning
      ([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128)).
-  3. **Windings, not parity.** Each orientation's winding is kept in ZZ
-     with its side, Z or Q (the sign of `m0`): a pair's turnings cancel, a
-     single electron's carries its sign. Held and open are the winding read
-     mod 2.
+  3. **Windings, not parity.** Each orientation's winding is kept in ZZ.
+     On the axis plane the weights are built (`atoms::axis_weights`): the
+     open states weigh `sum m0 U_m0`, the axis polarity `A`, and the held
+     states `sum 2 m0 P_m0`, a pair's two electrons sharing the level `m0`;
+     a seal is balanced, both zero. A band at least half full has every
+     orientation occupied once and its levels symmetric, so its held weight
+     is minus twice its open weight; a band below half has none
+     (`atoms::tests`). On the isoclinic planes
+     a pair's twist charges cancel (`c`, `-c`), and a single's sign is
+     symmetric at rest, so it waits on the spin
+     ([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128)).
   4. **Classes, not counts** ([#150](https://github.com/SAIOS-SAMN/xylarium/issues/150)). The occupancy is a cochain
      over the kind's fibres. Pairing and stripping move states between the
      poles with the capacity fixed: they are coboundaries. What a kind
@@ -1084,7 +1094,9 @@ dimensions.
   1. States per band (vent 1). Done: their sums equal today's `U` and the
      room, so no reading moved.
   2. States per plane (vent 2). Done on the axis plane, no reading moved;
-     the isoclinic split waits on the spin (#128). Then windings (vent 3).
+     the isoclinic split waits on the spin (#128). Windings (vent 3): done
+     on the axis plane, no reading moved; the isoclinic signs wait on the
+     spin.
   3. The delimiter retired (vent 5): the first vent that moves readings.
   4. Classes (vent 4), with the chain's cohomology ([#150](https://github.com/SAIOS-SAMN/xylarium/issues/150)).
   5. Seams (vent 6) and received turning (vent 7).

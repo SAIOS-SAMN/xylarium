@@ -1032,7 +1032,11 @@ dimensions.
      orientations and paired orientations apart: its room, its open states
      and its held states. They sum to the room `cap - Z`, to `U` and to
      `2P = Z - U`: `cap = E + U + 2P` per kind (axiom 9), readings only (the
-     hold and the room named apart, [#151](https://github.com/SAIOS-SAMN/xylarium/issues/151)).
+     hold and the room named apart, [#151](https://github.com/SAIOS-SAMN/xylarium/issues/151)). Built: `atoms::band_occupancy`
+     over every band reached, empty bands included, and `atoms::occupancy`,
+     their sums; the atom's unpaired count reads it (`atoms::Band::unpaired`),
+     and the partition holds over Z 1 to 1700
+     (`atoms::tests::the_occupancy_partitions_the_capacity`).
   2. **States per plane.** Each state's weight `m` places it on the six
      planes: `2P_k`, `U_k` and the pole `t_k = U_k / 2P_k` per plane (The
      six planes). The axis polarity `A`, built, is the axis component.
@@ -1069,8 +1073,8 @@ dimensions.
   (`stars::held_frames`, `stars::mixture_pole`), and `observe seals` and
   `observe founding`.
 - **Order of the work.**
-  1. States per band (vent 1): their sums equal today's `U` and the room,
-     so no reading moves.
+  1. States per band (vent 1). Done: their sums equal today's `U` and the
+     room, so no reading moved.
   2. States per plane (vent 2), then windings (vent 3).
   3. The delimiter retired (vent 5): the first vent that moves readings.
   4. Classes (vent 4), with the chain's cohomology ([#150](https://github.com/SAIOS-SAMN/xylarium/issues/150)).

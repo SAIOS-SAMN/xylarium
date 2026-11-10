@@ -4,7 +4,7 @@
 // Inputs: the spin, its torsion share (`bounce::torsion_share`, read once), the elements
 // (`elements::Element`), `formation::kinds` and `formation::founding_shells`
 // for the cascade, `atoms::vessel`, and `formation::lighting`. Reaches are
-// cluster units; amounts are held frames, universe units.
+// cluster units; amounts are in the held count, universe units.
 //
 // Steps: every kind is assigned its reach, spread r (1 +/- s_final). The closed
 // kinds, held on both faces of the paired throat (T16), form the firmament
@@ -26,13 +26,13 @@ use crate::formation;
 use xyl_core::Q;
 
 /// A firmament kind: one of the vessel's kinds held by the throat, as
-/// founded - its amount (held frames, universe units), its spin about the
+/// founded - its amount (held count, universe units), its spin about the
 /// throat, and its capture phase (turns).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Kind {
     /// The kind: an element's Z, or a cluster's kind index (compound.rs).
     pub z: u32,
-    /// Amount held by the throat (held frames, universe units).
+    /// Amount held by the throat (held count, universe units).
     pub amount: Q,
     /// Spin about the throat: the kind's reach at the founding, on the 2^-64
     /// grid.
@@ -59,7 +59,7 @@ pub struct Bead {
     /// Phase about the throat (turns in [0, 1)), the capture phase of its most
     /// abundant kind.
     pub phase: Q,
-    /// The kinds carried into the bead and their amounts (held frames).
+    /// The kinds carried into the bead and their amounts (held count).
     pub recipe: Mix,
     /// The bead's span about the throat (cluster units): from its run's inner
     /// edge or the pinch before it to the pinch after it or its run's outer

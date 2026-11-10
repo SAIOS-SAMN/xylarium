@@ -177,7 +177,7 @@ fn gathered(w: &Q, r: &Q, n: u32) -> Q {
 
 /// A piece's collapse. The piece holds (lambda + mu) W at reach R about the
 /// galaxy's core (lambda its holding per ring, mu the magnetism of its open
-/// frames, W its width); an infall of extent w on it gathers the piece's
+/// states, W its width); an infall of extent w on it gathers the piece's
 /// measure within the infall's angle, m(w) = (lambda + mu) W share_n(theta),
 /// theta the deficit angle w / (w + R) of the half turn in turns
 /// (`n` 1 in the disc, 2 in the bulge), and grips it at the infall's rim by
@@ -185,7 +185,7 @@ fn gathered(w: &Q, r: &Q, n: u32) -> Q {
 /// plus the shear across it, H w / (R (R + w)), and the heat the pulse
 /// leaves: the ring the bell brings at R, 1 / (pi (R + 1)), swung by the
 /// inbound echo (`swing` = 1 + A_in) and taken by the whole piece's grip,
-/// over what the piece sheds per ring, capped at 1 (its open frames' emission e and the
+/// over what the piece sheds per ring, capped at 1 (its open states' emission e and the
 /// vacuum's halving). The extents are read on a ladder of halvings of the
 /// width: the piece cools by whole halvings (radiative every ceil(1 / e)
 /// rings, plus the vacuum's) until its residue is under the best extent's
@@ -287,7 +287,7 @@ pub(crate) fn collapse(
 /// The heat the pulse leaves in matter that takes `taken` of it per ring
 /// (the ring the bell brings, times the swing and the matter's grip): the
 /// taken share over what the matter sheds per ring, capped at 1. The shed is
-/// the open frames' emission `open` plus `ln 2 / k_v` for the vacuum's
+/// the open states' emission `open` plus `ln 2 / k_v` for the vacuum's
 /// halving every `k_v` rings (`vacuum`, from [`vacuum_halving`]). With no
 /// shedding the heat is 1. One form for a piece's gas (`collapse`) and a
 /// star's disc (`disc::star_hold`).

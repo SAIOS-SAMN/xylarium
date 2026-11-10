@@ -94,7 +94,7 @@ pub fn nucleus_weights(k: u32) -> TwoWeights {
     }
 }
 
-/// A mix's nuclides summed: each kind's whole nuclei (amount in held frames
+/// A mix's nuclides summed: each kind's whole nuclei (amount in held count
 /// over one nucleus's) times its protons and neutrons.
 pub fn mix_weights(m: &Mix) -> TwoWeights {
     let (mut p, mut n) = (Q::ZERO, Q::ZERO);

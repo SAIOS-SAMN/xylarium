@@ -124,7 +124,7 @@ impl Atom {
         Q::new(i64::from(self.z) - i64::from(shallower), i64::from(b.n)).unwrap_or(Q::ZERO)
     }
 
-    /// Every frame paired: the atom bonds nothing.
+    /// Every state paired: the atom bonds nothing.
     pub fn closed(&self) -> bool {
         self.unpaired == 0
     }
@@ -361,7 +361,7 @@ fn fill(z: u32) -> Atom {
 /// atoms its faces (model.md, Chemistry from the elements). It keeps both
 /// faces whole and is read by planes, never by one tightness:
 /// - on the axis plane, each face's pole push `(U - W) / (U + W)` from its
-///   frames (axiom 9), composed across the pair by the flow law, and each
+///   states (axiom 9), composed across the pair by the flow law, and each
 ///   face's axis polarity, kept apart;
 /// - on the isoclinic planes, every open winding of each face with its
 ///   tightness, each held against the received turning;
@@ -392,7 +392,7 @@ pub struct WindingHold {
 
 impl Bond {
     /// Each face's pole push on the axis plane, `(U - W) / (U + W)`, with `U`
-    /// its open frames and `W = 3Z - U` its held frames.
+    /// its open states and `W = 3Z - U` its held count.
     pub fn pole_pushes(&self) -> [Q; 2] {
         self.faces.clone().map(|a| {
             let u = Q::int(i64::from(a.unpaired));
@@ -533,7 +533,7 @@ mod tests {
             // The balance share is +1 exactly where Z = cap, the dipole's
             // equator 3Z = 3Q.
             assert_eq!(rho == Q::ONE, z == cap, "Z {z}");
-            // A seal fills its capacity and holds no open frame: its pole
+            // A seal fills its capacity and holds no open state: its pole
             // point is the Z pole, t = u / w = 0, not the throat.
             assert_eq!(a.sealed(), z == cap, "Z {z}");
             if a.sealed() {

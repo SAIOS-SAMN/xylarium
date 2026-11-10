@@ -8,7 +8,7 @@ use xyl_core::Q;
 /// of its matter held, and the released remainder.
 ///
 /// The star tier's cut: the core has no bounce, only torsion; its push is
-/// the electromagnetic repulsion on open frames. Each kind of the infall
+/// the electromagnetic repulsion on open states. Each kind of the infall
 /// (`mix`: element and share of the infall's holding) is carried to spin
 /// l_z = p P_0 (e_z / e_mean)(w_mean / m_z) + `add` - p the core's push
 /// (1/2), P_0 the core's over-pressure, e_z the kind's open share, m_z its
@@ -16,7 +16,7 @@ use xyl_core::Q;
 /// world's received turning) - and stands at R_z = l_z / H about the core's hold. It is
 /// held (the star) where H / (R_z + H) >= p, else carried into the disc.
 /// Noble kinds (e = 0) carry no spin and fall in; an infall with no open
-/// frames is all star.
+/// states is all star.
 #[derive(Clone, Debug)]
 pub struct Hold {
     /// The share held.

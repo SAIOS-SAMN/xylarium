@@ -153,12 +153,16 @@ another crate. Laws are composed from shares (ratios of the form
   Calibre: none. Status: identity built
   (`turning::tests::t14s_plane_push_is_a_divergent_face`); the per-plane
   split planned.
-- Frame face (axiom 9; `compound::hold`, `elements::closed_share`): hold
-  `W = 3Z - U`, open `U`, whole `3Z`; convergent `W / 3Z` (the closed
-  share), divergent `U / 3Z`, pole `t = U / W` (the pole point); the
-  antipole exchanges `U` and `W`; the throat `U = W` is its equator,
-  `3Z = 2W`; `D(U / 3Z) = 1 + 2U / W`. Calibre: none. Status: built (an
-  identity of the definitions).
+- Capacity (axiom 9; `atoms::capacity`): `cap = E + U + 2P`, the room
+  `E = cap - Z`, the open states `U` (`compound::open`), the held states
+  `2P = Z - U`; shares against the capacity: occupancy `Z / cap = 3Z / 3Q`,
+  held `2P / cap`, open `U / cap`, room `E / cap`. Calibre: none. Status:
+  planned (#158); the code reads the held count `W = 3Z - U`.
+- Capacity face (axiom 9): convergent `2P / Z`, divergent `U / Z`, pole
+  `t = U / 2P`, `D(U / Z) = 1 + U / P`; the antipole exchanges held and
+  open; the equator `U = 2P`. Built in its place: the held count's face,
+  `W / 3Z` the closed share (`elements::closed_share`), `t = U / W` the
+  pole point (`compound::hold`). Calibre: none. Status: planned (#158).
 - Share transfer (T15, #128): a state of weight `m` with shares
   `w_k = |m_k| / sum_i |m_i|` composes its planes' hyperbolic angles,
   `sum_k w_k ln D_k` with `D_j = 1 + 2 t_j`, and `D(n)^A` for its axis
@@ -349,7 +353,7 @@ another crate. Laws are composed from shares (ratios of the form
   - Interaction: coherence `c = 1 - 2d` in `[0, 1]`; a meeting exchanges by
     the deficit contrast `T` times `c`, with `sum m l` conserved.
   - Perturbation: the held share `m / (r + m)` of the echo on the parcel's
-    frames (`loop_flux` vacuum channel), never on its reach.
+    states (`loop_flux` vacuum channel), never on its reach.
 
 ## 4. The firmament and the core
 
@@ -538,14 +542,14 @@ another crate. Laws are composed from shares (ratios of the form
     pinch interval about 0.67, so one pinch carries each tier's matter.
 
 - Throat holding (`circuit::onset_echoes`; derived): with no internal
-  moment, a kind is held by the throat exactly when it has no open frames
+  moment, a kind is held by the throat exactly when it has no open states
   (`compound::open = 0`): it has no pole state, and the jet never acts on
   it. With its net axis weight `A`, an open kind dilates by
   `D(s) D(n)^A` per echo and is held where `D(s) D(n)^A <= 1 - 2 delta`;
   on the continuum alone, `A <= -log_D(n) D(s)`, for seed 7 `A <= -8`
   (`D(n)^8 >= D(s) > D(n)^7`, exact): 461 open kinds held, Z 65-124,
   279-338, 422-762 (planned; the test below covers the moment-free map). A kind with `U` open and
-  `W` held frames crosses within `ln(W / U) / ln D(s)` echoes on the
+  `W` held count crosses within `ln(W / U) / ln D(s)` echoes on the
   continuum alone, since the map `t -> a t + b` has `a >= D(s) >= 3` and
   `b >= 0`. Over the founded kinds (seed 7) 20 are held, Z 2, 4, 28, 30, 32,
   34, 58, 208, 210, 234, 236, 260, 262, 264, 266, 268, 270, 272, 418, 1092,
@@ -580,18 +584,18 @@ another crate. Laws are composed from shares (ratios of the form
 - Pulse phase (`Substrate::pulse`): the phase is `frac((t / echo) / t_u)`,
   with `t_u = floor(2 (rim + 2)) + 1` echoes. Calibre: founding. Status: built.
 - Jetstream (`Substrate::loop_flux`, `circuit::pole_flux`): on a kind of hold
-  `w` and open frames `u`, the filament channel moves
-  `(rho - 1) u w / (w + rho u)` frames from Z to Q, the vacuum channel moves
-  `p(r, t) w` frames from Z to Q (none where `p >= 1`), and the echo channel
-  moves `R u` frames from Q to Z. Each channel is a dilator applied to the
+  `w` and open states `u`, the filament channel moves
+  `(rho - 1) u w / (w + rho u)` from Z to Q, the vacuum channel moves
+  `p(r, t) w` from Z to Q (none where `p >= 1`), and the echo channel
+  moves `R u` from Q to Z. Each channel is a dilator applied to the
   state left by the previous channel; the residual is the observed dilation
   over the channels' product and equals 1 where the loop closes. Calibre: founding. Status:
   partial (read by the observer).
 - Jetstream law (`circuit::jetstream`), one law for every holder of hold `w` and
-  open frames `u`: continuum (outflow) at push `p_c`, `rho = (1 + p_c) / (1 -
-  p_c)`, moves `(rho - 1) u w / (w + rho u)` frames Z to Q; vacuum (inflow) at
-  `p_v = H / (R + H)` moves `p_v w` frames Z to Q; electron phase moves `R u`
-  frames Q to Z (mean zero over an echo). `rho_net` is the product of the
+  open states `u`: continuum (outflow) at push `p_c`, `rho = (1 + p_c) / (1 -
+  p_c)`, moves `(rho - 1) u w / (w + rho u)` Z to Q; vacuum (inflow) at
+  `p_v = H / (R + H)` moves `p_v w` Z to Q; electron phase moves `R u`
+  Q to Z (mean zero over an echo). `rho_net` is the product of the
   channels' dilations, the torsion the echo leaves. Firmament kinds: `p_c = 1/2`
   at the throat's reach. A star's collective: `p_c = p_v = delta`, the vacuum's
   share at the star's rim about the star's mass, as a firmament kind's is read
@@ -725,9 +729,15 @@ another crate. Laws are composed from shares (ratios of the form
   with the axis's inversion it forms the pulse's antipole
   (`circuit::antipole`). The antinode share of harmonic `q` is 0 for even `q`
   and `1/q` for odd `q` (`circuit::antinode`). Calibre: none. Status: built.
-
-## 5. The galaxy
-
+- The capacity's occupancy, opened ([model.md](model.md#the-capacitys-occupancy-the-vents-to-open), #158):
+  per band `(n, l)` the empty slots, single and paired orientations (room,
+  open, held), summing to `cap - Z`, `U` and `2P = Z - U`; per plane `2P_k`,
+  `U_k`, `t_k = U_k / 2P_k`; each orientation's winding in ZZ with its side,
+  held and open its reading mod 2; pairing and stripping as coboundaries,
+  the occupancy, the capacity and the windings' total the class; every law
+  reading the held count `W` re-read on the capacity; seams
+  `u(z - 1) + 1 - u(z) < 0` read per band and plane. Calibre: none. Status:
+  planned.
 - Structure (`galaxy::Structure`): the rings are the beads sorted by reach,
   with edges `span x galaxy_kpc` and per-kpc holding `state / width`; the
   core reach is one galaxy unit, the nucleus is the first ring's outer edge,
@@ -830,7 +840,7 @@ another crate. Laws are composed from shares (ratios of the form
   `h`. Calibre: founding. Status: built.
 - Transduction per bell (`stars::transduced_per_bell`): `delta / (pi (r + 1))`.
   Calibre: founding. Status: built.
-- Frames at heat (`stars::held_frames`): `u_z(q)` open frames
+- Frames at heat (`stars::held_frames`): `u_z(q)` open states
   (`compound::open_hot`), `w_z(q) = 3 Z - u_z(q)` held; `A_z` the element
   table's `a` rounded to the nearest whole (`stars::nucleon_count`). Calibre: none. Status:
   built.
@@ -850,7 +860,7 @@ another crate. Laws are composed from shares (ratios of the form
 - Sequence (`stars::Sequence::of`): at each stage the held kind of greatest
   release steps (ties by the lesser `A`), transducing `share x release` and
   passing `share x (1 - release)` to its products (fission: in proportion to
-  their held frames), until no held kind releases; fusion stages, then
+  their held count), until no held kind releases; fusion stages, then
   fission stages where `t0 > 0`. Remnant `1 - sum transduced`
   (`stars::remnant`). Calibre: none. Status: built.
 - Life (`stars::life`, `stars::ends`): step `i` ends at `sum_{j <= i}

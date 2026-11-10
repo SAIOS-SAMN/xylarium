@@ -50,7 +50,7 @@ turning between planes, by the axes it mixes). A turn on one plane never
 stands for the others, so the dimensional capacity is kept. Its physics is
 torsion, stated as degrees of modification (a change of phase or of kind),
 of structure (a turning held as form, such as the twist held as torsion)
-or of perturbation (the echo's swing on frames). Its inverse, the return
+or of perturbation (the echo's swing on the occupied states). Its inverse, the return
 trip, is stated with it and is read from the gravitational density the
 return passes through, the deficit `M / (r + M)` at the return's reach
 (axiom 2), its reach and hold read in one calibre (Calibre and
@@ -278,7 +278,7 @@ vector or a negative mass: it is the dual deformation about the same
 invariant, with the holonomy around it conjugate.
 
 - **The invariant.** The mass invariant `M` is what the deformation keeps:
-  a count of whole nuclei and frames (axiom 4), exact and calibre-free.
+  a count of whole nuclei and their states (axiom 4), exact and calibre-free.
   Which nucleon `Q` enters it is [#151](https://github.com/SAIOS-SAMN/xylarium/issues/151).
 - **The pole coordinate.** At reach `r` the deformation is read by
   `t = r / M`, reach over hold (open over held, as the pole point is). It
@@ -359,7 +359,7 @@ split is not yet built.
   with a pole of that plane, reach over hold on it:
 
   ```text
-  a kind's frames     t   = U / W             the pole point (axiom 9)
+  a kind's states     t   = U / 2P            the pole point (axiom 9; built U / W)
   axis plane          t_0 = r / M             gravity's faces (axiom 2)
   isoclinic plane j   t_j = J_j / (6 H_j)     T14: push J_j / (6 H_j + J_j) = d(t_j)
   horizon             t_s = 1 + J / H         the torsion share s = d(t_s) (axiom 7)
@@ -383,13 +383,14 @@ split is not yet built.
   `sum_j J_j = J`, `sum_j H_j = H_iso` (axioms 4 and 11). Without spin
   (`J = 0`) every `t_j` is zero and nothing turns; a spinless hole does not
   bounce (axiom 7), so every founded universe separates its planes.
-- **The frame face.** Axiom 9's frames are the same law at one kind: the
-  hold `W = 3Z - U` (`compound::hold`) and the open frames `U`, whole
-  `3Z`. Its convergent face `W / 3Z` is the closed share that drives the
-  capture chain (`elements::closed_share`), its divergent face `U / 3Z`,
-  and its pole `t = U / W` is the pole point; the antipole `t -> 1 / t`
-  exchanges `U` and `W` (axiom 5), and the pole point's throat `U = W` is
-  the face's equator, `3Z = 2W`. `D(U / 3Z) = 1 + 2U / W`.
+- **The capacity face.** Axiom 9's capacity reads the same law at one
+  kind, between its held and open states: convergent `2P / Z`, divergent
+  `U / Z`, pole `t = U / 2P`, `D(U / Z) = 1 + U / P`; the antipole
+  `t -> 1 / t` exchanges held and open (axiom 5), and the equator
+  `U = 2P` is the pole point's throat. The room `E = cap - Z` stands beside
+  them, and the occupancy `Z / cap` is the dipole's Z face. Built, the code
+  reads the held count `W = 3Z - U` instead: `W / 3Z` is the closed share
+  (`elements::closed_share`) and `t = U / W` the pole point (#158).
 - **The transfer.** A state of weight `m` in Z^6, with turning shares
   `w_k = |m_k| / sum_i |m_i|`, feels its planes composed by the flow law
   (T15): its hyperbolic angle is the sum over planes of `w_k ln D_k`, with
@@ -508,12 +509,12 @@ carried by the jetstream. The laws below decide where each parcel goes, how
 it changes, and where parcels gather.
 
 **The parcel.** A parcel carries the counts of nuclei of each kind (atoms
-and clusters, `compound`), each kind's pole state (held frames `w`, open
-frames `u` and the electron phase `R`), its heat (the held share of the
+and clusters, `compound`), each kind's pole state (held count `w`, open
+states `u` and the electron phase `R`), its heat (the held share of the
 irradiation it has received), its hold `m` (a reading of its counts on the
 founding, in core masses), its reach `r` from its throat (in `r_g`) and its
-angular state (its phase and plane in degrees on the S^360). Counts and
-frames are conserved through every change; mass is read from the counts,
+angular state (its phase and plane in degrees on the S^360). Counts, occupancy
+and capacity are conserved through every change; mass is read from the counts,
 never carried.
 
 **Release.** Kind `k` leaves the throat at its onset, the echo at which its
@@ -524,7 +525,7 @@ pole state crosses the throat under the jet map (`circuit::onset`,
 `H_0(t) = 1 - sum_k outflow_k(t)`. A kind released over an interval is a
 filament: the locus of the parcels released along it.
 
-**What the throat holds.** A kind with no open frames has no pole state,
+**What the throat holds.** A kind with no open states has no pole state,
 so the jet never acts on it and the throat holds it. An open kind's pole
 point `t = U / W` is its position on the axis plane, and its net axis
 weight `A` (Weights on the six planes) is its moment there; the flow law
@@ -593,9 +594,9 @@ the degrees between them, the coherence `c = 1 - 2d` (`circuit::coherence`,
 phase, 0 opposed. Opposed parcels do not exchange.
 
 **Perturbation.** The part of the echo a parcel's elements cannot pass, its
-held share `m / (r + m)`, reverberates in its frames: the vacuum channel of
+held share `m / (r + m)`, reverberates in its occupied states: the vacuum channel of
 the parcel's loop (`circuit::Substrate::loop_flux`, swung by the inbound
-echo) moves frames between held and open, and so sets its heat. The same
+echo) moves states between held and open, and so sets its heat. The same
 net push `p_net` dilates the parcel's pole state per echo. Chemistry is what
 a parcel's kinds close into at the parcel's heat (`compound::closing`,
 `compound::held`), and a parcel whose pole state reaches the throat
@@ -658,7 +659,7 @@ longer holds.
 - In the jetstream (`Substrate::loop_flux`, `circuit::pole_flux`), three
   channels compose as dilators on each firmament kind's pole state over one
   echo: the filament's dilation at the throat, the vacuum's swung share of
-  the hold, and the electrons' phase state `R` on the open frames
+  the hold, and the electrons' phase state `R` on the open states
   (`circuit::electron_phase`, `R = kappa (1 - 2 frac(p))`). The residual is
   the observed dilation over the product of the channels, which is the
   torsion that the echo leaves on the kind. The loop closes, conserving the
@@ -931,7 +932,7 @@ the flow law, the conservation of counts and the inversion.
   2 pi M r / (r + M)`, is the passed share: full outside the core,
   suppressed inside it, the core's hold the throat. It is the swirl of a
   stretched vortex in deficit form.
-- **Viscosity.** A medium is viscous where its frames grip their
+- **Viscosity.** A medium is viscous where its states grip their
   neighbours and fluid where they do not: closed kinds and bonds heat has
   broken slide. In the pole coordinate `t = U / W` the viscosity is the
   open share, `nu(t) = t / (1 + t)`, the deficit form `delta(t, 1)`; heat
@@ -1002,10 +1003,81 @@ Z^6, each plane's reading kept, never summed into one number.
 - **Open.** At rest every kind's net twist charge is zero (the `c`
   distribution is symmetric), so the twist's direction needs the spin to
   break the symmetry. The jet map moves hydrogen first, from
-  `t = U / W = 1/2`, while its only state has weight zero: the pole
-  coordinate counts frames (`3Z` per kind) and the weights count electron
-  states (`Z`), and the two are not yet one account. The planes share one
+  `t = U / W = 1/2`, while its only state has weight zero: the built pole
+  coordinate reads the held count (`3Z` per kind, a delimiter) while the
+  weights count electron states (`Z`). Axiom 9's capacity account makes them
+  one, `t = U / 2P` over the states (#158). The planes share one
   rate while the spin is isoclinic.
+
+### The capacity's occupancy: the vents to open
+
+Planned ([#158](https://github.com/SAIOS-SAMN/xylarium/issues/158)), after Weights on the six planes and The six
+planes, under axiom 9.
+
+Every law that reads the atom reads two integers per kind: the held count
+`W = 3Z - U` (`compound::hold`), three per proton, a delimiter, and the open
+states `U` (`compound::open`, `atoms::unpaired`). The atom carries its
+capacity (`atoms::Atom`, `atoms::capacity`): bands `(n, l)`, each
+orientation empty, single or paired; each state's weight `m` in Z^6 over
+the six planes; each orientation a Hopf fibre over `CP^5`. Held and open
+keep only whether a fibre's turnings cancel, a counter-turning pair, or
+not, a single electron: the winding in ZZ read mod 2. The bands, the
+planes, the signed windings and the room are gone before any law reads
+them, so the manifold's topology and its cohomology are read as two
+dimensions.
+
+- **The vents to open.** Each replaces the two counts with the capacity's
+  structure:
+  1. **States per band.** Each band holds its empty slots, single
+     orientations and paired orientations apart: its room, its open states
+     and its held states. They sum to the room `cap - Z`, to `U` and to
+     `2P = Z - U`: `cap = E + U + 2P` per kind (axiom 9), readings only (the
+     hold and the room named apart, [#151](https://github.com/SAIOS-SAMN/xylarium/issues/151)).
+  2. **States per plane.** Each state's weight `m` places it on the six
+     planes: `2P_k`, `U_k` and the pole `t_k = U_k / 2P_k` per plane (The
+     six planes). The axis polarity `A`, built, is the axis component.
+  3. **Windings, not parity.** Each orientation's winding is kept in ZZ
+     with its side, Z or Q (the sign of `m0`): a pair's turnings cancel, a
+     single electron's carries its sign. Held and open are the winding read
+     mod 2.
+  4. **Classes, not counts** ([#150](https://github.com/SAIOS-SAMN/xylarium/issues/150)). The occupancy is a cochain
+     over the kind's fibres. Pairing and stripping move states between the
+     poles with the capacity fixed: they are coboundaries. What a kind
+     keeps through every pairing and stripping, its occupancy `Z`, its
+     capacity and its windings' total, is its class, and the books close on
+     it.
+  5. **The delimiter retired.** The three per proton is a delimiter, not a
+     capacity. Every law that reads the held count `W` is re-read on the
+     capacity: the closed share, the grain's whole nuclei, the mass of an
+     amount, the jet map's pole state, a star's pole and transduction, and
+     the emission share. Values move here; each is witnessed before and
+     after.
+  6. **Seams per band and plane.** A seam, `u(z - 1) + 1 - u(z) < 0`
+     (`atoms::vessel`), is read on the scalar `u`. Read per band and plane,
+     a single-nucleon peel releases where a component does, and the
+     vessel's lower edge follows from those components.
+  7. **Received per plane and band.** Stripping (`atoms::unpaired_hot`,
+     `compound::open_hot`) reads one isoclinic turning
+     (`atoms::Received`) against each band's tightness; it is to be read
+     per plane, with the return (Chemistry from the elements, vent 1;
+     [#128](https://github.com/SAIOS-SAMN/xylarium/issues/128)).
+- **Sites.** `compound::hold`, `compound::open`, `compound::open_hot`,
+  `atoms::unpaired`, `atoms::unpaired_hot`, `atoms::vessel`,
+  `elements::closed_share`, `circuit::grain` (whole nuclei and the mass of
+  an amount), the jet map's pole state (`circuit::core`), `formation`'s
+  shells, hold and emission, the stars' held count and pole
+  (`stars::held_frames`, `stars::mixture_pole`), and `observe seals` and
+  `observe founding`.
+- **Order of the work.**
+  1. States per band (vent 1): their sums equal today's `U` and the room,
+     so no reading moves.
+  2. States per plane (vent 2), then windings (vent 3).
+  3. The delimiter retired (vent 5): the first vent that moves readings.
+  4. Classes (vent 4), with the chain's cohomology ([#150](https://github.com/SAIOS-SAMN/xylarium/issues/150)).
+  5. Seams (vent 6) and received turning (vent 7).
+
+  A reading moves only where a law reads a component in place of a sum,
+  and it is witnessed before and after.
 
 ### The antipoles, the shear and the pinch
 
@@ -1021,7 +1093,7 @@ Derived ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)); not yet built
   `l = 18`, every `(m0, c)` and its image `(m0, -c)` hold the same number
   of harmonics, every axis level keeps `C(l - |m0| + 9, 9)`, and the
   filling reads the levels only, so each band keeps its electrons and
-  pairing and every founded kind keeps its open frames and axis polarity.
+  pairing and every founded kind keeps its open states and axis polarity.
 - **The shear on the antipode.** A state and its antipode lie on opposite
   faces, which advance `s` and `1 - s` per traversal, so the pair does not
   cancel: on the isoclinic planes it drifts `360 c n` degrees per traversal,
@@ -1100,8 +1172,8 @@ Axioms:
    `r / (r + M)` (Gravity: the deformation about a mass invariant).
 3. **Flow.** Pushes compose as `x (+) y = (x + y) / (1 + x y)`;
    `D(p) = (1 + p) / (1 - p)`.
-4. **Conservation.** Nuclei and frames are conserved; mass is a reading of
-   the counts.
+4. **Conservation.** Nuclei, their occupancy and their capacity are
+   conserved; mass is a reading of the counts.
 5. **Inversion.** `t -> 1 / t` exchanges the Z and Q poles; `x -> -x`
    reverses a phase. On gravity's faces, `t = r / M`, it is the antipole:
    it exchanges the convergent and divergent faces and fixes the equator
@@ -1111,8 +1183,17 @@ Axioms:
 8. **Six planes.** R^12 = C^6: the axis plane and five isoclinic planes,
    which the spin turns together; a state is a harmonic on S^11 with a
    weight `m` in Z^6.
-9. **Frames.** Each proton spans three frames: open `U` (the unpaired
-   electrons), held `W = 3Z - U`; the pole state `t = U / W`.
+9. **Capacity.** A kind's states stand on the directions of S^11: its
+   capacity `cap` is the room of every shape of every turning its atom
+   reaches (`3Q = 3 cap`, the dipole's Q side). Its `Z` electrons occupy
+   it, each orientation empty, single or paired: `cap = E + U + 2P`, with
+   the room `E`, the open states `U` (singles) and the held states `2P`
+   (`P` pairs). Shares are read against the capacity, never against a
+   delimiter: occupancy `Z / cap = 3Z / 3Q` (the dipole's Z face), held
+   `2P / cap`, open `U / cap`, room `E / cap`; the pole state is
+   `t = U / 2P`, open over held. Built: the code still reads the held count
+   `W = 3Z - U`, three per proton, and `t = U / W`; the capacity account
+   replaces it ([#158](https://github.com/SAIOS-SAMN/xylarium/issues/158)), and readings move where it does.
 10. **Shear.** Every cycle is a sheared orbit read in closed form; nothing
     repeats closed and nothing is stepped.
 11. **Degrees of turning.** The degrees a body turns, its hold times its
@@ -1182,7 +1263,7 @@ Derived ([#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)); not yet built
 
   | Circuit | Axes | Pivot | Read at the pinch |
   |---|---|---|---|
-  | Pole state | each plane's open and held frames | the throat, `t = 1` | the reach on the axis plane, `ln r = (N* - n_k) ln(D(s) D(n)^A)` since the kind's onset `n_k` |
+  | Pole state | each plane's open and held count | the throat, `t = 1` | the reach on the axis plane, `ln r = (N* - n_k) ln(D(s) D(n)^A)` since the kind's onset `n_k` |
   | Heat | each plane's deficit | the balance of held and emitted | held irradiation net of emission, composed over the echoes since onset |
   | Twist | each plane's weight | the antipode on each plane | the share of antipodal pairs flipped, `1 - (1 - n / 3)^N` |
   | Place | each plane's phase and anomaly | the periapsis | phase and anomaly per plane, and returns made |
@@ -1263,7 +1344,8 @@ and theorems T2, T8 and T11. Every identity below is exact.
 - **T17, the spin is a sheared orbit, turned by the faces' separation.**
   The two faces are an attractor and its inverse at the same level: the
   near face advances `s` per traversal, the antipode `1 - s`. A kind's
-  frames stand on both, its open share `q = U / (U + W)` (axiom 9) on the
+  states stand on both, its open share `q = U / (U + W)` (built; `U / Z`
+  on the capacity, axiom 9) on the
   near face and its held share on the antipode, so its degree of
   separation is the flow-law sum of the two advances (axiom 3), never their
   mean: the rapidity `rho = q ln D(s) - (1 - q) ln D(1 - s)`, with
@@ -1655,21 +1737,21 @@ what the physics produces is read, and the minds of a universe name it
     distinct components and never one number.
   - **Analogous in the law.** One attractor pair, separation and remanence
     at both tiers: a nucleus is its Z and Q faces, a bond its two atoms'
-    faces, and both release held frames.
-  - **Coupled through the frames.** Each proton's three frames span both
-    (axiom 9): the open frames `U` are the unpaired electrons, the atomic
-    side, standing at the nucleus's Q pole; the held frames `W = 3Z - U` are
-    its bonding at the Z pole. Pairing electrons moves frames from the Q pole
+    faces, and both release held count.
+  - **Coupled through the occupancy.** Each proton's three units of span stand on both
+    (axiom 9): the open states `U` are the unpaired electrons, the atomic
+    side, standing at the nucleus's Q pole; the held count `W = 3Z - U` are
+    its bonding at the Z pole. Pairing electrons moves states from the Q pole
     to the Z pole, a chemical act changing the nuclear pole state, and
     stripping moves them back; a change on one set of planes shows on the
-    other only through the frames.
+    other only through the occupancy.
   - **Received turning carries both** (`atoms::Received`): the axis plane's
     push, which the pole state reads (a star's compactness), and the
     isoclinic planes' turning, which strips the windings and sets a bond's
     hold (`atoms::unpaired_hot`, `compound::held`), each read by the laws
     of the planes it acts on (`stars::Sequence::of` reads both).
 - **Built from the elements.**
-  - The atom: its bands filled on S^11, its open and held frames, its
+  - The atom: its bands filled on S^11, its open and held count, its
     tightness and its stripping by received turning (`atoms::atom`,
     `atoms::unpaired_hot`, `atoms::tightness`), its two-atom bond read
     across both faces by planes (`atoms::bond`, `atoms::Bond`), and its
@@ -1677,7 +1759,7 @@ what the physics produces is read, and the minds of a universe name it
     on the axis plane (`atoms::axis_polarity`, T7) and the twist charge on
     the isoclinic planes (T6).
   - The two-part closure: the smallest cluster of two atoms with every
-    frame paired, `(u_B / g) A . (u_A / g) B` (`compound::closing`,
+    state paired, `(u_B / g) A . (u_A / g) B` (`compound::closing`,
     `compound::held`, `compound::stands`).
   - The star's nucleosynthesis: steps by release (`stars::fusion_step`,
     `stars::fission_step`, `stars::Sequence`).
@@ -1694,7 +1776,7 @@ what the physics produces is read, and the minds of a universe name it
     `atoms::bond` have no consumer outside `compound` yet.
   - **Closures to volatiles.** Six catalogued species with Earth's phase
     diagrams (`worlds::volatiles`), whose formulas disagree with the closure
-    law (`compound::closing` closes oxygen with four hydrogen frames
+    law (`compound::closing` closes oxygen with four hydrogen states
     paired); the greenhouse and albedos are calibrated to Earth.
   - **Nuclides.** One mass number per element, from the table's atomic
     weight (`circuit::mass_number`); four Earth isotopes and an Earth
@@ -1737,7 +1819,7 @@ what the physics produces is read, and the minds of a universe name it
      is coercivity, what can clear a link's weight and what cannot. Of the
      two drives given, eating is taking a passage and reproducing is the
      copy; everything else emerges.
-  6. **No Earth units in a law.** Energies are releases of held frames and
+  6. **No Earth units in a law.** Energies are releases of held count and
      received turning is in degrees on its planes; kelvin, electronvolts and
      joules stand only at the SI seam, for display (`package::Si`).
 - **Order of the work.**
@@ -1771,8 +1853,8 @@ law, the same at a nucleus, a star and a world:
   ring, `P = m transduced_per_bell(r) / bell` in core masses per ring (`c = 1`,
   `stars::power`), and its light is that power with the vessel's drift,
   `P (1 + pi bell q(t))` (`stars::light`). For a nucleus the radiated part
-  is its open frames over its weight, the Q pole's share of its frames
-  (`formation::emission`).
+  is its open states over its held count, the Q pole's share
+  (`formation::emission`; `U / 2P` on the capacity, axiom 9).
 - **The inversion.** Emission is irradiation turned outward: what a body
   held becomes what it gives to the bodies beyond it, so at each exchange
   the held share of one body is the received share of the next. The
@@ -1888,7 +1970,7 @@ law, the same at a nucleus, a star and a world:
   at its rim, `delta = m / (R 60 + m)` (`disc::rim_share`), with `m` the star's
   mass in core masses and `R` the rim of the held core its cloud's cut gives, in
   system-tier units (`galaxy::piece_rim`, `galaxy::Star::compactness`). The rim
-  comes from the atoms: the cut carries each kind to a spin from its open frames
+  comes from the atoms: the cut carries each kind to a spin from its open states
   and its mass per nucleus and holds it where its deficit meets the push
   (`formation::hold_at`). The cut is read in three states. At collapse the
   dark cut (no over-pressure) gives the held share `s0` and rim `R0`, so the
@@ -1988,18 +2070,20 @@ A star transduces by the polarity of the collective it holds: the inverse of
 magnetism between its bonding nucleons over the quantum states its
 irradiation opens. Every quantity is read from the atoms:
 
-- **Held and open frames under irradiation.** A kind `z` irradiated at heat
-  `q` (the turning the star receives per echo, in hydrogen units) keeps
-  `u_z(q)` open frames (`atoms::unpaired_hot`), its magnetism, the Q pole;
-  its held frames are `w_z(q) = 3Z - u_z(q)`, its bonding, the Z pole
-  (`compound::hold`).
+- **Held and open states under irradiation.** A kind `z` irradiated at
+  heat `q` (the turning the star receives per echo, in hydrogen units)
+  keeps `u_z(q)` open states (`atoms::unpaired_hot`), its magnetism, the Q
+  pole; its held count is `w_z(q) = 3Z - u_z(q)`, its bonding, the Z pole
+  (`compound::hold`; on the capacity its held states `Z - u_z(q)`,
+  axiom 9).
 - **The collective's pole point.** Over the held mixture, with `n_z` the
   count of nuclei of each kind (its share of the hold over `w_z`),
   `t = sum n_z u_z(q) / sum n_z w_z(q)` (`circuit::pole_point`). The star's
   polarity is the inversion `1 / t`: bonding over irradiated states.
 - **Irradiation carries the pole point.** A held kind's open share is at
-  most `Z` of its `3Z` frames, so `t <= 1/2` at ignition: every collective
-  starts on the Z side. Each echo carries the pole point outward by the
+  most `Z` of its span `3Z`, so the built `t = u / w <= 1/2` at ignition:
+  every collective starts on the Z side. On the capacity, `t = U / 2P` has
+  no such bound (#158). Each echo carries the pole point outward by the
   residual of its loop through the continuum and the vacuum, `rho_net`
   (next subsection), and after `n` echoes since ignition
   `t(n) = t0 rho_net^n`.
@@ -2029,7 +2113,7 @@ irradiation opens. Every quantity is read from the atoms:
   from the updated mixture, until no held kind releases under the current
   direction. Fusion stages come first; after the throat the fission stages
   follow, read the same way, a split's products sharing the passed hold in
-  proportion to their held frames. Each step's duration is its transduced share
+  proportion to their held count. Each step's duration is its transduced share
   over the star's transduction per bell (`stars::transduced_per_bell`); the
   first step is the main sequence, later steps the giant phases, and the hold no
   step transduced is the remnant (`stars::Sequence::of`, `stars::fusion_step`,
@@ -2044,7 +2128,7 @@ hydrogens to the kind of four nucleons, three of those to the kind of
 twelve, two to the kind of twenty-four, then eight to `Z 77` and ten to
 `Z 752`; 296 kinds of the table take no step in either direction):
 
-- The held frames per nucleon fall with the nucleon count across the whole
+- The held count per nucleon fall with the nucleon count across the whole
   table, so every fusion step releases hold and the sequence runs to
   superheavy kinds; the atoms give no peak at which fusion stops releasing.
 - Where the table holds no kind at `2 A_z`, the rule's least `k` can be
@@ -2065,14 +2149,14 @@ continuum and back through the vacuum:
 - **Continuum (outflow).** The filament dilates the state by the push the
   holder holds, `rho = (1 + p) / (1 - p)` (`shares::dilation_dy`): `p = 1/2`
   for a firmament kind at the throat, the compactness `delta` for a star's
-  collective. It moves `(rho - 1) u w / (w + rho u)` frames from the Z pole
+  collective. It moves `(rho - 1) u w / (w + rho u)` from the Z pole
   to the Q pole.
 - **Vacuum (inflow).** The return is through the vacuum's share at the
   holder's reach about the universal state, `p_v = H / (R + H)`
   (`xyl_core::shares::deficit_dy`), swung by the inbound echo; it moves `p_v w`
-  frames from Z to Q.
+  from Z to Q.
 - **Electron phase.** The electrons' phase state `R = kappa (1 - 2 frac(p))`
-  moves `R u` frames from Q to Z (`circuit::electron_phase`); over a whole
+  moves `R u` from Q to Z (`circuit::electron_phase`); over a whole
   echo its mean is zero, so the echo's mean motion is the continuum's and
   the vacuum's.
 - **Why the loop does not close.** Composed in one medium, an outbound
@@ -2131,7 +2215,7 @@ reads the reference values and none is tuned to them.
 | Fission star | A star whose held collective lies on the Q side of the throat (`t > 1`), so its steps split nuclei. No observed type is known to match; the model allows it. | Built: a fission step of the sequence, after the throat; the step's start is read from the cumulative step ends, not yet from `n*`. |
 | Supergiant | A giant of a star in the upper share of its cloud's masses. | Next: needs a derived boundary in the cloud's mass shares. |
 | Remnant | Every step of the sequence has ended: the star keeps the hold no step transduced (`stars::remnant`) and becomes a hole in the pulse network (`pulse::nodes`); a held body that does not ignite forms none. | Built. |
-| Compact remnant (white dwarf), denser remnant (neutron star) | A remnant whose held core's rim, from the remnant's cut of its remaining mixture, gives compactness below one half; the two separated by where the remnant's held kinds lose their open frames. | Next: needs that cut of the remnant's mixture. |
+| Compact remnant (white dwarf), denser remnant (neutron star) | A remnant whose held core's rim, from the remnant's cut of its remaining mixture, gives compactness below one half; the two separated by where the remnant's held kinds lose their open states. | Next: needs that cut of the remnant's mixture. |
 | Remnant at the throat (black hole) | A remnant whose compactness reaches `delta = 1/2`, the throat's equator: it holds as much as it passes and becomes a core with a throat. | Next: follows from the remnant's rim; whether such a remnant is an echo surface is under review with Netstratum. |
 | Binary companion | A second star drawn with a share of the primary's mass. | Placeholder: the share `0.1 + 0.9 u` is imposed; it is to come from the cloud's split. |
 | Variable star | The light's swing within a bell, `(pi / 2) |cos(2 pi t / echo)|` (`stars::flicker`). | Partial: a reading of the light only. |

@@ -4,10 +4,10 @@
 //
 // Inputs: a founded `Substrate` (found.rs), the anchor's bell (anchor.rs),
 // `bounce::horizon_reach`, `compound::open` / `compound::hold` for a kind's
-// frames, `formation::emission`, `galaxy::first_star_mass` (the star mass
+// states, `formation::emission`, `galaxy::first_star_mass` (the star mass
 // on the chain), and `pole_flux` (poles.rs) with `electron_phase`
 // (weights.rs). Reaches are cluster units,
-// amounts held frames, times in rings (one ring one bell), rates per ring.
+// amounts in the held count, times in rings (one ring one bell), rates per ring.
 //
 // - Deficit: `xyl_core::shares::deficit_dy(h, r) = h / (r + h)`, the vacuum's
 //   share at reach `r` about a hold `h`; `throat_push` is its value
@@ -54,7 +54,7 @@ pub fn throat_push() -> Dy {
 
 /// The echoes a pole point `t` takes to reach the throat (`t = 1`) under the
 /// dilation `rho` per echo: `ln(1 / t) / ln rho`, in closed form
-/// ([`throat_crossing`] with no added frames). Zero where `t >= 1`; `None`
+/// ([`throat_crossing`] with no added states). Zero where `t >= 1`; `None`
 /// where `t <= 0` (nothing open dilates) or `rho <= 1` (no dilation).
 pub fn echoes_to_throat(t: Dy, rho: Dy) -> Option<Dy> {
     if t.signum() <= 0 {
@@ -94,7 +94,7 @@ pub fn throat_crossing(t0: Dy, a: Dy, b: Dy) -> Option<Dy> {
 /// pole point by the dilation per echo `rho = (1 + p_c) / (1 - p_c)`
 /// (`xyl_core::shares::dilation_dy`, one law for every holder: the throat's
 /// `1/2` for the firmament, a star's compactness for its collective), and the vacuum
-/// moves `p_v` of the held frames to the open ones, `t -> (t + p_v) / (1 -
+/// moves `p_v` of the held count to the open ones, `t -> (t + p_v) / (1 -
 /// p_v)`; the electrons' phase state has mean zero over an echo. Composed,
 /// `t -> a t + b` with `a = rho / (1 - p_v)` and `b = p_v / (1 - p_v)`.
 /// `None` for a push outside `[0, 1)`: a push is not negative.
@@ -112,10 +112,10 @@ pub fn jet_map(p_c: Dy, p_v: Dy) -> Option<(Dy, Dy)> {
 
 /// The jet's onset for kind `k` (rings) under the vacuum share `p_v` its band
 /// receives, at the throat's torsion share `s`: the kind's state sits on the
-/// pole axis at `t = U / W`, its open frames over its closed (poles.rs), and
+/// pole axis at `t = U / W`, its open states over its closed (poles.rs), and
 /// its jetstream carries it out through the continuum at the torsion share
 /// and back through the vacuum at `p_v` ([`jet_map`]); it reaches the throat after
-/// [`throat_crossing`] echoes. A sealed kind (no open frames) has no pole
+/// [`throat_crossing`] echoes. A sealed kind (no open states) has no pole
 /// state and never does. The band's `beyond` share sets how much passes once
 /// it has.
 pub fn onset(k: u32, p_v: Dy, s: Dy) -> Option<Dy> {
@@ -349,11 +349,11 @@ impl Substrate {
     /// the laws compose on its pole state (`t = open / hold`, poles.rs), each
     /// a dilator on the state it finds, and whether their product returns
     /// the state to the kind's initial state, the 3Z hold conserved. The channels, in
-    /// order: the filament's dilation at the throat (`rho`, frames Z to Q),
+    /// order: the filament's dilation at the throat (`rho`, Z to Q),
     /// the vacuum's share at the kind's reach swung by the inbound echo (`p`
     /// of the hold, Z to Q; at a crest past the whole hold the state passes
     /// the far face and no coordinate stands: None), and the electrons'
-    /// phase state at the pulse (`R` of the open frames, Q to Z: the held
+    /// phase state at the pulse (`R` of the open states, Q to Z: the held
     /// face early in the echo, the open face late). The residual is the
     /// dilator left over, the torsion the echo leaves on the kind; the loop
     /// closes where it is one. None for a sealed kind, which has no pole
@@ -373,7 +373,7 @@ impl Substrate {
         if w.signum() <= 0 || u.signum() <= 0 {
             return None;
         }
-        // The filament opens frames by the jet's dilation at the torsion share
+        // The filament opens states by the jet's dilation at the torsion share
         // s, D(s) = (1 + s) / (1 - s): (u + f) / (w - f) = rho u / w.
         let rho = dilation_dy(Dy::from_q(&self.share))?.to_q();
         let filament = (&(&(&rho - &Q::ONE) * &u) * &w).checked_div(&(&w + &(&rho * &u)))?;
@@ -383,7 +383,7 @@ impl Substrate {
             return None;
         }
         let vacuum = &p * &w;
-        // Electron channel: R(pulse) u, the open frames' phase state.
+        // Electron channel: R(pulse) u, the open states' phase state.
         let echo = &super::weights::electron_phase(k.z, &self.pulse(t)) * &u;
         pole_flux(
             &w,
@@ -397,7 +397,7 @@ impl Substrate {
     /// The universal core's spin as a sheared orbit over its bounces (T17).
     ///
     /// At the bounce every founded kind is at the core, of hold `M` and
-    /// turning `J = a M^2`. A kind's frames stand on both faces: its open
+    /// turning `J = a M^2`. A kind's states stand on both faces: its open
     /// share `q = U / (U + W)` on the near face, which advances `s` per
     /// traversal, its held share on the antipode, which advances `1 - s`.
     /// Its separation is their flow-law sum, the rapidity
@@ -540,7 +540,7 @@ impl Substrate {
     }
 
     /// The outflow from the core by `t` rings after the bounce, by kind (held
-    /// frames): each firmament kind has sent out m0 (1 - exp(-rate (t - onset)))
+    /// states): each firmament kind has sent out m0 (1 - exp(-rate (t - onset)))
     /// once its state has reached the throat along the filament (its onset).
     pub fn outflow(&self, t: Dy) -> Vec<(u32, Dy)> {
         let t = t.max(Dy::ZERO);
@@ -676,7 +676,7 @@ impl Substrate {
     }
 
     /// What galaxy `index` has taken from the core by `t` (rings), by kind (held
-    /// frames): its landing share of each kind the jet threw one delay
+    /// states): its landing share of each kind the jet threw one delay
     /// earlier.
     pub fn intake(&self, index: u32, t: Dy) -> Vec<(u32, Dy)> {
         self.intakes(t)
@@ -1160,7 +1160,7 @@ mod tests {
             Dy::ratio(1, 2)
         );
         // A sealed kind (helium) never reaches the throat; hydrogen, one open
-        // frame over two closed, reaches it after ln 2 / ln D(s) echoes on the
+        // state over two closed, reaches it after ln 2 / ln D(s) echoes on the
         // continuum alone; the smaller a kind's open share, the later its
         // onset.
         let s = Dy::ratio(1, 2);
@@ -1187,7 +1187,7 @@ mod tests {
     fn a_kind_is_held_exactly_when_it_has_no_open_frames() {
         // Every kind of the table, at the extremal and the spinless torsion
         // share, on the continuum alone (no vacuum leg, b = 0): a kind with
-        // no open frames has no onset; every other kind crosses the throat
+        // no open states has no onset; every other kind crosses the throat
         // within ln(W / U) / ln D(s) echoes, the bound of the jet map
         // t -> a t with a = D(s).
         for s in [Dy::ratio(1, 2), Dy::ratio(3, 5)] {

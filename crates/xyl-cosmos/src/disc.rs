@@ -55,7 +55,7 @@ pub struct StarHold {
     pub tide: Q,
     /// The disc's agitation, at most 1: the pulse's turning at the star per
     /// echo, times the inbound echo's swing and the disc's grip, over what
-    /// the disc sheds per ring (the released kinds' open frames and the
+    /// the disc sheds per ring (the released kinds' open states and the
     /// vacuum's halving).
     pub a_disc: Q,
     /// The infall's extent (galaxy units).
@@ -130,7 +130,7 @@ pub fn star_hold(bead: &Bead, unit: &Q, held: &Q, swing: &Q, turning: &Q) -> Opt
     // `a_disc = turning x swing x grip / shed`, at most 1, in the form in
     // which the cooling reads a piece's heat (`formation::pulse_heat`):
     // grip = D / (1 + D) with D the disc's holding, shed = the released
-    // kinds' open frames plus the vacuum's halving.
+    // kinds' open states plus the vacuum's halving.
     let disc_holding = &Q::ONE - &star;
     let grip = disc_holding
         .checked_div(&(&Q::ONE + &disc_holding))

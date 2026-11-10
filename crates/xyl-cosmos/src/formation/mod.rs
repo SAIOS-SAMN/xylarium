@@ -3,7 +3,7 @@
 //!
 //! Inputs: the founding's beads (`circuit::Bead`), the founding unit, the
 //! held share and the inbound echo's swing `1 + A_in`
-//! (`circuit::Substrate::echo_swing`); nucleus holds and open frames from
+//! (`circuit::Substrate::echo_swing`); nucleus holds and open states from
 //! `compound` and masses from `circuit::nucleus_weights`;
 //! `measure::share_turns` for the infall's measure. Lengths are in galaxy
 //! rings, times in whole rings; in these units the core's reach is one ring
@@ -18,7 +18,7 @@
 //!   (`circuit::throat_push`, 1/2) and `delta = H / (R + H)`. Outside one
 //!   galaxy unit the gas is a circle in the plane (n = 1), within it the
 //!   bulge's ball (n = 2). Gas inflow from the ocean is not modelled.
-//! - Cooling: two channels per ring, the open frames' emission
+//! - Cooling: two channels per ring, the open states' emission
 //!   `e = open / hold` (one halving every `ceil(1 / e)` rings) and the
 //!   vacuum's halving (`(r / (r + h))^k <= 1/2`).
 //! - Collapse: an infall of extent `w` at reach `R` gathers
@@ -68,12 +68,12 @@ pub(crate) fn half(x: &Q) -> Q {
 
 /// A nucleus's mass in nucleons, Z + Q (weights.rs). Gravity and inertia use
 /// this, independent of kind; chemistry uses the hold (`compound::hold`, the
-/// electrons' frames), which is also the unit amounts are counted in.
+/// electrons' states), which is also the unit amounts are counted in.
 pub fn mass_weight(z: u32) -> Q {
     crate::circuit::nucleus_weights(z).mass()
 }
 
-/// What a nucleus radiates per ring: its open frames over its hold.
+/// What a nucleus radiates per ring: its open states over its hold.
 pub fn emission(z: u32) -> Q {
     Q::int(i64::from(crate::compound::open(z)))
         .checked_div(&Q::int(i64::from(crate::compound::hold(z))))

@@ -4,7 +4,7 @@
 //! Reads `circuit::anchor` (galaxy unit in kpc), `xyl_core::shares::deficit_dy`,
 //! `circuit::bell` and `echo` (one and two rings), the substrate's firmament
 //! outflow rate (`cores::substrate_for`, per ring), the element table and
-//! `compound` (frames at heat, in `sequence.rs`).
+//! `compound` (states at heat, in `sequence.rs`).
 //! Reach `r` is in galaxy units (`galaxy::Star::reach_units`); times are
 //! rings of time after the origin (one ring one bell); masses are core
 //! masses and light is power in core units, core masses (times `c^2`,
@@ -12,7 +12,7 @@
 //!
 //! - Compactness `delta`: a star's deficit at its rim, `m / (R 60 + m)`
 //!   (`disc::rim_share`), with `R` the rim of the held core its cloud's cut
-//!   gives (`galaxy::piece_rim`, from the atoms' open frames and masses in
+//!   gives (`galaxy::piece_rim`, from the atoms' open states and masses in
 //!   `formation::hold_at`). Every star of a cloud shares the rim, so a
 //!   heavier star is more compact (`galaxy::Star::compactness`).
 //! - Transduction (`transduced_per_bell`): the share of the ring it receives that a star

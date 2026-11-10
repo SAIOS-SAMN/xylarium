@@ -94,7 +94,7 @@ fn carried_reach(push: &Q, w: &Q, h_final: &Q) -> Q {
 /// (z, amount, reach). What the throat holds is not read here: it is the
 /// closed kinds, held on both faces of the paired throat (T16).
 pub fn founding_shells(mix: &[(u32, Q)]) -> (Q, Vec<(u32, Q, Q)>) {
-    // The founding runs on mass: amounts are converted from held frames to
+    // The founding runs on mass: amounts are converted from held count to
     // mass (x mass / hold) for the capture shares, the profile's beads and
     // the carriage's inertia, and converted back on return.
     let to_mass = |z: u32| {

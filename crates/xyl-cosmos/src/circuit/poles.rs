@@ -1,5 +1,5 @@
 // The poles as conformal points on the pole axis: Z at the origin e_o, Q at
-// the point at infinity, a carrier's state at t = U / W (open frames over
+// the point at infinity, a carrier's state at t = U / W (open states over
 // closed) and the throat at t = 1.
 //
 // Inputs: `xyl_core::cga` (points, dilators, projective comparison).
@@ -18,7 +18,7 @@ use xyl_core::Q;
 /// The poles as conformal points, built with exact versors. The Z pole
 /// (holding, coherence) is the origin e_o and the Q pole (magnetism,
 /// decoherence) the point at infinity e_inf; a carrier's pole state is the
-/// point X(t) on the pole axis at t = U / W (open frames over closed). The
+/// point X(t) on the pole axis at t = U / W (open states over closed). The
 /// vacuum's inversion, with the throat as its one fixed point, is the unit
 /// sphere's inversion X(t) -> X(1 / t): it swaps the poles and fixes t = 1.
 pub fn pole_point(w: &Q, u: &Q) -> Option<Mv> {
@@ -28,7 +28,7 @@ pub fn pole_point(w: &Q, u: &Q) -> Option<Mv> {
 
 /// The flux as a versor: an echo carries X(t0) to X(t1) by the dilator D(rho),
 /// rho = t1 / t0 - toward Z (the origin) where rho < 1, toward Q (infinity)
-/// where rho > 1. Each booked channel moving `toward_z` frames from Q to Z
+/// where rho > 1. Each booked channel moving `toward_z` from Q to Z
 /// (negative: Z to Q) is a separate dilator on the state it finds; channels
 /// compose by the geometric product, and the books close where the composed
 /// versor is projectively equal to the observed one. Any unbooked channel
@@ -49,13 +49,13 @@ pub struct PoleFlux {
     pub closed: bool,
 }
 
-/// Reads an echo's pole flux from the closed frames `w0`, `w1` and open
-/// frames `u0`, `u1` before and after, composing each `booked` channel (name,
-/// frames moved from Q to Z) as a dilator on the state it finds.
+/// Reads an echo's pole flux from the held count `w0`, `w1` and open
+/// states `u0`, `u1` before and after, composing each `booked` channel (name,
+/// states moved from Q to Z) as a dilator on the state it finds.
 ///
-/// Returns `None` when a ratio along the way is undefined: a zero closed-frame
+/// Returns `None` when a ratio along the way is undefined: a zero closed-state
 /// count, a zero starting coordinate U0 / W0, or a channel that empties the
-/// open or the closed frames. Read per firmament kind and echo by `Substrate::loop_flux`,
+/// open or the held count. Read per firmament kind and echo by `Substrate::loop_flux`,
 /// the jetstream.
 pub fn pole_flux(w0: &Q, u0: &Q, w1: &Q, u1: &Q, booked: &[(&'static str, Q)]) -> Option<PoleFlux> {
     let (t0, t1) = (u0.checked_div(w0)?, u1.checked_div(w1)?);

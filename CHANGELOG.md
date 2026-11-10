@@ -11,11 +11,11 @@ may change public APIs and the model's laws.
 
 ### Added
 
-- Held frames, the vents to open (docs/model.md; #158; roadmap item 56):
-  `W = 3Z - U` and `U` keep two counts of the atom's bands, planes and
-  fibre windings, the winding read mod 2. Seven vents in order (frames per
-  band, per plane, windings in ZZ, classes, the three frames, seams,
-  received turning), with their sites. No code changes.
+- The capacity's occupancy, the vents to open (docs/model.md; #158;
+  roadmap item 56): `W = 3Z - U` and `U` keep two counts of the atom's
+  bands, planes and fibre windings, the winding read mod 2. Seven vents
+  (states per band, per plane, windings in ZZ, classes, the delimiter
+  retired, seams, received turning), with their sites. No code changes.
 - The dipole, winding and phase, and the chain's cohomology stated
   (docs/model.md; #148, #149, #150; roadmap items 50 to 52). Every
   component of a reading is a dipole, `3Z/3Q + R` on the Z face and
@@ -236,6 +236,18 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Axiom 9 restated on capacity, not delimiters (ruled 2026-11-10, #158):
+  a kind's `Z` electrons occupy its capacity, `cap = E + U + 2P` (the
+  room, the open states, the held states); shares are read against the
+  capacity (occupancy `Z / cap = 3Z / 3Q`, held `2P / cap`, open `U / cap`,
+  room `E / cap`) and the pole state is `t = U / 2P`. "Frames" as a
+  nucleon count is retired across the docs and module comments: open
+  frames are the open states `U`, held frames the held count
+  `W = 3Z - U` (three per proton, the built delimiter, to be re-read on
+  the capacity, vent 5); "frame" keeps only its geometric meaning. The
+  frame face is now the capacity face; the vents section is *The
+  capacity's occupancy*; glossary gains *Occupancy* and *Room*. No code
+  changes value; the laws reading `W` are flagged where they move.
 - The six planes, a face per plane (#128, #121; docs/model.md): each plane
   reads gravity's face law with its own pole (`t_0 = r / M`,
   `t_j = J_j / (6 H_j)`, the horizon's `t_s = 1 + J / H`); a face's
@@ -243,8 +255,8 @@ may change public APIs and the model's laws.
   `D(d - c) = t`); T2 is the face law at the horizon and T14's plane push
   a divergent face (tests in `shares` and `turning`); T18 restated as
   separation, never an equal split (the plane's hold the kinds' turning on
-  it, `J_j` its part of the spin; `J / 5` removed); axiom 9's frames are the
-  same face law (`W / 3Z` the closed share, `t = U / W` the pole point).
+  it, `J_j` its part of the spin; `J / 5` removed); axiom 9's capacity reads
+  the same face law between held and open states (`t = U / 2P`).
   Two counts named apart
   (#151, ruled): the mass weight `m_Z = Z + Q` (neutrons) is the hold,
   the capacity `cap` the room.

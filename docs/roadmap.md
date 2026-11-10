@@ -87,7 +87,7 @@ its source location.
 
 | System | Role | Where |
 |---|---|---|
-| Integers (ZZ) | Everything counted: protons and neutrons, whole nuclei, frames, S^11 harmonics, the seal counts, the sexagesimal places of a coordinate, seeds and stream states | `u32` / `i64` indices; counts beyond a machine word as `Q` with denominator 1 (`num-bigint`); `atoms`, `fibres`, `circuit::grain`, `xyl_core::coordinate`, `xyl_core::rng` |
+| Integers (ZZ) | Everything counted: protons and neutrons, whole nuclei, states, S^11 harmonics, the seal counts, the sexagesimal places of a coordinate, seeds and stream states | `u32` / `i64` indices; counts beyond a machine word as `Q` with denominator 1 (`num-bigint`); `atoms`, `fibres`, `circuit::grain`, `xyl_core::coordinate`, `xyl_core::rng` |
 | Rationals (QQ) | All held state: element counts, firmament and bead amounts, reaches, spans, phases, the anchor, star and world masses | `xyl_core::Q`, lowest terms, `i64` on the stack and promoted to big integers on overflow; division is checked |
 | Reals (RR) | Never held directly. A real value enters as a proven rational enclosure `lo <= x <= hi` (pi, roots, exp, ln, sin, cos), or as a dyadic reading `m 2^e` at a seam, rounded toward zero and gridded back to `Q` before it is held | `xyl_core::certified::Encl`; `xyl_core::dyadic::Dy` |
 
@@ -123,16 +123,19 @@ carry the `2^-40` resolution of the draw.
 A kind is a nuclide `(Z, Q)`, where `Z` counts its protons and `Q` its
 neutrons. Its mass is `Z + Q` nucleons, which gravity and inertia read
 (`circuit::nucleus_weights`, `formation::mass_weight`). Chemistry, the
-founding and the light read the frames instead.
+founding and the light read the capacity's occupancy instead (axiom 9).
 
-- **3Z, the span.** Each proton spans three frames, split between the Z pole
-  (held, coherence) and the Q pole (open, decoherence). The hold is
-  `w = 3Z - u`, `u` the open (unpaired) frames (`compound::hold`,
-  `compound::open`). Pairing moves frames from the Q pole to the Z pole with
-  the span fixed. The closed share `h_Z = (3Z - u_Z) / 3Z` drives the capture
-  chain (`elements::closed_share`). Amounts move in whole nuclei of `w`
-  frames, so fusion conserves 3Z (`circuit::grain::nuclei_of`), and the
-  stars' transduction produces light with the 3Z hold conserved.
+- **3Z, the span.** The built account gives each proton three units, split
+  between the Z pole (held, coherence) and the Q pole (open, decoherence):
+  the held count `w = 3Z - u`, `u` the open (unpaired) states
+  (`compound::hold`, `compound::open`). Pairing moves an open state to the
+  held side with the span fixed. The closed share `h_Z = (3Z - u_Z) / 3Z`
+  drives the capture chain (`elements::closed_share`). Amounts move in whole
+  nuclei of `w`, so fusion conserves 3Z (`circuit::grain::nuclei_of`), and
+  the stars' transduction produces light with 3Z conserved. Three per
+  proton is a delimiter, not a capacity: axiom 9 restates the account on
+  the capacity, `cap = E + U + 2P`, where the 3 cancels from every share
+  (`3Z / 3Q = Z / cap`) ([#158](https://github.com/SAIOS-SAMN/xylarium/issues/158)).
 - **3Q, the capacity.** 3Q is three times the number of states in every
   shell the atom reaches: `cap = sum_n sum_(l < n) 2 d(l)` and
   `3Q = 3 cap`. The balance `R_Q = 6Z - 3Q` and its share
@@ -233,14 +236,14 @@ where it belongs to one.
     closed kinds, proved in EQUATIONS.md, Throat holding; [#35](https://github.com/SAIOS-SAMN/xylarium/issues/35), `track`, `law`). Parcels leave their
     throat at onset and move by the reach rate
     ([model.md](model.md#the-founding-as-flow)); angular state in degrees with
-    the swing as torsion and twist; perturbation on frames; meetings by
+    the swing as torsion and twist; perturbation on the occupied states; meetings by
     contrast times coherence; concentrations contract into throats of their
     own. Resolves items 3, 4 and 5 below.
 33. **Genesis structure** ([#36](https://github.com/SAIOS-SAMN/xylarium/issues/36), `defect`). The bead's triple use,
     homologue galaxies, stars by index and the forecast of minds are replaced
     by tiers formed from the flow.
 34. **The echo moves position** ([#37](https://github.com/SAIOS-SAMN/xylarium/issues/37), `defect`, `law`). The echo acts on
-    angular state and frames only. Done: the reach-scaled admission
+    angular state and occupied states only. Done: the reach-scaled admission
     (`least_share`) is removed with the paired throat (#86). Left:
     `push_at` and `beyond_at` banding reaches by the swing, `Push::swing`,
     and the pulse carrying world positions in `field`.
@@ -282,8 +285,8 @@ where it belongs to one.
    The cascade assigns each kind one reach and exchanges between stacks on the way out
    (`formation::founding_shells`). In its place: the
    bounce releases the torsion share's pressure along the filament, falling with
-   reach as the vacuum's share; each kind attaches to it by its open frames and
-   is held back by its held frames, and settles where the two balance, as a
+   reach as the vacuum's share; each kind attaches to it by its open states and
+   is held back by its held count, and settles where the two balance, as a
    distribution over reach. Shells and bands become concentrations read from
    those distributions. Sealed kinds do not attach and stay as the firmament.
 4. **Recycling through the cores**
@@ -343,12 +346,14 @@ where it belongs to one.
     (separation). Next: the per-plane split of `J` and `H` from the spin,
     the axis plane's count, the poles as the vortex's windings, then
     [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123).
-56. **Held frames: the vents** ([#158](https://github.com/SAIOS-SAMN/xylarium/issues/158), `law`, `defect`, `track`, M4;
-    [model.md](model.md#held-frames-the-vents-to-open)). `W` and `U` keep
-    two counts of the atom's bands, planes and fibre windings (the winding
-    read mod 2). Vents: frames per band, per plane, windings in ZZ, classes
-    (pairing and stripping as coboundaries), the three frames named, seams
-    per band and plane, received turning per plane and band.
+56. **The capacity's occupancy: the vents** ([#158](https://github.com/SAIOS-SAMN/xylarium/issues/158), `law`, `defect`, `track`, M4;
+    [model.md](model.md#the-capacitys-occupancy-the-vents-to-open)). Axiom 9 restated
+    on capacity: `cap = E + U + 2P`, shares against the capacity, the pole
+    `t = U / 2P`; the held count `W = 3Z - U` (three per proton) is a
+    delimiter to retire. Vents: states per band, per plane, windings in ZZ,
+    classes (pairing and stripping as coboundaries), the delimiter retired
+    (every law reading `W`), seams per band and plane, received turning per
+    plane and band.
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;
@@ -430,7 +435,7 @@ where it belongs to one.
 ### Stars (milestone 3, layer B)
 
 8. **No iron peak** ([#9](https://github.com/SAIOS-SAMN/xylarium/issues/9),
-   `needs-decision`). The atoms' held frames per nucleon fall across the whole
+   `needs-decision`). The atoms' held count per nucleon fall across the whole
    table, so every fusion step releases hold and the sequence runs to superheavy
    kinds.
 9. **Many-body fusion steps**
@@ -752,7 +757,7 @@ Next:
    outward (model.md, Radiation: irradiation held, transduced and passed
    on), in place of 278 K, 340 W/m^2, 288 K and `greenhouse_tau`;
    the mantle and the heat-producing isotopes from each element's hold and
-   open frames and the star's birth mixture, in place of the bulk-silicate
+   open states and the star's birth mixture, in place of the bulk-silicate
    Earth tables and the 4.57 Gyr epoch; `worlds/unit.rs` deleted.
 3. Layer D, life and minds (`life`, `minds`): rung waits and strike rates
    in rings; the mind-bearing body, its metabolism and generation, and the

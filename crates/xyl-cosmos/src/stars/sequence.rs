@@ -5,11 +5,11 @@
 //!
 //! Reads `elements::table` (each kind's nucleon count `A_z`, the table's `a`
 //! rounded to the nearest whole) and `compound::open_hot` and
-//! `compound::charge` (a kind's open frames under received turning and its charge). The received
+//! `compound::charge` (a kind's open states under received turning and its charge). The received
 //! turning is the turning the star receives per echo, in hydrogen units (`atoms::unpaired_hot`);
 //! shares are shares of the star's hold; echoes are counted from ignition.
 //!
-//! - Frames under received turning: a kind `z` keeps `u_z(q)` open frames (its Q pole) and
+//! - States under received turning: a kind `z` keeps `u_z(q)` open states (its Q pole) and
 //!   holds `w_z(q) = 3 Z - u_z(q)` (its Z pole).
 //! - Pole state (`mixture_pole`): over the held mixture, with `n_z = share_z /
 //!   w_z` nuclei of each kind, `t0 = sum n_z u_z / sum n_z w_z`, at most 1/2.
@@ -80,12 +80,12 @@ pub fn nucleon_count(z: u32) -> Option<u32> {
     nucleons().of.get(&z).copied()
 }
 
-/// A kind's open frames at `received` (hydrogen units), `u_z(q)`: its Q pole.
+/// A kind's open states at `received` (hydrogen units), `u_z(q)`: its Q pole.
 fn open_at(z: u32, received: &crate::atoms::Received) -> Q {
     Q::int(i64::from(crate::compound::open_hot(z, received)))
 }
 
-/// A kind's held frames at `received`, `w_z(q) = 3 Z - u_z(q)`: its Z pole,
+/// A kind's held count at `received`, `w_z(q) = 3 Z - u_z(q)`: its Z pole,
 /// never negative.
 pub fn held_frames(z: u32, received: &crate::atoms::Received) -> Q {
     (&Q::int(3 * i64::from(crate::compound::charge(z))) - &open_at(z, received)).max(Q::ZERO)
@@ -96,7 +96,7 @@ pub fn held_frames(z: u32, received: &crate::atoms::Received) -> Q {
 /// `circuit::pole_point`), over the held mixture `held` (kind, share of the
 /// hold) at `received`, with `n_z = share_z / w_z` the count of nuclei of each
 /// kind. Its inverse is the star's polarity. Zero for an empty mixture or
-/// one whose kinds hold no frames.
+/// one whose kinds hold no states.
 pub fn mixture_pole(held: &[(u32, Q)], received: &crate::atoms::Received) -> Q {
     let (mut open, mut closed) = (Q::ZERO, Q::ZERO);
     for (z, share) in held {
@@ -235,7 +235,7 @@ impl Sequence {
     /// kind of greatest release stepping on the mixture as it stands, its
     /// products' hold `share x (1 - release)` joining the mixture; then,
     /// where `t0 > 0`, the fission stages read the same way, the products
-    /// sharing the passed hold in proportion to their held frames.
+    /// sharing the passed hold in proportion to their held count.
     /// `throat_echoes` is left `None` ([`Sequence::at`] sets it). An empty
     /// mixture gives no step and a remnant of one.
     pub fn of(held: &[(u32, Q)], received: &crate::atoms::Received) -> Sequence {
@@ -305,7 +305,7 @@ impl Sequence {
 }
 
 /// A kind's step in one direction: its products, the hold each product
-/// receives per hold passed on (in proportion to the products' held frames),
+/// receives per hold passed on (in proportion to the products' held count),
 /// the nuclei taken and the release.
 struct Found {
     products: Vec<u32>,
@@ -440,7 +440,7 @@ mod tests {
         assert_eq!((first.kind, first.nuclei), (1, k));
         assert_eq!(first.products, vec![product]);
         assert_eq!((&first.share, &first.release), (&Q::ONE, &release));
-        // With no turning received the frames are the kinds' holds, so the release is the
+        // With no turning received the states are the kinds' holds, so the release is the
         // built form `1 - hold(z') / (k hold(z))`.
         let built = &Q::ONE
             - &Q::int(i64::from(crate::compound::hold(product)))
@@ -454,7 +454,7 @@ mod tests {
 
     #[test]
     fn pole_point_lies_on_the_z_side() {
-        // A kind's open frames are at most its charge of its 3Z, so the
+        // A kind's open states are at most its charge of its 3Z, so the
         // collective's pole point is at most 1/2.
         let half = Q::ratio(1, 2);
         for received in heats() {

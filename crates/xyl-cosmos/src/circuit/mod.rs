@@ -1,13 +1,13 @@
 //! The substrate (docs/model.md): the founding and the sections above it
 //! (core, ocean, galaxies) as closed-form functions of time `t` in rings
 //! (one ring one bell, the engine's unit of time; anchor.rs), evaluated on
-//! demand rather than stored as frames. Rates are per ring.
+//! demand rather than stored as states. Rates are per ring.
 //!
 //! Inputs: the parent's spin (through `origin::torsion_share`), the founded
 //! elements (`elements::Element`), `formation` for the cascade and the
-//! lighting, `atoms::vessel`, `compound` for each kind's frames, and
+//! lighting, `atoms::vessel`, `compound` for each kind's states, and
 //! `package` for the core's mass and the SI seam. Amounts are in held
-//! frames, universe units (the beads' states sum to the founding unit);
+//! states, universe units (the beads' states sum to the founding unit);
 //! reaches are in cluster units about the universal throat, read in the
 //! cluster tier (`xyl_core::units::Tier::Cluster`).
 //!
@@ -34,7 +34,7 @@
 use std::collections::BTreeMap;
 use xyl_core::Q;
 
-/// A mix of kinds: amount (held frames) by kind.
+/// A mix of kinds: amount (held count) by kind.
 pub type Mix = BTreeMap<u32, Q>;
 
 mod anchor;

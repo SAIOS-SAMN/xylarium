@@ -79,10 +79,10 @@ pub fn antinode(q: u32) -> Q {
         .unwrap_or(Q::ZERO)
 }
 
-/// Shine and light as one antipole pair. Shine is the efflux: the frames a
+/// Shine and light as one antipole pair. Shine is the efflux: the states a
 /// source's transduction closes, the dilator D(rho) moving its pole point toward Z.
 /// Light is the afflux, shine's antipole: the same flux through the axis's
-/// inversion, I D(rho) I = D(1 / rho), opening the receiver's frames (toward
+/// inversion, I D(rho) I = D(1 / rho), opening the receiver's states (toward
 /// Q). The pair's books close where the two dilators compose to the identity.
 /// Returns the light's dilation and whether the versor form closes exactly.
 pub fn light_of(rho_shine: &Q) -> Option<(Q, bool)> {

@@ -5,13 +5,13 @@
 //! the units `atoms::unpaired_hot` takes. Counts are exact `u32`, shares `Q`.
 //!
 //! - `closing`: the smallest closing cluster of two atoms with pairable
-//!   frames u_A, u_B at a received turning is (u_B / g) A . (u_A / g) B,
-//!   g = gcd(u_A, u_B), every frame paired; hydrides are u_B = 1, water
+//!   states u_A, u_B at a received turning is (u_B / g) A . (u_A / g) B,
+//!   g = gcd(u_A, u_B), every state paired; hydrides are u_B = 1, water
 //!   O . 4H. Returns (id, counts, the bond of its two parts) or None if
 //!   either pairs nothing. The bond keeps both parts whole and is read by
 //!   planes (`atoms::Bond`), never by one weaker tightness.
 //! - `stands`: a cluster stands while the received turning strips neither part's open
-//!   frames; an atom always stands.
+//!   states; an atom always stands.
 //! - Properties: `charge` = sum n Z; `bonds` = the lesser side's n u;
 //!   `open` = sum n u - 2 bonds; `hold` = 3 charge - open, so
 //!   hold + open = 3 charge for every kind.
@@ -78,8 +78,8 @@ pub fn charge(k: u32) -> u32 {
     parts(k).iter().map(|(z, n)| z * n).sum()
 }
 
-/// The frames a cluster's parts pair with each other: the lesser side's open
-/// frames.
+/// The states a cluster's parts pair with each other: the lesser side's open
+/// states.
 pub fn bonds(k: u32) -> u32 {
     if !is_cluster(k) {
         return 0;
@@ -88,7 +88,7 @@ pub fn bonds(k: u32) -> u32 {
     (na * crate::atoms::unpaired(za)).min(nb * crate::atoms::unpaired(zb))
 }
 
-/// A kind's open frames: its parts' open frames less two per bond.
+/// A kind's open states: its parts' open states less two per bond.
 pub fn open(k: u32) -> u32 {
     if !is_cluster(k) {
         return crate::atoms::unpaired(k);
@@ -100,8 +100,8 @@ pub fn open(k: u32) -> u32 {
     all - 2 * bonds(k)
 }
 
-/// Open frames at the turning a place receives: an atom's after ionization; a standing
-/// cluster keeps the open frames it has at rest, `open` (a cluster that would
+/// Open states at the turning a place receives: an atom's after ionization; a standing
+/// cluster keeps the open states it has at rest, `open` (a cluster that would
 /// not stand has already parted).
 pub fn open_hot(k: u32, heat: &crate::atoms::Received) -> u32 {
     if is_cluster(k) {
@@ -111,13 +111,13 @@ pub fn open_hot(k: u32, heat: &crate::atoms::Received) -> u32 {
     }
 }
 
-/// A kind's hold, 3 charge - open: pairing moves frames from the Q pole to
+/// A kind's hold, 3 charge - open: pairing moves states from the Q pole to
 /// the Z pole with the span fixed.
 pub fn hold(k: u32) -> u32 {
     3 * charge(k) - open(k)
 }
 
-/// How tightly a kind holds its outermost frame: an atom's tightness; for a
+/// How tightly a kind holds its outermost state: an atom's tightness; for a
 /// cluster, the weaker of its parts' (atoms::bond).
 pub fn tightness(k: u32) -> Q {
     parts(k)
@@ -141,7 +141,7 @@ pub fn stands(k: u32, heat: &crate::atoms::Received) -> bool {
 
 /// What two atoms meeting at the turning a place receives close into:
 /// (cluster id, count of `za`, count of `zb`, the bond of the two parts) for
-/// the smallest closing cluster of their pairable frames. None if either has
+/// the smallest closing cluster of their pairable states. None if either has
 /// nothing to pair.
 pub fn closing(
     za: u32,
@@ -189,7 +189,7 @@ mod tests {
 
     #[test]
     fn water_closes_from_its_parts_and_parts_by_heat() {
-        // Oxygen opens four frames on S^11 and hydrogen one, so the smallest
+        // Oxygen opens four states on S^11 and hydrogen one, so the smallest
         // closing cluster is O . 4H.
         let (w, no, nh, bond) = closing(8, 1, &crate::atoms::Received::none()).unwrap();
         assert_eq!((no, nh, key(w)), (1, 4, "Z008\u{b7}4Z001".to_string()));

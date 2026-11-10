@@ -370,7 +370,7 @@ where it belongs to one.
     (#163, first: the bench for #158's remaining vents), B2 the board home
     and ledger (#164, after #142), B3 bodies as spheres (#165), B4 elements
     on a body (#166), B5 substrate trials as data (#167, with #140), B6 the
-    board on the hypha (#168).
+    board on the hypha (#168). Done: B1, `observe bench`.
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

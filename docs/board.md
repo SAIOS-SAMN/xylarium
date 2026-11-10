@@ -112,9 +112,16 @@ and occupancy (`atoms::occupancy`), the element table
 (`elements::founding_bits`), and each kind's pole and emission. The bench
 reads the substrate alone, with no founding:
 
-- **The reading.** A new observer word, `substrate`, prints per kind the
-  occupancy (`E`, `U`, `2P`, `cap`), the closed share, the chain's count,
-  the founding bits, the pole and the emission, in seconds.
+- **The reading.** Built: `observe bench [LO] [HI]`. It reads the seed's
+  drawn spin (`origin::drawn_spin`) and its torsion share, and prints per
+  kind the nucleon count, the occupancy (`E`, `U`, `2P`, `cap`), the built
+  held count `W` and closed share, the capture's step (the bands the
+  added electron changes, `dU` and `dP` per band, and the capacity's
+  growth), the pole `U / W` and `U / 2P`, the emission, the chain's count
+  per hydrogen and the founded whole count. Then the founding bits, the
+  kinds founded whole, the mean nucleon count and the seals' counts. It
+  builds nothing above the chain and reads or writes no cache: about 30 s
+  for all 1700 kinds, most of it the element table.
 - **Trials as data.** A substrate law under trial is written as an exact
   expression over a kind's integers (`Z`, `Q`, `A`, `E`, `U`, `P`, `cap`)
   and evaluated in `Q` over every kind, beside the built law. The trial
@@ -158,7 +165,7 @@ kernel.
 
 | Phase | Work | Issue | Done when |
 |---|---|---|---|
-| B1 | The substrate bench: `observe substrate`, no founding | [#163](https://github.com/SAIOS-SAMN/xylarium/issues/163) | Every kind's occupancy, closed share, chain count, pole and emission printed in seconds on an empty home |
+| B1 | The substrate bench: `observe bench`, no founding (built) | [#163](https://github.com/SAIOS-SAMN/xylarium/issues/163) | Every kind's occupancy, closed share, chain count, pole and emission printed in seconds on an empty home |
 | B2 | The board home and its ledger | [#164](https://github.com/SAIOS-SAMN/xylarium/issues/164) | A blank board created, edited and read back from its ledger alone; depends on #142 |
 | B3 | Bodies as spheres on the enclosure | [#165](https://github.com/SAIOS-SAMN/xylarium/issues/165) | A core, a star and a world placed and read through the built laws, each place stated per plane in degrees |
 | B4 | Elements on a body | [#166](https://github.com/SAIOS-SAMN/xylarium/issues/166) | Adding and removing nuclei re-reads the star's pole, sequence and light, and only the dependent readings |

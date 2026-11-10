@@ -10,7 +10,7 @@
 //! and its hold `H = 1 + held`.
 //!
 //! - Founding shells (`founding_shells`): each kind's reach
-//!   `R_z = (K + s_i) / w_z / H` and whether the throat holds it,
+//!   `R_z = (K + s_i) / m_z / H` (`m_z = Z + Q`, `mass_weight`) and whether the throat holds it,
 //!   `R_z (1 + s_final) <= 1`.
 //! - Gas (`lighting`): each bead is a piece of the home galaxy's gas,
 //!   its state over the unit spread over its span, its kinds at its pinch

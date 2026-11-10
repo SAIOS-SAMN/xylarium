@@ -89,7 +89,7 @@ fn carried_reach(push: &Q, w: &Q, h_final: &Q) -> Q {
 }
 
 /// The founding shells: each kind's reach about the throat,
-/// R_z = (K + s_i) / w_z / H, after the filter below. Returns the final
+/// R_z = (K + s_i) / m_z / H (m_z the mass weight), after the filter below. Returns the final
 /// share s_final (each shell spreads R (1 +/- s_final)) and, per kind,
 /// (z, amount, reach). What the throat holds is not read here: it is the
 /// closed kinds, held on both faces of the paired throat (T16).

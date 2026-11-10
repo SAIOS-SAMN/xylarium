@@ -19,6 +19,15 @@ may change public APIs and the model's laws.
   Pairs are coboundaries on the containment chain, loops cocycles, the
   books' closing the cocycle condition, and twist, remanence and sheared
   returns its holonomy. The three meanings of Q are #151. No code changes.
+- The capacity in the cosmos (#151): `atoms::capacity` (`cap`, `3Q = 3
+  cap`), `atoms::balance` (`R_Q`, `rho_Q`), `circuit::kind_capacity` and
+  `circuit::mix_capacity`; `observe seals` reads them (it computed the
+  capacity itself before), prints each kind's pole point `t = u / w`, and
+  compares the founded mix's `3Q / 3Z` (as neutrons and as capacity) with
+  the throat's `s_Q / s_Z`. Proven over Z 1 to 1700: `rho_Q = +1` exactly
+  where `Z = cap`, exactly at the seals, each closed (`t = 0`, the Z pole).
+  For seed 7 neither reading of Q reproduces the throat.
+
 - The path (docs/roadmap.md): the destination, where the universe stands,
   and five stages as GitHub milestones (M3 to M7) with exit readings.
 - Calibre and dimensional capacity (docs/model.md, #123): a share reads its
@@ -222,6 +231,10 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Names (#151): phases in the rationals mod the integers are written
+  `QQ/ZZ`; the throat's pole shares `s_Q`, `s_Z` (were `Q`, `Z`); the
+  spin's grid `g` (was `N`); the founding's mass weight `m_Z = Z + Q` (was
+  `w_Z`, which names the hold `3Z - u`).
 - Reaches are read in tier units (cluster and galaxy units), never rings
   (#115); no formula changed.
 - "Ring" means only the bell's harmonic (docs/model.md, Units); the

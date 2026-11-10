@@ -7,6 +7,7 @@
 //
 // Outputs: `TwoWeights` (protons, neutrons, `mass`, `neutron_share`);
 // `mass_number` (the table's mass rounded to the nearest nucleon, A = floor(a + 1/2));
+// `kind_capacity` and `mix_capacity` (the dipole's capacity, `3Q = 3 cap`);
 // `neutrons_of` (the mass number less the
 // charge, summed over a cluster's parts); `nucleus_weights`; `mix_weights`
 // (whole nuclei only); `electron_phase`, R = kappa (1 - 2 frac(p)) in
@@ -107,6 +108,27 @@ pub fn mix_weights(m: &Mix) -> TwoWeights {
         protons: p,
         neutrons: n,
     }
+}
+
+/// A kind's capacity: an atom's `atoms::capacity`, a cluster's the sum over
+/// its parts; zero where none is read. `3Q = 3 cap` is the dipole's Q
+/// side beside the span `3Z` (docs/model.md, The dipole).
+pub fn kind_capacity(k: u32) -> Q {
+    crate::compound::parts(k)
+        .iter()
+        .filter(|(z, n)| *z > 0 && *n > 0)
+        .fold(Q::ZERO, |acc, (z, n)| {
+            let cap = crate::atoms::capacity(*z).map_or(0, i64::from);
+            &acc + &Q::int(cap * i64::from(*n))
+        })
+}
+
+/// A mix's capacity summed over each kind's whole nuclei (as
+/// [`mix_weights`]): with the protons it gives the mix's `3Z` and `3Q`.
+pub fn mix_capacity(m: &Mix) -> Q {
+    m.iter().fold(Q::ZERO, |acc, (k, a)| {
+        &acc + &(&nuclei_of(a, *k).1 * &kind_capacity(*k))
+    })
 }
 
 /// R, a kind's electron phase state at the pulse p (turns): the electrons'

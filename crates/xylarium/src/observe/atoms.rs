@@ -176,18 +176,16 @@ pub(super) fn push_reading(top: usize) -> String {
     out
 }
 
-/// The `seals Z` reading: the quantum capacity under each kind up to `top`
-/// (3Q from the 3Z formulas), read on the atom's bands. 3Z counts the filled
-/// frames; 3Q is three times Q_cap, the room of every shape of every turning
-/// the atom reaches; then R_Q = 6Z - 3Q and rho_Q = (2Z - Q_cap) / Q_cap.
-/// The kinds that seal (every winding full and every shape of the outermost
-/// turning full, rho_Q = +1) are the convergence points of the table. The
-/// reading also lists the seams and the vessel, and prints rows for selected
-/// kinds.
+/// The `seals Z` reading: the capacity under each kind up to `top`
+/// (`atoms::capacity`, `atoms::balance`): 3Z the span, 3Q = 3 cap, then
+/// R_Q = 6Z - 3Q and rho_Q = (2Z - cap) / cap. The kinds that seal (rho_Q =
+/// +1, Z = cap) are the dipole's equator, each with its pole point
+/// t = u / w. The reading lists the seams and the vessel, prints rows for
+/// selected kinds, and then the founded mix's dipole against the throat's.
 pub(super) fn seals_read(o: &Options, top: usize) -> String {
-    let share = Origin::of(o.seed)
-        .and_then(|b| xyl_cosmos::cores::substrate_for(&b.parent.spin))
-        .map(|s| s.share.clone());
+    let substrate =
+        Origin::of(o.seed).and_then(|b| xyl_cosmos::cores::substrate_for(&b.parent.spin));
+    let share = substrate.as_ref().map(|s| s.share.clone());
     let mut out = String::from(
         "The seals (rho_Q = +1, the quantum substrate filled) and rho_Q along the table\n",
     );
@@ -207,32 +205,35 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
                 seams.push(z);
             }
         }
-        // `Q_cap = sum over turnings n of sum over shapes l < n of 2 d(l)`.
-        let cap: u32 = (1..=a.outer_n)
-            .map(|n| {
-                (0..n)
-                    .map(|l| 2 * xyl_cosmos::fibres::directions(l))
-                    .sum::<u32>()
-            })
-            .sum();
-        let rho = Q::ratio(2 * i64::from(z) - i64::from(cap), i64::from(cap.max(1)));
+        let (Some(cap), Some((r_q, rho))) = (
+            xyl_cosmos::atoms::capacity(z),
+            xyl_cosmos::atoms::balance(z),
+        ) else {
+            continue;
+        };
+        // The pole point t = u / w, open over held frames.
+        let t = Q::ratio(
+            i64::from(a.unpaired),
+            i64::from(xyl_cosmos::compound::hold(z).max(1)),
+        );
         if a.sealed() {
-            sealed.push((z, a.outer_n, cap));
+            sealed.push((z, a.outer_n, cap, t.clone()));
         }
         if [1, 2, 28, 115, 208, 1000, 1050, 1092, 1100, 1200, 1600].contains(&z) {
             rows.push_str(&format!(
                 concat!(
                     "  Z{:>5}: turning {} capacity {} -> 3Z {} 3Q {} R_Q {} rho_Q {} ",
-                    "(open frames {}, sealed {})\n"
+                    "(open frames {}, pole point t {}, sealed {})\n"
                 ),
                 z,
                 a.outer_n,
                 cap,
                 3 * z,
                 3 * cap,
-                6 * i64::from(z) - 3 * i64::from(cap),
+                r_q,
                 show(&rho),
                 a.unpaired,
+                show(&t),
                 a.sealed()
             ));
         }
@@ -241,7 +242,10 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
         "Sealed kinds: {}\n",
         sealed
             .iter()
-            .map(|(z, n, c)| format!("Z{z} (turning {n}, capacity {c})"))
+            .map(|(z, n, c, t)| format!(
+                "Z{z} (turning {n}, capacity {c}, pole point t {})",
+                show(t)
+            ))
             .collect::<Vec<_>>()
             .join(", ")
     ));
@@ -271,6 +275,64 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
         None => out.push_str("The vessel: none (no seal within the table)\n"),
     }
     out.push_str(&rows);
+    if let Some(s) = substrate.as_deref() {
+        out.push_str(&dipole_read(s));
+    }
+    out
+}
+
+/// The founded mix's dipole against the throat's (docs/model.md, The
+/// dipole; #151): the throat's pole shares `s_Q = s`, `s_Z = 1 - s` from the
+/// torsion share, their ratio `1 + a / 2` and twist `n = 2s - 1`; then the
+/// firmament's and the whole founding's `3Q / 3Z` and
+/// `n = (3Q - 3Z) / (3Q + 3Z)`, with `3Q` read as the neutrons and as the
+/// capacity, over whole nuclei (`circuit::mix_weights`,
+/// `circuit::mix_capacity`). `R` is not in this comparison.
+fn dipole_read(s: &xyl_cosmos::circuit::Substrate) -> String {
+    let ratio = |q: &Q, z: &Q| q.checked_div(z).unwrap_or(Q::ZERO);
+    let twist = |q: &Q, z: &Q| (q - z).checked_div(&(q + z)).unwrap_or(Q::ZERO);
+    let s_q = s.share.clone();
+    let s_z = &Q::ONE - &s_q;
+    let mut out = format!(
+        concat!(
+            "The dipole against the throat (#151): the throat's s_Q {} s_Z {}, ",
+            "s_Q / s_Z {}, twist n {}\n"
+        ),
+        show(&s_q),
+        show(&s_z),
+        show(&ratio(&s_q, &s_z)),
+        show(&twist(&s_q, &s_z))
+    );
+    let firmament: xyl_cosmos::circuit::Mix = s
+        .firmament
+        .iter()
+        .map(|k| (k.z, k.amount.clone()))
+        .collect();
+    let mut founded = firmament.clone();
+    for b in &s.beads {
+        for (k, a) in &b.recipe {
+            let held = founded.entry(*k).or_insert(Q::ZERO);
+            *held = &*held + a;
+        }
+    }
+    for (label, mix) in [("firmament", &firmament), ("whole founding", &founded)] {
+        let w = xyl_cosmos::circuit::mix_weights(mix);
+        let cap = xyl_cosmos::circuit::mix_capacity(mix);
+        out.push_str(&format!(
+            concat!(
+                "  {}: 3Z {}; as neutrons 3Q {} (3Q / 3Z {}, n {}); ",
+                "as capacity 3Q {} (3Q / 3Z {}, n {})\n"
+            ),
+            label,
+            show(&(&w.protons * &Q::int(3))),
+            show(&(&w.neutrons * &Q::int(3))),
+            show(&ratio(&w.neutrons, &w.protons)),
+            show(&twist(&w.neutrons, &w.protons)),
+            show(&(&cap * &Q::int(3))),
+            show(&ratio(&cap, &w.protons)),
+            show(&twist(&cap, &w.protons))
+        ));
+    }
     out
 }
 

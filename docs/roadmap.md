@@ -248,9 +248,9 @@ where it belongs to one.
 38. **The ring as the throat orbit**
     ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60), `law`). A ring
     is the reading of the core's sheared elliptic orbit at the throat (the
-    axis dilation by its exponent, each plane's phase in Q/Z, never one
+    axis dilation by its exponent, each plane's phase in QQ/ZZ, never one
     scalar); the echo's twist `n = a / (4 + a)` moves Q up and Z down about the equator and is
-    held by the dipole as torsion, `Q / Z = 1 + a / 2`
+    held by the dipole as torsion, `s_Q / s_Z = 1 + a / 2`
     ([model.md](model.md#the-ring-the-throat-orbit-and-the-echos-torsion)).
     Done: each throat's echo is its sheared return at that throat's
     torsion share, `bell / (1 - s)` on the near face and `bell / s` on the far
@@ -321,8 +321,12 @@ where it belongs to one.
     [model.md](model.md#cohomology-pairs-loops-and-the-books)). Pairs as
     coboundaries, loops as cocycles, the books as the cocycle condition,
     holonomy as twist and remanence.
-53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`, `needs-decision`): the rational type,
-    the neutron count and the capacity.
+53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`, `needs-decision`): five meanings.
+    Done: the capacity and balance in `atoms` (`atoms::capacity`,
+    `atoms::balance`); the seals proven the dipole's equator at the Z pole;
+    the renames (`QQ/ZZ`, `s_Q`/`s_Z`, the spin grid `g`, the mass weight
+    `m_Z`). Open: the decision; the mix's dipole against the throat with
+    `R`.
 43. **Scalar collapses**
     ([#107](https://github.com/SAIOS-SAMN/xylarium/issues/107), `defect`,
     `law`;

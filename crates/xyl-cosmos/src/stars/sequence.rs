@@ -87,7 +87,7 @@ fn open_at(z: u32, received: &crate::atoms::Received) -> Q {
 
 /// A kind's held count at `received`, `w_z(q) = 3 Z - u_z(q)`: its Z pole,
 /// never negative.
-pub fn held_frames(z: u32, received: &crate::atoms::Received) -> Q {
+pub fn held_count(z: u32, received: &crate::atoms::Received) -> Q {
     (&Q::int(3 * i64::from(crate::compound::charge(z))) - &open_at(z, received)).max(Q::ZERO)
 }
 
@@ -100,7 +100,7 @@ pub fn held_frames(z: u32, received: &crate::atoms::Received) -> Q {
 pub fn mixture_pole(held: &[(u32, Q)], received: &crate::atoms::Received) -> Q {
     let (mut open, mut closed) = (Q::ZERO, Q::ZERO);
     for (z, share) in held {
-        let w = held_frames(*z, received);
+        let w = held_count(*z, received);
         let Some(n) = share.checked_div(&w) else {
             continue;
         };
@@ -157,7 +157,7 @@ pub struct Sequence {
 pub fn fusion_step(z: u32, received: &crate::atoms::Received) -> Option<(u32, u32, Q)> {
     let index = nucleons();
     let a = nucleon_count(z)?;
-    let w = held_frames(z, received);
+    let w = held_count(z, received);
     let top = *index.at.keys().next_back()?;
     for k in 2..=(top / a) {
         let Some(kinds) = index.at.get(&(k * a)) else {
@@ -167,7 +167,7 @@ pub fn fusion_step(z: u32, received: &crate::atoms::Received) -> Option<(u32, u3
         let best = kinds
             .iter()
             .filter_map(|p| {
-                let release = &Q::ONE - &held_frames(*p, received).checked_div(&kw)?;
+                let release = &Q::ONE - &held_count(*p, received).checked_div(&kw)?;
                 (release.signum() > 0).then_some((*p, release))
             })
             .max_by(|x, y| x.1.cmp(&y.1).then_with(|| y.0.cmp(&x.0)));
@@ -185,7 +185,7 @@ pub fn fusion_step(z: u32, received: &crate::atoms::Received) -> Option<(u32, u3
 pub fn fission_step(z: u32, received: &crate::atoms::Received) -> Option<([u32; 2], Q)> {
     let index = nucleons();
     let a = nucleon_count(z)?;
-    let w = held_frames(z, received);
+    let w = held_count(z, received);
     for a1 in (1..=a / 2).rev() {
         let (Some(lo), Some(hi)) = (index.at.get(&a1), index.at.get(&(a - a1))) else {
             continue;
@@ -194,7 +194,7 @@ pub fn fission_step(z: u32, received: &crate::atoms::Received) -> Option<([u32; 
             .iter()
             .flat_map(|z1| hi.iter().map(move |z2| (*z1, *z2)))
             .filter_map(|(z1, z2)| {
-                let made = &held_frames(z1, received) + &held_frames(z2, received);
+                let made = &held_count(z1, received) + &held_count(z2, received);
                 let release = &Q::ONE - &made.checked_div(&w)?;
                 (release.signum() > 0).then_some(([z1, z2], release))
             })
@@ -374,7 +374,7 @@ fn transduce(
         let frames: Vec<Q> = step
             .products
             .iter()
-            .map(|p| held_frames(*p, received))
+            .map(|p| held_count(*p, received))
             .collect();
         let all = frames.iter().fold(Q::ZERO, |a, w| &a + w);
         let mut given = Q::ZERO;

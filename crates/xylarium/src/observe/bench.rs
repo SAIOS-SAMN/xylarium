@@ -82,6 +82,34 @@ fn step(z: u32) -> String {
     parts.join("; ")
 }
 
+/// The capacity of the bands kind `z` has entered: twice the orientations
+/// of every band holding at least one electron, leaving out the room of
+/// shapes and turnings the atom reaches but has not entered.
+fn entered_capacity(z: u32) -> u32 {
+    band_occupancy(z)
+        .unwrap_or_default()
+        .iter()
+        .filter(|(_, o)| o.occupied() > 0)
+        .map(|(_, o)| o.capacity())
+        .sum()
+}
+
+/// The candidate closed shares the bench reads beside the built law, by
+/// name: held over the capacity (#170), held over the entered capacity, and
+/// occupancy over the entered capacity. Readings only; the founding reads
+/// the built law (`elements::closed_share`).
+const CANDIDATES: [&str; 3] = ["2P/cap", "2P/cap_in", "Z/cap_in"];
+
+fn candidates(z: u32, o: &Occupancy) -> [Q; 3] {
+    let cap_in = i64::from(entered_capacity(z));
+    let of = |a: u32, b: i64| Q::new(i64::from(a), b).unwrap_or(Q::ZERO);
+    [
+        of(o.held(), i64::from(o.capacity())),
+        of(o.held(), cap_in),
+        of(z, cap_in),
+    ]
+}
+
 /// `a / b` as a reading, `-` where `b` is zero.
 fn ratio(a: u32, b: u32) -> String {
     if b == 0 {
@@ -107,8 +135,9 @@ pub(super) fn bench_read(seed: u64, lo: u32, hi: u32) -> Result<String, String> 
         concat!(
             "The substrate bench (seed {}, no founding): the parent's spin {}, ",
             "torsion share a {}; the chain founds from 2^{} hydrogen\n",
-            "  Z A | E U 2P cap | W h | step | t U/W, U/2P | emission | ",
-            "count per H (a h chain) | founded whole\n"
+            "  Z A | E U 2P cap cap_in | W h | candidates 2P/cap 2P/cap_in Z/cap_in | ",
+            "step | t U/W, U/2P | emission U/W, face U/Z | count per H (a h chain) | ",
+            "founded whole\n"
         ),
         seed,
         show(&spin),
@@ -118,6 +147,9 @@ pub(super) fn bench_read(seed: u64, lo: u32, hi: u32) -> Result<String, String> 
     // The unfloored chain per hydrogen, prod_{2..=z} a h_z, read as a
     // dyadic; the founded counts are the exact floored chain.
     let mut chain = Dy::ONE;
+    // The same chain under each candidate share, to the vessel's top.
+    let vessel_top = xyl_cosmos::atoms::vessel().map_or(top, |(_, hi)| hi);
+    let mut trials = [Dy::ONE; 3];
     let (mut nuclei, mut nucleons, mut whole_kinds) = (Q::ZERO, Q::ZERO, 0u32);
     let mut seals = Vec::new();
     for z in 1..=top {
@@ -142,24 +174,41 @@ pub(super) fn bench_read(seed: u64, lo: u32, hi: u32) -> Result<String, String> 
         if o.room == 0 && o.open == 0 {
             seals.push((z, count.clone()));
         }
+        let cand = candidates(z, &o);
+        if z > 1 && z <= vessel_top {
+            for (t, h) in trials.iter_mut().zip(&cand) {
+                *t = *t * a * Dy::from_q(h);
+            }
+        }
         if z < lo || z > hi {
             continue;
         }
         let w = xyl_cosmos::compound::hold(z);
         let u = xyl_cosmos::compound::open(z);
         out.push_str(&format!(
-            "  Z{z} A{mass} | {} {} {} {} | {w} {} | {} | {}, {} | {} | {} | {}\n",
+            concat!(
+                "  Z{z} A{mass} | {} {} {} {} {} | {w} {} | {} {} {} | {} | ",
+                "{}, {} | {}, {} | {} | {}\n"
+            ),
             o.room,
             o.open,
             o.held(),
             o.capacity(),
+            entered_capacity(z),
             show(&h),
+            show(&cand[0]),
+            show(&cand[1]),
+            show(&cand[2]),
             step(z),
             ratio(u, w),
             ratio(o.open, o.held()),
             show(&xyl_cosmos::formation::emission(z)),
+            ratio(o.open, z),
             chain,
             show(&count),
+            z = z,
+            mass = mass,
+            w = w,
         ));
     }
     let mean = nucleons.checked_div(&nuclei).unwrap_or(Q::ZERO);
@@ -180,6 +229,19 @@ pub(super) fn bench_read(seed: u64, lo: u32, hi: u32) -> Result<String, String> 
         "The seals' counts per hydrogen: {}\n",
         seals.join(", ")
     ));
+    // The bits each chain needs to carry one nucleus of the vessel's top
+    // kind: -log2 of its unfloored count per hydrogen, a reading (the
+    // floored chain can need a bit more, as `elements::founding_bits` does).
+    let ln2 = Dy::int(2).log();
+    let needs: Vec<String> = CANDIDATES
+        .iter()
+        .zip(&trials)
+        .map(|(name, t)| format!("{name} {}", -(t.log() / ln2)))
+        .collect();
+    out.push_str(&format!(
+        "Bits to the vessel's top (Z{vessel_top}) under each closed share: built {bits}; {}\n",
+        needs.join(", ")
+    ));
     if let Some((vlo, vhi)) = xyl_cosmos::atoms::vessel() {
         out.push_str(&format!("The vessel: Z{vlo}..Z{vhi}\n"));
     }
@@ -191,6 +253,20 @@ pub(super) fn bench_read(seed: u64, lo: u32, hi: u32) -> Result<String, String> 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_entered_capacity_lies_between_the_occupancy_and_the_capacity() {
+        // The entered bands hold every electron and are part of the reach,
+        // so Z <= cap_in <= cap; at a seal every band is entered and full.
+        for z in 1..=xyl_cosmos::elements::TOP_Z {
+            let o = occupancy(z).unwrap_or_default();
+            let cap_in = entered_capacity(z);
+            assert!(z <= cap_in && cap_in <= o.capacity(), "Z{z}: {cap_in}");
+            if o.room == 0 {
+                assert_eq!(cap_in, z, "Z{z}");
+            }
+        }
+    }
 
     #[test]
     fn every_capture_adds_one_electron() {

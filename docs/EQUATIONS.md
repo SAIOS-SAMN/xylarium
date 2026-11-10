@@ -163,7 +163,11 @@ another crate. Laws are composed from shares (ratios of the form
   `W = 3Z - U`.
 - Capacity face (axiom 9): convergent `2P / Z`, divergent `U / Z`, pole
   `t = U / 2P`, `D(U / Z) = 1 + U / P`; the antipole exchanges held and
-  open; the equator `U = 2P`. Built in its place: the held count's face,
+  open; the equator `U = 2P`. Entered capacity (bench reading, #172):
+  `cap_in = sum 2 d(l)` over the bands holding an electron,
+  `Z <= cap_in <= cap`, equal to `Z` at a seal; the chain under
+  `2P / cap_in` needs 1996 bits to the vessel's top at seed 7's share,
+  under `2P / cap` 5546, under the built `W / 3Z` 1094. Built in its place: the held count's face,
   `W / 3Z` the closed share (`elements::closed_share`), `t = U / W` the
   pole point (`compound::hold`). Calibre: none. Status: planned (#158).
 - Share transfer (T15, #128): a state of weight `m` with shares
@@ -848,7 +852,7 @@ another crate. Laws are composed from shares (ratios of the form
   `h`. Calibre: founding. Status: built.
 - Transduction per bell (`stars::transduced_per_bell`): `delta / (pi (r + 1))`.
   Calibre: founding. Status: built.
-- Frames at heat (`stars::held_frames`): `u_z(q)` open states
+- Held count at heat (`stars::held_count`): `u_z(q)` open states
   (`compound::open_hot`), `w_z(q) = 3 Z - u_z(q)` held; `A_z` the element
   table's `a` rounded to the nearest whole (`stars::nucleon_count`). Calibre: none. Status:
   built.

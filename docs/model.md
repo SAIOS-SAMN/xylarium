@@ -1007,6 +1007,71 @@ Z^6, each plane's reading kept, never summed into one number.
   states (`Z`), and the two are not yet one account. The planes share one
   rate while the spin is isoclinic.
 
+### Held frames: the vents to open
+
+Planned ([#158](https://github.com/SAIOS-SAMN/xylarium/issues/158)), after Weights on the six planes and The six planes.
+
+Every law that reads frames reads two integers per kind: the held frames
+`W = 3Z - U` (`compound::hold`) and the open frames `U` (`compound::open`,
+`atoms::unpaired`). The atom carries more (`atoms::Atom`): bands
+`(n, l)`, each orientation empty, single or paired; each state's weight `m`
+in Z^6 over the six planes; each orientation a Hopf fibre over `CP^5`.
+Held and open keep only whether a fibre's turnings cancel, a
+counter-turning pair, or not, a single electron: the winding in ZZ read
+mod 2. The bands, the planes, the signed windings and the room are gone
+before any law reads them, so the manifold's topology and its cohomology
+are read as two dimensions.
+
+- **The vents to open.** Each replaces the two counts with the structure
+  the atom carries:
+  1. **Frames per band.** Each band holds its empty slots, single
+     orientations and paired orientations apart: its room, its reach and its
+     hold. The empty slots sum to the room `cap - Z` and the single
+     orientations to `U`, readings only (the hold and the room named apart,
+     [#151](https://github.com/SAIOS-SAMN/xylarium/issues/151)); the pairs count `(Z - U) / 2`, and `W = 3Z - U`
+     follows from them only through the three frames (vent 5).
+  2. **Frames per plane.** Each state's weight `m` places its frames on the
+     six planes: `W_k`, `U_k` and the pole `t_k = U_k / W_k` per plane (The
+     six planes). The axis polarity `A`, built, is the axis component.
+  3. **Windings, not parity.** Each orientation's winding is kept in ZZ
+     with its side, Z or Q (the sign of `m0`): a pair's turnings cancel, a
+     single electron's carries its sign. Held and open are the winding read
+     mod 2.
+  4. **Classes, not counts** ([#150](https://github.com/SAIOS-SAMN/xylarium/issues/150)). The frames are a cochain over the
+     kind's fibres. Pairing and stripping move frames between the poles with
+     the span fixed (axiom 9): they are coboundaries. What a kind keeps
+     through every pairing and stripping, its span `3Z` and its windings'
+     total, is its class, and the books close on it.
+  5. **The three frames named.** Each proton spans three frames (axiom 9),
+     held as a count. Which components they are, planes or lanes, is to be
+     derived; until then frames (`3Z`) and electron states (`Z`) are two
+     accounts (Weights on the six planes, Open).
+  6. **Seams per band and plane.** A seam, `u(z - 1) + 1 - u(z) < 0`
+     (`atoms::vessel`), is read on the scalar `u`. Read per band and plane,
+     a single-nucleon peel releases where a component does, and the
+     vessel's lower edge follows from those components.
+  7. **Received per plane and band.** Stripping (`atoms::unpaired_hot`,
+     `compound::open_hot`) reads one isoclinic turning
+     (`atoms::Received`) against each band's tightness; it is to be read
+     per plane, with the return (Chemistry from the elements, vent 1;
+     [#128](https://github.com/SAIOS-SAMN/xylarium/issues/128)).
+- **Sites.** `compound::hold`, `compound::open`, `compound::open_hot`,
+  `atoms::unpaired`, `atoms::unpaired_hot`, `atoms::vessel`,
+  `elements::closed_share`, `circuit::grain` (whole nuclei and the mass of
+  an amount), the jet map's pole state (`circuit::core`), `formation`'s
+  shells and hold, the stars' held frames and pole (`stars::held_frames`,
+  `stars::mixture_pole`), and `observe seals` and `observe founding`.
+- **Order of the work.**
+  1. Frames per band (vent 1): their sums equal today's `U` and the room,
+     so no reading moves.
+  2. Frames per plane (vent 2), then windings (vent 3).
+  3. Classes (vent 4), with the chain's cohomology ([#150](https://github.com/SAIOS-SAMN/xylarium/issues/150)).
+  4. Seams (vent 6) and received turning (vent 7).
+  5. The three frames (vent 5), as its derivation allows.
+
+  A reading moves only where a law reads a component in place of a sum,
+  and it is witnessed before and after.
+
 ### The antipoles, the shear and the pinch
 
 Derived ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)); not yet built. Each check below is exact.

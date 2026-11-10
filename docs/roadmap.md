@@ -343,6 +343,12 @@ where it belongs to one.
     (separation). Next: the per-plane split of `J` and `H` from the spin,
     the axis plane's count, the poles as the vortex's windings, then
     [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123).
+56. **Held frames: the vents** ([#158](https://github.com/SAIOS-SAMN/xylarium/issues/158), `law`, `defect`, `track`, M4;
+    [model.md](model.md#held-frames-the-vents-to-open)). `W` and `U` keep
+    two counts of the atom's bands, planes and fibre windings (the winding
+    read mod 2). Vents: frames per band, per plane, windings in ZZ, classes
+    (pairing and stripping as coboundaries), the three frames named, seams
+    per band and plane, received turning per plane and band.
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

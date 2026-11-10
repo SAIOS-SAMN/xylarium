@@ -11,6 +11,11 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Held frames, the vents to open (docs/model.md; #158; roadmap item 56):
+  `W = 3Z - U` and `U` keep two counts of the atom's bands, planes and
+  fibre windings, the winding read mod 2. Seven vents in order (frames per
+  band, per plane, windings in ZZ, classes, the three frames, seams,
+  received turning), with their sites. No code changes.
 - The dipole, winding and phase, and the chain's cohomology stated
   (docs/model.md; #148, #149, #150; roadmap items 50 to 52). Every
   component of a reading is a dipole, `3Z/3Q + R` on the Z face and

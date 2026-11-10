@@ -725,6 +725,15 @@ another crate. Laws are composed from shares (ratios of the form
   with the axis's inversion it forms the pulse's antipole
   (`circuit::antipole`). The antinode share of harmonic `q` is 0 for even `q`
   and `1/q` for odd `q` (`circuit::antinode`). Calibre: none. Status: built.
+- Held frames, opened ([model.md](model.md#held-frames-the-vents-to-open), #158):
+  per band `(n, l)` the empty slots, single and paired orientations (room,
+  reach, hold), the empty slots summing to `cap - Z`, the singles to `U`,
+  the pairs to `(Z - U) / 2` (`W = 3Z - U` only through the three frames); per plane `W_k`, `U_k`,
+  `t_k = U_k / W_k`; each orientation's winding in ZZ with its side, held
+  and open its reading mod 2; pairing and stripping as coboundaries, the
+  span `3Z` and the windings' total the class; seams
+  `u(z - 1) + 1 - u(z) < 0` read per band and plane. Calibre: none. Status:
+  planned.
 
 ## 5. The galaxy
 

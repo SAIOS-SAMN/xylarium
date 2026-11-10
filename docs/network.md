@@ -50,7 +50,7 @@ repository.
 
 - **Where.** A separate private repository,
   [SAIOS-SAMN/xylarium-uplink](https://github.com/SAIOS-SAMN/xylarium-uplink),
-  with its own AGENTS.md, CONTRIBUTING.md and CHANGELOG; it is to be
+  with AGENTS.md, CONTRIBUTING.md and a CHANGELOG; it is to be
   published with Mycelium's shared libraries.
 - **What.** One crate, `xyl-uplink`: the ancients' house on a hypha, the
   universal clock, the upward ledger, the endowment and the domain

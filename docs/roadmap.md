@@ -336,11 +336,18 @@ where it belongs to one.
     `360 c`, T3 unchanged); the torsion share as the divergent face. Next:
     the invariant's count (#151), the manifold's deformation as share
     transfer across the six planes (#121, #128), then #123 on it.
-53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`, `needs-decision`): five meanings.
+55. **The six planes: a face per plane** ([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128), [#121](https://github.com/SAIOS-SAMN/xylarium/issues/121), `law`;
+    [model.md](model.md#the-six-planes-a-face-per-plane)). Derived and
+    tested: a face's dilation is linear in its pole; T2 is the face law at
+    the horizon; T14's plane push is a divergent face; T18 restated
+    (separation). Next: the per-plane split of `J` and `H` from the spin,
+    the axis plane's count, the poles as the vortex's windings, then
+    [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123).
+53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;
     the renames (`QQ/ZZ`, `s_Q`/`s_Z`, the spin grid `g`, the mass weight
-    `m_Z`). Open: the decision; the mix's dipole against the throat with
+    `m_Z`); the ruling. Open: the mix's dipole against the throat with
     `R`.
 43. **Scalar collapses**
     ([#107](https://github.com/SAIOS-SAMN/xylarium/issues/107), `defect`,

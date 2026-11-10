@@ -139,6 +139,31 @@ another crate. Laws are composed from shares (ratios of the form
   reach `H + J`, pole `t = 1 + J / H = 1 + a / 2 = s_Q / s_Z`. Calibre:
   none. Status: built (identity,
   `turning::tests::the_torsion_share_is_gravitys_divergent_face`).
+- Face dilations ([model.md](model.md#the-six-planes-a-face-per-plane)):
+  `D(d(t)) = 1 + 2t`, `D(c(t)) = 1 + 2 / t`, `D(d - c) = t`; linear in the
+  pole. Calibre: none. Status: built (identity,
+  `shares::tests::a_faces_dilation_is_linear_in_its_pole`).
+- T2 at the horizon: `s = d(t_s)`, `t_s = 1 + a / 2` (`M = 1`):
+  `D(s) = 3 + a`, `n = d - c = a / (4 + a)`, `D(n) = t_s`. Calibre: none.
+  Status: built (identity, `turning::tests::t2_is_the_face_law_at_the_horizon`).
+- Plane faces (#128): plane `j` reads `t_j = J_j / (6 H_j)`; T14's push
+  `J_j / (6 H_j + J_j) = d(t_j)` dilates by `1 + J_j / (3 H_j)`; the axis
+  plane reads `t_0 = r / M`. Separation: a pole per plane, `t_j` distinct, totals
+  `sum_j J_j = J`, `sum_j H_j = H_iso`, never an equal split.
+  Calibre: none. Status: identity built
+  (`turning::tests::t14s_plane_push_is_a_divergent_face`); the per-plane
+  split planned.
+- Frame face (axiom 9; `compound::hold`, `elements::closed_share`): hold
+  `W = 3Z - U`, open `U`, whole `3Z`; convergent `W / 3Z` (the closed
+  share), divergent `U / 3Z`, pole `t = U / W` (the pole point); the
+  antipole exchanges `U` and `W`; the throat `U = W` is its equator,
+  `3Z = 2W`; `D(U / 3Z) = 1 + 2U / W`. Calibre: none. Status: built (an
+  identity of the definitions).
+- Share transfer (T15, #128): a state of weight `m` with shares
+  `w_k = |m_k| / sum_i |m_i|` composes its planes' hyperbolic angles,
+  `sum_k w_k ln D_k` with `D_j = 1 + 2 t_j`, and `D(n)^A` for its axis
+  polarity; each `ln D_k` a certified enclosure. Calibre: none. Status:
+  planned.
 - Dilation and flow law (`xyl_core::shares::dilation`, `flow`):
   `D(p) = (1 + p) / (1 - p)` for `-1 < p < 1`; `x (+) y = (x + y) / (1 + x
   y)`; `D(x (+) y) = D(x) D(y)`. Calibre: none. Status: built.
@@ -205,9 +230,10 @@ another crate. Laws are composed from shares (ratios of the form
   (`shares::tests::deficit_is_invariant_under_dilation`); the chain's
   links are planned.
 - Isoclinic frame (docs/model.md, The frame, the place and the chain; T18,
-  #90): `H_j = H_iso / 5` and `J_j = J / 5` on each of the five planes, so
-  T14's push `J_j / (6 H_j + J_j)` is the same on all five: one isoclinic
-  phase per body. A frame is the axis-plane phase, the isoclinic phase and
+  #90, #128): plane `j` holds `H_j = sum_k M_k w_kj` and carries `J_j`
+  by separation, so T14's push `J_j / (6 H_j + J_j)` differs by plane: an
+  isoclinic phase per plane. A frame is the axis-plane phase, the isoclinic
+  phases and
   the turning between planes into its parent. Calibre: none. Status: derived; not built.
 - Paired throat (docs/model.md, The core as a paired throat; #86): near
   face `D(s) D(n)^A`, far face `D(s) D(n)^-A`, product `(3 + a)^2`, so the
@@ -300,8 +326,8 @@ another crate. Laws are composed from shares (ratios of the form
   streamline is the throat orbit's sheared ellipse, `e = delta`, apsides
   `r (1 -/+ delta)`, `360 delta` degrees a traversal. Open: the core
   curve's shape between tiers, mutual linking `Lk_ij`, fibre separation in
-  `CP^5` in shares, helicity without its `Gamma^2` self term, and T18's
-  equal fifths. Calibre: one per tier, nested vortices dilated conformally. Status: planned; replaces `galaxy::Structure` bands,
+  `CP^5` in shares, helicity without its `Gamma^2` self term, and the
+  per-plane twist by separation (#128). Calibre: one per tier, nested vortices dilated conformally. Status: planned; replaces `galaxy::Structure` bands,
   `galaxy::Orbit` circles and `chain::Place` points.
 - Rim (`Substrate::found`): the rim is `max R (1 + s_final)` over every
   shell. Calibre: founding. Status: built; replaced by the founding as flow (planned).
@@ -480,7 +506,7 @@ another crate. Laws are composed from shares (ratios of the form
   Status: planned (derived).
   - Per plane: cohort hold `H_j = sum_k M_k w_kj`, `w_kj` the kind's share
     of turning in plane `j`; `s_j = (2 H_j + J_j) / (4 H_j + J_j)`,
-    `J_j = J / 5`, `J_0 = 0`.
+    `J_j` the plane's part of the spin, `sum_j J_j = J`, `J_0 = 0`.
   - Enclosed matter on the throat orbit: push `J_j / (6 H_j + J_j)` per
     echo; none on the axis plane.
   - A nucleus: `D_k = D(p_plane)^w_k D(n)^A`; held where `D_k <= 1`; else
@@ -666,7 +692,8 @@ another crate. Laws are composed from shares (ratios of the form
   proton count and `Q` the neutron count (the mass number
   `A = floor(a + 1/2)` less the charge, `circuit::mass_number`,
   from the element table; a cluster sums its parts), and a kind weighs
-  `Z + Q` nucleons. Calibre: none. Status: built.
+  `Z + Q` nucleons, the mass weight `m_Z` (ruled #151: the hold; the
+  capacity `cap` is named apart). Calibre: none. Status: built.
 - Electron phase state (`circuit::electron_phase`):
   `R = kappa (1 - 2 frac(p))` in `[-kappa, kappa]`, with `p` the bounce's
   pulse as a share of 360 degrees on the isoclinic planes and `kappa` the electrons' coherence on S^11 (`fibres`,

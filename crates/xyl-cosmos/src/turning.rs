@@ -198,6 +198,40 @@ mod tests {
     use super::*;
 
     #[test]
+    fn t2_is_the_face_law_at_the_horizon() {
+        // With the torsion share the divergent face at t_s = 1 + a / 2 (M = 1):
+        // D(s) = 1 + 2 t_s = 3 + a, the twist n = d - c = a / (4 + a), and
+        // D(n) = t_s = 1 + a / 2 (T2).
+        for a in [Q::ZERO, Q::ratio(1, 3), Q::ratio(2, 5), Q::ONE] {
+            let s = crate::bounce::torsion_share(&Q::ONE, &a);
+            let f =
+                xyl_core::shares::faces(&Q::ONE, &(&Q::ONE + &a.checked_div(&Q::int(2)).unwrap()))
+                    .unwrap();
+            assert_eq!(f.divergent, s);
+            assert_eq!(xyl_core::shares::dilation(&s), Some(&Q::int(3) + &a));
+            let n = -f.push();
+            assert_eq!(n, a.checked_div(&(&Q::int(4) + &a)).unwrap());
+            assert_eq!(xyl_core::shares::dilation(&n), f.pole());
+        }
+    }
+
+    #[test]
+    fn t14s_plane_push_is_a_divergent_face() {
+        // T14: plane j is pushed out at J_j / (6 H_j + J_j), the divergent
+        // face about the hold 6 H_j at reach J_j; its dilation 1 + J_j / (3 H_j).
+        for (h, j) in [(Q::ratio(1, 5), Q::ratio(1, 10)), (Q::ratio(3, 7), Q::ONE)] {
+            let six_h = &Q::int(6) * &h;
+            let push = j.checked_div(&(&six_h + &j)).unwrap();
+            let f = xyl_core::shares::faces(&six_h, &j).unwrap();
+            assert_eq!(f.divergent, push);
+            assert_eq!(
+                xyl_core::shares::dilation(&push),
+                Some(&Q::ONE + &j.checked_div(&(&Q::int(3) * &h)).unwrap())
+            );
+        }
+    }
+
+    #[test]
     fn the_torsion_share_is_gravitys_divergent_face() {
         // Axiom 7, s = (H + J) / (2H + J), is the divergent face about the
         // horizon's hold H at reach H + J, its pole t = 1 + J / H.

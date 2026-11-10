@@ -389,8 +389,9 @@ split is not yet built.
   `t -> 1 / t` exchanges held and open (axiom 5), and the equator
   `U = 2P` is the pole point's throat. The room `E = cap - Z` stands beside
   them, and the occupancy `Z / cap` is the dipole's Z face. Built, the code
-  reads the held count `W = 3Z - U` instead: `W / 3Z` is the closed share
-  (`elements::closed_share`) and `t = U / W` the pole point (#158).
+  reads the held count `W = 3Z - U` for the pole point, `t = U / W`; the
+  closed share reads the capacity, `2P / cap` (`elements::closed_share`,
+  #158).
 - **The transfer.** A state of weight `m` in Z^6, with turning shares
   `w_k = |m_k| / sum_i |m_i|`, feels its planes composed by the flow law
   (T15): its hyperbolic angle is the sum over planes of `w_k ln D_k`, with
@@ -472,9 +473,10 @@ pole axis and the five isoclinic planes).
 ### The elements (`elements.rs`, `atoms.rs`)
 
 - In the capture chain (`elements::founded`), nuclei are built one capture at a
-  time from hydrogen, `count_Z = floor(count_(Z-1) a h_Z)`, where `h_Z = (3Z -
-  u_Z) / 3Z` is the closed share of the new nucleus and `u_Z` is its number of
-  unpaired windings (`atoms::unpaired`). Counts are whole nuclei out of `2^b`
+  time from hydrogen, `count_Z = floor(count_(Z-1) a h_Z)`, where
+  `h_Z = 2P_Z / cap_Z` is the closed share of the new nucleus: its held
+  states (paired orientations, `atoms::occupancy`) over its capacity
+  (axiom 9). Hydrogen holds no pair; a seal holds a share of one. Counts are whole nuclei out of `2^b`
   hydrogen nuclei, where `b = founding_bits(a)` is the smallest number of bits
   that carries one whole nucleus of the vessel's sealing kind through the
   floored chain. A kind whose count floors to zero is absent from the founding.
@@ -1098,6 +1100,10 @@ dimensions.
      on the axis plane, no reading moved; the isoclinic signs wait on the
      spin.
   3. The delimiter retired (vent 5): the first vent that moves readings.
+     Begun with the closed share, `2P / cap` (`elements::closed_share`):
+     the capture chain founds from more hydrogen bits and the kinds
+     between the seals are rarer. The grain, the mass of an amount, the
+     pole state and the emission follow.
   4. Classes (vent 4), with the chain's cohomology ([#150](https://github.com/SAIOS-SAMN/xylarium/issues/150)).
   5. Seams (vent 6) and received turning (vent 7).
 

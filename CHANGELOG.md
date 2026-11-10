@@ -259,6 +259,13 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The closed share reads the capacity (#158, vent 5, axiom 9): the
+  capture chain's `h_Z` is a new kind's held states over its capacity,
+  `2P / cap` (`elements::closed_share`), in place of the held count over
+  the span, `(3Z - U) / 3Z`. Hydrogen holds no pair (share 0), a seal holds
+  a share of one. The founding moves: the chain founds the vessel's
+  sealing kind from more hydrogen bits (1093 to about 5546 at seed 7's
+  share), and the kinds between the seals are rarer.
 - Axiom 9 restated on capacity, not delimiters (ruled 2026-11-10, #158):
   a kind's `Z` electrons occupy its capacity, `cap = E + U + 2P` (the
   room, the open states, the held states); shares are read against the

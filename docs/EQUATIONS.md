@@ -163,9 +163,10 @@ another crate. Laws are composed from shares (ratios of the form
   `W = 3Z - U`.
 - Capacity face (axiom 9): convergent `2P / Z`, divergent `U / Z`, pole
   `t = U / 2P`, `D(U / Z) = 1 + U / P`; the antipole exchanges held and
-  open; the equator `U = 2P`. Built in its place: the held count's face,
-  `W / 3Z` the closed share (`elements::closed_share`), `t = U / W` the
-  pole point (`compound::hold`). Calibre: none. Status: planned (#158).
+  open; the equator `U = 2P`. The closed share reads the held states
+  against the capacity, `2P / cap` (`elements::closed_share`); the pole
+  point still reads the held count, `t = U / W` (`compound::hold`).
+  Calibre: none. Status: partly built (#158).
 - Share transfer (T15, #128): a state of weight `m` with shares
   `w_k = |m_k| / sum_i |m_i|` composes its planes' hyperbolic angles,
   `sum_k w_k ln D_k` with `D_j = 1 + 2 t_j`, and `D(n)^A` for its axis
@@ -259,9 +260,9 @@ another crate. Laws are composed from shares (ratios of the form
   `sum max(state - mean, 0) / sum state`, the held share is
   `firmament mass / holding`, the assembly time is `Lighting::cools_in` and
   the efficiency is `Lighting::lit`. Calibre: founding. Status: built.
-- Closed share (`elements::closed_share`): `h_Z = hold_Z / 3Z = (3Z - u_Z) / 3Z`
-  (`compound::hold`). Calibre: none. Status:
-  built.
+- Closed share (`elements::closed_share`): `h_Z = 2P_Z / cap_Z`, the new
+  kind's held states over its capacity (axiom 9, `atoms::occupancy`); zero
+  for hydrogen, one at a seal. Calibre: none. Status: built (#158, vent 5).
 - Capture chain (`elements::founded`): `count_1 = 2^b` and
   `count_Z = floor(count_(Z-1) a h_Z)`. Calibre: none. Status: built.
 - Founding bits (`elements::founding_bits`): `b` is the least value with

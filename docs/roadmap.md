@@ -129,8 +129,9 @@ founding and the light read the capacity's occupancy instead (axiom 9).
   between the Z pole (held, coherence) and the Q pole (open, decoherence):
   the held count `w = 3Z - u`, `u` the open (unpaired) states
   (`compound::hold`, `compound::open`). Pairing moves an open state to the
-  held side with the span fixed. The closed share `h_Z = (3Z - u_Z) / 3Z`
-  drives the capture chain (`elements::closed_share`). Amounts move in whole
+  held side with the span fixed. The closed share reads the capacity,
+  `h_Z = 2P_Z / cap_Z` (axiom 9, #158), and drives the capture chain
+  (`elements::closed_share`). Amounts move in whole
   nuclei of `w`, so fusion conserves 3Z (`circuit::grain::nuclei_of`), and
   the stars' transduction produces light with 3Z conserved. Three per
   proton is a delimiter, not a capacity: axiom 9 restates the account on
@@ -358,9 +359,11 @@ where it belongs to one.
     Vent 2 on the axis plane: occupancy by axis level and side
     (`atoms::axis_sides`), the polarity read from it; vent 3 on the axis
     plane: the open and held states' axis weights in ZZ
-    (`atoms::axis_weights`); no reading moved. Next: vent 5 (the delimiter
-    retired, the first to move readings); the isoclinic split and signs
-    with the spin (#128).
+    (`atoms::axis_weights`); no reading moved. Vent 5 begun: the closed
+    share on the capacity, `2P / cap` (`elements::closed_share`), which
+    moves the founding. Next: the grain, the mass of an amount, the pole
+    state and the emission off the held count; the isoclinic split and
+    signs with the spin (#128).
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

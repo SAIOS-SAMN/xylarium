@@ -17,7 +17,8 @@
 //!   `d = log10(ab_Pt / ab_U) / 14`, enclosed and fixed on a 2^-48 grid.
 //!   Built once per process; `Err` names the first row that fails to parse.
 //! - `founded(a)`: the table with each abundance replaced by a whole nucleus
-//!   count, `count_Z = floor(count_(Z-1) a h_Z)`, h_Z = (3Z - unpaired) / 3Z,
+//!   count, `count_Z = floor(count_(Z-1) a h_Z)`, `h_Z = 2P_Z / cap_Z` the
+//!   new kind's held states over its capacity (axiom 9, `atoms::occupancy`),
 //!   from 2^`founding_bits(a)` hydrogen: the fewest bits that found one whole
 //!   nucleus of the vessel's sealing kind. Depends on `a` alone.
 //! - `decimal`: a decimal literal as an exact rational, None if malformed.
@@ -170,11 +171,13 @@ struct Row {
 /// upper edge) with the open fifth turning above it.
 pub const TOP_Z: u32 = 1700;
 
-/// The closed share of a capture that makes kind `z`: its hold over its
-/// span, `compound::hold(z) / 3Z = (3Z - unpaired) / 3Z`.
+/// The closed share of a capture that makes kind `z`: its held states over
+/// its capacity, `h_Z = 2P / cap` (axiom 9), read against the room of every
+/// shape its atom reaches, never against a delimiter. Zero where the atom
+/// cannot be read.
 fn closed_share(z: u32) -> Q {
-    Q::int(i64::from(crate::compound::hold(z)))
-        .checked_div(&Q::int(3 * i64::from(z)))
+    crate::atoms::occupancy(z)
+        .and_then(|o| Q::new(i64::from(o.held()), i64::from(o.capacity())))
         .unwrap_or(Q::ZERO)
 }
 
@@ -368,13 +371,13 @@ pub fn valley_a(z: u32) -> Option<u32> {
 /// are built one capture at a time from hydrogen, so
 /// count_Z = count_(Z-1) s_Z with s_Z = a h_Z: each capture is one pass of the
 /// outbound jet through the throat, a is the share the jet carries (the
-/// parent's torsion share, from 1/2 to 3/5) and h_Z the new nucleus's closed share,
-/// (3Z - unpaired) / 3Z. Counts are whole nuclei out of 2^`founding_bits()`
-/// hydrogen, the fewest that found the vessel's sealing kind whole, so a kind
-/// with fewer than one nucleus has none and every mixture stays in whole
-/// numbers. Only count ratios are used. Other columns (masses, phases,
-/// classes) are as in the table, measured or predicted. `Err` as for the
-/// table.
+/// parent's torsion share, from 1/2 to 3/5) and h_Z the new nucleus's closed
+/// share, its held states over its capacity, 2P / cap (axiom 9). Counts are
+/// whole nuclei out of 2^`founding_bits()` hydrogen, the fewest that found
+/// the vessel's sealing kind whole, so a kind with fewer than one nucleus has
+/// none and every mixture stays in whole numbers. Only count ratios are
+/// used. Other columns (masses, phases, classes) are as in the table,
+/// measured or predicted. `Err` as for the table.
 pub fn founded(a: &Q) -> Result<Vec<Element>, String> {
     let mut out = table()?;
     out.sort_by_key(|e| e.z);
@@ -528,6 +531,20 @@ mod tests {
         let t = table().unwrap();
         let uue = t.iter().find(|e| e.z == 119).unwrap();
         assert!(uue.a > Q::int(u as i64), "Uue at A = {}", uue.a);
+    }
+
+    #[test]
+    fn the_closed_share_is_held_over_the_capacity() {
+        // Hydrogen holds no pair, so no capture closes on it; every kind the
+        // chain makes holds a share in (0, 1], whole exactly where the
+        // capacity is filled and paired (a seal, sealed by the capacity).
+        assert_eq!(closed_share(1), Q::ZERO);
+        for z in 2..=TOP_Z {
+            let (h, o) = (closed_share(z), crate::atoms::occupancy(z).unwrap());
+            assert!(h.signum() > 0 && h <= Q::ONE, "Z{z}: {h}");
+            assert_eq!(h == Q::ONE, o.room == 0 && o.open == 0, "Z{z}");
+            assert_eq!(o.capacity(), crate::atoms::capacity(z).unwrap(), "Z{z}");
+        }
     }
 
     #[test]

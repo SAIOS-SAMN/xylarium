@@ -205,6 +205,7 @@ running universes with `xylarium observe`.
 | [architecture.md](docs/architecture.md) | Layers, data flow, the event engine, caching, state, readings |
 | [model.md](docs/model.md) | The physical model, from the founding to worlds |
 | [EQUATIONS.md](docs/EQUATIONS.md) | Every formula with its source location |
+| [board.md](docs/board.md) | The board: a blank universe to deploy bodies and edit their elements (planned) |
 | [civilizations.md](docs/civilizations.md) | Life, peoples, knowledge, growth and transit |
 | [network.md](docs/network.md) | The Mycelium integration contract |
 | [development.md](docs/development.md) | Conventions, lints, testing, run times |

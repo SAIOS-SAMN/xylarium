@@ -11,6 +11,21 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Axis weights in ZZ (#158, vent 3): `atoms::axis_weights` gives a kind's
+  open states' axis weight `sum m0 U_m0` (the polarity `A`) and its held
+  states' `sum 2 m0 P_m0`: a pair cancels its twist charge on the
+  isoclinic planes but its two electrons share the axis level. A seal is
+  balanced (both zero); a band at least half full holds minus twice its
+  open weight, one below half none; proven over Z 1 to 1700. `observe seals` prints
+  both. The isoclinic signs wait on the spin (#128). No reading moves.
+- The occupancy on the axis plane (#158, vent 2): `atoms::Band::axis_occupancy`
+  places each band's room, open states and pairs by axis level `m0` (the
+  level holds `C(l - |m0| + 9, 9)` orientations; singles fill from the Z
+  side, pairs from the Z side beyond half full), and `atoms::axis_sides`
+  sums each kind's Z side, neutral level and Q side; the axis polarity
+  reads it. Proven over Z 1 to 1700 against the singles-only rule it
+  replaces. `observe seals` prints the sides. The isoclinic planes' split
+  waits on the spin (#128). No reading moves.
 - The capacity's occupancy per band (#158, vent 1): `atoms::Occupancy`
   (room, open states, pairs), `atoms::band_occupancy` over every band an
   atom reaches (empty bands included) and `atoms::occupancy`, their sums,

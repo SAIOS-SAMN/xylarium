@@ -27,7 +27,9 @@
 //! (`cap`, the room of every turning reached; `3Q = 3 cap`) and `balance`
 //! (`R_Q = 6Z - 3 cap`, `rho_Q = (2Z - cap) / cap`), and `occupancy` /
 //! `band_occupancy` (axiom 9: each band's room, open states and pairs, over
-//! every band reached; `cap = E + U + 2P`). `atom` returns
+//! every band reached; `cap = E + U + 2P`), `Band::axis_occupancy` and
+//! `axis_sides` (the axis plane by level `m0` and by side), and `axis_weights`
+//! (the open and held states' axis weights in ZZ). `atom` returns
 //! None for Z = 0 or a cluster id. Seals fall at Z = 2, 28, 208, 1092;
 //! `vessel` returns (lower, upper): the last seal within `TOP_Z`, and the
 //! heaviest kind below it whose single-nucleon peel releases,
@@ -116,32 +118,101 @@ impl Band {
 }
 
 impl Band {
-    /// The band's axis polarity (T7): the sum of the axis weights `m0` of its
-    /// unpaired electrons. The axis level `m0` holds `C(l - |m0| + 9, 9)`
-    /// orientations; a band at most half full fills the Z side (`m0 < 0`)
-    /// first, singly, and one more than half full has paired the Z side and
-    /// keeps its unpaired electrons on the Q side.
-    pub fn axis_polarity(&self) -> i64 {
+    /// The band's occupancy on the axis plane, level by level (#158, vent 2):
+    /// the axis level `m0` (from `-l` to `l`) holds `C(l - |m0| + 9, 9)`
+    /// orientations. A band at most half full fills singly from the Z side
+    /// (`m0 = -l`) upward; one more than half full pairs from the Z side
+    /// upward, its single orientations left on the Q side. Each level's room,
+    /// open states and pairs; they sum to [`Band::occupancy`].
+    pub fn axis_occupancy(&self) -> Vec<(i64, Occupancy)> {
         let l = i64::from(self.l);
-        let frames = crate::fibres::directions(self.l);
-        let (mut left, z_first) = if self.electrons <= frames {
-            (u64::from(self.electrons), true)
-        } else {
-            (u64::from(self.room() - self.electrons), false)
-        };
-        let mut a = 0i64;
-        for step in 0..=2 * l {
-            let m0 = if z_first { step - l } else { l - step };
-            let level = crate::fibres::choose(u64::try_from(l - m0.abs()).unwrap_or(0) + 9, 9);
-            let k = level.min(left);
-            a += i64::try_from(k).unwrap_or(0) * m0;
-            left -= k;
-            if left == 0 {
-                break;
-            }
-        }
-        a
+        let d = crate::fibres::directions(self.l);
+        let e = self.electrons.min(self.room());
+        // Singles (at most half full) or pairs (beyond), placed from the Z side.
+        let (mut left, pairing) = if e <= d { (e, false) } else { (e - d, true) };
+        (-l..=l)
+            .map(|m0| {
+                let level = u32::try_from(crate::fibres::choose(
+                    u64::try_from(l - m0.abs()).unwrap_or(0) + 9,
+                    9,
+                ))
+                .unwrap_or(u32::MAX);
+                let k = level.min(left);
+                left -= k;
+                let occ = if pairing {
+                    // Every orientation holds one electron; k of them a second.
+                    Occupancy {
+                        room: level - k,
+                        open: level - k,
+                        pairs: k,
+                    }
+                } else {
+                    Occupancy {
+                        room: 2 * level - k,
+                        open: k,
+                        pairs: 0,
+                    }
+                };
+                (m0, occ)
+            })
+            .collect()
     }
+
+    /// The band's axis weights in ZZ (#158, vent 3): its open states' axis
+    /// weight `sum m0 U_m0` and its held states' `sum 2 m0 P_m0`. A pair is a
+    /// state and its plane antipode, so its twist charges cancel on the
+    /// isoclinic planes, but its two electrons share the level `m0` and weigh
+    /// `2 m0` on the axis plane.
+    pub fn axis_weights(&self) -> (i64, i64) {
+        self.axis_occupancy()
+            .iter()
+            .fold((0, 0), |(open, held), (m0, o)| {
+                (
+                    open + m0 * i64::from(o.open),
+                    held + m0 * i64::from(o.held()),
+                )
+            })
+    }
+
+    /// The band's axis polarity (T7): the axis weight of its open states
+    /// ([`Band::axis_weights`]).
+    pub fn axis_polarity(&self) -> i64 {
+        self.axis_weights().0
+    }
+}
+
+/// A kind's axis weights in ZZ over every band it reaches (#158, vent 3):
+/// the open states' `sum m0 U_m0`, which is the axis polarity `A`, and the
+/// held states' `sum 2 m0 P_m0`. `None` for z = 0 or a cluster.
+pub fn axis_weights(z: u32) -> Option<(i64, i64)> {
+    Some(band_occupancy(z)?.iter().fold((0, 0), |(o, h), (b, _)| {
+        let (bo, bh) = b.axis_weights();
+        (o + bo, h + bh)
+    }))
+}
+
+/// A kind's occupancy on the axis plane by side, summed over every band it
+/// reaches (#158, vent 2): the Z side (`m0 < 0`), the neutral level
+/// (`m0 = 0`) and the Q side (`m0 > 0`). The five isoclinic planes are not
+/// split: at rest no state's isoclinic plane is chosen (T6, T7), and their
+/// split waits on the spin's per-plane turning (#128). `None` for z = 0 or a
+/// cluster.
+pub fn axis_sides(z: u32) -> Option<[Occupancy; 3]> {
+    Some(
+        band_occupancy(z)?
+            .iter()
+            .fold([Occupancy::default(); 3], |mut acc, (b, _)| {
+                for (m0, o) in b.axis_occupancy() {
+                    let side = match m0.signum() {
+                        -1 => 0,
+                        0 => 1,
+                        _ => 2,
+                    };
+                    acc[side] = acc[side].plus(o);
+                }
+                acc
+            }),
+    )
 }
 
 /// An atom's computed structure.
@@ -606,6 +677,91 @@ pub fn hold(zs: &[u32]) -> Q {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The axis polarity counted by singles alone: at most half full, the
+    /// singles from the Z side; beyond, the `room - e` singles from the Q side.
+    fn polarity_by_singles(b: &Band) -> i64 {
+        let l = i64::from(b.l);
+        let d = crate::fibres::directions(b.l);
+        let (mut left, z_first) = if b.electrons <= d {
+            (u64::from(b.electrons), true)
+        } else {
+            (u64::from(b.room() - b.electrons), false)
+        };
+        let mut a = 0i64;
+        for step in 0..=2 * l {
+            let m0 = if z_first { step - l } else { l - step };
+            let k = choose(u64::try_from(l - m0.abs()).unwrap() + 9, 9).min(left);
+            a += i64::try_from(k).unwrap() * m0;
+            left -= k;
+            if left == 0 {
+                break;
+            }
+        }
+        a
+    }
+
+    #[test]
+    fn the_axis_plane_partitions_each_band() {
+        for z in 1..=crate::elements::TOP_Z {
+            let (Some(bands), Some(sides), Some(o)) =
+                (band_occupancy(z), axis_sides(z), occupancy(z))
+            else {
+                continue;
+            };
+            for (b, ob) in &bands {
+                let levels = b.axis_occupancy();
+                // The levels sum to the band; each level's room is twice its
+                // orientations.
+                let sum = levels
+                    .iter()
+                    .fold(Occupancy::default(), |acc, (_, o)| acc.plus(*o));
+                assert_eq!(sum, *ob, "Z {z} band {}{}", b.n, b.l);
+                for (m0, lo) in &levels {
+                    let orientations = choose(u64::from(b.l) - m0.unsigned_abs() + 9, 9);
+                    assert_eq!(u64::from(lo.capacity()), 2 * orientations, "Z {z}");
+                }
+                // At least half full, every orientation holds one electron and
+                // the levels are symmetric, so the held weight is minus twice
+                // the open weight; below half full there is no pair.
+                let (open_b, held_b) = b.axis_weights();
+                if b.electrons >= crate::fibres::directions(b.l) {
+                    assert_eq!(held_b, -2 * open_b, "Z {z} band {}{}", b.n, b.l);
+                } else {
+                    assert_eq!(held_b, 0, "Z {z} band {}{}", b.n, b.l);
+                }
+            }
+            // The axis occupancy reproduces the polarity counted by singles
+            // alone (the rule before the occupancy, kept here as a reference).
+            for (b, _) in &bands {
+                assert_eq!(b.axis_polarity(), polarity_by_singles(b), "Z {z}");
+            }
+            // The open weight is the polarity; the occupied states' weight is
+            // the sum of the two; a seal is balanced on the axis.
+            let (open_w, held_w) = axis_weights(z).unwrap();
+            assert_eq!(Some(open_w), axis_polarity(z), "Z {z}");
+            let occupied_w: i64 = bands
+                .iter()
+                .flat_map(|(b, _)| b.axis_occupancy())
+                .map(|(m0, lo)| m0 * i64::from(lo.occupied()))
+                .sum();
+            assert_eq!(open_w + held_w, occupied_w, "Z {z}");
+            if atom(z).is_some_and(|a| a.sealed()) {
+                assert_eq!((open_w, held_w), (0, 0), "Z {z}");
+            }
+            // The sides sum to the kind, and the axis polarity is the open
+            // states' axis weight.
+            let total = sides
+                .iter()
+                .fold(Occupancy::default(), |acc, s| acc.plus(*s));
+            assert_eq!(total, o, "Z {z}");
+            assert_eq!(
+                axis_polarity(z),
+                Some(bands.iter().map(|(b, _)| b.axis_polarity()).sum()),
+                "Z {z}"
+            );
+        }
+    }
 
     #[test]
     fn the_occupancy_partitions_the_capacity() {

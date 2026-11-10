@@ -11,6 +11,14 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The bench reads the entered capacity and candidate closed shares
+  (#172): `cap_in`, twice the orientations of every band holding an
+  electron (`Z <= cap_in <= cap`, proven over Z 1 to 1700), and the closed
+  share as `2P / cap`, `2P / cap_in` and `Z / cap_in` beside the built
+  `W / 3Z`, with the bits each chain needs to the vessel's top (seed 7:
+  5546, 1996 and 1568 against 1094). It also reads the capacity face's
+  divergent share `U / Z` beside the emission. Readings only. The
+  founding is unchanged.
 - The substrate bench (#163, board B1): `observe bench [LO] [HI]` reads
   the substrate alone, with no founding and no cache. Per kind it prints
   the occupancy, the held count and closed share, the capture's step per
@@ -271,6 +279,8 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- `stars::held_frames` is renamed `stars::held_count`, retiring the last
+  code use of "frames" as a count (#172).
 - Axiom 9 restated on capacity, not delimiters (ruled 2026-11-10, #158):
   a kind's `Z` electrons occupy its capacity, `cap = E + U + 2P` (the
   room, the open states, the held states); shares are read against the

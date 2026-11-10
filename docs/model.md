@@ -1088,7 +1088,7 @@ dimensions.
   `elements::closed_share`, `circuit::grain` (whole nuclei and the mass of
   an amount), the jet map's pole state (`circuit::core`), `formation`'s
   shells, hold and emission, the stars' held count and pole
-  (`stars::held_frames`, `stars::mixture_pole`), and `observe seals` and
+  (`stars::held_count`, `stars::mixture_pole`), and `observe seals` and
   `observe founding`.
 - **Order of the work.**
   1. States per band (vent 1). Done: their sums equal today's `U` and the

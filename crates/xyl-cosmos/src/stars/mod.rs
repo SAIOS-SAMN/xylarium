@@ -51,7 +51,7 @@
 mod sequence;
 
 pub use sequence::{
-    fission_step, fusion_step, held_frames, mixture_pole, nucleon_count, Sequence, Step,
+    fission_step, fusion_step, held_count, mixture_pole, nucleon_count, Sequence, Step,
 };
 
 use xyl_core::dyadic::Dy;

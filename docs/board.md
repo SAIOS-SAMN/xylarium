@@ -119,7 +119,11 @@ reads the substrate alone, with no founding:
   added electron changes, `dU` and `dP` per band, and the capacity's
   growth), the pole `U / W` and `U / 2P`, the emission, the chain's count
   per hydrogen and the founded whole count. Then the founding bits, the
-  kinds founded whole, the mean nucleon count and the seals' counts. It
+  kinds founded whole, the mean nucleon count and the seals' counts.
+  Beside the built closed share it reads candidates, as readings only:
+  held over the capacity, held over the entered capacity (the bands
+  holding an electron) and occupancy over the entered capacity, each
+  with the bits its chain needs to the vessel's top. It
   builds nothing above the chain and reads or writes no cache: about 30 s
   for all 1700 kinds, most of it the element table.
 - **Trials as data.** A substrate law under trial is written as an exact

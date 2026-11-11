@@ -449,7 +449,7 @@ impl Substrate {
         // units, before the firmament is scaled to the universal state); ln t
         // and the polarity are read for open kinds only.
         let elements = crate::elements::founded(&self.share).ok()?;
-        let mut kinds: Vec<(u32, Q, Dy, i64)> = crate::formation::kinds(&elements)
+        let mut kinds: Vec<(u32, Q, Dy, Dy)> = crate::formation::kinds(&elements)
             .into_iter()
             .filter_map(|k| {
                 let hold = Q::int(i64::from(crate::compound::hold(k.z)));
@@ -459,12 +459,20 @@ impl Substrate {
             .filter_map(|(z, m)| {
                 let (u, w) = (crate::compound::open(z), crate::compound::hold(z));
                 if u == 0 {
-                    return Some((z, m, Dy::ZERO, 0));
+                    return Some((z, m, Dy::ZERO, Dy::ZERO));
                 }
                 let t = (Dy::from_q(&Q::int(i64::from(u))))
                     .div(&(Dy::from_q(&Q::int(i64::from(w)))))
                     .unwrap_or_default();
-                Some((z, m, t.ln()?, crate::atoms::axis_polarity(z)?))
+                // The axis polarity filled from both sides at the kind's
+                // capture phase (#201), held exact and read as a dyadic.
+                let from_q = super::weights::fill_share(z, &self.share);
+                Some((
+                    z,
+                    m,
+                    t.ln()?,
+                    Dy::from_q(&crate::atoms::axis_polarity(z, &from_q)?),
+                ))
             })
             .collect();
         let mut hold = kinds.iter().fold(Q::ZERO, |m, k| &m + &k.1);
@@ -492,14 +500,14 @@ impl Substrate {
                 let q = if far { Dy::ONE - q } else { q };
                 q * near - (Dy::ONE - q) * anti
             };
-            let spread = |members: &[(u32, Q, Dy, i64)], far: bool| {
+            let spread = |members: &[(u32, Q, Dy, Dy)], far: bool| {
                 members
                     .iter()
                     .fold(Dy::ZERO, |r, k| r + Dy::from_q(&k.1) * separation(k.0, far))
             };
-            let open = |k: &(u32, Q, Dy, i64)| crate::compound::open(k.0) > 0;
+            let open = |k: &(u32, Q, Dy, Dy)| crate::compound::open(k.0) > 0;
             // The near face holds by pressure what the far face releases.
-            let pressed = |k: &(u32, Q, Dy, i64)| open(k) && near + lnn * Dy::int(k.3) <= Dy::ZERO;
+            let pressed = |k: &(u32, Q, Dy, Dy)| open(k) && near + lnn * k.3 <= Dy::ZERO;
             let (out, far, at) = if cohorts.is_empty() && kinds.iter().any(pressed) {
                 let (out, stay): (Vec<_>, Vec<_>) = kinds.drain(..).partition(pressed);
                 kinds = stay;
@@ -510,8 +518,8 @@ impl Substrate {
                     .unwrap_or_default();
                 // The bounce at which each open kind arrives: the least whole
                 // k with k N* ln(D(s) D(n)^A) >= -ln t.
-                let arrive = |k: &(u32, Q, Dy, i64)| {
-                    let rate = near + lnn * Dy::int(k.3);
+                let arrive = |k: &(u32, Q, Dy, Dy)| {
+                    let rate = near + lnn * k.3;
                     if !open(k) || rate.signum() <= 0 {
                         return None;
                     }
@@ -529,7 +537,7 @@ impl Substrate {
                     .into_iter()
                     .map(|(z, m, lt, ax)| {
                         let climbed = if m.signum() > 0 && crate::compound::open(z) > 0 {
-                            lt + interval * Dy::int(first) * (near + lnn * Dy::int(ax))
+                            lt + interval * Dy::int(first) * (near + lnn * ax)
                         } else {
                             lt
                         };

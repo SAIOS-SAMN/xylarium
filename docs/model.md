@@ -371,6 +371,7 @@ components, and each formation mechanic moves one of them.
   | Mechanic | Moves | Keeps | Law |
   |---|---|---|---|
   | Capture and stripping of electrons (`atoms::unpaired_hot`, the jetstream's pole channels) | `R`, and the electrons' open and paired states | `3W`, `p` | built: the jetstream moves the electrons' pole state `t = U / W_held`, held to open, not nucleons |
+  | The axis fill, both ways (`atoms::Band::axis_levels`, `circuit::fill_share`) | the electrons' axis levels, so the polarity `A` and both dipoles of the split | `3W` | built (ruled 2026-11-11): the share `f_Q = abs(R) u / (W + abs(R) u)` enters from the Q side toward Z when `R > 0`, none when `R <= 0`, at the kind's capture phase; exact shares, never floored |
   | Fusion of `k` nuclei, fission (`stars::fusion_step`, the sequence) | `3W`: summed, or split | the split by weight: `h' = (sum W_i h_i) / (sum W_i)`, the mediant of the parts' `D` | built for `Z`; `Q` read from a table |
   | Nucleon conversion, Z to Q and back | `p`, by flow steps: `D(p') = D(p) D(s)` | `3W` | **not built**: every genesis and every galaxy reads one fixed table of measured weights (`crates/xyl-cosmos/data/elements.tsv`, through `circuit::mass_number`, S029) |
   | A bond | share through the bound electrons `g` between the strata | `3W` | LAW-COUPLING v2 (#241) |
@@ -398,16 +399,22 @@ components, and each formation mechanic moves one of them.
   1. The rest point at a singularity: the throat's medium as the
      resistance, read per dipole. At a throat the medium's share is 1/2, a
      push of 0, so the rest point is the kind's own axis split: its states
-     on the axis plane by side (`atoms::Band::axis_occupancy`), giving
+     on the axis plane by side (`atoms::Band::axis_levels`), giving
      `t = 3Q / 3Z`. Benched by `observe split` over Z 1 to 1700, it reads:
      - the seals exactly on the equator, `t = 1`, as The dipole states;
      - by count (the neutral level halved at the equator), `t <= 1` for
        every kind, with p50 0.92;
      - by weight (E005), no Q-side weight up to Z 15.
 
-     Still to rule: count or weight, and the Z-side-first filling of each
-     band's axis levels (#158), which makes `t <= 1` everywhere and is
-     registered as S136.
+     Ruled 2026-11-11: both are kept as dipoles, the count dipole and the
+     weight dipole, never collapsed. The fill is bidirectional (S136
+     remediated). A band's fill enters from the Q side toward Z by the face
+     of the electron phase's channel against the held count,
+     `f_Q = abs(R) u / (W + abs(R) u)` with the aperture `u`, when `R > 0`, and
+     from the Z side alone when `R <= 0`. It is read at the kind's capture
+     phase `(s Z) mod 1`, the crossing phase the founding carries, and held
+     as exact shares into the axis polarity `A` that the universal core's
+     cohorts read (`Substrate::spin_orbit`).
   2. The flow step `s` of one conversion, and its carry on `R`.
   3. Each galactic core's table at its bounce, from its medium, as an event
      in the galaxy's history. `circuit::mass_number(z)` becomes a reading of
@@ -1274,7 +1281,7 @@ dimensions.
   2. **States per plane.** Each state's weight `m` places it on the six
      planes: `2P_k`, `U_k` and the pole `t_k = U_k / 2P_k` per plane (The
      six planes). Built on the axis plane: each band's occupancy by axis
-     level `m0` (`atoms::Band::axis_occupancy`; the level holds
+     level `m0` (`atoms::Band::axis_levels`; the level holds
      `C(l - |m0| + 9, 9)` orientations, singles fill from the Z side, and
      beyond half full the pairs fill from the Z side and the singles stay on
      the Q side), and each kind's Z side, neutral level and Q side

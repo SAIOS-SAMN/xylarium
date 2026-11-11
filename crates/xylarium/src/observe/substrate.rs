@@ -186,12 +186,15 @@ fn core_state(s: &Substrate, t: Dy) -> String {
         show(&per_hold)
     ));
     if let Ok(elements) = xyl_cosmos::elements::founded(&s.share) {
-        let a: Vec<i64> = xyl_cosmos::formation::kinds(&elements)
+        let a: Vec<Q> = xyl_cosmos::formation::kinds(&elements)
             .iter()
-            .filter_map(|k| xyl_cosmos::atoms::axis_polarity(k.z))
+            .filter_map(|k| {
+                let from_q = xyl_cosmos::circuit::fill_share(k.z, &s.share);
+                xyl_cosmos::atoms::axis_polarity(k.z, &from_q)
+            })
             .collect();
         let mut values = a.clone();
-        values.sort_unstable();
+        values.sort();
         values.dedup();
         out.push_str(&format!(
             concat!(
@@ -199,12 +202,12 @@ fn core_state(s: &Substrate, t: Dy) -> String {
                 "{} values from {} to {}\n"
             ),
             a.len(),
-            a.iter().filter(|x| **x < 0).count(),
-            a.iter().filter(|x| **x > 0).count(),
-            a.iter().filter(|x| **x == 0).count(),
+            a.iter().filter(|x| x.signum() < 0).count(),
+            a.iter().filter(|x| x.signum() > 0).count(),
+            a.iter().filter(|x| x.signum() == 0).count(),
             values.len(),
-            values.first().copied().unwrap_or(0),
-            values.last().copied().unwrap_or(0)
+            values.first().map_or("-".to_string(), show),
+            values.last().map_or("-".to_string(), show)
         ));
     }
     for c in &orbit.cohorts {

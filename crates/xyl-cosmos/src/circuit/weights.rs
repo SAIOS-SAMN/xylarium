@@ -150,6 +150,34 @@ pub fn electron_phase(k: u32, p: &Q) -> Q {
     &kappa * &(&Q::ONE - &(&Q::int(2) * &p.frac()))
 }
 
+/// The share of a kind's axis fill entering from the Q side toward Z (#201):
+/// the face of the electron phase's channel, which moves `R u` of the
+/// kind's states from Q to Z against its held count `W` (the jetstream law),
+/// `f_Q = |R| u / (W + |R| u)`, read at the kind's capture phase about the
+/// throat, `psi = (s Z) mod 1` with `s` the torsion share (the crossing
+/// phase the founding carries). The sign of `R` picks the direction: for
+/// `R > 0` the channel runs Q to Z and `f_Q` is that face; for `R <= 0` it
+/// runs Z to Q and the whole fill enters from the Z side (`f_Q = 0`). A kind
+/// with no open state has no aperture, `f_Q = 0`.
+pub fn fill_share(k: u32, share: &Q) -> Q {
+    let psi = (share * &Q::int(i64::from(k))).frac();
+    let r = electron_phase(k, &psi);
+    let u = Q::int(i64::from(crate::compound::open(k)));
+    let w = Q::int(i64::from(crate::compound::hold(k)));
+    if r.signum() <= 0 || u.signum() <= 0 {
+        return Q::ZERO;
+    }
+    let channel = &r * &u;
+    channel.checked_div(&(&w + &channel)).unwrap_or(Q::ZERO)
+}
+
+/// [`fill_share`] at the founded universe's torsion share, read from the
+/// anchor's admitted spin: the share of the universal table (#201).
+pub fn universal_fill_share(k: u32) -> Q {
+    let share = crate::bounce::torsion_share(&Q::ONE, &crate::circuit::anchor().spin);
+    fill_share(k, &share)
+}
+
 impl Substrate {
     /// The universe's nuclides at `t` rings: the firmament still held, every
     /// galaxy's composition (recipe plus intake), and matter in flight.

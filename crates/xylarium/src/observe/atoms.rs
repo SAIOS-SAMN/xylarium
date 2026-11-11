@@ -246,13 +246,13 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
                 },
                 a.sealed()
             ));
+            let from_q = xyl_cosmos::circuit::universal_fill_share(z);
             if let (Some(sides), Some(weights)) = (
-                xyl_cosmos::atoms::axis_sides(z),
-                xyl_cosmos::atoms::axis_weights(z),
+                xyl_cosmos::atoms::axis_sides(z, &from_q),
+                xyl_cosmos::atoms::axis_weights(z, &from_q),
             ) {
-                let side = |o: &xyl_cosmos::atoms::Occupancy| {
-                    format!("E {} U {} 2P {}", o.room, o.open, o.held())
-                };
+                let side =
+                    |o: &(Q, Q)| format!("U {} 2P {}", show(&o.0), show(&(&o.1 * &Q::int(2))));
                 rows.push_str(&format!(
                     concat!(
                         "         axis plane: Z side ({}), neutral ({}), Q side ({}); ",
@@ -261,8 +261,8 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
                     side(&sides[0]),
                     side(&sides[1]),
                     side(&sides[2]),
-                    weights.0,
-                    weights.1
+                    show(&weights.0),
+                    show(&weights.1)
                 ));
             }
         }
@@ -379,7 +379,8 @@ pub(super) fn bond_reading(a: u32, b: u32, turning: &Q) -> Result<String, String
     let bond = xyl_cosmos::atoms::bond(&fa, &fb);
     let received = xyl_cosmos::atoms::Received::isoclinic(turning.clone());
     let pushes = bond.pole_pushes();
-    let polarity = bond.polarities();
+    let shares = [a, b].map(xyl_cosmos::circuit::universal_fill_share);
+    let polarity = bond.polarities([&shares[0], &shares[1]]);
     let mut out = format!(
         "The bond of Z {a} and Z {b} at an isoclinic turning of {}\n",
         crate::run::show(turning)
@@ -392,11 +393,11 @@ pub(super) fn bond_reading(a: u32, b: u32, turning: &Q) -> Result<String, String
             .map(|x| crate::run::show(&x))
             .unwrap_or_else(|| "-".into()),
         polarity[0]
-            .map(|x| x.to_string())
-            .unwrap_or_else(|| "-".into()),
+            .as_ref()
+            .map_or_else(|| "-".into(), crate::run::show),
         polarity[1]
-            .map(|x| x.to_string())
-            .unwrap_or_else(|| "-".into()),
+            .as_ref()
+            .map_or_else(|| "-".into(), crate::run::show),
     ));
     for (face, (z, atom)) in bond.held(&received).iter().zip([(a, &fa), (b, &fb)]) {
         out.push_str(&format!("  Isoclinic planes, Z {z}:"));

@@ -9,9 +9,11 @@
 //! rings, times in whole rings; in these units the core's reach is one ring
 //! and its hold `H = 1 + held`.
 //!
-//! - Founding shells (`founding_shells`): each kind's reach
-//!   `R_z = (K + s_i) / m_z / H` (`m_z = Z + Q`, `mass_weight`) and whether the throat holds it,
-//!   `R_z (1 + s_final) <= 1`.
+//! - Founding shells (`founding_shells`): at the capture mass `m = Z`, each
+//!   kind's reach `R_z = H D(s_final (+) s_i) / D(r_m)` with
+//!   `D(r_m) = W_e / 3`, whether the throat holds it, `R_z (1 + s_final) <= 1`,
+//!   and the universal table: each parcel's rest point `Q* / Z = H / R`,
+//!   gathered per kind by amount (`circuit::rest_neutrons`).
 //! - Gas (`lighting`): each bead is a piece of the home galaxy's gas,
 //!   its state over the unit spread over its span, its kinds at its pinch
 //!   with agitation `a = (p - delta) / p`, `p` the throat's push

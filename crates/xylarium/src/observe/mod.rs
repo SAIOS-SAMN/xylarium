@@ -141,6 +141,10 @@ fn count(what: &[String], default: usize) -> usize {
 /// ```
 pub fn observe(o: Options, what: &[String]) -> Result<bool, String> {
     xyl_cosmos::circuit::cache_in(&o.home);
+    // The universe's spin is registered first, so a reading that weighs a
+    // nucleus founds (or loads) the universal table instead of reading the
+    // capture state.
+    xyl_cosmos::circuit::register_spin(&xyl_cosmos::origin::drawn_spin(o.seed));
     if let Some(out) = law_reading(&o, what)? {
         print!("{out}");
         return Ok(true);

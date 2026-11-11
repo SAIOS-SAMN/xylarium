@@ -1,10 +1,11 @@
 //! The founding shells: each kind's capture share, the stacks of the mass
-//! profile and each kind's reach about the throat (see the parent module's
-//! header for the formulas).
+//! profile, each kind's reach about the throat and its rest point there
+//! (see the parent module's header for the formulas).
 
-use super::{half, mass_weight};
+use super::half;
 use rayon::prelude::*;
 use std::collections::BTreeMap;
+use xyl_core::shares::{dilation, flow};
 use xyl_core::Q;
 
 /// A kind on the cascade: (atomic number, amount, mass per nucleus).
@@ -20,11 +21,19 @@ fn nucleus_grain(x: &Q) -> Q {
     xyl_core::certified::down(x, 232)
 }
 
-/// The kinds of `mix` with a positive amount and mass, each amount
-/// multiplied by `scale(z)`: (z, amount, mass per nucleus).
+/// A kind's mass per nucleus at capture: its protons, `Z`. The bounce
+/// captures charge first (`Q0 = 0`); the neutrons are the conversion's rest
+/// point after the reach is read ([`rest_neutrons`]).
+fn capture_mass(z: u32) -> Q {
+    Q::int(i64::from(z))
+}
+
+/// The kinds of `mix` with a positive amount and a positive electron hold,
+/// each amount multiplied by `scale(z)`: (z, amount, capture mass).
 fn weighed(mix: &[(u32, Q)], scale: impl Fn(u32) -> Q) -> Vec<Weighed> {
     mix.iter()
-        .map(|(z, a)| (*z, a * &scale(*z), mass_weight(*z)))
+        .filter(|(z, _)| crate::compound::electron_hold(*z) > 0)
+        .map(|(z, a)| (*z, a * &scale(*z), capture_mass(*z)))
         .filter(|(_, a, w)| a.signum() > 0 && w.signum() > 0)
         .collect()
 }
@@ -45,77 +54,99 @@ fn profile_beads(prof: &[Q]) -> Vec<(usize, usize)> {
     segs
 }
 
-/// Each kind's capture share along the chain, light to heavy (`kinds`
-/// sorted by Z): with `held` the share captured so far and `H = 1 + held`,
-/// a kind captures `s = 1/2 held / (held + H)`, the unlocked hemisphere, and
-/// then adds the kind's amount over the total `amount` to `held`. Returns the shares by
-/// Z and the final held share.
-fn capture_shares(kinds: &[Weighed], amount: &Q) -> (BTreeMap<u32, Q>, Q) {
-    let mut held = Q::ZERO;
-    let mut shares = BTreeMap::new();
-    for (z, a, _) in kinds {
-        let h = &Q::ONE + &held;
-        let s = on_grid(&half(&held.checked_div(&(&held + &h)).unwrap_or(Q::ZERO)));
-        shares.insert(*z, s);
-        held = on_grid(&(&held + &a.checked_div(amount).unwrap_or(Q::ZERO)));
-    }
-    (shares, held)
+/// The share the chain holds, light to heavy (`kinds` sorted by Z): each
+/// kind adds its amount over the total `amount`, on the 2^-64 grid.
+fn held_share(kinds: &[Weighed], amount: &Q) -> Q {
+    kinds.iter().fold(Q::ZERO, |held, (_, a, _)| {
+        on_grid(&(&held + &a.checked_div(amount).unwrap_or(Q::ZERO)))
+    })
 }
 
-/// The throat's final share `1/2 held / (held + h_final)`.
+/// The face `1/2 held / (held + h_final)` of a share `held` against the
+/// throat's final hold: the throat's final share `s_final` for the chain's
+/// whole hold, a stack's share `s_i` for the stack's.
 fn final_share(held: &Q, h_final: &Q) -> Q {
     on_grid(&half(
         &held.checked_div(&(held + h_final)).unwrap_or(Q::ZERO),
     ))
 }
 
-/// A stack's share `s_i`: the sum of its kinds' capture shares.
-fn stack_share(part: &[Weighed], shares: &BTreeMap<u32, Q>) -> Q {
-    part.iter().fold(Q::ZERO, |acc, (z, _, _)| {
-        &acc + shares.get(z).unwrap_or(&Q::ZERO)
-    })
+/// A stack's share `s_i`: the face of the hold the stack gathers, its
+/// amount over the total `amount` ([`final_share`]). The capture shares are
+/// running subtotals of one enclosure, so a stack's share is the one face
+/// of what it holds, never their sum.
+fn stack_share(part: &[Weighed], amount: &Q, h_final: &Q) -> Q {
+    let held = part.iter().fold(Q::ZERO, |acc, (_, a, _)| &acc + a);
+    final_share(&held.checked_div(amount).unwrap_or(Q::ZERO), h_final)
 }
 
-/// The reach a push carries a nucleus of mass `w` to about the hold
-/// `h_final`: `push / w / h_final`, on the 2^-64 grid.
-fn carried_reach(push: &Q, w: &Q, h_final: &Q) -> Q {
-    // Stand-in S120: The mass divides the push instead of resisting it.
-    on_grid(
-        &push
-            .checked_div(w)
-            .unwrap_or(Q::ZERO)
-            .checked_div(h_final)
-            .unwrap_or(Q::ZERO),
-    )
+/// The reach a stack's push `p_stack` carries kind `z` to about the hold
+/// `h_final`: the push composed against the kind's resistance
+/// `r_m`, `p_net = p_stack (+) (-r_m)`, so `R = H D(p_net) = H D(p_stack) /
+/// D(r_m)` with `D(r_m) = W_e / 3`, `W_e = 3Z - U` the electron hold. `None`
+/// for a push outside `(-1, 1)` or a kind with no electron hold.
+fn carried_reach(p_stack: &Q, z: u32, h_final: &Q) -> Option<Q> {
+    let w_e = Q::int(i64::from(crate::compound::electron_hold(z)));
+    let d_r = w_e.checked_div(&Q::int(3)).filter(|d| d.signum() > 0)?;
+    Some(on_grid(&(h_final * &dilation(p_stack)?).checked_div(&d_r)?))
 }
 
-/// The founding shells: each kind's reach about the throat,
-/// R_z = (K + s_i) / m_z / H (m_z the mass weight), after the filter below. Returns the final
-/// share s_final (each shell spreads R (1 +/- s_final)) and, per kind,
-/// (z, amount, reach). What the throat holds is not read here: it is the
-/// closed kinds, held on both faces of the paired throat (T16).
-pub fn founding_shells(mix: &[(u32, Q)]) -> (Q, Vec<(u32, Q, Q)>) {
-    // The founding runs on mass: amounts are converted from held count to
-    // mass (x mass / hold) for the capture shares, the profile's beads and
-    // the carriage's inertia, and converted back on return.
+/// The conversion's rest point at each parcel's reach, gathered per kind:
+/// a parcel of kind `z` at reach `R` about the hold `H` rests at
+/// `Q* / Z = H / R`, the antipolar face (`t -> 1 / t`) of its reach, and
+/// the kind's neutrons per nucleus are its parcels' rest points weighted by
+/// their amounts, `Q_z = Z sum(a H / R) / sum(a)`, rational on the 2^-64
+/// grid; a kind with no parcel has no entry (`Q* = 0`, its capture state).
+fn rest_neutrons(parcels: &[(BTreeMap<u32, Q>, Q)], h_final: &Q) -> BTreeMap<u32, Q> {
+    let mut sums: BTreeMap<u32, (Q, Q)> = BTreeMap::new();
+    for (mix, r) in parcels {
+        let Some(t) = h_final.checked_div(r) else {
+            continue;
+        };
+        for (z, a) in mix.iter().filter(|(_, a)| a.signum() > 0) {
+            let e = sums.entry(*z).or_insert((Q::ZERO, Q::ZERO));
+            e.0 = &e.0 + &(a * &t);
+            e.1 = &e.1 + a;
+        }
+    }
+    sums.into_iter()
+        .filter_map(|(z, (num, den))| {
+            Some((z, on_grid(&(&capture_mass(z) * &num.checked_div(&den)?))))
+        })
+        .collect()
+}
+
+/// The founding shells: each kind's reach about the throat at capture,
+/// `R_z = H D(s_final (+) s_i) / D(r_m)` with `D(r_m) = W_e / 3`, after
+/// the filter below. Returns the final share s_final (each shell spreads
+/// R (1 +/- s_final)), per kind (z, amount, reach), and the universal
+/// table: each kind's neutrons per nucleus at the conversion's rest point
+/// (read by `circuit::rest_neutrons`). What the throat holds is not read
+/// here: it is the closed kinds, held on both faces of the paired throat
+/// (T16).
+pub fn founding_shells(mix: &[(u32, Q)]) -> (Q, Vec<(u32, Q, Q)>, BTreeMap<u32, Q>) {
+    // The founding runs on the capture mass: amounts are converted from
+    // held count to mass (x Z / W_e) for the held share, the profile's beads
+    // and the filter, and converted back on return.
     let to_mass = |z: u32| {
-        mass_weight(z)
+        capture_mass(z)
             .checked_div(&Q::int(i64::from(crate::compound::electron_hold(z))))
             .unwrap_or(Q::ONE)
     };
     let mut kinds = weighed(mix, to_mass);
     if kinds.is_empty() {
-        return (Q::ZERO, Vec::new());
+        return (Q::ZERO, Vec::new(), BTreeMap::new());
     }
     let amount = kinds.iter().fold(Q::ZERO, |acc, (_, a, _)| &acc + a);
     kinds.sort_by_key(|k| k.0);
-    let (shares, held) = capture_shares(&kinds, &amount);
-    let k_spin = shares.values().fold(Q::ZERO, |acc, s| &acc + s);
+    let held = held_share(&kinds, &amount);
     let h_final = &Q::ONE + &held;
     let s_final = final_share(&held, &h_final);
-    let released = release_shells(&kinds, &shares, &k_spin, &h_final);
+    let released = release_shells(&kinds, &amount, &s_final, &h_final);
     let takes = filter_takes(&released, &h_final, &s_final);
-    let out = place_takes(&released, takes)
+    let parcels = place_takes(&released, takes);
+    let neutrons = rest_neutrons(&parcels, &h_final);
+    let out = parcels
         .into_iter()
         .flat_map(|(mix, r)| {
             mix.into_iter()
@@ -124,29 +155,29 @@ pub fn founding_shells(mix: &[(u32, Q)]) -> (Q, Vec<(u32, Q, Q)>) {
                 .collect::<Vec<_>>()
         })
         .collect();
-    (s_final, out)
+    (s_final, out, neutrons)
 }
 
 /// Each kind's shell at release, heaviest first: (z, amount, reach). The
 /// stacks are the beads of the mass profile (each kind's amount, already in
-/// mass); a stack's push is `K + s_i`, and each kind is carried by the kind's
-/// mass per nucleus, `R = (K + s_i) / w / H`.
-fn release_shells(
-    kinds: &[Weighed],
-    shares: &BTreeMap<u32, Q>,
-    k_spin: &Q,
-    h_final: &Q,
-) -> Vec<Weighed> {
+/// mass); a stack's push is the throat's final share composed with the
+/// stack's own, `p_stack = s_final (+) s_i`, and each kind is carried
+/// against its resistance ([`carried_reach`]). A kind whose reach is
+/// refused is not released.
+fn release_shells(kinds: &[Weighed], amount: &Q, s_final: &Q, h_final: &Q) -> Vec<Weighed> {
     let mut heavy = kinds.to_vec();
     heavy.sort_by(|a, b| b.2.cmp(&a.2));
     let prof: Vec<Q> = heavy.iter().map(|(_, a, _)| a.clone()).collect();
     let mut shells = Vec::new();
     for (a0, a1) in profile_beads(&prof) {
         let part = &heavy[a0..a1];
-        // Stand-in S119: A stack push is a sum, not a composition against a hold.
-        let push = k_spin + &stack_share(part, shares);
-        for (z, a, w) in part {
-            shells.push((*z, a.clone(), carried_reach(&push, w, h_final)));
+        let Some(push) = flow(s_final, &stack_share(part, amount, h_final)) else {
+            continue;
+        };
+        for (z, a, _) in part {
+            if let Some(r) = carried_reach(&push, *z, h_final) {
+                shells.push((*z, a.clone(), r));
+            }
         }
     }
     shells
@@ -316,4 +347,37 @@ fn place_takes(released: &[Weighed], takes: Vec<(usize, usize, Q)>) -> Vec<(BTre
             )
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A lone kind holds the whole chain, so `H = 2` and its parcel rests at
+    /// the antipolar face of its reach: `(Q* / Z) R = H`, to Q's grid.
+    #[test]
+    fn a_lone_kind_rests_at_the_antipole_of_its_reach() {
+        for z in [1u32, 2, 26, 92, 1092] {
+            let (_, shells, table) = founding_shells(&[(z, Q::ONE)]);
+            let r = &shells[0].2;
+            let t = table[&z].checked_div(&Q::int(i64::from(z))).unwrap();
+            // Q_z is on the 2^-64 grid, so within a grid step at the reach.
+            let step = Q::new(1, 1 << 62).unwrap();
+            assert!((&(&t * r) - &Q::int(2)).abs() <= &step * r, "Z {z}");
+        }
+    }
+
+    /// The resistance `D(r_m) = W_e / 3` is positive for every atom, so no
+    /// kind of a mix is refused its reach or its rest point.
+    #[test]
+    fn every_atom_of_a_mix_has_a_rest_point() {
+        let mix: Vec<(u32, Q)> = (1..=crate::elements::TOP_Z)
+            .step_by(37)
+            .map(|z| (z, Q::new(1, i64::from(z)).unwrap()))
+            .collect();
+        let (_, _, table) = founding_shells(&mix);
+        for (z, _) in &mix {
+            assert!(table.get(z).is_some_and(|q| q.signum() > 0), "Z {z}");
+        }
+    }
 }

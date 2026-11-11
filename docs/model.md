@@ -372,10 +372,21 @@ components, and each formation mechanic moves one of them.
   `3Z / 3Q + R` added a turn to a dilation (I009, closed).
 - **The rest point.** At a bounce the medium's push is zero, so the rest
   point is `p_net,p = 0`: `p*_nuc,p = -R_p`, `3Z*_p / 3Q*_p = (1 - R_p) /
-  (1 + R_p)`. A kind at `abs(R_p) = 1` has none and is refused. The
-  reading and the table built from it are #201's next step; the counts it
-  gives are rational, and their reading back to whole nucleons is the
-  Diophantine split (#149).
+  (1 + R_p)`. A kind at `abs(R_p) = 1` has none and is refused. The counts
+  are rational; their reading back to whole nucleons is the Diophantine
+  split (#149).
+- **The universal table** (ruled 2026-11-11, #201). The bounce captures
+  first, then converts. The founding shells are read at the capture mass
+  `m = Z` (`Q0 = 0`): the stack's push `p_stack = s_final (+) s_i`, the
+  throat's final share composed with the stack's own face, against the
+  kind's resistance `D(r_m) = W_e / 3`, carries it to
+  `R = H D(p_stack) / D(r_m)`. Each parcel then rests at the antipolar face
+  of its reach, `Q* / Z = H / R` (the involution `t -> 1/t`, the law's sole
+  ground), so at release `Q* / Z = (3Z - U) / (3 D(p_stack))`. A kind's
+  `Q_z` is its parcels' rest points weighted by amount, a rational on the 2^-64 grid
+  (`circuit::rest_neutrons`); every reading of a nucleus after the shells
+  weighs `Z + Q_z`. At seed 7 no kind is refused and `Q* / Z` runs 0.42 to
+  557, rising with `W_e`.
 - **The two holds.** `3W = 3Z + 3Q` is the nucleon whole. The electron
   hold `W_e = 3Z - U` (`compound::electron_hold`) is the held states the
   bound electrons screen, against which the open channel `abs(R_p) u` acts
@@ -386,8 +397,8 @@ components, and each formation mechanic moves one of them.
   |---|---|---|---|
   | Capture and stripping of electrons (`atoms::unpaired_hot`, the jetstream's pole channels) | `R`, and the electrons' open and paired states | `3W`, `p` | built: the jetstream moves the electrons' pole state `t = U / W_held`, held to open, not nucleons |
   | The fill, both ways, per Hopf plane (`atoms::Band::plane_levels`, `circuit::fill_shares`) | the electrons' levels on each plane, so the polarities `A_p` and both dipoles of each plane's split | `3W` | built (ruled 2026-11-11): on plane `p` the share `f_p = abs(R_p) u / (W_e + abs(R_p) u)` enters from the Q side toward Z when `R_p > 0`, none when `R_p <= 0`, at the plane's capture phase; exact shares, never floored |
-  | Fusion of `k` nuclei, fission (`stars::fusion_step`, the sequence) | `3W`: summed, or split | the split by weight: `h' = (sum W_i h_i) / (sum W_i)`, the mediant of the parts' `D` | built for `Z`; `Q` read from a table |
-  | Nucleon conversion, Z to Q and back | `p`, by flow steps: `D(p') = D(p) D(s)` | `3W` | **not built**: every genesis and every galaxy reads one fixed table of measured weights (`crates/xyl-cosmos/data/elements.tsv`, through `circuit::mass_number`, S029) |
+  | Fusion of `k` nuclei, fission (`stars::fusion_step`, the sequence) | `3W`: summed, or split | the split by weight: `h' = (sum W_i h_i) / (sum W_i)`, the mediant of the parts' `D` | built for `Z`; `Q` read from the universal table, back to whole nucleons |
+  | Nucleon conversion, Z to Q and back | `p`, by flow steps: `D(p') = D(p) D(s)` | `3W` | built at the universal core's bounce (ruled 2026-11-11): capture at `m = Z`, then each parcel rests at `Q* / Z = H / R`, the antipolar face of its reach; a kind's `Q_z` gathers its parcels (`circuit::rest_neutrons`). Every galaxy reads this universal table (S138) |
   | A bond | share through the bound electrons `g` between the strata | `3W` | LAW-COUPLING v2 (#241) |
 
 - **What the conversion law must meet.** It keeps `3W`, moves `p` by flow
@@ -2299,7 +2310,8 @@ from the founding; the stand-ins are registered (docs/assumptions.md). The
 chain, in order, each step a founding change:
 
 1. **Matter:** `Q` from the conversion's rest point at each core's bounce
-   (E018, [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201)), retiring S029.
+   (E014, [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201)). Built for the universal table (S029 retired); the
+   galactic cores' tables remain (S138).
 2. **Stars:** condensed from the galactic core's held gas, mass and place
    read where the hold closes; retires S006 to S014 and S020
    ([#191](https://github.com/SAIOS-SAMN/xylarium/issues/191)), each remnant from the remnant's compactness (S003,

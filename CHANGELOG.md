@@ -11,6 +11,18 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The universal table from the conversion's rest point (#201, E014):
+  capture first at `m = Z`, then each founding parcel rests at
+  `Q* / Z = H / R`, the antipolar face of its reach; a kind's `Q_z` is its
+  parcels' rest points weighted by amount, a rational on the 2^-64 grid
+  (`circuit::rest_neutrons`), set by the founding and cached with it. The
+  founding shells compose the stack's push `p_stack = s_final (+) s_i`
+  against the kind's resistance `D(r_m) = W_e / 3`, `R = H D(p_stack) /
+  D(r_m)`. Retires S029 (the fixed table of measured weights), S119 (the
+  push as a sum) and S120 (the mass as a divisor); every galaxy reads the
+  universal table (S138). Seed 7: no kind refused, `Q* / Z` 0.42 to 557;
+  `observe split` reads A from the founded table (Z 28: 369).
+
 - The grids registered as declared rulers (roadmap, Declared rulers): the
   `2^-b` resolutions of founding matter (232), founding shares (64), fields
   (60), elements (48), the origin (40), bodies (32) and the nucleus grain's

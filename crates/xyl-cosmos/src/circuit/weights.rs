@@ -1,15 +1,16 @@
 // Z, Q and R: a kind's protons (Z), neutrons (Q) and the electrons' phase
 // state (R) at the bounce's pulse p (turns).
 //
-// Inputs: `elements::table` (mass numbers), `compound::parts` and
+// Inputs: the universal table (`formation::founding_shells`, set by the
+// founding), `compound::parts` and
 // `compound::charge`, `fibres::grow` (electron coherence kappa on S^11) and
 // `nuclei_of` (grain.rs); a `Substrate`'s outflow and intakes.
 //
 // Outputs: `TwoWeights` (protons, neutrons, `mass`, `neutron_share`);
-// `mass_number` (the table's mass rounded to the nearest nucleon, A = floor(a + 1/2));
+// `rest_neutrons` (an atom's Q from the universal table, rational);
+// `mass_number` (read back to whole nucleons, A = floor(Z + Q + 1/2));
 // `kind_capacity` and `mix_capacity` (the dipole's capacity, `3Q = 3 cap`);
-// `neutrons_of` (the mass number less the
-// charge, summed over a cluster's parts); `nucleus_weights`; `mix_weights`
+// `neutrons_of` (`rest_neutrons`, summed over a cluster's parts); `nucleus_weights`; `mix_weights`
 // (whole nuclei only); `electron_phase`, R = kappa (1 - 2 frac(p)) in
 // [-kappa, kappa], zero for a kind with no charge; `fill_shares`, the fill's
 // Q-side share on each of the six Hopf planes at its plane's capture phase
@@ -23,9 +24,9 @@ use xyl_core::Q;
 
 /// Z, Q and R: Z the protons, Q the neutrons, R the electrons' phase state at
 /// the bounce's pulse p (turns).
-/// - Z is the charge; Q is the mass number less the charge (from the element
-///   table; a cluster sums its parts). A kind is a nuclide (Z, Q) with weight
-///   Z + Q nucleons.
+/// - Z is the charge; Q is the conversion's rest point from the universal
+///   table, a rational on the 2^-64 grid (a cluster sums its parts). A
+///   kind is a nuclide (Z, Q) with weight Z + Q nucleons.
 /// - R is the electrons' coherence kappa (the share fibred on S^11, fibres.rs)
 ///   times the hemisphere response 1 - 2 frac(p), so R = kappa (1 - 2 frac(p))
 ///   in [-kappa, kappa]: held face early in the echo, zero at its turn, open
@@ -34,8 +35,8 @@ use xyl_core::Q;
 pub struct TwoWeights {
     /// Z: proton count (summed over whole nuclei for a mix).
     pub protons: Q,
-    /// Q: neutron count, mass number less charge (summed over whole nuclei for
-    /// a mix).
+    /// Q: neutron count at the rest point (summed over whole nuclei for a
+    /// mix).
     pub neutrons: Q,
 }
 
@@ -50,43 +51,65 @@ impl TwoWeights {
     }
 }
 
-/// An atom's mass number `A_z = floor(a + 1/2)`: the element table's mass
-/// `a` rounded to the nearest whole nucleon. `None` for a cluster, a kind
-/// outside the table or a mass that rounds to zero. Indexed once per
-/// process. The one mass-number law for every tier.
-pub fn mass_number(z: u32) -> Option<u32> {
-    static INDEX: std::sync::OnceLock<std::collections::BTreeMap<u32, u32>> =
-        std::sync::OnceLock::new();
-    INDEX
-        .get_or_init(|| {
-            crate::elements::table()
-                .unwrap_or_default()
-                .iter()
-                .filter_map(|e| {
-                    // Stand-in S029: One fixed table of weights for every universe and galaxy.
-                    let a = (&e.a + &xyl_core::ratio!(1, 2)).floor_i128()?;
-                    let a = u32::try_from(a).ok().filter(|&a| a > 0)?;
-                    Some((e.z, a))
-                })
-                .collect()
-        })
-        .get(&z)
-        .copied()
+/// The universal table: each atom's neutrons per nucleus at the
+/// conversion's rest point, built at the universal core's bounce
+/// (`formation::founding_shells`) and set once per process by the founding.
+static NEUTRONS: std::sync::OnceLock<std::collections::BTreeMap<u32, Q>> =
+    std::sync::OnceLock::new();
+
+/// Whether a founding is under way in this process: a reading taken then
+/// does not found again, and reads the capture state.
+static FOUNDING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Sets the universal table at the founding; the first founding in the
+/// process wins.
+pub(crate) fn set_neutrons(table: std::collections::BTreeMap<u32, Q>) {
+    let _ = NEUTRONS.set(table);
 }
 
-/// A kind's neutrons: its mass number ([`mass_number`]) less its charge; a
-/// cluster sums its parts.
+/// Marks a founding under way (`true`) or done (`false`).
+pub(crate) fn set_founding(on: bool) {
+    FOUNDING.store(on, std::sync::atomic::Ordering::SeqCst);
+}
+
+/// The process's universal table. Where no founding has happened yet, the
+/// substrate is founded first at the registered spin (as `anchor`); `None`
+/// where no spin is registered, during the founding, or where it fails.
+fn neutron_table() -> Option<&'static std::collections::BTreeMap<u32, Q>> {
+    if let Some(t) = NEUTRONS.get() {
+        return Some(t);
+    }
+    if !FOUNDING.load(std::sync::atomic::Ordering::SeqCst) {
+        let _ = super::anchor();
+    }
+    NEUTRONS.get()
+}
+
+/// An atom's neutrons per nucleus `Q_z` from the universal table: the
+/// conversion's rest point at its parcels' reaches, a rational on the
+/// 2^-64 grid (E014, #201). `None` for a cluster, a kind with no parcel or before the
+/// founding: such a kind is in its capture state, `Q = 0`.
+pub fn rest_neutrons(z: u32) -> Option<Q> {
+    // Stand-in S138: Every galaxy reads the universal table, not its core's own.
+    neutron_table()?.get(&z).cloned()
+}
+
+/// An atom's mass number read back to whole nucleons, `A_z = floor(Z + Q_z
+/// + 1/2)` ([`rest_neutrons`], #149). `None` where `Q_z` is not read.
+pub fn mass_number(z: u32) -> Option<u32> {
+    let a =
+        (&(&Q::int(i64::from(z)) + &rest_neutrons(z)?) + &xyl_core::ratio!(1, 2)).floor_i128()?;
+    u32::try_from(a).ok().filter(|&a| a > 0)
+}
+
+/// A kind's neutrons: each atom's [`rest_neutrons`] (zero in the capture
+/// state); a cluster sums its parts.
 pub fn neutrons_of(k: u32) -> Q {
-    let of_atom = |z: u32| -> Q {
-        mass_number(z)
-            .map(|a| Q::int(i64::from(a.saturating_sub(z))))
-            .unwrap_or(Q::ZERO)
-    };
     crate::compound::parts(k)
         .iter()
         .filter(|(z, n)| *z > 0 && *n > 0)
         .fold(Q::ZERO, |acc, (z, n)| {
-            &acc + &(&of_atom(*z) * &Q::int(i64::from(*n)))
+            &acc + &(&rest_neutrons(*z).unwrap_or(Q::ZERO) * &Q::int(i64::from(*n)))
         })
 }
 

@@ -93,6 +93,27 @@ pub struct Substrate {
     /// does), the lit share of its gas, and each piece of gas by reach
     /// (inner edge, outer edge, galaxy units) with the rings until it lights.
     pub lighting: formation::Lighting,
+    /// The universal table: each atom's neutrons per nucleus at the
+    /// conversion's rest point (`formation::founding_shells`), built at the
+    /// universal core's bounce.
+    pub neutrons: std::collections::BTreeMap<u32, Q>,
+}
+
+/// Marks the founding under way while held, so a reading of the neutrons
+/// taken inside it reads the capture state instead of founding again.
+struct Founding;
+
+impl Founding {
+    fn start() -> Self {
+        super::weights::set_founding(true);
+        Founding
+    }
+}
+
+impl Drop for Founding {
+    fn drop(&mut self) {
+        super::weights::set_founding(false);
+    }
 }
 
 impl Substrate {
@@ -110,6 +131,7 @@ impl Substrate {
     /// element table fails.
     pub fn found(spin: &Q) -> Option<(Substrate, Anchor)> {
         let mut prof = Prof::new(usize::MAX);
+        let _founding = Founding::start();
         // The founding depends only on the laws and the torsion share, so the
         // cache key is the founding digest and the share.
         let share = crate::bounce::torsion_share(&Q::ONE, spin);
@@ -121,6 +143,7 @@ impl Substrate {
             Some(super::anchor::of(&s.rim, s.lighting.cools_in, spin, &core))
         };
         if let Some(mut s) = super::cache::load(&key) {
+            super::weights::set_neutrons(s.neutrons.clone());
             s.reverb = s.reverberation();
             let a = anchor_of(&s)?;
             prof.lap("founding: from the cache");
@@ -129,8 +152,12 @@ impl Substrate {
         let elements = crate::elements::founded(&share).ok()?;
         let kinds = formation::kinds(&elements);
         let mix: Vec<(u32, Q)> = kinds.iter().map(|k| (k.z, k.share.clone())).collect();
-        let (s_final, shells) = formation::founding_shells(&mix);
+        let (s_final, shells, neutrons) = formation::founding_shells(&mix);
         prof.lap("founding: shells");
+        // Capture, then conversion: the shells are read at the capture mass
+        // (Q = 0), and every reading below weighs each nucleus with its
+        // neutrons at the rest point.
+        super::weights::set_neutrons(neutrons.clone());
         // The paired throat holds on both faces only its closed kinds (T16):
         // they are the firmament, and every open kind leaves.
         let shells: Vec<(u32, Q, Q, bool)> = shells
@@ -169,6 +196,7 @@ impl Substrate {
             reverb: Vec::new(),
             share: share.clone(),
             lighting: formation::Lighting::default(),
+            neutrons,
         };
         s.reverb = s.reverberation();
         prof.lap("founding: reverberation");

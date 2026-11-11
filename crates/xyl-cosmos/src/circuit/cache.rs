@@ -21,7 +21,7 @@ use xyl_core::codec::{Dec, Enc};
 /// load.
 static DIR: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
 
-const VERSION: u32 = 8;
+const VERSION: u32 = 9;
 
 /// Names the directory the founding is cached in (a universe's home). The
 /// first call in a process wins; without one, nothing is cached.
@@ -62,6 +62,10 @@ fn encode(s: &Substrate) -> Vec<u8> {
         for (z, a) in &b.recipe {
             e.u32(*z).q(a);
         }
+    }
+    e.len(s.neutrons.len());
+    for (z, q) in &s.neutrons {
+        e.u32(*z).q(q);
     }
     e.buf
 }
@@ -112,6 +116,12 @@ fn decode(buf: &[u8]) -> Option<Substrate> {
             span,
         });
     }
+    let n = d.count()?;
+    let mut neutrons = std::collections::BTreeMap::new();
+    for _ in 0..n {
+        let z = d.u32()?;
+        neutrons.insert(z, d.q()?);
+    }
     if !d.done() {
         return None;
     }
@@ -127,6 +137,7 @@ fn decode(buf: &[u8]) -> Option<Substrate> {
             lit,
             pieces,
         },
+        neutrons,
     })
 }
 

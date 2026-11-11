@@ -195,8 +195,10 @@ another crate. Laws are composed from shares (ratios of the form
 - Horizon sphere (`bounce::horizon`): `sigma = sphere_through(C, P)`, where
   `P` is the crossing on isoclinic plane 1 at reach `rho sin(R_h / rho)` and
   the pulse's phase (`bounce::crossing`). Calibre: founding. Status: built.
-- Spin bivector (`bounce::spin_bivector`): `K = a sum_(k=1..5) B_k`. Calibre: none. Status:
-  built.
+- Spin bivector (`bounce::spin_bivector`): `K = a sum_(k=0..5) B_k` over
+  the six planes, `B_0` the axis plane's blade in the common phase (#183);
+  at a crossing off the axis plane `P . B_0 = 0`, so the source is the five
+  isoclinic planes'. Calibre: none. Status: built.
 - White hole (`bounce::Bounce::of`, `xyl-core cga::Source`):
   `N = P ^ (P . K)` is null, fixes `P` and keeps `sigma`; the far face is the
   antipode of `P` under 180 degrees on each isoclinic plane

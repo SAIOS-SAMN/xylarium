@@ -297,6 +297,12 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The spin's generator turns all six planes in the common phase (#183):
+  `bounce::spin_bivector` is `a sum_(k=0..5) B_k`, the axis plane joining
+  the five isoclinic planes. The founding's crossing lies off the axis plane,
+  so the white hole's source is unchanged (`P . B_0 = 0`, tested), and so is
+  the founding.
+
 - The word retired by Mycelium #239 (with Netstratum) is gone from code,
   scripts and documentation, each use named for what it meant:
   `galaxy::DiscManifold` and `galaxy::disc_manifold` (a star's disc

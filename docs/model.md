@@ -432,8 +432,9 @@ axis plane, its first axis the pole axis, and the five isoclinic planes).
   at the pulse's phase (`crossing`); the pole axis is reserved for the
   filament. The horizon is the conformal sphere about the centre through the
   crossing point (`horizon`, `xyl-core cga::sphere_through`).
-- The spin is the bivector `K = a sum_k B_k` over the blades of the five
-  planes (`spin_bivector`). The white hole is the null generator
+- The spin is the bivector `K = a sum_k B_k` over the blades of the six
+  planes, the axis plane in the common phase (`spin_bivector`, #183; at a
+  crossing off the axis plane its axis part adds nothing to the source). The white hole is the null generator
   `N = P ^ (P . K)` at the crossing point (`xyl-core cga::Source`); it is
   verified to be null, fixes `P` and preserves the horizon. The throat's far
   face is the crossing point's antipode under 180 degrees on each of the five isoclinic planes
@@ -849,9 +850,11 @@ Ruled 2026-11-11 ([#183](https://github.com/SAIOS-SAMN/xylarium/issues/183)); bu
 - **Layout.** The founding's points have the twelve base axes: the axis
   plane on `cga` axes 1-2, its first the pole axis, and the isoclinic
   planes on 3-4 to 11-12 (`circuit::plane_blade`, `bounce::AXES`).
-- **Open.** The spin's generator (`bounce::spin_bivector`) still turns
-  the five isoclinic planes only; the axis plane joins it as a change of
-  law, read on the founding. For the plane-pair products, which torus is
+- **The spin.** The spin's generator (`bounce::spin_bivector`) turns all
+  six planes in the common phase. The founding's crossing lies on the first
+  isoclinic plane, so the axis plane's part adds nothing to the white hole's
+  source there (`P . e1 e2 = 0`), and the founding reads unchanged.
+- **Open.** For the plane-pair products, which torus is
   inside is set by the share split; a fibre on several plane pairs needs
   its winding on each.
 
@@ -874,10 +877,10 @@ display, never stored.
 - **The shear.** The orbit does not close. Each traversal advances its
   periapsis by `360 delta` degrees in its orbital plane
   (`turning::twist_per_turn`), a degree of structure returned after
-  `1 / (1 - delta)` traversals (T4), and the spin moves the orbit across the five isoclinic planes
+  `1 / (1 - delta)` traversals (T4), and the spin moves the orbit across the six planes
   (`bounce::spin_bivector`): every direction turns on a great circle of
-  S^9 in the ten dimensions the planes span, by the same degrees on each
-  isoclinic plane (T18), and the shear carries the
+  S^11 in the twelve dimensions the planes span, by the same degrees on
+  each plane (T18, the axis plane in the common phase by #183), and the shear carries the
   orbit from one circle to the next.
 - **Resonance.** An orbit returns exactly after `q` traversals, `q` the
   denominator of its advance in lowest terms. The reaches `r_k = (k - 1) M`

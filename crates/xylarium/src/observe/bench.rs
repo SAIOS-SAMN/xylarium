@@ -146,7 +146,7 @@ fn q_face(o: &Occupancy) -> QFace {
 /// The nucleon dipole of LAW-COUPLING v2's draft (Mycelium #241, 78.181
 /// section 2): `3p` and `3n` from the body (`n = A - Z`), the axis share
 /// `p / w` and `t = p / n`, and the push `pi = p (1 - g) / w` with its
-/// antipole `1 - pi`. Xylarium has no `g` of its own; the bench reads it as
+/// antipole `1 - pi`. Xylarium builds no bound share `g`; the bench reads it as
 /// the capacity face's held share `g = 2P / Z`, under which
 /// `pi = U / w` exactly. Readings only.
 struct Nucleons {

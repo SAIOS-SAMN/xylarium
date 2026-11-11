@@ -850,10 +850,37 @@ Ruled 2026-11-11 ([#183](https://github.com/SAIOS-SAMN/xylarium/issues/183)); bu
 - **Layout.** The founding's points have the twelve base axes: the axis
   plane on `cga` axes 1-2, its first the pole axis, and the isoclinic
   planes on 3-4 to 11-12 (`circuit::plane_blade`, `bounce::AXES`).
-- **The spin.** The spin's generator (`bounce::spin_bivector`) turns all
-  six planes in the common phase. The founding's crossing lies on the first
-  isoclinic plane, so the axis plane's part adds nothing to the white hole's
-  source there (`P . e1 e2 = 0`), and the founding reads unchanged.
+- **The charged spin.** Ruled 2026-11-11. The spin is charged, the
+  manifold's deformation itself, and it rests on its axis tilt through the
+  charge:
+  - Its magnitude is the holonomy at the body's reach,
+    `theta = 360 delta` degrees per traversal (`hopf::holonomy`), returned
+    after `1 / (1 - delta)` traversals (T4), on the six planes in the
+    common phase.
+  - The body's open charge is `pi = (p / w) (1 - delta)` (`hopf::open_charge`,
+    LAW-COUPLING v2's push on xylarium's orientation, the bound share
+    `g = delta`).
+  - The tilt turns the pole axis toward the open charge's isoclinic plane
+    (`hopf::tilt`), one generator, since a complex-linear mixing of planes
+    leaves the common phase unchanged (`T K T~ = K`).
+  - The tilt's faces are read off the motion, `c = 1 - eps / 90` and
+    `d = eps / 90` (`hopf::tilt_faces`: the overlap law on the share circle,
+    `psi = 2 eps`).
+  - Its natural balance is where those faces equal the charge's,
+    `eps* = 90 pi` degrees (`hopf::tilt_equilibrium`), restoring on both
+    sides. The writhe carries the tilt toward it, `Lk = Tw + Wr`.
+  - The charged spin is `K = delta (T B_0 T~ + sum_{q=1..5} B_q)`
+    (`hopf::charged_spin`).
+- **Where it stands.** The pieces are built in `xyl_core::hopf`. The
+  bounce's generator (`bounce::spin_bivector`) turns the six planes in the
+  common phase but is still untilted, with the drawn Kerr parameter as its
+  magnitude. Untilted, its axis part adds nothing at the crossing
+  (`P . e1 e2 = 0`), so the founding reads unchanged; that is the absence
+  of the tilt, not a law. The tilt enters once the parent hole's charge
+  (`p / w`) is read, and then the source carries `sin eps (P . e3 e2)`.
+  Next come the bells (the hole's spin tilted from its orbit normal) and
+  the worlds (`eps*` replacing the drawn obliquity and `life::body`'s
+  `tilt > 23`).
 - **Open.** For the plane-pair products, which torus is
   inside is set by the share split; a fibre on several plane pairs needs
   its winding on each.

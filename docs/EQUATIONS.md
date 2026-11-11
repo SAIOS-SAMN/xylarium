@@ -196,9 +196,20 @@ another crate. Laws are composed from shares (ratios of the form
   `P` is the crossing on isoclinic plane 1 at reach `rho sin(R_h / rho)` and
   the pulse's phase (`bounce::crossing`). Calibre: founding. Status: built.
 - Spin bivector (`bounce::spin_bivector`): `K = a sum_(k=0..5) B_k` over
-  the six planes, `B_0` the axis plane's blade in the common phase (#183);
-  at a crossing off the axis plane `P . B_0 = 0`, so the source is the five
-  isoclinic planes'. Calibre: none. Status: built.
+  the six planes, `B_0` the axis plane's blade in the common phase (#183),
+  untilted; at a crossing off the axis plane `P . B_0 = 0`. Calibre: none.
+  Status: built; to become the charged spin below.
+- Charged spin (`xyl_core::hopf`, ruled 2026-11-11, #183):
+  - the holonomy `theta = 360 delta` (`holonomy`);
+  - the open charge `pi = (p / w) (1 - delta)` (`open_charge`);
+  - the tilt of the pole axis toward isoclinic plane 1 by `eps` (`tilt`),
+    with faces `c = 1 - eps / 90` and `d = eps / 90` (`tilt_faces`);
+  - the balance `eps* = 90 pi` (`tilt_equilibrium`);
+  - `K = delta (T B_0 T~ + sum_{q=1..5} B_q)` (`charged_spin`), with
+    `T K T~ = K` for every complex-linear `T`.
+
+  Calibre: none. Status: built in `xyl_core`; not yet read by the bounce
+  (it needs the parent hole's `p / w`), the bells or the worlds.
 - White hole (`bounce::Bounce::of`, `xyl-core cga::Source`):
   `N = P ^ (P . K)` is null, fixes `P` and keeps `sigma`; the far face is the
   antipode of `P` under 180 degrees on each isoclinic plane

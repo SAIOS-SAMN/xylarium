@@ -194,6 +194,12 @@ impl<const N: usize> Rotor<N> {
         &self.v
     }
 
+    /// A multivector turned by the rotor: `V x V~ / (V V~)`, exact. A
+    /// bivector stays a bivector of the same magnitude.
+    pub fn conjugate(&self, x: &Mv) -> Mv {
+        self.v.sandwich(x).scale(&self.inv)
+    }
+
     /// An exact vector turned: `V v V~ / (V V~)`. The rotor's planes lie
     /// within its `N` axes, so the turned vector does too; an axis past
     /// `cga::MAX_N` lies on no plane and keeps its component.

@@ -387,10 +387,14 @@ where it belongs to one.
     linking by the strata and the plane pairs; S^360 unfibred. Done: the
     carrier, the weighted turn, the overlap share and the linking in
     `xyl_core::hopf`, and the founding's axes on its six planes (twelve
-    base axes, `circuit::plane_blade`, `bounce::AXES`), and the spin's
+    base axes, `circuit::plane_blade`, `bounce::AXES`), the spin's
     generator on the common phase (`bounce::spin_bivector` over the six
-    planes; the founding unchanged, its crossing off the axis plane). Next:
-    #128's windings per body, then the board's bodies (#162).
+    planes, untilted), and the charged spin, ruled 2026-11-11 (holonomy
+    `360 delta`, open charge `pi`, the axis tilt and its balance
+    `eps* = 90 pi`, `K = delta (T B_0 T~ + sum B_q)`, in `xyl_core::hopf`).
+    Next: the parent hole's charge, so the bounce reads the charged spin;
+    the bells' tilt; the worlds' tilt replacing the drawn obliquity and
+    `tilt > 23`; then #128's windings per body and the board (#162).
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

@@ -299,9 +299,22 @@ may change public APIs and the model's laws.
 
 - The spin's generator turns all six planes in the common phase (#183):
   `bounce::spin_bivector` is `a sum_(k=0..5) B_k`, the axis plane joining
-  the five isoclinic planes. The founding's crossing lies off the axis plane,
-  so the white hole's source is unchanged (`P . B_0 = 0`, tested), and so is
-  the founding.
+  the five isoclinic planes. Untilted, its axis part adds nothing at the
+  founding's crossing (`P . B_0 = 0`, tested), so the founding is unchanged.
+  The tilt is the next step, below.
+- The charged spin (ruled 2026-11-11, #183), built in `xyl_core::hopf`:
+  - `holonomy`: the spin's magnitude, `360 delta` degrees per traversal;
+  - `open_charge`: `pi = (p / w) (1 - delta)`;
+  - `tilt`: the pole axis turned toward isoclinic plane 1;
+  - `tilt_faces`: `c = 1 - eps / 90` and `d = eps / 90`;
+  - `tilt_equilibrium`: `eps* = 90 pi`;
+  - `charged_spin`: `K = delta (T B_0 T~ + sum_q B_q)`.
+
+  `Rotor::conjugate` turns a multivector. Tested: the fixture (3, 4) at
+  `delta = 1/4` gives `pi = 9/28` and `eps* = 405/14` degrees; a
+  complex-linear mixing leaves the common phase unchanged; any tilt keeps
+  the spin's magnitude; the balance restores. Nothing in the founding reads
+  it yet.
 
 - The word retired by Mycelium #239 (with Netstratum) is gone from code,
   scripts and documentation, each use named for what it meant:

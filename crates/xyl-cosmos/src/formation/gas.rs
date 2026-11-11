@@ -166,11 +166,11 @@ pub fn lighting(beads: &[Bead], unit: &Q, held: &Q, swing: &Q) -> Lighting {
 /// measure of S^n within the infall's angle (measure.rs: the circle's arc
 /// for the disc, n = 1; the sphere's cap for the bulge, n = 2). The angle is
 /// the deficit share `w / (w + r)` of the half turn, in turns; the measure is
-/// the whole at the half turn. Rounded down to the 2^-64 grid.
+/// the whole at the half turn. Cut toward zero to the 2^-64 grid.
 fn gathered(w: &Q, r: &Q, n: u32) -> Q {
     use xyl_core::dyadic::Dy;
     let turns = w.checked_div(&(&Q::int(2) * &(w + r))).unwrap_or(Q::ZERO);
-    xyl_core::certified::down(
+    xyl_core::certified::toward_zero(
         &xyl_core::measure::share_turns(n, Dy::from_q(&turns)).to_q(),
         64,
     )

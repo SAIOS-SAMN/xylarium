@@ -43,7 +43,7 @@ use crate::chain::Place;
 use crate::elements::decimal;
 use crate::package::hole_mass;
 use crate::pulse::{c_kpc_per_ring, wavelength_kpc, Kind, Node};
-use xyl_core::certified::down;
+use xyl_core::certified::toward_zero;
 use xyl_core::cga::{self, Mv, E1, E2, E3};
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
@@ -53,7 +53,7 @@ use xyl_core::Q;
 const GRID: u32 = 60;
 
 fn grid(d: Dy) -> Q {
-    down(&d.to_q(), GRID)
+    toward_zero(&d.to_q(), GRID)
 }
 
 /// An exact quotient; zero over zero is zero (every divisor here is a
@@ -484,7 +484,7 @@ impl Absorbed {
 /// native place by the share of the work the energy pays for: fully
 /// re-locking a world costs `1/2 m (M/a)^2 |dx|^2`, with `a` its native
 /// orbit and `dx` its displacement. The unpaid share remains as shear,
-/// rounded down to the 2^-60 grid. `None` where a moved point cannot be
+/// cut toward zero to the 2^-60 grid. `None` where a moved point cannot be
 /// read back.
 pub fn absorb(
     mass: &Q,
@@ -532,7 +532,7 @@ pub fn absorb(
         // Only the remaining shear is rounded to the grid: a fully re-locked
         // world sits exactly on its native place.
         .map(|(w, dx)| Anchor {
-            at: std::array::from_fn(|i| &w.native[i] + &down(&(&left * &dx[i]), GRID)),
+            at: std::array::from_fn(|i| &w.native[i] + &toward_zero(&(&left * &dx[i]), GRID)),
             native: w.native.clone(),
             mass: w.mass.clone(),
         })

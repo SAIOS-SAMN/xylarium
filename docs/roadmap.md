@@ -479,21 +479,18 @@ where it belongs to one.
     retires its stand-ins (S029; S006 to S014, S020; S066 to S070; S041 to
     S081).
 66. **Resolution from the carrier** ([#210](https://github.com/SAIOS-SAMN/xylarium/issues/210), `law`, `track`; ruled 2026-11-11).
-    Every grid in Declared rulers is replaced by the state count `Omega`
-    of its stage's carrier. Ruled: degrees are the unit turns are stated
-    in, never a count, so 360 enters no `Omega`; no factor that is not fixed
-    when the stage is read (no `L_max`, no parcel count, no aperture pad);
-    the carrier has six planes, so a share's count is the marginal
-    `6 Omega_1` or the joint `Omega_1^6`, `Omega_1 = sum W_e` over the
-    shell-bearing kinds, and a pair's `(6 Omega_1)^2`; founding matter's
-    count is `N_founding Omega_share`. Order:
-    - signed quantities truncate toward zero, `trunc(-x) = -trunc(x)`;
-      transfers move whole grains toward zero, the remainder with the
-      source;
-    - bench `Omega` per stage against the rulers on seed 7: the dyadic
-      envelope `2^-carrier_bits(Omega)` where `Dy` holds the value, and the
-      common denominator `floor(x Omega) / Omega` beside it on the founding's
-      rationals.
+    No grid, lattice or universal state count for shares: a dilation or
+    share is held as a factored product of integer face pairs
+    `prod (c_m, d_m)`. Composition appends factors and inversion swaps each
+    pair, so every factor keeps the counts it came from. A sum (such as
+    `Q_z` over a kind's parcels) keeps its terms factored and is formed
+    only at a reading. The throat balance and comparisons whose shared
+    factors cancel are exact; anything else is read through a certified
+    enclosure at the observer's precision. Whole counts stay whole by
+    the law that counts them. Done: every remaining cut truncates toward zero
+    (`certified::toward_zero`), mirror-symmetric and never growing a
+    magnitude; enclosures keep `down` and `up`. Next: the factored form,
+    one stage per PR, witnessed by readings.
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;
@@ -1090,8 +1087,8 @@ layer, each with the quantity that is to derive it.
   sample stars searched for bells (`SAMPLE` in xyl-kernel `field.rs`) and
   the ley lines per reading (`LINES_PER_READING`, 1024) are resolution
   choices.
-- **Grids** (the resolution a quantity is rounded down to, `2^-b`, by
-  `xyl_core::certified::down`): b = 232 for founding matter
+- **Grids** (the resolution a quantity is cut to toward zero, `2^-b`, by
+  `xyl_core::certified::toward_zero`): b = 232 for founding matter
   (`formation/shells.rs` nucleus_grain, the filter's takes); 64 for
   founding shares, reaches and the rest-point table (`formation/shells.rs`
   on_grid), the turning taken (`circuit::Substrate::spin_orbit`), the

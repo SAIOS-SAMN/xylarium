@@ -30,7 +30,7 @@
 //!   0..1. [`heat_sources`] and [`kept`] give each isotope's inventory at
 //!   the star's birth relative to the Sun's.
 //!
-//! Orbit quantities are `Q` rounded down to a 2^-32 grid, transcendentals
+//! Orbit quantities are `Q` cut toward zero to a 2^-32 grid, transcendentals
 //! read from certified enclosures; interior quantities are `Dy`. Laboratory
 //! rock and iron constants are declared rulers (`Rock`, the `Lab` table).
 
@@ -38,7 +38,7 @@ use crate::elements::Element;
 use crate::laws::Scales;
 use crate::package::Si;
 use crate::systems::World;
-use xyl_core::certified::{down, exp, pi};
+use xyl_core::certified::{exp, pi, toward_zero};
 use xyl_core::dyadic::Dy;
 use xyl_core::motion::{Boost, Modes};
 use xyl_core::{Stream, Q};
@@ -55,7 +55,7 @@ const BITS: u32 = 56;
 const GRID: u32 = 32;
 
 fn on_grid(x: Q) -> Q {
-    down(&x, GRID)
+    toward_zero(&x, GRID)
 }
 
 fn ex(x: &Q) -> Q {

@@ -1,7 +1,7 @@
 //! Invariants of the galaxy tier's sample stars and structure.
 
 use super::*;
-use xyl_core::certified::down;
+use xyl_core::certified::toward_zero;
 
 #[test]
 fn stars_circle_the_core_and_the_core_holds_its_share() {
@@ -14,7 +14,7 @@ fn stars_circle_the_core_and_the_core_holds_its_share() {
     for s in &stars {
         let first = birth(&s.r).expect("a standing star's ring lights");
         assert!(
-            s.born >= down(&first, GRID_BITS),
+            s.born >= toward_zero(&first, GRID_BITS),
             "born after its first light"
         );
         assert!(s.born <= horizon, "born before the horizon");

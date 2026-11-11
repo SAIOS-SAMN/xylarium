@@ -949,7 +949,7 @@ another crate. Laws are composed from shares (ratios of the form
 - Angle between bodies (`manifold::gap`, `chain::Place::arc`):
   the certified angle `pi / 2 -/+ asin(|a . b| / |a| |b|)`
   (`xyl_core::rotor::angle_between`), the directions exact, read at its
-  midpoint; the rotor's inverse is its conjugate (`Rotor::inverse`). The
+  midpoint; a frame's inverse is its reverse (`Frame::inverse`). The
   arc on a sphere is that angle times the chord `R sin(s / R)`
   (`bounce::curved_reach`). Calibre: none. Status: built; to be replaced by the pair
   reading (#118, section 1).

@@ -101,10 +101,14 @@ carry the `2^-40` resolution of the draw.
   carried by the multivector's type; its conformal model `Cl(n+1, 1)`
   provides points, versors and dilators. The nucleon poles described below
   are its origin and its point at infinity.
-- Rotors (`xyl_core::rotor`) are rational quaternions, the even part of
-  `Cl(3)`. Every manifold holds its frame as an exact rotor, and a rotor
-  turns a vector by the quaternion action (`Rotor::apply`), never by a
-  matrix.
+- Frames (`xyl_core::rotor::Frame`) are even versors of `xyl_core::cga`
+  over `N` base axes, the dimension held in the type. A turn names its
+  plane by its two generators and is stated in degrees
+  (`rotor::Turn`); a drawn half-angle direction is refused once, where it
+  is drawn, if zero (`rotor::Direction`), and a plane written in the code
+  is checked when the code is compiled (`Frame::on`). Every manifold holds
+  its frame as an exact versor, and a frame turns a vector by the sandwich
+  `V v V~ / (V V~)` (`Frame::apply`), never by a matrix.
 - Sphere measure (`xyl_core::measure`) gives the share of an n-sphere
   within an angle of an axis, on which caps and shares on a manifold are
   based.
@@ -158,7 +162,7 @@ founding and the light read the capacity's occupancy instead (axiom 9).
 Next, in order:
 
 1. Done ([#26](https://github.com/SAIOS-SAMN/xylarium/issues/26)): the
-   rotor's inverse (`Rotor::inverse`) and the certified angle between two
+   frame's inverse (`Frame::inverse`) and the certified angle between two
    directions (`rotor::angle_between`) replace the `acos` readings in
    `manifold::gap` and `chain::Place::arc`.
 2. The atom's catalogue columns (mass number, phase temperatures, density)
@@ -208,9 +212,11 @@ where it belongs to one.
     ([model.md](model.md#turns-axis-degrees-and-the-return)).
 29. **The flow law and the dilation in `xyl-core`** ([#42](https://github.com/SAIOS-SAMN/xylarium/issues/42), `defect`,
     `law`). Done: `D(p)`, the flow law and the deficit share in
-    `xyl_core::shares`, and the squared share removed; left, the rotors'
-    composition and the field's twist rotor, which go with the frame carrier
-    (item 40).
+    `xyl_core::shares`, and the squared share removed; the quaternion rotor
+    and its half-angle constructors replaced by the frame carrier
+    (`xyl_core::rotor::Frame`, turns on named planes in degrees). Left, the
+    field's twist rotor `1 + t B` (`field::rotate`), a half-angle tangent
+    at a law's root, with the field's tier.
 30. **Duplicate laws** ([#43](https://github.com/SAIOS-SAMN/xylarium/issues/43), `defect`). Done: one deficit function, one
     meeting law (`formation::founding_shells`), one certified exponential,
     ln 2 and pi. Left: the ocean's own pulls beside `Substrate::pulls`, the
@@ -303,7 +309,8 @@ where it belongs to one.
     ([#90](https://github.com/SAIOS-SAMN/xylarium/issues/90), `defect`,
     `law`; [model.md](model.md#the-frame-the-place-and-the-chain)). One
     frame carrier over the axis plane and five planes in `xyl_core::cga`,
-    composed along the anchor chain, replacing `xyl_core::rotor::Rotor` and
+    composed along the anchor chain (the carrier is built:
+    `xyl_core::rotor::Frame`, any planes within `cga::MAX_N`), replacing
     the three coordinates of `chain::Place`; tier maps by
     `manifold::dilation` only; separation and containment by caps in
     degrees; shear, stretch, torque and twist on every link; exact degrees on named planes.

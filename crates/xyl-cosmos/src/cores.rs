@@ -49,16 +49,27 @@ pub struct Shape {
     /// When the galaxy formed (rings after the origin); every galaxy takes
     /// the first-star time.
     pub born: Q,
-    /// Tilt of the galaxy's plane on S^360, as a half-angle direction (c, s)
-    /// set by magnetic repulsion among the galaxies; (1, 0), flat, for the home
-    /// galaxy.
-    pub tilt: (Dy, Dy),
+    /// Tilt of the galaxy's plane on S^360, as a half-angle direction set by
+    /// magnetic repulsion among the galaxies; the zero angle, flat, for the
+    /// home galaxy.
+    pub tilt: xyl_core::rotor::Direction,
     /// Node of the galaxy's plane about the universe's axis, as a half-angle
-    /// direction (c, s); (1, 0) for the home galaxy.
-    pub node: (Dy, Dy),
+    /// direction; the zero angle for the home galaxy.
+    pub node: xyl_core::rotor::Direction,
     /// Circulation rate about the throat, 4 delta per echo, in turns per ring;
     /// zero for the home galaxy at the core.
     pub rate: Dy,
+}
+
+/// A plane's frame from its drawn node and tilt: the tilt on the plane of
+/// axes 2, 3, then the node on the plane of axes 1, 2 (the axis's own),
+/// composed exactly.
+pub(crate) fn drawn_frame(
+    node: &xyl_core::rotor::Direction,
+    tilt: &xyl_core::rotor::Direction,
+) -> xyl_core::rotor::Frame<3> {
+    use xyl_core::rotor::Frame;
+    Frame::on::<1, 2>(node).then_after(&Frame::on::<2, 3>(tilt))
 }
 
 impl Shape {
@@ -66,15 +77,9 @@ impl Shape {
     /// plane's frame (node about the axis, then tilt) applied to its phase at
     /// t, at its reach.
     pub fn place_at(&self, t: Dy, r: &Q) -> crate::chain::Place {
-        use xyl_core::rotor::{Half, Rotor};
         let phase = (Dy::from_q(&self.phase) + self.rate * t).to_q().frac();
         let (c, s) = xyl_core::certified::cos_sin_turns(&xyl_core::certified::Encl::exact(phase));
-        let h = |p: (Dy, Dy)| Half {
-            c: p.0.to_q(),
-            s: p.1.to_q(),
-        };
-        let frame = Rotor::about(2, &h(self.node)).then_after(&Rotor::about(0, &h(self.tilt)));
-        let dir = frame
+        let dir = drawn_frame(&self.node, &self.tilt)
             .apply(&[c, s, xyl_core::certified::Encl::exact(Q::ZERO)])
             .map(|x| x.mid());
         crate::chain::Place::core(self.anchor().0, dir, r)
@@ -236,7 +241,7 @@ fn founding_of(origin: &Origin) -> Option<Arc<Founding>> {
     let substrate = substrate_for(&origin.parent.spin)?;
     let first = origin.first_stars().mid();
     // The home galaxy sits at the universe core.
-    let flat = (Dy::ONE, Dy::ZERO);
+    let flat = xyl_core::rotor::Direction::ZERO_ANGLE;
     let mut shapes = vec![Shape {
         index: 0,
         hole_suns: crate::package::hole_mass(),
@@ -253,9 +258,7 @@ fn founding_of(origin: &Origin) -> Option<Arc<Founding>> {
     for (index, bead) in substrate.galaxies().into_iter().skip(1) {
         let g = bead?;
         let out = g.reach.clone();
-        let (cs, sn) = xyl_core::rotor::Half::of_turns(&g.phase, 60)
-            .cos_sin()
-            .unwrap_or((Q::ONE, Q::ZERO));
+        let (cs, sn) = xyl_core::rotor::circle_point(&(&g.phase * &Q::int(360)), 60)?;
         // The hole mass is hole_suns = M_core x state: a bead's state is its
         // mass in units of the universal core's state (1).
         let hole_suns = &crate::package::hole_mass() * &g.state;
@@ -264,8 +267,8 @@ fn founding_of(origin: &Origin) -> Option<Arc<Founding>> {
         // plastic share.
         let pivot = |by: &Q| Dy::from_q(&(&Q::int(i64::from(index)) * by).frac());
         let (tilt, node) = (
-            crate::galaxy::tilt_of(pivot(&crate::galaxy::plastic_turns())),
-            crate::galaxy::node_of(pivot(&crate::galaxy::golden_turns())),
+            crate::galaxy::tilt_of(pivot(&crate::galaxy::plastic_turns()))?,
+            crate::galaxy::node_of(pivot(&crate::galaxy::golden_turns()))?,
         );
         // The circulation is rate = 4 delta / echo, delta = H / (reach + H)
         // with H the hold inside the galaxy's reach (`held_within`).
@@ -278,13 +281,7 @@ fn founding_of(origin: &Origin) -> Option<Arc<Founding>> {
             .unwrap_or_default();
         // The place at t = 0 is kept for reference; readings use place_at.
         let dir0 = {
-            use xyl_core::rotor::{Half, Rotor};
-            let h = |p: (Dy, Dy)| Half {
-                c: p.0.to_q(),
-                s: p.1.to_q(),
-            };
-            let frame = Rotor::about(2, &h(node)).then_after(&Rotor::about(0, &h(tilt)));
-            frame
+            drawn_frame(&node, &tilt)
                 .apply(&[
                     xyl_core::certified::Encl::exact(cs.clone()),
                     xyl_core::certified::Encl::exact(sn.clone()),

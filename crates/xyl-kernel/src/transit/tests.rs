@@ -125,7 +125,7 @@ fn orbit_gaps_and_voyages_follow_drives_and_wells() {
         tau_e: Q::ZERO,
         rate: Q::int(360),
         m0,
-        frame: xyl_core::rotor::Rotor::identity(),
+        frame: xyl_core::rotor::Frame::identity(),
         twist_deg: Q::ZERO,
         mass_ratio: Q::ZERO,
         chain: None,

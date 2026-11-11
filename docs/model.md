@@ -696,7 +696,7 @@ longer holds.
   pivots one tier up (the node by the golden angle about the throat's axis,
   the tilt toward it by the plastic angle's share of the S^360 measure; a
   placement by index, to be replaced, roadmap item 40),
-  and its place at `t` is its plane's rotor applied to its phase
+  and its place at `t` is its plane's frame applied to its phase
   (`Shape::place_at`). The stars of another galaxy are the home galaxy's stars
   read through that galaxy's length scale `2 m / (1 + m)`, where `m` is its hole
   mass ratio (`Shape::scale`, placeholder).
@@ -1438,8 +1438,10 @@ item 40); audited 2026-11-05. This section records where the cartography
 loses the model's dimensions and where the manifold chain is not composed,
 and the order in which that is to be opened up.
 
-- **The root.** A frame is a rational quaternion, `xyl_core::rotor::Rotor`,
-  the even part of Cl(3). A place is `chain::Place`, a direction in three
+- **The root.** A frame was a rational quaternion, the even part of Cl(3);
+  it is now an even versor of `xyl_core::cga` over any base axes
+  (`xyl_core::rotor::Frame`), each turn on a plane named by its generators
+  and stated in degrees. The frames built so far turn three axes only. A place is `chain::Place`, a direction in three
   coordinates with a reach, a climb and an offset. The model's states live
   on the axis plane and five isoclinic planes (axiom 8); the algebra that
   holds them is `xyl_core::cga`, and the planes' blades are

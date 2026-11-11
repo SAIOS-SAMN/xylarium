@@ -279,6 +279,19 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Frames are even versors of the geometric algebra (#42, #179):
+  `xyl_core::rotor::Frame<N>` over `N` base axes replaces the quaternion
+  `Rotor`, and `rotor::Turn` (a plane named by its two generators, an
+  angle in degrees) replaces the half-angle constructors `Half::of_t`
+  (a tangent) and `Half::of_turns`. A drawn half-angle direction
+  (`rotor::Direction`) is refused once, where it is drawn, if zero; a
+  plane written in the code is checked when it is compiled (`Frame::on`),
+  so a frame turns its vectors without refusal. `rotor::circle_point`
+  gives an angle's exact point of the circle. Frames reach every plane
+  within `cga::MAX_N`, the axis plane and the five isoclinic planes among
+  them. Readings are unchanged: the sandwich and the quaternion action
+  give the same exact vectors.
+
 - xyl-core adopts MU-STANDARDS 4.2 in full (#179):
   `crates/xyl-core/clippy.toml` denies Mycelium's table, which is maps
   (law 2, rule 9), wall time (law 9), choice by a scalar (rule 4), invented

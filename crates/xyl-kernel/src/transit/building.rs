@@ -502,6 +502,7 @@ impl<'a> Siting<'a> {
     /// `arc` kpc, for a passer of mass `body` (kg) and generation `gen` (s).
     fn worth(&self, body: Dy, gen: Dy, arc: Dy, m: u64, k: u64) -> Dy {
         let c = self.c;
+        // Stand-in S127: The voyage speed is capped at c, not composed below it.
         let voyage = c * ((arc * kpc_m()).div(&gen.max(Dy::ONE)).unwrap_or_default()).min(c);
         body * (c * c * (self.well(m) + self.well(k)) + voyage) - self.toll(body, arc, k)
     }

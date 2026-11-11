@@ -79,6 +79,7 @@ fn stack_share(part: &[Weighed], shares: &BTreeMap<u32, Q>) -> Q {
 /// The reach a push carries a nucleus of mass `w` to about the hold
 /// `h_final`: `push / w / h_final`, on the 2^-64 grid.
 fn carried_reach(push: &Q, w: &Q, h_final: &Q) -> Q {
+    // Stand-in S120: The mass divides the push instead of resisting it.
     on_grid(
         &push
             .checked_div(w)
@@ -142,6 +143,7 @@ fn release_shells(
     let mut shells = Vec::new();
     for (a0, a1) in profile_beads(&prof) {
         let part = &heavy[a0..a1];
+        // Stand-in S119: A stack push is a sum, not a composition against a hold.
         let push = k_spin + &stack_share(part, shares);
         for (z, a, w) in part {
             shells.push((*z, a.clone(), carried_reach(&push, w, h_final)));

@@ -416,6 +416,16 @@ where it belongs to one.
     - undeclared rulers ([#193](https://github.com/SAIOS-SAMN/xylarium/issues/193));
     - fabricated fallbacks ([#179](https://github.com/SAIOS-SAMN/xylarium/issues/179) tiers C-F);
     - the Earth, Sun and Jupiter calibrations (#25, #13, #14, #18).
+60. **Push and resistance** ([#195](https://github.com/SAIOS-SAMN/xylarium/issues/195), `law`, `track`;
+    [model.md](model.md#push-and-resistance)). Ruled 2026-11-11: every push
+    is offset by its resistance, `p_net = p (+) (-r)`. Done: the law stated
+    and the 15 sites that read a push bare or by subtraction registered and
+    marked (S114 to S128). Next, one site per PR with its resistance derived
+    and the readings compared:
+    - the drive's exhaust as composed states below `c` (#192);
+    - the tilt's restoring face (#183);
+    - the open charge, with LAW-COUPLING v2;
+    - the founding's pushes, with the capacity face (#158).
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

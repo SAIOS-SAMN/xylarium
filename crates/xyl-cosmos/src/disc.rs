@@ -148,6 +148,7 @@ pub fn star_hold(bead: &Bead, unit: &Q, held: &Q, swing: &Q, turning: &Q) -> Opt
         cloud: c.cloud,
         spin,
         received: crate::atoms::Received {
+            // Stand-in S123: The compactness is the axis push with no medium resisting it.
             axis: compactness.clone(),
             isoclinic: turning.clone(),
         },

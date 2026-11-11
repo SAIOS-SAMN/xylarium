@@ -121,6 +121,31 @@ integers (ZZ) where a relation closes.
   ([#127](https://github.com/SAIOS-SAMN/xylarium/issues/127)); `settle::period` rebuilds `p / q` from a dyadic step instead
   of carrying it from the laws that produce it.
 
+### Push and resistance
+
+Ruled 2026-11-11 ([#195](https://github.com/SAIOS-SAMN/xylarium/issues/195)). A push is offset by its resistance, through the
+flow law with the resistance reversed:
+
+```text
+p_net = p (+) (-r) = (p - r) / (1 - p r)        D(p_net) = D(p) / D(r)
+```
+
+- **The balance.** At `p = r` the net push is 0 and the dilation is 1.
+- **The sign.** A net push below 0 carries the holder back: the resistance
+  wins.
+- **The resistance.** Unless a law names another, it is the hold of the
+  medium at the reach, read through its deficit face. The expansion law
+  already reads its push this way: the continuum `H / (r + H)` against the
+  vacuum `m / (r + m)`.
+- **Speeds.** A speed is a push in `(-1, 1)` of `c`. Finite compositions
+  stay below 1, so light speed is a limit no finite set of states reaches.
+  A drive's exhaust is the composition of the states it produces, each
+  offset by its resistance (civilizations.md, Ley lines and the worth law).
+- **Where it is not yet read.** The sites that read a push bare or by
+  subtraction are registered as stand-ins, class P, S114 to S128
+  ([assumptions.md](assumptions.md)). The founding's sites move its matter,
+  so they land with the capacity face (#158, #172).
+
 ## 2. Units and the anchor
 
 - Base units are set by the universal core: `G = c = M_core = 1`, so the

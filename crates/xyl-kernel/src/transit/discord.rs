@@ -94,6 +94,7 @@ impl Network {
         let since = entry.1.max(p.dawn);
         let reach = self.reach_of(p.star);
         let c = crate::propulsion::c_m_s();
+        // Stand-in S128: The fold compares speeds capped at c, not composed below it.
         let worth = reach.is_some_and(|s| {
             let span_m = s * kpc_m();
             let speed = (span_m

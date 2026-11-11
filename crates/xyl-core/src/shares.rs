@@ -120,6 +120,7 @@ pub fn dilation_dy(p: Dy) -> Option<Dy> {
     if p.abs() >= Dy::ONE {
         return None;
     }
+    // Stand-in S115: Callers pass the gross push, not the net of its resistance.
     (Dy::ONE + p).div(&(Dy::ONE - p))
 }
 

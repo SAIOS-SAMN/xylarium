@@ -113,5 +113,6 @@ pub fn kpc_per_gyr(m_s: Dy) -> Dy {
 /// v_e = 0 it costs `body_kg * c^2`.
 pub fn passage_j(body_kg: Dy, v_e: Dy) -> Dy {
     let c = crate::propulsion::c_m_s();
+    // Stand-in S126: The exhaust is clamped to c and the line's medium is not read.
     body_kg * c * (c - v_e.clamp(Dy::ZERO, c))
 }

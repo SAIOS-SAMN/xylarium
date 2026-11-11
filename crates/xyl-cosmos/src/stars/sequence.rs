@@ -441,10 +441,10 @@ mod tests {
         assert_eq!(first.products, vec![product]);
         assert_eq!((&first.share, &first.release), (&Q::ONE, &release));
         // With no turning received the states are the kinds' holds, so the release is the
-        // built form `1 - hold(z') / (k hold(z))`.
+        // built form `1 - electron_hold(z') / (k electron_hold(z))`.
         let built = &Q::ONE
-            - &Q::int(i64::from(crate::compound::hold(product)))
-                .checked_div(&Q::int(i64::from(k * crate::compound::hold(1))))
+            - &Q::int(i64::from(crate::compound::electron_hold(product)))
+                .checked_div(&Q::int(i64::from(k * crate::compound::electron_hold(1))))
                 .unwrap();
         assert_eq!(first.transduced, built);
         let second = &seq.steps[1];

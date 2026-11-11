@@ -127,10 +127,10 @@ pub(super) fn push_reading(top: usize) -> String {
             q_z = &q_z + &(&tau * &Q::int(i64::from(open)));
         }
         // The built push is `1/2 open / hold`, with `open = compound::open(z)`
-        // (the electrons' open states) and `hold = compound::hold(z)`.
+        // (the electrons' open states) and `hold = compound::electron_hold(z)`.
         let (open, hold) = (
             Q::int(i64::from(xyl_cosmos::compound::open(z))),
-            Q::int(i64::from(xyl_cosmos::compound::hold(z))),
+            Q::int(i64::from(xyl_cosmos::compound::electron_hold(z))),
         );
         let half = xyl_core::ratio!(1, 2);
         let p_built = &half * &open.checked_div(&hold).unwrap_or(Q::ZERO);
@@ -214,7 +214,7 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
         // The built pole point t = u / w, open states over the held count.
         let t = Q::new(
             i64::from(a.unpaired),
-            i64::from(xyl_cosmos::compound::hold(z).max(1)),
+            i64::from(xyl_cosmos::compound::electron_hold(z).max(1)),
         )
         .unwrap_or(Q::ZERO);
         let occ = xyl_cosmos::atoms::occupancy(z).unwrap_or_default();
@@ -246,23 +246,24 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
                 },
                 a.sealed()
             ));
-            let from_q = xyl_cosmos::circuit::universal_fill_share(z);
+            let from_q = xyl_cosmos::circuit::universal_fill_shares(z);
             if let (Some(sides), Some(weights)) = (
-                xyl_cosmos::atoms::axis_sides(z, &from_q),
-                xyl_cosmos::atoms::axis_weights(z, &from_q),
+                xyl_cosmos::atoms::plane_sides(z, &from_q),
+                xyl_cosmos::atoms::plane_weights(z, &from_q),
             ) {
                 let side =
                     |o: &(Q, Q)| format!("U {} 2P {}", show(&o.0), show(&(&o.1 * &Q::int(2))));
                 rows.push_str(&format!(
                     concat!(
                         "         axis plane: Z side ({}), neutral ({}), Q side ({}); ",
-                        "weights: open (A) {}, held {}\n"
+                        "weights: open (A) {}, held {}; A_p on the six planes: {}\n"
                     ),
-                    side(&sides[0]),
-                    side(&sides[1]),
-                    side(&sides[2]),
-                    show(&weights.0),
-                    show(&weights.1)
+                    side(&sides[0][0]),
+                    side(&sides[0][1]),
+                    side(&sides[0][2]),
+                    show(&weights[0].0),
+                    show(&weights[0].1),
+                    super::bench::planes_shown(&weights.clone().map(|w| w.0))
                 ));
             }
         }
@@ -379,7 +380,7 @@ pub(super) fn bond_reading(a: u32, b: u32, turning: &Q) -> Result<String, String
     let bond = xyl_cosmos::atoms::bond(&fa, &fb);
     let received = xyl_cosmos::atoms::Received::isoclinic(turning.clone());
     let pushes = bond.pole_pushes();
-    let shares = [a, b].map(xyl_cosmos::circuit::universal_fill_share);
+    let shares = [a, b].map(xyl_cosmos::circuit::universal_fill_shares);
     let polarity = bond.polarities([&shares[0], &shares[1]]);
     let mut out = format!(
         "The bond of Z {a} and Z {b} at an isoclinic turning of {}\n",
@@ -394,10 +395,10 @@ pub(super) fn bond_reading(a: u32, b: u32, turning: &Q) -> Result<String, String
             .unwrap_or_else(|| "-".into()),
         polarity[0]
             .as_ref()
-            .map_or_else(|| "-".into(), crate::run::show),
+            .map_or_else(|| "-".into(), super::bench::planes_shown),
         polarity[1]
             .as_ref()
-            .map_or_else(|| "-".into(), crate::run::show),
+            .map_or_else(|| "-".into(), super::bench::planes_shown),
     ));
     for (face, (z, atom)) in bond.held(&received).iter().zip([(a, &fa), (b, &fb)]) {
         out.push_str(&format!("  Isoclinic planes, Z {z}:"));

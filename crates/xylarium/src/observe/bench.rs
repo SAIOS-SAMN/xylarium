@@ -6,7 +6,7 @@
 //! `atoms::band_occupancy`, `atoms::vessel`), the element table
 //! (`elements::table`), the capture chain (`elements::closed_share`,
 //! `elements::founding_bits`, `elements::founded`), the built hold and open
-//! states (`compound::hold`, `compound::open`), the emission
+//! states (`compound::electron_hold`, `compound::open`), the emission
 //! (`formation::emission`) and the nucleon count (`circuit::mass_number`).
 //! Nothing above the chain is built: no founding shells, no core, no cache
 //! read or written.
@@ -246,7 +246,7 @@ pub(super) fn bench_read(seed: u64, lo: u32, hi: u32) -> Result<String, String> 
         if z < lo || z > hi {
             continue;
         }
-        let w = xyl_cosmos::compound::hold(z);
+        let w = xyl_cosmos::compound::electron_hold(z);
         let u = xyl_cosmos::compound::open(z);
         out.push_str(&format!(
             concat!(
@@ -358,12 +358,23 @@ pub(super) fn bench_read(seed: u64, lo: u32, hi: u32) -> Result<String, String> 
     Ok(out)
 }
 
-/// A kind's states on the axis plane by side (#201): the Z side
-/// (`m0 < 0`), the neutral level (`m0 = 0`) and the Q side (`m0 > 0`), as
-/// exact shares, and the Z and Q sides' axis weights `sum |m0|`, filled with
-/// the share `from_q` from the Q side (`atoms::Band::axis_levels`). `None` for
-/// z = 0 or a cluster.
-struct AxisSplit {
+/// Six plane readings shown: one value when the planes read alike, else each
+/// plane's in order, the axis plane first.
+pub(super) fn planes_shown(v: &[Q; xyl_core::hopf::PLANES]) -> String {
+    if v.iter().all(|x| x == &v[0]) {
+        format!("{} (all six alike)", show(&v[0]))
+    } else {
+        v.iter().map(show).collect::<Vec<_>>().join(" ")
+    }
+}
+
+/// A kind's states on one Hopf plane by side (#201): the Z side (`m < 0`),
+/// the neutral level (`m = 0`) and the Q side (`m > 0`), as exact shares,
+/// and the Z and Q sides' weights `sum |m|`, filled with the share `from_q`
+/// from the plane's Q side (`atoms::Band::plane_levels`). `None` for z = 0
+/// or a cluster.
+#[derive(Clone)]
+struct PlaneSplit {
     z_side: Q,
     neutral: Q,
     q_side: Q,
@@ -371,8 +382,8 @@ struct AxisSplit {
     q_weight: Q,
 }
 
-fn axis_split(z: u32, from_q: &Q) -> Option<AxisSplit> {
-    let mut a = AxisSplit {
+fn plane_split(z: u32, from_q: &Q) -> Option<PlaneSplit> {
+    let mut a = PlaneSplit {
         z_side: Q::ZERO,
         neutral: Q::ZERO,
         q_side: Q::ZERO,
@@ -380,10 +391,10 @@ fn axis_split(z: u32, from_q: &Q) -> Option<AxisSplit> {
         q_weight: Q::ZERO,
     };
     for (band, _) in band_occupancy(z)? {
-        for lv in band.axis_levels(from_q)? {
+        for lv in band.plane_levels(from_q)? {
             let n = lv.occupied();
-            let w = &Q::int(lv.m0).abs() * &n;
-            match lv.m0.signum() {
+            let w = &Q::int(lv.m).abs() * &n;
+            match lv.m.signum() {
                 -1 => (a.z_side, a.z_weight) = (&a.z_side + &n, &a.z_weight + &w),
                 0 => a.neutral = &a.neutral + &n,
                 _ => (a.q_side, a.q_weight) = (&a.q_side + &n, &a.q_weight + &w),
@@ -393,41 +404,62 @@ fn axis_split(z: u32, from_q: &Q) -> Option<AxisSplit> {
     Some(a)
 }
 
-/// The two dipoles of the kind's axis split (#201), each a pole
-/// `t = 3Q / 3Z`, kept apart and never collapsed: the count dipole, the
-/// neutral level split at the equator,
-/// `t = (Q side + neutral / 2) / (Z side + neutral / 2)`; and the weight
-/// dipole (E005's plane shares), `t = Q weight / Z weight`, `None` where the
-/// Z side holds no axis weight.
-fn split_poles(a: &AxisSplit) -> (Option<Q>, Option<Q>) {
+/// The two dipoles of a plane's split (#201), each a pole `t = 3Q / 3Z`,
+/// kept apart and never collapsed: the count dipole, the neutral level split
+/// at the equator, `t = (Q side + neutral / 2) / (Z side + neutral / 2)`; and
+/// the weight dipole (E005's plane shares), `t = Q weight / Z weight`, `None`
+/// where the Z side holds no weight.
+fn split_poles(a: &PlaneSplit) -> (Option<Q>, Option<Q>) {
     let half = a.neutral.over(xyl_core::nonzero!(2));
     let by_count = (&a.q_side + &half).checked_div(&(&a.z_side + &half));
     (by_count, a.q_weight.checked_div(&a.z_weight))
 }
 
-/// The `split [LO] [HI]` reading (#201): per kind its axis states by side and
-/// the pole `t = 3Q / 3Z` they give at a throat (the singularity's medium a
-/// push of zero there), by count and by weight, with the nucleon whole
-/// `W = Z (1 + t)` each implies, beside the fixed table's for reference
-/// only. Readings; the founding reads the table (S029).
-pub(super) fn split_read(seed: u64, lo: u32, hi: u32) -> String {
+/// The `split [LO] [HI] [W]` reading (#201): per kind its states by side on
+/// the axis plane and the pole `t = 3Q / 3Z` they give at a throat (the
+/// singularity's medium a push of zero there), by count and by weight, with
+/// the nucleon whole `W = Z (1 + t)` each implies, beside the fixed table's
+/// for reference only; and each kind's six planes, read at the winding `W`
+/// (six comma-separated integers, the common phase `hopf::COMMON` when
+/// omitted): the planes' fill shares and the spread of their count poles,
+/// the shear between planes. Readings; the founding reads the table (S029).
+pub(super) fn split_read(
+    seed: u64,
+    lo: u32,
+    hi: u32,
+    winding: &[i64; xyl_core::hopf::PLANES],
+) -> String {
     let share = xyl_cosmos::bounce::torsion_share(&Q::ONE, &xyl_cosmos::origin::drawn_spin(seed));
     let top = xyl_cosmos::elements::TOP_Z;
     let (lo, hi) = (lo.max(1), hi.min(top));
-    let mut out = String::from(concat!(
-        "The axis split at a throat (#201): Z | f_Q, the share filled from Q | ",
-        "Z side, neutral, Q side; Z and Q weights | ",
-        "t = 3Q/3Z by count (neutral halved), W = Z (1 + t) | t by weight, W | table A\n"
-    ));
-    let (mut undefined, mut seals) = (0u32, Vec::new());
+    let mut out = format!(
+        concat!(
+            "The split at a throat (#201), winding {:?}: Z | f_Q, the share filled from Q, ",
+            "per plane | axis plane: Z side, neutral, Q side; Z and Q weights | ",
+            "t = 3Q/3Z by count (neutral halved), W = Z (1 + t) | t by weight, W | ",
+            "the six planes' count poles, lowest to highest | table A\n"
+        ),
+        winding
+    );
+    let (mut undefined, mut sheared, mut seals) = (0u32, 0u32, Vec::new());
     for z in lo..=hi {
-        let from_q = xyl_cosmos::circuit::fill_share(z, &share);
-        let Some(a) = axis_split(z, &from_q) else {
+        let from_q = xyl_cosmos::circuit::fill_shares(z, &share, winding);
+        let Some(planes) = from_q
+            .iter()
+            .map(|f| plane_split(z, f))
+            .collect::<Option<Vec<_>>>()
+        else {
             continue;
         };
-        let (tc, tw) = split_poles(&a);
+        let a = &planes[0];
+        let (tc, tw) = split_poles(a);
         if tw.is_none() {
             undefined += 1;
+        }
+        let poles: Vec<Q> = planes.iter().filter_map(|p| split_poles(p).0).collect();
+        let (lo_t, hi_t) = (poles.iter().min(), poles.iter().max());
+        if lo_t != hi_t {
+            sheared += 1;
         }
         let whole = |t: &Option<Q>| {
             t.as_ref().map_or("-".to_string(), |t| {
@@ -436,8 +468,8 @@ pub(super) fn split_read(seed: u64, lo: u32, hi: u32) -> String {
         };
         let pole = |t: &Option<Q>| t.as_ref().map_or("-".to_string(), show);
         let row = format!(
-            "  Z{z} | f_Q {} | {} {} {}; {} {} | {}, {} | {}, {} | {}\n",
-            show(&from_q),
+            "  Z{z} | f_Q {} | {} {} {}; {} {} | {}, {} | {}, {} | {} to {} | {}\n",
+            planes_shown(&from_q),
             show(&a.z_side),
             show(&a.neutral),
             show(&a.q_side),
@@ -447,6 +479,8 @@ pub(super) fn split_read(seed: u64, lo: u32, hi: u32) -> String {
             whole(&tc),
             pole(&tw),
             whole(&tw),
+            pole(&lo_t.cloned()),
+            pole(&hi_t.cloned()),
             xyl_cosmos::circuit::mass_number(z).map_or("-".to_string(), |m| m.to_string())
         );
         let sealed = occupancy(z).is_some_and(|o| o.room == 0 && o.open == 0);
@@ -458,9 +492,11 @@ pub(super) fn split_read(seed: u64, lo: u32, hi: u32) -> String {
     out.push_str(&format!(
         concat!(
             "Kinds with no Z-side axis weight (the pole by weight undefined): {}\n",
+            "Kinds whose six planes part (shear between planes): {}\n",
             "The seals:\n{}"
         ),
         undefined,
+        sheared,
         seals.concat()
     ));
     out
@@ -492,7 +528,7 @@ mod tests {
         for z in 1..=xyl_cosmos::elements::TOP_Z {
             let o = occupancy(z).unwrap_or_default();
             let qf = q_face(&o);
-            let w = i64::from(xyl_cosmos::compound::hold(z));
+            let w = i64::from(xyl_cosmos::compound::electron_hold(z));
             let (e, u) = (i64::from(o.room), i64::from(o.open));
             assert_eq!(i64::from(qf.held[0]) - w, 3 * e, "Z{z}");
             assert_eq!(i64::from(qf.held[1]) - w, 2 * e + u, "Z{z}");
@@ -522,13 +558,13 @@ mod tests {
     }
 
     #[test]
-    fn the_axis_split_holds_every_electron_and_sides_by_level() {
-        // Every electron sits on one side of the axis plane or on its
+    fn each_plane_split_holds_every_electron_and_sides_by_level() {
+        // Every electron sits on one side of a plane or on its
         // neutral level, so the sides sum to Z at any fill share; a weight is
         // on a side only; an even fill from both sides is symmetric.
         for z in 1..=xyl_cosmos::elements::TOP_Z {
             for from_q in [Q::ZERO, xyl_core::ratio!(1, 3), xyl_core::ratio!(1, 2)] {
-                let a = axis_split(z, &from_q).unwrap();
+                let a = plane_split(z, &from_q).unwrap();
                 let all = &(&a.z_side + &a.neutral) + &a.q_side;
                 assert_eq!(all, Q::int(i64::from(z)), "Z{z}");
                 assert!(a.z_weight >= a.z_side && a.q_weight >= a.q_side, "Z{z}");

@@ -100,7 +100,7 @@ pub fn founding_shells(mix: &[(u32, Q)]) -> (Q, Vec<(u32, Q, Q)>) {
     // the carriage's inertia, and converted back on return.
     let to_mass = |z: u32| {
         mass_weight(z)
-            .checked_div(&Q::int(i64::from(crate::compound::hold(z))))
+            .checked_div(&Q::int(i64::from(crate::compound::electron_hold(z))))
             .unwrap_or(Q::ONE)
     };
     let mut kinds = weighed(mix, to_mass);

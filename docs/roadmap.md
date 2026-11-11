@@ -132,7 +132,7 @@ founding and the light read the capacity's occupancy instead (axiom 9).
 - **3Z, the span.** The built account gives each proton three units, split
   between the Z pole (held, coherence) and the Q pole (open, decoherence):
   the held count `w = 3Z - u`, `u` the open (unpaired) states
-  (`compound::hold`, `compound::open`). Pairing moves an open state to the
+  (`compound::electron_hold`, `compound::open`). Pairing moves an open state to the
   held side with the span fixed. The closed share `h_Z = (3Z - u_Z) / 3Z`
   drives the capture chain (`elements::closed_share`). Amounts move in whole
   nuclei of `w`, so fusion conserves 3Z (`circuit::grain::nuclei_of`), and
@@ -363,9 +363,10 @@ where it belongs to one.
     plane and band. Done: vent 1, the occupancy per band and per kind
     (`atoms::occupancy`), the unpaired count read from it; no reading moved.
     Vent 2 on the axis plane: occupancy by axis level and side
-    (`atoms::axis_sides`), the polarity read from it; vent 3 on the axis
+    (`atoms::plane_sides`), the polarity read from it; vent 3 on the axis
     plane: the open and held states' axis weights in ZZ
-    (`atoms::axis_weights`); no reading moved. Next: vent 5 (the delimiter
+    (`atoms::plane_weights`); no reading moved. Both now read every Hopf
+    plane (#201, E016). Next: vent 5 (the delimiter
     retired, the first to move readings); the isoclinic split and signs
     with the spin (#128).
 57. **The board: a blank S^360 universe** ([#162](https://github.com/SAIOS-SAMN/xylarium/issues/162), `track`, `proposal`, M5;
@@ -454,13 +455,19 @@ where it belongs to one.
     Started 2026-11-11: a kind's state is the nucleon whole `3W`, the split
     `p = (3Z - 3Q) / 3W` with `D(p) = 3Z / 3Q`, and the phase `R`, with each
     formation mechanic moving one component. Done: the derivation (E012 to
-    E014; I009 to I011). Next:
-    - the conversion's resistance and rest point `p*`, benched over Z 1 to
-      1700;
+    E014; I009 to I011); the fill both ways (E015); the split, fill and
+    phase per Hopf plane (E016, S137), alike in the common phase; the
+    boundaries per plane (E017); the electron hold `W_e` named apart (I010);
+    the phase composed with the nucleon split, and the rest point
+    `3Z* / 3Q* = (1 - R_p) / (1 + R_p)` (E018, I009). Next:
+    - the conversion's resistance and rest point `p*` per plane, benched
+      over Z 1 to 1700;
     - its flow step and carry on `R`;
     - `3Q / 3Z` from `p*`, replacing Earth's mass numbers (S029);
-    - #148 restated;
-    - the held count renamed.
+    - the nucleon dipole reading per plane from E018, and `Q` from it in
+      place of the table in `circuit::TwoWeights`, `dipole_read` and
+      `field::stellar_tilt` (S029), with its reading back to whole nucleons
+      (#149).
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

@@ -67,7 +67,7 @@ pub(crate) fn half(x: &Q) -> Q {
 }
 
 /// A nucleus's mass in nucleons, Z + Q (weights.rs). Gravity and inertia use
-/// this, independent of kind; chemistry uses the hold (`compound::hold`, the
+/// this, independent of kind; chemistry uses the hold (`compound::electron_hold`, the
 /// electrons' states), which is also the unit amounts are counted in.
 pub fn mass_weight(z: u32) -> Q {
     crate::circuit::nucleus_weights(z).mass()
@@ -76,7 +76,7 @@ pub fn mass_weight(z: u32) -> Q {
 /// What a nucleus radiates per ring: its open states over its hold.
 pub fn emission(z: u32) -> Q {
     Q::int(i64::from(crate::compound::open(z)))
-        .checked_div(&Q::int(i64::from(crate::compound::hold(z))))
+        .checked_div(&Q::int(i64::from(crate::compound::electron_hold(z))))
         .unwrap_or(Q::ZERO)
 }
 
@@ -85,7 +85,7 @@ pub fn emission(z: u32) -> Q {
 pub struct Kind {
     /// Atomic number of the element.
     pub z: u32,
-    /// Hold of one nucleus, 3Z - unpaired (`compound::hold`).
+    /// Hold of one nucleus, 3Z - unpaired (`compound::electron_hold`).
     pub weight: Q,
     /// Share of the galaxy's grains' holding (shares sum to 1).
     pub share: Q,
@@ -100,7 +100,7 @@ pub fn kinds(elements: &[Element]) -> Vec<Kind> {
         .map(|e| {
             (
                 e.z,
-                Q::int(i64::from(crate::compound::hold(e.z))),
+                Q::int(i64::from(crate::compound::electron_hold(e.z))),
                 e.abundance.clone(),
             )
         })

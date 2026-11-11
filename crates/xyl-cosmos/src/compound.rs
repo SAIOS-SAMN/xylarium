@@ -111,9 +111,11 @@ pub fn open_hot(k: u32, heat: &crate::atoms::Received) -> u32 {
     }
 }
 
-/// A kind's hold, 3 charge - open: pairing moves states from the Q pole to
-/// the Z pole with the span fixed.
-pub fn hold(k: u32) -> u32 {
+/// A kind's electron hold `W_e = 3Z - U`, 3 charge - open: the held states
+/// the bound electrons screen, against which the open channel acts. Pairing
+/// moves states from the Q pole to the Z pole with the span fixed. Not the
+/// nucleon whole `3W = 3Z + 3Q` (I010).
+pub fn electron_hold(k: u32) -> u32 {
     3 * charge(k) - open(k)
 }
 
@@ -194,9 +196,9 @@ mod tests {
         let (w, no, nh, bond) = closing(8, 1, &crate::atoms::Received::none()).unwrap();
         assert_eq!((no, nh, key(w)), (1, 4, "Z008\u{b7}4Z001".to_string()));
         assert_eq!((charge(w), open(w), bonds(w)), (12, 0, 4));
-        // The identity hold + open = 3 charge holds for the cluster as for its
+        // The identity electron_hold + open = 3 charge holds for the cluster as for its
         // parts.
-        assert_eq!(hold(w) + open(w), 3 * 12);
+        assert_eq!(electron_hold(w) + open(w), 3 * 12);
         // The bond keeps both faces: oxygen's and hydrogen's open windings
         // each held whole with no turning received, and each face's pole push
         // on the axis plane composed across the pair.

@@ -186,20 +186,26 @@ fn core_state(s: &Substrate, t: Dy) -> String {
         show(&per_hold)
     ));
     if let Ok(elements) = xyl_cosmos::elements::founded(&s.share) {
-        let a: Vec<Q> = xyl_cosmos::formation::kinds(&elements)
+        let planes: Vec<[Q; xyl_core::hopf::PLANES]> = xyl_cosmos::formation::kinds(&elements)
             .iter()
             .filter_map(|k| {
-                let from_q = xyl_cosmos::circuit::fill_share(k.z, &s.share);
-                xyl_cosmos::atoms::axis_polarity(k.z, &from_q)
+                let from_q =
+                    xyl_cosmos::circuit::fill_shares(k.z, &s.share, &xyl_core::hopf::COMMON);
+                xyl_cosmos::atoms::plane_polarities(k.z, &from_q)
             })
             .collect();
+        let a: Vec<Q> = planes.iter().map(|p| p[0].clone()).collect();
+        let sheared = planes
+            .iter()
+            .filter(|p| p.iter().any(|x| x != &p[0]))
+            .count();
         let mut values = a.clone();
         values.sort();
         values.dedup();
         out.push_str(&format!(
             concat!(
                 "  Axis polarity (T7): {} kinds, {} Z side, {} Q side, {} neutral; ",
-                "{} values from {} to {}\n"
+                "{} values from {} to {}; kinds whose six planes part: {}\n"
             ),
             a.len(),
             a.iter().filter(|x| x.signum() < 0).count(),
@@ -207,7 +213,8 @@ fn core_state(s: &Substrate, t: Dy) -> String {
             a.iter().filter(|x| x.signum() == 0).count(),
             values.len(),
             values.first().map_or("-".to_string(), show),
-            values.last().map_or("-".to_string(), show)
+            values.last().map_or("-".to_string(), show),
+            sheared
         ));
     }
     for c in &orbit.cohorts {

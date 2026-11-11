@@ -3,7 +3,7 @@
 // and each galaxy's intake, composition and push.
 //
 // Inputs: a founded `Substrate` (found.rs), the anchor's bell (anchor.rs),
-// `bounce::horizon_reach`, `compound::open` / `compound::hold` for a kind's
+// `bounce::horizon_reach`, `compound::open` / `compound::electron_hold` for a kind's
 // states, `formation::emission`, `galaxy::first_star_mass` (the star mass
 // on the chain), and `pole_flux` (poles.rs) with `electron_phase`
 // (weights.rs). Reaches are cluster units,
@@ -141,7 +141,7 @@ pub fn onset(k: u32, p_v: Dy, s: Dy) -> Option<Dy> {
 /// `p_v` and torsion share `s` (see [`onset`]); None for a sealed kind, which
 /// never reaches the throat.
 pub fn onset_echoes(k: u32, p_v: Dy, s: Dy) -> Option<Dy> {
-    let (open, hold) = (crate::compound::open(k), crate::compound::hold(k));
+    let (open, hold) = (crate::compound::open(k), crate::compound::electron_hold(k));
     if open == 0 || hold == 0 {
         return None;
     }
@@ -391,27 +391,27 @@ impl Substrate {
     pub fn loop_flux_swung(&self, i: usize, t: Dy, swing: Dy) -> Option<PoleFlux> {
         let k = self.firmament.get(i)?;
         let rv = self.reverb.get(i)?;
-        let w = Q::int(i64::from(crate::compound::hold(k.z)));
+        let w_e = Q::int(i64::from(crate::compound::electron_hold(k.z)));
         let u = Q::int(i64::from(crate::compound::open(k.z)));
-        if w.signum() <= 0 || u.signum() <= 0 {
+        if w_e.signum() <= 0 || u.signum() <= 0 {
             return None;
         }
         // The filament opens states by the jet's dilation at the torsion share
-        // s, D(s) = (1 + s) / (1 - s): (u + f) / (w - f) = rho u / w.
+        // s, D(s) = (1 + s) / (1 - s): (u + f) / (w_e - f) = rho u / w_e.
         let rho = dilation_dy(Dy::from_q(&self.share))?.to_q();
-        let filament = (&(&(&rho - &Q::ONE) * &u) * &w).checked_div(&(&w + &(&rho * &u)))?;
-        // Vacuum channel: f_v = p w, p the vacuum's share swung by 1 + A_in.
+        let filament = (&(&(&rho - &Q::ONE) * &u) * &w_e).checked_div(&(&w_e + &(&rho * &u)))?;
+        // Vacuum channel: f_v = p w_e, p the vacuum's share swung by 1 + A_in.
         let p = (deficit_dy(rv.hold, rv.reach) * swing).to_q();
         if p >= Q::ONE {
             return None;
         }
-        let vacuum = &p * &w;
+        let vacuum = &p * &w_e;
         // Electron channel: R(pulse) u, the open states' phase state.
         let echo = &super::weights::electron_phase(k.z, &self.pulse(t)) * &u;
         pole_flux(
-            &w,
+            &w_e,
             &u,
-            &w,
+            &w_e,
             &u,
             &[("filament", -filament), ("vacuum", -vacuum), ("echo", echo)],
         )
@@ -452,27 +452,24 @@ impl Substrate {
         let mut kinds: Vec<(u32, Q, Dy, Dy)> = crate::formation::kinds(&elements)
             .into_iter()
             .filter_map(|k| {
-                let hold = Q::int(i64::from(crate::compound::hold(k.z)));
+                let hold = Q::int(i64::from(crate::compound::electron_hold(k.z)));
                 let m = (&k.share * &crate::formation::mass_weight(k.z)).checked_div(&hold)?;
                 (m.signum() > 0).then_some((k.z, m))
             })
             .filter_map(|(z, m)| {
-                let (u, w) = (crate::compound::open(z), crate::compound::hold(z));
+                let (u, w_e) = (crate::compound::open(z), crate::compound::electron_hold(z));
                 if u == 0 {
                     return Some((z, m, Dy::ZERO, Dy::ZERO));
                 }
                 let t = (Dy::from_q(&Q::int(i64::from(u))))
-                    .div(&(Dy::from_q(&Q::int(i64::from(w)))))
+                    .div(&(Dy::from_q(&Q::int(i64::from(w_e)))))
                     .unwrap_or_default();
-                // The axis polarity filled from both sides at the kind's
-                // capture phase (#201), held exact and read as a dyadic.
-                let from_q = super::weights::fill_share(z, &self.share);
-                Some((
-                    z,
-                    m,
-                    t.ln()?,
-                    Dy::from_q(&crate::atoms::axis_polarity(z, &from_q)?),
-                ))
+                // The polarity on the axis plane, where the Z-Q stretch is
+                // read, filled from both sides at the kind's capture phase in
+                // the common phase (#201), held exact and read as a dyadic.
+                let from_q = super::weights::fill_shares(z, &self.share, &xyl_core::hopf::COMMON);
+                let [axis, ..] = crate::atoms::plane_polarities(z, &from_q)?;
+                Some((z, m, t.ln()?, Dy::from_q(&axis)))
             })
             .collect();
         let mut hold = kinds.iter().fold(Q::ZERO, |m, k| &m + &k.1);
@@ -493,9 +490,9 @@ impl Substrate {
                 .ln()
                 .unwrap_or(Dy::ZERO);
             let separation = |z: u32, far: bool| {
-                let (u, w) = (crate::compound::open(z), crate::compound::hold(z));
+                let (u, w_e) = (crate::compound::open(z), crate::compound::electron_hold(z));
                 let q = (Dy::from_q(&Q::int(i64::from(u))))
-                    .div(&(Dy::from_q(&Q::int(i64::from(u + w)))))
+                    .div(&(Dy::from_q(&Q::int(i64::from(u + w_e)))))
                     .unwrap_or_default();
                 let q = if far { Dy::ONE - q } else { q };
                 q * near - (Dy::ONE - q) * anti
@@ -1271,7 +1268,7 @@ mod tests {
         assert!(li >= Dy::ZERO && o >= Dy::ZERO);
         let share = |k: u32| {
             (Dy::int(i64::from(crate::compound::open(k))))
-                .div(&(Dy::int(i64::from(crate::compound::hold(k)))))
+                .div(&(Dy::int(i64::from(crate::compound::electron_hold(k)))))
                 .unwrap_or_default()
         };
         assert_eq!(li > o, share(3) < share(8));
@@ -1293,14 +1290,14 @@ mod tests {
                 if crate::compound::is_cluster(z) {
                     continue;
                 }
-                let (u, w) = (crate::compound::open(z), crate::compound::hold(z));
+                let (u, w_e) = (crate::compound::open(z), crate::compound::electron_hold(z));
                 let onset = onset_echoes(z, Dy::ZERO, s);
-                if u == 0 || w == 0 {
+                if u == 0 || w_e == 0 {
                     assert!(onset.is_none(), "Z{z} has no open states and no onset");
                     continue;
                 }
                 let n = onset.unwrap_or_else(|| panic!("Z{z} has open states and an onset"));
-                let bound = (((Dy::int(i64::from(w)))
+                let bound = (((Dy::int(i64::from(w_e)))
                     .div(&(Dy::int(i64::from(u))))
                     .unwrap_or_default())
                 .ln()

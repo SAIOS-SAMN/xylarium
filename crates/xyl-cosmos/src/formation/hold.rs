@@ -66,7 +66,7 @@ fn hold_about(
 ) -> Hold {
     let open_of = |z: u32| {
         Q::int(i64::from(crate::compound::open_hot(z, received)))
-            .checked_div(&Q::int(i64::from(crate::compound::hold(z))))
+            .checked_div(&Q::int(i64::from(crate::compound::electron_hold(z))))
             .unwrap_or(Q::ZERO)
     };
     let kinds: Vec<(u32, Q, Q, Q)> = mix
@@ -75,7 +75,7 @@ fn hold_about(
             (
                 *z,
                 share.clone(),
-                Q::int(i64::from(crate::compound::hold(*z))),
+                Q::int(i64::from(crate::compound::electron_hold(*z))),
                 open_of(*z),
             )
         })

@@ -468,6 +468,20 @@ where it belongs to one.
       place of the table in `circuit::TwoWeights`, `dipole_read` and
       `field::stellar_tilt` (S029), with its reading back to whole nucleons
       (#149).
+    Held: E018's bench (Q*/Z from 0.014 to 436.7 at seed 7) awaits a
+    ruling.
+64. **Pivotry from the fibrations** ([#207](https://github.com/SAIOS-SAMN/xylarium/issues/207), `law`, `track`;
+    [model.md](model.md#pivotry-from-the-fibrations)). Twist, writhe,
+    strength, weakness, pull and break per plane from the Hopf carrier
+    (E019 to E023). Order: the pivot and twist per plane (#118, #128), writhe
+    and the overlap's faces, pull against the medium, break as a linking
+    event; then the anchor chain, the bond and material strength read them.
+65. **The formation chain** ([#208](https://github.com/SAIOS-SAMN/xylarium/issues/208), `law`, `track`, `defect`;
+    [model.md](model.md#the-formation-chain)). Matter from the rest point
+    (#201), stars condensed from the galactic core's held gas, worlds from
+    the star's held mixture, states and life from their matter; each step
+    retires its stand-ins (S029; S006 to S014, S020; S066 to S070; S041 to
+    S081).
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

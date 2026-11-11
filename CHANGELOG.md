@@ -11,6 +11,11 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The whole-nucleon read-back `A = floor(Z + Q_z + 1/2)` registered as a
+  stand-in (S139, #149): the basket's Q is `A - Z` (ruled 2026-11-11,
+  mycelium#238), an integer per universe, until the Diophantine split
+  derives it.
+
 - Every grid cut on a held value truncates toward zero
   (`certified::toward_zero`, #210) instead of rounding toward minus
   infinity: `toward_zero(-x) = -toward_zero(x)`, and no cut grows a

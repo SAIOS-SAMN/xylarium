@@ -347,6 +347,48 @@ and its Q face, with the electron phase state `R` between them.
   that comparison; the faces with the mix's `R` at the founding's pulse are
   a further step.
 
+### The state (3W, p, R) and the transitions of formation
+
+Started 2026-11-11 ([#201](https://github.com/SAIOS-SAMN/xylarium/issues/201)). A kind's state is one object with three
+components, and each formation mechanic moves one of them.
+
+- **The whole.** `3W = 3(Z + Q)`, the nucleon dimensions, three per
+  nucleon: `3Z` protons and `3Q` neutrons, both read from the body
+  (LAW-COUPLING v2's `3w`). The letter clashes with the held count
+  `W = 3Z - U`; the held count is to be renamed (EQUATIONS, I010).
+- **The split.** The dipole `3Q / 3Z` is the axis plane's share split, read
+  as faces of the whole (Faces of the dipole on S^n):
+  `h = 3Z / 3W`, `o = 3Q / 3W`, pole `t = 3Q / 3Z`, and the push over the
+  whole `p = h - o = (3Z - 3Q) / 3W`. Its dilation is the Z face itself,
+  `D(p) = h / o = 3Z / 3Q`, and the Q face is its antipole,
+  `D(-p) = 3Q / 3Z`.
+- **The phase.** `R` is the axis plane's turn, in degrees, joining the
+  common phase (#183). The dipole's faces read `D(p)` turned by `+R` and
+  `D(-p)` turned by `-R`. `R` turns the faces and is never added to a
+  share: #148's `3Z / 3Q + R` adds a turn to a dilation (I009).
+- **The transitions.** Each mechanic of formation moves one component:
+
+  | Mechanic | Moves | Keeps | Law |
+  |---|---|---|---|
+  | Capture and stripping of electrons (`atoms::unpaired_hot`, the jetstream's pole channels) | `R`, and the electrons' open and paired states | `3W`, `p` | built: the jetstream moves the electrons' pole state `t = U / W_held`, held to open, not nucleons |
+  | Fusion of `k` nuclei, fission (`stars::fusion_step`, the sequence) | `3W`: summed, or split | the split by weight: `h' = (sum W_i h_i) / (sum W_i)`, the mediant of the parts' `D` | built for `Z`; `Q` read from a table |
+  | Nucleon conversion, Z to Q and back | `p`, by flow steps: `D(p') = D(p) D(s)` | `3W` | **not built**: `Q` per kind is Earth's atomic weight (`circuit::mass_number`, S029) |
+  | A bond | share through the bound electrons `g` between the strata | `3W` | LAW-COUPLING v2 (#241) |
+
+- **What the conversion law must meet.** It keeps `3W`, moves `p` by flow
+  steps `s`, carries the charge it moves on `R`, and rests at the natural
+  balance of push and resistance: `p_net = p (+) (-r) = 0` (#195), per
+  dipole (#197), first-degree in the faces (#199). The rest point `p*` of
+  each kind gives its `3Q / 3Z`, which replaces the table's mass numbers.
+  It is never chosen by closeness to a measured value.
+- **Open, in order.**
+  1. The resistance the split meets: the bound electrons' held face, the
+     capacity's room, or the medium at the kind's reach (#195's default).
+     Each is benched by its rest point `p*` over Z 1 to 1700, read for
+     the seals and the vessel's chain, not against a table.
+  2. The flow step `s` of one conversion, and its carry on `R`.
+  3. Fusion's products read from `p*`, not the table.
+
 ### Gravity: the deformation about a mass invariant
 
 Ruled 2026-11-10 ([#155](https://github.com/SAIOS-SAMN/xylarium/issues/155)): gravity is the topological deformation of the

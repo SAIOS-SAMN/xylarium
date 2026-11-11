@@ -11,6 +11,16 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The state (3W, p, R) and the transitions of formation (#201): a kind's
+  nucleon whole `3W = 3(Z + Q)`, its split as faces of the whole (push
+  `p = (3Z - 3Q) / 3W`, `D(p) = 3Z / 3Q`, the Q face its antipole), and the
+  axis plane's turn `R`, which turns the faces and is never added to them.
+  Each formation mechanic moves one component: electrons move `R`; fusion
+  and fission move `3W`; conversion moves `p` (not built: `Q` is Earth's
+  atomic weight, S029); a bond moves share through `g`. The conversion's
+  rest point `p*` is the law to derive (EQUATIONS.md E012 to E014, I009 to
+  I011). Docs only.
+
 - No inverse square (#199, ruled): every coupling is first-degree in the
   faces, `h = M / (r + M) = 1 / (1 + t)`, with the hold and the reach in
   one denominator (EQUATIONS.md E011, model.md). The sites that read a

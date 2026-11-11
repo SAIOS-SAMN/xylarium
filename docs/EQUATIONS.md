@@ -58,6 +58,9 @@ sites are restated. The derivations are in
 | E009 | A drive's exhaust per face: `p_e,k = (p_1,k (+) (-r_1,k)) (+) ... (+) (p_n,k (+) (-r_n,k))` over the states it produces on face `k` | `best_spec`, `blended` (I004) | [#192](https://github.com/SAIOS-SAMN/xylarium/issues/192) | planned |
 | E010 | The charged spin per plane: `theta_k = 360 delta_k`, `pi_k`, `eps*_k = 90 pi_k`, `K = sum_k delta_k (T_k B_k T_k~)` | one `delta` and one tilt for every plane (I006) | [#183](https://github.com/SAIOS-SAMN/xylarium/issues/183) | planned |
 | E011 | Coupling is first-degree in the faces: `h = M / (r + M) = 1 / (1 + t)`, `o = r / (r + M) = t / (1 + t)`, the hold and the reach in one denominator, calibre-free; a traversal turns `360 h` on its named plane (the turning law, built); the measure of `S^n` (`sin^(n-1)`, `measure`) is the sphere's volume element, not a coupling | `M / r^2`, `M / d`, `a^2 / (4 d^2)`, `M / R^2`, roots (I008) | ruled; [#199](https://github.com/SAIOS-SAMN/xylarium/issues/199) | stated; sites open |
+| E012 | The state `(3W, p, R)`: `3W = 3(Z + Q)`; `h = 3Z / 3W`, `o = 3Q / 3W`, `t = 3Q / 3Z`, `p = (3Z - 3Q) / 3W`, `D(p) = 3Z / 3Q`, `D(-p) = 3Q / 3Z`; `R` the axis plane's turn | the dipole's faces as a sum (I009) | [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#148](https://github.com/SAIOS-SAMN/xylarium/issues/148), mycelium #241 | derived |
+| E013 | Formation's transitions: electrons move `R` (and `U`, `2P`); fusion and fission move `3W`, mixing the split by weight (the mediant of `D`); conversion moves `p` by flow steps `D(p') = D(p) D(s)`, keeping `3W`; a bond moves share through `g` | `Q` per kind from Earth's weights (I011) | [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201) | derived; conversion not built |
+| E014 | The conversion's rest point: `p*` where `p (+) (-r) = 0`, per dipole, first-degree; `3Q / 3Z = D(-p*)` | `circuit::mass_number`'s table (S029, I011) | [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195) | planned: the resistance to derive |
 
 | ID | Invalid form | Sites | Superseded by | Status |
 |---|---|---|---|---|
@@ -69,6 +72,9 @@ sites are restated. The derivations are in
 | I006 | One-dipole forms written on 2026-11-11: the tilt's faces and balance, the open charge, the charged spin's single `delta` | S124, S125, S132 | E010 | open |
 | I007 | Offsetting the open charge by the bound share, `(p / w) (+) (-g)` (proposed on #183 and #195, withdrawn): `g` is the charge already moved onto the held stratum, so it would be counted twice; the push is the linear pair share, and the rate it drives is offset by the medium (E007) | S124 | E003, E007 | closed: withdrawn |
 | I008 | A square or root at a coupling's root, or a reach decoupled from its hold: the field's intercepted share `a^2 / (4 d^2)`, the field's work `(M / a)^2 abs(dx)^2`, surface gravity `M / R^2` and pressure, `pulse::hear`'s `M / d`, `rotor::angle_between`'s root | S133, S134, S135, S025, S034 | E011 | open |
+| I009 | The dipole's faces as a turn added to a dilation, `3Z / 3Q + R` and `3Q / 3Z - R` (#148) | docs (model.md, The dipole) | E012 | open: restate #148 |
+| I010 | `W` names both the held count `3Z - U` (`compound::hold`) and, in v2's letters, the nucleon whole `3W = 3(Z + Q)` | `compound::hold`, docs | E012 | open: rename the held count |
+| I011 | The neutron count read from Earth's standard atomic weights, so `3Q`, `3W` and the split are a table, not a formation | S029, `stars::fusion_step` products | E013, E014 | open |
 
 ## 1. Numbers
 

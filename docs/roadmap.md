@@ -449,6 +449,18 @@ where it belongs to one.
     - surface gravity and pressure;
     - `pulse::hear`;
     - the separation (#118).
+63. **The state (3W, p, R)** ([#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), `law`, `track`;
+    [model.md](model.md#the-state-3w-p-r-and-the-transitions-of-formation)).
+    Started 2026-11-11: a kind's state is the nucleon whole `3W`, the split
+    `p = (3Z - 3Q) / 3W` with `D(p) = 3Z / 3Q`, and the phase `R`, with each
+    formation mechanic moving one component. Done: the derivation (E012 to
+    E014; I009 to I011). Next:
+    - the conversion's resistance and rest point `p*`, benched over Z 1 to
+      1700;
+    - its flow step and carry on `R`;
+    - `3Q / 3Z` from `p*`, replacing Earth's mass numbers (S029);
+    - #148 restated;
+    - the held count renamed.
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

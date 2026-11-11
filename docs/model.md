@@ -999,6 +999,33 @@ term; per-plane twist by separation
 fibres' carrier, their separation and their linking are ruled and built
 (The Hopf carrier, below).
 
+### Pivotry from the fibrations
+
+Planned ([#207](https://github.com/SAIOS-SAMN/xylarium/issues/207)). A tether between two bodies is a Hopf fibre on
+the twelve axes, and its behaviour is read per plane `k` from the
+fibration, never from a threshold or a material table:
+
+| Behaviour | Law per plane `k` | From |
+|---|---|---|
+| Pivot | the relative versor `P_b^-1 P_a`, per plane `(K_k, phi_k)` | `rotor::Rotor::conjugate`; Winding and phase |
+| Twist | `Tw_k = w_i,k - w_j,k`, the turn `360 delta_k` | `hopf::turn`; [#128](https://github.com/SAIOS-SAMN/xylarium/issues/128) |
+| Writhe | `Wr = Lk - Tw` | `hopf::linking`; The vortex |
+| Strength, weakness | the overlap's held face `h_k` and open face `o_k = 1 - h_k` | `hopf::overlap` |
+| Pull | `p_k = h_k - o_k`, offset by the medium, `p_k (+) (-r_k)` | Push and resistance |
+| Break | the event at which `Lk` changes | `xyl_core::event`; The vortex (reconnection) |
+
+- **Break is topological.** `Lk` is invariant under every continuous
+  deformation, so a tether bends, stretches and twists without breaking,
+  and breaks exactly where its linking changes: the vortex's reconnection.
+- **Built:** the conjugation, the turn at any winding, the overlap's faces,
+  the linking, the holonomy and the tilt (The Hopf carrier).
+- **Not built:** the pivot per plane ([#118](https://github.com/SAIOS-SAMN/xylarium/issues/118)); a non-common
+  winding from the founding ([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128)); the twist per plane
+  (`turning::twist_per_turn` reads one plane, S130); writhe, pull and
+  break as readings.
+- **Consumers:** the anchor chain's stretch, torque and twist; the bond
+  (`atoms::Bond`); material strength in place of the calibrated tables.
+
 ### The Hopf carrier: the six planes in one phase
 
 Ruled 2026-11-11 ([#183](https://github.com/SAIOS-SAMN/xylarium/issues/183)); built in `xyl_core::hopf`.
@@ -2263,6 +2290,26 @@ law, the same at a nucleus, a star and a world:
   cores, chemistry from the census).
 
 ## 6. Stars and systems
+
+### The formation chain
+
+Planned ([#208](https://github.com/SAIOS-SAMN/xylarium/issues/208)). Stars, systems and world states are drawn and
+calibrated (the prototype's population synthesis, `e11a9ec`), not formed
+from the founding; the stand-ins are registered (docs/assumptions.md). The
+chain, in order, each step a founding change:
+
+1. **Matter:** `Q` from the conversion's rest point at each core's bounce
+   (E018, [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201)), retiring S029.
+2. **Stars:** condensed from the galactic core's held gas, mass and place
+   read where the hold closes; retires S006 to S014 and S020
+   ([#191](https://github.com/SAIOS-SAMN/xylarium/issues/191)), each remnant from the remnant's compactness (S003,
+   [#188](https://github.com/SAIOS-SAMN/xylarium/issues/188)).
+3. **Worlds:** condensed from the star's held mixture
+   (`disc::StarHold::held`, `disc::manifold_worlds`); retires S066 to S070.
+4. **States:** world states and life from their matter and their star;
+   retires S041 to S063, then S073 to S081.
+
+The sections below describe the readings as built.
 
 - The transduction (`stars`): a star at reach `r` absorbs the ring that the bell
   brings there, `1 / (pi (r + 1))` per bell, plus the vessel's drift `bell q(t)

@@ -11,6 +11,11 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Pivotry from the fibrations (#207) and the formation chain (#208),
+  documented as planned: E019 to E023 (pivot, twist and writhe, strength and
+  weakness, pull, break per plane), roadmap items 64 and 65, and the model's
+  sections; the glossary's break and formation chain.
+
 - `observe split [LO] [HI]` (#201): the axis split at a throat, per kind its
   axis states by side and the pole `t = 3Q / 3Z` they give by count and by
   weight, with the nucleon whole it implies; readings only. Seed-free:

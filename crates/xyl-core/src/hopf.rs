@@ -227,6 +227,61 @@ mod tests {
         assert!(overlap(&bad, &s, &none).is_none());
     }
 
+    /// The quarter turn mixing the axis plane with isoclinic plane `q`: axis
+    /// 1 toward the plane's first axis and axis 2 toward its second, so
+    /// `(z_0, z_q) -> (-z_q, z_0)`, complex linear.
+    fn mixing(q: usize) -> Rotor<AXES> {
+        let (a, b) = plane(q).unwrap();
+        let quarter = |from, toward| {
+            let turn = Turn {
+                from,
+                toward,
+                degrees: Q::int(90),
+            };
+            Rotor::of(&turn, 40).unwrap()
+        };
+        quarter(2, b).then_after(&quarter(1, a))
+    }
+
+    #[test]
+    fn no_weighted_turn_moves_a_plane_share_and_a_mixing_quarter_turn_exchanges_them() {
+        // A body on the axis plane (3, 4) and on isoclinic plane 2 (1, -2).
+        let mut v = [0i64; AXES];
+        (v[0], v[1], v[4], v[5]) = (3, 4, 1, -2);
+        let body = vector(v);
+        let plane_norms = |x: &[Encl; AXES]| -> [Q; PLANES] {
+            std::array::from_fn(|p| {
+                &(&x[2 * p].lo * &x[2 * p].lo) + &(&x[2 * p + 1].lo * &x[2 * p + 1].lo)
+            })
+        };
+        // Every weighted turn keeps each plane's part: no winding exchanges
+        // the axis stratum with the isoclinic one.
+        for w in [COMMON, [2, 0, -3, 1, 0, 5], [0, 1, 1, 1, 1, 1]] {
+            let turned = turn(&w, &Q::int(30), 40).unwrap().apply(&body);
+            assert_eq!(plane_norms(&turned), plane_norms(&body));
+        }
+        // The mixing quarter turn carries the axis part onto plane 2 and
+        // plane 2's onto the axis, negated: (z0, z2) -> (-z2, z0).
+        let x = mixing(2);
+        let mut e = [0i64; AXES];
+        (e[0], e[1], e[4], e[5]) = (-1, 2, 3, 4);
+        assert_eq!(x.apply(&body), vector(e));
+        // Twice is the half turn on both planes, four times the identity:
+        // two same-sense quarter turns are not the identity.
+        let twice = x.then_after(&x);
+        let mut h = [0i64; AXES];
+        (h[0], h[1], h[4], h[5]) = (-3, -4, -1, 2);
+        assert_eq!(twice.apply(&body), vector(h));
+        assert_eq!(twice.then_after(&twice).apply(&body), body);
+        // It is complex linear on the two planes, so it commutes with the
+        // Hopf action and carries fibres to fibres.
+        let hopf = turn(&COMMON, &Q::int(30), 40).unwrap();
+        assert_eq!(
+            x.then_after(&hopf).apply(&body),
+            hopf.then_after(&x).apply(&body)
+        );
+    }
+
     #[test]
     fn linking_is_symmetric_integral_and_needs_an_axis_winding() {
         let (a, b) = ([2, 1, 0, -1, 0, 3], [1, 0, 2, 0, 5, 0]);

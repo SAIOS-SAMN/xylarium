@@ -25,7 +25,9 @@
 //! states open on both faces) and (b) `W_Q = 3cap - E` (the room the Q
 //! face's open count); per derivation the closed share `W_Q / 3Q`, the pole
 //! `open / W_Q`, the separation `W_Q - W` from the Z face, and the bits the
-//! chain needs to the vessel's top under `W_Q / 3Q`.
+//! chain needs to the vessel's top under `W_Q / 3Q`. Then LAW-COUPLING
+//! v2's draft (Mycelium #241): `3p`, `3n`, `p / w`, `t = p / n` and the push
+//! `p (1 - g) / w` at the capacity face's held share `g = 2P / Z`.
 
 use crate::run::show;
 use xyl_core::dyadic::Dy;
@@ -141,6 +143,26 @@ fn q_face(o: &Occupancy) -> QFace {
     }
 }
 
+/// The nucleon dipole of LAW-COUPLING v2's draft (Mycelium #241, 78.181
+/// section 2): `3p` and `3n` from the body (`n = A - Z`), the axis share
+/// `p / w` and `t = p / n`, and the push `pi = p (1 - g) / w` with its
+/// antipole `1 - pi`. Xylarium has no `g` of its own; the bench reads it as
+/// the capacity face's held share `g = 2P / Z`, under which
+/// `pi = U / w` exactly. Readings only.
+struct Nucleons {
+    p: u32,
+    n: u32,
+    pi: Q,
+}
+
+fn nucleon_dipole(z: u32, mass: u32, o: &Occupancy) -> Option<Nucleons> {
+    let n = mass.checked_sub(z)?;
+    let w = i64::from(mass);
+    let g = Q::new(i64::from(o.held()), i64::from(z))?;
+    let pi = &Q::new(i64::from(z), w)? * &(&Q::ONE - &g);
+    Some(Nucleons { p: z, n, pi })
+}
+
 /// `a / b` as a reading, `-` where `b` is zero.
 fn ratio(a: u32, b: u32) -> String {
     if b == 0 {
@@ -169,7 +191,7 @@ pub(super) fn bench_read(seed: u64, lo: u32, hi: u32) -> Result<String, String> 
             "  Z A | E U 2P cap cap_in | W h | candidates 2P/cap 2P/cap_in Z/cap_in | ",
             "step | t U/W, U/2P | emission U/W, face U/Z | count per H (a h chain) | ",
             "founded whole | Q face 3Q, W_Q a b, h_Q = W_Q/3Q a b, t_Q = open/W_Q a b, ",
-            "W_Q - W a b\n"
+            "W_Q - W a b | v2: 3p 3n, p/w, t = p/n, pi = p(1 - g)/w at g = 2P/Z, 1 - pi\n"
         ),
         seed,
         show(&spin),
@@ -229,7 +251,7 @@ pub(super) fn bench_read(seed: u64, lo: u32, hi: u32) -> Result<String, String> 
         out.push_str(&format!(
             concat!(
                 "  Z{z} A{mass} | {} {} {} {} {} | {w} {} | {} {} {} | {} | ",
-                "{}, {} | {}, {} | {} | {} | {} {} {} {} {} {} {} {} {}\n"
+                "{}, {} | {}, {} | {} | {} | {} {} {} {} {} {} {} {} {} | {}\n"
             ),
             o.room,
             o.open,
@@ -256,6 +278,15 @@ pub(super) fn bench_read(seed: u64, lo: u32, hi: u32) -> Result<String, String> 
             ratio(qf.open[1], qf.held[1]),
             i64::from(qf.held[0]) - i64::from(w),
             i64::from(qf.held[1]) - i64::from(w),
+            nucleon_dipole(z, mass, &o).map_or("-".to_string(), |v| format!(
+                "{} {}, {}, {}, {}, {}",
+                3 * v.p,
+                3 * v.n,
+                ratio(v.p, v.p + v.n),
+                ratio(v.p, v.n),
+                show(&v.pi),
+                show(&(&Q::ONE - &v.pi))
+            )),
             z = z,
             mass = mass,
             w = w,
@@ -360,6 +391,25 @@ mod tests {
             let sealed = o.room == 0 && o.open == 0;
             assert_eq!(qf.held.iter().all(|h| i64::from(*h) == w), sealed, "Z{z}");
             assert!(qf.held.iter().all(|h| *h <= qf.span), "Z{z}");
+        }
+    }
+
+    #[test]
+    fn the_v2_push_at_the_held_share_is_the_open_states_over_the_nucleons() {
+        // With g = 2P / Z, pi = p (1 - g) / w = U / w: the push the draft
+        // sets apart from U reads U again under xylarium's held share.
+        for z in 1..=xyl_cosmos::elements::TOP_Z {
+            let o = occupancy(z).unwrap_or_default();
+            let Some(mass) = xyl_cosmos::circuit::mass_number(z) else {
+                continue;
+            };
+            let v = nucleon_dipole(z, mass, &o).unwrap();
+            assert_eq!(v.p + v.n, mass, "Z{z}");
+            assert_eq!(
+                v.pi,
+                Q::new(i64::from(o.open), i64::from(mass)).unwrap(),
+                "Z{z}"
+            );
         }
     }
 

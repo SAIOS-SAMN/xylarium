@@ -482,6 +482,22 @@ where it belongs to one.
     the star's held mixture, states and life from their matter; each step
     retires its stand-ins (S029; S006 to S014, S020; S066 to S070; S041 to
     S081).
+66. **Resolution from the carrier** ([#210](https://github.com/SAIOS-SAMN/xylarium/issues/210), `law`, `track`; ruled 2026-11-11).
+    Every grid in Declared rulers is replaced by the state count `Omega`
+    of its stage's carrier. Ruled: degrees are the unit turns are stated
+    in, never a count, so 360 enters no `Omega`; no factor that is not fixed
+    when the stage is read (no `L_max`, no parcel count, no aperture pad);
+    the carrier has six planes, so a share's count is the marginal
+    `6 Omega_1` or the joint `Omega_1^6`, `Omega_1 = sum W_e` over the
+    shell-bearing kinds, and a pair's `(6 Omega_1)^2`; founding matter's
+    count is `N_founding Omega_share`. Order:
+    - signed quantities truncate toward zero, `trunc(-x) = -trunc(x)`;
+      transfers move whole grains toward zero, the remainder with the
+      source;
+    - bench `Omega` per stage against the rulers on seed 7: the dyadic
+      envelope `2^-carrier_bits(Omega)` where `Dy` holds the value, and the
+      common denominator `floor(x Omega) / Omega` beside it on the founding's
+      rationals.
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;
@@ -1078,3 +1094,18 @@ layer, each with the quantity that is to derive it.
   sample stars searched for bells (`SAMPLE` in xyl-kernel `field.rs`) and
   the ley lines per reading (`LINES_PER_READING`, 1024) are resolution
   choices.
+- **Grids** (the resolution a quantity is rounded down to, `2^-b`, by
+  `xyl_core::certified::down`): b = 232 for founding matter
+  (`formation/shells.rs` nucleus_grain, the filter's takes); 64 for
+  founding shares, reaches and the rest-point table (`formation/shells.rs`
+  on_grid), the turning taken (`circuit::Substrate::spin_orbit`), the
+  curved reach (`bounce::curved_reach`) and star masses
+  (`galaxy/star.rs` MASS_BITS); 60 for field readings (`field.rs` GRID),
+  star radii (`galaxy/star.rs`) and the turning per ring
+  (`turning::turning_si`); 48 for element abundances (`elements.rs`
+  GRID_BITS); 40 for the origin, the drawn spin, galaxy and centre
+  readings (`origin.rs`, `galaxy/mod.rs`, `centre.rs` GRID_BITS); 32 for
+  bodies, isotopes and orbits (`bodies/mod.rs` GRID); and the nucleus
+  grain's 8 bits below one hydrogen of the founding count
+  (`circuit/grain.rs` nucleon_unit). Each is to be derived from the state
+  count of its carrier (item 66, [#210](https://github.com/SAIOS-SAMN/xylarium/issues/210)).

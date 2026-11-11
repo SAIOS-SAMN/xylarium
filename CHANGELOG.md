@@ -11,6 +11,11 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The grids registered as declared rulers (roadmap, Declared rulers): the
+  `2^-b` resolutions of founding matter (232), founding shares (64), fields
+  (60), elements (48), the origin (40), bodies (32) and the nucleus grain's
+  8 bits, each to be derived from its carrier's state count (item 66, #210).
+
 - Pivotry from the fibrations (#207) and the formation chain (#208),
   documented as planned: E019 to E023 (pivot, twist and writhe, strength and
   weakness, pull, break per plane), roadmap items 64 and 65, and the model's

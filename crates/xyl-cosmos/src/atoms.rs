@@ -125,6 +125,7 @@ impl Band {
     /// upward, its single orientations left on the Q side. Each level's room,
     /// open states and pairs; they sum to [`Band::occupancy`].
     pub fn axis_occupancy(&self) -> Vec<(i64, Occupancy)> {
+        // Stand-in S136: The axis levels fill from the Z side upward.
         let l = i64::from(self.l);
         let d = crate::fibres::directions(self.l);
         let e = self.electrons.min(self.room());

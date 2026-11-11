@@ -396,8 +396,18 @@ components, and each formation mechanic moves one of them.
     and no homologue reads the home galaxy's (S010).
 - **Open, in order.**
   1. The rest point at a singularity: the throat's medium as the
-     resistance, read per dipole. It is benched over Z 1 to 1700 at the
-     universal core, on the seals and the vessel's chain.
+     resistance, read per dipole. At a throat the medium's share is 1/2, a
+     push of 0, so the rest point is the kind's own axis split: its states
+     on the axis plane by side (`atoms::Band::axis_occupancy`), giving
+     `t = 3Q / 3Z`. Benched by `observe split` over Z 1 to 1700, it reads:
+     - the seals exactly on the equator, `t = 1`, as The dipole states;
+     - by count (the neutral level halved at the equator), `t <= 1` for
+       every kind, with p50 0.92;
+     - by weight (E005), no Q-side weight up to Z 15.
+
+     Still to rule: count or weight, and the Z-side-first filling of each
+     band's axis levels (#158), which makes `t <= 1` everywhere and is
+     registered as S136.
   2. The flow step `s` of one conversion, and its carry on `R`.
   3. Each galactic core's table at its bounce, from its medium, as an event
      in the galaxy's history. `circuit::mass_number(z)` becomes a reading of

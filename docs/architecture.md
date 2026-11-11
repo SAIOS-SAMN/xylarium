@@ -170,6 +170,7 @@ and may run beside `run`. Bracketed arguments are optional, with their defaults.
 
 | Word | Arguments | Kind | Shows |
 |---|---|---|---|
+| `split` | `[LO] [HI]` | Law | The axis split at a throat (#201): per kind its axis states by side (Z side, neutral, Q side) and their weights, and the pole `t = 3Q / 3Z` they give by count (the neutral level halved) and by weight, with the nucleon whole `W = Z (1 + t)` each implies; the fixed table's mass number beside for reference only |
 | `bench` | `[LO] [HI]` | Law | The substrate bench, with no founding: per kind the occupancy, the held count and closed share, the capture's step per band, the pole, the emission and the capture chain's count; the Q face's two derivations (`W_Q = 3cap - U`, `3cap - E`) with their closed shares, poles and separations, and LAW-COUPLING v2's nucleon dipole (`3p`, `3n`, `p / w`, `t = p / n`, the push at `g = 2P / Z`); then the founding bits, the bits under each Q face, and the seals' counts (docs/board.md) |
 | `formation` | | Law | The founding's matter, then each galaxy's pieces of gas, their lighting and the star cut of the first lit pieces (`disc::star_hold` through `galaxy::disc_manifold`) with the worlds their manifolds hold, counted in rings |
 | `seals` | `[N=1600]` | Law | The quantum capacity of kinds Z 1 to N on the bands of each kind's atom, the seams and the kinds that seal |

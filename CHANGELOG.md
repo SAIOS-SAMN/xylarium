@@ -11,6 +11,13 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- `observe split [LO] [HI]` (#201): the axis split at a throat, per kind its
+  axis states by side and the pole `t = 3Q / 3Z` they give by count and by
+  weight, with the nucleon whole it implies; readings only. Seed-free:
+  the seals sit exactly on the equator (`t = 1`); by count every kind has
+  `t <= 1` (p50 0.92); by weight there is no Q-side weight up to Z 15. The
+  Z-side-first filling of the axis levels is registered (S136).
+
 - The state (3W, p, R) and the transitions of formation (#201): a kind's
   nucleon whole `3W = 3(Z + Q)`, its split as faces of the whole (push
   `p = (3Z - 3Q) / 3W`, `D(p) = 3Z / 3Q`, the Q face its antipole), and the

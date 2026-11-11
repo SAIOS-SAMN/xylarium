@@ -454,7 +454,11 @@ pub(super) fn split_read(lo: u32, hi: u32) -> String {
         out.push_str(&row);
     }
     out.push_str(&format!(
-        "Kinds with no Z-side axis weight (the pole by weight undefined): {undefined}\nThe seals:\n{}",
+        concat!(
+            "Kinds with no Z-side axis weight (the pole by weight undefined): {}\n",
+            "The seals:\n{}"
+        ),
+        undefined,
         seals.concat()
     ));
     out

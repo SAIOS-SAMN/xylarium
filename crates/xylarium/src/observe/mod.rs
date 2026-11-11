@@ -105,7 +105,8 @@ const READINGS: &str = concat!(
     "chemistry, star-types [N] [R], universal-core [R], ley [K], annals [K], events [K], ",
     "clock, ",
     "tiers S, sync [K]; ",
-    "law readings: bench [LO] [HI], split [LO] [HI], formation, galactic-core N, seals [Z], founding, ",
+    "law readings: bench [LO] [HI], split [LO] [HI], formation, galactic-core N, ",
+    "seals [Z], founding, ",
     "founding-reach, ",
     "worlds [N], ",
     "push [N], bonding [N]"

@@ -300,6 +300,14 @@ mod tests {
         let si = turning_si(&kg, &metres);
         let back = (&si * &pi).checked_div(&Q::int(180)).unwrap();
         let gap = (&back - &exact).abs();
-        assert!(gap <= &exact * &xyl_core::ratio!(1, 1 << 40), "{gap}");
+        // The SI form is cut toward zero to 2^-60 degrees per ring (a declared
+        // ruler, #210): one grain of it, back in core units, on top.
+        let grain = (&pi * &xyl_core::ratio!(1, 1 << 60))
+            .checked_div(&Q::int(180))
+            .unwrap();
+        assert!(
+            gap <= &(&exact * &xyl_core::ratio!(1, 1 << 40)) + &grain,
+            "{gap}"
+        );
     }
 }

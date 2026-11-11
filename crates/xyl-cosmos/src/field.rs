@@ -743,7 +743,9 @@ mod tests {
     #[test]
     fn transduced_share_reads_each_steps_release() {
         // Each step converts its release of what it transduces; a body that does
-        // not ignite and a remnant convert nothing.
+        // not ignite and a remnant convert nothing. The steps read the
+        // universal table, so the universe is founded first.
+        let _ = crate::genesis::origin();
         let seq = hydrogen();
         for (i, step) in seq.steps.iter().enumerate() {
             let share = transduced_share(&seq, Transduction::Step(i));
@@ -753,9 +755,7 @@ mod tests {
         assert_eq!(transduced_share(&seq, Transduction::Remnant), Q::ZERO);
         assert_eq!(transduced_share(&seq, Transduction::Unlit), Q::ZERO);
         // The step by age at r = 0 follows the ends in order, then the
-        // remnant (the universe is founded first because the bell sets the
-        // life).
-        let _ = crate::genesis::origin();
+        // remnant (the bell sets the life).
         let delta = crate::galaxy::first_star_compactness();
         let ends = crate::stars::ends(&seq, delta, Dy::ZERO);
         assert!(ends[0].signum() > 0);

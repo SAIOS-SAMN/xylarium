@@ -23,7 +23,7 @@ use xyl_cosmos::origin::Origin;
 /// surface. The conduction is the share:
 ///     sigma = sum_surplus u_b (1 - omega_b) / tau_b  /  sum u_b / tau_b
 /// The form follows from the contact count c: 0 inert, 1 molecule, 2 chain,
-/// 3 or 4 sheet, more framework. The reading is diagnostic; no law uses it.
+/// 3 or 4 sheet, more lattice. The reading is diagnostic; no law uses it.
 pub(super) fn bonding(top: usize) -> String {
     const CONTACT: u32 = 8;
     let mut out = String::from(
@@ -36,31 +36,31 @@ pub(super) fn bonding(top: usize) -> String {
             continue;
         };
         // Per open state: tau_b and the band's free room 1 - omega_b.
-        let mut frames: Vec<(Q, Q)> = Vec::new();
+        let mut bonded: Vec<(Q, Q)> = Vec::new();
         for b in a.bands.iter().filter(|b| b.unpaired() > 0) {
             let tau = a.winding_tightness(b);
             let d = xyl_cosmos::fibres::directions(b.l).max(1);
             let free = &Q::ONE - &Q::new(i64::from(b.unpaired()), i64::from(d)).unwrap_or(Q::ONE);
             for _ in 0..b.unpaired() {
-                frames.push((tau.clone(), free.clone()));
+                bonded.push((tau.clone(), free.clone()));
             }
         }
-        frames.sort_by(|x, y| y.0.cmp(&x.0));
-        let q = u32::try_from(frames.len()).unwrap_or(0);
-        let q_z = frames.iter().fold(Q::ZERO, |acc, f| &acc + &f.0);
+        bonded.sort_by(|x, y| y.0.cmp(&x.0));
+        let q = u32::try_from(bonded.len()).unwrap_or(0);
+        let q_z = bonded.iter().fold(Q::ZERO, |acc, f| &acc + &f.0);
         let c = q.min(CONTACT);
-        let grip = frames
+        let grip = bonded
             .iter()
             .take(c as usize)
             .fold(Q::ZERO, |acc, f| &acc + &f.0);
         let loose = |f: &(Q, Q)| Q::ONE.checked_div(&f.0).unwrap_or(Q::ZERO);
-        let all = frames.iter().fold(Q::ZERO, |acc, f| &acc + &loose(f));
-        let flow = frames
+        let all = bonded.iter().fold(Q::ZERO, |acc, f| &acc + &loose(f));
+        let flow = bonded
             .iter()
             .skip(c as usize)
             .fold(Q::ZERO, |acc, f| &acc + &(&loose(f) * &f.1));
         let sigma = flow.checked_div(&all).unwrap_or(Q::ZERO);
-        let locked = frames
+        let locked = bonded
             .iter()
             .skip(c as usize)
             .filter(|f| f.1.is_zero())
@@ -70,7 +70,7 @@ pub(super) fn bonding(top: usize) -> String {
             1 => "molecule",
             2 => "chain",
             3 | 4 => "sheet",
-            _ => "framework",
+            _ => "lattice",
         };
         tally.entry(form).or_default().push(z);
         if sigma.signum() > 0 {

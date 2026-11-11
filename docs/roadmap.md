@@ -305,10 +305,10 @@ where it belongs to one.
    The books become one cycle across the universe: held, in flight outward, held
    downstream and in flight inward together equal founded.
 
-40. **The frame, the place and the chain**
+40. **The rotor, the place and the chain**
     ([#90](https://github.com/SAIOS-SAMN/xylarium/issues/90), `defect`,
-    `law`; [model.md](model.md#the-frame-the-place-and-the-chain)). One
-    frame carrier over the axis plane and five planes in `xyl_core::cga`,
+    `law`; [model.md](model.md#the-rotor-the-place-and-the-chain)). One
+    rotor carrier over the axis plane and five planes in `xyl_core::cga`,
     composed along the anchor chain (the carrier is built:
     `xyl_core::rotor::Rotor`, any planes within `cga::MAX_N`), replacing
     the three coordinates of `chain::Place`; tier maps by
@@ -641,8 +641,8 @@ Next:
    manifold's matter that the star keeps, so that a metal-rich star's
    worlds settle as several bodies rather than one.
 2. Phase 4, cross-ties: A relation between two bodies is read once, in the
-   lowest tier holding both, through the versor between their frames. Each
-   manifold already holds its frame as an exact rotor. This first needs a
+   lowest tier holding both, through the versor between their rotors. Each
+   manifold already holds its plane as an exact rotor. This first needs a
    rotor inverse and the certified angle in `xyl_core::rotor` (done, #26);
    `manifold::gap` is next to be read in the lowest common tier.
 
@@ -850,7 +850,7 @@ Next:
 9. Deliberation between houses bound by the delays of their percepts
    (#94).
 10. Done: the uplink's exact T reading and a mind's focus as four exact
-    shares (`knowledge::Focus`); the frame's lane byte stays S until
+    shares (`knowledge::Focus`); the act's lane byte stays S until
     Mycelium retires it
     ([#108](https://github.com/SAIOS-SAMN/xylarium/issues/108), #107).
 11. Embedded minds: the uplink hosts the client's cognition, one per

@@ -163,7 +163,7 @@ mod tests {
 
     #[test]
     fn path_parts_do_not_alias() {
-        // "ab"+"c" must not equal "a"+"bc": parts are length-framed.
+        // "ab"+"c" must not equal "a"+"bc": parts are length-prefixed.
         let mut a = Stream::derive(1, &["ab".into(), "c".into()]);
         let mut b = Stream::derive(1, &["a".into(), "bc".into()]);
         assert_ne!(a.next_u64(), b.next_u64());

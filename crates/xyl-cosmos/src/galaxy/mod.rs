@@ -32,8 +32,8 @@
 //!   turning law over the mass inside; a homologue's lengths scale by its
 //!   shape's scale and its masses by its hole ratio.
 //! - [`Star::bearing`] and [`Star::place`]: position at `t` from the
-//!   phase (turns) and half-angle plane frame; places are on the universe's
-//!   3-sphere (`chain::Place`). [`disc_frame`] gives the [`DiscFrame`] of a
+//!   phase (turns) and the plane's rotor of drawn turns; places are on the universe's
+//!   3-sphere (`chain::Place`). [`disc_manifold`] gives the [`DiscManifold`] of a
 //!   star's disc; [`vertical`] its swing through the plane and exposure,
 //!   derived from the turning law, the crowding and the ring structure.
 //!
@@ -46,15 +46,15 @@
 //!
 //! Terms: galaxy unit, manifold (docs/glossary.md).
 
-mod frame;
+mod disc_manifold;
 mod star;
 #[cfg(test)]
 mod tests;
 mod vertical;
 
-pub use frame::{
-    disc_frame, first_star_compactness, first_star_mass, first_star_sequence, piece_rim,
-    piece_sequence, piece_star_mass, DiscFrame,
+pub use disc_manifold::{
+    disc_manifold, first_star_compactness, first_star_mass, first_star_sequence, piece_rim,
+    piece_sequence, piece_star_mass, DiscManifold,
 };
 pub(crate) use star::{golden_turns, node_of, plastic_turns, tilt_of};
 pub use star::{imf, star, Class, Orbit, Star};

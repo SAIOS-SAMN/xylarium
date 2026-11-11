@@ -1264,7 +1264,7 @@ mod tests {
     }
 
     #[test]
-    fn a_kind_is_held_exactly_when_it_has_no_open_frames() {
+    fn a_kind_is_held_exactly_when_it_has_no_open_states() {
         // Every kind of the table, at the extremal and the spinless torsion
         // share, on the continuum alone (no vacuum leg, b = 0): a kind with
         // no open states has no onset; every other kind crosses the throat

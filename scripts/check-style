@@ -11,6 +11,8 @@
 4. No private one-letter wrapper functions (`fn n(`, `fn r(`, ...) stand in
    for the shared numeric constructors. Public items named for a physical
    symbol (`Si::g`, `Si::c`) are allowed.
+5. The word "frame" is retired in code, scripts and documentation
+   (Mycelium #239); the changelog keeps its history.
 
 Usage: scripts/check-style       (from the repository root; exit 1 on failure)
 """
@@ -87,6 +89,27 @@ for path in sorted(glob.glob("*.md") + glob.glob("docs/*.md")):
     for i, line in enumerate(open(path, encoding="utf-8"), 1):
         if own.search(line):
             failures.append(f"{path}:{i}: 'its own' or 'their own'; name what is meant")
+
+# --- retired words ----------------------------------------------------------
+# "frame" is retired across Mycelium, Netstratum and Xylarium (Mycelium #239):
+# it collapses volume and dimensions. Name what is meant: a rotor, a disc
+# manifold, a relative versor, held and open states. The changelog keeps its
+# history.
+retired = re.compile(r"frame", re.I)
+for path in sorted(
+    glob.glob("crates/*/src/**/*.rs", recursive=True)
+    + glob.glob("crates/*/build.rs")
+    + glob.glob("crates/*/examples/*.rs")
+    + glob.glob("crates/*/Cargo.toml")
+    + glob.glob("*.md")
+    + glob.glob("docs/*.md")
+    + glob.glob("scripts/*")
+):
+    if path in ("CHANGELOG.md", "scripts/check-style"):
+        continue
+    for i, line in enumerate(open(path, encoding="utf-8", errors="replace"), 1):
+        if retired.search(line):
+            failures.append(f"{path}:{i}: the word 'frame' is retired; name what is meant")
 
 for msg in failures:
     print(msg)

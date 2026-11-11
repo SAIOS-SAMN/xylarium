@@ -21,7 +21,7 @@
 //! - `Manifold::stand` and `bearing`: the vector (as enclosures) and the
 //!   bearing (direction, distance a (1 - e cos M)) at an age.
 //! - `reach`, `Manifold::reach`: the arc `2 pi a m / (M + m)`, the one
-//!   reading of a child's reach (a star's manifold in `galaxy::disc_frame`,
+//!   reading of a child's reach (a star's manifold in `galaxy::disc_manifold`,
 //!   a world's moon budget and moons' reach in `systems`).
 //! - `cap_degrees`, `star_cap_degrees`: the share of the anchor's S^n a
 //!   reach fills (`measure::share_turns`), times 360. `share`: belonging, 1

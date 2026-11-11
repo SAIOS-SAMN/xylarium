@@ -322,7 +322,7 @@ mod tests {
     }
 
     #[test]
-    fn a_frame_keeps_length_and_its_inverse_undoes_it() {
+    fn a_rotor_keeps_length_and_its_inverse_undoes_it() {
         // A rotor at any scale keeps an exact vector's length, and its
         // inverse brings the vector back.
         let s = Rotor::<3>::drawn(1, 2, &Q::int(2), &Q::int(5))

@@ -71,8 +71,8 @@ another crate. Laws are composed from shares (ratios of the form
   only. Calibre: none. Status: built.
 - Pair reading ([model.md](model.md#pairs-the-pivot-per-plane), #118): for
   coordinates `a`, `b` of one origin (else refused), read in their lowest
-  common enclosure, the relative frame is `P = P_b^-1 o P_a` (refused
-  where no lawful frame relates them); its reading is a vector over the
+  common enclosure, the relative versor is `P = P_b^-1 o P_a` (refused
+  where no lawful versor relates them); its reading is a vector over the
   turning planes, `d_k(a, b)` in exact degrees with winding
   `K_k = floor(|d_k| / 360)`, one component per plane by its generators
   (six for founded matter: the axis plane by its exponent, five isoclinic
@@ -95,7 +95,7 @@ another crate. Laws are composed from shares (ratios of the form
   relations compose to the identity, and its holonomy is the class it
   holds when they do not. Calibre: none. Status: planned.
 
-## 2. Units and the master frame
+## 2. Units and the anchor
 
 - Base units (`xyl-core units.rs`): `G = c = M_core = 1`, and
   `r_g = G M_core / c^2` (`Units::of`). Calibre: core (`r_g`). Status: built.
@@ -250,10 +250,10 @@ another crate. Laws are composed from shares (ratios of the form
   ladder `60^p` (`units::Tier`, a declared ruler) is one instance. Calibre: none. Status: built at the law
   (`shares::tests::deficit_is_invariant_under_dilation`); the chain's
   links are planned.
-- Isoclinic frame (docs/model.md, The frame, the place and the chain; T18,
+- Isoclinic rotor (docs/model.md, The rotor, the place and the chain; T18,
   #90, #128): plane `j` holds `H_j = sum_k M_k w_kj` and carries `J_j`
   by separation, so T14's push `J_j / (6 H_j + J_j)` differs by plane: an
-  isoclinic phase per plane. A frame is the axis-plane phase, the isoclinic
+  isoclinic phase per plane. A body's turning is the axis-plane phase, the isoclinic
   phases and
   the turning between planes into its parent. Calibre: none. Status: derived; not built.
 - Paired throat (docs/model.md, The core as a paired throat; #86): near
@@ -574,7 +574,7 @@ another crate. Laws are composed from shares (ratios of the form
   Z 1093 to 1700 hold 22 closed kinds (Z 1094, 1118, 1272-1276, 1298-1302,
   1326, 1328, 1352, 1354, 1378-1396, even), unfounded: the founding stops
   at the vessel's seal, Z 1092. Calibre: none. Status: built (the test
-  `a_kind_is_held_exactly_when_it_has_no_open_frames`), and the firmament
+  `a_kind_is_held_exactly_when_it_has_no_open_states`), and the firmament
   is the closed kinds (`circuit::Substrate::found`).
 - Jet onset (`circuit::onset_echoes`): `circuit::throat_crossing` of
   `t = open / hold` under the kind's jetstream map at the torsion share `s`
@@ -909,7 +909,7 @@ another crate. Laws are composed from shares (ratios of the form
   `a_disc = min(1, turning x swing x grip / shed)` (`formation::pulse_heat`), with
   `grip = (1 - star) / (2 - star)` and `shed = e_rest + ln 2 / k_v`. Calibre: mixed, founding and core (#123). Status:
   built.
-- Star's manifold (`galaxy::disc_frame`): the gathering is
+- Star's manifold (`galaxy::disc_manifold`): the gathering is
   `min((mass / stellar_mass) / (cloud / infall), infall)`, the reach is
   `manifold::reach(r, m / M(<r)) = 2 pi r m / (M + m)`, and the star share
   is `min(gathering / reach, 1)`. Calibre: mixed, founding and core (#123). Status: built.

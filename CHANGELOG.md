@@ -9,6 +9,14 @@ may change public APIs and the model's laws.
 
 ## Unreleased
 
+### Changed
+
+- Every grid cut on a held value truncates toward zero
+  (`certified::toward_zero`, #210) instead of rounding toward minus
+  infinity: `toward_zero(-x) = -toward_zero(x)`, and no cut grows a
+  magnitude, so none adds spin, turn or matter. Identical on non-negative
+  values; enclosures keep `down` and `up`.
+
 ### Added
 
 - The universal table from the conversion's rest point (#201, E014):

@@ -56,6 +56,18 @@ pub fn down(q: &Q, bits: u32) -> Q {
     dyadic((q.numer() << bits).div_floor(&q.denom()), u64::from(bits))
 }
 
+/// `q` cut to the grid of `2^-bits` toward zero: `sgn(q) floor(|q| 2^bits) /
+/// 2^bits`. Mirror-symmetric, `toward_zero(-q) = -toward_zero(q)`, and
+/// never larger in magnitude than `q`, so a cut adds no spin, turn or
+/// matter. The cut for held values; [`down`] and [`up`] bound enclosures.
+pub fn toward_zero(q: &Q, bits: u32) -> Q {
+    if q.signum() < 0 {
+        up(q, bits)
+    } else {
+        down(q, bits)
+    }
+}
+
 /// `q` rounded up to the grid of `2^-bits`.
 pub fn up(q: &Q, bits: u32) -> Q {
     dyadic((q.numer() << bits).div_ceil(&q.denom()), u64::from(bits))
@@ -623,6 +635,23 @@ mod tests {
         let den = 10i128.pow(u32::try_from(frac.len()).unwrap());
         let num: i128 = format!("{int}{frac}").parse().unwrap();
         Q::from_i128(num, den).unwrap()
+    }
+
+    /// The held cut is mirror-symmetric and never grows a magnitude.
+    #[test]
+    fn the_cut_toward_zero_is_odd_and_never_grows() {
+        for x in [
+            dec("0.3"),
+            dec("-0.3"),
+            dec("2.71828"),
+            dec("-1.41421"),
+            Q::ZERO,
+        ] {
+            let c = toward_zero(&x, 7);
+            assert_eq!(toward_zero(&(-&x), 7), -&c);
+            assert!(c.abs() <= x.abs());
+            assert!((&x - &c).abs() < Q::new(1, 128).unwrap());
+        }
     }
 
     #[test]

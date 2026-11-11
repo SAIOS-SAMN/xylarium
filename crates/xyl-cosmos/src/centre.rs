@@ -29,7 +29,7 @@
 //! refuses.
 
 use crate::bounce::Bounce;
-use xyl_core::certified::{down, exp, Encl};
+use xyl_core::certified::{exp, toward_zero, Encl};
 use xyl_core::Q;
 
 const BITS: u32 = 64;
@@ -161,7 +161,7 @@ impl Core {
 
     /// Advances `dt` rings of deep time: the reservoir returns
     /// `reservoir x (1 - exp(-dt / tau))` to the bulge as jets, the lower
-    /// bound rounded down to the 2^-40 grid. Returns the amount returned.
+    /// bound cut toward zero to the 2^-40 grid. Returns the amount returned.
     pub fn run(&mut self, dt: &Q) -> Q {
         if self.reservoir.signum() <= 0 || dt.signum() <= 0 {
             return Q::ZERO;
@@ -169,7 +169,7 @@ impl Core {
         let x = dt.checked_div(&self.episode).unwrap_or(Q::ZERO);
         let kept = exp(&(-x), BITS);
         let share = Encl::exact(Q::ONE).sub(&kept);
-        let back = down(
+        let back = toward_zero(
             &Encl::exact(self.reservoir.clone()).mul(&share).lo,
             GRID_BITS,
         )
@@ -181,7 +181,7 @@ impl Core {
 
     /// Advances the far core's clock by `dt` rings: its engine releases
     /// `held x (1 - exp(-dt / tau))` of the throat's matter into the far
-    /// universe (the lower bound rounded down to the 2^-40 grid), and the
+    /// universe (the lower bound cut toward zero to the 2^-40 grid), and the
     /// hole's mass falls by that amount, never below its formation mass.
     /// Returns the amount released, or `None` where `Bounce::of` refuses.
     pub fn far_run(&mut self, dt: &Q) -> Option<Q> {
@@ -194,7 +194,7 @@ impl Core {
         }
         let x = dt.checked_div(&self.episode).unwrap_or(Q::ZERO);
         let share = Encl::exact(Q::ONE).sub(&exp(&(-x), BITS));
-        let out = down(
+        let out = toward_zero(
             &Encl::exact(self.far.held.clone()).mul(&share).lo,
             GRID_BITS,
         )

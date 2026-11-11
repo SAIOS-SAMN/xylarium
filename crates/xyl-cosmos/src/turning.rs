@@ -124,7 +124,7 @@ fn deficit_si(inside_kg: &Q, r_m: &Q) -> Q {
 }
 
 /// The turning law at `r_m` metres about `inside_kg` kilograms in degrees
-/// per ring: [`turning`] in core units times 180 / pi, rounded down to the
+/// per ring: [`turning`] in core units times 180 / pi, cut toward zero to the
 /// 2^-60 grid. Boundary, for the system and body layers not yet in core
 /// units; `package::Si::rad_s` reads it in radians per SI second. A
 /// non-positive radius, or no founding, gives zero.
@@ -134,7 +134,7 @@ pub fn turning_si(inside_kg: &Q, r_m: &Q) -> Q {
     let deg_ring = (&turning_rg(&m, &r) * &Q::int(180))
         .checked_div(&pi)
         .unwrap_or(Q::ZERO);
-    xyl_core::certified::down(&deg_ring, 60)
+    xyl_core::certified::toward_zero(&deg_ring, 60)
 }
 
 /// A world's year (rings): one turn (360 degrees) at `a_au` about
@@ -300,6 +300,14 @@ mod tests {
         let si = turning_si(&kg, &metres);
         let back = (&si * &pi).checked_div(&Q::int(180)).unwrap();
         let gap = (&back - &exact).abs();
-        assert!(gap <= &exact * &xyl_core::ratio!(1, 1 << 40), "{gap}");
+        // The SI form is cut toward zero to 2^-60 degrees per ring (a declared
+        // ruler, #210): one grain of it, back in core units, on top.
+        let grain = (&pi * &xyl_core::ratio!(1, 1 << 60))
+            .checked_div(&Q::int(180))
+            .unwrap();
+        assert!(
+            gap <= &(&exact * &xyl_core::ratio!(1, 1 << 40)) + &grain,
+            "{gap}"
+        );
     }
 }

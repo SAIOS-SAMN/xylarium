@@ -9,7 +9,7 @@ use super::{
 };
 use crate::chain::Place;
 use crate::origin::Origin;
-use xyl_core::certified::{cos_sin_turns, down, Encl};
+use xyl_core::certified::{cos_sin_turns, toward_zero, Encl};
 use xyl_core::dyadic::Dy;
 use xyl_core::measure;
 use xyl_core::units::Tier;
@@ -62,7 +62,7 @@ pub struct Star {
     pub r: Q,
     /// Birth time (rings after the origin), rounded to the grid.
     pub born: Q,
-    /// Mass (core masses), rounded down to the 2^-64 grid ([`imf`]).
+    /// Mass (core masses), cut toward zero to the 2^-64 grid ([`imf`]).
     pub mass: Q,
     /// A binary's companion mass (core masses); zero for a single star.
     pub companion: Q,
@@ -291,7 +291,7 @@ impl Class {
     }
 }
 
-/// The grid star masses are rounded down to (core masses): 2^-64.
+/// The grid star masses are cut toward zero to (core masses): 2^-64.
 const MASS_BITS: u32 = 64;
 
 /// A sample star's place in its galaxy before scaling: home-equivalent
@@ -355,10 +355,10 @@ fn placement(local: u64, nucleus: bool) -> Option<Placement> {
 /// `omega = delta bell / r` over the home-equivalent mass inside `radius`
 /// (core masses) times the hole ratio, at the scaled radius
 /// `radius x scale` (galaxy units); both radii are at least 1e-6 galaxy
-/// rings and rounded down to the 2^-60 grid.
+/// rings and cut toward zero to the 2^-60 grid.
 fn turning_rate(radius: Dy, scale: Dy, mass_ratio: Dy) -> Dy {
-    let r_q = down(&radius.max(Dy::sci(1, -6)).to_q(), 60);
-    let own_r = down(&(radius * scale).max(Dy::sci(1, -6)).to_q(), 60);
+    let r_q = toward_zero(&radius.max(Dy::sci(1, -6)).to_q(), 60);
+    let own_r = toward_zero(&(radius * scale).max(Dy::sci(1, -6)).to_q(), 60);
     Dy::from_q(&crate::turning::turning(
         &(&inside_mass(&r_q) * &mass_ratio.to_q()),
         &own_r,
@@ -417,7 +417,7 @@ pub fn star(seed: u64, origin: &Origin, n: u64) -> Option<Star> {
     };
     let rate = turning_rate(radius, scale, mass_ratio);
     let stands_for = stands_for(origin, nucleus);
-    let r = down(&radius.to_q(), if nucleus { 60 } else { GRID_BITS });
+    let r = toward_zero(&radius.to_q(), if nucleus { 60 } else { GRID_BITS });
     // Birth: the ring's first light, then a draw along the ring's
     // star-formation history (`chem::Chemistry::birth_along`), so a ring
     // forms stars throughout its history; without chemistry, first light.
@@ -429,10 +429,10 @@ pub fn star(seed: u64, origin: &Origin, n: u64) -> Option<Star> {
     let born = crate::chem::Chemistry::cached(origin)
         .map(|c| c.birth_along(&r, &first, u_born))
         .unwrap_or(first);
-    let born = down(&born, GRID_BITS);
+    let born = toward_zero(&born, GRID_BITS);
     // The mass is read at the home-equivalent radius: a homologue's star is
     // cut from the same piece of the chain as the home galaxy's.
-    let mass = down(&imf(&u_mass.to_q(), &r)?.mid(), MASS_BITS);
+    let mass = toward_zero(&imf(&u_mass.to_q(), &r)?.mid(), MASS_BITS);
     if mass.signum() <= 0 {
         return None;
     }
@@ -440,7 +440,7 @@ pub fn star(seed: u64, origin: &Origin, n: u64) -> Option<Star> {
     // (0.1 + 0.9 u_comp) times the star's mass.
     // Stand-in S006: A star is binary when u_bin < 1/3, its companion (0.1 + 0.9 u) of the mass.
     let companion = if u_bin < xyl_core::dyadic!(1, 3) {
-        down(
+        toward_zero(
             &(&mass * &(&xyl_core::ratio!(1, 10) + &(&xyl_core::ratio!(9, 10) * &u_comp.to_q()))),
             GRID_BITS,
         )
@@ -497,7 +497,7 @@ fn third_turns() -> Q {
 pub(crate) fn tilt_of(u: Dy) -> Option<xyl_core::rotor::Direction> {
     let theta = measure::angle_holding(measure::UNIVERSE_N, Dy::ONE - u);
     let (s, c) = (Dy::pi() * theta).sin_cos();
-    let fix = |x: Dy| Dy::from_q(&down(&x.max(Dy::ZERO).to_q(), GRID_BITS));
+    let fix = |x: Dy| Dy::from_q(&toward_zero(&x.max(Dy::ZERO).to_q(), GRID_BITS));
     xyl_core::rotor::Direction::drawn(fix(c), fix(s))
 }
 
@@ -505,7 +505,7 @@ pub(crate) fn tilt_of(u: Dy) -> Option<xyl_core::rotor::Direction> {
 /// (cos, sin) rounded to the grid; `None` where both round to zero.
 pub(crate) fn node_of(u: Dy) -> Option<xyl_core::rotor::Direction> {
     let (s, c) = (Dy::pi() * u).sin_cos();
-    let fix = |x: Dy| Dy::from_q(&down(&x.to_q(), GRID_BITS));
+    let fix = |x: Dy| Dy::from_q(&toward_zero(&x.to_q(), GRID_BITS));
     xyl_core::rotor::Direction::drawn(fix(c), fix(s))
 }
 

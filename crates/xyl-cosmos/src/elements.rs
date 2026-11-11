@@ -27,7 +27,7 @@
 //! abundances and channels, atomic weight and Goldschmidt class remain
 //! catalogue values not yet derived. Terms: capture chain (docs/glossary.md).
 
-use xyl_core::certified::{down, ln, Encl};
+use xyl_core::certified::{ln, toward_zero, Encl};
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 
@@ -481,7 +481,7 @@ fn build_table() -> Result<Vec<Element>, String> {
                 .mul(&Encl::exact(Q::int(i64::from(e.z) - 92)))
                 .neg();
             let f = xyl_core::certified::exp_of(&x, BITS);
-            e.abundance = down(&Encl::exact(u.abundance.clone()).mul(&f).mid(), GRID_BITS);
+            e.abundance = toward_zero(&Encl::exact(u.abundance.clone()).mul(&f).mid(), GRID_BITS);
         }
         out.push(e);
     }

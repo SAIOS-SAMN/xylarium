@@ -552,7 +552,7 @@ impl Substrate {
                 .unwrap_or_default())
             .to_q();
             let taken = &(&turning * &m.checked_div(&hold).unwrap_or(Q::ZERO)) * &share;
-            turning = &turning - &xyl_core::certified::down(&taken, 64);
+            turning = &turning - &xyl_core::certified::toward_zero(&taken, 64);
             hold = &hold - &m;
             a = turning.checked_div(&(&hold * &hold)).unwrap_or(Q::ZERO);
             cohorts.push(Cohort {

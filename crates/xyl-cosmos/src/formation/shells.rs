@@ -11,14 +11,14 @@ use xyl_core::Q;
 /// A kind on the cascade: (atomic number, amount, mass per nucleus).
 type Weighed = (u32, Q, Q);
 
-/// `x` rounded down to the 2^-64 grid.
+/// `x` cut toward zero to the 2^-64 grid.
 fn on_grid(x: &Q) -> Q {
-    xyl_core::certified::down(x, 64)
+    xyl_core::certified::toward_zero(x, 64)
 }
 
-/// `x` rounded down to the nucleus grain, 2^-232.
+/// `x` cut toward zero to the nucleus grain, 2^-232.
 fn nucleus_grain(x: &Q) -> Q {
-    xyl_core::certified::down(x, 232)
+    xyl_core::certified::toward_zero(x, 232)
 }
 
 /// A kind's mass per nucleus at capture: its protons, `Z`. The bounce

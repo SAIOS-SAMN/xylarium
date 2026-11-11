@@ -62,7 +62,7 @@ pub fn curved_reach(r: &Q, rho: &Q) -> Q {
         return r.clone();
     };
     let (_, s) = xyl_core::certified::cos_sin_turns(&Encl::exact(turns));
-    xyl_core::certified::down(&(rho * &s.mid()), 64)
+    xyl_core::certified::toward_zero(&(rho * &s.mid()), 64)
 }
 
 /// The pulse's axes: the axis plane (the pole axis, the filament, first) and

@@ -40,7 +40,7 @@
 //!
 //! Outputs: `Lighting` (rings to first light, lit share, per-piece record;
 //! fed into the founding), `Hold`, `Kind`.
-//! Invariants: every value is an exact `Q`, rounded down to the 2^-64 grid
+//! Invariants: every value is an exact `Q`, cut toward zero to the 2^-64 grid
 //! where noted, with `pi` and `ln 2` as certified midpoints; empty beads,
 //! spans and mixes yield `None` or empty results; results are deterministic
 //! (the parallel meetings in `founding_shells` are collected in order).

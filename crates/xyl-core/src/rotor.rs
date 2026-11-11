@@ -22,7 +22,7 @@
 //! - [`angle_between`], the certified angle between two exact directions.
 //!
 //! Invariants: a turn's direction is its half-angle, `degrees / 720` of a
-//! turn, rounded down to the grid of `2^-bits` once; after that every rotor
+//! turn, cut toward zero to the grid of `2^-bits` once; after that every rotor
 //! and every turned exact vector is exact, at any scale of the versor (the
 //! sandwich is divided by `V V~`, a positive scalar for a product of turns).
 //! A turn whose plane is not two distinct axes within `cga::MAX_N`, and the
@@ -30,7 +30,7 @@
 //! rotor holds its dimension `N` in its type: its planes lie within its `N`
 //! axes, so it turns an `N`-vector without refusal.
 
-use crate::certified::{cos_sin_turns, down, Encl};
+use crate::certified::{cos_sin_turns, toward_zero, Encl};
 use crate::cga::{base_axis, Mv};
 use crate::dyadic::Dy;
 use crate::Q;
@@ -119,7 +119,7 @@ fn plane(from: usize, toward: usize, n: usize) -> Option<Mv> {
 /// `2^-bits`.
 fn half_direction(degrees: &Q, bits: u32) -> (Q, Q) {
     let (c, s) = cos_sin_turns(&Encl::exact(degrees.over(crate::nonzero!(720))));
-    (down(&c.mid(), bits), down(&s.mid(), bits))
+    (toward_zero(&c.mid(), bits), toward_zero(&s.mid(), bits))
 }
 
 impl<const N: usize> Rotor<N> {

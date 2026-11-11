@@ -39,7 +39,7 @@ fn unit(rng: &mut Stream) -> Q {
 /// A drawn value fixed as one exact rational: the 2^-40 grid point at or
 /// below its enclosure's midpoint (within 2^-40 of the true draw).
 pub(crate) fn fix(e: &Encl) -> Q {
-    xyl_core::certified::down(&e.mid(), GRID_BITS)
+    xyl_core::certified::toward_zero(&e.mid(), GRID_BITS)
 }
 
 /// One step of the 2^-40 grid.
@@ -50,7 +50,7 @@ fn grid_step() -> Q {
 /// A spin clamped strictly inside (0, 1) on the 2^-40 grid.
 pub fn clamp_spin(spin: &Q) -> Q {
     let step = grid_step();
-    xyl_core::certified::down(spin, GRID_BITS)
+    xyl_core::certified::toward_zero(spin, GRID_BITS)
         .max(step.clone())
         .min(&Q::ONE - &step)
 }

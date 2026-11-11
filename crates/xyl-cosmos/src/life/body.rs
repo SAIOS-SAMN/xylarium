@@ -32,6 +32,7 @@ pub(super) fn growing(deg: i64) -> Dy {
     let eps = (Dy::int(deg) * Dy::pi())
         .div(&(Dy::int(180)))
         .unwrap_or_default();
+    // Stand-in S073: The growing share is read over 9 latitude bands and 48 days.
     let days = 48i64;
     let (mut total, mut weight) = (Dy::ZERO, Dy::ZERO);
     for i in 0..9i64 {
@@ -117,6 +118,7 @@ impl Body {
     /// A world's body at the settled age: tilt and tidal lock are read from
     /// the spin path at that age (upright and unlocked without a path).
     pub fn of(set: &Setting) -> Body {
+        // Stand-in S077: Tilt and lock are read once at the 3 Gyr settled age.
         let age = Dy::from_q(&crate::systems::settled_gyr());
         let (locked, cos) = match set.path {
             Some(p) => (age >= p.lock_gyr, p.cos_obliquity_at(age)),
@@ -166,6 +168,7 @@ pub fn foragers(ms: &[Medium], region: Region, body: &Body, ctx: &Ctx) -> Dy {
         return Dy::ZERO;
     };
     let area = body.radius * med.band;
+    // Stand-in S076: A locked world grows half the year and a giant's gravity is radius / 4.
     let season = if body.locked {
         xyl_core::dyadic!(1, 2)
     } else {
@@ -177,11 +180,13 @@ pub fn foragers(ms: &[Medium], region: Region, body: &Body, ctx: &Ctx) -> Dy {
         } else {
             Dy::ONE
         };
+    // Stand-in S074: R-strategy where the star is below 1/2 sun, the red-dwarf flare rule.
     let r_strategist = seasonal(body.tilt) || body.star_mass < xyl_core::dyadic!(1, 2);
     // Body mass relative to a K-strategist's on a unit world is the ratio of
     // the fertility ceilings (r 2.5, K 1.2) over the world's gravity (a
     // giant's surface gravity is taken as a quarter of its radius);
     // metabolism scales as 2m / (1 + m).
+    // Stand-in S075: The r and K fertility ceilings 2.5 and 1.2 set the body mass.
     let ceiling = if r_strategist {
         xyl_core::dyadic!(5, 2)
     } else {

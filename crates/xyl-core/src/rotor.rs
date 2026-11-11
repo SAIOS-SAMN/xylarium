@@ -246,6 +246,7 @@ pub fn circle_point(degrees: &Q, bits: u32) -> Option<(Q, Q)> {
 /// rational form in general, is an enclosure. `None` for a zero direction.
 pub fn angle_between(a: &[Q; 3], b: &[Q; 3], bits: u32) -> Option<crate::certified::Encl> {
     use crate::certified::{asin_any, pi, sqrt};
+    // Stand-in S034: One unnamed plane's angle stands as the distance under every arc.
     let dot = a.iter().zip(b).fold(Q::ZERO, |acc, (x, y)| &acc + &(x * y));
     let norm2 = |v: &[Q; 3]| v.iter().fold(Q::ZERO, |acc, x| &acc + &(x * x));
     let (na, nb) = (norm2(a), norm2(b));

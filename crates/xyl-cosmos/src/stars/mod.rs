@@ -73,6 +73,7 @@ pub fn ring_per_bell(reach: Dy, hold: Dy) -> Dy {
 /// The galaxy tier's own held medium enters with the received carry
 /// (roadmap item 44).
 fn ring_at(reach: Dy) -> Dy {
+    // Stand-in S027: A star's ring is read about the universal core's hold at its galaxy reach.
     ring_per_bell(reach, Dy::ONE)
 }
 

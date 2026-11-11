@@ -638,6 +638,7 @@ impl<'g> Universe<'g> {
         let mut out = std::collections::BTreeMap::new();
         for (i, step) in crate::sync::living(self) {
             let p = &self.cosmic.peoples[i];
+            // Stand-in S106: Ancient peoples are skipped from discord.
             if p.ancient {
                 continue;
             }
@@ -659,8 +660,10 @@ impl<'g> Universe<'g> {
                 crate::growth::generation_yr(&p.traits, &rulers),
             );
             let off = xyl_core::shares::deficit_dy(reach, mouth);
+            // Stand-in S108: An unknown z reads 1, so the discord is 0.
             let forget = Dy::ONE - step.z.unwrap_or(Dy::ONE);
             let joined = net.holds_mouth(p.star);
+            // Stand-in S107: Holding a ley mouth switches discord off.
             let d = if joined { Dy::ZERO } else { off * forget };
             // A people that folds space breaches the network: the breach
             // weighs its folded energy against its constellation's lawful

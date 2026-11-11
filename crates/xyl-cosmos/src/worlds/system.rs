@@ -67,6 +67,7 @@ pub fn settings<'a>(gal: &Galaxy, path: &[u64], sys: &'a System, star: &Star) ->
                         * Dy::from_q(&crate::package::Si::world_radius_m()),
                     e0: e,
                     e_forced: e,
+                    // Stand-in S043: Every moon is locked from birth, upright, with tau_e = 0.
                     tau_e: Dy::ZERO,
                     cos_obliquity: Dy::ONE,
                     lock_gyr: Dy::ZERO,

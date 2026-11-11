@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+"""The stand-ins' register and the code agree (docs/assumptions.md, #189).
+
+1. Every open register row names the files (backticked, one or more) that
+   use the stand-in; each exists and carries the marker `Stand-in S###`.
+2. Every marker in the code has an open register row naming that file.
+3. Every row names an issue; IDs are unique.
+4. A remediated row carries no marker in the code.
+
+Usage: scripts/check-stand-ins   (from the repository root; exit 1 on failure)
+"""
+
+import glob
+import os
+import re
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.chdir(ROOT)
+
+row = re.compile(
+    r"^\| (S\d{3}) \| [^|]+ \| ([^|]+) \|(?:[^|]*\|){4} \[#\d+\]\([^)]*\) \| (open|remediated[^|]*) \|$"
+)
+path_in = re.compile(r"`([^`]+\.rs)`")
+marker = re.compile(r"Stand-in (S\d{3})\b")
+failures = []
+rows = {}
+for i, line in enumerate(open("docs/assumptions.md", encoding="utf-8"), 1):
+    if not line.startswith("| S"):
+        continue
+    m = row.match(line.rstrip("\n"))
+    if not m:
+        failures.append(f"docs/assumptions.md:{i}: malformed register row")
+        continue
+    sid, site, state = m.groups()
+    paths = path_in.findall(site)
+    if sid in rows:
+        failures.append(f"docs/assumptions.md:{i}: {sid} listed twice")
+    if not paths:
+        failures.append(f"docs/assumptions.md:{i}: {sid} names no source file")
+    rows[sid] = (set(paths), state.startswith("open"))
+    for path in paths:
+        if not os.path.isfile(path):
+            failures.append(f"docs/assumptions.md:{i}: {sid} names a missing file {path}")
+
+found = {}
+for path in sorted(glob.glob("crates/*/src/**/*.rs", recursive=True)):
+    for i, line in enumerate(open(path, encoding="utf-8"), 1):
+        for sid in marker.findall(line):
+            found.setdefault(sid, set()).add(path)
+            if sid not in rows:
+                failures.append(f"{path}:{i}: {sid} has no register row")
+            elif not rows[sid][1]:
+                failures.append(f"{path}:{i}: {sid} is remediated; remove the marker")
+            elif path not in rows[sid][0]:
+                failures.append(f"{path}:{i}: {sid} is not registered in {path}")
+
+for sid, (paths, is_open) in sorted(rows.items()):
+    for path in sorted(paths):
+        if is_open and path not in found.get(sid, set()):
+            failures.append(f"{path}: {sid} is open in the register but unmarked in the code")
+
+for msg in failures:
+    print(msg)
+print(f"check-stand-ins: {len(rows)} stand-ins, {len(failures)} problems")
+sys.exit(1 if failures else 0)

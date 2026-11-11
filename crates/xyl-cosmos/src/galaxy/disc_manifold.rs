@@ -141,6 +141,7 @@ pub fn first_star_mass(sub: &crate::circuit::Substrate) -> Option<Q> {
 /// founding's own reference star, for readings that name no particular
 /// star. Zero before a founding or where no piece lights.
 pub fn first_star_compactness() -> Dy {
+    // Stand-in S028: The founding's reference star supplies compactness for unnamed stars.
     first_cut()
         .map(|cut| Dy::from_q(&crate::disc::rim_share(&(&cut.star * &cut.cloud), &cut.rim)))
         .unwrap_or(Dy::ZERO)

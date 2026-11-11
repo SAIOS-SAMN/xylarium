@@ -250,6 +250,7 @@ pub struct State {
 /// in the universe's stellar scales (not M^0.8, not the fourth root of
 /// L / R^2).
 pub fn star_t(star_mass: Dy, lum: Dy, sc: &Scales) -> Dy {
+    // Stand-in S048: Star temperature is 5772 L / R, the Sun's, with a 0.08 radius floor.
     let radius = (star_mass.div(&sc.star_mass).unwrap_or_default()).max(xyl_core::dyadic!(2, 25))
         * sc.star_radius;
     (Dy::int(5772) * lum.max(Dy::sci(1, -9)))
@@ -268,6 +269,7 @@ pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
     if set.world.giant {
         // A giant's state is its cloud tops from radiation alone; no surface,
         // interior or escape is solved.
+        // Stand-in S052: A giant's state is the blank at 1000 bar and albedo 0.3.
         return blank;
     }
     let c = constants();
@@ -303,6 +305,7 @@ pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
     // Exosphere temperature: the thermosphere factor times the equilibrium
     // temperature times 2 act / (1 + act) (1 at activity 1, approaching 2 for
     // a saturated star), times 3/2 with no magnetic field.
+    // Stand-in S050: The exosphere is 4 x T_eq, and x 3/2 without a field.
     let t_exo = c.thermosphere
         * t_eq0
         * crate::laws::share2(act)
@@ -333,6 +336,7 @@ pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
         .unwrap_or_default();
     let hpm = heat.div(&mass.max(Dy::sci(1, -6))).unwrap_or_default();
     let hot = c.hot_ev * sc.chem;
+    // Stand-in S049: No path reads cos(obliquity) = 0.7071, a 45 degree tilt.
     let cos_obl = set
         .path
         .map(|p| p.cos_obliquity_at(age))
@@ -380,6 +384,7 @@ pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
         albedo,
         g,
         // The air column attenuates light as exp(-p / 10 bar).
+        // Stand-in S053: Surface light is attenuated by exp(-p / 10 bar).
         light: flux * (Dy::ONE - albedo) * (-(xyl_core::dyadic!(1, 10) * p_bar)).exp(),
         ..blank
     }
@@ -484,6 +489,7 @@ fn photolyse(gas: &mut Mix, uv: Dy) {
     if uv <= constants().photolysis_uv {
         return;
     }
+    // Stand-in S054: A fixed photolysis list calibrated on the Sun and Titan.
     for (from, to, ratio) in [
         (Species::NH3, Species::N2, xyl_core::dyadic!(28, 34)),
         (Species::CH4, Species::CO2, xyl_core::dyadic!(44, 16)),

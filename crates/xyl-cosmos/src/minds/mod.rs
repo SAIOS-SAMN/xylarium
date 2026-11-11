@@ -159,12 +159,14 @@ fn expect(l: &life::Living, born: Dy, t0: Dy, curve: &mut [Dy], ctx: &Ctx) {
             .map(|e| e.min(horizon_gyr()))
             .unwrap_or_else(horizon_gyr);
         let steril = if ch.hazard.signum() > 0 && horizon > t0 {
+            // Stand-in S079: The sterilising pulse falls at its expected time.
             let at = t0 + (Dy::ONE).div(&ch.hazard).unwrap_or_default();
             (at < horizon).then_some(at)
         } else {
             None
         };
         let means: Vec<Dy> = ch.ladder.steps.iter().map(|s| s.mean_gyr).collect();
+        // Stand-in S082: The forecast climbs without arrivals, unlike lineage.
         let got = life::climb(&means, t0, horizon, steril, ch.mu, None);
         if got.times.len() == means.len() {
             if let Some(&t) = got.times.last() {

@@ -75,6 +75,7 @@ impl Node {
     pub fn place(&self, t: Dy, r: &Q) -> Place {
         match &self.kind {
             Kind::Core(sh) => sh.place_at(t, r),
+            // Stand-in S005: "progenitor star" names the star a remnant collapsed from.
             Kind::Stellar(s) => s.place(t, r),
         }
     }
@@ -121,6 +122,7 @@ pub fn nodes_among(seed: u64, origin: &Origin, candidates: &[u64]) -> Vec<Node> 
             continue;
         }
         let life = Dy::from_q(&crate::stars::life(&seq, s.compactness(), s.reach_units()));
+        // Stand-in S001: Every igniting star is made a hole at its first step's end.
         let born = Dy::from_q(&s.born) + life;
         // Remnant mass: the stellar mass the sample star stands for times
         // the share of the hold no step of its sequence transduced
@@ -128,6 +130,7 @@ pub fn nodes_among(seed: u64, origin: &Origin, candidates: &[u64]) -> Vec<Node> 
         // read in suns as the cores' masses are (boundary
         // `galaxy::suns_of_core_masses`).
         let stands_for = crate::galaxy::suns_of_core_masses(&s.stands_for.to_q());
+        // Stand-in S002: The sample star's whole represented population becomes one hole here.
         let mass = Dy::from_q(&stands_for)
             * Dy::from_q(&crate::stars::remnant(
                 &seq,
@@ -221,6 +224,7 @@ pub fn relays(nodes: &[Node], t: Dy) -> Vec<Relay> {
             None => from_core[i],
         };
         let detour = route - from_core[i];
+        // Stand-in S026: Relay continuity is cos(2 pi detour / lambda), every hole in phase.
         let continuity = ((Dy::int(2) * Dy::pi() * detour)
             .div(&lambda)
             .unwrap_or_default())
@@ -247,6 +251,7 @@ pub fn hear(place: &Place, nodes: &[Node], relays: &[Relay], t: Dy) -> Option<He
         }
         let d = place.arc_kpc(&node.place(t, &r), &r).max(Dy::sci(1, -6));
         // Weight I = M / d (first degree, in place of M / d^2).
+        // Stand-in S025: Intensity falls as M / d and every bell sums as one flat phasor.
         let i = node.mass.div(&d).unwrap_or_default();
         // Path: the route along the relay chain to this node, plus the arc
         // from it to the place.

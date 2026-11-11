@@ -215,6 +215,7 @@ impl Field {
         let Some(world) = w.system.worlds.get(p.world) else {
             return Dy::ZERO;
         };
+        // Stand-in S104: Radiation is all energy absorbed per year over a, floored at 1e-6 AU.
         let a = Dy::from_q(&world.a).max(Dy::sci(1, -6));
         b.per_year(now).div(&a).unwrap_or_default()
     }
@@ -229,6 +230,7 @@ impl Field {
             self.home.resize(people + 1, None);
         }
         let home = match self.home[people] {
+            // Stand-in S105: The first nonzero radiation becomes the people's adapted home.
             None if radiation.signum() > 0 => {
                 self.home[people] = Some(radiation);
                 return Dy::ONE;

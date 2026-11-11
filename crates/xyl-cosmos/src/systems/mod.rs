@@ -180,6 +180,7 @@ impl World {
     /// ([`World::ice_share`]), so ice's rigidity holds its shape and tides.
     /// The one icy test.
     pub fn icy(&self) -> bool {
+        // Stand-in S042: A world is icy where ice exceeds 1/5.
         self.ice_share() > xyl_core::ratio!(1, 5)
     }
 }
@@ -228,6 +229,7 @@ pub fn is_world(mass: &Q, radius: &Q, icy: bool) -> bool {
 
 /// The settled age at which systems are read (Gyr).
 pub fn settled_gyr() -> Q {
+    // Stand-in S066: Systems are read at a fixed settled age of 3 Gyr.
     Q::int(3)
 }
 
@@ -484,6 +486,7 @@ fn planet(
     let (core_share, mut ices) = gas.solids(&t_form);
     let has_water = ices.iter().any(|(s, _)| *s == "H2O");
     if !has_water {
+        // Stand-in S067: Comets deliver 1e-4 x env x z with fixed Solar-System ratios.
         let late = &(&xyl_core::ratio!(1, 10_000) * env) * z;
         ices = vec![
             ("H2O", late.clone()),
@@ -517,6 +520,7 @@ fn planet(
             .max(xyl_core::ratio!(1, 1_000_000)),
     )?;
     let keep = fix(&exp(&-(grow.checked_div(&Q::int(3))?), BITS));
+    // Stand-in S068: An envelope gathers from 10 world masses, x 5.6, with a giant radius fit.
     if core >= Q::int(10) {
         let gathering = core.checked_div(&(&core + &Q::int(10)))?;
         envelope = dyadic(

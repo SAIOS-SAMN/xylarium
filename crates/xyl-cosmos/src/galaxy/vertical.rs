@@ -86,6 +86,7 @@ pub fn vertical_frequency(r: Dy) -> Dy {
 /// the star's age against the ring's cooling time.
 fn heating_share(r: Dy, born: Dy, age: Dy) -> Dy {
     let age = age.max(Dy::ZERO);
+    // Stand-in S033: The cooling time falls back to the star's birth where the ring never lights.
     let cooling = birth(&r.to_q())
         .map(|b| Dy::from_q(&b))
         .unwrap_or(born)
@@ -106,6 +107,7 @@ pub fn vertical(r: Dy, born: Dy, age: Dy, u: Dy, phase: Dy) -> Vertical {
     // ring) and the draw `vz = -sigma ln(1 - u)`, an exponential in place
     // of a Rayleigh root.
     let sigma = h * nu * heating_share(r, born, age) * share;
+    // Stand-in S009: The vertical speed is drawn through an exponential, -sigma ln(1 - u).
     let vz = sigma
         * -(Dy::ONE - u)
             .max(Dy::sci(1, -12))
@@ -121,6 +123,7 @@ pub fn vertical(r: Dy, born: Dy, age: Dy, u: Dy, phase: Dy) -> Vertical {
     };
     // Exposure: the share of the oscillation inside the layer |z| < h,
     // linear in angle; 1 when the amplitude is within the layer.
+    // Stand-in S032: The crowded layer is read as where comets and supernovae are perturbed.
     let exposure = if amp <= h {
         Dy::ONE
     } else {

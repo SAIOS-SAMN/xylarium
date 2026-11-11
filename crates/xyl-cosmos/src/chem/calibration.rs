@@ -71,6 +71,7 @@ impl Calibration {
         };
         // The Sun was born 9.2 Gyr after the origin (13.8 - 4.6), read in
         // rings: a calibration epoch, removed with `Rulers::today` in phase 5.
+        // Stand-in S071: The Sun is born at 9.2 Gyr of a 13.8 Gyr today.
         let born = crate::turning::span_in_rings(&decimal("9.2").unwrap_or(Q::ZERO));
         let at_birth = cal.model.concs(k0, &born);
         let sun = (0..cal.elements.len())

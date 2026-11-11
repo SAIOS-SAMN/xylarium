@@ -160,6 +160,7 @@ impl Focus {
 /// The experience scale U of [`wright`] and [`mastery`], in KU: U = 10 KU,
 /// the free thought of ten thousand unit minds for one year. Declared ruler.
 pub fn knowledge_unit() -> Dy {
+    // Stand-in S092: U = 10 KU, with lived share 1/20, curiosity 1/4 and pooled keep 1/2.
     Dy::int(10)
 }
 
@@ -234,6 +235,7 @@ fn ku_body_w() -> Dy {
 /// domain order (energy, materials, biology, information); each row sums to
 /// 2. Declared rulers.
 fn sense_weights(sense: &str) -> ByDomain {
+    // Stand-in S091: A per-sense table of domain weights, a game table.
     match sense {
         "chemistry" => [
             xyl_core::dyadic!(1, 8),
@@ -296,6 +298,7 @@ pub struct Profile {
 /// bits per monomer and eps0 the chemistry's copying fidelity at the body's
 /// temperature (life.rs); a plasma life has legible = 0.
 pub fn profile(t: &Traits, ctx: &Ctx) -> Profile {
+    // Stand-in S093: Profile weights are declared fractions and aquatic is a flag.
     let aquatic = matches!(t.form, "swimming" | "drifting") || t.dark || t.at == Where::UnderIce;
     let shape_w = match t.shape {
         Shape::Superorganism => xyl_core::dyadic!(3, 2),
@@ -399,6 +402,7 @@ impl Needs {
         };
         Needs {
             hunger,
+            // Stand-in S095: Births, crust, power and trade pulls read 0 until their layers exist.
             ..Needs::default()
         }
     }
@@ -465,6 +469,7 @@ impl Thinkers {
             impedance: Dy::ONE,
             needs: Needs::of(p),
             profile: profile(&p.traits, ctx),
+            // Stand-in S094: Life expectancy is set equal to one generation.
             life_yr: growth::generation_yr(&p.traits, &rul),
             fluid: Dy::ZERO,
             consciousness: Dy::ZERO,

@@ -91,6 +91,7 @@ impl Rock {
     }
     /// Tidal dissipation quality factor Q, dimensionless (100).
     pub fn tidal_q() -> Q {
+        // Stand-in S041: Tidal Q is 100 and I / MR^2 is 0.33, the Earth's values.
         Q::int(100)
     }
     /// Moment-of-inertia factor I / (M R^2), dimensionless (0.33).

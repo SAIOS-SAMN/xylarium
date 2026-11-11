@@ -94,6 +94,7 @@ fn constants() -> &'static Constants {
         // Open rulers, to be derived from each world's chemistry: the
         // information a mind's blueprint holds (bits), the body built per
         // monomer of genome, and the mass of a mind-bearing body (kg).
+        // Stand-in S080: I_mind, body_per_monomer, sterilise_at_r0, discrimination: open rulers.
         i_mind: Dy::sci(1, 9),
         body_per_monomer: Dy::sci(1, 3),
         m_mind_kg: Dy::int(10),
@@ -143,6 +144,7 @@ pub fn probe_ages(home: &Home, ctx: &Ctx) -> Vec<Dy> {
 /// The 500 of Franklin's 50/500 rule: the population size that keeps a
 /// people's evolutionary potential.
 pub fn viable() -> Dy {
+    // Stand-in S098: A viable people is 500 bodies.
     Dy::int(500)
 }
 

@@ -147,6 +147,7 @@ pub fn orbits(star_kg: &Q, worlds: &[&World], rng: &mut Stream) -> Vec<Orbit> {
                 gaps.push((a2 - a1).checked_div(&(a2 + a1)).unwrap_or(Q::ONE));
             }
         }
+        // Stand-in S040: A world with no neighbour takes an eccentricity cap of 9/10.
         let cap = gaps
             .iter()
             .min()
@@ -170,10 +171,12 @@ pub fn orbits(star_kg: &Q, worlds: &[&World], rng: &mut Stream) -> Vec<Orbit> {
         // world's stream stands where it stood.
         let _ = rng.next_u64();
         let obliquity = world_tilt(w);
+        // Stand-in S039: A world with no tilt read stands upright, cos(obliquity) = 1.
         let cos_obliquity = obliquity
             .as_ref()
             .and_then(|eps| xyl_core::rotor::circle_point(eps, 40))
             .map_or(Q::ONE, |(c, _)| c);
+        // Stand-in S038: A world's birth spin is (0.1 + 0.4 u) of break-up.
         let share = &xyl_core::ratio!(1, 10)
             + &(&xyl_core::ratio!(4, 10) * &Dy::unit(rng.next_u64()).to_q());
         let icy = w.icy();

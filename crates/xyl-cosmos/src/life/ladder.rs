@@ -163,6 +163,7 @@ pub fn ladder(m: &Medium, area_m2: Dy, ctx: &Ctx) -> Option<Ladder> {
 /// the field to persist.
 fn dormant_rate(m: &Medium, ctx: &Ctx) -> Dy {
     if m.solvent == Solvent::Plasma {
+        // Stand-in S081: A dormant plasma pattern is lost at 1 per second.
         return Dy::ONE;
     }
     let c = constants();

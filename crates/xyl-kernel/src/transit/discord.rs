@@ -102,6 +102,7 @@ impl Network {
             .min(c);
             speed > c - v_e.clamp(Dy::ZERO, c)
         });
+        // Stand-in S109: A fold comes once per generation; worth and the ftl switch are booleans.
         if !cosmic.gal.sc.ftl || self.holds_mouth(p.star) || !worth || at <= since {
             if self.folds.contains_key(&i) {
                 self.folds.insert(i, (entry.0, at.max(since)));
@@ -130,6 +131,7 @@ impl Network {
 
     /// Returns whether the constellation of `star` holds a ley mouth.
     pub fn holds_mouth(&self, star: u64) -> bool {
+        // Stand-in S107: J, holding a ley mouth, is 0 or 1 and switches discord off.
         let Some(c) = self.of.get(&star) else {
             return false;
         };

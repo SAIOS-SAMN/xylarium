@@ -110,6 +110,7 @@ fn passages(u: &Universe<'_>, k: usize) -> String {
         .filter(|p| p.ancient && p.population.signum() > 0)
         .take(3)
     {
+        // Stand-in S113: Observe reports passages at best_spec, not the people's drive.
         let spec = best_spec(&u.cosmic, p);
         let esc = home_escape(&u.cosmic, p);
         let mut near: Vec<(Dy, &xyl_kernel::cosmic::People)> = u

@@ -238,6 +238,7 @@ impl Chemistry {
         let sfr = ring.sfr.at(&dt).mid();
         let window = crate::turning::span_in_rings(&decimal("0.1").unwrap_or(Q::ZERO));
         let formed = &(&(&sfr * &pi(BITS).mid()) * &decimal("90000").unwrap_or(Q::ZERO)) * &window;
+        // Stand-in S072: Mergers are 2e-5 per sun over 300 pc and 0.1 Gyr, a Poisson count drawn.
         let expect = &decimal("2.0e-5").unwrap_or(Q::ZERO) * &formed;
         if expect.signum() <= 0 {
             return Some(&Q::ONE - &recent);

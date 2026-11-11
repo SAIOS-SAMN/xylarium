@@ -921,6 +921,7 @@ impl Substrate {
     /// hold a bead's ring, a galaxy's circulation and the ocean's carry are
     /// read about. Exact.
     pub fn held_within(&self, r: &Q) -> Q {
+        // Stand-in S036: One of two interim models of the hold inside a reach.
         self.beads
             .iter()
             .filter(|b| b.reach < *r)

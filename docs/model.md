@@ -864,7 +864,7 @@ Ruled 2026-11-11 ([#183](https://github.com/SAIOS-SAMN/xylarium/issues/183)); bu
     (`hopf::tilt`), one generator, since a complex-linear mixing of planes
     leaves the common phase unchanged (`T K T~ = K`).
   - The tilt's faces are read off the motion, `c = 1 - eps / 90` and
-    `d = eps / 90` (`hopf::tilt_faces`: the overlap law on the share circle,
+    `d = eps / 90` (`hopf::tilt_faces_l1`: the overlap law on the share circle,
     `psi = 2 eps`).
   - Its natural balance is where those faces equal the charge's,
     `eps* = 90 pi` degrees (`hopf::tilt_equilibrium`), restoring on both
@@ -878,9 +878,21 @@ Ruled 2026-11-11 ([#183](https://github.com/SAIOS-SAMN/xylarium/issues/183)); bu
   (`P . e1 e2 = 0`), so the founding reads unchanged; that is the absence
   of the tilt, not a law. The tilt enters once the parent hole's charge
   (`p / w`) is read, and then the source carries `sin eps (P . e3 e2)`.
-  Next come the bells (the hole's spin tilted from its orbit normal) and
-  the worlds (`eps*` replacing the drawn obliquity and `life::body`'s
-  `tilt > 23`).
+  The bells and the worlds read it (ruled 2026-11-11, the bounce held
+  until the parent's charge is derived, and `bounce::torsion_share` on the
+  drawn spin until then):
+  - A stellar hole's spin axis stands `eps*` from its orbit normal
+    (`field::stellar_tilt`, `field::stellar_axis`). The charge is its
+    progenitor's held mixture's proton share (`circuit::mix_weights`), and
+    `delta` is the progenitor's compactness, the bound share at a star. The
+    tilt turns the pole toward the line of nodes.
+  - A world's tilt is `eps*` of its matter's proton share
+    (`sum m_i Z_i / A_i` over `sum m_i`) and its held face at its rim,
+    `m / (R + m)` in `r_g` (`bodies::world_tilt`). It replaces the drawn
+    obliquity.
+  - A world is seasonal where the tilt's passed face exceeds its kept one,
+    past the faces' equator at 45 degrees (`life::seasonal`). It replaces
+    `life::body`'s `tilt > 23`, Earth's number, in the r-strategy.
 - **Open.** For the plane-pair products, which torus is
   inside is set by the share split; a fibre on several plane pairs needs
   its winding on each.

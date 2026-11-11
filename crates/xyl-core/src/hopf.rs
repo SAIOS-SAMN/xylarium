@@ -39,7 +39,7 @@
 //!   push on xylarium's orientation, `g = delta`); the axis tilt, a turn of
 //!   the pole axis toward the open charge's isoclinic plane ([`tilt`]),
 //!   whose faces are read off the motion as `c = 1 - eps / 90`,
-//!   `d = eps / 90` ([`tilt_faces`]); its natural balance, where the tilt's
+//!   `d = eps / 90` ([`tilt_faces_l1`]); its natural balance, where the tilt's
 //!   faces equal the charge's, `eps* = 90 pi` degrees
 //!   ([`tilt_equilibrium`]); and the charged spin
 //!   `K = delta (T B_0 T~ + sum_{q=1..5} B_q)` ([`charged_spin`]), its
@@ -73,16 +73,15 @@ pub fn holonomy(delta: &Q) -> Option<Q> {
     within_share(delta).then(|| delta * &Q::int(360))
 }
 
-/// The open charge of a body of `p` protons in `w` nucleons whose held face
-/// is `delta`: `pi = (p / w) (1 - delta)`, LAW-COUPLING v2's push on
-/// xylarium's orientation (protons held, `g = delta`). `None` for `w = 0`,
-/// `p > w` or `delta` outside `[0, 1]`.
-pub fn open_charge(p: u32, w: u32, delta: &Q) -> Option<Q> {
-    if p > w || !within_share(delta) {
+/// The open charge of a body whose proton share is `p / w` (protons over
+/// nucleons) and whose held face is `delta`: `pi = (p / w) (1 - delta)`,
+/// LAW-COUPLING v2's push on xylarium's orientation (protons held,
+/// `g = delta`). `None` for a share or `delta` outside `[0, 1]`.
+pub fn open_charge(proton_share: &Q, delta: &Q) -> Option<Q> {
+    if !within_share(proton_share) || !within_share(delta) {
         return None;
     }
-    let share = Q::new(i64::from(p), i64::from(w))?;
-    Some(&share * &(&Q::ONE - delta))
+    Some(proton_share * &(&Q::ONE - delta))
 }
 
 /// The axis tilt by `degrees`: the pole axis (plane 0's first axis) turned
@@ -100,12 +99,13 @@ pub fn tilt(degrees: &Q, bits: u32) -> Option<Rotor<AXES>> {
     Rotor::of(&turn, bits)
 }
 
-/// The tilt's faces, read off the motion: the overlap of the tilted axis
-/// plane with the upright one, its arc on the share circle twice the tilt
+/// The tilt's faces, read off the motion, an L1 reading of the round angle
+/// (named as one, LAW-COUPLING 78.175's shared degrees): the overlap of the
+/// tilted axis plane with the upright one, its arc on the share circle twice the tilt
 /// (`psi = 2 eps`), so `c = 1 - eps / 90` stays on the axis stratum and
 /// `d = eps / 90` is carried onto the isoclinic one. `None` outside
 /// `[0, 90]` degrees.
-pub fn tilt_faces(degrees: &Q) -> Option<Faces> {
+pub fn tilt_faces_l1(degrees: &Q) -> Option<Faces> {
     let quarter = Q::int(90);
     if degrees.signum() < 0 || degrees > &quarter {
         return None;
@@ -192,7 +192,8 @@ pub fn arc(degrees: &Q) -> Q {
     &near * &Q::int(360)
 }
 
-/// Two fibres' faces: the held overlap `c = sum_p min(s_p(i), s_p(j)) (1 -
+/// Two fibres' faces, an L1 reading of each plane's round angle (named as
+/// one, 78.175's shared degrees): the held overlap `c = sum_p min(s_p(i), s_p(j)) (1 -
 /// arc_p / 180)` and the passed separation `d = 1 - c`, from their plane
 /// shares `si`, `sj` and the phase difference on each plane in degrees
 /// (`dr`, any value; its shorter arc is taken). Identical fibres hold
@@ -413,35 +414,37 @@ mod tests {
         // LAW-COUPLING v2's fixture: (p, n) = (3, 4) at H = 1, R = 3, delta = 1/4:
         // pi = 9/28 and the tilt rests at 90 pi = 405/14 degrees, where its
         // faces are the charge's.
-        let pi = open_charge(3, 7, &delta).unwrap();
+        let pi = open_charge(&crate::ratio!(3, 7), &delta).unwrap();
         assert_eq!(pi, crate::ratio!(9, 28));
         let rest = tilt_equilibrium(&pi).unwrap();
         assert_eq!(rest, crate::ratio!(405, 14));
-        let faces = tilt_faces(&rest).unwrap();
+        let faces = tilt_faces_l1(&rest).unwrap();
         assert_eq!(
             (faces.convergent, faces.divergent.clone()),
             (&Q::ONE - &pi, pi.clone())
         );
         // The balance restores: past it the isoclinic stratum holds more
         // than the open charge carries, short of it less.
-        let past = tilt_faces(&(&rest + &Q::ONE)).unwrap().divergent;
-        let short = tilt_faces(&(&rest - &Q::ONE)).unwrap().divergent;
+        let past = tilt_faces_l1(&(&rest + &Q::ONE)).unwrap().divergent;
+        let short = tilt_faces_l1(&(&rest - &Q::ONE)).unwrap().divergent;
         assert!(past > pi && short < pi);
         // Neutral or wholly held stands upright; a bare proton far from any
         // hold tilts a quarter turn, the strata exchanged; the equator is
         // half of it.
         assert_eq!(
-            tilt_equilibrium(&open_charge(1, 1, &Q::ONE).unwrap()),
+            tilt_equilibrium(&open_charge(&Q::ONE, &Q::ONE).unwrap()),
             Some(Q::ZERO)
         );
         assert_eq!(
-            tilt_equilibrium(&open_charge(1, 1, &Q::ZERO).unwrap()),
+            tilt_equilibrium(&open_charge(&Q::ONE, &Q::ZERO).unwrap()),
             Some(Q::int(90))
         );
         assert_eq!(tilt_equilibrium(&crate::ratio!(1, 2)), Some(Q::int(45)));
         // Refusals.
-        assert!(open_charge(2, 1, &delta).is_none() && open_charge(0, 0, &delta).is_none());
-        assert!(tilt_faces(&Q::int(91)).is_none() && tilt_faces(&Q::int(-1)).is_none());
+        assert!(
+            open_charge(&Q::int(2), &delta).is_none() && open_charge(&Q::ONE, &Q::int(2)).is_none()
+        );
+        assert!(tilt_faces_l1(&Q::int(91)).is_none() && tilt_faces_l1(&Q::int(-1)).is_none());
         assert!(holonomy(&Q::int(2)).is_none() && tilt_equilibrium(&Q::int(-1)).is_none());
     }
 

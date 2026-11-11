@@ -392,9 +392,11 @@ where it belongs to one.
     planes, untilted), and the charged spin, ruled 2026-11-11 (holonomy
     `360 delta`, open charge `pi`, the axis tilt and its balance
     `eps* = 90 pi`, `K = delta (T B_0 T~ + sum B_q)`, in `xyl_core::hopf`).
-    Next: the parent hole's charge, so the bounce reads the charged spin;
-    the bells' tilt; the worlds' tilt replacing the drawn obliquity and
-    `tilt > 23`; then #128's windings per body and the board (#162).
+    The bells' tilt (`field::stellar_tilt`) and the worlds' tilt
+    (`bodies::world_tilt`, replacing the drawn obliquity; `life::seasonal`
+    replacing `tilt > 23`). Next: the parent hole's charge, so the bounce
+    and `bounce::torsion_share` read the charged spin together (held, ruled
+    2026-11-11); then #128's windings per body and the board (#162).
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

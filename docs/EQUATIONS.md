@@ -137,6 +137,20 @@ another crate. Laws are composed from shares (ratios of the form
   `-p`, so `D(-p) = 1 / D(p)`; the equator `r = M` is fixed, `c = d = 1/2`,
   `p = 0`; exactly `p = 2c - 1 = 1 - 2d`. Calibre: none. Status: built (identities,
   `shares::tests::the_faces_are_antipoles_under_the_inversion`).
+- Push and resistance ([#195](https://github.com/SAIOS-SAMN/xylarium/issues/195), ruled 2026-11-11): every push is offset
+  by its resistance through the flow law,
+  `p_net = p (+) (-r) = (p - r) / (1 - p r)`, `D(p_net) = D(p) / D(r)`.
+  The balance is `p = r` (`p_net = 0`, `D = 1`); a net push may be negative,
+  carrying the holder back. The resistance is the hold of the medium at the
+  reach, read through its deficit face, unless a law names another. Built
+  in this form: the expansion law, the bond's separation, the ocean's pair
+  share, the faces' imbalance. Read bare or by subtraction, each marked
+  (docs/assumptions.md, class P, S114 to S128): the throat push, the
+  dilation's input, the push at reach, the jet map, a galaxy's push, the
+  stack push, the carried reach, the agitation, the star tier's cut, the
+  received axis push, the open charge, the tilt's balance, the passage
+  energy and the kernel's capped speeds. Calibre: none. Status: law ruled;
+  sites to be offset one by one.
 - Turns on the faces (#155): `+360 c` degrees per traversal on the
   convergent face (deficit angle, inward), `-360 d` on the divergent face
   (excess angle, outward); the divergent turn at `t` is minus the
@@ -465,10 +479,12 @@ another crate. Laws are composed from shares (ratios of the form
 - Held share (`Substrate::held_share`): the held share is
   `firmament mass / (firmament mass + sum bead masses)`. Calibre: none. Status: built.
 - Throat push (`circuit::throat_push`): `p = delta(H, H) = 1/2`. Calibre: none. Status:
-  built.
+  built, read bare: the convergent face, unresisted by the divergent face
+  1/2, so the net push at the equator is 0 (S114, #195).
 - Dilation per echo (`xyl_core::shares::dilation_dy`), one law for every holder:
   `rho = (1 + p) / (1 - p)`, `p` the push the holder receives. Calibre: none. Status:
-  built.
+  built; its callers pass the gross push, to become the net push
+  `p (+) (-r)` (S115, #195).
 - Jet dilation (`shares::dilation_dy` of the torsion share): the continuum carries the
   throat's torsion share `s = (H + J) / (2H + J)` at each crossing, so
   `rho = D(s) = (1 + s) / (1 - s)`: 3 at `s = 1/2` (no spin), 4 at
@@ -622,7 +638,8 @@ another crate. Laws are composed from shares (ratios of the form
   `echo (sin(2 pi t / echo) / 2 pi + Q(t)) / t`, with `Q` the state out by
   `t`. Calibre: founding. Status: built.
 - Push at reach (`Substrate::push_at`):
-  `p(R, t) = h / (R + h) (1 + A_in(t))`. Calibre: founding. Status: built.
+  `p(R, t) = h / (R + h) (1 + A_in(t))`. Calibre: founding. Status: built,
+  read bare and unbounded (S116, #195).
 - Band past the throat at `t` (`Substrate::beyond_at`): the share is
   `beyond` with the deficit replaced by `p(r, t)`. Calibre: founding. Status: built.
 - Pulse phase (`Substrate::pulse`): the phase is `frac((t / echo) / t_u)`,
@@ -645,8 +662,10 @@ another crate. Laws are composed from shares (ratios of the form
   share at the star's rim about the star's mass, as a firmament kind's is read
   at its reach about the kind's hold. Mean echo map (`circuit::jet_map`): `t ->
   a t + b`, `a = rho / (1 - p_v)`, `b = p_v / (1 - p_v)`. Firmament kinds: `p_c
-  = 1/2`, `p_v` the kind's vacuum share at its reach about its hold. Calibre: founding. Status:
-  built for both.
+  = 1/2`, `p_v` the kind's vacuum share at its reach about its hold.
+  Calibre: founding. Status: built for both; the vacuum adds to the
+  continuum instead of resisting it, where the net is `p_c (+) (-p_v)`
+  (S117, #195).
 - Throat crossing (`circuit::throat_crossing`): iterating `t -> a t + b`,
   `t_n = t* + (t0 - t*) a^n` with `t* = b / (1 - a)`, so the throat falls
   after `ln((1 - t*) / (t0 - t*)) / ln a` echoes; `circuit::echoes_to_throat`
@@ -685,7 +704,9 @@ another crate. Laws are composed from shares (ratios of the form
   inside / ((R + inside) h)` and `reach = l / inside`, with `inside =
   H(R)` the held medium at the galaxy's reach and `h` its state over the
   mean; the recession is `dl/dt / inside`,
-  and the shift is `z = recession / c_ocean`. Calibre: founding. Status: built.
+  and the shift is `z = recession / c_ocean`. Calibre: founding. Status:
+  built, the recession unresisted by the hold inside the reach (S118,
+  #195).
 - Tide (`Substrate::tide`): `A(R - x, t) - A(R + x, t)`. Calibre: founding. Status: built.
 - Galaxy selection (`Substrate::holds_a_star`, `Substrate::galaxies`): a
   bead is a galaxy where `lit x state >= m_p` and `state <= 1` (core

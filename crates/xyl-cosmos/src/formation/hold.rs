@@ -119,6 +119,7 @@ fn hold_about(
     let mut carried: Vec<(Q, Q, Q, u32, Q)> = kinds
         .iter()
         .map(|(z, s, w, e)| {
+            // Stand-in S122: The push is subtracted and gated, not offset by the hold.
             let pushed = &(&(p * p0) * &e.checked_div(&e_mean).unwrap_or(Q::ZERO))
                 * &w_mean.checked_div(&mass_weight(*z)).unwrap_or(Q::ZERO);
             (&pushed + add, s.clone(), e.clone(), *z, w.clone())

@@ -81,6 +81,7 @@ pub fn open_charge(proton_share: &Q, delta: &Q) -> Option<Q> {
     if !within_share(proton_share) || !within_share(delta) {
         return None;
     }
+    // Stand-in S124: The bound share is subtracted, not composed against the push.
     Some(proton_share * &(&Q::ONE - delta))
 }
 
@@ -121,6 +122,7 @@ pub fn tilt_faces_l1(degrees: &Q) -> Option<Faces> {
 /// axis stratum holding the held charge `1 - pi` and the isoclinic one the
 /// open charge `pi`: `eps* = 90 pi` degrees. `None` outside `[0, 1]`.
 pub fn tilt_equilibrium(open: &Q) -> Option<Q> {
+    // Stand-in S125: The tilt rests with no restoring face against the open charge.
     within_share(open).then(|| open * &Q::int(90))
 }
 

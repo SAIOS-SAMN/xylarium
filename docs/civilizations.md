@@ -401,6 +401,24 @@ passage_energy = m_body * c * (c - v_e)
 `v_e` is the builder's exhaust speed: the throat supplies only the speed that
 the builder's drive does not. Lines are built only where worth is positive.
 
+Light speed is not a state a drive holds. A drive's exhaust is the
+composition of the dynamic states it produces, each a push offset by its
+resistance, `p_e = (p_1 (+) (-r_1)) (+) ... (+) (p_n (+) (-r_n))`
+([#195](https://github.com/SAIOS-SAMN/xylarium/issues/195)), below 1 for every finite set of states, and
+`v_e = p_e c`. So `passage_energy = m c^2 (1 - p_e)` is positive for every
+built drive. The code still reads the best drive's exhaust as `c` (S083,
+S126, [#192](https://github.com/SAIOS-SAMN/xylarium/issues/192)), which makes every lawful line free, and caps
+voyage speeds at `c` rather than composing them (S127, S128).
+
+Light speed is not a state a drive holds. A drive's exhaust is the
+composition of the dynamic states it produces, each a push offset by its
+resistance, `p_e = (p_1 (+) (-r_1)) (+) ... (+) (p_n (+) (-r_n))`
+([#195](https://github.com/SAIOS-SAMN/xylarium/issues/195)), below 1 for every finite set of states, and
+`v_e = p_e c`. So `passage_energy = m c^2 (1 - p_e)` is positive for every
+built drive. The code still reads the best drive's exhaust as `c` (S083,
+S126, [#192](https://github.com/SAIOS-SAMN/xylarium/issues/192)), which makes every lawful line free, and caps
+voyage speeds at `c` rather than composing them (S127, S128).
+
 - Discovery: a house considers only constellations that its craft could have
   reached since its emergence epoch and that the network has not joined.
 - Optimisation: candidates are bounded above from the lower bound of their

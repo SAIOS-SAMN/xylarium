@@ -49,6 +49,7 @@ use xyl_core::Q;
 /// where reach and hold coincide.
 pub fn throat_push() -> Dy {
     let h = Dy::from_q(&crate::bounce::horizon_reach(&Q::ONE));
+    // Stand-in S114: The convergent face is read, the divergent face not resisting it.
     deficit_dy(h, h)
 }
 
@@ -112,6 +113,7 @@ pub fn jet_map(p_c: Dy, p_v: Dy) -> Option<(Dy, Dy)> {
     if p_c.signum() < 0 {
         return None;
     }
+    // Stand-in S117: The vacuum adds to the continuum instead of resisting it.
     let rho = dilation_dy(p_c)?;
     if p_v.signum() < 0 || p_v >= Dy::ONE {
         return None;
@@ -353,6 +355,7 @@ impl Substrate {
     /// The push at reach `r` about hold `h` at `t`: the vacuum's share there
     /// swung by the inbound echo, `h / (r + h) (1 + A_in(t))`.
     pub fn push_at(&self, r: Dy, h: Dy, t: Dy) -> Dy {
+        // Stand-in S116: The swung push is unbounded and unresisted.
         deficit_dy(h, r) * (Dy::ONE + self.inbound(t))
     }
 
@@ -1008,6 +1011,7 @@ impl Substrate {
     /// galaxy, reach as founded and now, recession, the light's shift, drift
     /// and swing.
     pub fn push(&self, t: Dy) -> Vec<Push> {
+        // Stand-in S118: The recession is pushed with no hold resisting it.
         let mean = Dy::from_q(&self.mean_state()).max(Dy::sci(1, -300));
         let shares = self.ocean_shares();
         let c = self.c_ocean().max(Dy::sci(1, -300));

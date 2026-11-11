@@ -11,6 +11,13 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Push and resistance (#195, ruled): every push is offset by its resistance
+  through the flow law, `p_net = p (+) (-r)`. The law is stated in
+  EQUATIONS.md, model.md (Push and resistance) and civilizations.md (a
+  drive's exhaust is composed states, below `c`). The 15 sites that read a
+  push bare or by subtraction are registered as stand-ins S114 to S128
+  (class P) and marked in code. Docs and comments only; no reading changes.
+
 - The register of stand-ins (#189): docs/assumptions.md lists 113 sites
   where the code takes a value, an outcome or a branch no built law
   decides, with each one's class, consumers, origin and issue. Most came

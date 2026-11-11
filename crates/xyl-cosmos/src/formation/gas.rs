@@ -47,6 +47,7 @@ pub(crate) fn cooling(bead: &Bead, unit: &Q, h: &Q, swing: &Q) -> Option<Cooling
     let lambda = holding.checked_div(&width).unwrap_or(Q::ZERO);
     let push = crate::circuit::throat_push().to_q();
     let deficit = xyl_core::shares::deficit(h, &reach).unwrap_or(Q::ZERO);
+    // Stand-in S121: The deficit is subtracted from the push, not composed against it.
     let agitation = (&push - &deficit)
         .checked_div(&push)
         .unwrap_or(Q::ZERO)

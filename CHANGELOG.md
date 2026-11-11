@@ -11,6 +11,24 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The bench reads the Q face (#148; Mycelium #239, #241), readings only:
+  - the span `3Q = 3cap`, and two derivations of its held count,
+    `W_Q = 3cap - U` (a) and `W_Q = 3cap - E` (b);
+  - per derivation, the closed share `W_Q / 3Q`, the pole `open / W_Q`
+    and the separation from the Z face, which is `3E` for (a) and `2E + U`
+    for (b), proven over Z 1 to 1700; both meet the Z face exactly at the
+    seals;
+  - the bits the chain needs to the vessel's top under `W_Q / 3Q` (seed 7:
+    997 for (a) and 1450 for (b), against 1094 built);
+  - LAW-COUPLING v2's nucleon dipole: `3p`, `3n`, `p / w`, `t = p / n`, and
+    the draft's push `p (1 - g) / w` at the capacity face's held share
+    `g = 2P / Z`, under which the push is `U / w` exactly.
+
+  A `hopf` test fixes the exchange of the join's strata: no weighted turn
+  moves a plane's share, and the quarter turn mixing the axis plane with an
+  isoclinic plane carries `(z0, zq)` to `(-zq, z0)`, commuting with the
+  Hopf action. The founding is unchanged.
+
 - The bench reads the entered capacity and candidate closed shares
   (#172): `cap_in`, twice the orientations of every band holding an
   electron (`Z <= cap_in <= cap`, proven over Z 1 to 1700), and the closed

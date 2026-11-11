@@ -438,6 +438,17 @@ where it belongs to one.
 
     To rule: I002, whether a deficit share read as a push (the expansion
     law's form) or the faces' push governs. Then each site per PR.
+62. **No inverse square** ([#199](https://github.com/SAIOS-SAMN/xylarium/issues/199), `law`, `defect`;
+    [model.md](model.md#faces-of-the-dipole-on-sn)). Ruled 2026-11-11:
+    every coupling is first-degree in the faces, `h = M / (r + M)`, with the
+    hold and the reach in one denominator. Done: the law stated (E011), and
+    the sites that read a square, a root or a reach without its hold
+    registered and marked (class Q: S133 to S135, with S025 and S034).
+    Next, each site as a face reading:
+    - the field's intercepted share and work;
+    - surface gravity and pressure;
+    - `pulse::hear`;
+    - the separation (#118).
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

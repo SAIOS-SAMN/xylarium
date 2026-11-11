@@ -11,6 +11,15 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- No inverse square (#199, ruled): every coupling is first-degree in the
+  faces, `h = M / (r + M) = 1 / (1 + t)`, with the hold and the reach in
+  one denominator (EQUATIONS.md E011, model.md). The sites that read a
+  square, a root or a reach without its hold are registered (class Q:
+  S133 to S135, with S025 and S034 reclassed) and marked: the field's
+  `a^2 / (4 d^2)` and `(M / a)^2` work, surface gravity `M / R^2`,
+  `pulse::hear`'s `M / d` and `angle_between`'s root. Docs and comments
+  only.
+
 - Faces of the dipole on S^n (#197, ruled): a reading resolves as many
   faces as its sphere carries, `N = n + 1` dipoles, with weights, faces,
   pushes and resistance per dipole. Its capacity is `N c`, read per face

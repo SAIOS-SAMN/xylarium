@@ -57,6 +57,7 @@ sites are restated. The derivations are in
 | E008 | Capacity: a reading carries `N` components, `v_k = p_net,k c` each in `(-c, c)`, never summed; its capacity is `N c` | light speed as the one ceiling, `v_e = c` (I004, I005) | ruled; [#197](https://github.com/SAIOS-SAMN/xylarium/issues/197) | derived |
 | E009 | A drive's exhaust per face: `p_e,k = (p_1,k (+) (-r_1,k)) (+) ... (+) (p_n,k (+) (-r_n,k))` over the states it produces on face `k` | `best_spec`, `blended` (I004) | [#192](https://github.com/SAIOS-SAMN/xylarium/issues/192) | planned |
 | E010 | The charged spin per plane: `theta_k = 360 delta_k`, `pi_k`, `eps*_k = 90 pi_k`, `K = sum_k delta_k (T_k B_k T_k~)` | one `delta` and one tilt for every plane (I006) | [#183](https://github.com/SAIOS-SAMN/xylarium/issues/183) | planned |
+| E011 | Coupling is first-degree in the faces: `h = M / (r + M) = 1 / (1 + t)`, `o = r / (r + M) = t / (1 + t)`, the hold and the reach in one denominator, calibre-free; a traversal turns `360 h` on its named plane (the turning law, built); the measure of `S^n` (`sin^(n-1)`, `measure`) is the sphere's volume element, not a coupling | `M / r^2`, `M / d`, `a^2 / (4 d^2)`, `M / R^2`, roots (I008) | ruled; [#199](https://github.com/SAIOS-SAMN/xylarium/issues/199) | stated; sites open |
 
 | ID | Invalid form | Sites | Superseded by | Status |
 |---|---|---|---|---|
@@ -67,6 +68,7 @@ sites are restated. The derivations are in
 | I005 | Speeds capped at `c` by `min`, not composed per face | S127, S128 | E001, E008 | open |
 | I006 | One-dipole forms written on 2026-11-11: the tilt's faces and balance, the open charge, the charged spin's single `delta` | S124, S125, S132 | E010 | open |
 | I007 | Offsetting the open charge by the bound share, `(p / w) (+) (-g)` (proposed on #183 and #195, withdrawn): `g` is the charge already moved onto the held stratum, so it would be counted twice; the push is the linear pair share, and the rate it drives is offset by the medium (E007) | S124 | E003, E007 | closed: withdrawn |
+| I008 | A square or root at a coupling's root, or a reach decoupled from its hold: the field's intercepted share `a^2 / (4 d^2)`, the field's work `(M / a)^2 abs(dx)^2`, surface gravity `M / R^2` and pressure, `pulse::hear`'s `M / d`, `rotor::angle_between`'s root | S133, S134, S135, S025, S034 | E011 | open |
 
 ## 1. Numbers
 

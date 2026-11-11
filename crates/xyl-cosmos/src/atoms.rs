@@ -296,6 +296,7 @@ pub fn atom(z: u32) -> Option<Atom> {
 /// read per echo, the isoclinic part in hydrogen units (the turning that
 /// strips hydrogen's lone winding is 1), the axis part as a push.
 #[derive(Clone, Debug, PartialEq, Eq)]
+// Stand-in S131: The isoclinic turning is one number for five planes.
 pub struct Received {
     /// The axis plane's push per echo: the star's compactness for a star.
     pub axis: Q,

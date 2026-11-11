@@ -81,7 +81,7 @@ pub fn open_charge(proton_share: &Q, delta: &Q) -> Option<Q> {
     if !within_share(proton_share) || !within_share(delta) {
         return None;
     }
-    // Stand-in S124: The bound share is subtracted, not composed against the push.
+    // Stand-in S124: The rate this share drives is not offset by the medium.
     Some(proton_share * &(&Q::ONE - delta))
 }
 
@@ -142,6 +142,7 @@ pub fn charged_spin(delta: &Q, degrees: &Q, bits: u32) -> Option<crate::cga::Mv>
     };
     let axis = tilt(degrees, bits)?.conjugate(&blade(0)?);
     let isoclinic = (1..PLANES).try_fold(Mv::zero(), |m, p| Some(m.add(&blade(p)?)))?;
+    // Stand-in S132: One holonomy scales every plane, not one per plane.
     Some(axis.add(&isoclinic).scale(delta))
 }
 

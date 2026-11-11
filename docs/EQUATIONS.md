@@ -32,6 +32,42 @@ Module paths are relative to `crates/xyl-cosmos/src` unless prefixed with
 another crate. Laws are composed from shares (ratios of the form
 `M / (R + M)`) and angles, not from squares or cubes of a quantity.
 
+Letters: `h` and `o` are a dipole's held and open faces; `c` is the speed
+of light only.
+
+## Updated equations
+
+This section tracks the equations ruled or derived since 2026-11-11 and the
+forms they invalidate, so each change has one line of history. An E-row is
+a new or updated equation; an I-row is a form in the code or the docs it
+invalidates, with its sites and register IDs (docs/assumptions.md). A row
+moves to Built with the PR that lands it, and an I-row closes when its
+sites are restated. The derivations are in
+[model.md](model.md#faces-of-the-dipole-on-sn).
+
+| ID | Equation | Replaces | Ruling / issue | Status |
+|---|---|---|---|---|
+| E001 | Push and resistance: `p_net = p (+) (-r) = (p - r) / (1 - p r)`, `D(p_net) = D(p) / D(r)` | bare and subtracted pushes (I002, I005) | ruled; [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195) | stated; sites open |
+| E002 | A face's push: `p = h - o = 2h - 1`, pole `t = o / h`, `D(p) = h / o = 1 / t` (`shares::Faces::push`) | `p = 2c - 1` (I001) | [#155](https://github.com/SAIOS-SAMN/xylarium/issues/155), [#197](https://github.com/SAIOS-SAMN/xylarium/issues/197) | built (letters renamed) |
+| E003 | A share offset by a resistance share: `t_net = t_a / t_b`, `h_net = 1 / (1 + t_a / t_b)` | composing raw shares as pushes (I002) | derived; [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195), mycelium #241 | derived |
+| E004 | The faces of S^n: `N = n + 1` dipoles (a complex carrier `S^(2m-1)`: its `m` planes), `2N` faces, each `1 / (2N)` of the measure | the two-face reading of a whole body (I003) | ruled; [#197](https://github.com/SAIOS-SAMN/xylarium/issues/197) | derived |
+| E005 | A body's weights per dipole: `w_k >= 0`, `sum w_k = 1`; a state's plane shares `|m_k| / l` (`hopf::plane_shares`); an extended body's caps by volume (`measure::share_turns`); isotropic `1 / N` | one hold for every direction (I003) | [#197](https://github.com/SAIOS-SAMN/xylarium/issues/197) | derived |
+| E006 | Per dipole at reach `r`: `m_k = w_k m`, `h_k = m_k / (r + m_k)`, `o_k = r / (r + m_k)`, `t_k = r / m_k`, `p_k = h_k - o_k` | one face pair (I003) | [#197](https://github.com/SAIOS-SAMN/xylarium/issues/197) | derived |
+| E007 | Per dipole against the medium (`H_k = sigma_k H`, `rho_k = H_k / (r + H_k)`): `t_net,k = t_k / t_rho,k = H_k / m_k`, the reach cancelling; balance `m_k = H_k` | the expansion law's reach-dependent rate (I002, open) | derived; to rule; [#197](https://github.com/SAIOS-SAMN/xylarium/issues/197) | derived |
+| E008 | Capacity: a reading carries `N` components, `v_k = p_net,k c` each in `(-c, c)`, never summed; its capacity is `N c` | light speed as the one ceiling, `v_e = c` (I004, I005) | ruled; [#197](https://github.com/SAIOS-SAMN/xylarium/issues/197) | derived |
+| E009 | A drive's exhaust per face: `p_e,k = (p_1,k (+) (-r_1,k)) (+) ... (+) (p_n,k (+) (-r_n,k))` over the states it produces on face `k` | `best_spec`, `blended` (I004) | [#192](https://github.com/SAIOS-SAMN/xylarium/issues/192) | planned |
+| E010 | The charged spin per plane: `theta_k = 360 delta_k`, `pi_k`, `eps*_k = 90 pi_k`, `K = sum_k delta_k (T_k B_k T_k~)` | one `delta` and one tilt for every plane (I006) | [#183](https://github.com/SAIOS-SAMN/xylarium/issues/183) | planned |
+
+| ID | Invalid form | Sites | Superseded by | Status |
+|---|---|---|---|---|
+| I001 | `p = 2c - 1` with `c` the held face beside the speed of light | docs (EQUATIONS faces entries renamed) | E002 | closed: renamed |
+| I002 | A deficit share read as a push: the throat push `1/2` (the share 1/2 is the push 0), the push at reach, the jet map's `p_c` and `p_v`, the expansion law's `p_c = H / (r + H)` and `p_v = m / (r + m)`, the received axis push, and the 1/5 composition (withdrawn) | S114, S116, S117, S123; `circuit` parcel release (planned) | E002, E003, E007 | open: to rule, since it changes the expansion law's dynamics |
+| I003 | One dipole read for a whole body or sphere: the pole point on one axis `t = U / W`, the turning law on one plane, the isoclinic turning as one number for five planes, LAW-COUPLING v2's split on the axis plane alone | S129, S130, S131; mycelium #241 | E004 to E006 | open |
+| I004 | Light speed as the one ceiling: the drive's `v_e = c`, and "below `c`" as the bound (#195's first text) | S083, S085, S126 | E008, E009 | open |
+| I005 | Speeds capped at `c` by `min`, not composed per face | S127, S128 | E001, E008 | open |
+| I006 | One-dipole forms written on 2026-11-11: the tilt's faces and balance, the open charge, the charged spin's single `delta` | S124, S125, S132 | E010 | open |
+| I007 | Offsetting the open charge by the bound share, `(p / w) (+) (-g)` (proposed on #183 and #195, withdrawn): `g` is the charge already moved onto the held stratum, so it would be counted twice; the push is the linear pair share, and the rate it drives is offset by the medium (E007) | S124 | E003, E007 | closed: withdrawn |
+
 ## 1. Numbers
 
 - `Q`, the exact rational (`xyl-core q.rs`), holds all held state. Status:
@@ -128,14 +164,14 @@ another crate. Laws are composed from shares (ratios of the form
   share `1 - delta` is its divergent face. Calibre: none. Status: built.
 - Gravity's faces ([model.md](model.md#gravity-the-deformation-about-a-mass-invariant),
   #155; `xyl_core::shares::faces`, `shares::Faces`): with `t = r / M`,
-  convergent `c = M / (r + M) = 1 / (1 + t)`, divergent
-  `d = r / (r + M) = t / (1 + t)`; `c + d = 1`, `c / d = 1 / t`
+  held (convergent) `h = M / (r + M) = 1 / (1 + t)`, open (divergent)
+  `o = r / (r + M) = t / (1 + t)`; `h + o = 1`, `h / o = 1 / t`
   (`Faces::pole`). Calibre: none (a ratio). Status: built.
 - Gravity's antipole (`Faces::antipole`, `Faces::push`): the inversion
-  `t -> 1 / t`, `r -> M (M / r)`, gives `c(1 / t) = d(t)`; the imbalance
-  `p = c - d = (1 - t) / (1 + t)` has `D(p) = c / d = M / r` and goes to
-  `-p`, so `D(-p) = 1 / D(p)`; the equator `r = M` is fixed, `c = d = 1/2`,
-  `p = 0`; exactly `p = 2c - 1 = 1 - 2d`. Calibre: none. Status: built (identities,
+  `t -> 1 / t`, `r -> M (M / r)`, gives `h(1 / t) = o(t)`; the imbalance
+  `p = h - o = (1 - t) / (1 + t)` has `D(p) = h / o = M / r` and goes to
+  `-p`, so `D(-p) = 1 / D(p)`; the equator `r = M` is fixed, `h = o = 1/2`,
+  `p = 0`; exactly `p = 2h - 1 = 1 - 2o`. Calibre: none. Status: built (identities,
   `shares::tests::the_faces_are_antipoles_under_the_inversion`).
 - Push and resistance ([#195](https://github.com/SAIOS-SAMN/xylarium/issues/195), ruled 2026-11-11): every push is offset
   by its resistance through the flow law,
@@ -151,12 +187,12 @@ another crate. Laws are composed from shares (ratios of the form
   received axis push, the open charge, the tilt's balance, the passage
   energy and the kernel's capped speeds. Calibre: none. Status: law ruled;
   sites to be offset one by one.
-- Turns on the faces (#155): `+360 c` degrees per traversal on the
-  convergent face (deficit angle, inward), `-360 d` on the divergent face
+- Turns on the faces (#155): `+360 h` degrees per traversal on the
+  convergent face (deficit angle, inward), `-360 o` on the divergent face
   (excess angle, outward); the divergent turn at `t` is minus the
   convergent turn at `1 / t`. They are one element of QQ/ZZ:
-  `-360 d = -360 + 360 c`, differing by the whole turn `360 (c + d) = 360`.
-  A body reads winding `-1` and phase `360 c` (T3's `360 delta`), never
+  `-360 o = -360 + 360 h`, differing by the whole turn `360 (h + o) = 360`.
+  A body reads winding `-1` and phase `360 h` (T3's `360 delta`), never
   their sum. Calibre: none. Status: derived; no reading changes.
 - Torsion share as a face (axiom 7; `bounce::torsion_share`):
   `s = (H + J) / (2H + J)` is the divergent face about the hold `H` at

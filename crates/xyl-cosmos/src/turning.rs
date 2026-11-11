@@ -155,6 +155,7 @@ pub fn span_in_rings(span: &Q) -> Q {
 /// The twist in degrees: the angle by which a carried direction turns over
 /// one circuit about `inside_kg` at `r_m`, equal to 360 times the deficit.
 pub fn twist_per_turn(inside_kg: &Q, r_m: &Q) -> Q {
+    // Stand-in S130: The turn is read on one plane, not per dipole.
     &Q::int(360) * &deficit_si(inside_kg, r_m)
 }
 

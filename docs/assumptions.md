@@ -48,6 +48,7 @@ The rule (AGENTS.md):
 | H | A boolean or an endpoint blend where a share is meant | [#192](https://github.com/SAIOS-SAMN/xylarium/issues/192) |
 | U | A ruler inline and undeclared (class C rows read by laws) | [#193](https://github.com/SAIOS-SAMN/xylarium/issues/193) |
 | P | A push read bare or offset by subtraction, not by its resistance through the flow law, `p ⊕ (-r)` | [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195) |
+| N | One dipole read for a whole body or sphere where the sphere carries `n + 1` (EQUATIONS.md, Updated equations, I003) | [#197](https://github.com/SAIOS-SAMN/xylarium/issues/197) |
 
 ## The register
 
@@ -179,8 +180,12 @@ repository root.
 | S121 | P | `crates/xyl-cosmos/src/formation/gas.rs` cooling | Agitation (p - delta) / p, the deficit subtracted from the throat push | p ⊕ (-delta) | lighting, star_hold | 0.3.0 | [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195) | open |
 | S122 | P | `crates/xyl-cosmos/src/formation/hold.rs` hold_at | The cut subtracts the push linearly and holds by the gate h / (R + h) >= p | A net push per kind, held where it balances | disc star_hold, the star's mixture | 0.3.0 | [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195) | open |
 | S123 | P | `crates/xyl-cosmos/src/disc.rs` star_hold | The axis push is the star's compactness, no medium resisting | The compactness offset by the medium at the star | Received.axis, sequences, the bound share g | 0.3.0 | [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195) | open |
-| S124 | P | `crates/xyl-core/src/hopf.rs` open_charge | The open charge subtracts the bound share linearly, (p / w)(1 - g) | (p / w) ⊕ (-g), once LAW-COUPLING v2 rules (#241) | tilt_equilibrium, the bells, the worlds | 669206b | [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195) | open |
+| S124 | P | `crates/xyl-core/src/hopf.rs` open_charge | The open charge is the linear pair share (p / w)(1 - g), and the rate it drives is not offset by the medium | The share stays (g already moved charge onto the held stratum); the rate it drives is offset by the medium's hold at the place (E007), not by g (mycelium #241) | tilt_equilibrium, the bells, the worlds | 669206b | [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195) | open |
 | S125 | P | `crates/xyl-core/src/hopf.rs` tilt_equilibrium | The tilt rests at 90 pi with no restoring face | The open charge offset by the tilt's kept face | field stellar_tilt, bodies world_tilt | 669206b | [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195) | open |
 | S126 | P | `crates/xyl-kernel/src/transit/mod.rs` passage_j | The throat supplies c - v_e with v_e clamped to [0, c]; the line's medium is not read | The exhaust push offset by its resistance, below 1 | tithe, worth, breach, folds | 0.3.0 | [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195) | open |
 | S127 | P | `crates/xyl-kernel/src/transit/building.rs` Siting::worth | The voyage speed is capped, c min(S / T, c), not composed | A composed speed below c | line worth, branch and bound | 0.3.0 | [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195) | open |
 | S128 | P | `crates/xyl-kernel/src/transit/discord.rs` Network::fold | The fold compares capped speeds, c min(S / T, c) > c (c - v_e) | Composed speeds | folds, breach | 0.3.0 | [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195) | open |
+| S129 | N | `crates/xyl-cosmos/src/circuit/poles.rs` pole_point | The pole state is one point on one axis, t = U / W | A pole per dipole of the carrier (E004 to E006) | jet map, onsets, observe | 0.3.0 | [#197](https://github.com/SAIOS-SAMN/xylarium/issues/197) | open |
+| S130 | N | `crates/xyl-cosmos/src/turning.rs` twist_per_turn | The turn per traversal is 360 delta on one plane | A turn per dipole, 360 delta_k | manifolds, twist, bodies | 0.3.0 | [#197](https://github.com/SAIOS-SAMN/xylarium/issues/197) | open |
+| S131 | N | `crates/xyl-cosmos/src/atoms.rs` Received | The isoclinic turning is one number for five planes | A turning per plane (#128) | stripping, sequences, bonds | 0.3.0 | [#197](https://github.com/SAIOS-SAMN/xylarium/issues/197) | open |
+| S132 | N | `crates/xyl-core/src/hopf.rs` charged_spin | One holonomy delta scales every plane's blade | delta_k per plane (E010) | none yet | 669206b | [#197](https://github.com/SAIOS-SAMN/xylarium/issues/197) | open |

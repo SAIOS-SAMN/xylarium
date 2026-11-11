@@ -4,7 +4,7 @@
 Xylarium integrates against its tagged releases, the stable contract the
 projects on the network pin to (its `mycelium-sdk` crate, the wire version
 and act table, and the shared physics library's law ids). The uplink is
-pinned to mycelium `main` at `7b89732d`, past `v0.4.0-rc.1` (wire v3);
+pinned to mycelium `main` at `9fdabd74`, past `v0.4.0-rc.1` (wire v3, `Certified`);
 v0.4.0 final is not cut
 ([#82](https://github.com/SAIOS-SAMN/xylarium/issues/82)). The
 network Mycelium
@@ -58,7 +58,7 @@ repository.
   commands (`xyl-uplink run` for live play with the house as a
   `run::Link`, `xyl-uplink found-universe` to found a domain).
 - **Dependencies.** `mycelium-sdk` pinned by git revision of mycelium
-  `main` (`7b89732d`: wire v3 with the crossing record on universe acts, mu
+  `main` (`9fdabd74`: wire v3 with the crossing record on universe acts, mu
   as modes, typed acts), and `xyl-core`, `xyl-cosmos`, `xyl-kernel` and
   `xylarium` pinned by git revision of this repository. A kernel change the
   uplink needs lands here first; the uplink then moves its pin.

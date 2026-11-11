@@ -60,8 +60,11 @@ sites are restated. The derivations are in
 | E011 | Coupling is first-degree in the faces: `h = M / (r + M) = 1 / (1 + t)`, `o = r / (r + M) = t / (1 + t)`, the hold and the reach in one denominator, calibre-free; a traversal turns `360 h` on its named plane (the turning law, built); the measure of `S^n` (`sin^(n-1)`, `measure`) is the sphere's volume element, not a coupling | `M / r^2`, `M / d`, `a^2 / (4 d^2)`, `M / R^2`, roots (I008) | ruled; [#199](https://github.com/SAIOS-SAMN/xylarium/issues/199) | stated; sites open |
 | E012 | The state `(3W, p, R)`: `3W = 3(Z + Q)`; `h = 3Z / 3W`, `o = 3Q / 3W`, `t = 3Q / 3Z`, `p = (3Z - 3Q) / 3W`, `D(p) = 3Z / 3Q`, `D(-p) = 3Q / 3Z`; `R` the axis plane's turn | the dipole's faces as a sum (I009) | [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#148](https://github.com/SAIOS-SAMN/xylarium/issues/148), mycelium #241 | derived |
 | E013 | Formation's transitions: electrons move `R` (and `U`, `2P`); fusion and fission move `3W`, mixing the split by weight (the mediant of `D`); conversion moves `p` by flow steps `D(p') = D(p) D(s)`, keeping `3W`; a bond moves share through `g` | `Q` per kind from Earth's weights (I011) | [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201) | derived; conversion not built |
-| E014 | The conversion's rest point at a singularity: `p*` where `p (+) (-r) = 0`, `r` the singularity's medium at its throat, per dipole, first-degree; `3Q / 3Z = D(-p*)`. Each genesis builds its universal table at the universal core's bounce; each galactic core builds its galaxy's table at the core's bounce, as an event | one fixed table of measured weights for every universe and galaxy (S029, I011) | [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195), [#7](https://github.com/SAIOS-SAMN/xylarium/issues/7) | planned: the rest point to derive |
-| E015 | The axis fill both ways: `f_Q = abs(R) u / (W + abs(R) u)` from the Q side toward Z for `R > 0` (none for `R <= 0`), `R = kappa (1 - 2 frac(psi))` at the capture phase `psi = (s Z) mod 1`; exact shares per level (`atoms::Band::axis_levels`), the polarity `A` exact; both dipoles of the split kept, count (the neutral level halved) and weight | the Z-side-first integer fill (S136) | ruled; [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201) | built |
+| E014 | The conversion's rest point at a singularity: `p*` where `p (+) (-r) = 0`, `r` the singularity's medium at its throat, per dipole, first-degree; `3Q / 3Z = D(-p*)`. Read per Hopf plane, `p* = (p*_0, ..., p*_5)` (E016); at a bounce in the common phase the six are equal, so the planes part only where a winding is not common. Each genesis builds its universal table at the universal core's bounce; each galactic core builds its galaxy's table at the core's bounce, as an event | one fixed table of measured weights for every universe and galaxy (S029, I011) | [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195), [#7](https://github.com/SAIOS-SAMN/xylarium/issues/7) | planned: the rest point to derive |
+| E015 | The axis fill both ways: `f_Q = abs(R) u / (W + abs(R) u)` from the Q side toward Z for `R > 0` (none for `R <= 0`), `R = kappa (1 - 2 frac(psi))` at the capture phase `psi = (s Z) mod 1`; exact shares per level (`atoms::Band::plane_levels`), the polarity `A` exact; both dipoles of the split kept, count (the neutral level halved) and weight | the Z-side-first integer fill (S136) | ruled; [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201) | built |
+| E016 | The split, fill and phase per Hopf plane `p` in `0..6` (6 dipoles, 12 faces on `S^11`): the level `m_p` holds `C(l - abs(m_p) + 9, 9)` orientations on every plane (a harmonic's multiplicity reads only `sum abs(m_p)`); the plane's capture phase `psi_p = (w_p s Z) mod 1` at the winding `w`; `R_p = kappa (1 - 2 frac(psi_p))`, `kappa` the whole fibre's coherence on every plane; `f_p = abs(R_p) u / (W_e + abs(R_p) u)`, `W_e = 3Z - U` the electron hold for `R_p > 0`, else 0; the plane polarity `A_p` (`circuit::fill_shares`, `atoms::plane_polarities`, `atoms::plane_sides`). In the common phase (`hopf::COMMON`) the six planes read alike, so the planes part only where the winding is not common (the Seifert twist, #128) or a tilt mixes the pole axis | the axis plane read alone, one scalar `R` (S137, I012) | ruled; [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#197](https://github.com/SAIOS-SAMN/xylarium/issues/197), [#183](https://github.com/SAIOS-SAMN/xylarium/issues/183) | built |
+| E017 | The transitional boundaries per plane: the balance `t_p = 1`, which is `p_net,p = 0` and `D(p_net,p) = 1` (one boundary: `D(p) = 1/t`), with the faces `h_p = o_p = 1/2`; and the fill's reversal `R_p = 0`, at `frac(psi_p) = 1/2`. A body crossing on one plane and not another holds both phases at once, the boundary a surface inside it | a single fusion/fission threshold for the whole body | derived; [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201) | the reversal a closed form of the phase; the balance's crossing waits on the conversion's motion (E013) |
+| E018 | The nucleon dipole turned by the phase, per Hopf plane `p`: `p_nuc,p = (3Z_p - 3Q_p) / 3W_p` composed with `R_p` by the flow law, `p_net,p = p_nuc,p (+) R_p = (p_nuc,p + R_p) / (1 + p_nuc,p R_p)`, so `D(p_net,p) = D(p_nuc,p) D(R_p)`: the Z face `(3Z_p / 3Q_p) (1 + R_p) / (1 - R_p)` and the Q face, its antipole, `(3Q_p / 3Z_p) (1 - R_p) / (1 + R_p)`, product 1; `R_p = 0` is the bare dipole. At the bounce's rest point, `p_net,p = 0`: `p*_nuc,p = -R_p` and `3Z*_p / 3Q*_p = (1 - R_p) / (1 + R_p)`. `R_p` is read as a push in `(-1, 1)`, so a kind with `abs(R_p) = 1` (coherence 1 at a whole-turn crossing) has no rest point and is refused | `3Z / 3Q + R` (I009); one fixed table of weights (S029, I011) | ruled; [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#148](https://github.com/SAIOS-SAMN/xylarium/issues/148) | stated; the reading and the table from it are #201 step 3 |
 
 | ID | Invalid form | Sites | Superseded by | Status |
 |---|---|---|---|---|
@@ -73,9 +76,11 @@ sites are restated. The derivations are in
 | I006 | One-dipole forms written on 2026-11-11: the tilt's faces and balance, the open charge, the charged spin's single `delta` | S124, S125, S132 | E010 | open |
 | I007 | Offsetting the open charge by the bound share, `(p / w) (+) (-g)` (proposed on #183 and #195, withdrawn): `g` is the charge already moved onto the held stratum, so it would be counted twice; the push is the linear pair share, and the rate it drives is offset by the medium (E007) | S124 | E003, E007 | closed: withdrawn |
 | I008 | A square or root at a coupling's root, or a reach decoupled from its hold: the field's intercepted share `a^2 / (4 d^2)`, the field's work `(M / a)^2 abs(dx)^2`, surface gravity `M / R^2` and pressure, `pulse::hear`'s `M / d`, `rotor::angle_between`'s root | S133, S134, S135, S025, S034 | E011 | open |
-| I009 | The dipole's faces as a turn added to a dilation, `3Z / 3Q + R` and `3Q / 3Z - R` (#148) | docs (model.md, The dipole) | E012 | open: restate #148 |
-| I010 | `W` names both the held count `3Z - U` (`compound::hold`) and, in v2's letters, the nucleon whole `3W = 3(Z + Q)` | `compound::hold`, docs | E012 | open: rename the held count |
+| I009 | The dipole's faces as a turn added to a dilation, `3Z / 3Q + R` and `3Q / 3Z - R` (#148) | docs (model.md, The dipole) | E012, E018 | closed: restated as the composition `D(p_nuc (+) R) = D(p_nuc) D(R)` (E018) |
+| I010 | `W` names both the held count `3Z - U` and, in v2's letters, the nucleon whole `3W = 3(Z + Q)` | `compound::electron_hold` (was `compound::hold`), `circuit::fill_shares`, `circuit::Substrate::loop_flux_swung`, `spin_orbit` | E012 | closed: the electron hold is `W_e = 3Z - U` (`compound::electron_hold`, `w_e` at its sites); `3W = 3Z + 3Q` is the nucleon whole |
 | I011 | One fixed table of measured weights (`crates/xyl-cosmos/data/elements.tsv`, through `circuit::mass_number`) for every genesis and every galaxy, so `3Q`, `3W` and the split are the same everywhere: neither the universe's own nor each galactic core's | S029, S010, `stars::fusion_step` products | E013, E014 | open |
+| I012 | The axis plane read alone for a kind's split, fill and polarity, with one scalar `R`: one dipole where `S^11` carries six | S137; `atoms`, `circuit::weights` | E016 | closed: read per plane |
+| I013 | The coherence split across the planes by the states' plane shares, `kappa_p` from `abs(m_p)` (proposed with the six-plane ruling): the Hopf fibre turns all six planes at once, so its coherence is carried whole on each plane; the plane shares weigh where a state sits, not how coherent the fibre is | none | E016 | closed: not adopted |
 
 ## 1. Numbers
 
@@ -238,7 +243,7 @@ sites are restated. The derivations are in
   `2P / cap_in` needs 1996 bits to the vessel's top at seed 7's share,
   under `2P / cap` 5546, under the built `W / 3Z` 1094. Built in its place: the held count's face,
   `W / 3Z` the closed share (`elements::closed_share`), `t = U / W` the
-  pole point (`compound::hold`). Calibre: none. Status: planned (#158).
+  pole point (`compound::electron_hold`). Calibre: none. Status: planned (#158).
 - Share transfer (T15, #128): a state of weight `m` with shares
   `w_k = |m_k| / sum_i |m_i|` composes its planes' hyperbolic angles,
   `sum_k w_k ln D_k` with `D_j = 1 + 2 t_j`, and `D(n)^A` for its axis
@@ -353,14 +358,14 @@ sites are restated. The derivations are in
   (2a)` echoes apart;
   the pair closes while `a <= 1`. Seed 7: one cohort, 0.5648 of the hold at
   `rho = -0.646` against `-0.798`, giving `a* = 0.9933`. Calibre: none. Status: built
-  (`circuit::Substrate::spin_orbit`, `atoms::axis_polarity`,
+  (`circuit::Substrate::spin_orbit`, `atoms::plane_polarities`,
   `circuit::Anchor::core_spin`; the firmament is the closed kinds).
 - Cascade readings (`origin::Origin::of`): the lumpiness is
   `sum max(state - mean, 0) / sum state`, the held share is
   `firmament mass / holding`, the assembly time is `Lighting::cools_in` and
   the efficiency is `Lighting::lit`. Calibre: founding. Status: built.
 - Closed share (`elements::closed_share`): `h_Z = hold_Z / 3Z = (3Z - u_Z) / 3Z`
-  (`compound::hold`). Calibre: none. Status:
+  (`compound::electron_hold`). Calibre: none. Status:
   built.
 - Capture chain (`elements::founded`): `count_1 = 2^b` and
   `count_Z = floor(count_(Z-1) a h_Z)`. Calibre: none. Status: built.
@@ -845,10 +850,12 @@ sites are restated. The derivations are in
   per band `(n, l)` the empty slots, single and paired orientations (room,
   open, held), summing to `cap - Z`, `U` and `2P = Z - U` (built:
   `atoms::Occupancy`, `atoms::band_occupancy`); per plane `2P_k`,
-  `U_k`, `t_k = U_k / 2P_k` (built on the axis plane by level `m0`, level
-  multiplicity `C(l - |m0| + 9, 9)`: `atoms::Band::axis_levels`,
-  `atoms::axis_sides`; the isoclinic split awaits the spin, #128); the axis weights in ZZ, open `sum m0 U_m0 = A` and held
-  `sum 2 m0 P_m0` (built, `atoms::axis_weights`; per band `-2 A_b` at
+  `U_k`, `t_k = U_k / 2P_k` (built on each of the six planes by its charge
+  `m_p`, level multiplicity `C(l - |m_p| + 9, 9)` on every plane:
+  `atoms::Band::plane_levels`, `atoms::plane_sides`, E016; the planes part
+  only by their fill shares, alike in the common phase); the weights per
+  plane, open `sum m U_m = A_p` and held
+  `sum 2 m P_m` (built, `atoms::plane_weights`; per band `-2 A_b` at
   least half full, `0` below), held and open the
   isoclinic winding read mod 2; pairing and stripping as coboundaries,
   the occupancy, the capacity and the windings' total the class; every law

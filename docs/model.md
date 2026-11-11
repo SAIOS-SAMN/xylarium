@@ -362,16 +362,30 @@ components, and each formation mechanic moves one of them.
   whole `p = h - o = (3Z - 3Q) / 3W`. Its dilation is the Z face itself,
   `D(p) = h / o = 3Z / 3Q`, and the Q face is its antipole,
   `D(-p) = 3Q / 3Z`.
-- **The phase.** `R` is the axis plane's turn, in degrees, joining the
-  common phase (#183). The dipole's faces read `D(p)` turned by `+R` and
-  `D(-p)` turned by `-R`. `R` turns the faces and is never added to a
-  share: #148's `3Z / 3Q + R` adds a turn to a dilation (I009).
+- **The phase.** `R` is each Hopf plane's phase, `R_p`, joining the common
+  phase (#183). It turns the faces by composition, never by addition
+  (ruled 2026-11-11, E018): read as a push in `(-1, 1)`, it composes with
+  the nucleon split by the flow law, `p_net,p = p_nuc,p (+) R_p`, so the
+  dilations multiply, `D(p_net,p) = D(p_nuc,p) D(R_p)`. The Z face reads
+  `(3Z_p / 3Q_p) D(R_p)` and the Q face `(3Q_p / 3Z_p) D(-R_p)`; their
+  product is one, and `R_p = 0` leaves the bare dipole. #148's
+  `3Z / 3Q + R` added a turn to a dilation (I009, closed).
+- **The rest point.** At a bounce the medium's push is zero, so the rest
+  point is `p_net,p = 0`: `p*_nuc,p = -R_p`, `3Z*_p / 3Q*_p = (1 - R_p) /
+  (1 + R_p)`. A kind at `abs(R_p) = 1` has none and is refused. The
+  reading and the table built from it are #201's next step; the counts it
+  gives are rational, and their reading back to whole nucleons is the
+  Diophantine split (#149).
+- **The two holds.** `3W = 3Z + 3Q` is the nucleon whole. The electron
+  hold `W_e = 3Z - U` (`compound::electron_hold`) is the held states the
+  bound electrons screen, against which the open channel `abs(R_p) u` acts
+  (I010, closed).
 - **The transitions.** Each mechanic of formation moves one component:
 
   | Mechanic | Moves | Keeps | Law |
   |---|---|---|---|
   | Capture and stripping of electrons (`atoms::unpaired_hot`, the jetstream's pole channels) | `R`, and the electrons' open and paired states | `3W`, `p` | built: the jetstream moves the electrons' pole state `t = U / W_held`, held to open, not nucleons |
-  | The axis fill, both ways (`atoms::Band::axis_levels`, `circuit::fill_share`) | the electrons' axis levels, so the polarity `A` and both dipoles of the split | `3W` | built (ruled 2026-11-11): the share `f_Q = abs(R) u / (W + abs(R) u)` enters from the Q side toward Z when `R > 0`, none when `R <= 0`, at the kind's capture phase; exact shares, never floored |
+  | The fill, both ways, per Hopf plane (`atoms::Band::plane_levels`, `circuit::fill_shares`) | the electrons' levels on each plane, so the polarities `A_p` and both dipoles of each plane's split | `3W` | built (ruled 2026-11-11): on plane `p` the share `f_p = abs(R_p) u / (W_e + abs(R_p) u)` enters from the Q side toward Z when `R_p > 0`, none when `R_p <= 0`, at the plane's capture phase; exact shares, never floored |
   | Fusion of `k` nuclei, fission (`stars::fusion_step`, the sequence) | `3W`: summed, or split | the split by weight: `h' = (sum W_i h_i) / (sum W_i)`, the mediant of the parts' `D` | built for `Z`; `Q` read from a table |
   | Nucleon conversion, Z to Q and back | `p`, by flow steps: `D(p') = D(p) D(s)` | `3W` | **not built**: every genesis and every galaxy reads one fixed table of measured weights (`crates/xyl-cosmos/data/elements.tsv`, through `circuit::mass_number`, S029) |
   | A bond | share through the bound electrons `g` between the strata | `3W` | LAW-COUPLING v2 (#241) |
@@ -399,7 +413,7 @@ components, and each formation mechanic moves one of them.
   1. The rest point at a singularity: the throat's medium as the
      resistance, read per dipole. At a throat the medium's share is 1/2, a
      push of 0, so the rest point is the kind's own axis split: its states
-     on the axis plane by side (`atoms::Band::axis_levels`), giving
+     on the axis plane by side (`atoms::Band::plane_levels`), giving
      `t = 3Q / 3Z`. Benched by `observe split` over Z 1 to 1700, it reads:
      - the seals exactly on the equator, `t = 1`, as The dipole states;
      - by count (the neutral level halved at the equator), `t <= 1` for
@@ -415,6 +429,26 @@ components, and each formation mechanic moves one of them.
      phase `(s Z) mod 1`, the crossing phase the founding carries, and held
      as exact shares into the axis polarity `A` that the universal core's
      cohorts read (`Substrate::spin_orbit`).
+
+     Ruled 2026-11-11: the split, the fill and `R` are read per Hopf plane,
+     not on the axis plane alone (S137 remediated, E016). The six planes
+     are the carrier's six dipoles, twelve faces on `S^11`, Faces of the
+     dipole on S^n. On plane `p` the levels are the plane's charge `m_p`,
+     `C(l - |m_p| + 9, 9)` orientations each: a harmonic's multiplicity
+     reads only `sum |m_p|`, so every plane counts alike
+     (`atoms::tests::every_plane_counts_its_levels_alike`). Each plane reads
+     the capture phase `psi_p = (w_p s Z) mod 1` at the winding `w`,
+     its phase `R_p = kappa (1 - 2 frac(psi_p))`, the fibre's coherence
+     carried whole on every plane, and its fill `f_p`
+     (`circuit::fill_shares`), so its polarity `A_p`
+     (`atoms::plane_polarities`). At the bounce the winding is the common
+     phase (Hopf carrier), so the six planes read alike and the scalar
+     reading lost nothing there: the planes part only where a winding is
+     not common (the Seifert twist, #128) or a tilt turns the pole axis.
+     The boundaries per plane are two (E017): the balance `t_p = 1`, which
+     is `p_net,p = 0` and `D(p_net,p) = 1` at once, and the fill's reversal
+     `R_p = 0`. `observe split LO HI W` reads the six planes at any
+     winding.
   2. The flow step `s` of one conversion, and its carry on `R`.
   3. Each galactic core's table at its bounce, from its medium, as an event
      in the galaxy's history. `circuit::mass_number(z)` becomes a reading of
@@ -1253,7 +1287,7 @@ Planned ([#158](https://github.com/SAIOS-SAMN/xylarium/issues/158)), after Weigh
 planes, under axiom 9.
 
 Every law that reads the atom reads two integers per kind: the held count
-`W = 3Z - U` (`compound::hold`), three per proton, a delimiter, and the open
+`W = 3Z - U` (`compound::electron_hold`), three per proton, a delimiter, and the open
 states `U` (`compound::open`, `atoms::unpaired`). The atom carries its
 capacity (`atoms::Atom`, `atoms::capacity`): bands `(n, l)`, each
 orientation empty, single or paired; each state's weight `m` in Z^6 over
@@ -1280,19 +1314,19 @@ dimensions.
      (`atoms::tests::the_occupancy_partitions_the_capacity`).
   2. **States per plane.** Each state's weight `m` places it on the six
      planes: `2P_k`, `U_k` and the pole `t_k = U_k / 2P_k` per plane (The
-     six planes). Built on the axis plane: each band's occupancy by axis
-     level `m0` (`atoms::Band::axis_levels`; the level holds
-     `C(l - |m0| + 9, 9)` orientations, singles fill from the Z side, and
-     beyond half full the pairs fill from the Z side and the singles stay on
-     the Q side), and each kind's Z side, neutral level and Q side
-     (`atoms::axis_sides`); the axis polarity `A` reads it. The five
-     isoclinic planes are not split: at rest no state's isoclinic plane is
-     chosen (T6, T7), so their split waits on the spin's per-plane turning
+     six planes). Built on every plane (#201, E016): each band's occupancy
+     by the plane's charge `m_p` (`atoms::Band::plane_levels`; the level
+     holds `C(l - |m_p| + 9, 9)` orientations on every plane, filled from
+     both sides by the plane's share `f_p`), and each kind's Z side,
+     neutral level and Q side per plane (`atoms::plane_sides`); the plane
+     polarities `A_p` read it. At rest the planes part only by their fill
+     shares, which are equal in the common phase; their twist signs wait on
+     the spin's per-plane turning
      ([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128)).
   3. **Windings, not parity.** Each orientation's winding is kept in ZZ.
-     On the axis plane the weights are built (`atoms::axis_weights`): the
-     open states weigh `sum m0 U_m0`, the axis polarity `A`, and the held
-     states `sum 2 m0 P_m0`, a pair's two electrons sharing the level `m0`;
+     On every plane the weights are built (`atoms::plane_weights`): the
+     open states weigh `sum m U_m`, the plane polarity `A_p`, and the held
+     states `sum 2 m P_m`, a pair's two electrons sharing the level `m`;
      a seal is balanced, both zero. A band at least half full has every
      orientation occupied once and its levels symmetric, so its held weight
      is minus twice its open weight; a band below half has none
@@ -1321,7 +1355,7 @@ dimensions.
      (`atoms::Received`) against each band's tightness; it is to be read
      per plane, with the return (Chemistry from the elements, vent 1;
      [#128](https://github.com/SAIOS-SAMN/xylarium/issues/128)).
-- **Sites.** `compound::hold`, `compound::open`, `compound::open_hot`,
+- **Sites.** `compound::electron_hold`, `compound::open`, `compound::open_hot`,
   `atoms::unpaired`, `atoms::unpaired_hot`, `atoms::vessel`,
   `elements::closed_share`, `circuit::grain` (whole nuclei and the mass of
   an amount), the jet map's pole state (`circuit::core`), `formation`'s
@@ -1581,7 +1615,7 @@ Derived ([#78](https://github.com/SAIOS-SAMN/xylarium/issues/78)); not yet built
 Derived and built ([#86](https://github.com/SAIOS-SAMN/xylarium/issues/86)):
 the firmament is the closed kinds (`circuit::Substrate::found`), the spin
 orbit is `circuit::Substrate::spin_orbit` with each kind's axis polarity
-from `atoms::axis_polarity` (T7), and the anchor holds the core's spin
+from `atoms::plane_polarities` (T7, the axis plane's), and the anchor holds the core's spin
 after it (`circuit::Anchor::core_spin`); `xylarium observe universal-core`
 prints the cohorts. A pinched throat's own cohort spin waits on the
 pinches being built. A core is one throat with two faces, near and far, and never an open
@@ -2022,7 +2056,7 @@ what the physics produces is read, and the minds of a universe name it
     `atoms::unpaired_hot`, `atoms::tightness`), its two-atom bond read
     across both faces by planes (`atoms::bond`, `atoms::Bond`), and its
     weights on the six planes: the axis polarity
-    on the axis plane (`atoms::axis_polarity`, T7) and the twist charge on
+    on each plane (`atoms::plane_polarities`, T7) and the twist charge on
     the isoclinic planes (T6).
   - The two-part closure: the smallest cluster of two atoms with every
     state paired, `(u_B / g) A . (u_A / g) B` (`compound::closing`,
@@ -2340,7 +2374,7 @@ irradiation opens. Every quantity is read from the atoms:
   heat `q` (the turning the star receives per echo, in hydrogen units)
   keeps `u_z(q)` open states (`atoms::unpaired_hot`), its magnetism, the Q
   pole; its held count is `w_z(q) = 3Z - u_z(q)`, its bonding, the Z pole
-  (`compound::hold`; on the capacity its held states `Z - u_z(q)`,
+  (`compound::electron_hold`; on the capacity its held states `Z - u_z(q)`,
   axiom 9).
 - **The collective's pole point.** Over the held mixture, with `n_z` the
   count of nuclei of each kind (its share of the hold over `w_z`),

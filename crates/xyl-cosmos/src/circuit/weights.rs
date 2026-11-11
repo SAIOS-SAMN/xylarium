@@ -11,11 +11,14 @@
 // `neutrons_of` (the mass number less the
 // charge, summed over a cluster's parts); `nucleus_weights`; `mix_weights`
 // (whole nuclei only); `electron_phase`, R = kappa (1 - 2 frac(p)) in
-// [-kappa, kappa], zero for a kind with no charge; and `Substrate::two_weights`,
+// [-kappa, kappa], zero for a kind with no charge; `fill_shares`, the fill's
+// Q-side share on each of the six Hopf planes at its plane's capture phase
+// `psi_p = (w_p s Z) mod 1` (#201); and `Substrate::two_weights`,
 // the universe's nuclides at t (firmament held, galaxies, matter in
 // flight). All counts are exact rationals.
 
 use super::*;
+use xyl_core::hopf::PLANES;
 use xyl_core::Q;
 
 /// Z, Q and R: Z the protons, Q the neutrons, R the electrons' phase state at
@@ -150,32 +153,40 @@ pub fn electron_phase(k: u32, p: &Q) -> Q {
     &kappa * &(&Q::ONE - &(&Q::int(2) * &p.frac()))
 }
 
-/// The share of a kind's axis fill entering from the Q side toward Z (#201):
-/// the face of the electron phase's channel, which moves `R u` of the
-/// kind's states from Q to Z against its held count `W` (the jetstream law),
-/// `f_Q = |R| u / (W + |R| u)`, read at the kind's capture phase about the
-/// throat, `psi = (s Z) mod 1` with `s` the torsion share (the crossing
-/// phase the founding carries). The sign of `R` picks the direction: for
-/// `R > 0` the channel runs Q to Z and `f_Q` is that face; for `R <= 0` it
-/// runs Z to Q and the whole fill enters from the Z side (`f_Q = 0`). A kind
-/// with no open state has no aperture, `f_Q = 0`.
-pub fn fill_share(k: u32, share: &Q) -> Q {
-    let psi = (share * &Q::int(i64::from(k))).frac();
-    let r = electron_phase(k, &psi);
+/// The shares of a kind's fill entering from the Q side toward Z on each
+/// Hopf plane (#201): per plane `p`, the face of the electron phase's channel,
+/// which moves `R_p u` of the kind's states from Q to Z against its electron
+/// hold `W_e = 3Z - U` (the jetstream law), `f_p = |R_p| u / (W_e + |R_p|
+/// u)`. `R_p` is read at the plane's capture phase about the throat, `psi_p = (w_p s Z) mod
+/// 1`, with `s` the torsion share (the crossing phase the founding carries)
+/// and `w_p` the plane's winding: the fibre turns plane `p` at `w_p` times
+/// the common rate, and its coherence `kappa` is the whole fibre's on every
+/// plane. The sign of `R_p` picks the plane's direction: for `R_p > 0` the
+/// channel runs Q to Z and `f_p` is that face; for `R_p <= 0` it runs Z to
+/// Q and the plane's fill enters from the Z side alone (`f_p = 0`). A kind
+/// with no open state has no aperture on any plane. In the common phase
+/// (`hopf::COMMON`, the Hopf action) the six shares are equal.
+pub fn fill_shares(k: u32, share: &Q, winding: &[i64; PLANES]) -> [Q; PLANES] {
     let u = Q::int(i64::from(crate::compound::open(k)));
-    let w = Q::int(i64::from(crate::compound::hold(k)));
-    if r.signum() <= 0 || u.signum() <= 0 {
-        return Q::ZERO;
-    }
-    let channel = &r * &u;
-    channel.checked_div(&(&w + &channel)).unwrap_or(Q::ZERO)
+    let w_e = Q::int(i64::from(crate::compound::electron_hold(k)));
+    let charge = &(share * &Q::int(i64::from(k)));
+    winding.map(|wp| {
+        let psi = (charge * &Q::int(wp)).frac();
+        let r = electron_phase(k, &psi);
+        if r.signum() <= 0 || u.signum() <= 0 {
+            return Q::ZERO;
+        }
+        let channel = &r * &u;
+        channel.checked_div(&(&w_e + &channel)).unwrap_or(Q::ZERO)
+    })
 }
 
-/// [`fill_share`] at the founded universe's torsion share, read from the
-/// anchor's admitted spin: the share of the universal table (#201).
-pub fn universal_fill_share(k: u32) -> Q {
+/// [`fill_shares`] at the founded universe's torsion share, read from the
+/// anchor's admitted spin, in the common phase: the shares of the universal
+/// table (#201).
+pub fn universal_fill_shares(k: u32) -> [Q; PLANES] {
     let share = crate::bounce::torsion_share(&Q::ONE, &crate::circuit::anchor().spin);
-    fill_share(k, &share)
+    fill_shares(k, &share, &xyl_core::hopf::COMMON)
 }
 
 impl Substrate {
@@ -213,5 +224,32 @@ impl Substrate {
             );
         }
         mix_weights(&all)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn each_plane_fills_at_its_own_capture_phase() {
+        // In the common phase the six planes' shares are equal; at any
+        // winding each plane's share is the share of a common winding of its
+        // own rate, and every share is a face in [0, 1), zero without an
+        // aperture.
+        let share = xyl_core::ratio!(3, 5);
+        let winding = [1, 2, -1, 3, 0, 5];
+        for k in 1..=crate::elements::TOP_Z {
+            let common = fill_shares(k, &share, &xyl_core::hopf::COMMON);
+            assert!(common.iter().all(|f| f == &common[0]), "Z{k}");
+            let f = fill_shares(k, &share, &winding);
+            for (p, wp) in winding.iter().enumerate() {
+                assert_eq!(f[p], fill_shares(k, &share, &[*wp; PLANES])[0], "Z{k}");
+                assert!(f[p].signum() >= 0 && f[p] < Q::ONE, "Z{k}");
+                if crate::compound::open(k) == 0 {
+                    assert_eq!(f[p], Q::ZERO, "Z{k}");
+                }
+            }
+        }
     }
 }

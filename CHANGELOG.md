@@ -358,6 +358,26 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The split, the fill and the electron phase are read per Hopf plane (#201,
+  ruled, E016). `circuit::fill_shares` gives each plane's Q-side share at
+  its capture phase `psi_p = (w_p s Z) mod 1`, with `R_p = kappa (1 - 2
+  frac(psi_p))`; `atoms::Band::plane_levels`, `atoms::plane_sides`,
+  `atoms::plane_weights` and `atoms::plane_polarities` read each plane by
+  its charge `m_p` (replacing `Band::axis_levels`, `axis_sides`,
+  `axis_weights` and `axis_polarity`). Every plane counts its levels alike,
+  so in the common phase the six read alike and no founding reading moves;
+  `observe split LO HI W` reads the six planes at any winding and counts the
+  kinds whose planes part. The axis-plane-only reading is registered and
+  remediated (S137); the per-plane boundaries are stated (E017).
+
+- The electron hold is named apart from the nucleon whole (#201, I010):
+  `compound::hold` is now `compound::electron_hold`, `W_e = 3Z - U`, and
+  its sites read `w_e`; `3W = 3Z + 3Q` is the nucleon whole. The phase
+  turns the nucleon dipole by composition (E018, I009 closed):
+  `D(p_nuc,p (+) R_p) = D(p_nuc,p) D(R_p)` on the Z face and its inverse on
+  the Q face, with the rest point `3Z*_p / 3Q*_p = (1 - R_p) / (1 + R_p)`
+  at a bounce.
+
 - The axis fill is bidirectional (#201, ruled): a band's electrons enter
   from the Q side toward Z by the face of the electron phase's channel
   against the held count, `f_Q = |R| u / (W + |R| u)`, when `R > 0` at the

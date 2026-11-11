@@ -171,10 +171,10 @@ struct Row {
 pub const TOP_Z: u32 = 1700;
 
 /// The closed share of a capture that makes kind `z`: its hold over its
-/// span, `compound::hold(z) / 3Z = (3Z - unpaired) / 3Z`.
+/// span, `compound::electron_hold(z) / 3Z = (3Z - unpaired) / 3Z`.
 pub fn closed_share(z: u32) -> Q {
     // Stand-in S035: The closed share W / 3Z is built in place of the capacity face.
-    Q::int(i64::from(crate::compound::hold(z)))
+    Q::int(i64::from(crate::compound::electron_hold(z)))
         .checked_div(&Q::int(3 * i64::from(z)))
         .unwrap_or(Q::ZERO)
 }

@@ -38,11 +38,11 @@ pub struct Orbit {
 }
 
 impl Orbit {
-    /// The plane's frame: the tilt on the plane of axes 2, 3, then the node
+    /// The plane's rotor: the tilt on the plane of axes 2, 3, then the node
     /// on the core's plane (axes 1, 2), each a drawn half-angle direction,
     /// composed exactly.
-    pub fn frame(&self) -> xyl_core::rotor::Frame<3> {
-        crate::cores::drawn_frame(&self.node, &self.tilt)
+    pub fn rotor(&self) -> xyl_core::rotor::Rotor<3> {
+        crate::cores::drawn_rotor(&self.node, &self.tilt)
     }
 
     /// Orbital phase at `t` rings (turns): the initial phase plus the
@@ -136,13 +136,13 @@ impl Star {
 
     /// Bearing from the star's galactic core at `t` rings (galaxy units,
     /// relative to the core's place): reach (orbit radius), unit direction
-    /// (the plane's frame applied to the phase; exact turns), and climb
+    /// (the plane's rotor applied to the phase; exact turns), and climb
     /// off the plane (a disc star's vertical swing, zero otherwise).
     pub fn bearing(&self, t: Dy) -> (Q, [Q; 3], Q) {
         let o = &self.orbit;
         let (c, s) = cos_sin_turns(&Encl::exact(o.turns_at(t).to_q()));
         let dir = o
-            .frame()
+            .rotor()
             .apply(&[c, s, Encl::exact(Q::ZERO)])
             .map(|x| x.mid());
         let climb = match o.swing {

@@ -27,6 +27,7 @@ pub mod codec;
 pub mod coordinate;
 pub mod dyadic;
 pub mod event;
+pub mod hopf;
 pub mod measure;
 pub mod motion;
 pub mod q;

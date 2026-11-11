@@ -101,14 +101,14 @@ carry the `2^-40` resolution of the draw.
   carried by the multivector's type; its conformal model `Cl(n+1, 1)`
   provides points, versors and dilators. The nucleon poles described below
   are its origin and its point at infinity.
-- Frames (`xyl_core::rotor::Frame`) are even versors of `xyl_core::cga`
+- Rotors (`xyl_core::rotor::Rotor`) are even versors of `xyl_core::cga`
   over `N` base axes, the dimension held in the type. A turn names its
   plane by its two generators and is stated in degrees
   (`rotor::Turn`); a drawn half-angle direction is refused once, where it
   is drawn, if zero (`rotor::Direction`), and a plane written in the code
-  is checked when the code is compiled (`Frame::on`). Every manifold holds
-  its frame as an exact versor, and a frame turns a vector by the sandwich
-  `V v V~ / (V V~)` (`Frame::apply`), never by a matrix.
+  is checked when the code is compiled (`Rotor::on`). Every manifold holds
+  its plane as an exact rotor, and a rotor turns a vector by the sandwich
+  `V v V~ / (V V~)` (`Rotor::apply`), never by a matrix.
 - Sphere measure (`xyl_core::measure`) gives the share of an n-sphere
   within an angle of an axis, on which caps and shares on a manifold are
   based.
@@ -162,7 +162,7 @@ founding and the light read the capacity's occupancy instead (axiom 9).
 Next, in order:
 
 1. Done ([#26](https://github.com/SAIOS-SAMN/xylarium/issues/26)): the
-   frame's inverse (`Frame::inverse`) and the certified angle between two
+   rotor's inverse (`Rotor::inverse`) and the certified angle between two
    directions (`rotor::angle_between`) replace the `acos` readings in
    `manifold::gap` and `chain::Place::arc`.
 2. The atom's catalogue columns (mass number, phase temperatures, density)
@@ -213,8 +213,8 @@ where it belongs to one.
 29. **The flow law and the dilation in `xyl-core`** ([#42](https://github.com/SAIOS-SAMN/xylarium/issues/42), `defect`,
     `law`). Done: `D(p)`, the flow law and the deficit share in
     `xyl_core::shares`, and the squared share removed; the quaternion rotor
-    and its half-angle constructors replaced by the frame carrier
-    (`xyl_core::rotor::Frame`, turns on named planes in degrees). Left, the
+    and its half-angle constructors replaced by the rotor of turns
+    (`xyl_core::rotor::Rotor`, turns on named planes in degrees). Left, the
     field's twist rotor `1 + t B` (`field::rotate`), a half-angle tangent
     at a law's root, with the field's tier.
 30. **Duplicate laws** ([#43](https://github.com/SAIOS-SAMN/xylarium/issues/43), `defect`). Done: one deficit function, one
@@ -310,7 +310,7 @@ where it belongs to one.
     `law`; [model.md](model.md#the-frame-the-place-and-the-chain)). One
     frame carrier over the axis plane and five planes in `xyl_core::cga`,
     composed along the anchor chain (the carrier is built:
-    `xyl_core::rotor::Frame`, any planes within `cga::MAX_N`), replacing
+    `xyl_core::rotor::Rotor`, any planes within `cga::MAX_N`), replacing
     the three coordinates of `chain::Place`; tier maps by
     `manifold::dilation` only; separation and containment by caps in
     degrees; shear, stretch, torque and twist on every link; exact degrees on named planes.
@@ -378,6 +378,19 @@ where it belongs to one.
     and ledger (#164, after #142), B3 bodies as spheres (#165), B4 elements
     on a body (#166), B5 substrate trials as data (#167, with #140), B6 the
     board on the hypha (#168). Done: B1, `observe bench`.
+58. **The Hopf carrier** ([#183](https://github.com/SAIOS-SAMN/xylarium/issues/183), `law`, M4;
+    [model.md](model.md#the-hopf-carrier-the-six-planes-in-one-phase)). Ruled
+    2026-11-11: the base carrier is `S^1 -> S^11 -> CP^5`, the axis plane
+    in the common phase, the Z-Q stretch the axis plane's share split
+    across the join `S^11 = S^1 * S^9`; the per-plane twist (#128) the
+    weighted Seifert action; fibres separated by a rational overlap share;
+    linking by the strata and the plane pairs; S^360 unfibred. Done: the
+    carrier, the weighted turn, the overlap share and the linking in
+    `xyl_core::hopf`, and the founding's axes on its six planes (twelve
+    base axes, `circuit::plane_blade`, `bounce::AXES`). Next: the spin's
+    generator on the common phase (the axis plane joins
+    `bounce::spin_bivector`, a change of law read on the founding), then
+    #128's windings per body, then the board's bodies (#162).
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

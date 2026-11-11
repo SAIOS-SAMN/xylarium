@@ -61,25 +61,25 @@ pub struct Shape {
     pub rate: Dy,
 }
 
-/// A plane's frame from its drawn node and tilt: the tilt on the plane of
+/// A plane's rotor from its drawn node and tilt: the tilt on the plane of
 /// axes 2, 3, then the node on the plane of axes 1, 2 (the axis's own),
 /// composed exactly.
-pub(crate) fn drawn_frame(
+pub(crate) fn drawn_rotor(
     node: &xyl_core::rotor::Direction,
     tilt: &xyl_core::rotor::Direction,
-) -> xyl_core::rotor::Frame<3> {
-    use xyl_core::rotor::Frame;
-    Frame::on::<1, 2>(node).then_after(&Frame::on::<2, 3>(tilt))
+) -> xyl_core::rotor::Rotor<3> {
+    use xyl_core::rotor::Rotor;
+    Rotor::on::<1, 2>(node).then_after(&Rotor::on::<2, 3>(tilt))
 }
 
 impl Shape {
     /// The core's place at `t` rings on the universe's sphere of radius `r`: its
-    /// plane's frame (node about the axis, then tilt) applied to its phase at
+    /// plane's rotor (node about the axis, then tilt) applied to its phase at
     /// t, at its reach.
     pub fn place_at(&self, t: Dy, r: &Q) -> crate::chain::Place {
         let phase = (Dy::from_q(&self.phase) + self.rate * t).to_q().frac();
         let (c, s) = xyl_core::certified::cos_sin_turns(&xyl_core::certified::Encl::exact(phase));
-        let dir = drawn_frame(&self.node, &self.tilt)
+        let dir = drawn_rotor(&self.node, &self.tilt)
             .apply(&[c, s, xyl_core::certified::Encl::exact(Q::ZERO)])
             .map(|x| x.mid());
         crate::chain::Place::core(self.anchor().0, dir, r)
@@ -281,7 +281,7 @@ fn founding_of(origin: &Origin) -> Option<Arc<Founding>> {
             .unwrap_or_default();
         // The place at t = 0 is kept for reference; readings use place_at.
         let dir0 = {
-            drawn_frame(&node, &tilt)
+            drawn_rotor(&node, &tilt)
                 .apply(&[
                     xyl_core::certified::Encl::exact(cs.clone()),
                     xyl_core::certified::Encl::exact(sn.clone()),

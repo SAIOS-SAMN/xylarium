@@ -1,4 +1,4 @@
-//! Frames: turns on named planes, stated in degrees, composed exactly as
+//! Rotors: turns on named planes, stated in degrees, composed exactly as
 //! the even versors of the geometric algebra (`crate::cga`).
 //!
 //! Inputs: a [`Turn`], a plane named by its two generators (base axes counted
@@ -8,7 +8,7 @@
 //! turn as `certified::Encl` arrays of any dimension.
 //!
 //! Outputs:
-//! - [`Frame`] of `N` base axes, an even versor `c - s e_from e_toward` and the products of
+//! - [`Rotor`] of `N` base axes, an even versor `c - s e_from e_toward` and the products of
 //!   such versors, on any planes of base axes up to `cga::MAX_N` (the axis
 //!   plane and the five isoclinic planes among them): `of` turns `from`
 //!   toward `toward` by a turn's degrees, `drawn` by a drawn half-angle
@@ -22,12 +22,12 @@
 //! - [`angle_between`], the certified angle between two exact directions.
 //!
 //! Invariants: a turn's direction is its half-angle, `degrees / 720` of a
-//! turn, rounded down to the grid of `2^-bits` once; after that every frame
+//! turn, rounded down to the grid of `2^-bits` once; after that every rotor
 //! and every turned exact vector is exact, at any scale of the versor (the
 //! sandwich is divided by `V V~`, a positive scalar for a product of turns).
 //! A turn whose plane is not two distinct axes within `cga::MAX_N`, and the
 //! zero direction `(0, 0)`, which holds no angle, are refused (`None`). A
-//! frame holds its dimension `N` in its type: its planes lie within its `N`
+//! rotor holds its dimension `N` in its type: its planes lie within its `N`
 //! axes, so it turns an `N`-vector without refusal.
 
 use crate::certified::{cos_sin_turns, down, Encl};
@@ -49,8 +49,8 @@ pub struct Turn {
 
 /// A drawn half-angle direction `(c, s)` at any scale, never the zero
 /// direction `(0, 0)`, which holds no angle: the refusal is taken once, where
-/// the direction is drawn ([`Direction::drawn`]), so a frame built from it
-/// ([`Frame::on`]) needs none.
+/// the direction is drawn ([`Direction::drawn`]), so a rotor built from it
+/// ([`Rotor::on`]) needs none.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Direction {
     c: Dy,
@@ -87,20 +87,20 @@ impl Direction {
 /// the code is compiled: two distinct axes of `n`, within `cga::MAX_N`.
 #[expect(
     clippy::panic,
-    reason = "a const block: a plane written outside the frame fails the build, never a run"
+    reason = "a const block: a plane written outside the rotor fails the build, never a run"
 )]
 const fn written_plane(from: usize, toward: usize, n: usize) -> (usize, usize) {
     match (base_axis(from), base_axis(toward)) {
         (Some(a), Some(b)) if from != toward && from <= n && toward <= n => (a, b),
-        _ => panic!("a frame's plane is two distinct axes of the frame"),
+        _ => panic!("a rotor's plane is two distinct axes of the rotor"),
     }
 }
 
-/// A frame of `N` base axes: an even versor of `cga`, the product of turns
+/// A rotor of `N` base axes: an even versor of `cga`, the product of turns
 /// on planes within those axes, held at any scale with the reciprocal of
 /// its scale `V V~`.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Frame<const N: usize> {
+pub struct Rotor<const N: usize> {
     v: Mv,
     inv: Q,
 }
@@ -122,49 +122,49 @@ fn half_direction(degrees: &Q, bits: u32) -> (Q, Q) {
     (down(&c.mid(), bits), down(&s.mid(), bits))
 }
 
-impl<const N: usize> Frame<N> {
-    /// The identity frame: no turn.
-    pub fn identity() -> Frame<N> {
-        Frame {
+impl<const N: usize> Rotor<N> {
+    /// The identity rotor: no turn.
+    pub fn identity() -> Rotor<N> {
+        Rotor {
             v: Mv::scalar(Q::ONE),
             inv: Q::ONE,
         }
     }
 
-    /// The frame of one turn, its half-angle on the grid of `2^-bits`.
-    /// `None` for a plane that is not two distinct axes of the frame's `N`
+    /// The rotor of one turn, its half-angle on the grid of `2^-bits`.
+    /// `None` for a plane that is not two distinct axes of the rotor's `N`
     /// (within `cga::MAX_N`), and where the gridded half-angle is the zero
     /// direction.
-    pub fn of(turn: &Turn, bits: u32) -> Option<Frame<N>> {
+    pub fn of(turn: &Turn, bits: u32) -> Option<Rotor<N>> {
         let (c, s) = half_direction(&turn.degrees, bits);
-        Frame::drawn(turn.from, turn.toward, &c, &s)
+        Rotor::drawn(turn.from, turn.toward, &c, &s)
     }
 
-    /// The frame of a drawn half-angle direction `(c, s)` at any scale on
+    /// The rotor of a drawn half-angle direction `(c, s)` at any scale on
     /// the plane turning `from` toward `toward`: the versor
     /// `c - s e_from e_toward`, of scale `c^2 + s^2`. `None` for the zero
     /// direction and for a plane that is not two distinct axes of the
-    /// frame's `N` (within `cga::MAX_N`).
-    pub fn drawn(from: usize, toward: usize, c: &Q, s: &Q) -> Option<Frame<N>> {
+    /// rotor's `N` (within `cga::MAX_N`).
+    pub fn drawn(from: usize, toward: usize, c: &Q, s: &Q) -> Option<Rotor<N>> {
         let b = plane(from, toward, N)?;
         let inv = (&(c * c) + &(s * s)).recip()?;
-        Some(Frame {
+        Some(Rotor {
             v: Mv::scalar(c.clone()).sub(&b.scale(s)),
             inv,
         })
     }
 
-    /// The frame of a drawn direction on the plane turning axis `FROM`
+    /// The rotor of a drawn direction on the plane turning axis `FROM`
     /// toward axis `TOWARD`, both written in the code and checked when it is
     /// compiled: the versor `c - s e_FROM e_TOWARD`, of scale `c^2 + s^2`.
-    pub fn on<const FROM: usize, const TOWARD: usize>(d: &Direction) -> Frame<N> {
+    pub fn on<const FROM: usize, const TOWARD: usize>(d: &Direction) -> Rotor<N> {
         let (a, b) = const { written_plane(FROM, TOWARD, N) };
         let (c, s) = (d.c.to_q(), d.s.to_q());
         let plane = Mv::blade(a, Q::ONE).geo(&Mv::blade(b, Q::ONE));
         // A `Direction` is never `(0, 0)`, so `c^2 + s^2 > 0` and the
         // reciprocal is always taken.
         let inv = (&(&c * &c) + &(&s * &s)).recip().map_or(Q::ONE, |r| r);
-        Frame {
+        Rotor {
             v: Mv::scalar(c).sub(&plane.scale(&s)),
             inv,
         }
@@ -172,29 +172,29 @@ impl<const N: usize> Frame<N> {
 
     /// `self` after `o`: the product turns by `o` first, then by `self`; its
     /// scale is the product of the two scales.
-    pub fn then_after(&self, o: &Frame<N>) -> Frame<N> {
-        Frame {
+    pub fn then_after(&self, o: &Rotor<N>) -> Rotor<N> {
+        Rotor {
             v: self.v.geo(&o.v),
             inv: &self.inv * &o.inv,
         }
     }
 
-    /// The inverse frame: the reverse `V~`, of the same scale. Composed with
-    /// the frame it is the scalar `V V~`, the identity at that scale,
+    /// The inverse rotor: the reverse `V~`, of the same scale. Composed with
+    /// the rotor it is the scalar `V V~`, the identity at that scale,
     /// exactly.
-    pub fn inverse(&self) -> Frame<N> {
-        Frame {
+    pub fn inverse(&self) -> Rotor<N> {
+        Rotor {
             v: self.v.reverse(),
             inv: self.inv.clone(),
         }
     }
 
-    /// The frame's versor in `cga`.
+    /// The rotor's versor in `cga`.
     pub fn versor(&self) -> &Mv {
         &self.v
     }
 
-    /// An exact vector turned: `V v V~ / (V V~)`. The frame's planes lie
+    /// An exact vector turned: `V v V~ / (V V~)`. The rotor's planes lie
     /// within its `N` axes, so the turned vector does too; an axis past
     /// `cga::MAX_N` lies on no plane and keeps its component.
     fn turn(&self, v: &[Q; N]) -> [Q; N] {
@@ -204,7 +204,7 @@ impl<const N: usize> Frame<N> {
         })
     }
 
-    /// An enclosed vector turned by the frame: its exact midpoint turned,
+    /// An enclosed vector turned by the rotor: its exact midpoint turned,
     /// each component widened by the sum of the vector's radii, since a turn
     /// moves no vector by more than its length. An exact vector stays exact.
     pub fn apply(&self, v: &[Encl; N]) -> [Encl; N] {
@@ -268,13 +268,13 @@ mod tests {
     fn a_turn_in_degrees_carries_its_generator_exactly() {
         // A right angle turns e1 to e2 exactly: its half-angle direction has
         // equal components on any grid.
-        fn right<const N: usize>(from: usize, toward: usize) -> Frame<N> {
+        fn right<const N: usize>(from: usize, toward: usize) -> Rotor<N> {
             let turn = Turn {
                 from,
                 toward,
                 degrees: Q::int(90),
             };
-            Frame::of(&turn, 40).unwrap()
+            Rotor::of(&turn, 40).unwrap()
         }
         assert_eq!(right::<3>(1, 2).apply(&exact([1, 0, 0])), exact([0, 1, 0]));
         // Turning toward the other way round is the inverse.
@@ -284,14 +284,14 @@ mod tests {
         let r = right::<3>(2, 3).then_after(&right(1, 2));
         assert_eq!(r.apply(&exact([1, 0, 0])), exact([0, 0, 1]));
         // Turns on the isoclinic planes past the third axis compose in a
-        // frame that holds them, and leave a vector off their planes as it
+        // rotor that holds them, and leave a vector off their planes as it
         // is.
         let far = right::<11>(10, 11).then_after(&right(4, 5));
         let (mut v, mut w) = ([0i64; 11], [0i64; 11]);
         (v[0], v[3], v[9]) = (1, 1, 1);
         (w[0], w[4], w[10]) = (1, 1, 1);
         assert_eq!(far.apply(&exact(v)), exact(w));
-        // One axis twice, an axis outside the frame and the zero direction
+        // One axis twice, an axis outside the rotor and the zero direction
         // hold no plane or angle.
         let none = |from, toward| {
             let turn = Turn {
@@ -299,42 +299,42 @@ mod tests {
                 toward,
                 degrees: Q::int(30),
             };
-            Frame::<3>::of(&turn, 40)
+            Rotor::<3>::of(&turn, 40)
         };
         assert!(none(2, 2).is_none() && none(0, 1).is_none() && none(3, 4).is_none());
-        assert!(Frame::<{ crate::cga::MAX_N + 1 }>::drawn(
+        assert!(Rotor::<{ crate::cga::MAX_N + 1 }>::drawn(
             1,
             crate::cga::MAX_N + 1,
             &Q::ONE,
             &Q::ONE
         )
         .is_none());
-        assert!(Frame::<3>::drawn(1, 2, &Q::ZERO, &Q::ZERO).is_none());
+        assert!(Rotor::<3>::drawn(1, 2, &Q::ZERO, &Q::ZERO).is_none());
         assert!(Direction::drawn(Dy::ZERO, Dy::ZERO).is_none());
-        // A direction on a written plane is the same frame as the drawn one.
+        // A direction on a written plane is the same rotor as the drawn one.
         let d = Direction::drawn(Dy::int(3), Dy::int(-2)).unwrap();
-        let drawn = Frame::<3>::drawn(2, 3, &Q::int(3), &Q::int(-2)).unwrap();
-        assert_eq!(Frame::<3>::on::<2, 3>(&d), drawn);
+        let drawn = Rotor::<3>::drawn(2, 3, &Q::int(3), &Q::int(-2)).unwrap();
+        assert_eq!(Rotor::<3>::on::<2, 3>(&d), drawn);
         assert_eq!(
-            Frame::<3>::on::<1, 2>(&Direction::ZERO_ANGLE),
-            Frame::identity()
+            Rotor::<3>::on::<1, 2>(&Direction::ZERO_ANGLE),
+            Rotor::identity()
         );
     }
 
     #[test]
     fn a_frame_keeps_length_and_its_inverse_undoes_it() {
-        // A frame at any scale keeps an exact vector's length, and its
+        // A rotor at any scale keeps an exact vector's length, and its
         // inverse brings the vector back.
-        let s = Frame::<3>::drawn(1, 2, &Q::int(2), &Q::int(5))
+        let s = Rotor::<3>::drawn(1, 2, &Q::int(2), &Q::int(5))
             .unwrap()
-            .then_after(&Frame::drawn(2, 3, &Q::int(1), &crate::ratio!(-1, 3)).unwrap())
-            .then_after(&Frame::drawn(1, 3, &Q::int(3), &Q::int(1)).unwrap());
+            .then_after(&Rotor::drawn(2, 3, &Q::int(1), &crate::ratio!(-1, 3)).unwrap())
+            .then_after(&Rotor::drawn(1, 3, &Q::int(3), &Q::int(1)).unwrap());
         let v = exact([3, -4, 7]);
         let turned = s.apply(&v);
         let len = |v: &[Encl; 3]| v.iter().fold(Q::ZERO, |acc, c| &acc + &(&c.lo * &c.lo));
         assert_eq!(len(&turned), len(&v));
         assert_eq!(s.inverse().apply(&turned), v);
-        // The frame and its inverse compose to the positive scalar V V~.
+        // The rotor and its inverse compose to the positive scalar V V~.
         let p = s.then_after(&s.inverse());
         assert_eq!(p.versor().grade(0), *p.versor());
         assert!(p.versor().scalar_part() > Q::ZERO);
@@ -371,7 +371,7 @@ mod tests {
                 toward: 2,
                 degrees,
             };
-            let image = Frame::<2>::of(&turn, 60).unwrap().apply(&exact([1, 0]));
+            let image = Rotor::<2>::of(&turn, 60).unwrap().apply(&exact([1, 0]));
             assert_eq!(image, [c, s].map(Encl::exact));
         }
     }

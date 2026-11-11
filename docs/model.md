@@ -419,8 +419,8 @@ split is not yet built.
 ### The bounce (`bounce.rs`)
 
 A universe begins as the white-hole face of a parent's black hole, computed
-exactly in the conformal algebra `Cl(12, 1)` over `Q` (eleven base axes: the
-pole axis and the five isoclinic planes).
+exactly in the conformal algebra `Cl(13, 1)` over `Q` (twelve base axes: the
+axis plane, its first axis the pole axis, and the five isoclinic planes).
 
 - Horizon reach: the hole holds the deficit share `delta = M / (R + M)` at
   reach `R`. The horizon is where the received share `1 - delta` is twice
@@ -806,10 +806,54 @@ replaces `galaxy::Structure`'s bands, `galaxy::Orbit`'s circles on drawn
 planes and `chain::Place`'s points (streamlines are the throat orbit's
 sheared ellipses, `e = delta`, `360 delta` degrees a traversal).
 
-Open: the core curve between tiers; mutual linking `Lk_ij`; the fibres'
-separation in shares (not Fubini-Study's arccos); helicity without its
-`Gamma^2` self term; per-plane twist by separation
-([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128), ruled).
+Open: the core curve between tiers; helicity without its `Gamma^2` self
+term; per-plane twist by separation
+([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128), ruled). The
+fibres' carrier, their separation and their linking are ruled and built
+(The Hopf carrier, below).
+
+### The Hopf carrier: the six planes in one phase
+
+Ruled 2026-11-11 ([#183](https://github.com/SAIOS-SAMN/xylarium/issues/183)); built in `xyl_core::hopf`.
+
+- **The carrier.** The band counts (1, 12, 77, 352 orientations) are the
+  harmonics on `S^11` in `C^6`, each orientation a fibre of
+  `S^1 -> S^11 -> CP^5`. That fibration needs a free circle action, so all
+  six planes turn in the common phase, the axis plane included:
+  `z_p -> e^{i theta} z_p` (`hopf::turn` with `hopf::COMMON`). Turning only
+  the five isoclinic planes would fix the circle `z_iso = 0` and leave a
+  cone over `CP^4`, not `CP^5`.
+- **The stretch.** The Z-Q stretch is the axis plane's share split, not
+  its phase: `S^11 = S^1_axis * S^9_iso`, a join, each point a split
+  `c0 = 1 / (1 + t0)`, `d0 = 1 - c0` between the axis circle and the
+  isoclinic `S^9` (which fibres over `CP^4`). The axis plane's phase joins
+  the common turn, so a pure axis state still turns.
+- **The twist.** The per-plane twist (#128) is the weighted Seifert action
+  `z_p -> e^{i w_p theta} z_p`, `w` in `Z^6` (`hopf::turn` with any
+  winding).
+- **Separation.** Two fibres hold `c = sum_p min(s_p(i), s_p(j)) (1 -
+  arc_p / 180)` and pass `d = 1 - c` (`hopf::overlap`), `s_p` their plane
+  shares (`|m_p| / l` for a harmonic, `hopf::plane_shares`) and `arc_p` the
+  shorter arc of their phase difference on plane `p` in degrees. It is
+  exact, with no root and no arccosine; its pole `t = d / c` reads as the
+  faces law's.
+- **Linking.** Two circles do not link in `S^11`. The axis circle and the
+  isoclinic `S^9` link once (1 + 9 + 1 = 11, `hopf::STRATA_LINKING`). On
+  the 3-sphere `S^3_{p,q}` that two planes cut from `S^11` fibres link by
+  their winding products (`hopf::pair_linking`), and the axis-isoclinic
+  linking of two fibres is
+  `Lk = sum_{q=1..5} (w_i0 w_jq + w_j0 w_iq)` (`hopf::linking`).
+- **S^360.** It is even (`chi = 2`), so it has no circle fibration. It
+  stays the universe's measure space, and each body carries an
+  `S^11` bundle of the body over its site (#162).
+- **Layout.** The founding's points have the twelve base axes: the axis
+  plane on `cga` axes 1-2, its first the pole axis, and the isoclinic
+  planes on 3-4 to 11-12 (`circuit::plane_blade`, `bounce::AXES`).
+- **Open.** The spin's generator (`bounce::spin_bivector`) still turns
+  the five isoclinic planes only; the axis plane joins it as a change of
+  law, read on the founding. For the plane-pair products, which torus is
+  inside is set by the share split; a fibre on several plane pairs needs
+  its winding on each.
 
 ### The ring: the throat orbit and the echo's torsion
 
@@ -1438,10 +1482,11 @@ item 40); audited 2026-11-05. This section records where the cartography
 loses the model's dimensions and where the manifold chain is not composed,
 and the order in which that is to be opened up.
 
-- **The root.** A frame was a rational quaternion, the even part of Cl(3);
-  it is now an even versor of `xyl_core::cga` over any base axes
-  (`xyl_core::rotor::Frame`), each turn on a plane named by its generators
-  and stated in degrees. The frames built so far turn three axes only. A place is `chain::Place`, a direction in three
+- **The root.** A body's plane was held as a rational quaternion, the even
+  part of Cl(3); it is now a rotor, an even versor of `xyl_core::cga` over
+  any base axes (`xyl_core::rotor::Rotor`), each turn on a plane named by
+  its generators and stated in degrees. The rotors built so far turn three
+  axes only. A place is `chain::Place`, a direction in three
   coordinates with a reach, a climb and an offset. The model's states live
   on the axis plane and five isoclinic planes (axiom 8); the algebra that
   holds them is `xyl_core::cga`, and the planes' blades are

@@ -285,7 +285,7 @@ mod tests {
         // The horizon grew with the hole: it stands exactly at the reach where
         // the deficit is one third, curved along the enclosure.
         assert_eq!(
-            c.hole.at[1],
+            c.hole.at[2],
             crate::bounce::curved_reach(&crate::bounce::horizon_reach(c.mass()), &c.enclosure)
         );
     }

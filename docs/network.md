@@ -4,8 +4,8 @@
 Xylarium integrates against its tagged releases, the stable contract the
 projects on the network pin to (its `mycelium-sdk` crate, the wire version
 and act table, and the shared physics library's law ids). The uplink is
-pinned to `v0.3.0`; `v0.4.0-rc.1` (wire `0x0200`, law version 5) is tagged
-and the move to it is open
+pinned to mycelium `main` at `7b89732d`, past `v0.4.0-rc.1` (wire v3);
+v0.4.0 final is not cut
 ([#82](https://github.com/SAIOS-SAMN/xylarium/issues/82)). The
 network Mycelium
 runs is called the [hypha](glossary.md). This document describes Xylarium's side
@@ -18,8 +18,9 @@ a universe to the hypha is not part of this repository. Without an uplink,
 
 ## How a kernel plugs in
 
-- **A client session.** The uplink opens an SDK client session with the
-  hypha and runs the universe's live play beside it (`run::run_with` with a
+- **A house on a node of xylarium's.** The uplink runs a hypha node for
+  xylarium, a peer of the mesh, and the house speaks to it through an SDK
+  session while the universe's live play runs beside it (`run::run_with` with a
   `run::Link`, below).
 - **The universe as a domain.** One universe, founded from one package and
   one seed, is one domain. Keys on the seat surface are hashed under the
@@ -56,19 +57,19 @@ repository.
   universal clock, the upward ledger, the endowment and the domain
   commands (`xyl-uplink run` for live play with the house as a
   `run::Link`, `xyl-uplink found-universe` to found a domain).
-- **Dependencies.** `mycelium-sdk` pinned by git tag (`v0.3.0`), and
-  `xyl-core`, `xyl-cosmos`, `xyl-kernel` and `xylarium` pinned by git
-  revision of this repository. A kernel change the uplink needs lands here
-  first; the uplink then moves its pin.
-- **Status against v0.4.0-rc.1.** Not built: v0.4.0 changes act layouts
-  and addresses within wire `0x0200` and law version 5 (`ACT_LAWS` modes 7
-  and 8 become the clause register, signed by reconstruction; word, chart
-  and task addresses change), so the uplink cannot speak to a v0.4.0
-  hypha until it is moved (#82). The version numbers do not tell the two
-  apart: a v0.3.0 peer is not refused by its version. The SDK's own conformance suite,
-  run from this host with the kernel profile against Mycelium's test mesh,
-  conforms in process and on the network (2026-11-10). That run signs
-  with a scratch test voice: it is not a xylarium signing.
+- **Dependencies.** `mycelium-sdk` pinned by git revision of mycelium
+  `main` (`7b89732d`: wire v3 with the crossing record on universe acts, mu
+  as modes, typed acts), and `xyl-core`, `xyl-cosmos`, `xyl-kernel` and
+  `xylarium` pinned by git revision of this repository. A kernel change the
+  uplink needs lands here first; the uplink then moves its pin.
+- **The wire.** The house speaks every act through the SDK's `Session`,
+  inside Noise on the house home's static key, so the framing and the
+  TUniversal point are the SDK's and none is written in the uplink (#82).
+- **Topology** (ruled 2026-11-11). The house speaks to xylarium's own hypha
+  node at 127.0.0.1:7520, a peer of the mesh, and never dials a remote
+  hypha; the hypha in-process with the kernel is the target. The node
+  joins the standing mesh by the enrolment act (mycelium#276), which is
+  not built yet, so the uplink is not run live until it is.
 - **Signing the Concordance.** A kernel signs a clause by presenting its
   own reconstruction of each fixture under its key. Xylarium has signed
   none: it implements LAW-COORDINATE at v1 only, and has no FORMS-PASSAGE

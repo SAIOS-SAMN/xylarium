@@ -465,7 +465,10 @@ where it belongs to one.
     at `Q* / Z = H / R`, retiring S029, S119 and S120. Next:
     - each galactic core's table at its bounce (S138);
     - the conversion's flow step and carry on `R`;
-    - the nucleon dipole reading per plane from E018 (#149).
+    - the nucleon dipole reading per plane from E018, and the whole
+      nucleons by the Diophantine split (#149), replacing the nearest-nucleon
+      read-back (S139) that gives the basket's Q (ruled 2026-11-11,
+      mycelium#238).
 64. **Pivotry from the fibrations** ([#207](https://github.com/SAIOS-SAMN/xylarium/issues/207), `law`, `track`;
     [model.md](model.md#pivotry-from-the-fibrations)). Twist, writhe,
     strength, weakness, pull and break per plane from the Hopf carrier

@@ -97,6 +97,7 @@ pub fn rest_neutrons(z: u32) -> Option<Q> {
 /// An atom's mass number read back to whole nucleons, `A_z = floor(Z + Q_z
 /// + 1/2)` ([`rest_neutrons`], #149). `None` where `Q_z` is not read.
 pub fn mass_number(z: u32) -> Option<u32> {
+    // Stand-in S139: The whole-nucleon count is the rest point rounded to the nearest nucleon.
     let a =
         (&(&Q::int(i64::from(z)) + &rest_neutrons(z)?) + &xyl_core::ratio!(1, 2)).floor_i128()?;
     u32::try_from(a).ok().filter(|&a| a > 0)

@@ -60,7 +60,7 @@ pub fn mass_number(z: u32) -> Option<u32> {
                 .unwrap_or_default()
                 .iter()
                 .filter_map(|e| {
-                    // Stand-in S029: The nucleon count A is the standard atomic weight rounded.
+                    // Stand-in S029: One fixed table of weights for every universe and galaxy.
                     let a = (&e.a + &xyl_core::ratio!(1, 2)).floor_i128()?;
                     let a = u32::try_from(a).ok().filter(|&a| a > 0)?;
                     Some((e.z, a))

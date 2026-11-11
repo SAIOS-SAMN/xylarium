@@ -19,7 +19,11 @@ may change public APIs and the model's laws.
   and fission move `3W`; conversion moves `p` (not built: `Q` is Earth's
   atomic weight, S029); a bond moves share through `g`. The conversion's
   rest point `p*` is the law to derive (EQUATIONS.md E012 to E014, I009 to
-  I011). Docs only.
+  I011). The tables are built per singularity: each genesis builds its
+  universal table at the universal core's bounce, and each galactic core
+  its galaxy's at the core's bounce, as an event, replacing the one fixed
+  table of measured weights every universe and galaxy reads today (S029).
+  Docs only.
 
 - No inverse square (#199, ruled): every coupling is first-degree in the
   faces, `h = M / (r + M) = 1 / (1 + t)`, with the hold and the reach in

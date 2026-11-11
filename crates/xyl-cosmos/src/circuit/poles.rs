@@ -22,6 +22,7 @@ use xyl_core::Q;
 /// vacuum's inversion, with the throat as its one fixed point, is the unit
 /// sphere's inversion X(t) -> X(1 / t): it swaps the poles and fixes t = 1.
 pub fn pole_point(w: &Q, u: &Q) -> Option<Mv> {
+    // Stand-in S129: The pole state is one point on one axis, not a pole per dipole.
     let t = u.checked_div(w)?;
     Some(cga::point_at(&[t]))
 }

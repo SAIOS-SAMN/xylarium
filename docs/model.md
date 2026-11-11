@@ -146,6 +146,50 @@ p_net = p (+) (-r) = (p - r) / (1 - p r)        D(p_net) = D(p) / D(r)
   ([assumptions.md](assumptions.md)). The founding's sites move its matter,
   so they land with the capacity face (#158, #172).
 
+### Faces of the dipole on S^n
+
+Ruled 2026-11-11 ([#197](https://github.com/SAIOS-SAMN/xylarium/issues/197)). A reading resolves as many faces as its sphere carries,
+not two. The two-face law (`shares::faces`) is the case of one dipole.
+Letters: `h` held, `o` open; `c` is the speed of light.
+
+- **The faces.** `S^n` in `R^(n+1)` has `N = n + 1` axes, each a dipole
+  with two antipodal poles. Its `2N` faces are the cells nearer one pole
+  than any other, each `1 / (2N)` of the sphere's measure by symmetry.
+  A complex carrier `S^(2m-1)` in `C^m` reads its dipoles as its `m`
+  planes: the Hopf carrier's six on `S^11` (#183), and the universe's
+  `S^360` has 361.
+- **A body's weights.** `w_k >= 0` with `sum w_k = 1`, the share of the
+  body's hold on dipole `k`:
+  - a state, by its plane shares `|m_k| / l` (`hopf::plane_shares`);
+  - an extended body, by the caps' shares of its volume
+    (`measure::share_turns`);
+  - an isotropic body or medium, `1 / N`.
+- **Faces per dipole.** At reach `r`, with `m_k = w_k m`:
+  `h_k = m_k / (r + m_k)`, `o_k = r / (r + m_k)`, `t_k = r / m_k`, and the
+  push is the faces' imbalance `p_k = h_k - o_k = 2 h_k - 1`, with
+  `D(p_k) = h_k / o_k = 1 / t_k`. A share is a face, not a push: the share
+  `h` is the push `2h - 1`, and its complement `1 - h` is the push's flow
+  inverse.
+- **Resistance per dipole.** The medium's hold on the dipole, `H_k = sigma_k
+  H`, with face `rho_k = H_k / (r + H_k)`. Offset by the flow law
+  (Push and resistance), in poles: `t_net,k = t_k / t_rho,k = H_k / m_k`. The
+  reach cancels, and the balance is `m_k = H_k`, the expansion law's rest
+  point (`H = m`).
+- **Capacity.** A reading carries `N` components, `v_k = p_net,k c`, each in
+  `(-c, c)`. They are read per face and never summed into one speed (no
+  root). The reading's capacity is `N c`: the more dipoles it engages, the
+  more it carries.
+- **Reduction.** For `N = 1`, `w = sigma = 1`, these are the two-face law,
+  the faces' push and the Push and resistance law.
+- **Open.**
+  - The expansion law reads its pushes as deficit shares (`p_c = H / (r +
+    H)`), which gives a reach-dependent rate. Under the faces law the reach
+    cancels per dipole. Which form governs is to rule (EQUATIONS.md, Updated
+    equations, I002).
+  - The medium's weights `sigma_k` are to derive. Isotropic `1 / N` stands
+    until a law gives them.
+  - A reach per dipole is open with #128.
+
 ## 2. Units and the anchor
 
 - Base units are set by the universal core: `G = c = M_core = 1`, so the

@@ -426,6 +426,18 @@ where it belongs to one.
     - the tilt's restoring face (#183);
     - the open charge, with LAW-COUPLING v2;
     - the founding's pushes, with the capacity face (#158).
+61. **Faces of the dipole on S^n** ([#197](https://github.com/SAIOS-SAMN/xylarium/issues/197), `law`, `track`;
+    [model.md](model.md#faces-of-the-dipole-on-sn)). Ruled 2026-11-11: a
+    reading resolves as many faces as its sphere carries, `N = n + 1`
+    dipoles, with capacity `N c` read per face. Done:
+    - the derivation;
+    - the tracking section in [EQUATIONS.md](EQUATIONS.md#updated-equations)
+      (E001 to E010, I001 to I007);
+    - the faces' letters renamed `h`, `o`;
+    - the one-dipole sites registered and marked (class N, S129 to S132).
+
+    To rule: I002, whether a deficit share read as a push (the expansion
+    law's form) or the faces' push governs. Then each site per PR.
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

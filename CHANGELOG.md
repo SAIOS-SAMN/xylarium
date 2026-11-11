@@ -11,6 +11,19 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Faces of the dipole on S^n (#197, ruled): a reading resolves as many
+  faces as its sphere carries, `N = n + 1` dipoles, with weights, faces,
+  pushes and resistance per dipole. Its capacity is `N c`, read per face
+  and never summed. EQUATIONS.md gains a tracking section, "Updated
+  equations": E-rows for new equations and I-rows for the forms they
+  invalidate, each with sites and register IDs. The faces' letters are
+  renamed `h` (held) and `o` (open), so `c` is only the speed of light
+  (the old `p = 2c - 1` read the held face, never doubled the speed of
+  light). One-dipole sites are registered as stand-ins S129 to S132
+  (class N). Offsetting the open charge by the bound share is withdrawn
+  (I007): the rate it drives is offset by the medium. Docs and comments
+  only.
+
 - Push and resistance (#195, ruled): every push is offset by its resistance
   through the flow law, `p_net = p (+) (-r)`. The law is stated in
   EQUATIONS.md, model.md (Push and resistance) and civilizations.md (a

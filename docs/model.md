@@ -372,22 +372,37 @@ components, and each formation mechanic moves one of them.
   |---|---|---|---|
   | Capture and stripping of electrons (`atoms::unpaired_hot`, the jetstream's pole channels) | `R`, and the electrons' open and paired states | `3W`, `p` | built: the jetstream moves the electrons' pole state `t = U / W_held`, held to open, not nucleons |
   | Fusion of `k` nuclei, fission (`stars::fusion_step`, the sequence) | `3W`: summed, or split | the split by weight: `h' = (sum W_i h_i) / (sum W_i)`, the mediant of the parts' `D` | built for `Z`; `Q` read from a table |
-  | Nucleon conversion, Z to Q and back | `p`, by flow steps: `D(p') = D(p) D(s)` | `3W` | **not built**: `Q` per kind is Earth's atomic weight (`circuit::mass_number`, S029) |
+  | Nucleon conversion, Z to Q and back | `p`, by flow steps: `D(p') = D(p) D(s)` | `3W` | **not built**: every genesis and every galaxy reads one fixed table of measured weights (`crates/xyl-cosmos/data/elements.tsv`, through `circuit::mass_number`, S029) |
   | A bond | share through the bound electrons `g` between the strata | `3W` | LAW-COUPLING v2 (#241) |
 
 - **What the conversion law must meet.** It keeps `3W`, moves `p` by flow
   steps `s`, carries the charge it moves on `R`, and rests at the natural
   balance of push and resistance: `p_net = p (+) (-r) = 0` (#195), per
-  dipole (#197), first-degree in the faces (#199). The rest point `p*` of
-  each kind gives its `3Q / 3Z`, which replaces the table's mass numbers.
-  It is never chosen by closeness to a measured value.
+  dipole (#197), first-degree in the faces (#199). It is never chosen by
+  closeness to a measured value.
+- **Where the tables are built** (operator, 2026-11-11). The rest point is
+  read at a singularity, so each singularity builds a table:
+  - **The universal table:** every genesis builds the universe's table at
+    the universal core's bounce. Each kind's `3Q / 3Z = D(-p*)` is read
+    against the universal singularity's medium (#195's resistance, at the
+    throat), so it is that universe's, by its seed and its laws.
+  - **The galactic tables:** each galactic core is a black hole and white
+    hole pair with a bounce (Cores are paired throats). Its singularity
+    re-reads the conversion against the core's medium, so its galaxy's
+    elements form there, as an event at the core's bounce.
+  - **Locality:** traversing outward from the universal singularity, the
+    elemental distribution is local by core. A reader of a kind's nucleons
+    names the singularity whose table it reads; no galaxy reads another's,
+    and no homologue reads the home galaxy's (S010).
 - **Open, in order.**
-  1. The resistance the split meets: the bound electrons' held face, the
-     capacity's room, or the medium at the kind's reach (#195's default).
-     Each is benched by its rest point `p*` over Z 1 to 1700, read for
-     the seals and the vessel's chain, not against a table.
+  1. The rest point at a singularity: the throat's medium as the
+     resistance, read per dipole. It is benched over Z 1 to 1700 at the
+     universal core, on the seals and the vessel's chain.
   2. The flow step `s` of one conversion, and its carry on `R`.
-  3. Fusion's products read from `p*`, not the table.
+  3. Each galactic core's table at its bounce, from its medium, as an event
+     in the galaxy's history. `circuit::mass_number(z)` becomes a reading of
+     a named singularity's table.
+  4. Fusion's products read from the table of the core where they form.
 
 ### Gravity: the deformation about a mass invariant
 

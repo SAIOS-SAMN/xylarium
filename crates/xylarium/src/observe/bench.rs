@@ -360,53 +360,49 @@ pub(super) fn bench_read(seed: u64, lo: u32, hi: u32) -> Result<String, String> 
 
 /// A kind's states on the axis plane by side (#201): the Z side
 /// (`m0 < 0`), the neutral level (`m0 = 0`) and the Q side (`m0 > 0`), as
-/// counts, and the Z and Q sides' axis weights `sum |m0|`
-/// (`atoms::Band::axis_occupancy`). `None` for z = 0 or a cluster.
+/// exact shares, and the Z and Q sides' axis weights `sum |m0|`, filled with
+/// the share `from_q` from the Q side (`atoms::Band::axis_levels`). `None` for
+/// z = 0 or a cluster.
 struct AxisSplit {
-    z_side: u64,
-    neutral: u64,
-    q_side: u64,
-    z_weight: u64,
-    q_weight: u64,
+    z_side: Q,
+    neutral: Q,
+    q_side: Q,
+    z_weight: Q,
+    q_weight: Q,
 }
 
-fn axis_split(z: u32) -> Option<AxisSplit> {
+fn axis_split(z: u32, from_q: &Q) -> Option<AxisSplit> {
     let mut a = AxisSplit {
-        z_side: 0,
-        neutral: 0,
-        q_side: 0,
-        z_weight: 0,
-        q_weight: 0,
+        z_side: Q::ZERO,
+        neutral: Q::ZERO,
+        q_side: Q::ZERO,
+        z_weight: Q::ZERO,
+        q_weight: Q::ZERO,
     };
     for (band, _) in band_occupancy(z)? {
-        for (m0, occ) in band.axis_occupancy() {
-            let n = u64::from(occ.occupied());
-            let w = m0.unsigned_abs() * n;
-            match m0.signum() {
-                -1 => (a.z_side, a.z_weight) = (a.z_side + n, a.z_weight + w),
-                0 => a.neutral += n,
-                _ => (a.q_side, a.q_weight) = (a.q_side + n, a.q_weight + w),
+        for lv in band.axis_levels(from_q)? {
+            let n = lv.occupied();
+            let w = &Q::int(lv.m0).abs() * &n;
+            match lv.m0.signum() {
+                -1 => (a.z_side, a.z_weight) = (&a.z_side + &n, &a.z_weight + &w),
+                0 => a.neutral = &a.neutral + &n,
+                _ => (a.q_side, a.q_weight) = (&a.q_side + &n, &a.q_weight + &w),
             }
         }
     }
     Some(a)
 }
 
-/// The pole `t = 3Q / 3Z` the kind's axis split gives (#201), read two ways:
-/// by count, the neutral level split at the equator,
-/// `t = (Q side + neutral / 2) / (Z side + neutral / 2)`; by weight
-/// (E005's plane shares), `t = Q weight / Z weight`, `None` where the Z
-/// side holds no axis weight.
+/// The two dipoles of the kind's axis split (#201), each a pole
+/// `t = 3Q / 3Z`, kept apart and never collapsed: the count dipole, the
+/// neutral level split at the equator,
+/// `t = (Q side + neutral / 2) / (Z side + neutral / 2)`; and the weight
+/// dipole (E005's plane shares), `t = Q weight / Z weight`, `None` where the
+/// Z side holds no axis weight.
 fn split_poles(a: &AxisSplit) -> (Option<Q>, Option<Q>) {
-    let half = |x: u64| Q::new(i64::try_from(x).unwrap_or(0), 2);
-    let by_count = half(a.neutral).and_then(|h| {
-        let zq = &Q::int(i64::try_from(a.q_side).unwrap_or(0)) + &h;
-        let zz = &Q::int(i64::try_from(a.z_side).unwrap_or(0)) + &h;
-        zq.checked_div(&zz)
-    });
-    let by_weight = Q::int(i64::try_from(a.q_weight).unwrap_or(0))
-        .checked_div(&Q::int(i64::try_from(a.z_weight).unwrap_or(0)));
-    (by_count, by_weight)
+    let half = a.neutral.over(xyl_core::nonzero!(2));
+    let by_count = (&a.q_side + &half).checked_div(&(&a.z_side + &half));
+    (by_count, a.q_weight.checked_div(&a.z_weight))
 }
 
 /// The `split [LO] [HI]` reading (#201): per kind its axis states by side and
@@ -414,16 +410,21 @@ fn split_poles(a: &AxisSplit) -> (Option<Q>, Option<Q>) {
 /// push of zero there), by count and by weight, with the nucleon whole
 /// `W = Z (1 + t)` each implies, beside the fixed table's for reference
 /// only. Readings; the founding reads the table (S029).
-pub(super) fn split_read(lo: u32, hi: u32) -> String {
+pub(super) fn split_read(seed: u64, lo: u32, hi: u32) -> String {
+    let share = xyl_cosmos::bounce::torsion_share(&Q::ONE, &xyl_cosmos::origin::drawn_spin(seed));
     let top = xyl_cosmos::elements::TOP_Z;
     let (lo, hi) = (lo.max(1), hi.min(top));
     let mut out = String::from(concat!(
-        "The axis split at a throat (#201): Z | Z side, neutral, Q side; Z and Q weights | ",
+        "The axis split at a throat (#201): Z | f_Q, the share filled from Q | ",
+        "Z side, neutral, Q side; Z and Q weights | ",
         "t = 3Q/3Z by count (neutral halved), W = Z (1 + t) | t by weight, W | table A\n"
     ));
     let (mut undefined, mut seals) = (0u32, Vec::new());
     for z in lo..=hi {
-        let Some(a) = axis_split(z) else { continue };
+        let from_q = xyl_cosmos::circuit::fill_share(z, &share);
+        let Some(a) = axis_split(z, &from_q) else {
+            continue;
+        };
         let (tc, tw) = split_poles(&a);
         if tw.is_none() {
             undefined += 1;
@@ -435,12 +436,13 @@ pub(super) fn split_read(lo: u32, hi: u32) -> String {
         };
         let pole = |t: &Option<Q>| t.as_ref().map_or("-".to_string(), show);
         let row = format!(
-            "  Z{z} | {} {} {}; {} {} | {}, {} | {}, {} | {}\n",
-            a.z_side,
-            a.neutral,
-            a.q_side,
-            a.z_weight,
-            a.q_weight,
+            "  Z{z} | f_Q {} | {} {} {}; {} {} | {}, {} | {}, {} | {}\n",
+            show(&from_q),
+            show(&a.z_side),
+            show(&a.neutral),
+            show(&a.q_side),
+            show(&a.z_weight),
+            show(&a.q_weight),
             pole(&tc),
             whole(&tc),
             pole(&tw),
@@ -522,13 +524,20 @@ mod tests {
     #[test]
     fn the_axis_split_holds_every_electron_and_sides_by_level() {
         // Every electron sits on one side of the axis plane or on its
-        // neutral level, so the sides sum to Z; a weight is on a side only.
+        // neutral level, so the sides sum to Z at any fill share; a weight is
+        // on a side only; an even fill from both sides is symmetric.
         for z in 1..=xyl_cosmos::elements::TOP_Z {
-            let a = axis_split(z).unwrap();
-            assert_eq!(a.z_side + a.neutral + a.q_side, u64::from(z), "Z{z}");
-            assert!(a.z_weight >= a.z_side && a.q_weight >= a.q_side, "Z{z}");
-            let (tc, _) = split_poles(&a);
-            assert!(tc.is_some_and(|t| t.signum() >= 0), "Z{z}");
+            for from_q in [Q::ZERO, xyl_core::ratio!(1, 3), xyl_core::ratio!(1, 2)] {
+                let a = axis_split(z, &from_q).unwrap();
+                let all = &(&a.z_side + &a.neutral) + &a.q_side;
+                assert_eq!(all, Q::int(i64::from(z)), "Z{z}");
+                assert!(a.z_weight >= a.z_side && a.q_weight >= a.q_side, "Z{z}");
+                let (tc, _) = split_poles(&a);
+                assert!(tc.is_some_and(|t| t.signum() >= 0), "Z{z}");
+                if from_q == xyl_core::ratio!(1, 2) {
+                    assert_eq!(a.z_weight, a.q_weight, "Z{z}");
+                }
+            }
         }
     }
 

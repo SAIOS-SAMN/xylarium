@@ -358,6 +358,17 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The axis fill is bidirectional (#201, ruled): a band's electrons enter
+  from the Q side toward Z by the face of the electron phase's channel
+  against the held count, `f_Q = |R| u / (W + |R| u)`, when `R > 0` at the
+  kind's capture phase, and from the Z side alone otherwise. The levels,
+  the axis weights and the polarity `A` are exact shares
+  (`atoms::Band::axis_levels`, `axis_weights`, `axis_polarity`,
+  `axis_sides`; `circuit::fill_share`), never floored. The universal core's
+  cohorts read the new polarity (`Substrate::spin_orbit`), so the founding
+  changes where a kind's channel is open. Both dipoles of the split are kept
+  (`observe split`, now with `f_Q`). S136 is remediated.
+
 - The spin's generator turns all six planes in the common phase (#183):
   `bounce::spin_bivector` is `a sum_(k=0..5) B_k`, the axis plane joining
   the five isoclinic planes. Untilted, its axis part adds nothing at the

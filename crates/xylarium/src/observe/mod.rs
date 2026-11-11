@@ -163,7 +163,7 @@ fn law_reading(o: &Options, what: &[String]) -> Result<Option<String>, String> {
             let top = xyl_cosmos::elements::TOP_Z;
             let z = |i: usize, d: u32| what.get(i).and_then(|x| x.parse().ok()).unwrap_or(d);
             let lo = z(1, 1);
-            bench::split_read(lo, z(2, if what.len() > 1 { lo } else { top }))
+            bench::split_read(o.seed, lo, z(2, if what.len() > 1 { lo } else { top }))
         }
         Some("seals") => atoms::seals_read(o, count(what, xyl_cosmos::elements::TOP_Z as usize)),
         Some("founding-reach") => founding::founding_read(o)?,

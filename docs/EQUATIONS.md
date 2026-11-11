@@ -61,6 +61,7 @@ sites are restated. The derivations are in
 | E012 | The state `(3W, p, R)`: `3W = 3(Z + Q)`; `h = 3Z / 3W`, `o = 3Q / 3W`, `t = 3Q / 3Z`, `p = (3Z - 3Q) / 3W`, `D(p) = 3Z / 3Q`, `D(-p) = 3Q / 3Z`; `R` the axis plane's turn | the dipole's faces as a sum (I009) | [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#148](https://github.com/SAIOS-SAMN/xylarium/issues/148), mycelium #241 | derived |
 | E013 | Formation's transitions: electrons move `R` (and `U`, `2P`); fusion and fission move `3W`, mixing the split by weight (the mediant of `D`); conversion moves `p` by flow steps `D(p') = D(p) D(s)`, keeping `3W`; a bond moves share through `g` | `Q` per kind from Earth's weights (I011) | [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201) | derived; conversion not built |
 | E014 | The conversion's rest point at a singularity: `p*` where `p (+) (-r) = 0`, `r` the singularity's medium at its throat, per dipole, first-degree; `3Q / 3Z = D(-p*)`. Each genesis builds its universal table at the universal core's bounce; each galactic core builds its galaxy's table at the core's bounce, as an event | one fixed table of measured weights for every universe and galaxy (S029, I011) | [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195), [#7](https://github.com/SAIOS-SAMN/xylarium/issues/7) | planned: the rest point to derive |
+| E015 | The axis fill both ways: `f_Q = abs(R) u / (W + abs(R) u)` from the Q side toward Z for `R > 0` (none for `R <= 0`), `R = kappa (1 - 2 frac(psi))` at the capture phase `psi = (s Z) mod 1`; exact shares per level (`atoms::Band::axis_levels`), the polarity `A` exact; both dipoles of the split kept, count (the neutral level halved) and weight | the Z-side-first integer fill (S136) | ruled; [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201) | built |
 
 | ID | Invalid form | Sites | Superseded by | Status |
 |---|---|---|---|---|
@@ -845,7 +846,7 @@ sites are restated. The derivations are in
   open, held), summing to `cap - Z`, `U` and `2P = Z - U` (built:
   `atoms::Occupancy`, `atoms::band_occupancy`); per plane `2P_k`,
   `U_k`, `t_k = U_k / 2P_k` (built on the axis plane by level `m0`, level
-  multiplicity `C(l - |m0| + 9, 9)`: `atoms::Band::axis_occupancy`,
+  multiplicity `C(l - |m0| + 9, 9)`: `atoms::Band::axis_levels`,
   `atoms::axis_sides`; the isoclinic split awaits the spin, #128); the axis weights in ZZ, open `sum m0 U_m0 = A` and held
   `sum 2 m0 P_m0` (built, `atoms::axis_weights`; per band `-2 A_b` at
   least half full, `0` below), held and open the

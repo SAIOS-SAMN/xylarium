@@ -1,5 +1,6 @@
 // The multi-axial pulse as versors: one fixed pole axis and five planes
-// turning isoclinically (11 = 1 + 2 x 5 base axes), their antipoles and
+// turning isoclinically (12 = 2 + 2 x 5 base axes, the six planes of
+// `xyl_core::hopf`), their antipoles and
 // antinodes.
 //
 // Inputs: `xyl_core::cga` (exact versors over `Q`) and the pole point
@@ -17,16 +18,19 @@
 use xyl_core::cga::{self, base_axis, Mv};
 use xyl_core::Q;
 
-/// The multi-axial pulse (11 = 1 + 2 x 5): one fixed axis and five orthogonal
-/// planes turning isoclinically, so every plane shares one phase. The fixed
-/// axis is the pole axis (base axis 1, where `pole_point` sets X(t), t = U / W:
-/// Z the origin, Q at infinity, the throat at t = 1); the planes lie on base
-/// axes 2-3, 4-5, 6-7, 8-9, 10-11.
-pub const PLANES: usize = 5;
+/// The multi-axial pulse (12 = 2 + 2 x 5): the axis plane and five orthogonal
+/// planes turning isoclinically, so every plane shares one phase, the six
+/// planes of `xyl_core::hopf`. The axis plane's first axis is the pole axis
+/// (base axis 1, where `pole_point` sets X(t), t = U / W: Z the origin, Q at
+/// infinity, the throat at t = 1); the isoclinic planes lie on base axes
+/// 3-4, 5-6, 7-8, 9-10, 11-12 (`cga` counts from 1).
+pub const PLANES: usize = xyl_core::hopf::PLANES - 1;
 
-/// The blade of isoclinic plane `k` (0..PLANES): base axes 2 + 2k and 3 + 2k.
+/// The blade of isoclinic plane `k` (0..PLANES): `xyl_core::hopf` plane
+/// `k + 1`, base axes 3 + 2k and 4 + 2k.
 pub fn plane_blade(k: usize) -> Option<usize> {
-    Some(base_axis(2 + 2 * k)? | base_axis(3 + 2 * k)?)
+    let (a, b) = xyl_core::hopf::plane(k + 1)?;
+    Some(base_axis(a)? | base_axis(b)?)
 }
 
 /// The planes' antipole, the isoclinic half turn: the product of the five
@@ -102,10 +106,10 @@ pub fn antipoles_hold(t: &Q) -> Option<(bool, bool)> {
     let x = cga::point_at(std::slice::from_ref(t));
     let inv = axis_antipole().sandwich(&x);
     let inversion = cga::projective_ratio(&inv, &cga::point_at(&[inverted(t)?])).is_some();
-    // A point with coordinate t on the axis and 1 on the first axis of every
-    // plane: (t, 1, 0, 1, 0, ...).
-    let mut p = vec![t.clone()];
-    let mut m = vec![t.clone()];
+    // A point with coordinate t on the pole axis and 1 on the first axis of
+    // every isoclinic plane: (t, 0, 1, 0, 1, 0, ...).
+    let mut p = vec![t.clone(), Q::ZERO];
+    let mut m = vec![t.clone(), Q::ZERO];
     for _ in 0..PLANES {
         p.extend([one.clone(), Q::ZERO]);
         m.extend([-one.clone(), Q::ZERO]);

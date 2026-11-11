@@ -77,7 +77,7 @@ pub const EM: usize = 0b10000;
 pub const MAX_N: usize = (usize::BITS - 3) as usize;
 
 /// The mask of base axis `i`, counted from 1. `None` for 0 and past [`MAX_N`].
-pub fn base_axis(i: usize) -> Option<usize> {
+pub const fn base_axis(i: usize) -> Option<usize> {
     match i {
         0 => None,
         1..=3 => Some(1 << (i - 1)),

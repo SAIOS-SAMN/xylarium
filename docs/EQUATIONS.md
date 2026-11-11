@@ -50,6 +50,16 @@ another crate. Laws are composed from shares (ratios of the form
   over generators. `Mv` is the conformal `Mv<EM>`, `Cl(n+1, 1)`; two
   signatures never compose (the product does not compile). The four
   Concordance 2.11 fixtures hold in `Cl(3, 2)`. Calibre: none. Status: built.
+- Hopf carrier (`xyl_core::hopf`, #183): the six planes of `C^6`, plane
+  `p` on `cga` axes `2p + 1`, `2p + 2`; the weighted turn
+  `z_p -> e^{i w_p theta} z_p` (`turn`), the Hopf action on `S^11` for
+  `w = (1, ..., 1)` (`COMMON`), free; plane shares `s_p = |m_p| / l`
+  (`plane_shares`, refused for `l = 0`); the overlap of two fibres
+  `c = sum_p min(s_p(i), s_p(j)) (1 - arc_p / 180)`, `d = 1 - c`, `arc_p` in
+  `[0, 180]` degrees (`overlap`, `arc`); linking
+  `Lk = sum_{q=1..5} (w_i0 w_jq + w_j0 w_iq)` (`linking`), the strata's
+  `Lk(S^1_axis, S^9_iso) = 1` (`STRATA_LINKING`). Calibre: none. Status:
+  built (ruled 2026-11-11).
 - Capture phase (`circuit::found`): `(share Z) mod 1`, exact; its
   denominator divides the torsion share's. Calibre: none. Status: built.
 - Coordinate (`xyl_core::coordinate`, LAW-COORDINATE v1): a lane is an
@@ -729,9 +739,11 @@ another crate. Laws are composed from shares (ratios of the form
   seal is closed (`u = 0`), so its pole point is `t = 0`, the Z pole, not
   the throat (`t = 1`). Calibre: none. Status: built (identities over Z 1
   to 1700, `atoms::tests`).
-- Axes (`circuit/axes.rs`): the pulse has one fixed axis, the pole axis
-  (base axis 1), and five isoclinic planes on base axes 2-3, 4-5, 6-7, 8-9
-  and 10-11 (`circuit::plane_blade`). 180 degrees on each isoclinic plane
+- Axes (`circuit/axes.rs`): the pulse has the six planes of
+  `xyl_core::hopf`: the axis plane on base axes 1-2, its first the pole
+  axis, and five isoclinic planes on base axes 3-4, 5-6, 7-8, 9-10 and
+  11-12 (`circuit::plane_blade`; `cga` counts axes from 1, model.md from
+  0). 180 degrees on each isoclinic plane
   (`circuit::plane_antipole`) sends a point to its antipode, and together
   with the axis's inversion it forms the pulse's antipole
   (`circuit::antipole`). The antinode share of harmonic `q` is 0 for even `q`
@@ -949,7 +961,7 @@ another crate. Laws are composed from shares (ratios of the form
 - Angle between bodies (`manifold::gap`, `chain::Place::arc`):
   the certified angle `pi / 2 -/+ asin(|a . b| / |a| |b|)`
   (`xyl_core::rotor::angle_between`), the directions exact, read at its
-  midpoint; the rotor's inverse is its conjugate (`Rotor::inverse`). The
+  midpoint; a rotor's inverse is its reverse (`Rotor::inverse`). The
   arc on a sphere is that angle times the chord `R sin(s / R)`
   (`bounce::curved_reach`). Calibre: none. Status: built; to be replaced by the pair
   reading (#118, section 1).

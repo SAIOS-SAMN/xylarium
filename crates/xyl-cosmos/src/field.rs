@@ -188,10 +188,10 @@ impl Bell {
             Kind::Core(_) => ([Q::ZERO, Q::ZERO, Q::ONE], crate::circuit::anchor().spin),
             Kind::Stellar(s) => {
                 let o = &s.orbit;
-                // The orbit plane's normal: the frame's image of the z axis.
+                // The orbit plane's normal: the rotor's image of the z axis.
                 let z = xyl_core::certified::Encl::exact(Q::ZERO);
                 let n = o
-                    .frame()
+                    .rotor()
                     .apply(&[z.clone(), z, xyl_core::certified::Encl::exact(Q::ONE)]);
                 (
                     [
@@ -512,8 +512,8 @@ mod tests {
                 reach: Q::ZERO,
                 phase: Q::ZERO,
                 born: Q::ZERO,
-                tilt: (Dy::ONE, Dy::ZERO),
-                node: (Dy::ONE, Dy::ZERO),
+                tilt: xyl_core::rotor::Direction::ZERO_ANGLE,
+                node: xyl_core::rotor::Direction::ZERO_ANGLE,
                 rate: Dy::ZERO,
             })),
             mass: Dy::from_q(&hole_mass()),

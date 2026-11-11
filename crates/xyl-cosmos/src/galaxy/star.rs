@@ -27,26 +27,22 @@ pub struct Orbit {
     /// Orbital phase at the origin (turns, exact).
     pub turns0: Dy,
     /// Tilt of the plane about the line of nodes, as an exact half-angle
-    /// (c, s); (1, 0) for a disc star, whose plane is the disc's.
-    pub tilt: (Dy, Dy),
-    /// Node of the plane about the core's axis, as a half-angle (c, s); (1, 0)
-    /// for a disc star.
-    pub node: (Dy, Dy),
+    /// direction; the zero angle for a disc star, whose plane is the disc's.
+    pub tilt: xyl_core::rotor::Direction,
+    /// Node of the plane about the core's axis, as a half-angle direction;
+    /// the zero angle for a disc star.
+    pub node: xyl_core::rotor::Direction,
     /// A disc star's vertical oscillation: the draw that sets its speed and
     /// its phase (turns, exact); `None` for bulge and nucleus stars.
     pub swing: Option<(Dy, Dy)>,
 }
 
 impl Orbit {
-    /// The plane's frame: the tilt about x, then the node about the core's
-    /// axis, composed exactly by half-angles.
-    pub fn frame(&self) -> xyl_core::rotor::Rotor {
-        use xyl_core::rotor::{Half, Rotor};
-        let h = |p: (Dy, Dy)| Half {
-            c: p.0.to_q(),
-            s: p.1.to_q(),
-        };
-        Rotor::about(2, &h(self.node)).then_after(&Rotor::about(0, &h(self.tilt)))
+    /// The plane's rotor: the tilt on the plane of axes 2, 3, then the node
+    /// on the core's plane (axes 1, 2), each a drawn half-angle direction,
+    /// composed exactly.
+    pub fn rotor(&self) -> xyl_core::rotor::Rotor<3> {
+        crate::cores::drawn_rotor(&self.node, &self.tilt)
     }
 
     /// Orbital phase at `t` rings (turns): the initial phase plus the
@@ -140,13 +136,13 @@ impl Star {
 
     /// Bearing from the star's galactic core at `t` rings (galaxy units,
     /// relative to the core's place): reach (orbit radius), unit direction
-    /// (the plane's frame applied to the phase; exact half-angles), and climb
+    /// (the plane's rotor applied to the phase; exact turns), and climb
     /// off the plane (a disc star's vertical swing, zero otherwise).
     pub fn bearing(&self, t: Dy) -> (Q, [Q; 3], Q) {
         let o = &self.orbit;
         let (c, s) = cos_sin_turns(&Encl::exact(o.turns_at(t).to_q()));
         let dir = o
-            .frame()
+            .rotor()
             .apply(&[c, s, Encl::exact(Q::ZERO)])
             .map(|x| x.mid());
         let climb = match o.swing {
@@ -301,8 +297,8 @@ const MASS_BITS: u32 = 64;
 struct Placement {
     radius: Dy,
     pop: Pop,
-    tilt: (Dy, Dy),
-    node: (Dy, Dy),
+    tilt: xyl_core::rotor::Direction,
+    node: xyl_core::rotor::Direction,
     turns0: Dy,
 }
 
@@ -313,7 +309,8 @@ struct Placement {
 /// uses the plastic turn, its node the golden turn and its phase the
 /// sqrt 3 - 1 turn. Every prefix of the sample is thus evenly spread over
 /// the rings and over the sphere of orbit normals.
-fn placement(local: u64, nucleus: bool) -> Placement {
+/// `None` where a drawn tilt or node is the zero direction.
+fn placement(local: u64, nucleus: bool) -> Option<Placement> {
     let pivot = |by: &Q| Dy::from_q(&(&Q::int(i64::try_from(local).unwrap_or(0)) * by).frac());
     // Radius: the share as a fraction of the rings' cumulative holding (of
     // the nucleus's rings only, for a nucleus star).
@@ -331,24 +328,24 @@ fn placement(local: u64, nucleus: bool) -> Placement {
     };
     let (tilt, node, turns0) = if pop == Pop::Disc {
         (
-            (Dy::ONE, Dy::ZERO),
-            (Dy::ONE, Dy::ZERO),
+            xyl_core::rotor::Direction::ZERO_ANGLE,
+            xyl_core::rotor::Direction::ZERO_ANGLE,
             pivot(&golden_turns()),
         )
     } else {
         (
-            tilt_of(pivot(&plastic_turns())),
-            node_of(pivot(&golden_turns())),
+            tilt_of(pivot(&plastic_turns()))?,
+            node_of(pivot(&golden_turns()))?,
             pivot(&third_turns()),
         )
     };
-    Placement {
+    Some(Placement {
         radius,
         pop,
         tilt,
         node,
         turns0,
-    }
+    })
 }
 
 /// A star's turning rate (radians per ring): the turning law
@@ -407,7 +404,7 @@ pub fn star(seed: u64, origin: &Origin, n: u64) -> Option<Star> {
         n & ((1u64 << CORE_SHIFT) - 1)
     };
     let _replaced = (u(), u(), u(), u());
-    let place = placement(local, nucleus);
+    let place = placement(local, nucleus)?;
     let radius = place.radius;
     let swing = if place.pop == Pop::Disc {
         Some((u(), u()))
@@ -490,20 +487,20 @@ fn third_turns() -> Q {
 
 /// A tilt holding `u` of S^360's measure (concentrated toward 90 degrees,
 /// the measure's equator), returned as the half-angle direction (cos, sin),
-/// rounded to the grid.
-pub(crate) fn tilt_of(u: Dy) -> (Dy, Dy) {
+/// rounded to the grid; `None` where both round to zero.
+pub(crate) fn tilt_of(u: Dy) -> Option<xyl_core::rotor::Direction> {
     let theta = measure::angle_holding(measure::UNIVERSE_N, Dy::ONE - u);
     let (s, c) = (Dy::pi() * theta).sin_cos();
     let fix = |x: Dy| Dy::from_q(&down(&x.max(Dy::ZERO).to_q(), GRID_BITS));
-    (fix(c), fix(s))
+    xyl_core::rotor::Direction::drawn(fix(c), fix(s))
 }
 
 /// A node at `u` of a turn about the axis, as the half-angle direction
-/// (cos, sin) rounded to the grid.
-pub(crate) fn node_of(u: Dy) -> (Dy, Dy) {
+/// (cos, sin) rounded to the grid; `None` where both round to zero.
+pub(crate) fn node_of(u: Dy) -> Option<xyl_core::rotor::Direction> {
     let (s, c) = (Dy::pi() * u).sin_cos();
     let fix = |x: Dy| Dy::from_q(&down(&x.to_q(), GRID_BITS));
-    (fix(c), fix(s))
+    xyl_core::rotor::Direction::drawn(fix(c), fix(s))
 }
 
 /// The initial mass function, inverse-transformed at the uniform `u`: a

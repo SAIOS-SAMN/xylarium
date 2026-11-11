@@ -14,10 +14,10 @@
 //! Outputs:
 //! - `manifolds` -> one `Manifold` per world: rate in degrees per ring from
 //!   the turning law, eccentricity relaxing toward its forced value
-//!   (`Manifold::e`, `bodies::eccentricity`), plane as an exact half-angle frame, twist per
-//!   turn equal to the anchor's deficit. A giant's moons sit on a 2:1 chain:
-//!   each rate is the innermost's halved k times, k the nearest power of two
-//!   to the turning-law ratio.
+//!   (`Manifold::e`, `bodies::eccentricity`), plane as an exact rotor of
+//!   turns in degrees, twist per turn equal to the anchor's deficit. A
+//!   giant's moons sit on a 2:1 chain: each rate is the innermost's halved k
+//!   times, k the nearest power of two to the turning-law ratio.
 //! - `Manifold::stand` and `bearing`: the vector (as enclosures) and the
 //!   bearing (direction, distance a (1 - e cos M)) at an age.
 //! - `reach`, `Manifold::reach`: the arc `2 pi a m / (M + m)`, the one
@@ -40,7 +40,7 @@ use crate::systems::System;
 use xyl_core::certified::{cos_sin_turns, pi, Encl};
 use xyl_core::dyadic::Dy;
 use xyl_core::measure;
-use xyl_core::rotor::{Half, Rotor};
+use xyl_core::rotor::{Rotor, Turn};
 use xyl_core::units::{Tier, Units};
 use xyl_core::{Stream, Q};
 
@@ -98,10 +98,10 @@ pub struct Manifold {
     pub rate: Q,
     /// Mean anomaly at the star's birth (turns, an exact draw).
     pub m0: Q,
-    /// The orbital plane by half-angles: periapsis about its axis,
-    /// inclination about the line of nodes, node about the anchor's axis,
-    /// composed into one exact frame (the identity for a moon).
-    pub frame: Rotor,
+    /// The orbital plane as turns in degrees: periapsis and node on the
+    /// anchor's plane (axes 1, 2), inclination on the plane of axes 2, 3,
+    /// composed into one exact rotor (the identity for a moon).
+    pub rotor: Rotor<3>,
     /// The anchor's deficit (degrees): the twist per turn.
     pub twist_deg: Q,
     /// Mass over the anchor's mass (the Hill scale ratio).
@@ -176,7 +176,7 @@ pub fn manifolds(
                     tau_e: Q::ZERO,
                     rate: crate::turning::turning_si(&host_kg, &a_m),
                     m0,
-                    frame: Rotor::identity(),
+                    rotor: Rotor::identity(),
                     twist_deg: crate::turning::twist_per_turn(&host_kg, &a_m),
                     mass_ratio: mass_kg.checked_div(&host_kg).unwrap_or(Q::ZERO),
                     chain,
@@ -184,6 +184,11 @@ pub fn manifolds(
             }
             _ => {
                 let Some(o) = orbits.get(planet) else {
+                    continue;
+                };
+                // Planes of two distinct axes of three, and a gridded
+                // half-angle never the zero direction: the rotor is built.
+                let Some(rotor) = rotor_of(&o.inc, &o.node, &o.peri) else {
                     continue;
                 };
                 planet += 1;
@@ -197,7 +202,7 @@ pub fn manifolds(
                     tau_e: crate::circuit::rings_of_gyr(&o.tau_e),
                     rate: crate::turning::turning_si(&star_kg, &o.a_m),
                     m0,
-                    frame: frame_of(&o.inc, &o.node, &o.peri),
+                    rotor,
                     twist_deg: crate::turning::twist_per_turn(&star_kg, &o.a_m),
                     mass_ratio: mass_kg.checked_div(&star_kg).unwrap_or(Q::ZERO),
                     chain: None,
@@ -268,11 +273,11 @@ impl Manifold {
         let half_e = ecc.mul(&Encl::exact(xyl_core::ratio!(1, 2)));
         let x = a.mul(&cm.add(&half_e.mul(&c2.sub(&Encl::exact(Q::int(3))))));
         let y = a.mul(&sm.add(&half_e.mul(&s2)));
-        // The twist over time (uniform in degrees), then the plane's frame
-        // (half-angles, exact).
+        // The twist over time (uniform in degrees), then the plane's rotor
+        // (turns in degrees on named planes, exact).
         let (cw, sw) = cos_sin_turns(&self.twist(&ecc, all).mul(&Encl::exact(age.clone())));
         let (xp, yp) = (x.mul(&cw).sub(&y.mul(&sw)), x.mul(&sw).add(&y.mul(&cw)));
-        let vector = self.frame.apply(&[xp, yp, Encl::exact(Q::ZERO)]);
+        let vector = self.rotor.apply(&[xp, yp, Encl::exact(Q::ZERO)]);
         Stand {
             e: ecc,
             mean,
@@ -297,7 +302,7 @@ impl Manifold {
     }
 
     /// Bearing from the anchor at `age` rings: the unit direction the plane's
-    /// frame turns its phase to (mean turn plus periapsis twist; exact
+    /// rotor turns its phase to (mean turn plus periapsis twist; exact
     /// half-angles, unit by construction), and the distance a (1 - e cos M),
     /// linear in the elements.
     pub fn bearing(&self, age: &Q, all: &[Manifold]) -> Bearing {
@@ -308,7 +313,7 @@ impl Manifold {
         let (c, s) = cos_sin_turns(&along);
         Bearing {
             dir: self
-                .frame
+                .rotor
                 .apply(&[c, s, Encl::exact(Q::ZERO)])
                 .map(|x| x.mid()),
             r: &self.a * &(&Q::ONE - &(&ecc.mid() * &cm.mid())),
@@ -367,15 +372,27 @@ pub fn reach(a: &Encl, ratio: &Q) -> Encl {
         .mul(&pi(BITS).mul(&Encl::exact(Q::int(2))))
 }
 
-/// A plane's frame from its drawn inclination (rad), node and periapsis
-/// (turns): each as a half-angle on the grid, composed exactly as node after
-/// inclination after periapsis.
-fn frame_of(inc: &Q, node: &Q, peri: &Q) -> Rotor {
+/// A plane's rotor from its drawn inclination (rad), node and periapsis
+/// (turns): each a turn in degrees on its named plane, its half-angle on the
+/// grid, composed exactly as node after inclination after periapsis.
+fn rotor_of(inc: &Q, node: &Q, peri: &Q) -> Option<Rotor<3>> {
     let inc_turns = Encl::exact(inc.clone()).mul(per_turn()).mid();
-    let h = |t: &Q| Half::of_turns(t, 40);
-    Rotor::about(2, &h(node))
-        .then_after(&Rotor::about(0, &h(&inc_turns)))
-        .then_after(&Rotor::about(2, &h(peri)))
+    let turn = |from: usize, toward: usize, turns: &Q| {
+        let degrees = turns * &Q::int(360);
+        Rotor::of(
+            &Turn {
+                from,
+                toward,
+                degrees,
+            },
+            40,
+        )
+    };
+    Some(
+        turn(1, 2, node)?
+            .then_after(&turn(2, 3, &inc_turns)?)
+            .then_after(&turn(1, 2, peri)?),
+    )
 }
 
 /// The share of a point's S^n of directions a cap holds: a reach `x` (arc

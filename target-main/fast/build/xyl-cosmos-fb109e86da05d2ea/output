@@ -1,0 +1,5 @@
+cargo:rerun-if-changed=/tmp/claude-1000/-opt-xylarium-kernel/ba9f774c-4d8c-4773-8b5c-af8692f78819/scratchpad/wt-main/crates/xyl-cosmos/src
+cargo:rerun-if-changed=/tmp/claude-1000/-opt-xylarium-kernel/ba9f774c-4d8c-4773-8b5c-af8692f78819/scratchpad/wt-main/crates/xyl-cosmos/data
+cargo:rerun-if-changed=/tmp/claude-1000/-opt-xylarium-kernel/ba9f774c-4d8c-4773-8b5c-af8692f78819/scratchpad/wt-main/crates/xyl-cosmos/../xyl-core/src
+cargo:rustc-env=XYL_SOURCE_DIGEST=3aafadc132cec4bf
+cargo:rustc-env=XYL_FOUNDING_DIGEST=cb7b623e6be850fb

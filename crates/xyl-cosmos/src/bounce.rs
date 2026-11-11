@@ -8,11 +8,11 @@
 //! hole on the far side; the simulated universe begins as such a white hole.
 //!
 //! Reads `xyl_core::cga` (`point_at`, `sphere_through`, `keeping`, `Source`),
-//! `xyl_core::rotor::Half`, `circuit::axes` (the five isoclinic planes and
+//! `xyl_core::rotor::circle_point`, `circuit::axes` (the five isoclinic planes and
 //! their antipole). `torsion_share` is the jet's share from the spin, read
 //! once by the founding (`circuit::Substrate::found`). Units are natural, G = c = 1;
-//! points have `AXES` = 11 coordinates (the pole axis first), so the algebra
-//! is `Cl(12, 1)` over `Q`.
+//! points have `AXES` = 12 coordinates (the axis plane first, the pole axis
+//! its first axis), so the algebra is `Cl(13, 1)` over `Q`.
 //!
 //! - `horizon_reach`: with held share `delta = M / (R + M)`, the horizon is
 //!   where the received share `1 - delta` is twice the held one, so
@@ -64,22 +64,22 @@ pub fn curved_reach(r: &Q, rho: &Q) -> Q {
     xyl_core::certified::down(&(rho * &s.mid()), 64)
 }
 
-/// The pulse's axes: the pole axis (the filament) and five isoclinic planes
-/// (circuit::axes), eleven base axes in all.
-pub const AXES: usize = 1 + 2 * crate::circuit::PLANES;
+/// The pulse's axes: the axis plane (the pole axis, the filament, first) and
+/// five isoclinic planes (circuit::axes), the twelve base axes of
+/// `xyl_core::hopf`.
+pub const AXES: usize = xyl_core::hopf::AXES;
 
 /// The crossing point: on the first isoclinic plane at reach `x` from
-/// `centre` and at the pulse's phase `psi` (turns), exact in the rotor's
-/// half-angle (xyl_core::rotor::Half). The pole axis (axis 1) is left to the
-/// filament; the planes carry the turning.
+/// `centre` and at the pulse's phase `psi` (turns), exact as the circle's
+/// point at `360 psi` degrees (`xyl_core::rotor::circle_point`). The pole
+/// axis (axis 1) is left to the filament; the planes carry the turning.
 pub fn crossing(centre: &[Q], x: &Q, psi: &Q) -> Vec<Q> {
-    let (c, s) = xyl_core::rotor::Half::of_turns(psi, 60)
-        .cos_sin()
-        .unwrap_or((Q::ONE, Q::ZERO));
+    let (c, s) =
+        xyl_core::rotor::circle_point(&(psi * &Q::int(360)), 60).unwrap_or((Q::ONE, Q::ZERO));
     let mut at: Vec<Q> = centre.to_vec();
     at.resize(AXES, Q::ZERO);
-    at[1] = &at[1] + &(x * &c);
-    at[2] = &at[2] + &(x * &s);
+    at[2] = &at[2] + &(x * &c);
+    at[3] = &at[3] + &(x * &s);
     at
 }
 
@@ -167,7 +167,7 @@ pub struct Bounce {
     pub phase: Q,
     /// The crossing point on the horizon (relative to the centre), on the
     /// first isoclinic plane at the horizon reach along the enclosure and at
-    /// the pulse's phase; eleven coordinates, the pole axis first.
+    /// the pulse's phase; twelve coordinates, the axis plane first.
     pub at: Vec<Q>,
     /// The horizon as the conformal sphere about the origin through the
     /// crossing point `at`, at the horizon reach, where the held share is 1/3

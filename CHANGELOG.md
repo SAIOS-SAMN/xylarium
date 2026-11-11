@@ -279,6 +279,29 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Rotors are even versors of the geometric algebra (#42, #179):
+  `xyl_core::rotor::Rotor<N>` over `N` base axes replaces the quaternion
+  `Rotor`, and `rotor::Turn` (a plane named by its two generators, an
+  angle in degrees) replaces the half-angle constructors `Half::of_t`
+  (a tangent) and `Half::of_turns`. A drawn half-angle direction
+  (`rotor::Direction`) is refused once, where it is drawn, if zero; a
+  plane written in the code is checked when it is compiled (`Rotor::on`),
+  so a rotor turns its vectors without refusal. `rotor::circle_point`
+  gives an angle's exact point of the circle. Rotors reach every plane
+  within `cga::MAX_N`, the axis plane and the five isoclinic planes among
+  them. `Manifold::frame`, `galaxy::Orbit::frame` are now `rotor`.
+  Readings are unchanged: the sandwich and the quaternion action give the
+  same exact vectors.
+- The Hopf carrier (#183, ruled 2026-11-11): `xyl_core::hopf` holds the
+  six planes of `C^6`, the weighted turn `z_p -> e^{i w_p theta} z_p`
+  (the Hopf action, free on `S^11`, for the common winding; the per-plane
+  twist for any other), plane shares, the rational overlap of two fibres
+  (`c = sum_p min(s_p(i), s_p(j)) (1 - arc_p / 180)`, no arccosine) and
+  their linking. The founding's points take the twelve base axes: the
+  axis plane on `cga` axes 1-2 (the pole axis first) and the isoclinic
+  planes on 3-4 to 11-12 (`circuit::plane_blade`, `bounce::AXES`), so the
+  algebra is `Cl(13, 1)`.
+
 - xyl-core adopts MU-STANDARDS 4.2 in full (#179):
   `crates/xyl-core/clippy.toml` denies Mycelium's table, which is maps
   (law 2, rule 9), wall time (law 9), choice by a scalar (rule 4), invented

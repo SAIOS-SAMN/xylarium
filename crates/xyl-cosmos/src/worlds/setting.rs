@@ -326,6 +326,7 @@ pub fn build(set: &Setting, age: Dy, ctx: &Ctx) -> State {
     let bind_ev = (gm_r * Dy::int(2) * c.m_h_kg * sc.proton)
         .div(&c.ev_j)
         .unwrap_or_default();
+    // Stand-in S135: Surface gravity and pressure divide by the radius squared.
     let g = mass
         .div(&(radius.max(Dy::sci(1, -6)) * radius.max(Dy::sci(1, -6))))
         .unwrap_or_default();

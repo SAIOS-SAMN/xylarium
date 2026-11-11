@@ -179,6 +179,15 @@ Letters: `h` held, `o` open; `c` is the speed of light.
   `(-c, c)`. They are read per face and never summed into one speed (no
   root). The reading's capacity is `N c`: the more dipoles it engages, the
   more it carries.
+- **First degree.** Every coupling reads a face: `h = M / (r + M) = 1 /
+  (1 + t)`, the hold and the reach in one first-degree denominator, never
+  `M / r^2` or `M / d` ([#199](https://github.com/SAIOS-SAMN/xylarium/issues/199)). A source is not flux spread over a shell of
+  area `r^2`; a traversal is a turn of `360 h` on its named plane, between
+  an attractor pair. So the face is finite at `r = 0` (`h = 1`), carries
+  no leftover length (no dimensional coupling constant enters it), and
+  holds its share far out (`h = 1 / (1 + t)`, not `1 / t^2`). Sites that
+  still read a square, a root, or a reach without its hold are registered
+  (class Q, S133 to S135, with S025 and S034).
 - **Reduction.** For `N = 1`, `w = sigma = 1`, these are the two-face law,
   the faces' push and the Push and resistance law.
 - **Open.**

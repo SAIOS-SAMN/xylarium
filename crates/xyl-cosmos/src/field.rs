@@ -339,6 +339,7 @@ impl Bell {
     pub fn energy_at(&self, d_kpc: Dy, a_out_au: &Q) -> Q {
         // Stand-in S023: Distance is floored at 1 AU and energy falls as a^2 / 4 d^2.
         let d_au = grid(d_kpc * Dy::from_q(&au_per_kpc())).max(Q::ONE);
+        // Stand-in S133: The share is the inverse square of a shell, not a face.
         let share = qd(&(a_out_au * a_out_au), &(&Q::int(4) * &(&d_au * &d_au)));
         &(&(&self.light * &self.period) * &star_ring()) * &share
     }
@@ -502,6 +503,7 @@ pub fn absorb(
         let a2 = (0..3).fold(Q::ZERO, |s, i| &s + &(&w.native[i] * &w.native[i]));
         let d2 = (0..3).fold(Q::ZERO, |s, i| &s + &(&dx[i] * &dx[i]));
         // Work 1/2 m (M / a)^2 |dx|^2, the turning M / a squared.
+        // Stand-in S134: The work squares the turning and sums squares.
         let work = if a2.signum() > 0 {
             qd(&(&qd(&(&w.mass * &(mass * mass)), &a2) * &d2), &Q::int(2))
         } else {

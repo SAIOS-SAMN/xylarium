@@ -121,8 +121,9 @@ fn rest_neutrons(parcels: &[(BTreeMap<u32, Q>, Q)], h_final: &Q) -> BTreeMap<u32
 /// the filter below. Returns the final share s_final (each shell spreads
 /// R (1 +/- s_final)), per kind (z, amount, reach), and the universal
 /// table: each kind's neutrons per nucleus at the conversion's rest point
-/// ([`rest_neutrons`]). What the throat holds is not read here: it is the
-/// closed kinds, held on both faces of the paired throat (T16).
+/// (read by `circuit::rest_neutrons`). What the throat holds is not read
+/// here: it is the closed kinds, held on both faces of the paired throat
+/// (T16).
 pub fn founding_shells(mix: &[(u32, Q)]) -> (Q, Vec<(u32, Q, Q)>, BTreeMap<u32, Q>) {
     // The founding runs on the capture mass: amounts are converted from
     // held count to mass (x Z / W_e) for the held share, the profile's beads

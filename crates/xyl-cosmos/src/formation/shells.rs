@@ -95,8 +95,8 @@ fn carried_reach(p_stack: &Q, z: u32, h_final: &Q) -> Option<Q> {
 /// a parcel of kind `z` at reach `R` about the hold `H` rests at
 /// `Q* / Z = H / R`, the antipolar face (`t -> 1 / t`) of its reach, and
 /// the kind's neutrons per nucleus are its parcels' rest points weighted by
-/// their amounts, `Q_z = Z sum(a H / R) / sum(a)`. Exact rationals; a kind
-/// with no parcel has no entry (`Q* = 0`, its capture state).
+/// their amounts, `Q_z = Z sum(a H / R) / sum(a)`, rational on the 2^-64
+/// grid; a kind with no parcel has no entry (`Q* = 0`, its capture state).
 fn rest_neutrons(parcels: &[(BTreeMap<u32, Q>, Q)], h_final: &Q) -> BTreeMap<u32, Q> {
     let mut sums: BTreeMap<u32, (Q, Q)> = BTreeMap::new();
     for (mix, r) in parcels {
@@ -110,7 +110,9 @@ fn rest_neutrons(parcels: &[(BTreeMap<u32, Q>, Q)], h_final: &Q) -> BTreeMap<u32
         }
     }
     sums.into_iter()
-        .filter_map(|(z, (num, den))| Some((z, &capture_mass(z) * &num.checked_div(&den)?)))
+        .filter_map(|(z, (num, den))| {
+            Some((z, on_grid(&(&capture_mass(z) * &num.checked_div(&den)?))))
+        })
         .collect()
 }
 
@@ -351,14 +353,16 @@ mod tests {
     use super::*;
 
     /// A lone kind holds the whole chain, so `H = 2` and its parcel rests at
-    /// the antipolar face of its reach: `(Q* / Z) R = H`.
+    /// the antipolar face of its reach: `(Q* / Z) R = H`, to Q's grid.
     #[test]
     fn a_lone_kind_rests_at_the_antipole_of_its_reach() {
         for z in [1u32, 2, 26, 92, 1092] {
             let (_, shells, table) = founding_shells(&[(z, Q::ONE)]);
             let r = &shells[0].2;
             let t = table[&z].checked_div(&Q::int(i64::from(z))).unwrap();
-            assert_eq!(&t * r, Q::int(2), "Z {z}");
+            // Q_z is on the 2^-64 grid, so within a grid step at the reach.
+            let step = Q::new(1, 1 << 62).unwrap();
+            assert!((&(&t * r) - &Q::int(2)).abs() <= &step * r, "Z {z}");
         }
     }
 

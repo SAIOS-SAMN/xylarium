@@ -42,42 +42,50 @@
 //! Invariants: every step conserves the nucleon count (`k A_z = A'`,
 //! `A1 + A2 = A_z`); cumulative transduced plus remnant is one. A cluster
 //! kind (`compound::is_cluster`) enters the pole point but takes no step,
-//! since the element table gives it no nucleon count. Terms: pole point of a
+//! since the universal table gives it no nucleon count. Terms: pole point of a
 //! star, fusion step, fission step, sequence (docs/glossary.md).
 
 use std::collections::BTreeMap;
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 
-/// The element table's nucleon counts: `A_z` by kind and the kinds at each
-/// `A`, built once per process. Empty where the table does not build.
+/// The universal table's nucleon counts read back to whole nucleons
+/// (`circuit::mass_number`): `A_z` by kind and the kinds at each `A`, built
+/// once per process after the founding.
 struct Nucleons {
     of: BTreeMap<u32, u32>,
     at: BTreeMap<u32, Vec<u32>>,
 }
 
-fn nucleons() -> &'static Nucleons {
+/// The process's nucleon index, kept once the universal table reads; `None`
+/// before the founding (no kind has a count to step by).
+fn nucleons() -> Option<&'static Nucleons> {
     static INDEX: std::sync::OnceLock<Nucleons> = std::sync::OnceLock::new();
-    INDEX.get_or_init(|| {
-        let mut index = Nucleons {
-            of: BTreeMap::new(),
-            at: BTreeMap::new(),
+    if let Some(index) = INDEX.get() {
+        return Some(index);
+    }
+    let mut index = Nucleons {
+        of: BTreeMap::new(),
+        at: BTreeMap::new(),
+    };
+    for e in crate::elements::table().unwrap_or_default() {
+        let Some(a) = crate::circuit::mass_number(e.z).filter(|a| *a > 0) else {
+            continue;
         };
-        for e in crate::elements::table().unwrap_or_default() {
-            let Some(a) = crate::circuit::mass_number(e.z).filter(|a| *a > 0) else {
-                continue;
-            };
-            index.of.insert(e.z, a);
-            index.at.entry(a).or_default().push(e.z);
-        }
-        index
-    })
+        index.of.insert(e.z, a);
+        index.at.entry(a).or_default().push(e.z);
+    }
+    if index.of.is_empty() {
+        return None;
+    }
+    Some(INDEX.get_or_init(|| index))
 }
 
-/// A kind's nucleon count `A_z`, the element table's `a` rounded to the
-/// nearest whole; `None` for a cluster or a kind outside the table.
+/// A kind's nucleon count `A_z`, its rest-point mass read back to whole
+/// nucleons; `None` for a cluster, a kind outside the table or before the
+/// founding.
 pub fn nucleon_count(z: u32) -> Option<u32> {
-    nucleons().of.get(&z).copied()
+    nucleons()?.of.get(&z).copied()
 }
 
 /// A kind's open states at `received` (hydrogen units), `u_z(q)`: its Q pole.
@@ -155,7 +163,7 @@ pub struct Sequence {
 /// largest release among the kinds there. Returns `(k, z', release)`, or
 /// `None` where no such kind exists in the table.
 pub fn fusion_step(z: u32, received: &crate::atoms::Received) -> Option<(u32, u32, Q)> {
-    let index = nucleons();
+    let index = nucleons()?;
     let a = nucleon_count(z)?;
     let w = held_count(z, received);
     let top = *index.at.keys().next_back()?;
@@ -183,7 +191,7 @@ pub fn fusion_step(z: u32, received: &crate::atoms::Received) -> Option<(u32, u3
 /// hold `1 - (w1 + w2) / w > 0`, with the largest release at that split.
 /// Returns `([z1, z2], release)`, or `None` where no split releases.
 pub fn fission_step(z: u32, received: &crate::atoms::Received) -> Option<([u32; 2], Q)> {
-    let index = nucleons();
+    let index = nucleons()?;
     let a = nucleon_count(z)?;
     let w = held_count(z, received);
     for a1 in (1..=a / 2).rev() {
@@ -348,7 +356,7 @@ fn transduce(
     steps: &mut Vec<Step>,
 ) {
     let mut found: BTreeMap<u32, Option<Found>> = BTreeMap::new();
-    let guard = nucleons().of.len().saturating_mul(nucleons().of.len());
+    let guard = nucleons().map_or(0, |n| n.of.len().saturating_mul(n.of.len()));
     for _ in 0..guard {
         let mut best: Option<((u32, u32), Q)> = None;
         for (&key, share) in holds.iter() {
@@ -405,14 +413,18 @@ fn transduce(
 mod tests {
     use super::*;
 
-    /// A pure-hydrogen held mixture, an input of the tests only.
+    /// A pure-hydrogen held mixture, an input of the tests only. The steps
+    /// read the universal table, so the test genesis is founded first.
     fn hydrogen() -> Vec<(u32, Q)> {
+        let _ = crate::genesis::origin();
         vec![(1, Q::ONE)]
     }
 
     /// Test mixtures: pure hydrogen, hydrogen with helium, and a spread of
-    /// heavier kinds, inputs of the tests only.
+    /// heavier kinds, inputs of the tests only, read on the test genesis's
+    /// universal table.
     fn mixtures() -> Vec<Vec<(u32, Q)>> {
+        let _ = crate::genesis::origin();
         vec![
             hydrogen(),
             vec![(1, xyl_core::ratio!(3, 4)), (2, xyl_core::ratio!(1, 4))],

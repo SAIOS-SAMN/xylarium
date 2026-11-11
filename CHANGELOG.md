@@ -14,7 +14,7 @@ may change public APIs and the model's laws.
 - The universal table from the conversion's rest point (#201, E014):
   capture first at `m = Z`, then each founding parcel rests at
   `Q* / Z = H / R`, the antipolar face of its reach; a kind's `Q_z` is its
-  parcels' rest points weighted by amount, an exact rational
+  parcels' rest points weighted by amount, a rational on the 2^-64 grid
   (`circuit::rest_neutrons`), set by the founding and cached with it. The
   founding shells compose the stack's push `p_stack = s_final (+) s_i`
   against the kind's resistance `D(r_m) = W_e / 3`, `R = H D(p_stack) /

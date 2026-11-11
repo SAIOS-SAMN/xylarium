@@ -25,8 +25,8 @@ use xyl_core::Q;
 /// Z, Q and R: Z the protons, Q the neutrons, R the electrons' phase state at
 /// the bounce's pulse p (turns).
 /// - Z is the charge; Q is the conversion's rest point from the universal
-///   table, an exact rational (a cluster sums its parts). A kind is a nuclide (Z, Q) with weight
-///   Z + Q nucleons.
+///   table, a rational on the 2^-64 grid (a cluster sums its parts). A
+///   kind is a nuclide (Z, Q) with weight Z + Q nucleons.
 /// - R is the electrons' coherence kappa (the share fibred on S^11, fibres.rs)
 ///   times the hemisphere response 1 - 2 frac(p), so R = kappa (1 - 2 frac(p))
 ///   in [-kappa, kappa]: held face early in the echo, zero at its turn, open
@@ -86,8 +86,8 @@ fn neutron_table() -> Option<&'static std::collections::BTreeMap<u32, Q>> {
 }
 
 /// An atom's neutrons per nucleus `Q_z` from the universal table: the
-/// conversion's rest point at its parcels' reaches, an exact rational
-/// (E014, #201). `None` for a cluster, a kind with no parcel or before the
+/// conversion's rest point at its parcels' reaches, a rational on the
+/// 2^-64 grid (E014, #201). `None` for a cluster, a kind with no parcel or before the
 /// founding: such a kind is in its capture state, `Q = 0`.
 pub fn rest_neutrons(z: u32) -> Option<Q> {
     // Stand-in S138: Every galaxy reads the universal table, not its core's own.

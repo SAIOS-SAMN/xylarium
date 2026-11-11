@@ -20,7 +20,7 @@ pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
         .iter()
         .map(|k| (k.z, k.share.clone()))
         .collect();
-    let (s_final, shells) = xyl_cosmos::formation::founding_shells(&mix);
+    let (s_final, shells, _) = xyl_cosmos::formation::founding_shells(&mix);
     // The firmament is the closed kinds (T16), held on both faces whatever
     // the shells' reach test says; the shells give each kind's reach.
     let mut held: Vec<u32> = shells
@@ -103,7 +103,7 @@ pub(super) fn founding_read(o: &Options) -> Result<String, String> {
         .collect();
     let present = mix.len();
     let top = mix.iter().map(|(z, _)| *z).max().unwrap_or(0);
-    let (_, shells) = xyl_cosmos::formation::founding_shells(&mix);
+    let (_, shells, neutrons) = xyl_cosmos::formation::founding_shells(&mix);
     let mut out = format!(
         "The founding with the table to Z {}: {present} kinds founded (heaviest Z {top})\n",
         xyl_cosmos::elements::TOP_Z
@@ -117,8 +117,12 @@ pub(super) fn founding_read(o: &Options) -> Result<String, String> {
             || s.0 == top
     }) {
         let q = xyl_cosmos::compound::open(*z);
+        let rest = neutrons
+            .get(z)
+            .and_then(|n| n.checked_div(&Q::int(i64::from(*z))))
+            .map_or_else(|| "-".to_string(), |t| show(&t));
         out.push_str(&format!(
-            "  Z{z:>5}: reach {}  Q/3Z {}\n",
+            "  Z{z:>5}: reach {}  Q/3Z {}  Q*/Z {rest}\n",
             show(r),
             show(&Q::new(i64::from(q), 3 * i64::from(*z)).unwrap_or(Q::ZERO))
         ));

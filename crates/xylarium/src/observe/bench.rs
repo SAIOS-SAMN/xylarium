@@ -418,11 +418,11 @@ fn split_poles(a: &PlaneSplit) -> (Option<Q>, Option<Q>) {
 /// The `split [LO] [HI] [W]` reading (#201): per kind its states by side on
 /// the axis plane and the pole `t = 3Q / 3Z` they give at a throat (the
 /// singularity's medium a push of zero there), by count and by weight, with
-/// the nucleon whole `W = Z (1 + t)` each implies, beside the fixed table's
-/// for reference only; and each kind's six planes, read at the winding `W`
+/// the nucleon whole `W = Z (1 + t)` each implies, beside the universal
+/// table's (E014); and each kind's six planes, read at the winding `W`
 /// (six comma-separated integers, the common phase `hopf::COMMON` when
 /// omitted): the planes' fill shares and the spread of their count poles,
-/// the shear between planes. Readings; the founding reads the table (S029).
+/// the shear between planes. Readings.
 pub(super) fn split_read(
     seed: u64,
     lo: u32,

@@ -459,17 +459,13 @@ where it belongs to one.
     phase per Hopf plane (E016, S137), alike in the common phase; the
     boundaries per plane (E017); the electron hold `W_e` named apart (I010);
     the phase composed with the nucleon split, and the rest point
-    `3Z* / 3Q* = (1 - R_p) / (1 + R_p)` (E018, I009). Next:
-    - the conversion's resistance and rest point `p*` per plane, benched
-      over Z 1 to 1700;
-    - its flow step and carry on `R`;
-    - `3Q / 3Z` from `p*`, replacing Earth's mass numbers (S029);
-    - the nucleon dipole reading per plane from E018, and `Q` from it in
-      place of the table in `circuit::TwoWeights`, `dipole_read` and
-      `field::stellar_tilt` (S029), with its reading back to whole nucleons
-      (#149).
-    Held: E018's bench (Q*/Z from 0.014 to 436.7 at seed 7) awaits a
-    ruling.
+    `3Z* / 3Q* = (1 - R_p) / (1 + R_p)` (E018, I009); the universal table
+    from the rest point (E014, ruled 2026-11-11): capture at `m = Z`, the
+    stack's push `s_final (+) s_i` against `D(r_m) = W_e / 3`, each parcel
+    at `Q* / Z = H / R`, retiring S029, S119 and S120. Next:
+    - each galactic core's table at its bounce (S138);
+    - the conversion's flow step and carry on `R`;
+    - the nucleon dipole reading per plane from E018 (#149).
 64. **Pivotry from the fibrations** ([#207](https://github.com/SAIOS-SAMN/xylarium/issues/207), `law`, `track`;
     [model.md](model.md#pivotry-from-the-fibrations)). Twist, writhe,
     strength, weakness, pull and break per plane from the Hopf carrier

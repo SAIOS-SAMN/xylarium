@@ -11,6 +11,17 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The universal table from the conversion's rest point (#201, E014):
+  capture first at `m = Z`, then each founding parcel rests at
+  `Q* / Z = H / R`, the antipolar face of its reach; a kind's `Q_z` is its
+  parcels' rest points weighted by amount, an exact rational
+  (`circuit::rest_neutrons`), set by the founding and cached with it. The
+  founding shells compose the stack's push `p_stack = s_final (+) s_i`
+  against the kind's resistance `D(r_m) = W_e / 3`, `R = H D(p_stack) /
+  D(r_m)`. Retires S029 (the fixed table of measured weights), S119 (the
+  push as a sum) and S120 (the mass as a divisor); every galaxy reads the
+  universal table (S138). Seed 7: no kind refused, `Q* / Z` 0.42 to 557.
+
 - Pivotry from the fibrations (#207) and the formation chain (#208),
   documented as planned: E019 to E023 (pivot, twist and writhe, strength and
   weakness, pull, break per plane), roadmap items 64 and 65, and the model's

@@ -115,6 +115,7 @@ impl Climate {
             .filter(|(s, _)| t < ctx.diagram(*s).tt)
             .map(|(_, v)| v)
             .sum();
+        // Stand-in S051: Albedo is 0.3, the Earth's, plus up to 0.4 at full ice.
         let albedo = if icy.signum() > 0 {
             xyl_core::dyadic!(3, 10)
                 + xyl_core::dyadic!(2, 5)

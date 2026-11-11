@@ -182,6 +182,10 @@ A reading is read-only and can run beside `xylarium run`.
   the law follows from the tier below.
 - In [roadmap.md](roadmap.md), the item moves from Next to Landed, and
   declared rulers are added or removed.
+- [assumptions.md](assumptions.md): a law that stands in for an unbuilt one
+  gets a register row and the comment `Stand-in S###` at each site that
+  uses it. A law that replaces a stand-in marks the row remediated, with
+  its PR, and removes the markers.
 - [CHANGELOG.md](../CHANGELOG.md) receives an entry under Unreleased.
 
 ### Checklist

@@ -173,6 +173,7 @@ pub const TOP_Z: u32 = 1700;
 /// The closed share of a capture that makes kind `z`: its hold over its
 /// span, `compound::hold(z) / 3Z = (3Z - unpaired) / 3Z`.
 pub fn closed_share(z: u32) -> Q {
+    // Stand-in S035: The closed share W / 3Z is built in place of the capacity face.
     Q::int(i64::from(crate::compound::hold(z)))
         .checked_div(&Q::int(3 * i64::from(z)))
         .unwrap_or(Q::ZERO)
@@ -441,6 +442,7 @@ fn build_table() -> Result<Vec<Element>, String> {
     let mut out = Vec::with_capacity(rows.len());
     for r in rows {
         let mut e = r.e;
+        // Stand-in S030: A row without a mass takes A from the valley-of-stability fit.
         if e.a.is_zero() {
             e.a = Q::int(i64::from(
                 valley_a(e.z).ok_or_else(|| format!("no valley A for Z = {}", e.z))?,

@@ -158,6 +158,7 @@ pub(crate) fn of(rim: &Q, cools_in: Option<i64>, spin: &Q, core_spin: &Q) -> Anc
         .unwrap_or(Q::ZERO);
     // The first stars shine after the rings the gas takes to cool, with at
     // least one ring.
+    // Stand-in S014: The first stars sit at ring 1 where the home gas never lights.
     let rings = Q::int(cools_in.unwrap_or(1).max(1));
     Anchor {
         rim: rim.clone(),

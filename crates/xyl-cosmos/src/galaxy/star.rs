@@ -194,6 +194,7 @@ impl Star {
     /// The share of the vertical oscillation spent inside the crowded layer
     /// at `age` rings (1 for a star without a vertical orbit).
     pub fn exposure(&self, age: Dy) -> Dy {
+        // Stand-in S031: Exposure reads 1 for bulge and nucleus stars.
         self.vertical_at(age).map(|v| v.exposure).unwrap_or(Dy::ONE)
     }
 
@@ -256,6 +257,7 @@ impl Class {
     pub fn name(&self) -> Option<&'static str> {
         use crate::field::Transduction;
         match self.step {
+            // Stand-in S032: Dwarf names borrowed from astrophysics.
             Transduction::Unlit => Some("held body that does not ignite (brown dwarf)"),
             Transduction::Step(_) if self.fission => Some("fission star"),
             Transduction::Step(0) if self.outlives => Some("long-lived main sequence (red dwarf)"),
@@ -311,6 +313,7 @@ struct Placement {
 /// the rings and over the sphere of orbit normals.
 /// `None` where a drawn tilt or node is the zero direction.
 fn placement(local: u64, nucleus: bool) -> Option<Placement> {
+    // Stand-in S008: Placement turns the sample index by irrational turns (phyllotaxis).
     let pivot = |by: &Q| Dy::from_q(&(&Q::int(i64::try_from(local).unwrap_or(0)) * by).frac());
     // Radius: the share as a fraction of the rings' cumulative holding (of
     // the nucleus's rings only, for a nucleus star).
@@ -387,6 +390,7 @@ pub fn star(seed: u64, origin: &Origin, n: u64) -> Option<Star> {
     // ratio (`cores`).
     let core = core_of(n);
     let shape = crate::cores::shape(origin, core)?;
+    // Stand-in S010: Every other galaxy is the home galaxy's homologue, scaled.
     let (scale, mass_ratio) = (shape.scale(), Dy::from_q(&shape.mass_ratio()));
     let nucleus = (n & ((1u64 << CORE_SHIFT) - 1)) >= NUCLEUS_BASE;
     let mut rng = Stream::derive(
@@ -434,6 +438,7 @@ pub fn star(seed: u64, origin: &Origin, n: u64) -> Option<Star> {
     }
     // For u_bin < 1/3 the star is a binary, with companion mass
     // (0.1 + 0.9 u_comp) times the star's mass.
+    // Stand-in S006: A star is binary when u_bin < 1/3, its companion (0.1 + 0.9 u) of the mass.
     let companion = if u_bin < xyl_core::dyadic!(1, 3) {
         down(
             &(&mass * &(&xyl_core::ratio!(1, 10) + &(&xyl_core::ratio!(9, 10) * &u_comp.to_q()))),
@@ -442,6 +447,7 @@ pub fn star(seed: u64, origin: &Origin, n: u64) -> Option<Star> {
     } else {
         Q::ZERO
     };
+    // Stand-in S037: The galaxy::Orbit circle is the star's carrier.
     let orbit = Orbit {
         radius: radius * scale,
         rate,
@@ -523,6 +529,7 @@ pub fn imf(u: &Q, r: &Q) -> Option<Encl> {
     let b = d.checked_div(&(&Q::ONE + &d))?;
     let u = u.clone().max(Q::ZERO).min(Q::ONE);
     let x = (&b * &u).checked_div(&(&(&Q::ONE + &b) - &u))?;
+    // Stand-in S007: A star's mass is a draw u over the piece's top mass.
     let m = &top * &x;
     (m.signum() > 0).then(|| Encl::exact(m))
 }

@@ -84,6 +84,7 @@ pub fn metabolism_w(traits: &Traits, ctx: &Ctx, r: &Rulers) -> Dy {
 /// `trophic`, averaged over the year by the growing share (one half on a
 /// tidally locked world).
 pub fn food_w(med: &Medium, body: &Body, r: &Rulers) -> Dy {
+    // Stand-in S096: A locked world's growing share is 1/2.
     let season = if body.locked {
         xyl_core::dyadic!(1, 2)
     } else {
@@ -164,6 +165,7 @@ pub fn power(
 ) -> Power {
     let area = body.area_m2();
     Power {
+        // Stand-in S097: Starlight is flux x 340 W/m2 x the surface.
         starlight_w: state.flux.max(Dy::ZERO) * r.flux_w * area,
         heat_w: state.q.max(Dy::ZERO) * area,
         bodies_w: numbers.max(Dy::ZERO) * metabolism_w(traits, ctx, r),

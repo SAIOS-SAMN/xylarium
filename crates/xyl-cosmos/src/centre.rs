@@ -38,6 +38,7 @@ const GRID_BITS: u32 = 40;
 /// The share of infalling matter that crosses the horizon (the rest is held
 /// in the accretion flow outside it).
 pub fn horizon_share() -> Q {
+    // Stand-in S017: Horizon share 1/10 and efficiency 1/10 are rulers named in code only.
     xyl_core::ratio!(1, 10)
 }
 /// The share of crossing matter radiated as light on the way in.

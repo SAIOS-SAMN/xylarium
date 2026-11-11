@@ -72,6 +72,14 @@ A module `foo` is `src/foo.rs` or, when split, the directory `src/foo/`
   add a parallel version (`foo2`, `new_foo`).
 - Derive from lower tiers. An underived constant is a declared ruler and is
   listed in [roadmap.md#declared-rulers](docs/roadmap.md#declared-rulers).
+- A law that is not built is refused (`None`) or registered as a stand-in
+  in [assumptions.md](docs/assumptions.md), with the comment
+  `Stand-in S###` at every site that uses it. Never take the nearest
+  quantity of another body, tier or event in its place, and never read a
+  missing value as a law value. A new consumer of a stand-in cites its ID;
+  a refactor keeps the marker; the marker leaves with the PR that builds
+  the law. `scripts/check-stand-ins` (run by `scripts/check-docs`) keeps the
+  register and the markers in agreement.
 - Tests assert invariants (conservation, identities, bounds, monotonicity,
   refusal), never a number the model produced.
 - Never found a universe inside a test; read `crate::genesis::origin()` and

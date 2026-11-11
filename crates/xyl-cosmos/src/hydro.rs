@@ -129,6 +129,7 @@ pub fn particle_power(w: &State) -> Dy {
 /// (a yield of G ~ 2 per 100 eV at ~1.5 eV each), divided by the 340 W/m^2
 /// flux unit.
 pub fn radiolysis(w: &State) -> Dy {
+    // Stand-in S058: The Earth's magnetosphere and air set the cutoffs, columns and 3% yield.
     (xyl_core::dyadic!(3, 100) * particle_power(w))
         .div(&(Dy::int(340)))
         .unwrap_or_default()

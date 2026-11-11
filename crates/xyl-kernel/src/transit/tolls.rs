@@ -75,6 +75,7 @@ pub fn quote(
 ) -> Quote {
     let f = floor(lane);
     let c = ceiling(around_hops, lane_hops, hop_value, cargo_value);
+    // Stand-in S112: The toll is the midpoint of floor and ceiling.
     let toll = match handling {
         Handling::Open => f.min(c),
         _ => c.min(f + (c - f).max(Dy::ZERO).div(&(Dy::int(2))).unwrap_or_default()),

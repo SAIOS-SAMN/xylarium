@@ -170,6 +170,7 @@ pub fn window_years(
 pub fn blended(lo: &Spec, hi: &Spec, share: Dy) -> Spec {
     let s = share.clamp(Dy::ZERO, Dy::ONE);
     Spec {
+        // Stand-in S085: The drive blends chemical to annihilation; the kind flips at 1/2.
         drive: if s > xyl_core::dyadic!(1, 2) {
             hi.drive
         } else {
@@ -183,6 +184,7 @@ pub fn blended(lo: &Spec, hi: &Spec, share: Dy) -> Spec {
 /// Returns the drive with the highest exhaust speed that the people's traits
 /// and the galaxy's chemistry allow.
 pub fn best_spec(cosmic: &Cosmic, p: &crate::cosmic::People) -> Spec {
+    // Stand-in S083: The best drive is always annihilation at c^2 per kg, so v_e = c.
     crate::propulsion::Drive::ALL
         .iter()
         .map(|&d| Spec::of(d, &p.traits, &cosmic.gal.sc, cosmic.gal.elements))

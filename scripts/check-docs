@@ -9,6 +9,8 @@
 3. Every source file named in backticks (`circuit/poles.rs`, `minds.rs`)
    exists.
 4. Every glossary entry names at least one code item or document.
+5. The stand-ins' register and the code's markers agree
+   (`scripts/check-stand-ins`, docs/assumptions.md).
 
 Usage: scripts/check-docs        (from the repository root; exit 1 on failure)
 """
@@ -121,6 +123,14 @@ for i, line in enumerate(open("docs/glossary.md", encoding="utf-8"), 1):
     cells = [c.strip() for c in line.strip().strip("|").split("|")]
     if len(cells) < 3 or not any("`" in c or "](" in c for c in cells[2:]):
         failures.append(f"docs/glossary.md:{i}: entry `{cells[0]}` names no code item or document")
+
+import subprocess
+
+stand_ins = subprocess.run(
+    [os.path.join(ROOT, "scripts", "check-stand-ins")], capture_output=True, text=True
+)
+if stand_ins.returncode != 0:
+    failures.extend(l for l in stand_ins.stdout.splitlines() if not l.startswith("check-stand-ins:"))
 
 for msg in failures:
     print(msg)

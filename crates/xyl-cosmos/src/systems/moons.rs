@@ -235,6 +235,7 @@ pub(super) fn belts(
     }
     // The comet cloud is 5% of a tenth of the giants' mass, retained in the
     // share exp(-env); it condenses at 30 times the outermost reach.
+    // Stand-in S069: The comet cloud is 5% of a tenth of the giants' mass, at 30x the reach.
     let comets = (giants_mass.signum() > 0).then(|| {
         let kept = fix(&exp(&-env.clone(), BITS));
         let mass = &(&(giants_mass * &xyl_core::ratio!(1, 10)) * &xyl_core::ratio!(5, 100)) * &kept;

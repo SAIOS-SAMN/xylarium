@@ -120,6 +120,7 @@ pub fn chemistries(ms: &[Medium], body: &Body, home: &Home, ctx: &Ctx) -> Vec<Ch
         .collect();
     // A lit medium's window closes at 0.9 of the star's lifetime, as the
     // star's rising luminosity on the giant branch evaporates the seas.
+    // Stand-in S078: A lit medium's window closes at 0.9 of the star's life.
     let star_end = home.born
         + lifetime(&home.sequence, home.compactness, home.reach, ctx) * xyl_core::dyadic!(9, 10);
     let crowd = worlds::cosmic_rays(home.r) * home.exposure;
@@ -222,6 +223,7 @@ pub fn lineage(key: &[u64], chems: &[Chemistry], seeded: &[(Region, Dy)]) -> Opt
             .unwrap_or_else(horizon_gyr);
         // The sterilising pulse comes at its expected time, the hazard's
         // reciprocal after the start.
+        // Stand-in S079: The sterilising pulse falls at its expected time, 1 / hazard.
         let steril = if ch.hazard.signum() > 0 && horizon > t0 {
             let at = t0 + (Dy::ONE).div(&ch.hazard).unwrap_or_default();
             (at < horizon).then_some(at)

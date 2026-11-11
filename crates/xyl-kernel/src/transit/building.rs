@@ -180,6 +180,7 @@ impl Network {
         let Some((arc, m, k, _, body)) = siting.best(&placer, per, &by_n, &mine, seen) else {
             return;
         };
+        // Stand-in S111: An unknown mouth reach reads 1 kpc in the tithe.
         let mouth = self.reach_of(k).unwrap_or(Dy::ONE);
         let cost = tithe(passage_j(body, v_e), arc, mouth);
         let voyage = (arc * kpc_m())
@@ -196,6 +197,7 @@ impl Network {
         self.works.insert(
             key,
             Ley {
+                // Stand-in S112: A new line is tolled by default.
                 handling: Handling::Tolled,
                 from: m,
                 to: k,
@@ -286,8 +288,10 @@ fn builders(cosmic: &Cosmic, at: Dy) -> Vec<Builder> {
         .enumerate()
         .filter(|(_, p)| p.ancient && p.population.signum() > 0)
         .filter_map(|(i, p)| {
+            // Stand-in S084: Builders take best_spec, so every lawful line's passage energy is 0.
             let spec = best_spec(cosmic, p);
             let cruise = cruise_speed(&spec, ratio, home_escape(cosmic, p));
+            // Stand-in S086: A builder's spare power is the world's whole starlight and heat.
             let spare = cosmic
                 .power(p, at)
                 .map(|w| (w.starlight_w + w.heat_w - w.bodies_w).max(Dy::ZERO))
@@ -304,6 +308,7 @@ fn in_tune_stars(cosmic: &Cosmic, discord: &BTreeMap<usize, Dy>) -> Vec<u64> {
         .peoples
         .iter()
         .enumerate()
+        // Stand-in S110: "in tune" is discord < 1/2, a cut and not a share.
         .filter(|(i, p)| {
             !p.ancient
                 && p.population.signum() > 0

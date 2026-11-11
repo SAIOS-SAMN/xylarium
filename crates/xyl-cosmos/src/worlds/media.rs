@@ -179,6 +179,7 @@ pub(super) fn solvents(w: &State, ctx: &Ctx) -> Vec<(Solvent, Where, Dy, Dy, Dy,
             // shell at the world's heat flow (tides included) is less than the
             // ice layer's thickness. The ocean sits at the triple point, plus
             // 5 K (scaled) for water.
+            // Stand-in S062: A subsurface ocean sits at its triple point + 5 K.
             let t_under = ctx.diagram(s).tt
                 + if s == Species::H2O {
                     Dy::int(5) * chem
@@ -190,6 +191,7 @@ pub(super) fn solvents(w: &State, ctx: &Ctx) -> Vec<(Solvent, Where, Dy, Dy, Dy,
                 .unwrap_or_default()
                 .div(&(Dy::int(1000)))
                 .unwrap_or_default();
+            // Stand-in S063: No interior flux reads the geothermal flux from Earth's 0.087 W/m2.
             let q = if w.q.signum() > 0 {
                 w.q
             } else {
@@ -221,6 +223,7 @@ pub(super) fn solvents(w: &State, ctx: &Ctx) -> Vec<(Solvent, Where, Dy, Dy, Dy,
             ));
         }
     }
+    // Stand-in S061: A silicate melt solvent exists above 1400 K.
     if !w.giant && t >= c.melt_k * chem {
         out.push((
             Solvent::Melt,
@@ -232,6 +235,7 @@ pub(super) fn solvents(w: &State, ctx: &Ctx) -> Vec<(Solvent, Where, Dy, Dy, Dy,
             Dy::ZERO,
         ));
     }
+    // Stand-in S060: Giant plasma starts at 10 world masses, its energy scaled on Jupiter.
     if w.giant && w.mass >= c.giant_plasma_mass {
         let energy = c.giant_flux
             * (w.mass.div(&(Dy::int(318))).unwrap_or_default())
@@ -314,6 +318,7 @@ pub fn region(s: Solvent, at: Where, t: Dy, dark: bool, ctx: &Ctx) -> Region {
     if s == Solvent::Plasma {
         return Region::Plasmic;
     }
+    // Stand-in S059: Regions follow Earth-biochemistry windows at 450 K and 230 K.
     if s == Solvent::Melt || at == Where::Supercritical || t > Dy::int(450) * chem {
         return Region::Mineral;
     }
@@ -362,6 +367,7 @@ pub fn richness(w: &State, s: Solvent, t: Dy, z: Dy, ctx: &Ctx) -> Dy {
     if has(Species::NH3) || has(Species::N2) || w.air.has(Species::N2) {
         elements += Dy::ONE;
     }
+    // Stand-in S064: Richness counts C, N, O and metal against 4, a CHON chemistry.
     let share = (elements.div(&(Dy::int(4))).unwrap_or_default()).clamp(Dy::ZERO, Dy::ONE);
     if s == Solvent::Plasma {
         // A plasma has no bonds; its structure is carried by fields.
@@ -426,6 +432,7 @@ pub fn media(w: &State, z: Dy, ctx: &Ctx) -> Vec<Medium> {
 /// strength (`State::field`, 0 to 1) times the dynamo's unit, 1e-4 T (an
 /// open ruler).
 pub fn plasma_field_ev(w: &State) -> Dy {
+    // Stand-in S065: Plasma field energy is the Bohr magneton x field x 1e-4 T.
     Dy::sci(5788, -8) * w.field.max(Dy::ZERO) * Dy::sci(1, -4)
 }
 

@@ -9,6 +9,7 @@ use super::*;
 pub fn activity(star_mass: Dy, age: Dy) -> Dy {
     // The spin-down rate k is linear in stellar mass, at least 1/20.
     let spin_down = star_mass.max(xyl_core::dyadic!(1, 20));
+    // Stand-in S057: Stellar activity is 1 + 9 exp(-k age) with a 1/20 floor, a solar fit.
     Dy::ONE + Dy::int(9) * (-(age.max(Dy::ZERO) * spin_down)).exp()
 }
 

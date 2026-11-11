@@ -161,6 +161,7 @@ impl Civilizations {
             let (Some(stand), Some((_, years))) = (&stands[i], spans[i]) else {
                 continue;
             };
+            // Stand-in S103: The environment reads 1 where no reading exists.
             let env = environment.get(i).copied().unwrap_or(Dy::ONE);
             let span = Carried {
                 years,
@@ -379,6 +380,7 @@ impl Civilizations {
             return;
         }
         let numbers = cosmic.peoples[i].population;
+        // Stand-in S101: Emigrants are half the target's housing, capped at half the parent.
         let emigrants = (h.div(&(Dy::int(2))).unwrap_or_default())
             .max(viable)
             .min(numbers.div(&(Dy::int(2))).unwrap_or_default());
@@ -785,8 +787,10 @@ fn stand_of(
             .unwrap_or(Dy::ZERO)
     };
     let (d0, d1) = (reader.degree(from), reader.degree(to));
+    // Stand-in S099: A people falls below 1 body, and failing is a boolean.
     let failing = houses_at(p.world, d1) < Dy::ONE;
     let crowded = p.population * Dy::int(2) >= p.capacity;
+    // Stand-in S100: Reach is an index window of four orbital places.
     let reach: Vec<(usize, Dy)> = if sails && (failing || crowded) {
         (p.world.saturating_sub(4)..(p.world + 5).min(reader.worlds()))
             .filter(|&w| w != p.world && !held.contains(&(p.star, w)))

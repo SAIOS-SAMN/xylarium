@@ -347,6 +347,7 @@ fn holding_within(st: &Structure, r: &Q) -> Q {
 /// the whole holding `H`. This mass's deficit sets a star's turning rate
 /// there (`turning`).
 pub fn inside_mass(r: &Q) -> Q {
+    // Stand-in S036: A second model of the hold inside a reach.
     &Q::ONE + &holding_within(&structure(), r)
 }
 

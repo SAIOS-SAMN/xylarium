@@ -122,6 +122,7 @@ impl Rulers {
     }
     /// The disc's flat rotation speed, 220 km/s.
     pub fn v_flat() -> Q {
+        // Stand-in S071: The disc rotates at the Milky Way's 220 km/s.
         decimal("220").unwrap_or(Q::ZERO)
     }
     /// The gas at R0 today, in dex against solar (the Cosmic Abundance

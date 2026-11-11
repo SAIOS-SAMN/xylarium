@@ -69,6 +69,7 @@ pub(super) const ICES: [Ice; 6] = [
 
 /// The share of a cooling nebula's carbon held as species `sp`.
 pub(super) fn carbon_as(sp: &str) -> Q {
+    // Stand-in S070: Carbon splits CO 1/2, CO2 1/5, CH4 3/10; nitrogen NH3 and N2 1/2 each.
     match sp {
         "CO" => xyl_core::ratio!(1, 2),
         "CO2" => xyl_core::ratio!(1, 5),

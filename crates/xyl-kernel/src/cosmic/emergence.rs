@@ -84,6 +84,7 @@ impl Cosmic<'_> {
             traits: p.traits.clone(),
             dawn: at,
             population: emigrants,
+            // Stand-in S102: A daughter's capacity is its emigrants; its growth is the parent's.
             capacity: emigrants,
             rate: p.rate,
             updated: at,
@@ -110,6 +111,7 @@ impl Cosmic<'_> {
             return None;
         }
         let (state, ms, body) = self.world_at(m.star, m.w, m.epoch)?;
+        // Stand-in S087: R or K is a boolean, r where the star is below 1/2 sun.
         let strategy =
             if xyl_cosmos::life::seasonal(body.tilt) || body.star_mass < xyl_core::dyadic!(1, 2) {
                 Strategy::R
@@ -140,6 +142,7 @@ impl Cosmic<'_> {
             Dy::ZERO,
             Dy::ZERO,
         );
+        // Stand-in S098: A viable people is 500 bodies.
         if capacity < viable() {
             // The world houses fewer than a viable people: it cannot feed
             // one now.
@@ -259,6 +262,7 @@ pub fn select(
                 | xyl_cosmos::worlds::Species::NH3
         )
     );
+    // Stand-in S090: The leading sense is set by cutoffs, heat above 450 K.
     let sense = if plasma {
         "fields"
     } else if dark {
@@ -282,6 +286,7 @@ pub fn select(
         "walking"
     };
     let u = Dy::unit(rng.next_u64());
+    // Stand-in S088: Sociality is a draw u + 3/10 (r) + 1/5 (low energy) - 1/4.
     let social =
         (u + if strategy == Strategy::R {
             xyl_core::dyadic!(3, 10)
@@ -293,6 +298,7 @@ pub fn select(
             Dy::ZERO
         } - xyl_core::dyadic!(1, 4))
         .clamp(Dy::ZERO, Dy::ONE);
+    // Stand-in S089: The mind's shape is set by cutoffs on sociality, plasma and pace.
     let shape = if social > xyl_core::dyadic!(3, 4) && strategy == Strategy::R {
         Shape::Superorganism
     } else if plasma || (dark && med.pace < xyl_core::dyadic!(1, 20)) {

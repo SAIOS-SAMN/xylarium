@@ -104,6 +104,7 @@ impl Shape {
             return Dy::ONE;
         }
         let ratio = self.mass_ratio();
+        // Stand-in S011: The galaxy scale is 2m / (1 + m) with M_a the home mass.
         Dy::from_q(
             &(&Q::int(2) * &ratio)
                 .checked_div(&(&Q::ONE + &ratio))
@@ -181,6 +182,7 @@ impl Weights {
 
     /// The factor on element `sym`.
     pub fn factor(&self, sym: &str) -> Q {
+        // Stand-in S015: H and He weigh 1 and a metal missing from a bead's mix reads 0.
         if sym == "H" || sym == "He" {
             return Q::ONE;
         }
@@ -265,6 +267,7 @@ fn founding_of(origin: &Origin) -> Option<Arc<Founding>> {
         // The plane follows the galaxies' magnetic-repulsion spacing
         // (galaxy.rs): node from index x golden turn, tilt from index x
         // plastic share.
+        // Stand-in S013: A galaxy's plane is from index x plastic and golden turns.
         let pivot = |by: &Q| Dy::from_q(&(&Q::int(i64::from(index)) * by).frac());
         let (tilt, node) = (
             crate::galaxy::tilt_of(pivot(&crate::galaxy::plastic_turns()))?,
@@ -295,6 +298,7 @@ fn founding_of(origin: &Origin) -> Option<Arc<Founding>> {
             place: [&dir0[0] * &out, &dir0[1] * &out, &dir0[2] * &out],
             reach: out.clone(),
             phase: g.phase.clone(),
+            // Stand-in S012: Every galaxy is born at the home galaxy's first-star time.
             born: first.clone(),
             tilt,
             node,

@@ -144,6 +144,7 @@ pub fn manifolds(
     };
     for (i, w) in sys.worlds.iter().enumerate() {
         let mut draw = Stream::derive(seed, &["anomaly".into(), star.n.into(), (i as u64).into()]);
+        // Stand-in S044: A world's mean anomaly at the star's birth is a uniform draw.
         let m0 = Dy::unit(draw.next_u64()).to_q();
         let mass_kg = &w.mass * &Si::world_mass_kg();
         match (w.host, &w.a_host_radii) {
@@ -152,6 +153,7 @@ pub fn manifolds(
                 let host_kg = &g.mass * &Si::world_mass_kg();
                 let a_m = &(a_r * &g.radius) * &Si::world_radius_m();
                 let ef = w.e_forced.clone().unwrap_or(Q::ZERO);
+                // Stand-in S045: Every moon sits on a captured 2:1 chain, rate innermost / 2^k.
                 let chain = innermost(h).and_then(|first| {
                     let a_in = sys.worlds[first].a_host_radii.clone()?;
                     // Steps along the 2:1 chain: k (below 24) makes 2^k the
@@ -176,6 +178,7 @@ pub fn manifolds(
                     tau_e: Q::ZERO,
                     rate: crate::turning::turning_si(&host_kg, &a_m),
                     m0,
+                    // Stand-in S046: A moon's plane is the identity rotor.
                     rotor: Rotor::identity(),
                     twist_deg: crate::turning::twist_per_turn(&host_kg, &a_m),
                     mass_ratio: mass_kg.checked_div(&host_kg).unwrap_or(Q::ZERO),
@@ -188,6 +191,7 @@ pub fn manifolds(
                 };
                 // Planes of two distinct axes of three, and a gridded
                 // half-angle never the zero direction: the rotor is built.
+                // Stand-in S047: A refused plane skips the planet counter, shifting later orbits.
                 let Some(rotor) = rotor_of(&o.inc, &o.node, &o.peri) else {
                     continue;
                 };

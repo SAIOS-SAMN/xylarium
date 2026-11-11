@@ -81,6 +81,7 @@ pub fn au_per_kpc() -> Q {
 /// energy in the field law (`Bell::energy_at`, `absorb`, `Absorbed`, the
 /// kernel's `Books`) is in this unit.
 pub fn star_year() -> Q {
+    // Stand-in S018: The energy unit is the Sun's light over a Julian year.
     decimal("2.28002").unwrap_or(Q::ZERO)
 }
 
@@ -92,6 +93,7 @@ pub fn star_ring() -> Q {
     let per_s = star_year()
         .checked_div(&decimal("3.15576e7").unwrap_or(Q::ONE))
         .unwrap_or(Q::ZERO);
+    // Stand-in S019: A ring's energy reads the SI seconds of a ring inside the law.
     dyadic(&(&per_s * &crate::package::Si::seconds_per_ring()))
 }
 
@@ -99,6 +101,7 @@ pub fn star_ring() -> Q {
 /// flow (32 000 suns per sun) that crosses the horizon, radiated at the
 /// centre's efficiency (`centre`).
 pub fn hole_light_per_star_mass() -> Q {
+    // Stand-in S016: Hole light is mass x 32 000 x horizon share x efficiency.
     &(&Q::int(32_000) * &horizon_share()) * &efficiency()
 }
 
@@ -172,12 +175,14 @@ pub struct Bell {
 /// place of (M / M_core)^(1/3)).
 pub fn pitch_kpc(mass: Dy) -> Dy {
     let ratio = (mass.div(&(Dy::from_q(&hole_mass()))).unwrap_or_default()).max(Dy::sci(1, -30));
+    // Stand-in S022: The pitch scales by the extent of M / M_core for a cube root.
     wavelength_kpc() * Dy::from_q(&crate::elements::extent(&ratio.to_q()))
 }
 
 /// A stellar hole's Kerr spin in (0, 1), drawn deterministically from the
 /// seed and star index.
 fn drawn_spin(seed: u64, n: u64) -> Q {
+    // Stand-in S020: Each stellar hole's spin is a fresh draw.
     let x =
         xyl_core::Stream::derive(seed, &["stellar hole spin".into(), n.into()]).next_u64() >> 12;
     // (x + 1) / (2^52 + 2) with x < 2^52: strictly inside (0, 1).
@@ -199,6 +204,7 @@ pub fn stellar_tilt(s: &crate::galaxy::Star) -> Option<Q> {
         .collect();
     let w = crate::circuit::mix_weights(&held);
     let share = w.protons.checked_div(&(&w.protons + &w.neutrons))?;
+    // Stand-in S003: The star's compactness stands for the remnant's held face.
     let delta = s.compactness().to_q();
     xyl_core::hopf::tilt_equilibrium(&xyl_core::hopf::open_charge(&share, &delta)?)
 }
@@ -219,6 +225,7 @@ pub fn stellar_axis(o: &crate::galaxy::Orbit, tilt: Option<&Q>) -> [Q; 3] {
             };
             Rotor::<3>::of(&turn, 40)
         })
+        // Stand-in S004: An unread tilt stands upright.
         .map_or(orbit.clone(), |t| orbit.then_after(&t));
     let z = xyl_core::certified::Encl::exact(Q::ZERO);
     rotor
@@ -233,6 +240,7 @@ impl Bell {
     /// balance of its charge (`stellar_tilt`, `stellar_axis`).
     pub fn of(node: &Node, seed: u64) -> Bell {
         let (axis, spin, tilt) = match &node.kind {
+            // Stand-in S021: Every galactic core spins about z at the parent's drawn spin.
             Kind::Core(_) => (
                 [Q::ZERO, Q::ZERO, Q::ONE],
                 crate::circuit::anchor().spin,
@@ -329,6 +337,7 @@ impl Bell {
     /// disc covers (pi a^2 over 4 pi d^2: a^2 / (4 d^2), exact), with d at
     /// least 1 AU; in field energy units.
     pub fn energy_at(&self, d_kpc: Dy, a_out_au: &Q) -> Q {
+        // Stand-in S023: Distance is floored at 1 AU and energy falls as a^2 / 4 d^2.
         let d_au = grid(d_kpc * Dy::from_q(&au_per_kpc())).max(Q::ONE);
         let share = qd(&(a_out_au * a_out_au), &(&Q::int(4) * &(&d_au * &d_au)));
         &(&(&self.light * &self.period) * &star_ring()) * &share
@@ -418,6 +427,7 @@ pub struct Anchor {
 impl Anchor {
     /// A world on its native orbit of radius `a` AU.
     pub fn on_orbit(a: &Q, mass: &Q) -> Anchor {
+        // Stand-in S024: Every world anchor sits on the first axis at [a, 0, 0].
         let native = [a.clone(), Q::ZERO, Q::ZERO];
         Anchor {
             at: native.clone(),

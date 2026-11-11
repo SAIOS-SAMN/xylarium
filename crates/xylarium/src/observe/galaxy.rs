@@ -340,6 +340,7 @@ pub(super) fn tiers(o: &Options, n: u64) -> Result<String, String> {
 
 /// The relative reach of the Earth's star in its galaxy, about 8 kpc of a
 /// 15 kpc disc: the probe's default input, used by no law.
+// Stand-in S113: The probe defaults to the Earth's reach in its disc.
 const REFERENCE_REACH: (i64, i64) = (8, 15);
 
 /// The `star-types` reading at the universe's age: an open census of the

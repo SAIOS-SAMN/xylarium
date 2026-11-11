@@ -65,6 +65,7 @@ pub fn galaxy_radius(scale: &Q) -> Q {
 /// Distances between places in different galaxies run through the cores'
 /// throats.
 #[derive(Clone, Debug, PartialEq, Eq)]
+// Stand-in S037: A place is a point, not the vortex.
 pub struct Place {
     /// Arc from the anchor along the sphere (galaxy units).
     pub reach: Q,

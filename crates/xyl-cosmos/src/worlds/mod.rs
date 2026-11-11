@@ -147,6 +147,7 @@ fn constants() -> &'static Constants {
         // CH4 are photolysed within years, 0.03 of a Sun's flux times its
         // bond-breaking share of about 6.5 percent times a middle-aged
         // activity of 1.4. Titan, at about 0.01, keeps its methane.
+        // Stand-in S054: The photolysis threshold is calibrated on the Sun.
         photolysis_uv: Dy::sci(3, -2) * Dy::sci(65, -3) * xyl_core::dyadic!(14, 10),
         strip_rate: Dy::sci(2, -6),
         transport_bar: xyl_core::dyadic!(1, 10),
@@ -154,16 +155,20 @@ fn constants() -> &'static Constants {
         weather_e_k: xyl_core::dyadic!(23, 2),
         weather_scale: Dy::sci(1, -3),
         jeans_hold: Dy::int(15),
+        // Stand-in S050: The exosphere is four times the equilibrium heat.
         thermosphere: Dy::int(4),
+        // Stand-in S056: The runaway limit is 282 / 340, the Earth's.
         runaway_flux: xyl_core::dyadic!(282, 340),
         // Provisional: calibrated so that the unit world reads near 288 K
         // (it reads 286 K).
+        // Stand-in S055: Greenhouse_tau 31/5 is tuned so the unit world reads 288 K.
         greenhouse_tau: xyl_core::dyadic!(31, 5),
         melt_k: Dy::int(1400),
         giant_plasma_mass: Dy::int(10),
         solvent_barrier: Dy::int(25),
         strong_kt: Dy::int(40),
         weak_kt: Dy::int(10),
+        // Stand-in S063: The geothermal flux is Earth's 0.087 W/m2.
         geo_flux: (Dy::sci(87, -3)).div(&(Dy::int(340))).unwrap_or_default(),
         heat_unit_w: Dy::sci(87, -3)
             * Dy::int(4)

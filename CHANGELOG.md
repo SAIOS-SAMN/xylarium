@@ -11,6 +11,17 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The register of stand-ins (#189): docs/assumptions.md lists 113 sites
+  where the code takes a value, an outcome or a branch no built law
+  decides, with each one's class, consumers, origin and issue. Most came
+  with the first commit's prototype import (`e11a9ec`). Every site carries
+  the comment `Stand-in S###`, and `scripts/check-stand-ins`, run by
+  `check-docs`, keeps the register and the markers in agreement. AGENTS.md
+  gains the rule: a law not built is refused or registered, never read
+  from another body, tier or event. Issues #188, #190, #191, #192 and #193
+  hold the remediation by root class. Comments and docs only; no reading
+  changes.
+
 - The bench reads the Q face (#148; Mycelium #239, #241), readings only:
   - the span `3Q = 3cap`, and two derivations of its held count,
     `W_Q = 3cap - U` (a) and `W_Q = 3cap - E` (b);

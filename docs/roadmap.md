@@ -397,6 +397,25 @@ where it belongs to one.
     replacing `tilt > 23`). Next: the parent hole's charge, so the bounce
     and `bounce::torsion_share` read the charged spin together (held, ruled
     2026-11-11); then #128's windings per body and the board (#162).
+59. **Stand-ins: the register of assumptions** ([#189](https://github.com/SAIOS-SAMN/xylarium/issues/189), `defect`, `track`;
+    [assumptions.md](assumptions.md)). The audit of 2026-11-11 found about
+    115 stand-ins read as law, nearly all from the prototype import
+    `e11a9ec`. Their status lived only in prose, so every refactor and new
+    reader consumed them. Done:
+    - the register (S001 to S113) and a marker at every site;
+    - `scripts/check-stand-ins`, run by `check-docs`;
+    - the rule in AGENTS.md.
+
+    Remediation is by root class:
+    - an imposed outcome or another body's, tier's or event's quantity
+      ([#190](https://github.com/SAIOS-SAMN/xylarium/issues/190), with the
+      remnants, [#188](https://github.com/SAIOS-SAMN/xylarium/issues/188));
+    - draws standing for laws ([#191](https://github.com/SAIOS-SAMN/xylarium/issues/191));
+    - the kernel's endpoint blends and booleans, first the free passage of
+      the annihilation drive ([#192](https://github.com/SAIOS-SAMN/xylarium/issues/192));
+    - undeclared rulers ([#193](https://github.com/SAIOS-SAMN/xylarium/issues/193));
+    - fabricated fallbacks ([#179](https://github.com/SAIOS-SAMN/xylarium/issues/179) tiers C-F);
+    - the Earth, Sun and Jupiter calibrations (#25, #13, #14, #18).
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

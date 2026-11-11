@@ -974,7 +974,8 @@ impl Substrate {
     /// face carries the open share `s` out and its far face returns the held
     /// share `1 - s`, opposed, so the ocean carries `s (+) (-(1 - s))` out per
     /// echo (the pair share), zero only for a spinless throat. Turning: on the
-    /// five isoclinic planes (`bounce::spin_bivector`, T18) each traversal at
+    /// six planes in the common phase (`bounce::spin_bivector`, T18, #183)
+    /// each traversal at
     /// `r` advances `360 delta` degrees, returned after `1 / (1 - delta)`
     /// traversals (T4), read from the same medium.
     pub fn carry(&self, r: Dy, t: Dy) -> Carry {

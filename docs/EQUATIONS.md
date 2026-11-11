@@ -195,8 +195,35 @@ another crate. Laws are composed from shares (ratios of the form
 - Horizon sphere (`bounce::horizon`): `sigma = sphere_through(C, P)`, where
   `P` is the crossing on isoclinic plane 1 at reach `rho sin(R_h / rho)` and
   the pulse's phase (`bounce::crossing`). Calibre: founding. Status: built.
-- Spin bivector (`bounce::spin_bivector`): `K = a sum_(k=1..5) B_k`. Calibre: none. Status:
-  built.
+- Spin bivector (`bounce::spin_bivector`): `K = a sum_(k=0..5) B_k` over
+  the six planes, `B_0` the axis plane's blade in the common phase (#183),
+  untilted; at a crossing off the axis plane `P . B_0 = 0`. Calibre: none.
+  Status: built; to become the charged spin below.
+- Charged spin (`xyl_core::hopf`, ruled 2026-11-11, #183):
+  - the holonomy `theta = 360 delta` (`holonomy`);
+  - the open charge `pi = (p / w) (1 - delta)` (`open_charge`);
+  - the tilt of the pole axis toward isoclinic plane 1 by `eps` (`tilt`),
+    with faces `c = 1 - eps / 90` and `d = eps / 90` (`tilt_faces_l1`);
+  - the balance `eps* = 90 pi` (`tilt_equilibrium`);
+  - `K = delta (T B_0 T~ + sum_{q=1..5} B_q)` (`charged_spin`), with
+    `T K T~ = K` for every complex-linear `T`.
+
+  Calibre: none. Status: built in `xyl_core`; read by the bells and the
+  worlds (below); not by the bounce, which needs the parent hole's `p / w`.
+- Stellar hole's axis (`field::stellar_tilt`, `field::stellar_axis`):
+  - `eps* = 90 (p / w) (1 - delta)`, with `p / w` the progenitor's held
+    mixture's proton share (`circuit::mix_weights`) and `delta` its
+    compactness `m / (R + m)` (`Star::compactness`);
+  - the axis is the orbit's rotor after a turn of the pole toward the line
+    of nodes by `eps*`, so `n . n' = cos eps*` exactly (tested).
+
+  Calibre: none. Status: built.
+- World's tilt (`bodies::world_tilt`): `eps* = 90 (p / w) (1 - delta)` with
+  `p / w = sum m_i Z_i / A_i / sum m_i` over the world's elements and
+  `delta = m / (R + m)`, `m` in core masses and `R` in `r_g`; the cosine
+  is the tilt's exact circle point. Seasonal (`life::seasonal`): `eps / 90
+  > 1 - eps / 90`, that is past 45 degrees. Calibre: one per share
+  (`r_g`). Status: built.
 - White hole (`bounce::Bounce::of`, `xyl-core cga::Source`):
   `N = P ^ (P . K)` is null, fixes `P` and keeps `sigma`; the far face is the
   antipode of `P` under 180 degrees on each isoclinic plane

@@ -3,6 +3,16 @@
 
 use super::*;
 
+/// Whether a world's seasons outweigh its steady year: the tilt's passed
+/// face exceeds its kept one, `d = eps / 90 > c = 1 - eps / 90`
+/// (`xyl_core::hopf::tilt_faces_l1`), the tilt past the faces' equator at
+/// 45 degrees, where its pole `t = d / c` passes 1 (#183). The r-strategy
+/// reads it; no Earth tilt stands in for it.
+pub fn seasonal(tilt_deg: i64) -> bool {
+    let tilt = xyl_core::Q::int(tilt_deg.abs().min(90));
+    xyl_core::hopf::tilt_faces_l1(&tilt).is_some_and(|f| f.divergent > f.convergent)
+}
+
 /// The share of a world's year and surface warm enough to grow, by the axial
 /// tilt (whole degrees, read as its absolute value capped at 90). Daily-mean
 /// sunlight at each latitude through the year is counted where it reaches
@@ -167,7 +177,7 @@ pub fn foragers(ms: &[Medium], region: Region, body: &Body, ctx: &Ctx) -> Dy {
         } else {
             Dy::ONE
         };
-    let r_strategist = body.tilt > 23 || body.star_mass < xyl_core::dyadic!(1, 2);
+    let r_strategist = seasonal(body.tilt) || body.star_mass < xyl_core::dyadic!(1, 2);
     // Body mass relative to a K-strategist's on a unit world is the ratio of
     // the fertility ceilings (r 2.5, K 1.2) over the world's gravity (a
     // giant's surface gravity is taken as a quarter of its radius);

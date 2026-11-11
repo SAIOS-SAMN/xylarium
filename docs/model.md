@@ -432,8 +432,9 @@ axis plane, its first axis the pole axis, and the five isoclinic planes).
   at the pulse's phase (`crossing`); the pole axis is reserved for the
   filament. The horizon is the conformal sphere about the centre through the
   crossing point (`horizon`, `xyl-core cga::sphere_through`).
-- The spin is the bivector `K = a sum_k B_k` over the blades of the five
-  planes (`spin_bivector`). The white hole is the null generator
+- The spin is the bivector `K = a sum_k B_k` over the blades of the six
+  planes, the axis plane in the common phase (`spin_bivector`, #183; at a
+  crossing off the axis plane its axis part adds nothing to the source). The white hole is the null generator
   `N = P ^ (P . K)` at the crossing point (`xyl-core cga::Source`); it is
   verified to be null, fixes `P` and preserves the horizon. The throat's far
   face is the crossing point's antipode under 180 degrees on each of the five isoclinic planes
@@ -849,9 +850,50 @@ Ruled 2026-11-11 ([#183](https://github.com/SAIOS-SAMN/xylarium/issues/183)); bu
 - **Layout.** The founding's points have the twelve base axes: the axis
   plane on `cga` axes 1-2, its first the pole axis, and the isoclinic
   planes on 3-4 to 11-12 (`circuit::plane_blade`, `bounce::AXES`).
-- **Open.** The spin's generator (`bounce::spin_bivector`) still turns
-  the five isoclinic planes only; the axis plane joins it as a change of
-  law, read on the founding. For the plane-pair products, which torus is
+- **The charged spin.** Ruled 2026-11-11. The spin is charged, the
+  manifold's deformation itself, and it rests on its axis tilt through the
+  charge:
+  - Its magnitude is the holonomy at the body's reach,
+    `theta = 360 delta` degrees per traversal (`hopf::holonomy`), returned
+    after `1 / (1 - delta)` traversals (T4), on the six planes in the
+    common phase.
+  - The body's open charge is `pi = (p / w) (1 - delta)` (`hopf::open_charge`,
+    LAW-COUPLING v2's push on xylarium's orientation, the bound share
+    `g = delta`).
+  - The tilt turns the pole axis toward the open charge's isoclinic plane
+    (`hopf::tilt`), one generator, since a complex-linear mixing of planes
+    leaves the common phase unchanged (`T K T~ = K`).
+  - The tilt's faces are read off the motion, `c = 1 - eps / 90` and
+    `d = eps / 90` (`hopf::tilt_faces_l1`: the overlap law on the share circle,
+    `psi = 2 eps`).
+  - Its natural balance is where those faces equal the charge's,
+    `eps* = 90 pi` degrees (`hopf::tilt_equilibrium`), restoring on both
+    sides. The writhe carries the tilt toward it, `Lk = Tw + Wr`.
+  - The charged spin is `K = delta (T B_0 T~ + sum_{q=1..5} B_q)`
+    (`hopf::charged_spin`).
+- **Where it stands.** The pieces are built in `xyl_core::hopf`. The
+  bounce's generator (`bounce::spin_bivector`) turns the six planes in the
+  common phase but is still untilted, with the drawn Kerr parameter as its
+  magnitude. Untilted, its axis part adds nothing at the crossing
+  (`P . e1 e2 = 0`), so the founding reads unchanged; that is the absence
+  of the tilt, not a law. The tilt enters once the parent hole's charge
+  (`p / w`) is read, and then the source carries `sin eps (P . e3 e2)`.
+  The bells and the worlds read it (ruled 2026-11-11, the bounce held
+  until the parent's charge is derived, and `bounce::torsion_share` on the
+  drawn spin until then):
+  - A stellar hole's spin axis stands `eps*` from its orbit normal
+    (`field::stellar_tilt`, `field::stellar_axis`). The charge is its
+    progenitor's held mixture's proton share (`circuit::mix_weights`), and
+    `delta` is the progenitor's compactness, the bound share at a star. The
+    tilt turns the pole toward the line of nodes.
+  - A world's tilt is `eps*` of its matter's proton share
+    (`sum m_i Z_i / A_i` over `sum m_i`) and its held face at its rim,
+    `m / (R + m)` in `r_g` (`bodies::world_tilt`). It replaces the drawn
+    obliquity.
+  - A world is seasonal where the tilt's passed face exceeds its kept one,
+    past the faces' equator at 45 degrees (`life::seasonal`). It replaces
+    `life::body`'s `tilt > 23`, Earth's number, in the r-strategy.
+- **Open.** For the plane-pair products, which torus is
   inside is set by the share split; a fibre on several plane pairs needs
   its winding on each.
 
@@ -874,10 +916,10 @@ display, never stored.
 - **The shear.** The orbit does not close. Each traversal advances its
   periapsis by `360 delta` degrees in its orbital plane
   (`turning::twist_per_turn`), a degree of structure returned after
-  `1 / (1 - delta)` traversals (T4), and the spin moves the orbit across the five isoclinic planes
+  `1 / (1 - delta)` traversals (T4), and the spin moves the orbit across the six planes
   (`bounce::spin_bivector`): every direction turns on a great circle of
-  S^9 in the ten dimensions the planes span, by the same degrees on each
-  isoclinic plane (T18), and the shear carries the
+  S^11 in the twelve dimensions the planes span, by the same degrees on
+  each plane (T18, the axis plane in the common phase by #183), and the shear carries the
   orbit from one circle to the next.
 - **Resonance.** An orbit returns exactly after `q` traversals, `q` the
   denominator of its advance in lowest terms. The reaches `r_k = (k - 1) M`

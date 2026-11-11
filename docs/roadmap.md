@@ -387,10 +387,16 @@ where it belongs to one.
     linking by the strata and the plane pairs; S^360 unfibred. Done: the
     carrier, the weighted turn, the overlap share and the linking in
     `xyl_core::hopf`, and the founding's axes on its six planes (twelve
-    base axes, `circuit::plane_blade`, `bounce::AXES`). Next: the spin's
-    generator on the common phase (the axis plane joins
-    `bounce::spin_bivector`, a change of law read on the founding), then
-    #128's windings per body, then the board's bodies (#162).
+    base axes, `circuit::plane_blade`, `bounce::AXES`), the spin's
+    generator on the common phase (`bounce::spin_bivector` over the six
+    planes, untilted), and the charged spin, ruled 2026-11-11 (holonomy
+    `360 delta`, open charge `pi`, the axis tilt and its balance
+    `eps* = 90 pi`, `K = delta (T B_0 T~ + sum B_q)`, in `xyl_core::hopf`).
+    The bells' tilt (`field::stellar_tilt`) and the worlds' tilt
+    (`bodies::world_tilt`, replacing the drawn obliquity; `life::seasonal`
+    replacing `tilt > 23`). Next: the parent hole's charge, so the bounce
+    and `bounce::torsion_share` read the charged spin together (held, ruled
+    2026-11-11); then #128's windings per body and the board (#162).
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;
@@ -481,8 +487,8 @@ where it belongs to one.
    can be eight or ten nuclei in one step, while bonding on S^11 is pairwise.
 10. **The transduction's multi-axial path**
     ([#11](https://github.com/SAIOS-SAMN/xylarium/issues/11), `proposal`). The
-    pole point moves by the jetstream's axial map; torsion in the five isoclinic
-    planes (`bounce::spin_bivector`) is specified, not built.
+    pole point moves by the jetstream's axial map; torsion in the six planes
+    (`bounce::spin_bivector`) is specified, not built.
 11. **Remaining star types**
     ([#12](https://github.com/SAIOS-SAMN/xylarium/issues/12), `proposal`). The
     remnant's own cut (compact, denser and throat-compact remnants), the

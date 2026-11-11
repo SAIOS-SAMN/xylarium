@@ -22,7 +22,12 @@ pub struct Orbit {
     pub node: Q,
     /// Argument of periapsis, as a fraction of a turn in \[0, 1).
     pub peri: Q,
-    /// Cosine of the spin axis's tilt at birth, in \[-1, 1\].
+    /// The spin axis's tilt at birth (degrees, in \[0, 90\]): the natural
+    /// balance of the world's charge ([`world_tilt`], #183); `None` where the
+    /// world's elements are not read, and the axis then stands upright.
+    pub obliquity: Option<Q>,
+    /// Cosine of the spin axis's tilt at birth, in \[0, 1\]: the tilt's
+    /// exact point of the circle (`rotor::circle_point`), 1 when upright.
     pub cos_obliquity: Q,
     /// Spin at birth, in rad/s (a share 0.1 to 0.5 of break-up spin).
     pub spin0: Q,
@@ -98,6 +103,32 @@ pub fn lock_gyr(host_kg: &Q, a_m: &Q, mass: &Q, radius: &Q, icy: bool, spin0: &Q
     on_grid(secs.checked_div(&Si::gyr_s()).unwrap_or(Q::ZERO))
 }
 
+/// A world's axis tilt at the natural balance of its charge (#183):
+/// `eps* = 90 pi` degrees with `pi = (p / w) (1 - delta)`, `p / w` the proton
+/// share of its matter (`sum m_i Z_i / A_i` over `sum m_i`, by element) and
+/// `delta` its held face at its rim, `m / (R + m)` with its mass in core
+/// masses (its gravitational length in `r_g`) and its radius in `r_g`, the
+/// form of a star's compactness (`disc::rim_share`). `None` for a world with
+/// no element mass.
+pub fn world_tilt(w: &World) -> Option<Q> {
+    let table = crate::elements::table().ok()?;
+    let (protons, mass) =
+        w.elements
+            .iter()
+            .zip(&table)
+            .fold((Q::ZERO, Q::ZERO), |(p, m), (share, el)| {
+                let per = Q::int(i64::from(el.z))
+                    .checked_div(&el.a)
+                    .unwrap_or(Q::ZERO);
+                (&p + &(share * &per), &m + share)
+            });
+    let proton_share = protons.checked_div(&mass)?;
+    let m = (&w.mass * &Si::world_mass_kg()).checked_div(&crate::package::core_kg())?;
+    let r = (&w.radius * &Si::world_radius_m()).checked_div(&crate::chain::units().r_g_m)?;
+    let delta = xyl_core::shares::deficit(&m, &r)?;
+    xyl_core::hopf::tilt_equilibrium(&xyl_core::hopf::open_charge(&proton_share, &delta)?)
+}
+
 /// The orbital elements and spins of a star's planets (innermost first);
 /// `star_kg` is the star's mass.
 pub fn orbits(star_kg: &Q, worlds: &[&World], rng: &mut Stream) -> Vec<Orbit> {
@@ -134,7 +165,15 @@ pub fn orbits(star_kg: &Q, worlds: &[&World], rng: &mut Stream) -> Vec<Orbit> {
                 .unwrap_or(Q::ZERO);
         let node = w.phase.clone();
         let peri = w.phase.clone();
-        let cos_obliquity = &(&Q::int(2) * &Dy::unit(rng.next_u64()).to_q()) - &Q::ONE;
+        // The axis tilt is the balance of the world's charge (#183), no longer
+        // a draw; the draw it took is still read, so every later draw of the
+        // world's stream stands where it stood.
+        let _ = rng.next_u64();
+        let obliquity = world_tilt(w);
+        let cos_obliquity = obliquity
+            .as_ref()
+            .and_then(|eps| xyl_core::rotor::circle_point(eps, 40))
+            .map_or(Q::ONE, |(c, _)| c);
         let share = &xyl_core::ratio!(1, 10)
             + &(&xyl_core::ratio!(4, 10) * &Dy::unit(rng.next_u64()).to_q());
         let icy = w.icy();
@@ -154,6 +193,7 @@ pub fn orbits(star_kg: &Q, worlds: &[&World], rng: &mut Stream) -> Vec<Orbit> {
             inc,
             node,
             peri,
+            obliquity,
             cos_obliquity,
             spin0,
             lock_gyr: lock,

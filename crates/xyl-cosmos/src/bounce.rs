@@ -21,8 +21,9 @@
 //!   radius `rho` as `rho sin(r / rho)`, fixed on the 2^-64 grid.
 //! - `horizon`: the dual sphere `sigma = C + (C . P) e_inf` about the centre
 //!   through the crossing `P` (`crossing`, on the first plane at phase psi).
-//! - `spin_bivector`: the Kerr parameter `a = J / M^2` as the same turn in
-//!   all five planes.
+//! - `spin_bivector`: the Kerr parameter `a = J / M^2` as the same turn on
+//!   all six planes of `xyl_core::hopf`, the axis plane in the common phase
+//!   (#183).
 //! - `Bounce::of`: the source `N = P ^ (P . K)`, verified null, fixing `P`
 //!   and keeping the horizon, and the far face, `P` under the planes' half
 //!   turn. Returns None unless `M > 0`, `0 < a < 1`, the enclosure is
@@ -138,13 +139,17 @@ pub fn spin_of_share(mass: &Q, a: &Q) -> Option<Q> {
         .checked_div(&(mass * mass))
 }
 
-/// The spin as the multi-axial bivector: the five isoclinic planes' blades,
-/// every plane sharing the one turn of magnitude `spin` (the Kerr
-/// parameter), so the white hole's generator carries all five planes'
-/// turning.
+/// The spin as the multi-axial bivector: the blades of the six planes of
+/// `xyl_core::hopf`, the axis plane and the five isoclinic planes, every
+/// plane sharing the one turn of magnitude `spin` (the Kerr parameter): the
+/// common phase of the Hopf carrier (#183), so the white hole's generator
+/// carries every plane's turning. A crossing on an isoclinic plane has no
+/// axis-plane coordinate, so the axis plane's part adds nothing to the
+/// source there (`P . e1 e2 = 0`).
 pub fn spin_bivector(spin: &Q) -> Mv {
-    (0..crate::circuit::PLANES)
-        .filter_map(crate::circuit::plane_blade)
+    (0..xyl_core::hopf::PLANES)
+        .filter_map(xyl_core::hopf::plane)
+        .filter_map(|(a, b)| Some(cga::base_axis(a)? | cga::base_axis(b)?))
         .fold(Mv::zero(), |m, blade| {
             m.add(&Mv::blade(blade, spin.clone()))
         })
@@ -174,7 +179,7 @@ pub struct Bounce {
     /// (see [`horizon()`]).
     pub horizon: Mv,
     /// The white hole at the crossing: the null generator N = P ^ (P . K) that
-    /// fixes the crossing point and keeps the horizon, K the five planes'
+    /// fixes the crossing point and keeps the horizon, K the six planes'
     /// spin ([`spin_bivector`]).
     pub source: Source,
     /// The throat's far face: the crossing point's antipode under the planes'
@@ -188,7 +193,7 @@ impl Bounce {
     /// the S^360 enclosure of curvature radius `enclosure` and crossed on the
     /// first isoclinic plane at the [`horizon_reach`] taken along the
     /// enclosure ([`curved_reach`]) and at the pulse's `phase`; the spin turns
-    /// all five planes ([`spin_bivector`]). `None` unless `mass > 0`,
+    /// all six planes ([`spin_bivector`]). `None` unless `mass > 0`,
     /// `0 < spin < 1` and `enclosure > 0`, or if the horizon-keeping component
     /// of the spin or the source cannot be built (the checks are made for
     /// every input).
@@ -204,8 +209,8 @@ impl Bounce {
             phase,
         );
         let p = point(&at);
-        // The spin bivector is an isoclinic turn about the centre, of magnitude
-        // a in each of the five planes.
+        // The spin bivector is the common turn about the centre, of magnitude
+        // a on each of the six planes.
         let k = spin_bivector(spin);
         // Only the component that preserves the horizon generates the source;
         // for a turn about the centre that is the whole bivector.
@@ -228,6 +233,32 @@ impl Bounce {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_axis_plane_in_the_common_phase_leaves_the_source_at_an_isoclinic_crossing() {
+        // The generator on the five isoclinic planes alone, and on all six:
+        // at a crossing off the axis plane both give the same source.
+        let (mass, spin, enclosure, phase) = (
+            Q::int(1),
+            xyl_core::ratio!(1, 3),
+            Q::int(1000),
+            xyl_core::ratio!(1, 7),
+        );
+        let b = Bounce::of(&mass, &spin, &enclosure, &phase).unwrap();
+        let five = (0..crate::circuit::PLANES)
+            .filter_map(crate::circuit::plane_blade)
+            .fold(Mv::zero(), |m, blade| {
+                m.add(&Mv::blade(blade, spin.clone()))
+            });
+        let six = spin_bivector(&spin);
+        assert_ne!(five, six);
+        let p = point(&b.at);
+        let kept = keeping(&b.horizon, &five).unwrap();
+        let source = Source::of(&b.horizon, &p, &kept).unwrap();
+        assert_eq!(source, b.source);
+        assert_eq!(b.at.first(), Some(&Q::ZERO));
+        assert_eq!(b.at.get(1), Some(&Q::ZERO));
+    }
 
     #[test]
     fn spin_makes_the_white_hole_a_null_source() {

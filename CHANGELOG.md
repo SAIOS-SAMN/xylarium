@@ -297,6 +297,41 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The spin's generator turns all six planes in the common phase (#183):
+  `bounce::spin_bivector` is `a sum_(k=0..5) B_k`, the axis plane joining
+  the five isoclinic planes. Untilted, its axis part adds nothing at the
+  founding's crossing (`P . B_0 = 0`, tested), so the founding is unchanged.
+  The tilt is the next step, below.
+- The charged spin (ruled 2026-11-11, #183), built in `xyl_core::hopf`:
+  - `holonomy`: the spin's magnitude, `360 delta` degrees per traversal;
+  - `open_charge`: `pi = (p / w) (1 - delta)`;
+  - `tilt`: the pole axis turned toward isoclinic plane 1;
+  - `tilt_faces_l1`: `c = 1 - eps / 90` and `d = eps / 90`;
+  - `tilt_equilibrium`: `eps* = 90 pi`;
+  - `charged_spin`: `K = delta (T B_0 T~ + sum_q B_q)`.
+
+  `Rotor::conjugate` turns a multivector. Tested: the fixture (3, 4) at
+  `delta = 1/4` gives `pi = 9/28` and `eps* = 405/14` degrees; a
+  complex-linear mixing leaves the common phase unchanged; any tilt keeps
+  the spin's magnitude; the balance restores. Nothing in the founding reads
+  it yet.
+- The bells and the worlds take the charged spin's tilt (#183, ruled
+  2026-11-11):
+  - A stellar hole's spin axis stands `eps* = 90 pi` from its orbit normal
+    (`field::stellar_tilt`, `field::stellar_axis`, recorded as `Bell::tilt`).
+    The charge is its progenitor's held mixture's proton share, and `delta`
+    is the progenitor's compactness.
+  - A world's tilt is `eps*` of its matter's proton share and its held face
+    at its rim (`bodies::world_tilt`, `Orbit::obliquity`). It replaces the
+    drawn obliquity; the stream draw is still read, so every later draw
+    stands.
+  - `life::seasonal` (the tilt past the faces' equator, 45 degrees) replaces
+    `tilt > 23` in the r-strategy (`life`, `xyl-kernel` `cosmic::emergence`).
+  - `open_charge` takes the proton share as a rational.
+  - `worlds` prints each planet's tilt and the tilts' spread.
+
+  The founding and `bounce::torsion_share` are unchanged.
+
 - The word retired by Mycelium #239 (with Netstratum) is gone from code,
   scripts and documentation, each use named for what it meant:
   `galaxy::DiscManifold` and `galaxy::disc_manifold` (a star's disc

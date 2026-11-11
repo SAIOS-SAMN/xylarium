@@ -534,8 +534,9 @@ fn chain_manifold(st: &Star) -> String {
 }
 
 /// One star's row of the `worlds` reading: its chain manifold, then its
-/// planets (orbit in AU, mass in world units, giants marked).
-fn star_rows(k: u64, st: &Star, sys: &System, planets: &[(Q, Q, bool)]) -> String {
+/// planets (orbit in AU, mass in world units, giants marked, the axis tilt
+/// at the balance of the world's charge in degrees, `s` where seasonal).
+fn star_rows(k: u64, st: &Star, sys: &System, planets: &[(Q, Q, bool, Option<Q>)]) -> String {
     let mut rows = format!("    chain: {}\n", chain_manifold(st));
     rows.push_str(&format!(
         "  star {k} ({} suns): {} planets: {}\n",
@@ -543,11 +544,16 @@ fn star_rows(k: u64, st: &Star, sys: &System, planets: &[(Q, Q, bool)]) -> Strin
         planets.len(),
         planets
             .iter()
-            .map(|(a, m, g)| format!(
-                "{} AU {} E{}",
+            .map(|(a, m, g, tilt)| format!(
+                "{} AU {} E{} tilt {}",
                 Dy::from_q(a),
                 Dy::from_q(m),
-                if *g { " giant" } else { "" }
+                if *g { " giant" } else { "" },
+                tilt.as_ref().map_or("-".to_string(), |t| {
+                    let whole = t.floor_i128().and_then(|x| i64::try_from(x).ok());
+                    let mark = whole.is_some_and(xyl_cosmos::life::seasonal);
+                    format!("{}{}", Dy::from_q(t), if mark { " s" } else { "" })
+                })
             ))
             .collect::<Vec<_>>()
             .join(", ")
@@ -568,6 +574,7 @@ pub(super) fn worlds_read(o: &Options, n: usize) -> Result<String, String> {
     let (mut counts, mut ratios, mut rows) = (Vec::new(), Vec::new(), String::new());
     let (mut belts, mut moons, mut giants, mut comets) = (0usize, 0usize, 0usize, 0usize);
     let mut bare = Bare::default();
+    let mut tilts: Vec<Q> = Vec::new();
     for k in 0..u64::try_from(n).unwrap_or(0) {
         let Some(st) = xyl_cosmos::galaxy::star(o.seed, origin, k) else {
             bare.unlit += 1;
@@ -577,12 +584,20 @@ pub(super) fn worlds_read(o: &Options, n: usize) -> Result<String, String> {
         else {
             continue;
         };
-        let mut planets: Vec<(Q, Q, bool)> = sys
+        let mut planets: Vec<(Q, Q, bool, Option<Q>)> = sys
             .worlds
             .iter()
             .filter(|w| w.host.is_none())
-            .map(|w| (w.a.clone(), w.mass.clone(), w.giant))
+            .map(|w| {
+                (
+                    w.a.clone(),
+                    w.mass.clone(),
+                    w.giant,
+                    xyl_cosmos::bodies::world_tilt(w),
+                )
+            })
             .collect();
+        tilts.extend(planets.iter().filter_map(|p| p.3.clone()));
         planets.sort_by(|a, b| a.0.cmp(&b.0));
         if planets.is_empty() {
             bare.count(&st);
@@ -601,6 +616,7 @@ pub(super) fn worlds_read(o: &Options, n: usize) -> Result<String, String> {
     }
     counts.sort_unstable();
     ratios.sort();
+    tilts.sort();
     let at = |v: &[usize], f: usize| v.get(f * v.len() / 10).copied().unwrap_or(0);
     let rt = |f: usize| {
         ratios
@@ -628,6 +644,30 @@ pub(super) fn worlds_read(o: &Options, n: usize) -> Result<String, String> {
         belts,
         comets
     );
+    let tilt_at = |f: usize| {
+        tilts
+            .get(f * tilts.len() / 10)
+            .map_or("-".to_string(), |t| Dy::from_q(t).to_string())
+    };
+    let seasonal = tilts
+        .iter()
+        .filter(|t| {
+            t.floor_i128()
+                .and_then(|x| i64::try_from(x).ok())
+                .is_some_and(xyl_cosmos::life::seasonal)
+        })
+        .count();
+    out.push_str(&format!(
+        concat!(
+            "  axis tilt at the charge's balance (degrees, 90 pi): p10 {} p50 {} p90 {}; ",
+            "{} of {} past 45 (seasonal)\n"
+        ),
+        tilt_at(1),
+        tilt_at(5),
+        tilt_at(9),
+        seasonal,
+        tilts.len()
+    ));
     out.push_str(&format!(
         concat!(
             "  without worlds: {} never lit, {} without a disc manifold, ",

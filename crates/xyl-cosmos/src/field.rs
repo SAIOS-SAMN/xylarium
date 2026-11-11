@@ -146,6 +146,11 @@ pub fn carry(v: &Mv, x: &[Q; 3]) -> Option<[Q; 3]> {
 pub struct Bell {
     /// The hole's spin axis (a direction, exact on the grid).
     pub axis: [Q; 3],
+    /// The axis tilt from the orbit normal (degrees), at the balance of the
+    /// progenitor's charge (`stellar_tilt`); `None` for a galactic core and
+    /// where the progenitor's held mixture is not read, whose axis is then
+    /// the orbit normal.
+    pub tilt: Option<Q>,
     /// The hole's Kerr spin parameter J / M^2, in (0, 1).
     pub spin: Q,
     /// Pitch (kpc): the core's wavelength scaled by the hole's mass
@@ -179,28 +184,64 @@ fn drawn_spin(seed: u64, n: u64) -> Q {
     Q::new(i64::try_from(x).unwrap_or(0) + 1, (1i64 << 52) + 2).unwrap_or(xyl_core::ratio!(1, 2))
 }
 
+/// The tilt of a stellar hole's spin axis at the natural balance of its
+/// charge (#183): `eps* = 90 pi` degrees with `pi = (p / w) (1 - delta)`,
+/// `p / w` the proton share of its progenitor's held mixture
+/// (`disc::StarHold::held`, `circuit::mix_weights`) and `delta` the
+/// progenitor's held face at its rim (`Star::compactness`, the bound share
+/// `g` at a star). `None` where the progenitor's disc manifold or its
+/// mixture is not read.
+pub fn stellar_tilt(s: &crate::galaxy::Star) -> Option<Q> {
+    let held: crate::circuit::Mix = crate::galaxy::disc_manifold(&s.r, &s.mass)?
+        .cut
+        .held
+        .into_iter()
+        .collect();
+    let w = crate::circuit::mix_weights(&held);
+    let share = w.protons.checked_div(&(&w.protons + &w.neutrons))?;
+    let delta = s.compactness().to_q();
+    xyl_core::hopf::tilt_equilibrium(&xyl_core::hopf::open_charge(&share, &delta)?)
+}
+
+/// A stellar hole's spin axis, exact before the grid: the orbit's rotor
+/// applied to the pole, tilted first by `tilt` degrees on the body's plane
+/// carrying the pole (axis 3) toward the line of nodes (axis 1), so the axis
+/// stands `tilt` degrees from the orbit normal. Upright for `None`.
+pub fn stellar_axis(o: &crate::galaxy::Orbit, tilt: Option<&Q>) -> [Q; 3] {
+    use xyl_core::rotor::{Rotor, Turn};
+    let orbit = o.rotor();
+    let rotor = tilt
+        .and_then(|degrees| {
+            let turn = Turn {
+                from: 3,
+                toward: 1,
+                degrees: degrees.clone(),
+            };
+            Rotor::<3>::of(&turn, 40)
+        })
+        .map_or(orbit.clone(), |t| orbit.then_after(&t));
+    let z = xyl_core::certified::Encl::exact(Q::ZERO);
+    rotor
+        .apply(&[z.clone(), z, xyl_core::certified::Encl::exact(Q::ONE)])
+        .map(|x| x.mid())
+}
+
 impl Bell {
     /// A node's bell: a galactic core spins about the z axis (the disc's axis)
     /// at the universal core's spin (`circuit::anchor`); a stellar hole spins
-    /// about its progenitor star's orbit normal at a drawn spin.
+    /// at a drawn spin about its progenitor star's orbit normal tilted by the
+    /// balance of its charge (`stellar_tilt`, `stellar_axis`).
     pub fn of(node: &Node, seed: u64) -> Bell {
-        let (axis, spin) = match &node.kind {
-            Kind::Core(_) => ([Q::ZERO, Q::ZERO, Q::ONE], crate::circuit::anchor().spin),
+        let (axis, spin, tilt) = match &node.kind {
+            Kind::Core(_) => (
+                [Q::ZERO, Q::ZERO, Q::ONE],
+                crate::circuit::anchor().spin,
+                None,
+            ),
             Kind::Stellar(s) => {
-                let o = &s.orbit;
-                // The orbit plane's normal: the rotor's image of the z axis.
-                let z = xyl_core::certified::Encl::exact(Q::ZERO);
-                let n = o
-                    .rotor()
-                    .apply(&[z.clone(), z, xyl_core::certified::Encl::exact(Q::ONE)]);
-                (
-                    [
-                        grid(Dy::from_q(&n[0].mid())),
-                        grid(Dy::from_q(&n[1].mid())),
-                        grid(Dy::from_q(&n[2].mid())),
-                    ],
-                    drawn_spin(seed, s.n),
-                )
+                let tilt = stellar_tilt(s);
+                let n = stellar_axis(&s.orbit, tilt.as_ref());
+                (n.map(|x| grid(Dy::from_q(&x))), drawn_spin(seed, s.n), tilt)
             }
         };
         let pitch = pitch_kpc(node.mass);
@@ -210,6 +251,7 @@ impl Bell {
         let light = &mass * &hole_light_per_star_mass();
         Bell {
             axis,
+            tilt,
             spin,
             pitch_kpc,
             period,
@@ -578,6 +620,27 @@ mod tests {
         let s = bs.get(1).expect("a stellar bell");
         assert!(s.pitch_kpc < bs[0].pitch_kpc && s.period < bs[0].period);
         assert!(s.spin.signum() > 0 && s.spin < Q::ONE);
+        // Its axis stands at the balance of its progenitor's charge from the
+        // orbit normal: the cosine between them is the tilt's point of the
+        // circle, exactly, and the tilt lies in a quarter turn.
+        let Kind::Stellar(star) = &stellar(origin).kind else {
+            panic!("a stellar node")
+        };
+        let eps = s.tilt.clone().expect("the progenitor's charge is read");
+        assert!(eps.signum() >= 0 && eps <= Q::int(90));
+        let (normal, tilted) = (
+            stellar_axis(&star.orbit, None),
+            stellar_axis(&star.orbit, Some(&eps)),
+        );
+        let dot = normal
+            .iter()
+            .zip(&tilted)
+            .fold(Q::ZERO, |a, (x, y)| &a + &(x * y));
+        assert_eq!(
+            Some(dot),
+            xyl_core::rotor::circle_point(&eps, 40).map(|(c, _)| c)
+        );
+        assert!(bs[0].tilt.is_none());
         // Arrivals are counted in closed form: a period's span holds one ring.
         let b = &bs[0];
         let period = Dy::from_q(&b.period);

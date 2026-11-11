@@ -110,11 +110,12 @@ impl Cosmic<'_> {
             return None;
         }
         let (state, ms, body) = self.world_at(m.star, m.w, m.epoch)?;
-        let strategy = if body.tilt > 23 || body.star_mass < xyl_core::dyadic!(1, 2) {
-            Strategy::R
-        } else {
-            Strategy::K
-        };
+        let strategy =
+            if xyl_cosmos::life::seasonal(body.tilt) || body.star_mass < xyl_core::dyadic!(1, 2) {
+                Strategy::R
+            } else {
+                Strategy::K
+            };
         let mut rng = Stream::derive(
             self.gal.seed,
             &["body".into(), m.star.into(), (m.w as u64).into()],

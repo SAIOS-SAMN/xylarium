@@ -130,6 +130,14 @@ fn climb_is_deterministic_and_impacts_only_delay() {
 }
 
 #[test]
+fn the_seasons_outweigh_the_year_past_the_tilts_equator() {
+    // The tilt's faces balance at 45 degrees: below it the kept face holds,
+    // above it the passed face; the sign of the tilt does not matter.
+    assert!(!seasonal(0) && !seasonal(23) && !seasonal(45));
+    assert!(seasonal(46) && seasonal(90) && seasonal(-60) && seasonal(120));
+}
+
+#[test]
 fn growing_share_and_transfer_bounds() {
     assert_eq!(growing_share(0), Dy::ONE);
     assert!(

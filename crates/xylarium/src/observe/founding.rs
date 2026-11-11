@@ -134,7 +134,7 @@ pub(super) fn founding_read(o: &Options) -> Result<String, String> {
 
 /// The `formation` reading: the founding's matter, then each galaxy's gas,
 /// its lit pieces and the star tier's cut of the first lit pieces
-/// (`galaxy::disc_frame`, the cut `disc::star_hold` the stars are made
+/// (`galaxy::disc_manifold`, the cut `disc::star_hold` the stars are made
 /// from), counted in rings of the galaxy's echo; every galaxy is read as the
 /// home galaxy's homologue.
 pub(super) fn formation(o: &Options) -> Result<String, String> {
@@ -242,9 +242,9 @@ fn galaxies(shapes: &[Shape], sub: &Substrate) -> String {
 /// belt its manifold holds (`disc::manifold_worlds`).
 fn star_tier(p: &(Q, Q, Option<i64>, Q)) -> String {
     let mid = (&p.0 + &p.1).checked_div(&Q::int(2)).unwrap_or(Q::ZERO);
-    let frame = xyl_cosmos::galaxy::piece_star_mass(&mid)
-        .and_then(|m| xyl_cosmos::galaxy::disc_frame(&mid, &m));
-    let Some(f) = frame else {
+    let disc = xyl_cosmos::galaxy::piece_star_mass(&mid)
+        .and_then(|m| xyl_cosmos::galaxy::disc_manifold(&mid, &m));
+    let Some(f) = disc else {
         return format!("  Star tier at {} galaxy units: no cut\n", show(&mid));
     };
     let (worlds, belt) = xyl_cosmos::disc::manifold_worlds(&f.star_share, &f.a_disc, &f.tide);

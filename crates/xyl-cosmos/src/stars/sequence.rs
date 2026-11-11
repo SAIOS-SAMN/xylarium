@@ -371,12 +371,12 @@ fn transduce(
         };
         let share = holds.insert(key, Q::ZERO).unwrap_or(Q::ZERO);
         let passed = &share * &(&Q::ONE - &step.release);
-        let frames: Vec<Q> = step
+        let held: Vec<Q> = step
             .products
             .iter()
             .map(|p| held_count(*p, received))
             .collect();
-        let all = frames.iter().fold(Q::ZERO, |a, w| &a + w);
+        let all = held.iter().fold(Q::ZERO, |a, w| &a + w);
         let mut given = Q::ZERO;
         for (i, p) in step.products.iter().enumerate() {
             // The last product takes the exact remainder, so the hold passed
@@ -384,7 +384,7 @@ fn transduce(
             let part = if i + 1 == step.products.len() {
                 &passed - &given
             } else {
-                (&passed * &frames[i]).checked_div(&all).unwrap_or(Q::ZERO)
+                (&passed * &held[i]).checked_div(&all).unwrap_or(Q::ZERO)
             };
             given = &given + &part;
             add_hold(holds, *p, &part);

@@ -12,7 +12,7 @@ it and is evaluated lazily, when a reading or an event requires it.
 
 | Tier | Modules | Produces |
 |---|---|---|
-| Numbers | `xyl-core` `q`, `certified`, `dyadic`, `cga`, `rotor`, `hopf`, `units`, `measure`, `event`, `rng`, `coordinate` | Exact rationals, certified enclosures, geometric algebra `Cl(p,q)` with its conformal model `Cl(n+1,1)`, frames of turns on named planes in degrees, the tier unit ladder, the certified crossing solver, deterministic streams |
+| Numbers | `xyl-core` `q`, `certified`, `dyadic`, `cga`, `rotor`, `hopf`, `units`, `measure`, `event`, `rng`, `coordinate` | Exact rationals, certified enclosures, geometric algebra `Cl(p,q)` with its conformal model `Cl(n+1,1)`, rotors of turns on named planes in degrees, the tier unit ladder, the certified crossing solver, deterministic streams |
 | Founding | `xyl-cosmos` `origin`, `bounce`, `elements`, `atoms`, `compound`, `fibres`, `formation`, `chain`, `cores`, `package`, `circuit::found` | The element table, the founding cascade, the firmament, beads and galaxies |
 | Substrate | `xyl-cosmos` `circuit` (`core`, `weights`, `anchor`, ...) | The core's reverberation, outflow, the medium, intake, force and tide as functions of `t`; the anchor (bell, rims, radius) |
 | Galaxies | `xyl-cosmos` `galaxy`, `stars`, `chem`, `centre`, `pulse`, `field`, `turning` | The home galaxy's stars on orbits, star lives, chemical evolution, the bells and their pulses |
@@ -171,7 +171,7 @@ and may run beside `run`. Bracketed arguments are optional, with their defaults.
 | Word | Arguments | Kind | Shows |
 |---|---|---|---|
 | `bench` | `[LO] [HI]` | Law | The substrate bench, with no founding: per kind the occupancy, the held count and closed share, the capture's step per band, the pole, the emission and the capture chain's count; then the founding bits and the seals' counts (docs/board.md) |
-| `formation` | | Law | The founding's matter, then each galaxy's pieces of gas, their lighting and the star cut of the first lit pieces (`disc::star_hold` through `galaxy::disc_frame`) with the worlds their manifolds hold, counted in rings |
+| `formation` | | Law | The founding's matter, then each galaxy's pieces of gas, their lighting and the star cut of the first lit pieces (`disc::star_hold` through `galaxy::disc_manifold`) with the worlds their manifolds hold, counted in rings |
 | `seals` | `[N=1600]` | Law | The quantum capacity of kinds Z 1 to N on the bands of each kind's atom, the seams and the kinds that seal |
 | `founding-reach` | | Law | Every founded kind's reach about the throat from the founding shells, and its open share |
 | `worlds` | `[N=200]` | Law | The planets of the first N sample stars as settling leaves them: orbits, masses, neighbour ratios, and the stars without worlds by cause |

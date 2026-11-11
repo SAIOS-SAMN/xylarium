@@ -8,7 +8,7 @@ fn disc_and_world_element_masses_sum_exactly() {
     let origin = crate::genesis::origin();
     let chem = crate::genesis::chem();
     let elements = crate::elements::table().unwrap();
-    let mut framed = 0;
+    let mut with_manifold = 0;
     'outer: for chunk in [0u64, 4000, 9000] {
         for jj in 0..4u64 {
             for k in 0..40u64 {
@@ -16,23 +16,23 @@ fn disc_and_world_element_masses_sum_exactly() {
                 let Some(star) = star(7, origin, n) else {
                     continue;
                 };
-                // A standing star has a disc frame, and the disc law's mass
+                // A standing star has a disc manifold, and the disc law's mass
                 // balance closes: the regions' holdings plus the belt equal
                 // the infall less the star's share.
-                let frame = crate::galaxy::disc_frame(&star.r, &star.mass)
-                    .expect("a standing star's frame");
+                let disc = crate::galaxy::disc_manifold(&star.r, &star.mass)
+                    .expect("a standing star's disc manifold");
                 let (regions, belt) =
-                    crate::disc::manifold_worlds(&frame.star_share, &frame.a_disc, &frame.tide);
+                    crate::disc::manifold_worlds(&disc.star_share, &disc.a_disc, &disc.tide);
                 let gathered = regions.iter().fold(Q::ZERO, |a, (_, h)| &a + h);
                 assert_eq!(
                     &gathered + &belt,
-                    &Q::ONE - &frame.star_share,
+                    &Q::ONE - &disc.star_share,
                     "the disc's books: regions {gathered} + belt {belt}"
                 );
                 for w in regions.windows(2) {
                     assert!(w[1].0 > w[0].0, "regions chain outward");
                 }
-                framed += 1;
+                with_manifold += 1;
                 let sys = system(7, origin, &[n], &star, chem, &elements).unwrap();
                 for w in &sys.worlds {
                     let sum = w.elements.iter().fold(Q::ZERO, |a, x| &a + x);
@@ -56,11 +56,14 @@ fn disc_and_world_element_masses_sum_exactly() {
                     let sum = b.elements.iter().fold(Q::ZERO, |a, x| &a + x);
                     assert_eq!(sum, b.mass, "a belt too");
                 }
-                if framed >= 4 {
+                if with_manifold >= 4 {
                     break 'outer;
                 }
             }
         }
     }
-    assert!(framed > 0, "some standing stars were framed");
+    assert!(
+        with_manifold > 0,
+        "some standing stars have a disc manifold"
+    );
 }

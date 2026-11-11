@@ -279,6 +279,17 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The word retired by Mycelium #239 (with Netstratum) is gone from code,
+  scripts and documentation, each use named for what it meant:
+  `galaxy::DiscManifold` and `galaxy::disc_manifold` (a star's disc
+  manifold; module `galaxy/disc_manifold.rs`), the rotor (a body's plane),
+  the relative versor (the pivot), held and open states (a kind's counts),
+  the anchor (model.md section 2, "Units and the anchor"), "The rotor, the
+  place and the chain" (#90). Readings change in text only: `worlds`
+  counts stars "without a disc manifold", and `atoms`' bonding names the
+  densest form "lattice". `scripts/check-style` refuses the word; this
+  changelog keeps its history.
+
 - Rotors are even versors of the geometric algebra (#42, #179):
   `xyl_core::rotor::Rotor<N>` over `N` base axes replaces the quaternion
   `Rotor`, and `rotor::Turn` (a plane named by its two generators, an

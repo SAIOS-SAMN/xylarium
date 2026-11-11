@@ -57,7 +57,7 @@ pub fn galaxy_radius(scale: &Q) -> Q {
 /// A place, held as a bearing on its sphere (no squared lengths):
 /// - `reach`: its arc from its anchor along the sphere (a star's from its
 ///   galaxy's core, a core's from the universe's pole);
-/// - `dir`: the unit direction its frame turns the anchor's axis to (exact,
+/// - `dir`: the unit direction its rotor turns the anchor's axis to (exact,
 ///   unit by construction);
 /// - `climb`: its offset from its orbit's plane (a disc star's swing);
 /// - `out`: an additional offset from that place (e.g. a drift).
@@ -68,7 +68,7 @@ pub fn galaxy_radius(scale: &Q) -> Q {
 pub struct Place {
     /// Arc from the anchor along the sphere (galaxy units).
     pub reach: Q,
-    /// Unit direction the frame turns the anchor's axis to (exact).
+    /// Unit direction the rotor turns the anchor's axis to (exact).
     pub dir: [Q; 3],
     /// Offset from the orbit's plane (galaxy units, signed).
     pub climb: Q,
@@ -95,7 +95,7 @@ pub struct Cell {
 
 impl Place {
     /// A core on the universe's sphere of radius `r`: its reach from the pole
-    /// (galaxy units) and its direction (its plane's frame applied to its
+    /// (galaxy units) and its direction (its plane's rotor applied to its
     /// phase at t, cores.rs Shape::place_at).
     pub fn core(reach: Q, dir: [Q; 3], r: &Q) -> Place {
         Place {

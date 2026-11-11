@@ -1,6 +1,6 @@
 # The physical model
 
-This document describes Xylarium's physics: the master frame, the founding,
+This document describes Xylarium's physics: the anchor and its units, the founding,
 and the derivation of each tier from the tier before it. Every formula, with
 its code location and status, is listed in [EQUATIONS.md](EQUATIONS.md);
 terms are defined in [glossary.md](glossary.md); declared constants are
@@ -76,7 +76,7 @@ and reads both in one calibre:
 
 1. `a` and `b` are coordinates of one origin (LAW-COORDINATE), read in
    their lowest common enclosure; different origins are refused.
-2. Their relative frame is found by conjugation, `P_b^-1 o P_a`
+2. Their relative versor is found by conjugation, `P_b^-1 o P_a`
    (Mycelium's pivot engine), and refused where none relates them.
 3. It is read per turning plane, by generator, in exact degrees with its
    winding `K` (in ZZ) and its phase (in QQ/ZZ; Winding and phase);
@@ -121,7 +121,7 @@ integers (ZZ) where a relation closes.
   ([#127](https://github.com/SAIOS-SAMN/xylarium/issues/127)); `settle::period` rebuilds `p / q` from a dyadic step instead
   of carrying it from the laws that produce it.
 
-## 2. Units and the master frame
+## 2. Units and the anchor
 
 - Base units are set by the universal core: `G = c = M_core = 1`, so the
   core's mass, called the universal state, is 1. The unit of length is the
@@ -255,7 +255,7 @@ and its Q face, with the electron phase state `R` between them.
   2. `R` per plane: the pulse is one share of 360 degrees for the five
      isoclinic planes ([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128)).
   3. The founding's output carried per kind as dipoles; the rim placed by
-     the containment chain (dilator, frame and cap), not by an exponent.
+     the containment chain (dilator, rotor and cap), not by an exponent.
   4. The deficit and the turning law on both faces; then [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) part 2.
 - **The name Q.** Ruled 2026-11-10 ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151)): two counts, named apart.
   The nucleon `Q` is the neutron count, and the mass weight
@@ -696,7 +696,7 @@ longer holds.
   pivots one tier up (the node by the golden angle about the throat's axis,
   the tilt toward it by the plastic angle's share of the S^360 measure; a
   placement by index, to be replaced, roadmap item 40),
-  and its place at `t` is its plane's frame applied to its phase
+  and its place at `t` is its plane's rotor applied to its phase
   (`Shape::place_at`). The stars of another galaxy are the home galaxy's stars
   read through that galaxy's length scale `2 m / (1 + m)`, where `m` is its hole
   mass ratio (`Shape::scale`, placeholder).
@@ -1475,7 +1475,7 @@ and theorems T2, T8 and T11. Every identity below is exact.
   - **What persists on the child side.** A core persists on the child side
     of a bounce only through the closed kinds it carries.
 
-### The frame, the place and the chain
+### The rotor, the place and the chain
 
 Planned ([#90](https://github.com/SAIOS-SAMN/xylarium/issues/90), roadmap
 item 40); audited 2026-11-05. This section records where the cartography
@@ -1491,13 +1491,13 @@ and the order in which that is to be opened up.
   on the axis plane and five isoclinic planes (axiom 8); the algebra that
   holds them is `xyl_core::cga`, and the planes' blades are
   `circuit::axes::plane_blade`.
-- **Frames built, not composed.**
-  - Four sites build a frame from a node and a tilt about the fixed axes
-    `z` and `x`: `galaxy::Orbit::frame`, `cores::Shape::place_at`, the
-    founding's `dir0` in `cores`, and `frame_of` in `manifold`.
-  - A frame is read through one image: the orbit normal as the image of
+- **Rotors built, not composed.**
+  - Four sites build a rotor from a node and a tilt about the fixed axes
+    `z` and `x`: `galaxy::Orbit::rotor`, `cores::Shape::place_at`, the
+    founding's `dir0` in `cores`, and `rotor_of` in `manifold`.
+  - A rotor is read through one image: the orbit normal as the image of
     `z` in `field::Bell::of`, and a place as the image of `(cos, sin, 0)`.
-  - A planet's frame ignores its star's frame, and a moon's is the identity.
+  - A planet's rotor ignores its star's rotor, and a moon's is the identity.
   - `manifold::galaxy_place` keeps a world's distance from its star and
     drops its direction (`chain::Place::standing_off`).
   - Field anchors sit on the first axis (`field::Anchor::on_orbit`).
@@ -1541,7 +1541,7 @@ and the order in which that is to be opened up.
   - Distinct phases on the planes come from these pushes, plane by plane,
     and from a link that turns one plane into another: a body whose planes
     are turned relative to its parent's.
-  - A frame is therefore three parts: the axis-plane phase; the isoclinic
+  - A body's turning is therefore three parts: the axis-plane phase; the isoclinic
     phases, one per plane, each a sheared orbit (T4); and the turning that carries the body's
     planes into its parent's, the turning between planes of the coordinate's
     holonomic lane. The present node and tilt are that turning restricted
@@ -1550,8 +1550,8 @@ and the order in which that is to be opened up.
     writhe where the link forms (T10, T13). Until then the drawn node and
     tilt stand as its factors, composed along the chain.
 - **Order of the work.**
-  1. One frame carrier over the six planes, composed along the chain, a
-     place being its parent's frame acting on the body's own state.
+  1. One rotor carrier over the six planes, composed along the chain, a
+     place being its parent's rotor acting on the body's own state.
      T18 settles its shape: an axis-plane phase, the isoclinic phases (one per plane) and
      the turning that carries the body's planes into its parent's.
   2. The chain's tier maps by `manifold::dilation` only, with SI read once
@@ -1566,7 +1566,7 @@ and the order in which that is to be opened up.
 ### The automorphic, synaptic chain
 
 Planned ([#97](https://github.com/SAIOS-SAMN/xylarium/issues/97), roadmap
-item 41), with The frame, the place and the chain (#90), Phase weakening and
+item 41), with The rotor, the place and the chain (#90), Phase weakening and
 phase strengthening (#84) and the polity (civilizations.md, Minds in the
 ancient seats, #94).
 
@@ -1585,8 +1585,8 @@ ancient seats, #94).
     it and the flow law are invariant under every dilation
     (`xyl_core::shares`, the test
     `deficit_is_invariant_under_dilation`).
-  - The chain fails it today. Tiers hop through SI, frames are rebuilt per
-    tier, and homologue galaxies reuse home values (The frame, the place
+  - The chain fails it today. Tiers hop through SI, rotors are rebuilt per
+    tier, and homologue galaxies reuse home values (The rotor, the place
     and the chain).
 - **Synaptic: a link holds a weight set by its history.**
   - **The weight.** It is the link's stored turning between planes, `tau`,
@@ -1623,7 +1623,7 @@ Planned ([#150](https://github.com/SAIOS-SAMN/xylarium/issues/150)), after The d
 ([#149](https://github.com/SAIOS-SAMN/xylarium/issues/149)) and Pairs ([#118](https://github.com/SAIOS-SAMN/xylarium/issues/118)).
 
 - **The complex.** On the containment chain (core, star, planet, moon,
-  nucleon; its links and cross-ties, The frame, the place and the chain):
+  nucleon; its links and cross-ties, The rotor, the place and the chain):
   - 0-cochains: each body's state, its dipoles per plane;
   - 1-cochains: each pair's relation through the pivot `P_b^-1 o P_a`, per
     plane, as a winding in ZZ and a phase in QQ/ZZ, on both faces.
@@ -1770,7 +1770,7 @@ clean: their lanes are never summed, ordered or compared as one number.
 - **The uplink.**
   - The T reading is floored to a whole ring.
   - A mind's act is one count.
-  - Every act is framed on the S lane.
+  - Every act is written on the S lane.
 - **Order of opening.**
   1. The bond and stripping as graded shares, read by both faces and their
      separation.
@@ -1867,7 +1867,7 @@ what the physics produces is read, and the minds of a universe name it
      Opened in part: the carrier `atoms::Received` holds the axis plane's
      push and the isoclinic planes' turning apart through the atom, the
      two-part closure, the star cut and the star's sequence; the turnings
-     between planes and the return are to come with the frame carrier
+     between planes and the return are to come with the rotor carrier
      (roadmap item 40).
   2. **Closure held, not chosen.** Every closure a mixture admits is held
      together, a superposition, never the one releasing most. Passage,
@@ -2072,7 +2072,7 @@ law, the same at a nucleus, a star and a world:
   `h / (l / h + h) >= p` on the held hold (`formation::hold_at`). The
   disc's agitation is `turning x swing x grip / shed`, with
   `grip = (1 - star) / (2 - star)` and `shed = e_rest + ln 2 / k_v`.
-- The star's manifold (`galaxy::disc_frame`): the star's gathering extent is
+- The star's manifold (`galaxy::disc_manifold`): the star's gathering extent is
   its mass in holding units (`mass / stellar_mass`) over the infall's
   holding per ring, at most the infall. Its manifold reach is the arc of its
   circle about the core that its pull holds,

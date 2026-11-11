@@ -456,8 +456,8 @@ fn gaps_from(
 struct Bare {
     /// The star's ring never lit: no star.
     unlit: usize,
-    /// No disc frame at the star.
-    unframed: usize,
+    /// No disc manifold at the star.
+    no_manifold: usize,
     /// The star's gathering fills its manifold (star share >= 1).
     filled: usize,
     /// No region on the manifold holds against the core's twist.
@@ -469,8 +469,8 @@ struct Bare {
 impl Bare {
     /// Counts the cause for a lit star `st` left without planets.
     fn count(&mut self, st: &Star) {
-        match xyl_cosmos::galaxy::disc_frame(&st.r, &st.mass) {
-            None => self.unframed += 1,
+        match xyl_cosmos::galaxy::disc_manifold(&st.r, &st.mass) {
+            None => self.no_manifold += 1,
             Some(f) if f.star_share >= Q::ONE => self.filled += 1,
             Some(f)
                 if xyl_cosmos::disc::manifold_worlds(&f.star_share, &f.a_disc, &f.tide)
@@ -484,10 +484,10 @@ impl Bare {
     }
 }
 
-/// The chain's frame at star `st`: its piece, the infall's extent, the
+/// The chain's manifold at star `st`: its piece, the infall's extent, the
 /// star's share, the tide (the core-star tie) and the regions.
-fn chain_frame(st: &Star) -> String {
-    xyl_cosmos::galaxy::disc_frame(&st.r, &st.mass)
+fn chain_manifold(st: &Star) -> String {
+    xyl_cosmos::galaxy::disc_manifold(&st.r, &st.mass)
         .map(|f| {
             let (regions, belt) =
                 xyl_cosmos::disc::manifold_worlds(&f.star_share, &f.a_disc, &f.tide);
@@ -529,14 +529,14 @@ fn chain_frame(st: &Star) -> String {
         })
         .unwrap_or_else(|| {
             let r = xyl_cosmos::galaxy::kpc_of_units(&st.r);
-            format!("no frame at {} kpc", Dy::from_q(&r))
+            format!("no disc manifold at {} kpc", Dy::from_q(&r))
         })
 }
 
-/// One star's row of the `worlds` reading: its chain frame, then its
+/// One star's row of the `worlds` reading: its chain manifold, then its
 /// planets (orbit in AU, mass in world units, giants marked).
 fn star_rows(k: u64, st: &Star, sys: &System, planets: &[(Q, Q, bool)]) -> String {
-    let mut rows = format!("    chain: {}\n", chain_frame(st));
+    let mut rows = format!("    chain: {}\n", chain_manifold(st));
     rows.push_str(&format!(
         "  star {k} ({} suns): {} planets: {}\n",
         Dy::from_q(&sys.spec.mass),
@@ -560,7 +560,7 @@ fn star_rows(k: u64, st: &Star, sys: &System, planets: &[(Q, Q, bool)]) -> Strin
 /// It gives the distribution of planets per star, the counts of giants,
 /// moons, belts and comet clouds, the causes of stars without planets, the
 /// distribution of neighbouring orbits' ratios, and for the first 12 stars
-/// the chain frame and the planets (orbit in AU, mass in world units).
+/// the chain manifold and the planets (orbit in AU, mass in world units).
 pub(super) fn worlds_read(o: &Options, n: usize) -> Result<String, String> {
     let founded = Founded::of(o.seed)?;
     let chem = founded.chemistry()?;
@@ -630,10 +630,11 @@ pub(super) fn worlds_read(o: &Options, n: usize) -> Result<String, String> {
     );
     out.push_str(&format!(
         concat!(
-            "  without worlds: {} never lit, {} unframed, {} gathering fills the manifold, ",
-            "{} nothing holds against the twist, {} settled away\n"
+            "  without worlds: {} never lit, {} without a disc manifold, ",
+            "{} gathering fills the manifold, {} nothing holds against the twist, ",
+            "{} settled away\n"
         ),
-        bare.unlit, bare.unframed, bare.filled, bare.twisted, bare.settled_out
+        bare.unlit, bare.no_manifold, bare.filled, bare.twisted, bare.settled_out
     ));
     out.push_str(&format!(
         "  neighbours' orbit ratio: min {} p10 {} p50 {} p90 {}\n{rows}",

@@ -1,4 +1,4 @@
-//! A star's disc frame: the founding piece at its reach, the infall's cut
+//! A star's disc manifold: the founding piece at its reach, the infall's cut
 //! there (`disc::star_hold`, held per piece) and the star's manifold reach;
 //! the star mass a piece's cut gives ([`piece_star_mass`],
 //! [`first_star_mass`]); and the transduction sequence of the piece's held
@@ -11,13 +11,13 @@ use xyl_core::certified::Encl;
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 
-/// The chain's frame for a star's disc at reach `r` (galaxy units) of the
+/// The chain's manifold for a star's disc at reach `r` (galaxy units) of the
 /// home galaxy: its piece of the founding, the infall's extent there, the
 /// share of the infall the star holds, the galaxy's tide at the pinch (the
 /// core-star tie) and the disc's agitation (`disc::star_hold`). The cut is
 /// read once per piece and cached.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct DiscFrame {
+pub struct DiscManifold {
     /// The piece's index among the founding's beads.
     pub piece: usize,
     /// The infall's extent (galaxy units), the extent of the star-forming
@@ -177,12 +177,12 @@ fn first_piece(sub: &crate::circuit::Substrate) -> Option<&(Q, Q, Option<i64>, Q
         .map(|(_, p)| p)
 }
 
-/// The disc's frame at reach `r` (galaxy units) of the home galaxy for a
-/// star of `mass` core masses (see [`DiscFrame`]). The cut is read once per
+/// The disc's manifold at reach `r` (galaxy units) of the home galaxy for a
+/// star of `mass` core masses (see [`DiscManifold`]). The cut is read once per
 /// piece and cached; the gathering extent and manifold reach depend on the
 /// star's mass. `None` where the founding is absent, no piece lies at `r` or
 /// the piece does not light.
-pub fn disc_frame(r: &Q, mass: &Q) -> Option<DiscFrame> {
+pub fn disc_manifold(r: &Q, mass: &Q) -> Option<DiscManifold> {
     let (piece, infall, lit) = held_cut(r)?;
     let cut = lit.0.clone();
     // `extent = m / (c / w)`, at most the infall's extent `w`: the star's
@@ -204,7 +204,7 @@ pub fn disc_frame(r: &Q, mass: &Q) -> Option<DiscFrame> {
         .checked_div(&reach.clone().max(xyl_core::ratio!(1, 1_000_000_000_000)))
         .unwrap_or(Q::ONE)
         .min(Q::ONE);
-    Some(DiscFrame {
+    Some(DiscManifold {
         piece,
         infall,
         extent,

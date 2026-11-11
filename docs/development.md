@@ -53,6 +53,13 @@ The following conventions apply in addition to `rustfmt` (run
   Model vocabulary is used as defined in [glossary.md](glossary.md).
   `scripts/check-style` checks capitalisation, sentence endings and "its
   own".
+- **Retired words.** The word Mycelium #239 retires, the f-word of
+  transports, is not used in code, scripts or documentation, as in Mycelium
+  and Netstratum: it collapses volume and dimensions. Name what is meant: a rotor (a body's
+  plane, `xyl_core::rotor::Rotor`), a disc manifold
+  (`galaxy::DiscManifold`), a relative versor (the pivot), held and open
+  states (a kind's counts). `scripts/check-style` checks this; the
+  changelog keeps its history.
 - **Doc comments.** Every public item has a `///` comment that states what it
   returns, its units, and when it returns `None` or `Err`. Entry points carry an
   `# Examples` section.

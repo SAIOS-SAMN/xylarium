@@ -1,7 +1,7 @@
 //! A star's system: its worlds, moons, belt and comet cloud, with every
 //! body's matter apportioned among the elements by mass.
 //!
-//! Inputs: a `galaxy::Star` and its manifold (`galaxy::disc_frame`), the
+//! Inputs: a `galaxy::Star` and its manifold (`galaxy::disc_manifold`), the
 //! regions `disc::manifold_worlds` cuts on it, the birth gas from
 //! `chem::Chemistry` weighted by its galactic core's recipe
 //! (`cores::weights_at`), the element table (`elements::Element`), and SI
@@ -265,16 +265,16 @@ pub fn system(
     // The star's manifold about the core; each world's region is cut against
     // the core's tide at the star (disc::manifold_worlds), so the
     // core-star-planet chain follows one law.
-    let Some(frame) = crate::galaxy::disc_frame(&star.r, &star.mass) else {
+    let Some(disc) = crate::galaxy::disc_manifold(&star.r, &star.mass) else {
         return Some(empty(spec));
     };
     let (regions, belt_share) =
-        crate::disc::manifold_worlds(&frame.star_share, &frame.a_disc, &frame.tide);
+        crate::disc::manifold_worlds(&disc.star_share, &disc.a_disc, &disc.tide);
     // The worlds' outer edge is the star's manifold reach (AU, from galaxy
     // rings through the boundary `galaxy::kpc_of_units`); a world's reach is
     // its region's share of it.
     let a_out = dyadic(
-        &(&crate::galaxy::kpc_of_units(&frame.reach) * &crate::package::Si::kpc())
+        &(&crate::galaxy::kpc_of_units(&disc.reach) * &crate::package::Si::kpc())
             .checked_div(&crate::package::Si::au())
             .unwrap_or(Q::ZERO),
     );
@@ -289,7 +289,7 @@ pub fn system(
     let infall_solids = dyadic(
         &(&star_earths
             .checked_div(
-                &frame
+                &disc
                     .star_share
                     .clone()
                     .max(xyl_core::ratio!(1, 1_000_000_000)),
@@ -323,7 +323,7 @@ pub fn system(
                 &total,
                 &star_earths,
                 &a_out,
-                &frame,
+                &disc,
                 &infall_solids,
                 &moon_pool,
             );
@@ -358,17 +358,17 @@ fn moon_budget(
     mass: &Q,
     star_earths: &Q,
     a_out: &Q,
-    frame: &crate::galaxy::DiscFrame,
+    disc: &crate::galaxy::DiscManifold,
     infall_solids: &Q,
     moon_pool: &Q,
 ) -> (Q, Q) {
     let world_reach_au = world_reach(a, mass, star_earths);
     let width = world_reach_au.checked_div(a_out).unwrap_or(Q::ZERO);
-    let budget = dyadic(&(&(&frame.a_disc * &width) * infall_solids).min(moon_pool.clone()));
+    let budget = dyadic(&(&(&disc.a_disc * &width) * infall_solids).min(moon_pool.clone()));
     let x = a.checked_div(a_out).unwrap_or(Q::ONE);
-    let tide = frame
+    let tide = disc
         .star_share
-        .checked_div(&(&x + &frame.star_share))
+        .checked_div(&(&x + &disc.star_share))
         .unwrap_or(Q::ZERO);
     (budget, tide)
 }

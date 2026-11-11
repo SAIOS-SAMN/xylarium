@@ -149,7 +149,7 @@ hypha, held by the private uplink's session.
   `u` (Mycelium 78.156) is the universe's exact count, whole rings and the
   ring's phase, never floored to a ring. A mind's focus is four exact
   shares (`knowledge::Focus`), and the seat listing states the call's four
-  arguments. The frame's lane byte is a vestige: Mycelium writes S on every
+  arguments. The act's lane byte is a vestige: Mycelium writes S on every
   act and nothing reads it, an act's lanes being the modes its content
   moves, so the uplink writes S until Mycelium retires the byte.
 

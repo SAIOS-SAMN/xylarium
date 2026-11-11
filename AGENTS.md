@@ -64,7 +64,7 @@ A module `foo` is `src/foo.rs` or, when split, the directory `src/foo/`
   ([model.md](docs/model.md#calibre-and-dimensional-capacity)).
 - Every pair reading (a separation, an arc, a closeness: every `a, b` or
   `x, y`) keeps its dimensional capacity: coordinates of one origin, read
-  in one calibre, related by the pivot (the relative frame by
+  in one calibre, related by the pivot (the relative versor by
   conjugation), read plane by plane in degrees with each winding and each
   return, never one scalar, never a square or a root
   ([model.md](docs/model.md#pairs-the-pivot-per-plane)).

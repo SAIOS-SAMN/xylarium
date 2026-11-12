@@ -109,10 +109,14 @@ Two build-time digests key the caches (`crates/xyl-cosmos/build.rs`):
 | Digest | Covers | Keys |
 |---|---|---|
 | `XYL_FOUNDING_DIGEST` | The founding's files only: `origin`, `bounce`, `elements`, `atoms`, `compound`, `fibres`, `formation`, `cores`, `chain`, `package`, `circuit/`, `data/`, and `xyl-core` | The founding cache, with the torsion share |
+| `XYL_SHELLS_DIGEST` | The founding shells' files: `atoms`, `compound`, `elements`, `fibres`, `formation/shells.rs`, `formation/mod.rs`, `data/` and `xyl-core` | The shells' cache (`shells-*`), with the torsion share |
 | `XYL_SOURCE_DIGEST` | Every source file of `xyl-cosmos` and `xyl-core`, and `data/` | The forecast and the heavy-star caches |
 
 A change to a layer above the founding (a disc, a world or a life law)
-leaves the founding digest unchanged, so a home's founding is reused. The
+leaves the founding digest unchanged, so a home's founding is reused; a
+change to a founding law above the shells (the circuit, the gas) leaves
+the shells digest unchanged, so the founding reads its shells back and
+re-derives only the stages above them. The
 founding anchors every tier above it through `circuit::anchor` (the bell,
 the rims, the universe's radius, the firmament's margin).
 
@@ -130,7 +134,7 @@ A universe's state is divided by how it is obtained:
 | Kind | Examples | Storage |
 |---|---|---|
 | Derived | The founding, galaxies, star orbits, systems, world states, the forecast of minds, the bells | Recomputed from the seed on every start; never stored as truth |
-| Cached derived | The founding (`founding-*`), the forecast (`forecast-*`, `forecast-stars/`), the heavy stars (`bells-*`) | Written to the home directory as accelerators; deleting them does not change results |
+| Cached derived | The founding (`founding-*`), its shells (`shells-*`), the forecast (`forecast-*`, `forecast-stars/`), the heavy stars (`bells-*`) | Written to the home directory as accelerators; deleting them does not change results |
 | Path-dependent | Each people's numbers, housing, knowledge and focus, home radiation, eminent figures, ley lines built and their handling, folds, the keepers' commits | Written to `checkpoint` at each save |
 | Inputs | Seat takes, focus, handling, moves and settlements | Recorded at their counts in `checkpoint` |
 
@@ -140,6 +144,7 @@ A home directory holds:
 |---|---|
 | `genesis` | The genesis record (`xylarium genesis v2`): seed, founding digest, laws digest, the anchor, the package (core mass, spin, share), the census by kind, the galaxies, the systems' limits, the bell |
 | `founding-<digest>-<share>` | The founding cache |
+| `shells-<digest>-<share>` | The founding shells' cache: the final share, each shell and the universal table |
 | `forecast-*`, `forecast-stars/` | The forecast of minds, whole and star by star |
 | `bells-*` | The heavy stars whose bells are weighed |
 | `checkpoint` | Held state and inputs |

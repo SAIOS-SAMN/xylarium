@@ -119,8 +119,8 @@ pub(super) fn founding_read(o: &Options) -> Result<String, String> {
         let q = xyl_cosmos::compound::open(*z);
         let rest = neutrons
             .get(z)
-            .and_then(|n| n.checked_div(&Q::int(i64::from(*z))))
-            .map_or_else(|| "-".to_string(), |t| show(&t));
+            .and_then(|p| xyl_core::shares::weighted(p, 64))
+            .map_or_else(|| "-".to_string(), |t| show(&t.mid()));
         out.push_str(&format!(
             "  Z{z:>5}: reach {}  Q/3Z {}  Q*/Z {rest}\n",
             show(r),

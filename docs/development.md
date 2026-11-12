@@ -122,11 +122,12 @@ implementation per quantity.
 
 ### 3. Keep the founding cached
 
-`crates/xyl-cosmos/build.rs` hashes two digests at build time:
+`crates/xyl-cosmos/build.rs` hashes three digests at build time:
 
 | Digest | Covers | Keys |
 |---|---|---|
 | `XYL_FOUNDING_DIGEST` | `origin`, `bounce`, `elements`, `atoms`, `compound`, `fibres`, `formation`, `cores`, `chain`, `package`, `circuit/`, `data/` and all of `xyl-core/src` | The founding cache (`founding-*` in a home, `target/genesis` for tests) |
+| `XYL_SHELLS_DIGEST` | `atoms`, `compound`, `elements`, `fibres`, `formation/shells.rs`, `formation/mod.rs`, `data/` and all of `xyl-core/src` | The shells' cache (`shells-*`), read back when only a law above the shells changed |
 | `XYL_SOURCE_DIGEST` | Every `.rs` and `.tsv` file of `xyl-cosmos` and `xyl-core` | The forecast caches (`forecast-*`, `forecast-stars/`, `bells-*`) |
 
 Both digests hash code only: comments and blank lines are excluded, so a

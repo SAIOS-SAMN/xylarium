@@ -21,7 +21,7 @@ use xyl_core::codec::{Dec, Enc};
 /// load.
 static DIR: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
 
-const VERSION: u32 = 9;
+const VERSION: u32 = 10;
 
 /// Names the directory the founding is cached in (a universe's home). The
 /// first call in a process wins; without one, nothing is cached.
@@ -63,10 +63,7 @@ fn encode(s: &Substrate) -> Vec<u8> {
             e.u32(*z).q(a);
         }
     }
-    e.len(s.neutrons.len());
-    for (z, q) in &s.neutrons {
-        e.u32(*z).q(q);
-    }
+    put_table(&mut e, &s.neutrons);
     e.buf
 }
 
@@ -116,12 +113,7 @@ fn decode(buf: &[u8]) -> Option<Substrate> {
             span,
         });
     }
-    let n = d.count()?;
-    let mut neutrons = std::collections::BTreeMap::new();
-    for _ in 0..n {
-        let z = d.u32()?;
-        neutrons.insert(z, d.q()?);
-    }
+    let neutrons = get_table(&mut d)?;
     if !d.done() {
         return None;
     }
@@ -139,6 +131,92 @@ fn decode(buf: &[u8]) -> Option<Substrate> {
         },
         neutrons,
     })
+}
+
+/// The universal table: per kind its rest-point parcels, each an amount and
+/// its face pairs (each count written as an integer `Q`).
+fn put_table(e: &mut Enc, table: &super::weights::Table) {
+    e.len(table.len());
+    for (z, parcels) in table {
+        e.u32(*z).len(parcels.len());
+        for p in parcels {
+            e.q(&p.amount).len(p.pairs.pairs().len());
+            for (c, d) in p.pairs.pairs() {
+                e.q(&Q::from_big(c.clone().into()))
+                    .q(&Q::from_big(d.clone().into()));
+            }
+        }
+    }
+}
+
+/// [`put_table`] read back; `None` for a count or pair that does not read.
+fn get_table(d: &mut Dec) -> Option<super::weights::Table> {
+    let mut table = super::weights::Table::new();
+    for _ in 0..d.count()? {
+        let z = d.u32()?;
+        let mut parcels = Vec::new();
+        for _ in 0..d.count()? {
+            let amount = d.q()?;
+            let mut pairs = xyl_core::shares::FacePairs::one();
+            for _ in 0..d.count()? {
+                let (c, dd) = (d.q()?, d.q()?);
+                pairs = pairs.compose(&xyl_core::shares::FacePairs::pair(c.numer(), dd.numer())?);
+            }
+            parcels.push(xyl_core::shares::Parcel { amount, pairs });
+        }
+        table.insert(z, parcels);
+    }
+    Some(table)
+}
+
+/// The founding shells as `formation::founding_shells` returns them: the
+/// final share, each shell (z, amount, reach) and the universal table.
+pub(crate) type Shells = (Q, Vec<(u32, Q, Q)>, super::weights::Table);
+
+/// The cached founding shells for `key` (`shells-{key}` in the directory),
+/// if the directory holds them whole.
+pub(crate) fn load_shells(key: &str) -> Option<Shells> {
+    let buf = std::fs::read(DIR.get()?.join(format!("shells-{key}"))).ok()?;
+    decode_shells(&buf)
+}
+
+/// Keeps the founding shells for `key`, written whole and renamed as
+/// [`store`] does; failures are silent.
+pub(crate) fn store_shells(key: &str, s: &Shells) {
+    let Some(dir) = DIR.get() else {
+        return;
+    };
+    let _ = std::fs::create_dir_all(dir);
+    let p = dir.join(format!("shells-{key}"));
+    let tmp = p.with_extension("tmp");
+    let _ = std::fs::write(&tmp, encode_shells(s)).and_then(|_| std::fs::rename(&tmp, &p));
+}
+
+/// The founding shells written with the format version.
+fn encode_shells(s: &Shells) -> Vec<u8> {
+    let mut e = Enc::new();
+    e.u32(VERSION).q(&s.0).len(s.1.len());
+    for (z, a, r) in &s.1 {
+        e.u32(*z).q(a).q(r);
+    }
+    put_table(&mut e, &s.2);
+    e.buf
+}
+
+/// [`encode_shells`] read back; `None` for another version or a buffer
+/// that does not read whole.
+fn decode_shells(buf: &[u8]) -> Option<Shells> {
+    let mut d = Dec::new(buf);
+    if d.u32()? != VERSION {
+        return None;
+    }
+    let s_final = d.q()?;
+    let mut shells = Vec::new();
+    for _ in 0..d.count()? {
+        shells.push((d.u32()?, d.q()?, d.q()?));
+    }
+    let table = get_table(&mut d)?;
+    d.done().then_some((s_final, shells, table))
 }
 
 /// The cached founding for `key`, if the directory holds one that reads whole.
@@ -160,4 +238,23 @@ pub(crate) fn store(key: &str, c: &Substrate) {
     }
     let tmp = p.with_extension("tmp");
     let _ = std::fs::write(&tmp, encode(c)).and_then(|_| std::fs::rename(&tmp, &p));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The shells stage reads back as written, face pairs and all, and a
+    /// truncated buffer is refused.
+    #[test]
+    fn the_shells_stage_reads_back_whole() {
+        let mix: Vec<(u32, Q)> = [1u32, 2, 8, 26]
+            .iter()
+            .map(|z| (*z, Q::new(1, i64::from(*z)).unwrap()))
+            .collect();
+        let shells = crate::formation::founding_shells(&mix);
+        let buf = encode_shells(&shells);
+        assert_eq!(decode_shells(&buf), Some(shells));
+        assert_eq!(decode_shells(&buf[..buf.len() - 1]), None);
+    }
 }

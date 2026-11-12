@@ -13,7 +13,8 @@
 //!   kind's reach `R_z = H D(s_final (+) s_i) / D(r_m)` with
 //!   `D(r_m) = W_e / 3`, whether the throat holds it, `R_z (1 + s_final) <= 1`,
 //!   and the universal table: each parcel's rest point `Q* / Z = H / R`,
-//!   gathered per kind by amount (`circuit::rest_neutrons`).
+//!   held per kind unsummed (`circuit::neutrons_at`); a take is carried by
+//!   the catcher's push.
 //! - Gas (`lighting`): each bead is a piece of the home galaxy's gas,
 //!   its state over the unit spread over its span, its kinds at its pinch
 //!   with agitation `a = (p - delta) / p`, `p` the throat's push
@@ -41,8 +42,8 @@
 //! Outputs: `Lighting` (rings to first light, lit share, per-piece record;
 //! fed into the founding), `Hold`, `Kind`.
 //! Invariants: every value is an exact `Q`, cut toward zero to the 2^-64 grid
-//! where noted (in the founding shells only sums are cut; pushes and
-//! reaches are held as face pairs, `shares::FacePairs`), with `pi` and
+//! where noted (the founding shells are exact: pushes and reaches held as
+//! face pairs, `shares::FacePairs`, sums formed exactly), with `pi` and
 //! `ln 2` as certified midpoints; empty beads, spans and mixes yield `None`
 //! or empty results; results are deterministic
 //! (the parallel meetings in `founding_shells` are collected in order).

@@ -34,8 +34,8 @@ pub struct Kind {
     pub z: u32,
     /// Amount held by the throat (held count, universe units).
     pub amount: Q,
-    /// Spin about the throat: the kind's reach at the founding, on the 2^-64
-    /// grid.
+    /// Spin about the throat: the kind's reach at the founding, exact (read
+    /// from its face pairs).
     pub spin: Q,
     /// Capture phase about the throat (turns in [0, 1), exact; its
     /// denominator divides the torsion share's).
@@ -96,7 +96,7 @@ pub struct Substrate {
     /// The universal table: each atom's neutrons per nucleus at the
     /// conversion's rest point (`formation::founding_shells`), built at the
     /// universal core's bounce.
-    pub neutrons: std::collections::BTreeMap<u32, Q>,
+    pub neutrons: super::weights::Table,
 }
 
 /// Marks the founding under way while held, so a reading of the neutrons
@@ -149,10 +149,20 @@ impl Substrate {
             prof.lap("founding: from the cache");
             return Some((s, a));
         }
-        let elements = crate::elements::founded(&share).ok()?;
-        let kinds = formation::kinds(&elements);
-        let mix: Vec<(u32, Q)> = kinds.iter().map(|k| (k.z, k.share.clone())).collect();
-        let (s_final, shells, neutrons) = formation::founding_shells(&mix);
+        // The shells are a separate stage, cached under the shells' digest
+        // and the share: a change to a law above them reads them back.
+        let shells_key = format!("{}-{}", crate::package::shells_digest(), share).replace('/', "-");
+        let (s_final, shells, neutrons) = match super::cache::load_shells(&shells_key) {
+            Some(cached) => cached,
+            None => {
+                let elements = crate::elements::founded(&share).ok()?;
+                let kinds = formation::kinds(&elements);
+                let mix: Vec<(u32, Q)> = kinds.iter().map(|k| (k.z, k.share.clone())).collect();
+                let staged = formation::founding_shells(&mix);
+                super::cache::store_shells(&shells_key, &staged);
+                staged
+            }
+        };
         prof.lap("founding: shells");
         // Capture, then conversion: the shells are read at the capture mass
         // (Q = 0), and every reading below weighs each nucleus with its
@@ -285,8 +295,8 @@ fn outer_edge(r: &Q, s_final: &Q) -> Q {
     r * &(&Q::ONE + s_final)
 }
 
-/// The firmament: the held shells (inside the vessel), each at its reach on
-/// the 2^-64 grid and its capture phase, scaled so their mass is 1.
+/// The firmament: the held shells (inside the vessel), each at its exact
+/// reach and its capture phase, scaled so their mass is 1.
 fn firmament_of(shells: &[(u32, Q, Q, bool)], share: &Q) -> Vec<Kind> {
     let mut firmament: Vec<Kind> = shells
         .iter()

@@ -16,7 +16,17 @@ may change public APIs and the model's laws.
   stack's push is `D(s_final) D(s_i)`, a reach the pairs `[(H),
   D(p_stack), (3, W_e)]`, a rest point the reach's pairs swapped, and the
   filter orders reaches by their pairs with the shared hold and throat
-  share cancelled. Only the founding's sums are still read on the grid.
+  share cancelled. The founding holds no sum: a take is carried by the
+  catcher's push against the taken kind's resistance instead of moving
+  the catcher to a mean reach, and the universal table holds each kind's
+  rest-point parcels unsummed (`shares::Parcel`), read at the reader's
+  precision (`circuit::neutrons_at`, `shares::weighted`); the
+  whole-nucleon count is refined until decided. Cache version 10.
+
+- The founding is staged: the shells are cached on their own
+  (`shells-<digest>-<share>`, keyed by `XYL_SHELLS_DIGEST`), so a change
+  to a founding law above them (the circuit, the gas) re-derives only the
+  stages above the shells.
 
 - The whole-nucleon read-back `A = floor(Z + Q_z + 1/2)` registered as a
   stand-in (S139, #149): the basket's Q is `A - Z` (ruled 2026-11-11,

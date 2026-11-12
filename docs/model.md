@@ -384,12 +384,17 @@ components, and each formation mechanic moves one of them.
   of its reach, `Q* / Z = H / R` (the involution `t -> 1/t`, the law's sole
   ground). The push and the reach are held as face pairs
   (`shares::FacePairs`, #210): `R` is the pairs `[(H), D(s_final),
-  D(s_i), (3, W_e)]` and the rest point swaps them, exact; only sums are
-  read on the 2^-64 grid. So at release `Q* / Z = (3Z - U) / (3 D(p_stack))`. A kind's
-  `Q_z` is its parcels' rest points weighted by amount, a rational on the 2^-64 grid
-  (`circuit::rest_neutrons`); every reading of a nucleus after the shells
-  weighs `Z + Q_z`. At seed 7 no kind is refused and `Q* / Z` runs 0.42 to
-  557, rising with `W_e`.
+  D(s_i), (3, W_e)]` and the rest point swaps them, exact. So at release
+  `Q* / Z = (3Z - U) / (3 D(p_stack))`. A kind is its parcels' rest
+  points, unsummed (`shares::Parcel`); a reader forms `Q_z`, their
+  amount-weighted reading, as an enclosure at the reader's precision: a
+  nucleus's weight on the 2^-64 grid (`circuit::rest_neutrons`), the
+  whole-nucleon count refined until the count is decided
+  (`circuit::mass_number`); every reading of a nucleus after the shells
+  weighs `Z + Q_z`. Seed 7 founds one stack, so a catcher's push is its
+  giver's and every kind rests at its closed form
+  `Q* / Z = W_e / (3 D(1/6)^2) = 25 W_e / 147`: no kind is refused, and
+  `Q* / Z` runs 50/147 to 3900/7, rising with `W_e`.
 - **The two holds.** `3W = 3Z + 3Q` is the nucleon whole. The electron
   hold `W_e = 3Z - U` (`compound::electron_hold`) is the held states the
   bound electrons screen, against which the open channel `abs(R_p) u` acts
@@ -804,8 +809,9 @@ a parcel's kinds close into at the parcel's heat (`compound::closing`,
 (`t = 1`) begins to transduce (`stars::Sequence`).
 
 **Meetings.** Where two parcels reach the same `r`, they exchange matter by
-the contrast of their deficits `T` times their coherence, with `sum m l`
-conserved (the filter of `formation::founding_shells`). Meetings and onsets are the
+the contrast of their deficits `T` times their coherence, and the
+catcher's push carries what it takes against the taken kind's own
+resistance (the filter of `formation::founding_shells`). Meetings and onsets are the
 events of the founding; between them every parcel's path is the closed form
 above.
 

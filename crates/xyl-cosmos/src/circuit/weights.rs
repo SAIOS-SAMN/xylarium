@@ -7,7 +7,8 @@
 // `nuclei_of` (grain.rs); a `Substrate`'s outflow and intakes.
 //
 // Outputs: `TwoWeights` (protons, neutrons, `mass`, `neutron_share`);
-// `rest_neutrons` (an atom's Q from the universal table, rational);
+// `neutrons_at` (an atom's Q from its rest-point parcels, an enclosure at a
+// reader's precision), `rest_neutrons` (on the 2^-64 grid);
 // `mass_number` (read back to whole nucleons, A = floor(Z + Q + 1/2));
 // `kind_capacity` and `mix_capacity` (the dipole's capacity, `3Q = 3 cap`);
 // `neutrons_of` (`rest_neutrons`, summed over a cluster's parts); `nucleus_weights`; `mix_weights`
@@ -25,7 +26,8 @@ use xyl_core::Q;
 /// Z, Q and R: Z the protons, Q the neutrons, R the electrons' phase state at
 /// the bounce's pulse p (turns).
 /// - Z is the charge; Q is the conversion's rest point from the universal
-///   table, a rational on the 2^-64 grid (a cluster sums its parts). A
+///   table, exact, read for a weight on the 2^-64 grid and for the
+///   whole-nucleon count from the exact value (a cluster sums its parts). A
 ///   kind is a nuclide (Z, Q) with weight Z + Q nucleons.
 /// - R is the electrons' coherence kappa (the share fibred on S^11, fibres.rs)
 ///   times the hemisphere response 1 - 2 frac(p), so R = kappa (1 - 2 frac(p))
@@ -51,11 +53,14 @@ impl TwoWeights {
     }
 }
 
+/// The universal table: each atom's parcels at the conversion's rest
+/// point, `Q* / Z` as face pairs with the parcel's amount (E014).
+pub type Table = std::collections::BTreeMap<u32, Vec<xyl_core::shares::Parcel>>;
+
 /// The universal table: each atom's neutrons per nucleus at the
 /// conversion's rest point, built at the universal core's bounce
 /// (`formation::founding_shells`) and set once per process by the founding.
-static NEUTRONS: std::sync::OnceLock<std::collections::BTreeMap<u32, Q>> =
-    std::sync::OnceLock::new();
+static NEUTRONS: std::sync::OnceLock<Table> = std::sync::OnceLock::new();
 
 /// Whether a founding is under way in this process: a reading taken then
 /// does not found again, and reads the capture state.
@@ -63,7 +68,7 @@ static FOUNDING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::
 
 /// Sets the universal table at the founding; the first founding in the
 /// process wins.
-pub(crate) fn set_neutrons(table: std::collections::BTreeMap<u32, Q>) {
+pub(crate) fn set_neutrons(table: Table) {
     let _ = NEUTRONS.set(table);
 }
 
@@ -75,7 +80,7 @@ pub(crate) fn set_founding(on: bool) {
 /// The process's universal table. Where no founding has happened yet, the
 /// substrate is founded first at the registered spin (as `anchor`); `None`
 /// where no spin is registered, during the founding, or where it fails.
-fn neutron_table() -> Option<&'static std::collections::BTreeMap<u32, Q>> {
+fn neutron_table() -> Option<&'static Table> {
     if let Some(t) = NEUTRONS.get() {
         return Some(t);
     }
@@ -85,21 +90,54 @@ fn neutron_table() -> Option<&'static std::collections::BTreeMap<u32, Q>> {
     NEUTRONS.get()
 }
 
-/// An atom's neutrons per nucleus `Q_z` from the universal table: the
-/// conversion's rest point at its parcels' reaches, a rational on the
-/// 2^-64 grid (E014, #201). `None` for a cluster, a kind with no parcel or before the
-/// founding: such a kind is in its capture state, `Q = 0`.
-pub fn rest_neutrons(z: u32) -> Option<Q> {
+/// An atom's parcels at the conversion's rest point in the universal
+/// table (E014, #201), unsummed.
+fn rest_parcels(z: u32) -> Option<&'static [xyl_core::shares::Parcel]> {
     // Stand-in S138: Every galaxy reads the universal table, not its core's own.
-    neutron_table()?.get(&z).cloned()
+    neutron_table()?.get(&z).map(Vec::as_slice)
 }
 
-/// An atom's mass number read back to whole nucleons, `A_z = floor(Z + Q_z
-/// + 1/2)` ([`rest_neutrons`], #149). `None` where `Q_z` is not read.
+/// An atom's neutrons per nucleus `Q_z = Z sum(a Q* / Z) / sum(a)` over its
+/// parcels, enclosed on the `2^-bits` grid (`shares::weighted`): the sum
+/// formed at this reading, never held. `None` for a cluster, a kind with no
+/// parcel or before the founding.
+pub fn neutrons_at(z: u32, bits: u32) -> Option<xyl_core::certified::Encl> {
+    let t = xyl_core::shares::weighted(rest_parcels(z)?, bits)?;
+    let z = xyl_core::certified::Encl::exact(Q::int(i64::from(z)));
+    Some(t.mul(&z))
+}
+
+/// An atom's neutrons per nucleus `Q_z` read for a nucleus's weight: the
+/// lower bound of [`neutrons_at`] on the 2^-64 grid, the precision weights
+/// are read at. `None` for a cluster, a kind with no parcel or before the
+/// founding: such a kind is in its capture state, `Q = 0`.
+pub fn rest_neutrons(z: u32) -> Option<Q> {
+    Some(xyl_core::certified::toward_zero(
+        &neutrons_at(z, 64)?.lo,
+        64,
+    ))
+}
+
+/// An atom's mass number read back to whole nucleons,
+/// `A_z = floor(Z + Q_z + 1/2)`: [`neutrons_at`] refined, doubling the
+/// precision from 2^-64, until both bounds give one count, so the count is
+/// decided by the parcels, not by a grid (#149). `None` where `Q_z` is not
+/// read, or where 2^-4096 does not decide it.
 pub fn mass_number(z: u32) -> Option<u32> {
     // Stand-in S139: The whole-nucleon count is the rest point rounded to the nearest nucleon.
-    let a =
-        (&(&Q::int(i64::from(z)) + &rest_neutrons(z)?) + &xyl_core::ratio!(1, 2)).floor_i128()?;
+    let count = |q: &Q| (&(&Q::int(i64::from(z)) + q) + &xyl_core::ratio!(1, 2)).floor_i128();
+    let mut bits = 64;
+    let a = loop {
+        let e = neutrons_at(z, bits)?;
+        let (lo, hi) = (count(&e.lo)?, count(&e.hi)?);
+        if lo == hi {
+            break lo;
+        }
+        if bits >= 4096 {
+            return None;
+        }
+        bits *= 2;
+    };
     u32::try_from(a).ok().filter(|&a| a > 0)
 }
 

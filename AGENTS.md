@@ -102,10 +102,11 @@ A module `foo` is `src/foo.rs` or, when split, the directory `src/foo/`
   finishing.
 - A code edit to any founding file (`crates/xyl-cosmos/build.rs` lists
   them; all of `xyl-core` is included) changes `XYL_FOUNDING_DIGEST` and
-  forces the next genesis or test run to found the universe again. Comment
-  edits do not: the digests hash code only. Test laws above the founding
-  against the cached test genesis by running only the changed modules'
-  tests.
+  forces the next genesis or test run to found the universe again; an edit
+  outside the shells' files (`XYL_SHELLS_DIGEST`) reads the cached shells
+  and re-derives only the stages above them. Comment edits do not: the
+  digests hash code only. Test laws above the founding against the cached
+  test genesis by running only the changed modules' tests.
 - Before finishing, run `cargo fmt --all`, `cargo clippy --workspace
   --all-targets -- -D warnings`, `RUSTDOCFLAGS="-D warnings" cargo doc
   --workspace --no-deps`, `scripts/check-docs` and `scripts/check-style`.

@@ -496,9 +496,13 @@ where it belongs to one.
     pushes and reaches held as face pairs (`shares::FacePairs`): the
     stack's push `D(s_final) D(s_i)`, the reach `[(H), D(p_stack),
     (3, W_e)]`, the rest point by swapping the reach's pairs, the
-    filter's reach order by the pairs after the shared ones cancel. Next:
-    the founding's sums (held shares, mean reaches, `Q_z`) as enclosures
-    read at the observer's precision, then the later stages, one per PR.
+    filter's reach order by the pairs after the shared ones cancel. Done:
+    no sum held in the founding: the chain's hold is 1 (`H = 2`,
+    `s_final = 1/6`); a take is carried by the catcher's push against the
+    taken kind's resistance, no mean reach; a kind holds its parcels' rest
+    points unsummed (`shares::Parcel`), read at the reader's precision
+    (`circuit::neutrons_at`; the whole-nucleon count refined until
+    decided). Next: the later stages, one per PR.
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;
@@ -1098,9 +1102,8 @@ layer, each with the quantity that is to derive it.
 - **Grids** (the resolution a quantity is cut to toward zero, `2^-b`, by
   `xyl_core::certified::toward_zero`): b = 232 for founding matter
   (`formation/shells.rs` nucleus_grain, the filter's takes); 64 for
-  the founding's sums (the held shares, a caught shell's mean reach and
-  the rest-point table, `formation/shells.rs` on_grid; the shares' faces,
-  pushes and reaches are face pairs, uncut), the turning taken (`circuit::Substrate::spin_orbit`), the
+  a nucleus's neutrons read for its weight (`circuit::rest_neutrons`; the
+  founding shells themselves are exact), the turning taken (`circuit::Substrate::spin_orbit`), the
   curved reach (`bounce::curved_reach`) and star masses
   (`galaxy/star.rs` MASS_BITS); 60 for field readings (`field.rs` GRID),
   star radii (`galaxy/star.rs`) and the turning per ring

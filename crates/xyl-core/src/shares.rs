@@ -27,6 +27,11 @@
 //!   evaluation: the balance (`prod c = prod d`) and a comparison, read
 //!   after the factors two products share cancel. [`FacePairs::value`] is
 //!   the reading, the product formed once.
+//! - [`Parcel`]: an amount held at a dilation (face pairs); its antipole
+//!   about a hold `H` is `H / D`, the pairs swapped and composed with `H`.
+//!   [`weighted`] reads parcels' amount-weighted dilation
+//!   `sum(a D) / sum(a)` as an enclosure on the `2^-bits` grid: the sum is
+//!   formed only at a reading, at the reader's precision.
 //!
 //! Invariants: every value is exact on `Q`; a push outside `(-1, 1)` and a
 //! deficit with a negative hold or reach, or with both zero, are refused
@@ -36,6 +41,7 @@
 //!
 //! Terms: deficit share, dilation, flow law (docs/glossary.md).
 
+use crate::certified::Encl;
 use crate::dyadic::Dy;
 use crate::Q;
 use num_bigint::BigInt;
@@ -178,6 +184,49 @@ impl FacePairs {
     }
 }
 
+/// An amount held at a dilation: the dilation as face pairs, the amount in
+/// the unit of whatever the parcel holds.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Parcel {
+    /// The amount held.
+    pub amount: Q,
+    /// The dilation it is held at.
+    pub pairs: FacePairs,
+}
+
+impl Parcel {
+    /// The parcel at the antipole of its dilation about `hold`: `hold / D`,
+    /// the pairs swapped and composed with the hold, the amount kept.
+    /// `None` for a hold that is not positive.
+    pub fn antipole(&self, hold: &Q) -> Option<Parcel> {
+        Some(Parcel {
+            amount: self.amount.clone(),
+            pairs: FacePairs::of(hold)?.compose(&self.pairs.inverse()),
+        })
+    }
+}
+
+/// Parcels' amount-weighted dilation `sum(a D) / sum(a)`, enclosed on the
+/// `2^-bits` grid: each term and the amount are read outward at `bits` and
+/// the sum is formed on those readings, so the enclosure holds the exact
+/// value without the exact sum being formed. `None` where the parcels hold
+/// no positive amount.
+pub fn weighted(parcels: &[Parcel], bits: u32) -> Option<Encl> {
+    let zero = Encl::exact(Q::ZERO);
+    let (moment, amount) =
+        parcels
+            .iter()
+            .filter(|p| p.amount.signum() > 0)
+            .fold((zero.clone(), zero), |(m, a), p| {
+                let term = Encl::exact(&p.amount * &p.pairs.value()).outward(bits);
+                (
+                    m.add(&term),
+                    a.add(&Encl::exact(p.amount.clone()).outward(bits)),
+                )
+            });
+    Some(moment.mul(&amount.recip()?).outward(bits))
+}
+
 /// Gravity's two faces about a hold `m` at reach `r` (one calibre for both):
 /// `m / (r + m)` and `r / (r + m)`. `None` for a negative hold or reach, or
 /// where both are zero.
@@ -265,6 +314,38 @@ mod tests {
         }
         assert!(FacePairs::dilation(&Q::ONE).is_none());
         assert!(FacePairs::of(&Q::ZERO).is_none());
+    }
+
+    /// A parcel's antipole times its dilation is the hold, and the
+    /// weighted reading encloses the exact weighted dilation and narrows as
+    /// the precision rises.
+    #[test]
+    fn parcels_read_their_weighted_dilation() {
+        let parcels: Vec<Parcel> = [(1, 6), (-2, 7), (5, 11)]
+            .iter()
+            .enumerate()
+            .map(|(k, (n, d))| Parcel {
+                amount: Q::new(i64::try_from(k).unwrap() + 1, 3).unwrap(),
+                pairs: FacePairs::dilation(&Q::new(*n, *d).unwrap()).unwrap(),
+            })
+            .collect();
+        let hold = Q::new(5, 2).unwrap();
+        for p in &parcels {
+            let back = p.antipole(&hold).unwrap();
+            assert_eq!(&back.pairs.value() * &p.pairs.value(), hold);
+        }
+        let exact = parcels
+            .iter()
+            .fold(Q::ZERO, |m, p| &m + &(&p.amount * &p.pairs.value()))
+            .checked_div(&parcels.iter().fold(Q::ZERO, |a, p| &a + &p.amount))
+            .unwrap();
+        let (coarse, fine) = (
+            weighted(&parcels, 16).unwrap(),
+            weighted(&parcels, 64).unwrap(),
+        );
+        assert!(coarse.contains(&exact) && fine.contains(&exact));
+        assert!(&fine.hi - &fine.lo <= &coarse.hi - &coarse.lo);
+        assert!(weighted(&[], 64).is_none());
     }
 
     #[test]

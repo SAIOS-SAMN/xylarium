@@ -143,3 +143,11 @@ impl Si {
 pub fn founding_digest() -> &'static str {
     env!("XYL_FOUNDING_DIGEST")
 }
+
+/// The founding shells' digest: the files the shells are derived from (the
+/// atoms, compounds, elements and fibres, the shell laws, the data tables and
+/// xyl-core). A change to a law above the shells leaves it unchanged, so the
+/// cached shells are read instead of founded again.
+pub fn shells_digest() -> &'static str {
+    env!("XYL_SHELLS_DIGEST")
+}

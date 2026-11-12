@@ -8,6 +8,11 @@
 //!   bounce, elements, atoms, compound, fibres, cores, chain, package,
 //!   `src/formation/`, `src/circuit/`, `data/` and xyl-core), which keys the founding
 //!   cache; a change to a layer above the founding leaves it unchanged.
+//! - `XYL_SHELLS_DIGEST`: the subset the founding shells are derived from
+//!   (atoms, compound, elements, fibres, `src/formation/shells.rs` and
+//!   `src/formation/mod.rs`, `data/` and xyl-core), which keys the shells'
+//!   cache; a change to a law above the shells (the circuit, the gas) reads
+//!   the cached shells instead of founding them again.
 //!
 //! Each digest covers file names and contents in sorted path order and is
 //! cut to 16 hex digits. `watch.rs` and every line containing `watch::` are
@@ -66,6 +71,26 @@ fn main() {
             || name.starts_with("data/")
             || name.starts_with("../xyl-core/src/")
     };
+    // The founding shells are derived from the element table, the atoms'
+    // holds and the shell laws alone.
+    let shells = |name: &str| {
+        const FILES: [&str; 6] = [
+            "src/atoms.rs",
+            "src/compound.rs",
+            "src/elements.rs",
+            "src/fibres.rs",
+            "src/formation/shells.rs",
+            "src/formation/mod.rs",
+        ];
+        FILES.contains(&name) || name.starts_with("data/") || name.starts_with("../xyl-core/src/")
+    };
+    let staged = digest(
+        &root,
+        all.iter()
+            .filter(|p| shells(&p.strip_prefix(&root).unwrap_or(p).to_string_lossy())),
+        "xylarium shells digest v1",
+    );
+    println!("cargo:rustc-env=XYL_SHELLS_DIGEST={staged}");
     let laws = digest(&root, all.iter(), "xylarium source digest v1");
     let found = digest(
         &root,

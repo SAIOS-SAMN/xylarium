@@ -382,7 +382,10 @@ components, and each formation mechanic moves one of them.
   kind's resistance `D(r_m) = W_e / 3`, carries it to
   `R = H D(p_stack) / D(r_m)`. Each parcel then rests at the antipolar face
   of its reach, `Q* / Z = H / R` (the involution `t -> 1/t`, the law's sole
-  ground), so at release `Q* / Z = (3Z - U) / (3 D(p_stack))`. A kind's
+  ground). The push and the reach are held as face pairs
+  (`shares::FacePairs`, #210): `R` is the pairs `[(H), D(s_final),
+  D(s_i), (3, W_e)]` and the rest point swaps them, exact; only sums are
+  read on the 2^-64 grid. So at release `Q* / Z = (3Z - U) / (3 D(p_stack))`. A kind's
   `Q_z` is its parcels' rest points weighted by amount, a rational on the 2^-64 grid
   (`circuit::rest_neutrons`); every reading of a nucleus after the shells
   weighs `Z + Q_z`. At seed 7 no kind is refused and `Q* / Z` runs 0.42 to

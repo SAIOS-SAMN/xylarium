@@ -492,8 +492,13 @@ where it belongs to one.
     enclosure at the observer's precision. Whole counts stay whole by
     the law that counts them. Done: every remaining cut truncates toward zero
     (`certified::toward_zero`), mirror-symmetric and never growing a
-    magnitude; enclosures keep `down` and `up`. Next: the factored form,
-    one stage per PR, witnessed by readings.
+    magnitude; enclosures keep `down` and `up`. Done: the founding's
+    pushes and reaches held as face pairs (`shares::FacePairs`): the
+    stack's push `D(s_final) D(s_i)`, the reach `[(H), D(p_stack),
+    (3, W_e)]`, the rest point by swapping the reach's pairs, the
+    filter's reach order by the pairs after the shared ones cancel. Next:
+    the founding's sums (held shares, mean reaches, `Q_z`) as enclosures
+    read at the observer's precision, then the later stages, one per PR.
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;
@@ -1093,8 +1098,9 @@ layer, each with the quantity that is to derive it.
 - **Grids** (the resolution a quantity is cut to toward zero, `2^-b`, by
   `xyl_core::certified::toward_zero`): b = 232 for founding matter
   (`formation/shells.rs` nucleus_grain, the filter's takes); 64 for
-  founding shares, reaches and the rest-point table (`formation/shells.rs`
-  on_grid), the turning taken (`circuit::Substrate::spin_orbit`), the
+  the founding's sums (the held shares, a caught shell's mean reach and
+  the rest-point table, `formation/shells.rs` on_grid; the shares' faces,
+  pushes and reaches are face pairs, uncut), the turning taken (`circuit::Substrate::spin_orbit`), the
   curved reach (`bounce::curved_reach`) and star masses
   (`galaxy/star.rs` MASS_BITS); 60 for field readings (`field.rs` GRID),
   star radii (`galaxy/star.rs`) and the turning per ring

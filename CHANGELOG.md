@@ -11,6 +11,13 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The founding's pushes and reaches are held as face pairs
+  (`shares::FacePairs`, #210) instead of cut to the 2^-64 grid: the
+  stack's push is `D(s_final) D(s_i)`, a reach the pairs `[(H),
+  D(p_stack), (3, W_e)]`, a rest point the reach's pairs swapped, and the
+  filter orders reaches by their pairs with the shared hold and throat
+  share cancelled. Only the founding's sums are still read on the grid.
+
 - The whole-nucleon read-back `A = floor(Z + Q_z + 1/2)` registered as a
   stand-in (S139, #149): the basket's Q is `A - Z` (ruled 2026-11-11,
   mycelium#238), an integer per universe, until the Diophantine split

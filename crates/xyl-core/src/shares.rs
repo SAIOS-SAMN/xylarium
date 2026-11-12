@@ -19,6 +19,14 @@
 //! - [`flow`]: the composition of two pushes, `x (+) y = (x + y) / (1 + x
 //!   y)` (two opposed pushes compose as `x (+) (-y)`). The dilation turns
 //!   the flow law into a product, `D(x (+) y) = D(x) D(y)`.
+//! - [`FacePairs`]: a dilation held factored, a product of integer face
+//!   pairs `prod (c_m / d_m)` ([#210](https://github.com/SAIOS-SAMN/xylarium/issues/210)).
+//!   A composition appends the other's pairs and the inversion
+//!   (`p -> -p`, `t -> 1 / t`) swaps each pair, so every factor keeps the
+//!   counts it came from: no expansion, no gcd, no cut. Exact without
+//!   evaluation: the balance (`prod c = prod d`) and a comparison, read
+//!   after the factors two products share cancel. [`FacePairs::value`] is
+//!   the reading, the product formed once.
 //!
 //! Invariants: every value is exact on `Q`; a push outside `(-1, 1)` and a
 //! deficit with a negative hold or reach, or with both zero, are refused
@@ -30,6 +38,8 @@
 
 use crate::dyadic::Dy;
 use crate::Q;
+use num_bigint::BigInt;
+use std::cmp::Ordering;
 
 /// Gravity's two faces about a mass invariant: the convergent (held) face and
 /// the divergent (passed) face, antipoles under the inversion `t -> 1 / t`.
@@ -62,6 +72,109 @@ impl Faces {
             convergent: self.divergent.clone(),
             divergent: self.convergent.clone(),
         }
+    }
+}
+
+/// A dilation held factored: the product of integer face pairs
+/// `prod (c_m / d_m)`, every count positive. Each pair keeps the counts it
+/// came from; nothing is expanded or reduced until [`FacePairs::value`].
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FacePairs {
+    pairs: Vec<(BigInt, BigInt)>,
+}
+
+impl FacePairs {
+    /// The empty product, the dilation 1 (no push).
+    pub fn one() -> FacePairs {
+        FacePairs { pairs: Vec::new() }
+    }
+
+    /// One pair `c / d`; `None` unless both counts are positive.
+    pub fn pair(c: BigInt, d: BigInt) -> Option<FacePairs> {
+        let zero = BigInt::from(0);
+        (c > zero && d > zero).then(|| FacePairs {
+            pairs: vec![(c, d)],
+        })
+    }
+
+    /// A positive rational as its one pair, numerator over denominator;
+    /// `None` for zero or a negative.
+    pub fn of(q: &Q) -> Option<FacePairs> {
+        FacePairs::pair(q.numer(), q.denom())
+    }
+
+    /// The dilation of a push `p = n / d`: the pair `(d + n, d - n)`, which
+    /// is `(1 + p) / (1 - p)`. `None` for `p` outside `(-1, 1)`.
+    pub fn dilation(p: &Q) -> Option<FacePairs> {
+        let (n, d) = (p.numer(), p.denom());
+        FacePairs::pair(&d + &n, &d - &n)
+    }
+
+    /// The composition: the other's pairs appended. For two dilations this
+    /// is the flow law, `D(x (+) y) = D(x) D(y)`.
+    pub fn compose(&self, other: &FacePairs) -> FacePairs {
+        let mut pairs = self.pairs.clone();
+        pairs.extend(other.pairs.iter().cloned());
+        FacePairs { pairs }
+    }
+
+    /// The inversion `p -> -p` (`t -> 1 / t`): every pair swapped.
+    pub fn inverse(&self) -> FacePairs {
+        FacePairs {
+            pairs: self
+                .pairs
+                .iter()
+                .map(|(c, d)| (d.clone(), c.clone()))
+                .collect(),
+        }
+    }
+
+    /// The pairs, in the order they were composed.
+    pub fn pairs(&self) -> &[(BigInt, BigInt)] {
+        &self.pairs
+    }
+
+    /// This product against `other`: the pairs the two share cancel, and the
+    /// remaining counts are compared crosswise, `prod c_a prod d_b` against
+    /// `prod c_b prod d_a`. Exact; nothing is divided.
+    pub fn cmp_value(&self, other: &FacePairs) -> Ordering {
+        let mut theirs: Vec<Option<&(BigInt, BigInt)>> = other.pairs.iter().map(Some).collect();
+        let mut mine: Vec<&(BigInt, BigInt)> = Vec::new();
+        for p in &self.pairs {
+            match theirs.iter_mut().find(|q| q.is_some_and(|q| q == p)) {
+                Some(slot) => *slot = None,
+                None => mine.push(p),
+            }
+        }
+        let one = BigInt::from(1);
+        let (mut left, mut right) = (one.clone(), one);
+        for (c, d) in mine {
+            left *= c;
+            right *= d;
+        }
+        for (c, d) in theirs.into_iter().flatten() {
+            left *= d;
+            right *= c;
+        }
+        left.cmp(&right)
+    }
+
+    /// Whether the product balances, `prod c = prod d`: the dilation 1, the
+    /// throat's balance.
+    pub fn balanced(&self) -> bool {
+        self.cmp_value(&FacePairs::one()) == Ordering::Equal
+    }
+
+    /// The reading: the product formed once, `prod c / prod d`, exact.
+    pub fn value(&self) -> Q {
+        let one = BigInt::from(1);
+        let (mut c, mut d) = (one.clone(), one);
+        for (cm, dm) in &self.pairs {
+            c *= cm;
+            d *= dm;
+        }
+        // Every count is positive, so the denominator is never zero.
+        Q::from_big(num_rational::BigRational::new(c, d))
     }
 }
 
@@ -127,6 +240,32 @@ pub fn dilation_dy(p: Dy) -> Option<Dy> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// One composition of face pairs: its reading is the flow law's, its
+    /// inversion composed with it balances, and a product compared with
+    /// itself extended by one pair orders as that pair's own faces.
+    #[test]
+    fn face_pairs_compose_as_the_flow_law() {
+        let pushes = [
+            Q::new(1, 6).unwrap(),
+            Q::new(-2, 7).unwrap(),
+            Q::new(5, 11).unwrap(),
+        ];
+        let chain = pushes.iter().fold(FacePairs::one(), |f, p| {
+            f.compose(&FacePairs::dilation(p).unwrap())
+        });
+        let pushed = pushes[1..]
+            .iter()
+            .fold(pushes[0].clone(), |x, y| flow(&x, y).unwrap());
+        assert_eq!(chain.value(), dilation(&pushed).unwrap());
+        assert!(chain.compose(&chain.inverse()).balanced());
+        for (c, d) in chain.pairs() {
+            let one = FacePairs::pair(c.clone(), d.clone()).unwrap();
+            assert_eq!(chain.compose(&one).cmp_value(&chain), c.cmp(d));
+        }
+        assert!(FacePairs::dilation(&Q::ONE).is_none());
+        assert!(FacePairs::of(&Q::ZERO).is_none());
+    }
 
     #[test]
     fn a_faces_dilation_is_linear_in_its_pole() {

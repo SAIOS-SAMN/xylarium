@@ -3,15 +3,20 @@
 //! (see the parent module's header for the formulas).
 
 use super::half;
+use num_bigint::BigInt;
 use rayon::prelude::*;
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
-use xyl_core::shares::{dilation, flow};
+use xyl_core::shares::FacePairs;
 use xyl_core::Q;
 
 /// A kind on the cascade: (atomic number, amount, mass per nucleus).
 type Weighed = (u32, Q, Q);
 
-/// `x` cut toward zero to the 2^-64 grid.
+/// A released shell: (atomic number, amount, reach held as face pairs).
+type Released = (u32, Q, FacePairs);
+
+/// A sum's reading, `x` cut toward zero to the 2^-64 grid.
 fn on_grid(x: &Q) -> Q {
     xyl_core::certified::toward_zero(x, 64)
 }
@@ -64,11 +69,10 @@ fn held_share(kinds: &[Weighed], amount: &Q) -> Q {
 
 /// The face `1/2 held / (held + h_final)` of a share `held` against the
 /// throat's final hold: the throat's final share `s_final` for the chain's
-/// whole hold, a stack's share `s_i` for the stack's.
+/// whole hold, a stack's share `s_i` for the stack's. Exact: a ratio of
+/// the hold's reading, not a sum.
 fn final_share(held: &Q, h_final: &Q) -> Q {
-    on_grid(&half(
-        &held.checked_div(&(held + h_final)).unwrap_or(Q::ZERO),
-    ))
+    half(&held.checked_div(&(held + h_final)).unwrap_or(Q::ZERO))
 }
 
 /// A stack's share `s_i`: the face of the hold the stack gathers, its
@@ -77,32 +81,38 @@ fn final_share(held: &Q, h_final: &Q) -> Q {
 /// of what it holds, never their sum.
 fn stack_share(part: &[Weighed], amount: &Q, h_final: &Q) -> Q {
     let held = part.iter().fold(Q::ZERO, |acc, (_, a, _)| &acc + a);
-    final_share(&held.checked_div(amount).unwrap_or(Q::ZERO), h_final)
+    final_share(
+        &on_grid(&held.checked_div(amount).unwrap_or(Q::ZERO)),
+        h_final,
+    )
 }
 
-/// The reach a stack's push `p_stack` carries kind `z` to about the hold
-/// `h_final`: the push composed against the kind's resistance
-/// `r_m`, `p_net = p_stack (+) (-r_m)`, so `R = H D(p_net) = H D(p_stack) /
-/// D(r_m)` with `D(r_m) = W_e / 3`, `W_e = 3Z - U` the electron hold. `None`
-/// for a push outside `(-1, 1)` or a kind with no electron hold.
-fn carried_reach(p_stack: &Q, z: u32, h_final: &Q) -> Option<Q> {
-    let w_e = Q::int(i64::from(crate::compound::electron_hold(z)));
-    let d_r = w_e.checked_div(&Q::int(3)).filter(|d| d.signum() > 0)?;
-    Some(on_grid(&(h_final * &dilation(p_stack)?).checked_div(&d_r)?))
+/// The reach a stack's push carries kind `z` to about the hold `h_final`,
+/// as face pairs: the push's dilation `D(p_stack)` composed against the
+/// kind's resistance `r_m`, `p_net = p_stack (+) (-r_m)`, so `R = H D(p_net)
+/// = H D(p_stack) / D(r_m)`, the pairs `[(H), D(p_stack), (3, W_e)]` with
+/// `D(r_m) = W_e / 3`, `W_e = 3Z - U` the electron hold. `None` for a kind
+/// with no electron hold.
+fn carried_reach(d_stack: &FacePairs, z: u32, h_final: &Q) -> Option<FacePairs> {
+    let w_e = BigInt::from(crate::compound::electron_hold(z));
+    let resist = FacePairs::pair(BigInt::from(3), w_e)?;
+    Some(FacePairs::of(h_final)?.compose(d_stack).compose(&resist))
 }
 
 /// The conversion's rest point at each parcel's reach, gathered per kind:
 /// a parcel of kind `z` at reach `R` about the hold `H` rests at
-/// `Q* / Z = H / R`, the antipolar face (`t -> 1 / t`) of its reach, and
-/// the kind's neutrons per nucleus are its parcels' rest points weighted by
-/// their amounts, `Q_z = Z sum(a H / R) / sum(a)`, rational on the 2^-64
-/// grid; a kind with no parcel has no entry (`Q* = 0`, its capture state).
-fn rest_neutrons(parcels: &[(BTreeMap<u32, Q>, Q)], h_final: &Q) -> BTreeMap<u32, Q> {
+/// `Q* / Z = H / R`, the antipolar face (`t -> 1 / t`) of its reach: the
+/// reach's pairs swapped and composed with `H`, exact. The kind's neutrons
+/// per nucleus are its parcels' rest points weighted by their amounts,
+/// `Q_z = Z sum(a H / R) / sum(a)`, the sum read on the 2^-64 grid; a kind
+/// with no parcel has no entry (`Q* = 0`, its capture state).
+fn rest_neutrons(parcels: &[(BTreeMap<u32, Q>, FacePairs)], h_final: &Q) -> BTreeMap<u32, Q> {
     let mut sums: BTreeMap<u32, (Q, Q)> = BTreeMap::new();
     for (mix, r) in parcels {
-        let Some(t) = h_final.checked_div(r) else {
+        let Some(hold) = FacePairs::of(h_final) else {
             continue;
         };
+        let t = hold.compose(&r.inverse()).value();
         for (z, a) in mix.iter().filter(|(_, a)| a.signum() > 0) {
             let e = sums.entry(*z).or_insert((Q::ZERO, Q::ZERO));
             e.0 = &e.0 + &(a * &t);
@@ -151,7 +161,7 @@ pub fn founding_shells(mix: &[(u32, Q)]) -> (Q, Vec<(u32, Q, Q)>, BTreeMap<u32, 
         .flat_map(|(mix, r)| {
             mix.into_iter()
                 .filter(|(_, a)| a.signum() > 0)
-                .map(move |(z, a)| (z, a.checked_div(&to_mass(z)).unwrap_or(Q::ZERO), r.clone()))
+                .map(move |(z, a)| (z, a.checked_div(&to_mass(z)).unwrap_or(Q::ZERO), r.value()))
                 .collect::<Vec<_>>()
         })
         .collect();
@@ -161,17 +171,22 @@ pub fn founding_shells(mix: &[(u32, Q)]) -> (Q, Vec<(u32, Q, Q)>, BTreeMap<u32, 
 /// Each kind's shell at release, heaviest first: (z, amount, reach). The
 /// stacks are the beads of the mass profile (each kind's amount, already in
 /// mass); a stack's push is the throat's final share composed with the
-/// stack's own, `p_stack = s_final (+) s_i`, and each kind is carried
-/// against its resistance ([`carried_reach`]). A kind whose reach is
-/// refused is not released.
-fn release_shells(kinds: &[Weighed], amount: &Q, s_final: &Q, h_final: &Q) -> Vec<Weighed> {
+/// stack's own, `p_stack = s_final (+) s_i`, held as its dilation
+/// `D(s_final) D(s_i)` (the flow law as composed pairs), and each kind is
+/// carried against its resistance ([`carried_reach`]). A kind whose reach
+/// is refused is not released.
+fn release_shells(kinds: &[Weighed], amount: &Q, s_final: &Q, h_final: &Q) -> Vec<Released> {
     let mut heavy = kinds.to_vec();
     heavy.sort_by(|a, b| b.2.cmp(&a.2));
     let prof: Vec<Q> = heavy.iter().map(|(_, a, _)| a.clone()).collect();
     let mut shells = Vec::new();
     for (a0, a1) in profile_beads(&prof) {
         let part = &heavy[a0..a1];
-        let Some(push) = flow(s_final, &stack_share(part, amount, h_final)) else {
+        let s_i = stack_share(part, amount, h_final);
+        let Some(push) = FacePairs::dilation(s_final)
+            .zip(FacePairs::dilation(&s_i))
+            .map(|(f, i)| f.compose(&i))
+        else {
             continue;
         };
         for (z, a, _) in part {
@@ -184,10 +199,12 @@ fn release_shells(kinds: &[Weighed], amount: &Q, s_final: &Q, h_final: &Q) -> Ve
 }
 
 /// The release state each meeting is read against: per released shell its
-/// tightness, its deficit `H / (R + H)` and its spread `R (1 -/+ s_final)`,
-/// and the kind whose meetings are traced (`XYL_FILTER_TRACE`).
+/// tightness, its reach read once, its deficit `H / (R + H)` and its spread
+/// `R (1 -/+ s_final)`, and the kind whose meetings are traced
+/// (`XYL_FILTER_TRACE`).
 struct ReleaseState {
     tight: Vec<Q>,
+    reach: Vec<Q>,
     deficit: Vec<Q>,
     band: Vec<(Q, Q)>,
     trace: Option<u32>,
@@ -205,20 +222,22 @@ struct ReleaseState {
 /// passage is evaluated against the release state alone, so the result does
 /// not depend on order and the lighter shells' meetings run in parallel
 /// (collected in index order).
-fn filter_takes(released: &[Weighed], h_final: &Q, s_final: &Q) -> Vec<(usize, usize, Q)> {
+fn filter_takes(released: &[Released], h_final: &Q, s_final: &Q) -> Vec<(usize, usize, Q)> {
+    let reach: Vec<Q> = released.iter().map(|(_, _, r)| r.value()).collect();
     let state = ReleaseState {
         tight: released
             .iter()
             .map(|(z, _, _)| crate::compound::tightness(*z))
             .collect(),
-        deficit: released
+        deficit: reach
             .iter()
-            .map(|(_, _, r)| h_final.checked_div(&(r + h_final)).unwrap_or(Q::ZERO))
+            .map(|r| h_final.checked_div(&(r + h_final)).unwrap_or(Q::ZERO))
             .collect(),
-        band: released
+        band: reach
             .iter()
-            .map(|(_, _, r)| (r * &(&Q::ONE - s_final), r * &(&Q::ONE + s_final)))
+            .map(|r| (r * &(&Q::ONE - s_final), r * &(&Q::ONE + s_final)))
             .collect(),
+        reach,
         trace: std::env::var("XYL_FILTER_TRACE")
             .ok()
             .and_then(|v| v.parse::<u32>().ok()),
@@ -233,19 +252,27 @@ fn filter_takes(released: &[Weighed], h_final: &Q, s_final: &Q) -> Vec<(usize, u
 /// Shell `i`'s meetings with every heavier shell `j < i` (see
 /// [`filter_takes`]).
 fn meetings(
-    released: &[Weighed],
+    released: &[Released],
     state: &ReleaseState,
     i: usize,
     zi: u32,
     mi: &Q,
-    ri: &Q,
+    ri_pairs: &FacePairs,
 ) -> Vec<(usize, usize, Q)> {
     let mut mine = Vec::new();
-    for (j, (zj, mj, rj)) in released.iter().enumerate().take(i) {
+    let ri = &state.reach[i];
+    for (j, (zj, mj, rj_pairs)) in released.iter().enumerate().take(i) {
         let (lo_j, hi_j) = (&state.band[j].0, &state.band[j].1);
-        if mj.signum() <= 0 || mi.signum() <= 0 || rj >= ri || ri <= lo_j {
+        // The reaches compare by their pairs, the shared hold and throat
+        // share cancelling.
+        if mj.signum() <= 0
+            || mi.signum() <= 0
+            || rj_pairs.cmp_value(ri_pairs) != Ordering::Less
+            || ri <= lo_j
+        {
             continue;
         }
+        let rj = &state.reach[j];
         // The contact is 1/2 for a whole passage, else 1/2 the share of the
         // spread crossed.
         let near = if ri >= hi_j {
@@ -307,13 +334,16 @@ fn meetings(
 /// reach, and stands at the amount-weighted mean of its parts' reaches
 /// (sum m l unchanged). Caught matter is not caught again in the same
 /// founding.
-fn place_takes(released: &[Weighed], takes: Vec<(usize, usize, Q)>) -> Vec<(BTreeMap<u32, Q>, Q)> {
+fn place_takes(
+    released: &[Released],
+    takes: Vec<(usize, usize, Q)>,
+) -> Vec<(BTreeMap<u32, Q>, FacePairs)> {
     let mut asked: Vec<Q> = vec![Q::ZERO; released.len()];
     for (_, j, take) in &takes {
         asked[*j] = &asked[*j] + take;
     }
     let mut given: Vec<Q> = vec![Q::ZERO; released.len()];
-    let mut parts: Vec<Vec<Weighed>> = vec![Vec::new(); released.len()];
+    let mut parts: Vec<Vec<(u32, Q, Q)>> = vec![Vec::new(); released.len()];
     for (i, j, take) in takes {
         let (has, all) = (&released[j].1, &asked[j]);
         let take = if all > has {
@@ -325,15 +355,22 @@ fn place_takes(released: &[Weighed], takes: Vec<(usize, usize, Q)>) -> Vec<(BTre
             continue;
         }
         given[j] = &given[j] + &take;
-        parts[i].push((released[j].0, take, released[j].2.clone()));
+        parts[i].push((released[j].0, take, released[j].2.value()));
     }
     released
         .iter()
         .enumerate()
-        .map(|(i, (z, m, r))| {
+        .map(|(i, (z, m, r_pairs))| {
             let own = m - &given[i];
             let mut mix: BTreeMap<u32, Q> = BTreeMap::new();
             mix.insert(*z, own.clone());
+            // A shell that caught nothing keeps its reach's pairs; one that
+            // caught stands at the mean of its parts' reaches, a sum read on
+            // the 2^-64 grid.
+            if parts[i].is_empty() {
+                return (mix, r_pairs.clone());
+            }
+            let r = &r_pairs.value();
             let (mut mass, mut ml) = (own.clone(), &own * r);
             for (zj, a, rj) in &parts[i] {
                 let e = mix.entry(*zj).or_insert(Q::ZERO);
@@ -341,10 +378,8 @@ fn place_takes(released: &[Weighed], takes: Vec<(usize, usize, Q)>) -> Vec<(BTre
                 mass = &mass + a;
                 ml = &ml + &(a * rj);
             }
-            (
-                mix,
-                on_grid(&ml.checked_div(&mass).unwrap_or_else(|| r.clone())),
-            )
+            let mean = on_grid(&ml.checked_div(&mass).unwrap_or_else(|| r.clone()));
+            (mix, FacePairs::of(&mean).unwrap_or_else(|| r_pairs.clone()))
         })
         .collect()
 }
@@ -354,7 +389,8 @@ mod tests {
     use super::*;
 
     /// A lone kind holds the whole chain, so `H = 2` and its parcel rests at
-    /// the antipolar face of its reach: `(Q* / Z) R = H`, to Q's grid.
+    /// the antipolar face of its reach: `(Q* / Z) R = H`, the reach's pairs
+    /// swapped; `Q_z` is a sum's reading on the 2^-64 grid.
     #[test]
     fn a_lone_kind_rests_at_the_antipole_of_its_reach() {
         for z in [1u32, 2, 26, 92, 1092] {

@@ -391,8 +391,10 @@ components, and each formation mechanic moves one of them.
   nucleus's weight on the 2^-64 grid (`circuit::rest_neutrons`), the
   whole-nucleon count refined until the count is decided
   (`circuit::mass_number`); every reading of a nucleus after the shells
-  weighs `Z + Q_z`. At seed 7 no kind is refused and `Q* / Z` runs 0.42 to
-  557, rising with `W_e`.
+  weighs `Z + Q_z`. Seed 7 founds one stack, so a catcher's push is its
+  giver's and every kind rests at its closed form
+  `Q* / Z = W_e / (3 D(1/6)^2) = 25 W_e / 147`: no kind is refused, and
+  `Q* / Z` runs 50/147 to 3900/7, rising with `W_e`.
 - **The two holds.** `3W = 3Z + 3Q` is the nucleon whole. The electron
   hold `W_e = 3Z - U` (`compound::electron_hold`) is the held states the
   bound electrons screen, against which the open channel `abs(R_p) u` acts

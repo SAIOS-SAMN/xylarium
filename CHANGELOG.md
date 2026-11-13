@@ -11,6 +11,16 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- A pulse is one breath (E011): each ring expands and contracts the
+  manifold, so its turn swings out and back at the amplitude `360 h` and its
+  screw's translation returns; the star holds its worlds against the
+  amplitude, and the pulses leave no drift (the kernel's drift and the
+  stand-off it caused are removed). The intercepted share falls as the
+  manifold's own measure at the reach (`formation::gathered`, one law with
+  the gas): the cap of S^n within the deficit angle, the face (`1 / d`) on
+  the disc's circle beyond one galaxy unit and the inverse square in the
+  bulge's ball within it.
+
 - Field anchors stand on their orbits (S024): each world's native
   direction is its manifold's bearing at the pulse's age (a moon's its
   giant's), and its shear is a rotor carried with the orbit

@@ -14,8 +14,8 @@
 //!
 //! - Versors: `bend` (translator), `turn_about` (a turn in degrees on the
 //!   plane dual to an exact unit axis, its half-angle an exact circle
-//!   point), `twist` (screw: the turn then a translation along the axis);
-//!   `carry` moves a point by any versor, odd ones by the twisted adjoint.
+//!   point); `carry` moves a point by any versor, odd ones by the twisted
+//!   adjoint.
 //! - `Bell::of`, `bells`: each node's screw. Its pitch is the core's
 //!   wavelength times the extent of M / M_core (`pitch_kpc`), its period
 //!   the pitch at light speed, its axis the core's or the progenitor
@@ -28,13 +28,14 @@
 //!   `sigma = spin r_g` against the reach, and the pitch's share `pitch h`
 //!   along it (E011). `Bell::energy_at`: light x period x the system's
 //!   face `a / (d + a)` (E011), no floor.
-//! - `absorb` -> `Option<Absorbed>`: the pulse shears each world's orbit;
-//!   the star pays up to the energy in to re-lock them, at
-//!   `1/2 m (M / a)^2 |dx|^2` each, leaving the unpaid share as shear; of
-//!   the rest, `transduced_share` (the current `transduction` step's release
-//!   in the star's sequence, `stars::Step::release`) transduces out and the
-//!   remainder leaves as light. The translation of the star's G point is the
-//!   drift and shears no orbit.
+//! - `absorb` -> `Option<Absorbed>`: a ring is one breath of the manifold,
+//!   its turn swinging each world about the star and back at the
+//!   amplitude `Bell::received`; the star pays up to the energy in to hold
+//!   them, `m M / (a + M rho) x s` each (`s` the turn's share), leaving the
+//!   unpaid share as shear; of the rest, `transduced_share` (the current
+//!   `transduction` step's release in the star's sequence,
+//!   `stars::Step::release`) transduces out and the remainder leaves as
+//!   light. A breath returns, so it leaves no drift.
 //!
 //! Invariant (`Absorbed::balances`): in = gravity + light + transduced out
 //! exactly, every term held as a 62-bit dyadic and light the exact
@@ -131,12 +132,6 @@ pub fn turn_about(axis: &[Q; 3], degrees: &Q) -> Option<Mv> {
     }
     let (c, s) = xyl_core::rotor::circle_point(&degrees.over(xyl_core::nonzero!(2)), 64)?;
     Some(Mv::scalar(c).sub(&plane_of(axis).scale(&s)))
-}
-
-/// Twist: a turn of `degrees` about `axis` (as in [`turn_about`]) followed
-/// by the translation `along`. `None` as for [`turn_about`].
-pub fn twist(axis: &[Q; 3], degrees: &Q, along: &[Q; 3]) -> Option<Mv> {
-    Some(cga::translator_at(along).geo(&turn_about(axis, degrees)?))
 }
 
 /// A point moved by a versor, exactly (an odd versor acts by its twisted
@@ -306,13 +301,15 @@ impl Bell {
         u64::try_from(ring(to) - ring(from)).unwrap_or(0)
     }
 
-    /// The pulse at a place `d_kpc` away, first-degree (E011): the bell's
-    /// screw turns the plane dual to its axis by the turning law,
-    /// `360 h` degrees with `h = sigma / (d + sigma)` the face of the hole's
-    /// strain `sigma = spin x r_g` against the reach (finite at `d = 0`, no
-    /// floor), then translates along the axis by the pitch's share of the
-    /// turn, `pitch x h` (AU). No arctangent, no half-angle tangent. `None`
-    /// for an axis not exactly of unit length.
+    /// The pulse's breath at a place `d_kpc` away, first-degree (E011): one
+    /// ring is one breath of the manifold, expanding and contracting, so its
+    /// turn about the bell's axis swings out and back and its screw's
+    /// translation returns; the ring leaves no net turn and no net drift. Its
+    /// amplitude is the turning law's `360 h` degrees on the plane dual to
+    /// the axis, `h = sigma / (d + sigma)` the face of the hole's strain
+    /// `sigma = spin x r_g` against the reach, finite at `d = 0`; this is the
+    /// turn the star holds its worlds against. `None` for an axis not exactly
+    /// of unit length.
     pub fn received(&self, d_kpc: Dy) -> Option<Mv> {
         // The hole's r_g: the core's r_g times the hole's mass over the
         // core's.
@@ -328,20 +325,22 @@ impl Bell {
                 .div(&(d_kpc.max(Dy::ZERO) + sigma))
                 .unwrap_or_default(),
         );
-        let degrees = &Q::int(360) * &h;
-        let shift = &(&self.pitch_kpc * &au_per_kpc()) * &h;
-        let along: [Q; 3] = std::array::from_fn(|i| grid(Dy::from_q(&(&shift * &self.axis[i]))));
-        twist(&self.axis, &degrees, &along)
+        turn_about(&self.axis, &(&Q::int(360) * &h))
     }
 
     /// The energy of one ring intercepted by a system of radius `a_out_au` at
-    /// `d_kpc`: one period of light times the system's face against the
-    /// reach, `a / (d + a)` with both in AU (E011, first-degree: the hold
-    /// and the reach in one denominator, finite at `d = 0`, no floor); in
+    /// `d_kpc`: one period of light times the system's share of the manifold
+    /// the pulse spreads on at that reach (`formation::gathered`), the cap of
+    /// S^n within the system's deficit angle `a / (d + a)` of the half turn,
+    /// both in AU, `n` the manifold's dimension at the reach
+    /// (`formation::dimension_at`: the disc's circle beyond one galaxy unit,
+    /// the share the face itself; the bulge's ball within it, the share
+    /// falling as the inverse square far out). Finite at `d = 0`, no floor; in
     /// field energy units.
     pub fn energy_at(&self, d_kpc: Dy, a_out_au: &Q) -> Q {
         let d_au = grid(d_kpc * Dy::from_q(&au_per_kpc())).max(Q::ZERO);
-        let share = qd(a_out_au, &(&d_au + a_out_au));
+        let n = crate::formation::dimension_at(&crate::galaxy::units_of_kpc(&d_kpc.to_q()));
+        let share = crate::formation::gathered(a_out_au, &d_au, n);
         &(&(&self.light * &self.period) * &star_ring()) * &share
     }
 }
@@ -497,8 +496,8 @@ fn sun_rg_au() -> Q {
 }
 
 /// The result of one absorption: energy in, spent as gravity (re-locking
-/// orbits), light and transduction-out; each world's place afterwards (with any shear
-/// not re-locked), and the system's drift along the pulse (AU).
+/// orbits), light and transduction-out; and each world's place afterwards
+/// (with any shear not re-locked). A breath returns, so it leaves no drift.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Absorbed {
     /// Energy the pulse brings, in field energy units (one unit = world mass
@@ -515,8 +514,6 @@ pub struct Absorbed {
     pub transduced_out: Q,
     /// Each world's anchor after the absorption, in the input order.
     pub anchors: Vec<Anchor>,
-    /// The star's G point's drift along the pulse (AU).
-    pub drift: [Q; 3],
 }
 
 impl Absorbed {
@@ -529,9 +526,9 @@ impl Absorbed {
 
 /// A star of `mass` suns absorbs a pulse `v` bringing `energy_in`, its
 /// current step converting `transduced_out` of what it transduces
-/// (`transduced_share`). The pulse's translation moves the star's G point
-/// (the drift) and shears no orbit; its turn turns each world about the
-/// star, keeping its reach. Re-locking a world turned from its native
+/// (`transduced_share`). The pulse is one breath: its turn swings each world
+/// about the star and back, keeping its reach, and the star holds the world
+/// against the breath's amplitude `v`. Re-locking a world turned from its native
 /// direction by the share `s` of a whole turn (`turn_share`) costs the
 /// hold's work over that share, first-degree (E011): `m M / (a + M rho) x s`, the world's
 /// mass times the star's face at the orbit's reach with the hold read as a
@@ -546,17 +543,16 @@ pub fn absorb(
     v: &Mv,
     energy_in: &Q,
 ) -> Option<Absorbed> {
-    let drift = carry(v, &[Q::ZERO, Q::ZERO, Q::ZERO])?;
     let hold = &(mass * &sun_rg_au());
     let mut moved = Vec::with_capacity(worlds.len());
     let mut need = Q::ZERO;
     for w in worlds {
-        // The pulse's turn about the star: the world's point moved, less the
-        // drift, read back as a direction at the same reach.
+        // The breath's turn about the star at its amplitude: the world's
+        // point moved, read back as a direction at the same reach.
         let at = w.at();
         let point: [Q; 3] = std::array::from_fn(|i| &at[i] * &w.reach);
         let c = carry(v, &point)?;
-        let turned: [Q; 3] = std::array::from_fn(|i| qd(&(&c[i] - &drift[i]), &w.reach));
+        let turned: [Q; 3] = std::array::from_fn(|i| qd(&c[i], &w.reach));
         let share = dyadic(&turn_share(&w.native, &turned));
         let work = qd(&(&(&w.mass * mass) * &share), &(&w.reach + hold));
         need = &need + &work;
@@ -608,7 +604,6 @@ pub fn absorb(
         light,
         transduced_out,
         anchors,
-        drift,
     })
 }
 
@@ -796,8 +791,6 @@ mod tests {
                 .fold(Q::ZERO, |x, y| &x + &y),
         );
         assert!(s2 > s1, "sheared further: {s1} -> {s2}");
-        // The drift is the pulse's translation along the z axis.
-        assert!(a.drift[2].signum() != 0 && a.drift[0] == Q::ZERO && a.drift[1] == Q::ZERO);
     }
 
     /// A pure-hydrogen held mixture at heat 0.

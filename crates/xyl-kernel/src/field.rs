@@ -17,16 +17,16 @@
 //!   computed in parallel.
 //! - Books ([`Books`]): energy in = gravity + light + transduced out, exact in
 //!   `Q` ([`Books::balances`]).
-//! - Anchors and drift: each star's worlds as anchors from its G point
-//!   (AU), and the star's offset from its galactic orbit (AU, summed per
-//!   axis), which shifts the arrival times of later pulses.
+//! - Anchors: each star's worlds as anchors from its G point (AU), each at
+//!   its orbit's direction, its shear carried with it. A pulse is one
+//!   breath that returns, so it leaves no drift.
 //! - Radiation ([`Field::radiation`]): the star's absorbed energy per year
 //!   over the world's orbital radius.
 //! - Environment ([`Field::environment`]): 1 at or below the people's tuned
 //!   home radiation, home / radiation above it; the tuning follows the
 //!   current radiation at 1 - e^(-years / generation).
 //!
-//! Books, anchors and drift are regenerated from the seed; each people's
+//! Books and anchors are regenerated from the seed; each people's
 //! tuned home radiation is held in the checkpoint.
 //!
 //! Terms: bell, books (docs/glossary.md).
@@ -37,7 +37,7 @@ use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 use xyl_cosmos::chain::{radius, units};
 use xyl_cosmos::field::{
-    absorb, au_per_kpc, bells, path, transduced_share, transduction, Absorbed, Anchor, Bell,
+    absorb, bells, path, transduced_share, transduction, Absorbed, Anchor, Bell,
 };
 use xyl_cosmos::manifold::{manifolds, Anchor as ManifoldAnchor};
 use xyl_cosmos::pulse::{nodes, nodes_among, Node};
@@ -97,7 +97,7 @@ impl Books {
 }
 
 /// The field state of the universe in play: the bells and each reached
-/// star's books, anchors and drift.
+/// star's books and anchors.
 #[derive(Clone, Debug, Default)]
 pub struct Field {
     bells: Vec<(Node, Bell)>,
@@ -109,9 +109,6 @@ pub struct Field {
     pub home: Vec<Option<Dy>>,
     /// Each reached star's world anchors, in AU from the star's G point.
     pub anchors: BTreeMap<u64, Vec<Anchor>>,
-    /// Each reached star's offset from its galactic orbit caused by the
-    /// pulses, in AU per axis.
-    pub drift: BTreeMap<u64, [Q; 3]>,
 }
 
 impl Field {
@@ -130,7 +127,6 @@ impl Field {
             books: BTreeMap::new(),
             home: Vec::new(),
             anchors: BTreeMap::new(),
-            drift: BTreeMap::new(),
         }
     }
 
@@ -163,42 +159,25 @@ impl Field {
     /// Returns the number of pulses delivered.
     pub fn step(&mut self, cosmic: &Cosmic<'_>, from: Dy, to: Dy) -> u64 {
         use rayon::prelude::*;
-        // Stars' books, worlds and drift do not depend on each other, so each
+        // Stars' books and worlds do not depend on each other, so each
         // star's state is taken out, updated in parallel and stored back.
         let stars: std::collections::BTreeSet<u64> =
             cosmic.peoples.iter().map(|p| p.star).collect();
-        let held: Vec<(u64, Option<Vec<Anchor>>, Option<[Q; 3]>, Option<Books>)> = stars
+        let held: Vec<(u64, Option<Vec<Anchor>>, Option<Books>)> = stars
             .into_iter()
-            .map(|k| {
-                (
-                    k,
-                    self.anchors.remove(&k),
-                    self.drift.remove(&k),
-                    self.books.remove(&k),
-                )
-            })
+            .map(|k| (k, self.anchors.remove(&k), self.books.remove(&k)))
             .collect();
         let (systems, bells, seed) = (&cosmic.systems, &self.bells, cosmic.gal.seed);
-        let done: Vec<(u64, Option<Vec<Anchor>>, Option<[Q; 3]>, Option<Books>, u64)> = held
+        let done: Vec<(u64, Option<Vec<Anchor>>, Option<Books>, u64)> = held
             .into_par_iter()
-            .map(|(star, anchors, drift0, books0)| {
-                ring_star(
-                    seed,
-                    star,
-                    (anchors, drift0, books0),
-                    systems,
-                    bells,
-                    (from, to),
-                )
+            .map(|(star, anchors, books0)| {
+                ring_star(seed, star, (anchors, books0), systems, bells, (from, to))
             })
             .collect();
         let mut delivered = 0;
-        for (star, anchors, drift, books, n) in done {
+        for (star, anchors, books, n) in done {
             if let Some(a) = anchors {
                 self.anchors.insert(star, a);
-            }
-            if let Some(d) = drift {
-                self.drift.insert(star, d);
             }
             if let Some(b) = books {
                 self.books.insert(star, b);
@@ -262,23 +241,23 @@ fn from_ring_of(gyr: Dy) -> Dy {
     xyl_cosmos::circuit::rings_of_gyr_dy(gyr)
 }
 
-/// One star's state between deliveries: its worlds' anchors, its drift (AU
-/// per axis) and its books, each `None` until first reached.
-type StarState = (Option<Vec<Anchor>>, Option<[Q; 3]>, Option<Books>);
+/// One star's state between deliveries: its worlds' anchors and its books,
+/// each `None` until first reached.
+type StarState = (Option<Vec<Anchor>>, Option<Books>);
 
 /// Delivers every bell's pulses arriving in `(from, to]` Gyr to `star` from
 /// its held state. Returns the star's new state and the pulses delivered.
 fn ring_star(
     seed: u64,
     star: u64,
-    (anchors, drift0, books0): StarState,
+    (anchors, books0): StarState,
     systems: &BTreeMap<u64, crate::cosmic::Witnessed>,
     bells: &[(Node, Bell)],
     (from, to): (Dy, Dy),
-) -> (u64, Option<Vec<Anchor>>, Option<[Q; 3]>, Option<Books>, u64) {
+) -> (u64, Option<Vec<Anchor>>, Option<Books>, u64) {
     let _busy = xyl_core::watch::busy(format!("rings of star {star}"));
     let Some(w) = systems.get(&star) else {
-        return (star, anchors, drift0, books0, 0);
+        return (star, anchors, books0, 0);
     };
     let mass = w.system.spec.mass.clone();
     // Each world's direction from the star where its orbit has carried it
@@ -303,7 +282,7 @@ fn ring_star(
             .collect()
     });
     let Some(a_out) = w.system.worlds.iter().map(|x| x.a.clone()).max() else {
-        return (star, Some(worlds), drift0, books0, 0);
+        return (star, Some(worlds), books0, 0);
     };
     // The cosmos counts in rings: the span converts at this boundary.
     let (from_ring, to_ring) = (
@@ -318,26 +297,15 @@ fn ring_star(
         to_ring - Dy::from_q(&w.star.born),
     );
     let transduced_out = transduced_share(&seq, step);
-    let mut drift = drift0.unwrap_or([Q::ZERO, Q::ZERO, Q::ZERO]);
     let mut books = books0;
     let mut delivered = 0;
     for (node, bell) in bells {
         if node.born >= to_ring {
             continue;
         }
-        // The star's place: its manifold position at `to`, stood off by the
-        // drift's L1 length (the sum of the absolute per-axis offsets in AU,
-        // converted to kpc), not by a Euclidean length.
-        let kpc = au_per_kpc();
-        let off = drift
-            .iter()
-            .fold(Q::ZERO, |a, d| &a + &d.abs())
-            .checked_div(&kpc)
-            .unwrap_or(Q::ZERO);
-        let place = w
-            .star
-            .place(to_ring, &radius())
-            .standing_off(&(&off * &xyl_cosmos::galaxy::units_of_kpc(&Q::ONE)));
+        // The star's place: its manifold position at `to`. A breath returns,
+        // so the pulses leave it no drift.
+        let place = w.star.place(to_ring, &radius());
         let (delay, d) = path(node, &place, to_ring);
         let k = bell.arrivals(delay, from_ring, to_ring);
         if k == 0 {
@@ -367,17 +335,13 @@ fn ring_star(
             };
             let settled = a.anchors == worlds;
             let n = if settled { k - i } else { 1 };
-            let times = Q::int(i64::try_from(n).unwrap_or(i64::MAX));
-            for (x, dx) in drift.iter_mut().zip(&a.drift) {
-                *x = &*x + &(dx * &times);
-            }
             b.add(&a, n, to);
             worlds = a.anchors;
             i += n;
         }
         delivered += k;
     }
-    (star, Some(worlds), Some(drift), books, delivered)
+    (star, Some(worlds), books, delivered)
 }
 
 #[cfg(test)]

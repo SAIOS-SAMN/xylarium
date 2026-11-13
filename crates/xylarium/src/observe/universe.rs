@@ -165,9 +165,6 @@ pub(super) fn star(u: &Universe<'_>, n: Option<u64>) -> String {
         )),
         None => out.push_str("  no pulse has reached it\n"),
     }
-    if let Some(d) = u.field.drift.get(&n) {
-        out.push_str(&format!("  drift: [{}, {}, {}]\n", d[0], d[1], d[2]));
-    }
     if let Some(ws) = u.field.anchors.get(&n) {
         for (i, w) in ws.iter().enumerate() {
             out.push_str(&format!(

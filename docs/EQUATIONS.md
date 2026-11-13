@@ -1048,22 +1048,29 @@ sites are restated. The derivations are in
   `Remnant`; the transduction-out share (`field::transduced_share`) is the
   step's release. Calibre: mixed, founding and core (#123). Status: built.
 - The field law, first-degree (`field`; E011, #199):
-  - The received turn (`field::Bell::received`): `360 h` degrees on the
-    plane dual to the bell's exact unit axis (`field::turn_about`, the
-    half-angle an exact circle point), `h = sigma / (d + sigma)` the face of
-    the hole's strain `sigma = spin r_g` against the reach, then the pitch's
-    share `pitch h` along the axis. No arctangent, no half-angle tangent,
-    no floor. Calibre: one per share (kpc).
+  - The breath (`field::Bell::received`): a ring is one breath of the
+    manifold, expanding and contracting; its turn about the bell's exact
+    unit axis swings out and back and its screw's translation returns, so a
+    ring leaves no net turn and no drift. Its amplitude is `360 h` degrees
+    on the plane dual to the axis (`field::turn_about`, the half-angle an
+    exact circle point), `h = sigma / (d + sigma)` the face of the hole's
+    strain `sigma = spin r_g` against the reach. Calibre: one per share
+    (kpc).
   - The intercepted energy (`field::Bell::energy_at`): light x period x the
-    system's face `a / (d + a)`, `a` and `d` in AU. Calibre: one per share
-    (AU).
+    system's share of the manifold the pulse spreads on at that reach, the
+    cap of S^n within the deficit angle `a / (d + a)` of the half turn
+    (`formation::gathered`, one law with the gas's gathered share), `n` the
+    manifold's dimension at the reach (`formation::dimension_at`: the
+    disc's circle beyond one galaxy unit, where the share is the face and
+    falls as `1 / d`; the bulge's ball within it, where it falls as
+    `1 / d^2`). Finite at `d = 0`. Calibre: one per share (AU).
   - The re-lock work (`field::absorb`): a world turned from its native
     direction by the share `s` of a turn costs `m M / (a + M rho) x s`, the
     world's mass times the star's face at the orbit's reach with the hold
     read as a length (`rho` one sun's `r_g` in AU), in field energy units;
     `s` is read plane by plane from the pivot's rate (11b),
-    `sum_k atan |g_k| / pi`, certified. The pulse's translation is the
-    drift and shears no orbit; a turn keeps the reach. The unpaid share
+    `sum_k atan |g_k| / pi`, certified, at the breath's amplitude; a turn
+    keeps the reach. The unpaid share
     stays as shear, the pivot's rate scaled by it (`Rotor::rate_scaled`), a
     rotor carried with the world as its orbit moves (`field::Anchor`: each
     world at its manifold's bearing at the pulse's age, a moon at its

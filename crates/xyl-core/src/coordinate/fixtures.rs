@@ -844,3 +844,76 @@ fn fixture_16_keys_k_per_component_and_unopened_lanes() {
         })
     );
 }
+
+/// FORMS-PASSAGE v4 (LAW-PASSAGE v3, 78.172), from its definitions: on the
+/// plane of `e+1` (bit 0) and `e-1` (bit 1) in `Cl(2, 2)` (the units of
+/// plane 2 at bits 2 and 3), a crossing keeps the whole, reverses the span,
+/// exchanges hold and reach and writes `-2 (H - R)` on `T`; its return
+/// restores the state and cancels the flux; at the throat nothing is
+/// written; a riding state passes one-sided, flipping its parity, and two
+/// rides are the identity. Every refusal is named.
+#[test]
+fn passage_swaps_the_poles() {
+    const NEG: usize = 0b1010;
+    type M = crate::cga::Mv<NEG>;
+    let (p1, n1, p2, n2) = (1usize, 2usize, 4usize, 8usize);
+    let plane = PolePlane::of(&M::blade(p1, Q::ONE), &M::blade(n1, Q::ONE)).unwrap();
+    let poles = Poles {
+        hold: rational(3, 1),
+        reach: rational(1, 2),
+    };
+    let x: M = plane.state(&poles);
+    let flux = rational(7, 3);
+    let c = plane.cross(&x, &flux).unwrap();
+    let past = plane.read(&c.state).unwrap();
+    assert_eq!(past.hold, poles.reach);
+    assert_eq!(past.reach, poles.hold);
+    assert_eq!(&past.hold + &past.reach, &poles.hold + &poles.reach);
+    assert_eq!(c.span, -(&poles.hold - &poles.reach));
+    assert_eq!(
+        c.flux,
+        &flux - &(&Q::int(2) * &(&poles.hold - &poles.reach))
+    );
+    assert_eq!(poles.face().map(|d| &Q::ONE - &d), past.face());
+    let back = plane.cross(&c.state, &c.flux).unwrap();
+    assert_eq!(back.state, x);
+    assert_eq!(back.flux, flux);
+    let throat = Poles {
+        hold: Q::ONE,
+        reach: Q::ONE,
+    };
+    let t = plane.cross(&plane.state::<NEG>(&throat), &flux).unwrap();
+    assert_eq!((t.span, t.flux), (Q::ZERO, flux.clone()));
+    // A riding state: odd in, even out, and back.
+    let q = M::blade(p2, rational(2, 1)).add(&M::blade(p1 | p2 | n2, rational(1, 3)));
+    let rode = plane.ride(&q).unwrap();
+    assert!(rode.terms().all(|(m, _)| m.count_ones() % 2 == 0));
+    assert_eq!(plane.ride(&rode).unwrap(), q);
+    // Refusals by name.
+    assert_eq!(
+        plane.ride(&M::scalar(Q::ONE).add(&M::blade(p2, Q::ONE))),
+        Err(CoordinateRefusal::MixedParity {
+            degrees: vec![0, 1]
+        })
+    );
+    assert_eq!(
+        plane.read(&x.add(&M::blade(p2, Q::ONE))),
+        Err(CoordinateRefusal::NotOnPolePlane { blades: vec![p2] })
+    );
+    assert_eq!(
+        plane.read(&M::scalar(Q::ZERO)),
+        Err(CoordinateRefusal::NotOnPolePlane { blades: vec![] })
+    );
+    assert_eq!(
+        PolePlane::of(&M::blade(n1, Q::ONE), &M::blade(n2, Q::ONE)),
+        Err(CoordinateRefusal::WrongSign { generator: n1 })
+    );
+    assert_eq!(
+        PolePlane::of(&M::blade(p1, Q::ONE), &M::blade(p2, Q::ONE)),
+        Err(CoordinateRefusal::WrongSign { generator: p2 })
+    );
+    assert!(matches!(
+        PolePlane::of(&M::blade(p1, rational(2, 1)), &M::blade(n1, Q::ONE)),
+        Err(CoordinateRefusal::NotUnit { .. })
+    ));
+}

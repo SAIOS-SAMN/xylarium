@@ -71,12 +71,13 @@ repository.
   joins the standing mesh by the enrolment act (mycelium#276), which is
   not built yet, so the uplink is not run live until it is.
 - **Signing the Concordance.** A kernel signs a clause by presenting its
-  own reconstruction of each fixture under its key. Xylarium reconstructs
-  FORMS-COORDINATE v4 (its fixtures 1 to 16, `xyl_core::coordinate`) and
-  FORMS-TURNING v1's 11b (`rotor::motion`), and has no FORMS-PASSAGE v4 or
-  FORMS-COUPLING reading. FORMS-PASSAGE v4 is a
-  network clause, which a hosted domain's crossings need, so it is read
-  first (#136). Enabling or vetoing the kernel clauses is the operator's
+  own reconstruction of each fixture under its key (`xyl-uplink sign`,
+  `ACT_LAWS` modes 7 and 8). Xylarium reconstructs FORMS-COORDINATE v4
+  (its fixtures 1 to 16, `xyl_core::coordinate`), FORMS-TURNING v1's 11b
+  (`rotor::motion`) and FORMS-PASSAGE v4 (the pole swap, the flux and the
+  riding state's pass, `coordinate::PolePlane`); it has no FORMS-COUPLING
+  reading yet. Coordinate and turning were admitted on the standing mesh
+  on 2026-11-13. Enabling or vetoing the kernel clauses is the operator's
   decision.
 - **Standards.** The uplink follows this repository's process: changes by
   pull request under the shared identity, and the same checks (fmt,

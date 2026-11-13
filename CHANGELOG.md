@@ -9,6 +9,16 @@ may change public APIs and the model's laws.
 
 ## Unreleased
 
+### Added
+
+- The passage in the algebra, FORMS-PASSAGE v4 (LAW-PASSAGE v3, 78.172):
+  `coordinate::PolePlane` holds a plane's units `e+` and `e-` in any
+  `Cl(p, q)`; a throat state `(H + R) e+ + (H - R) e-` crosses by the
+  reflection `x -> e+ x e+` (span reversed, whole kept, hold and reach
+  exchanged), writing `T - 2 (H - R)`, and a riding state passes
+  one-sided, `q -> e+ q`. Refusals by name: `NotUnit`, `WrongSign`,
+  `NotOnPolePlane`, `MixedParity`.
+
 ### Changed
 
 - The throat's push swings with the inbound echo (#233 item 3):

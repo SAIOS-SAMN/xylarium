@@ -29,7 +29,7 @@ mod motion;
 
 pub use body::{written_value, Bodies, Bounds, Coordinate, Interval, Local, Origin, Range, Sides};
 pub use keys::{Axis, Key, Lane, Lanes, Openings, Plane, Vector};
-pub use motion::{EventBell, Merger, Poles};
+pub use motion::{Crossing, EventBell, Merger, PolePlane, Poles};
 
 use crate::Q;
 
@@ -164,6 +164,28 @@ pub enum CoordinateRefusal {
     TurnsUnbounded {
         /// The key.
         key: String,
+    },
+    /// A pole that is not one generator at coefficient one: its terms,
+    /// each blade mask and coefficient written.
+    NotUnit {
+        /// The terms held.
+        terms: Vec<(usize, String)>,
+    },
+    /// A pole of the other square: `e+` named negative or `e-` positive.
+    WrongSign {
+        /// The generator's mask.
+        generator: usize,
+    },
+    /// A passage state off its pole plane: the blades held off the plane's
+    /// two units (none for the zero, which holds no state).
+    NotOnPolePlane {
+        /// The blade masks off the plane.
+        blades: Vec<usize>,
+    },
+    /// A riding state holding both parities: the degrees it holds.
+    MixedParity {
+        /// The degrees, ascending.
+        degrees: Vec<u32>,
     },
 }
 

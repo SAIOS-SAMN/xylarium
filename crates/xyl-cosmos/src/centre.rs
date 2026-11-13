@@ -283,11 +283,14 @@ mod tests {
             c.run(&Q::int(100));
         }
         assert!(c.conserved() && c.reservoir < Q::ONE);
-        // The horizon grew with the hole: it stands exactly at the reach where
-        // the deficit is one third, curved along the enclosure.
+        // The horizon grew with the hole: the crossing stands exactly at plane
+        // 1's horizon of its spinning pair (T21), curved along the enclosure.
         assert_eq!(
             c.hole.at[2],
-            crate::bounce::curved_reach(&crate::bounce::horizon_reach(c.mass()), &c.enclosure)
+            crate::bounce::curved_reach(
+                &crate::bounce::crossing_reach(c.mass(), &c.hole.spin),
+                &c.enclosure
+            )
         );
     }
 

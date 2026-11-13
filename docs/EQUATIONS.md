@@ -266,8 +266,24 @@ sites are restated. The derivations are in
 - Dilation and flow law (`xyl_core::shares::dilation`, `flow`):
   `D(p) = (1 + p) / (1 - p)` for `-1 < p < 1`; `x (+) y = (x + y) / (1 + x
   y)`; `D(x (+) y) = D(x) D(y)`. Calibre: none. Status: built.
-- Horizon reach (`bounce::horizon_reach`): `delta_h = 1/3`, so
-  `R_h = M (1 - delta_h) / delta_h = 2M`. Calibre: none. Status: built.
+- Horizon reach (`bounce::horizon_reach`, `bounce::horizon_share`; T20):
+  the equator of the pair's hold, `R_h = M_near + M_far`; about one face,
+  `delta_h = M / (2M + M_far)`. A pair sharing one hold (T16): `R_h = 2M`,
+  `delta_h = 1/3`. Derived from axioms 2, 5 and 6 (pairing). Calibre: none.
+  Status: built. Open: the far face's own hold where the faces do not
+  share one (a pinched throat's far face is the core it bounces into), and
+  the hold passing between the faces over the breath.
+- Axial horizon (`bounce::horizon_planes`, `bounce::crossing_reach`; T21):
+  per plane, where the pair's held face balances its passed face (the
+  holding theorem, T8, T15, T16), about the hold the pair presents there,
+  `H_v = (M_near + M_far) (1 - vent)`, `vent` the share its open states pass
+  (axiom 9). The axis plane balances at `H_v`; a turning plane at
+  `H_v + a M` (axiom 7). The charged spin's tilt `eps` mixes the axis plane
+  and isoclinic plane 1 by its faces `c = 1 - eps / 90`, `d = eps / 90`:
+  `R_0 = c H_v + d (H_v + a M)`, `R_1 = c (H_v + a M) + d H_v`. The bounce
+  crosses on plane 1 at `R_1`. Calibre: one per share. Status: built; the
+  spin's split per plane is the common phase's whole `a M` on each (S144),
+  and the parent's tilt is upright where its charge is unread (S004).
 - Curved reach (`bounce::curved_reach`): the reach is `rho sin(r / rho)` on
   the S^360 enclosure of radius `rho`. Calibre: founding. Status: built.
 - Horizon sphere (`bounce::horizon`): `sigma = sphere_through(C, P)`, where
@@ -311,9 +327,10 @@ sites are restated. The derivations are in
 - Spin draw (`origin::Origin::of`): the spin is drawn uniformly on the 2^-40
   grid, strictly inside `(0, 1)` (`origin::clamp_spin`). Calibre: none. Status: built.
 - Torsion share (`bounce::torsion_share`), one law for every throat:
-  `a = (H + J) / (2H + J)` with `H = 2M` and `J = a_Kerr M^2`; at the
-  universal core (`M = 1`) `a = 1/2` at zero spin and `a = 3/5` at the
-  extremal spin. The inverse (`bounce::spin_of_share`) is
+  `a = (H + J) / (2H + J)` with `H = 2M` and `J = a_Kerr M`, the spin read
+  as a reach in the hold's calibre (Kerr's length `J / M`, not the angular
+  momentum `a M^2`, which mixes calibres off `M = 1`); `a = 1/2` at zero
+  spin and `a = 3/5` at the extremal spin, for every mass. The inverse (`bounce::spin_of_share`) is
   `J = H (2a - 1) / (1 - a)`, put on the origin's grid by
   `origin::clamp_spin`. The founding reads the share once
   (`circuit::Substrate::found`) and holds it as `Substrate::share`. Calibre: none. Status: built.
@@ -1048,23 +1065,33 @@ sites are restated. The derivations are in
   `Remnant`; the transduction-out share (`field::transduced_share`) is the
   step's release. Calibre: mixed, founding and core (#123). Status: built.
 - The field law, first-degree (`field`; E011, #199):
-  - The received turn (`field::Bell::received`): `360 h` degrees on the
-    plane dual to the bell's exact unit axis (`field::turn_about`, the
-    half-angle an exact circle point), `h = sigma / (d + sigma)` the face of
-    the hole's strain `sigma = spin r_g` against the reach, then the pitch's
-    share `pitch h` along the axis. No arctangent, no half-angle tangent,
-    no floor. Calibre: one per share (kpc).
+  - The breath (`field::Bell::received`): a ring is one breath of the
+    manifold, expanding and contracting; its turn about the bell's exact
+    unit axis swings out and back and its screw's translation returns, so a
+    ring leaves no net turn and no drift. Its amplitude is `360 h` degrees
+    on the plane dual to the axis (`field::turn_about`, the half-angle an
+    exact circle point), `h = sigma / (d + sigma)` the face of the hole's
+    strain `sigma = spin r_g` against the reach. Calibre: one per share
+    (kpc).
   - The intercepted energy (`field::Bell::energy_at`): light x period x the
-    system's face `a / (d + a)`, `a` and `d` in AU. Calibre: one per share
-    (AU).
+    system's share of the manifold the pulse spreads on at that reach, the
+    cap of S^n within the deficit angle `a / (d + a)` of the half turn
+    (`formation::gathered`, one law with the gas's gathered share), `n` the
+    manifold's dimension at the reach (`formation::dimension_at`: the
+    disc's circle beyond one galaxy unit, where the share is the face and
+    falls as `1 / d`; the bulge's ball within it, where it falls as
+    `1 / d^2`). Finite at `d = 0`. Calibre: one per share (AU).
   - The re-lock work (`field::absorb`): a world turned from its native
     direction by the share `s` of a turn costs `m M / (a + M rho) x s`, the
     world's mass times the star's face at the orbit's reach with the hold
     read as a length (`rho` one sun's `r_g` in AU), in field energy units;
     `s` is read plane by plane from the pivot's rate (11b),
-    `sum_k atan |g_k| / pi`, certified. The pulse's translation is the
-    drift and shears no orbit; a turn keeps the reach. The unpaid share
-    stays as shear, the pivot's rate scaled by it (`Rotor::rate_scaled`).
+    `sum_k atan |g_k| / pi`, certified, at the breath's amplitude; a turn
+    keeps the reach. The unpaid share
+    stays as shear, the pivot's rate scaled by it (`Rotor::rate_scaled`), a
+    rotor carried with the world as its orbit moves (`field::Anchor`: each
+    world at its manifold's bearing at the pulse's age, a moon at its
+    giant's).
     Books: in = gravity + light + transduced out, exactly. Calibre: one per
     share (AU).
 - Power (`stars::power`): `P = m transduced_per_bell(r) / bell` core masses per
@@ -1195,9 +1222,9 @@ the Xylarium function is the implementation. The ids are proposals.
 | LAW-POLARITY-SEQUENCE | pole point `sum(n u) / sum(n w)`; fusion below the throat, fission above, ordered by release | Xylarium | `stars::sequence::mixture_pole`, `Sequence::of` |
 
 LAW-TORSION-SHARE takes the horizon reach as an argument: Xylarium states
-`H = M (1 - delta_h) / delta_h = 2M` (`bounce::horizon_reach`) with the
-horizon's held share `delta_h = 1/3` a declared ruler of its founding, and
-`J = a M^2`. The rim share (`disc::rim_share`) is LAW-DEFICIT-SHARE with the reach
+`H = M_near + M_far` (`bounce::horizon_reach`, T20), the equator of the
+pair's hold, `2M` where the faces share one hold, and
+`J = a M` (the spin as a reach). The rim share (`disc::rim_share`) is LAW-DEFICIT-SHARE with the reach
 `R k`, `k` the tier ratio. The dilation turns the flow law of Concordance
 section 2.6 into a product, `D(x (+) y) = D(x) D(y)` with
 `x (+) y = (x + y) / (1 + x y)`, and the court's throat level is

@@ -56,10 +56,7 @@ pub(crate) fn cooling(bead: &Bead, unit: &Q, h: &Q, swing: &Q) -> Option<Cooling
         .iter()
         .fold(Q::ZERO, |a, (z, s)| &a + &(s * &emission(*z)));
     let mu = &lambda * &emission;
-    // The measure's dimension is n = 1 (a circle in the galaxy's plane)
-    // outside the core's reach of one galaxy unit and n = 2 (the bulge's ball)
-    // within it.
-    let n = if reach > Q::ONE { 1 } else { 2 };
+    let n = dimension_at(&reach);
     let (cools_in, infall, cloud, clouds, cooled, heat) = collapse(
         &lambda, &mu, &agitation, &emission, &reach, h, &width, swing, n,
     );
@@ -162,12 +159,26 @@ pub fn lighting(beads: &[Bead], unit: &Q, held: &Q, swing: &Q) -> Lighting {
     }
 }
 
-/// The share of a piece an infall of extent `w` at reach `r` gathers: the
-/// measure of S^n within the infall's angle (measure.rs: the circle's arc
-/// for the disc, n = 1; the sphere's cap for the bulge, n = 2). The angle is
-/// the deficit share `w / (w + r)` of the half turn, in turns; the measure is
-/// the whole at the half turn. Cut toward zero to the 2^-64 grid.
-fn gathered(w: &Q, r: &Q, n: u32) -> Q {
+/// The dimension of the galaxy's manifold at `reach` (galaxy units): n = 1,
+/// a circle in the galaxy's plane, outside the core's reach of one galaxy
+/// unit; n = 2, the bulge's ball, within it. What spreads at a reach spreads
+/// on that manifold, so its share falls as the manifold's own measure.
+pub(crate) fn dimension_at(reach: &Q) -> u32 {
+    if reach > &Q::ONE {
+        1
+    } else {
+        2
+    }
+}
+
+/// The share an extent `w` at reach `r` holds on S^n: the measure of S^n
+/// within the extent's angle (measure.rs: the circle's arc, n = 1, which is
+/// the face itself; the sphere's cap, n = 2, which falls as the inverse
+/// square far out). The angle is the deficit share `w / (w + r)` of the half
+/// turn, in turns; the measure is the whole at the half turn. One law for an
+/// infall's gathered share and a system's intercepted share of a pulse. Cut
+/// toward zero to the 2^-64 grid.
+pub(crate) fn gathered(w: &Q, r: &Q, n: u32) -> Q {
     use xyl_core::dyadic::Dy;
     let turns = w.checked_div(&(&Q::int(2) * &(w + r))).unwrap_or(Q::ZERO);
     xyl_core::certified::toward_zero(
@@ -351,4 +362,47 @@ pub(crate) fn vacuum_halving(r: &Q, h: &Q) -> Option<i64> {
     let k = ln2.hi.checked_div(&lr.lo)?;
     let whole = -((-k).floor_i128()?);
     i64::try_from(whole.max(1)).ok()
+}
+
+#[cfg(test)]
+mod share_tests {
+    use super::*;
+
+    /// A share falls as its manifold's own measure: on the disc's circle
+    /// (n = 1) it is the face `w / (w + r)` itself and halves as the reach
+    /// doubles far out; in the bulge's ball (n = 2) it is the cap, below the
+    /// face, and quarters as the reach doubles; both hold the whole at the
+    /// centre.
+    #[test]
+    fn a_share_falls_as_its_manifolds_measure() {
+        let w = Q::ONE;
+        let (near, far) = (Q::int(1000), Q::int(2000));
+        let face = w.checked_div(&(&w + &near)).unwrap();
+        let tiny = xyl_core::ratio!(1, 1_000_000_000);
+        assert!((&gathered(&w, &near, 1) - &face).abs() < tiny);
+        let ratio = |n| {
+            gathered(&w, &near, n)
+                .checked_div(&gathered(&w, &far, n))
+                .unwrap()
+        };
+        assert!(
+            (&ratio(1) - &Q::int(2)).abs() < xyl_core::ratio!(1, 100),
+            "{}",
+            ratio(1)
+        );
+        assert!(
+            (&ratio(2) - &Q::int(4)).abs() < xyl_core::ratio!(1, 100),
+            "{}",
+            ratio(2)
+        );
+        assert!(gathered(&w, &near, 2) < gathered(&w, &near, 1));
+        assert!((&gathered(&w, &Q::ZERO, 2) - &Q::ONE).abs() < tiny);
+        assert_eq!(
+            (
+                dimension_at(&Q::int(2)),
+                dimension_at(&xyl_core::ratio!(1, 2))
+            ),
+            (1, 2)
+        );
+    }
 }

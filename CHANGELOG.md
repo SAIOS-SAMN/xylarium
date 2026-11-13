@@ -11,6 +11,42 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The horizon is axial (T21): `bounce::horizon_planes` gives each plane's
+  horizon from the holding theorem, the pair's hold less what its open
+  states vent (axiom 9) on the axis plane and that plus the spin's reach
+  `a M` on a turning plane, the charged spin's tilt mixing the axis plane
+  with isoclinic plane 1; the bounce crosses on plane 1 at its horizon
+  (`crossing_reach`). The spin enters as a reach in the hold's calibre,
+  Kerr's length `a M` (axiom 7, the torsion share and its inverse), in place
+  of `a M^2`, which mixed calibres off `M = 1`; at the universal core
+  nothing moves. S144 registers the spin's whole reach on every turning
+  plane until its split per plane is built.
+
+- The horizon is derived (T20), no longer a declared ruler. Axiom 6 is now
+  the pairing (a throat is one pair of faces, each presenting its hold),
+  and the horizon is where the faces meet: the equator of the pair's hold,
+  `R_h = M_near + M_far`, the inversion's fixed point.
+  `bounce::horizon_reach(near, far)` and `horizon_share(near, far)` take both
+  faces' holds; the universal core's pair shares its hold (T16), so
+  `R_h = 2M` and `delta_h = 1/3` as before. Open: the far face's own hold
+  where the faces do not share one, and its exchange over the breath.
+
+- A pulse is one breath (E011): each ring expands and contracts the
+  manifold, so its turn swings out and back at the amplitude `360 h` and its
+  screw's translation returns; the star holds its worlds against the
+  amplitude, and the pulses leave no drift (the kernel's drift and the
+  stand-off it caused are removed). The intercepted share falls as the
+  manifold's own measure at the reach (`formation::gathered`, one law with
+  the gas): the cap of S^n within the deficit angle, the face (`1 / d`) on
+  the disc's circle beyond one galaxy unit and the inverse square in the
+  bulge's ball within it.
+
+- Field anchors stand on their orbits (S024): each world's native
+  direction is its manifold's bearing at the pulse's age (a moon's its
+  giant's), and its shear is a rotor carried with the orbit
+  (`field::Anchor::along`, `Anchor::at`), in place of every world on the
+  first axis.
+
 - The field law is first-degree (E011, #199). A bell's received turn is
   `360 h` degrees about its exact unit axis, `h = sigma / (d + sigma)` the
   face of the hole's strain against the reach, with the pitch's share

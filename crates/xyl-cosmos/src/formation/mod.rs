@@ -63,7 +63,7 @@ mod gas;
 mod hold;
 mod shells;
 
-pub(crate) use gas::{cooling, lights, pulse_heat, vacuum_halving};
+pub(crate) use gas::{cooling, dimension_at, gathered, lights, pulse_heat, vacuum_halving};
 pub use gas::{lighting, Lighting};
 pub use hold::{hold_at, Hold};
 pub use shells::{founding_shells, spin_orbit, Cohort, Shell, SpinOrbit};

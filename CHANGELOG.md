@@ -71,6 +71,13 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Dimensional orthogonality of a rotor (E028): `Rotor::dimensions` reads
+  a rotor's planes (its bivector part by generators), its volumes (grade 4
+  and above) and its capacity, half the rank of the bivector part's
+  antisymmetric matrix, exact; `rotor::orthogonal` names planes that
+  share no axis. Tested on mycelium 78.173's 11b cases. AGENTS.md states the
+  rule: a rotor is never read as one angle or one plane.
+
 - Space-time readings as null pairs (#222): docs/model.md states the
   interval as the null pair `u v`, never a square, with the flow law as its
   velocity addition and the cone outside the dilation's domain (E024);

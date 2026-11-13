@@ -226,6 +226,112 @@ impl<const N: usize> Rotor<N> {
     }
 }
 
+/// A rotor read by its dimensions (model.md, Dimensional orthogonality of a
+/// rotor): the turning it carries on each plane of base axes (its bivector
+/// part, by generators `(i, j)`, `i < j`), the volumes it carries on four or
+/// more axes (its parts of grade 4 and above, which only turnings on
+/// orthogonal planes make), and its dimensional capacity, the number of
+/// mutually orthogonal planes it turns. Never one angle.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Dimensions {
+    /// The turning on each plane, `((i, j), coefficient)`, at the rotor's
+    /// scale, in the order of the planes' generators.
+    pub planes: Vec<((usize, usize), Q)>,
+    /// The volumes: the axes of each part of grade 4 and above, with its
+    /// coefficient at the rotor's scale.
+    pub volumes: Vec<(Vec<usize>, Q)>,
+    /// The number of mutually orthogonal planes the turning spans: half the
+    /// rank of its antisymmetric matrix over the base axes, exact. A plane
+    /// turned by exactly a half turn leaves no bivector part and shows only
+    /// in a volume.
+    pub capacity: usize,
+}
+
+/// Two planes of base axes are orthogonal when they share no axis: their
+/// turnings commute and compose with a volume. Planes that share an axis do
+/// not commute, and their composite turns the third plane between them.
+pub fn orthogonal(a: (usize, usize), b: (usize, usize)) -> bool {
+    a.0 != b.0 && a.0 != b.1 && a.1 != b.0 && a.1 != b.1
+}
+
+/// The base axes (counted from 1) of a blade's mask: bits 0 to 2 are axes
+/// 1 to 3, bits 3 and 4 the conformal pair (none), and bit `b >= 5` axis
+/// `b - 1` (`cga::base_axis`).
+fn axes_of(mask: usize) -> Option<Vec<usize>> {
+    let mut axes = Vec::new();
+    for bit in 0..usize::BITS as usize {
+        if mask & (1 << bit) == 0 {
+            continue;
+        }
+        match bit {
+            0..=2 => axes.push(bit + 1),
+            3 | 4 => return None,
+            _ => axes.push(bit - 1),
+        }
+    }
+    Some(axes)
+}
+
+/// The rank of an `n` by `n` matrix over Q, by exact elimination: the
+/// pivot is the next row on which the column is not zero, an order of the
+/// rows' own index, not a choice among them.
+fn rank(mut m: Vec<Vec<Q>>, n: usize) -> usize {
+    let cols = n;
+    let mut r = 0;
+    for c in 0..cols {
+        let Some(p) = (r..m.len()).find(|&i| m[i][c].signum() != 0) else {
+            continue;
+        };
+        m.swap(r, p);
+        let pivot = m[r][c].clone();
+        for i in 0..m.len() {
+            if i == r || m[i][c].signum() == 0 {
+                continue;
+            }
+            let Some(f) = m[i][c].checked_div(&pivot) else {
+                continue;
+            };
+            let row = m[r].clone();
+            for (x, y) in m[i].iter_mut().zip(&row) {
+                *x = &*x - &(&f * y);
+            }
+        }
+        r += 1;
+    }
+    r
+}
+
+impl<const N: usize> Rotor<N> {
+    /// The rotor read by its dimensions ([`Dimensions`]).
+    pub fn dimensions(&self) -> Dimensions {
+        let mut planes = Vec::new();
+        let mut volumes = Vec::new();
+        let mut matrix = vec![vec![Q::ZERO; N]; N];
+        for (mask, c) in self.v.terms() {
+            let Some(axes) = axes_of(mask) else {
+                continue;
+            };
+            let value = c * &self.inv;
+            match axes.as_slice() {
+                [i, j] => {
+                    if *i <= N && *j <= N {
+                        matrix[i - 1][j - 1] = value.clone();
+                        matrix[j - 1][i - 1] = -&value;
+                    }
+                    planes.push(((*i, *j), value));
+                }
+                a if a.len() >= 4 => volumes.push((axes, value)),
+                _ => {}
+            }
+        }
+        Dimensions {
+            planes,
+            volumes,
+            capacity: rank(matrix, N) / 2,
+        }
+    }
+}
+
 /// The cosine and sine of `degrees`, exact: the point of the circle a turn
 /// by `degrees` carries its first generator to, its half-angle on the grid
 /// of `2^-bits`, so `cos^2 + sin^2 = 1` exactly. `None` where the gridded
@@ -266,6 +372,54 @@ pub fn angle_between(a: &[Q; 3], b: &[Q; 3], bits: u32) -> Option<crate::certifi
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Dimensional orthogonality, read on 11b's cases (mycelium 78.173):
+    /// one plane has capacity 1 and no volume; two orthogonal planes commute,
+    /// carry a volume on their four axes and have capacity 2; two planes
+    /// sharing an axis do not commute, turn the third plane between them,
+    /// carry no volume, and span one plane (capacity 1, as every turning
+    /// of three axes does).
+    #[test]
+    fn a_rotor_reads_its_orthogonal_planes() {
+        let q = |n: i64, d: i64| Q::new(n, d).unwrap();
+        // The rate b = tan(theta / 4) gives the half-angle direction (1 - b^2, 2b).
+        let on = |from, toward, b: Q| {
+            Rotor::<4>::drawn(from, toward, &(&Q::ONE - &(&b * &b)), &(&Q::int(2) * &b)).unwrap()
+        };
+        let one = on(1, 2, q(1, 2)).dimensions();
+        assert_eq!(
+            (one.planes.len(), one.volumes.len(), one.capacity),
+            (1, 0, 1)
+        );
+        let (a, b) = (on(1, 2, q(1, 2)), on(3, 4, q(1, 3)));
+        assert_eq!(
+            a.then_after(&b),
+            b.then_after(&a),
+            "orthogonal planes commute"
+        );
+        let both = a.then_after(&b).dimensions();
+        assert_eq!(both.capacity, 2);
+        assert_eq!(
+            both.volumes.iter().map(|v| v.0.clone()).collect::<Vec<_>>(),
+            vec![vec![1, 2, 3, 4]]
+        );
+        assert!(orthogonal((1, 2), (3, 4)) && !orthogonal((1, 2), (2, 3)));
+        let (c, d) = (on(1, 2, q(1, 2)), on(2, 3, q(1, 3)));
+        assert_ne!(
+            c.then_after(&d),
+            d.then_after(&c),
+            "planes sharing an axis do not commute"
+        );
+        let shared = c.then_after(&d).dimensions();
+        let turned: Vec<(usize, usize)> = shared.planes.iter().map(|p| p.0).collect();
+        assert_eq!(
+            turned,
+            vec![(1, 2), (1, 3), (2, 3)],
+            "the third plane is turned"
+        );
+        assert!(shared.volumes.is_empty());
+        assert_eq!(shared.capacity, 1);
+    }
 
     fn exact<const N: usize>(v: [i64; N]) -> [Encl; N] {
         v.map(|k| Encl::exact(Q::int(k)))

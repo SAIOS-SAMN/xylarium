@@ -56,9 +56,9 @@ pub(crate) fn cooling(bead: &Bead, unit: &Q, h: &Q, swing: &Q) -> Option<Cooling
         .iter()
         .fold(Q::ZERO, |a, (z, s)| &a + &(s * &emission(*z)));
     let mu = &lambda * &emission;
-    let n = dimension_at(&reach);
+    let ball = dimension_at(&reach);
     let (cools_in, infall, cloud, clouds, cooled, heat) = collapse(
-        &lambda, &mu, &agitation, &emission, &reach, h, &width, swing, n,
+        &lambda, &mu, &agitation, &emission, &reach, h, &width, swing, &ball,
     );
     let heated = &cooled + &heat;
     Some(Cooling {
@@ -159,26 +159,23 @@ pub fn lighting(beads: &[Bead], unit: &Q, held: &Q, swing: &Q) -> Lighting {
     }
 }
 
-/// The dimension of the galaxy's manifold at `reach` (galaxy units): n = 1,
-/// a circle in the galaxy's plane, outside the core's reach of one galaxy
-/// unit; n = 2, the bulge's ball, within it. What spreads at a reach spreads
-/// on that manifold, so its share falls as the manifold's own measure.
-pub(crate) fn dimension_at(reach: &Q) -> u32 {
-    if reach > &Q::ONE {
-        1
-    } else {
-        2
-    }
+/// The ball's share of the galaxy's manifold at `reach` (galaxy units): the
+/// core's face there, `H / (H + reach)` with the core's hold `H = 1` (one
+/// galaxy unit, where the bulge's ball and the disc's circle meet at half).
+/// What spreads at a reach spreads on both measures, the bulge's ball (S^2)
+/// by this share and the disc's circle (S^1) by the rest: a smooth passage,
+/// all ball at the centre and all circle far out, never a cut (#233 item 2).
+pub(crate) fn dimension_at(reach: &Q) -> Q {
+    Q::ONE.checked_div(&(&Q::ONE + reach)).unwrap_or(Q::ZERO)
 }
 
-/// The share an extent `w` at reach `r` holds on S^n: the measure of S^n
-/// within the extent's angle (measure.rs: the circle's arc, n = 1, which is
-/// the face itself; the sphere's cap, n = 2, which falls as the inverse
-/// square far out). The angle is the deficit share `w / (w + r)` of the half
-/// turn, in turns; the measure is the whole at the half turn. One law for an
-/// infall's gathered share and a system's intercepted share of a pulse. Cut
-/// toward zero to the 2^-64 grid.
-pub(crate) fn gathered(w: &Q, r: &Q, n: u32) -> Q {
+/// The measure of S^n an extent `w` at reach `r` holds: the measure within
+/// the extent's angle (measure.rs: the circle's arc, n = 1, which is the
+/// face itself; the sphere's cap, n = 2, which falls as the inverse square
+/// far out). The angle is the deficit share `w / (w + r)` of the half turn,
+/// in turns; the measure is the whole at the half turn. Cut toward zero to
+/// the 2^-64 grid.
+fn measure_on(w: &Q, r: &Q, n: u32) -> Q {
     use xyl_core::dyadic::Dy;
     let turns = w.checked_div(&(&Q::int(2) * &(w + r))).unwrap_or(Q::ZERO);
     xyl_core::certified::toward_zero(
@@ -187,12 +184,20 @@ pub(crate) fn gathered(w: &Q, r: &Q, n: u32) -> Q {
     )
 }
 
+/// The share an extent `w` at reach `r` holds on the manifold whose ball's
+/// share is `ball` (`dimension_at`): the ball's cap by `ball` and the
+/// circle's arc by `1 - ball`. One law for an infall's gathered share and a
+/// system's intercepted share of a pulse.
+pub(crate) fn gathered(w: &Q, r: &Q, ball: &Q) -> Q {
+    &(ball * &measure_on(w, r, 2)) + &(&(&Q::ONE - ball) * &measure_on(w, r, 1))
+}
+
 /// A piece's collapse. The piece holds (lambda + mu) W at reach R about the
 /// galaxy's core (lambda its holding per ring, mu the magnetism of its open
 /// states, W its width); an infall of extent w on it gathers the piece's
 /// measure within the infall's angle, m(w) = (lambda + mu) W share_n(theta),
 /// theta the deficit angle w / (w + R) of the half turn in turns
-/// (`n` 1 in the disc, 2 in the bulge), and grips it at the infall's rim by
+/// (the ball's share `ball` at the reach, `dimension_at`), and grips it at the infall's rim by
 /// the deficit law, m / (w + m). It holds where that grip exceeds its agitation
 /// plus the shear across it, H w / (R (R + w)), and the heat the pulse
 /// leaves: the ring the bell brings at R, 1 / (pi (R + 1)), swung by the
@@ -215,13 +220,13 @@ pub(crate) fn collapse(
     h: &Q,
     width: &Q,
     swing: &Q,
-    n: u32,
+    ball: &Q,
 ) -> (Option<i64>, Q, Q, i64, Q, Q) {
     // The piece's hold is (lambda + mu) W, and an infall's grip at its rim is
     // m / (w + m) with m = (lambda + mu) W share_n(theta).
     let shell = &(lambda + mu) * width;
     let grip = |w: &Q| {
-        let m = &shell * &gathered(w, reach, n);
+        let m = &shell * &gathered(w, reach, ball);
         m.checked_div(&(w + &m)).unwrap_or(Q::ZERO)
     };
     // The pulse's heat is 1 / (pi (R + 1)) times the swing and the whole
@@ -289,7 +294,7 @@ pub(crate) fn collapse(
     (
         Some(cools_in),
         infall.clone(),
-        &shell * &gathered(&infall, reach, n),
+        &shell * &gathered(&infall, reach, ball),
         clouds,
         a,
         heat,
@@ -379,10 +384,10 @@ mod share_tests {
         let (near, far) = (Q::int(1000), Q::int(2000));
         let face = w.checked_div(&(&w + &near)).unwrap();
         let tiny = xyl_core::ratio!(1, 1_000_000_000);
-        assert!((&gathered(&w, &near, 1) - &face).abs() < tiny);
+        assert!((&measure_on(&w, &near, 1) - &face).abs() < tiny);
         let ratio = |n| {
-            gathered(&w, &near, n)
-                .checked_div(&gathered(&w, &far, n))
+            measure_on(&w, &near, n)
+                .checked_div(&measure_on(&w, &far, n))
                 .unwrap()
         };
         assert!(
@@ -395,14 +400,24 @@ mod share_tests {
             "{}",
             ratio(2)
         );
-        assert!(gathered(&w, &near, 2) < gathered(&w, &near, 1));
-        assert!((&gathered(&w, &Q::ZERO, 2) - &Q::ONE).abs() < tiny);
-        assert_eq!(
-            (
-                dimension_at(&Q::int(2)),
-                dimension_at(&xyl_core::ratio!(1, 2))
-            ),
-            (1, 2)
-        );
+        assert!(measure_on(&w, &near, 2) < measure_on(&w, &near, 1));
+        assert!((&measure_on(&w, &Q::ZERO, 2) - &Q::ONE).abs() < tiny);
+        // The ball's share passes smoothly: whole at the centre, half at the
+        // core's reach, falling with the reach and never cut; the gathered
+        // share lies between the two measures at every reach (the cap above
+        // the arc where the extent rivals the reach, below it far out).
+        assert_eq!(dimension_at(&Q::ZERO), Q::ONE);
+        assert_eq!(dimension_at(&Q::ONE), xyl_core::ratio!(1, 2));
+        assert!(dimension_at(&Q::int(2)) < dimension_at(&xyl_core::ratio!(1, 2)));
+        for r in [xyl_core::ratio!(1, 2), Q::ONE, Q::int(3), near.clone()] {
+            let (cap, arc) = (measure_on(&w, &r, 2), measure_on(&w, &r, 1));
+            let g = gathered(&w, &r, &dimension_at(&r));
+            let (lo, hi) = if cap < arc {
+                (&cap, &arc)
+            } else {
+                (&arc, &cap)
+            };
+            assert!(lo <= &g && &g <= hi, "{r}: {cap} {g} {arc}");
+        }
     }
 }

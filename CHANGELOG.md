@@ -11,6 +11,14 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The manifold's dimension passes smoothly (#233 item 2):
+  `formation::dimension_at` is the ball's share `H / (H + r)` at the reach,
+  the core's face with its hold of one galaxy unit, in place of the cut
+  from the bulge's ball to the disc's circle at one galaxy unit.
+  `formation::gathered` reads the ball's cap by that share and the circle's
+  arc by the rest, for the gas's gathered share and the field's
+  intercepted energy alike.
+
 - The coordinate is FORMS-COORDINATE v4, reconstructed from Mycelium
   78.173 section 1 in place of LAW-COORDINATE v1 (`xyl_core::coordinate`):
   origins, keyed vector lanes with H only on turning planes and `K` per

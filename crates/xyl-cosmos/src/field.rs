@@ -332,15 +332,15 @@ impl Bell {
     /// `d_kpc`: one period of light times the system's share of the manifold
     /// the pulse spreads on at that reach (`formation::gathered`), the cap of
     /// S^n within the system's deficit angle `a / (d + a)` of the half turn,
-    /// both in AU, `n` the manifold's dimension at the reach
-    /// (`formation::dimension_at`: the disc's circle beyond one galaxy unit,
-    /// the share the face itself; the bulge's ball within it, the share
-    /// falling as the inverse square far out). Finite at `d = 0`, no floor; in
+    /// both in AU, on the manifold at the reach (`formation::dimension_at`:
+    /// the bulge's ball by the core's face there, the disc's circle by the
+    /// rest, a smooth passage: the share is the face itself far out and
+    /// falls as the inverse square near the core). Finite at `d = 0`, no floor; in
     /// field energy units.
     pub fn energy_at(&self, d_kpc: Dy, a_out_au: &Q) -> Q {
         let d_au = grid(d_kpc * Dy::from_q(&au_per_kpc())).max(Q::ZERO);
-        let n = crate::formation::dimension_at(&crate::galaxy::units_of_kpc(&d_kpc.to_q()));
-        let share = crate::formation::gathered(a_out_au, &d_au, n);
+        let ball = crate::formation::dimension_at(&crate::galaxy::units_of_kpc(&d_kpc.to_q()));
+        let share = crate::formation::gathered(a_out_au, &d_au, &ball);
         &(&(&self.light * &self.period) * &star_ring()) * &share
     }
 }

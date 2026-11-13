@@ -175,8 +175,14 @@ sites are restated. The derivations are in
   `(r / rim) bell / 2`. Calibre: mixed, founding and core (#123). Status: built.
 - Ocean speed (`Substrate::c_ocean`): `c_ocean = rim / (bell / 2) = 3600 c`.
   Calibre: mixed, founding and core (#123). Status: built.
-- Universe radius (`circuit::anchor::of`): the radius is `rim / pi`, given
-  in kpc and in `r_g`. Calibre: mixed, founding and core (#123). Status: built.
+- Universe radius (`circuit::anchor::of`, `chain::radius`): at rest
+  `rho_0 = rim / pi`, in kpc and in `r_g`; it breathes with the bell (#233),
+  `rho(t) = rho_0 (1 + delta_rim cos(360 t / echo))`, the enclosure
+  deformed by the core's deficit at its rim `delta_rim = 1 / (rim + 1)` on
+  the swing of the ring (the inbound echo's ring term), so every reach taken
+  on it (`bounce::curved_reach`, `Place::arc`, the field's paths, the bells'
+  hearing) reads the radius at the time it is read. Calibre: mixed, founding and
+  core (#123). Status: built.
 - First stars (`circuit::anchor::of`): the first stars form at
   `max(cools_in, 1) bell`. Calibre: founding. Status: built.
 - SI bridge (`package::hole_mass`): the core's mass in SI units, declared by the

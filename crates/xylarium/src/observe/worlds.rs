@@ -375,7 +375,7 @@ fn relations(
         ));
     }
     let t = Dy::from_q(&u.now);
-    let r = xyl_cosmos::chain::radius();
+    let r = xyl_cosmos::chain::radius(t);
     let other = u.cosmic.peoples.iter().find(|p| p.star != n);
     if let (Some(&a), Some(o)) = (planets.first(), other) {
         if let Some(ow) = u.cosmic.systems.get(&o.star) {

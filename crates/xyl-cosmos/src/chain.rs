@@ -45,10 +45,26 @@ pub fn units() -> Units {
     Units::of(&Si::g(), &Si::c(), &crate::package::core_kg()).unwrap_or(Units { r_g_m: Q::ZERO })
 }
 
-/// The universe's curvature radius in the galaxy tier's unit: the founding's
-/// rim over pi (circuit::anchor).
-pub fn radius() -> Q {
-    crate::galaxy::units_of_kpc(&crate::galaxy::radius_kpc())
+/// The universe's curvature radius at `t` rings, in the galaxy tier's unit:
+/// the founding's rim over pi (circuit::anchor), breathing with the bell.
+/// Each echo the enclosure expands and contracts by the core's deficit at
+/// its rim, `delta_rim = H / (rim + H)` with the core's hold `H = 1` (the
+/// manifold's deformation about its hold, E011, #155), on the ring's own
+/// swing, the inbound echo's ring term (`circuit::Substrate::inbound`):
+/// `rho(t) = rho_0 (1 + delta_rim cos(360 t / echo))`. Smooth, first-degree
+/// in the deficit, returning each echo (#233).
+pub fn radius(t: Dy) -> Q {
+    let rest = crate::galaxy::units_of_kpc(&crate::galaxy::radius_kpc());
+    let rim = crate::circuit::anchor().rim;
+    let deficit = Q::ONE.checked_div(&(&rim + &Q::ONE)).unwrap_or(Q::ZERO);
+    let turns = t
+        .div(&crate::circuit::echo())
+        .unwrap_or_default()
+        .to_q()
+        .frac();
+    let (cos, _) = xyl_core::certified::cos_sin_turns(&Encl::exact(turns));
+    let swing = xyl_core::certified::toward_zero(&(&deficit * &cos.mid()), 64);
+    &rest * &(&Q::ONE + &swing)
 }
 
 /// The radius of a galaxy's sphere (each galaxy an enclosed S^360): the
@@ -309,6 +325,27 @@ impl Place {
 #[cfg(test)]
 mod separation_tests {
     use super::*;
+
+    /// The universe's radius breathes with the bell: over an echo it swings
+    /// about its rest by at most the core's deficit at its rim and returns
+    /// after a whole echo.
+    #[test]
+    fn the_universes_radius_breathes() {
+        let _ = crate::genesis::origin();
+        let echo = crate::circuit::echo();
+        let rest = crate::galaxy::units_of_kpc(&crate::galaxy::radius_kpc());
+        let rim = crate::circuit::anchor().rim;
+        let deficit = Q::ONE.checked_div(&(&rim + &Q::ONE)).unwrap();
+        let bound = &rest * &deficit;
+        let (open, half) = (radius(Dy::ZERO), radius(echo.div(&Dy::int(2)).unwrap()));
+        assert!(open > rest && half < rest, "{open} {half}");
+        for k in 0..8 {
+            let t = echo * Dy::int(k).div(&Dy::int(8)).unwrap();
+            assert!((&radius(t) - &rest).abs() <= bound, "t {t}");
+        }
+        let back = radius(echo);
+        assert!((&back - &open).abs() < &bound * &xyl_core::ratio!(1, 1_000_000));
+    }
 
     /// Two places on one plane keep every component apart: their relative
     /// rotor turns no plane, their phase difference carries its whole turns

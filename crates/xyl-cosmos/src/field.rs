@@ -353,7 +353,7 @@ pub fn bells(nodes: &[Node], seed: u64) -> Vec<Bell> {
 /// The light delay (rings) and proper distance (kpc) from a bell to a place
 /// at `t` rings.
 pub fn path(node: &Node, place: &Place, t: Dy) -> (Dy, Dy) {
-    let r = crate::chain::radius();
+    let r = crate::chain::radius(t);
     let d = place.arc_kpc(&node.place(t, &r), &r);
     let c = c_kpc_per_ring();
     if c.signum() <= 0 {

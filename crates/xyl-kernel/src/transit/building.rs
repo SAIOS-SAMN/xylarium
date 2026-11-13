@@ -377,7 +377,7 @@ impl<'a> Placer<'a> {
         Placer {
             net,
             start,
-            sphere: xyl_cosmos::chain::radius(),
+            sphere: xyl_cosmos::chain::radius(start),
             placed: RefCell::default(),
         }
     }

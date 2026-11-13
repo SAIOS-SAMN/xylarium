@@ -13,7 +13,7 @@ use xyl_kernel::universe::Universe;
 /// stars' fuelling at the core's reach, and each people's star on its
 /// galactic manifold.
 pub(super) fn galaxy(u: &Universe<'_>) -> String {
-    let r = radius();
+    let r = radius(Dy::from_q(&u.now));
     let mut out = String::from("Units from the white hole (G = c = M_core = 1)\n");
     out.push_str(&format!(
         "  r_g = {} m; the galaxy tier's unit 60^5 r_g; 1 kpc = {} of it\n",

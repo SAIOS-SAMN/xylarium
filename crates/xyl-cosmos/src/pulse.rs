@@ -197,7 +197,7 @@ pub struct Relay {
 /// `nodes[0]` is taken as the universe core; an empty `nodes` gives an empty
 /// network.
 pub fn relays(nodes: &[Node], t: Dy) -> Vec<Relay> {
-    let r = crate::chain::radius();
+    let r = crate::chain::radius(t);
     let places: Vec<Place> = nodes.iter().map(|x| x.place(t, &r)).collect();
     let arc = |a: &Place, b: &Place| a.arc_kpc(b, &r);
     let Some(core) = places.first() else {
@@ -249,7 +249,7 @@ pub fn relays(nodes: &[Node], t: Dy) -> Vec<Relay> {
 /// What `place` hears of the live bells at `t` rings; `None` when no node is
 /// live. Arcs are at least 1e-6 kpc.
 pub fn hear(place: &Place, nodes: &[Node], relays: &[Relay], t: Dy) -> Option<Hearing> {
-    let r = crate::chain::radius();
+    let r = crate::chain::radius(t);
     let lambda = wavelength_kpc();
     // Each live bell: its intensity, its arrival on the T lane (whole
     // wavelengths and phase) and the planes it arrives on.
@@ -339,7 +339,7 @@ mod tests {
             .iter()
             .all(|r| r.continuity >= -Dy::ONE && r.continuity <= Dy::ONE));
         assert_eq!(relays.first().map(|r| r.continuity), Some(Dy::ONE));
-        let r = crate::chain::radius();
+        let r = crate::chain::radius(t);
         let Some(core) = all.first() else {
             return;
         };

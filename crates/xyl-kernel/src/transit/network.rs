@@ -162,7 +162,7 @@ impl Network {
         if !self.constellations.is_empty() && !back && t < self.holds_to {
             return;
         }
-        let sphere = xyl_cosmos::chain::radius();
+        let sphere = xyl_cosmos::chain::radius(t);
         // One ring of the bell, read in Gyr (the network's times are Gyr).
         let ring = xyl_cosmos::circuit::gyr_of_rings_dy(xyl_cosmos::circuit::bell());
         let mut placed: BTreeMap<usize, xyl_cosmos::chain::Place> = BTreeMap::new();

@@ -33,7 +33,7 @@ fn stars_circle_the_core_and_the_core_holds_its_share() {
     assert!(stars.iter().all(|s| s.orbit.radius.to_q() <= edge));
     // A star's distance from its core is its orbit radius plus its climb,
     // never beyond the swing's amplitude, and its place changes with t.
-    let r = crate::chain::radius();
+    let r = crate::chain::radius(Dy::int(5));
     let s = &stars[0];
     let (p0, p1) = (s.place(Dy::int(5), &r), s.place(Dy::sci(51, -1), &r));
     let (reach, _, climb) = s.bearing(Dy::int(5));

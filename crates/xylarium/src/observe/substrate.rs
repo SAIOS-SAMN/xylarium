@@ -424,7 +424,7 @@ fn galaxies(origin: &Origin, s: &Substrate, t: Dy) -> String {
             .map(|x| per_gyr(s.tide(g.reach0, x, t)))
             .unwrap_or(Dy::ZERO);
         let rate = shape.map(|sh| per_gyr(sh.rate)).unwrap_or(Dy::ZERO);
-        let cell = shape.map(|sh| sh.place_at(t, &xyl_cosmos::chain::radius()).cell());
+        let cell = shape.map(|sh| sh.place_at(t, &xyl_cosmos::chain::radius(t)).cell());
         let carry = s.carry(g.reach0, t);
         out.push_str(&format!(
             concat!(

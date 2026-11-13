@@ -68,6 +68,11 @@ A module `foo` is `src/foo.rs` or, when split, the directory `src/foo/`
   conjugation), read plane by plane in degrees with each winding and each
   return, never one scalar, never a square or a root
   ([model.md](docs/model.md#pairs-the-pivot-per-plane)).
+- Every rotor is read by its dimensions (`Rotor::dimensions`): the planes
+  it turns, the volumes orthogonal planes make, and its capacity, the
+  number of mutually orthogonal planes. Never one angle (a 1D collapse),
+  never one plane of a rotor that turns several (a 2D collapse)
+  ([model.md](docs/model.md#dimensional-orthogonality-of-a-rotor)).
 - One model per quantity: replace in place and delete the old code; never
   add a parallel version (`foo2`, `new_foo`).
 - Derive from lower tiers. An underived constant is a declared ruler and is

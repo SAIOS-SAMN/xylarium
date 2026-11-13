@@ -91,6 +91,39 @@ and reads both in one calibre:
 It retires `rotor::angle_between`, one unnamed plane through
 `a . b / sqrt(|a|^2 |b|^2)` and asin; its readers are listed on [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118).
 
+### Dimensional orthogonality of a rotor
+
+A rotor (`xyl_core::rotor::Rotor`) is an even versor: turns on named planes
+composed by the geometric product. It is read by its dimensions
+(`Rotor::dimensions`), never as one angle, so no reading collapses it to
+one dimension (a scalar angle) or two (one plane):
+
+- **Orthogonal planes.** Two planes of base axes are orthogonal when they
+  share no axis (`rotor::orthogonal`). Their turnings commute, and their
+  composite carries a volume, a part of grade 4 on their four axes.
+- **Planes sharing an axis** are not orthogonal. Their turnings do not
+  commute (`R1 R2 - R2 R1` lies on the third plane), and their composite
+  turns the third plane between them and carries no volume (mycelium
+  78.173, 11b).
+- **The planes a rotor carries** are its bivector part by generators
+  `(i, j)`; its volumes are its parts of grade 4 and above.
+- **Dimensional capacity.** The number of mutually orthogonal planes a
+  rotor turns is half the rank of its bivector part's antisymmetric matrix
+  over the base axes, found by exact elimination over Q, with no root, no
+  angle and no eigenvalue. One plane has capacity 1. A turning of three
+  axes has capacity 1 whatever planes compose it. Turnings on two
+  orthogonal planes have capacity 2. On the twelve axes of the Hopf
+  carrier the capacity is at most six, one per plane of `C^6`. A plane
+  turned by exactly a half turn leaves no bivector part and shows only in
+  a volume.
+- **The traps.** A reading that keeps one angle of a rotor of any
+  capacity is a one-dimensional collapse (`rotor::angle_between`, retiring
+  under [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118)). A
+  reading that keeps one plane of a rotor of capacity two or more, or that
+  drops its volumes, is a two-dimensional collapse. A relation between two
+  rotors is their relative versor, read by its dimensions (Pairs: the
+  pivot, per plane).
+
 ### Space-time readings: the null pair
 
 Tracked on [#222](https://github.com/SAIOS-SAMN/xylarium/issues/222). The interval `ds^2 = c^2 dt^2 - |dx|^2` is a square

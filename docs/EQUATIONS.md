@@ -1100,11 +1100,14 @@ sites are restated. The derivations are in
   - The intercepted energy (`field::Bell::energy_at`): light x period x the
     system's share of the manifold the pulse spreads on at that reach, the
     cap of S^n within the deficit angle `a / (d + a)` of the half turn
-    (`formation::gathered`, one law with the gas's gathered share), `n` the
-    manifold's dimension at the reach (`formation::dimension_at`: the
-    disc's circle beyond one galaxy unit, where the share is the face and
-    falls as `1 / d`; the bulge's ball within it, where it falls as
-    `1 / d^2`). Finite at `d = 0`. Calibre: one per share (AU).
+    (`formation::gathered`, one law with the gas's gathered share), read
+    on both measures at once: the bulge's ball (S^2, the cap, falling as
+    `1 / d^2`) by the ball's share `b = H / (H + r)` at the reach `r`
+    (`formation::dimension_at`, the core's face with its hold `H = 1`
+    galaxy unit, `b = 1/2` there), and the disc's circle (S^1, the arc, the
+    face itself, falling as `1 / d`) by `1 - b`. A smooth passage, never a
+    cut (#233 item 2). Finite at `d = 0`. Calibre: one per share (AU); `b`
+    in galaxy units.
   - The re-lock work (`field::absorb`): a world turned from its native
     direction by the share `s` of a turn costs `m M / (a + M rho) x s`, the
     world's mass times the star's face at the orbit's reach with the hold

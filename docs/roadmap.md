@@ -162,9 +162,9 @@ founding and the light read the capacity's occupancy instead (axiom 9).
 Next, in order:
 
 1. Done ([#26](https://github.com/SAIOS-SAMN/xylarium/issues/26)): the
-   rotor's inverse (`Rotor::inverse`) and the certified angle between two
-   directions (`rotor::angle_between`) replace the `acos` readings in
-   `manifold::gap` and `chain::Place::arc`.
+   rotor's inverse (`Rotor::inverse`) and the pivot between two directions
+   (`rotor::pivot`, which replaced the angle reading `angle_between`) replace the
+   `acos` readings in `manifold::gap` and `chain::Place::arc`.
 2. The atom's catalogue columns (mass number, phase temperatures, density)
    are to be derived from 3Z, 3Q and R rather than read from
    `data/elements.tsv` (milestone 3, chemistry from the census).
@@ -700,8 +700,8 @@ where it belongs to one.
 
 25. **Rotor inverse and the versor angle**
     ([#26](https://github.com/SAIOS-SAMN/xylarium/issues/26), `proposal`, `good
-    first issue`). Done: `Rotor::inverse` and the certified
-    `rotor::angle_between` replace the `acos` readings in
+    first issue`). Done: `Rotor::inverse` and the pivot (`rotor::pivot`,
+    which replaced the angle reading `angle_between`) replace the `acos` readings in
     `manifold::gap` and `chain::Place::arc`.
 45. **Ring keeps one meaning** ([#115](https://github.com/SAIOS-SAMN/xylarium/issues/115), done).)
 

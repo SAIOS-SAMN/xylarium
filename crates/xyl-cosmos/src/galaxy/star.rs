@@ -140,10 +140,12 @@ impl Star {
     /// off the plane (a disc star's vertical swing, zero otherwise).
     pub fn bearing(&self, t: Dy) -> (Q, [Q; 3], Q) {
         let o = &self.orbit;
-        let (c, s) = cos_sin_turns(&Encl::exact(o.turns_at(t).to_q()));
+        // The phase's exact circle point, turned exactly: a unit direction.
+        let (c, s) = xyl_core::rotor::circle_point(&(&o.turns_at(t).to_q() * &Q::int(360)), 64)
+            .unwrap_or((Q::ONE, Q::ZERO));
         let dir = o
             .rotor()
-            .apply(&[c, s, Encl::exact(Q::ZERO)])
+            .apply(&[c, s, Q::ZERO].map(Encl::exact))
             .map(|x| x.mid());
         let climb = match o.swing {
             Some((u, phase)) => {

@@ -86,6 +86,19 @@ fn stars_circle_the_core_and_the_core_holds_its_share() {
         stars[1].place(Dy::int(4), &r),
         stars[2].place(Dy::int(4), &r),
     );
+    // Every place's direction is exactly of unit length, so the pivot
+    // between two places is always read, never refused.
+    for p in [&a, &b] {
+        let n2 = p.dir.iter().fold(Q::ZERO, |s, x| &s + &(x * x));
+        assert_eq!(n2, Q::ONE);
+        assert_eq!(
+            p.core
+                .as_ref()
+                .map(|c| c.dir.iter().fold(Q::ZERO, |s, x| &s + &(x * x))),
+            Some(Q::ONE)
+        );
+    }
+    assert!(xyl_core::rotor::pivot(&a.dir, &b.dir, 64).is_some());
     assert!(a.arc(&a, &r).mid().abs() < xyl_core::ratio!(1, 1_000_000));
     let (ab, ba) = (a.arc(&b, &r).mid(), b.arc(&a, &r).mid());
     assert_eq!(ab, ba);

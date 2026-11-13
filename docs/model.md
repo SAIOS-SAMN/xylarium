@@ -88,8 +88,12 @@ and reads both in one calibre:
    `C2 = sum_k min(w_k, w'_k) (1 - 2 |d_k|) + (1 - m) / 2`.
 6. A single angle is shown only for display, as a certified sector.
 
-It retires `rotor::angle_between`, one unnamed plane through
-`a . b / sqrt(|a|^2 |b|^2)` and asin; its readers are listed on [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118).
+Built: the pivot between two unit directions (`rotor::pivot`), the rotor
+`1 + b a` on its named plane with its turn read from its scalar part and
+scale. It replaced the angle reading `angle_between`, one unnamed plane through
+`a . b / sqrt(|a|^2 |b|^2)` and asin, now deleted
+([#118](https://github.com/SAIOS-SAMN/xylarium/issues/118)). Planned: the
+winding and phase per plane of the six planes.
 
 ### Dimensional orthogonality of a rotor
 
@@ -117,8 +121,10 @@ one dimension (a scalar angle) or two (one plane):
   turned by exactly a half turn leaves no bivector part and shows only in
   a volume.
 - **The traps.** A reading that keeps one angle of a rotor of any
-  capacity is a one-dimensional collapse (`rotor::angle_between`, retiring
-  under [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118)). A
+  capacity above one is a one-dimensional collapse (the deleted
+  the angle reading `angle_between` was one). A pivot between two directions has
+  capacity one, so its one turn on its named plane is its whole reading
+  (`rotor::pivot`). A
   reading that keeps one plane of a rotor of capacity two or more, or that
   drops its volumes, is a two-dimensional collapse. A relation between two
   rotors is their relative versor, read by its dimensions (Pairs: the
@@ -1854,8 +1860,9 @@ and the order in which that is to be opened up.
 - **Relations not read in the lowest common tier.** `pulse::hear` weighs
   bells over a flat arc in kpc as one complex phasor on one plane;
   chronometry adds distances in kpc; galaxies carry no cross-ties.
-- **Separation by squares.** `xyl_core::rotor::angle_between` (a dot product
-  and a root) is the distance under every arc. Separations are sums of one
+- **Separation as one scalar.** The pivot's turn (`xyl_core::rotor::pivot`)
+  is the distance under every arc (S140); the dot product and root of the
+  deleted `angle_between` are gone. Separations are sums of one
   angle and differences of radii, and the field's shear and work are sums
   of squares, against axiom 3's composition and caps in degrees.
 - **Links without shear.** A star's galactic orbit and a core's circulation
@@ -2486,9 +2493,10 @@ The sections below describe the readings as built.
 - Exponentials below the working resolution are enclosed by `[0, 2^-bits]`
   rather than computed (`systems::exp`).
 - Angles between bodies: `manifold::gap` and `chain::Place::arc`
-  read the angle between two directions as the certified angle between them
-  (`xyl_core::rotor::angle_between`): the directions stay exact and only the
-  angle, which has no rational form in general, is an enclosure.
+  read the turn between two directions as the pivot's
+  (`xyl_core::rotor::pivot`): the directions are exact unit circle points,
+  the rotor between them is exact, and only its turn in degrees, which has
+  no rational form in general, is an enclosure.
 - Next: the manifold's disc-mass scale, the share of the manifold's matter
   that the star keeps, is to be revised. With the current scale, the
   settling merges the worlds of a metal-rich star into one heavy world; the

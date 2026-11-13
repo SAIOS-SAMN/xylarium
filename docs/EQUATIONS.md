@@ -65,7 +65,7 @@ sites are restated. The derivations are in
 | E016 | The split, fill and phase per Hopf plane `p` in `0..6` (6 dipoles, 12 faces on `S^11`): the level `m_p` holds `C(l - abs(m_p) + 9, 9)` orientations on every plane (a harmonic's multiplicity reads only `sum abs(m_p)`); the plane's capture phase `psi_p = (w_p s Z) mod 1` at the winding `w`; `R_p = kappa (1 - 2 frac(psi_p))`, `kappa` the whole fibre's coherence on every plane; `f_p = abs(R_p) u / (W_e + abs(R_p) u)`, `W_e = 3Z - U` the electron hold for `R_p > 0`, else 0; the plane polarity `A_p` (`circuit::fill_shares`, `atoms::plane_polarities`, `atoms::plane_sides`). In the common phase (`hopf::COMMON`) the six planes read alike, so the planes part only where the winding is not common (the Seifert twist, #128) or a tilt mixes the pole axis | the axis plane read alone, one scalar `R` (S137, I012) | ruled; [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#197](https://github.com/SAIOS-SAMN/xylarium/issues/197), [#183](https://github.com/SAIOS-SAMN/xylarium/issues/183) | built |
 | E017 | The transitional boundaries per plane: the balance `t_p = 1`, which is `p_net,p = 0` and `D(p_net,p) = 1` (one boundary: `D(p) = 1/t`), with the faces `h_p = o_p = 1/2`; and the fill's reversal `R_p = 0`, at `frac(psi_p) = 1/2`. A body crossing on one plane and not another holds both phases at once, the boundary a surface inside it | a single fusion/fission threshold for the whole body | derived; [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201) | the reversal a closed form of the phase; the balance's crossing waits on the conversion's motion (E013) |
 | E018 | The nucleon dipole turned by the phase, per Hopf plane `p`: `p_nuc,p = (3Z_p - 3Q_p) / 3W_p` composed with `R_p` by the flow law, `p_net,p = p_nuc,p (+) R_p = (p_nuc,p + R_p) / (1 + p_nuc,p R_p)`, so `D(p_net,p) = D(p_nuc,p) D(R_p)`: the Z face `(3Z_p / 3Q_p) (1 + R_p) / (1 - R_p)` and the Q face, its antipole, `(3Q_p / 3Z_p) (1 - R_p) / (1 + R_p)`, product 1; `R_p = 0` is the bare dipole. At the bounce's rest point, `p_net,p = 0`: `p*_nuc,p = -R_p` and `3Z*_p / 3Q*_p = (1 - R_p) / (1 + R_p)`. `R_p` is read as a push in `(-1, 1)`, so a kind with `abs(R_p) = 1` (coherence 1 at a whole-turn crossing) has no rest point and is refused | `3Z / 3Q + R` (I009); one fixed table of weights (S029, I011) | ruled; [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#148](https://github.com/SAIOS-SAMN/xylarium/issues/148) | built: the universal table at the bounce (`formation::founding_shells`), in the common phase |
-| E019 | The pivot per plane: the relative versor `P_b^-1 P_a`, read on each plane `k` as its winding `K_k` in ZZ and phase `phi_k` in QQ/ZZ | `rotor::angle_between`, one scalar per pair | [#207](https://github.com/SAIOS-SAMN/xylarium/issues/207), [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118) | planned |
+| E019 | The pivot per plane: the relative versor `P_b^-1 P_a`, read on each plane `k` as its winding `K_k` in ZZ and phase `phi_k` in QQ/ZZ | the angle reading `angle_between`, one scalar per pair (deleted) | [#207](https://github.com/SAIOS-SAMN/xylarium/issues/207), [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118) | partly built: `rotor::pivot`, the relative rotor `1 + b a` between two unit directions, its plane by generators and its turn; the winding and phase per plane of the six planes planned |
 | E020 | Twist per plane: `Tw_k = w_i,k - w_j,k`, the turn `360 delta_k`; writhe `Wr = Lk - Tw` | the turn on one plane (S130) | [#207](https://github.com/SAIOS-SAMN/xylarium/issues/207), [#128](https://github.com/SAIOS-SAMN/xylarium/issues/128) | planned |
 | E021 | Strength and weakness per plane: the overlap's held face `h_k` and open face `o_k = 1 - h_k` (`hopf::overlap`) | calibrated material strengths | [#207](https://github.com/SAIOS-SAMN/xylarium/issues/207) | planned |
 | E022 | Pull per plane: `p_k = h_k - o_k`, offset by the medium, `p_k (+) (-r_k)` | a pull read bare | [#207](https://github.com/SAIOS-SAMN/xylarium/issues/207), [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195) | planned |
@@ -74,7 +74,7 @@ sites are restated. The derivations are in
 | E025 | A separation is the pivot per plane, `P_b^-1 P_a` (E019); a crossing is a count on the T lane, timelike, null or spacelike by the signs of `u` and `v` | one scalar arc over `c` (I014) | [#219](https://github.com/SAIOS-SAMN/xylarium/issues/219), [#207](https://github.com/SAIOS-SAMN/xylarium/issues/207) | planned |
 | E026 | Speeds compose: exhaust, throat supply and the line's medium by `p (+) (-r)`; a spacelike span crosses only by a passage | `c min(S / T, c)` and `c - v_e` clamped (I015) | [#220](https://github.com/SAIOS-SAMN/xylarium/issues/220), to rule | planned |
 | E027 | An event carried from `a` to `b`: the rapidities of the nested wells composed per plane, the place turned by `P_b^-1 P_a`, the T coordinate counted through the keepers between | a remote event read by light delay and the reader's keeper alone | [#221](https://github.com/SAIOS-SAMN/xylarium/issues/221) | planned |
-| E028 | A rotor is read by its dimensions: its planes (the bivector part by generators), its volumes (grade 4 and above), and its capacity, half the rank of the bivector part's antisymmetric matrix, exact; two planes are orthogonal when they share no axis, commute, and compose with a volume; planes sharing an axis turn the third plane | one angle per rotor (`rotor::angle_between`), one plane per rotor | [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118), [#207](https://github.com/SAIOS-SAMN/xylarium/issues/207) | built (`rotor::Rotor::dimensions`, `rotor::orthogonal`) |
+| E028 | A rotor is read by its dimensions: its planes (the bivector part by generators), its volumes (grade 4 and above), and its capacity, half the rank of the bivector part's antisymmetric matrix, exact; two planes are orthogonal when they share no axis, commute, and compose with a volume; planes sharing an axis turn the third plane | one angle per rotor (the angle reading `angle_between`, deleted), one plane per rotor | [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118), [#207](https://github.com/SAIOS-SAMN/xylarium/issues/207) | built (`rotor::Rotor::dimensions`, `rotor::orthogonal`) |
 
 | ID | Invalid form | Sites | Superseded by | Status |
 |---|---|---|---|---|
@@ -85,7 +85,7 @@ sites are restated. The derivations are in
 | I005 | Speeds capped at `c` by `min`, not composed per face | S127, S128 | E001, E008 | open |
 | I006 | One-dipole forms written on 2026-11-11: the tilt's faces and balance, the open charge, the charged spin's single `delta` | S124, S125, S132 | E010 | open |
 | I007 | Offsetting the open charge by the bound share, `(p / w) (+) (-g)` (proposed on #183 and #195, withdrawn): `g` is the charge already moved onto the held stratum, so it would be counted twice; the push is the linear pair share, and the rate it drives is offset by the medium (E007) | S124 | E003, E007 | closed: withdrawn |
-| I008 | A square or root at a coupling's root, or a reach decoupled from its hold: the field's intercepted share `a^2 / (4 d^2)`, the field's work `(M / a)^2 abs(dx)^2`, surface gravity `M / R^2` and pressure, `pulse::hear`'s `M / d`, `rotor::angle_between`'s root | S133, S134, S135, S025, S034 | E011 | open |
+| I008 | A square or root at a coupling's root, or a reach decoupled from its hold: the field's intercepted share `a^2 / (4 d^2)`, the field's work `(M / a)^2 abs(dx)^2`, surface gravity `M / R^2` and pressure, `pulse::hear`'s `M / d`, the deleted the angle reading `angle_between`'s root | S133, S134, S135, S025; S034 remediated by `rotor::pivot` | E011 | open |
 | I009 | The dipole's faces as a turn added to a dilation, `3Z / 3Q + R` and `3Q / 3Z - R` (#148) | docs (model.md, The dipole) | E012, E018 | closed: restated as the composition `D(p_nuc (+) R) = D(p_nuc) D(R)` (E018) |
 | I010 | `W` names both the held count `3Z - U` and, in v2's letters, the nucleon whole `3W = 3(Z + Q)` | `compound::electron_hold` (was `compound::hold`), `circuit::fill_shares`, `circuit::Substrate::loop_flux_swung`, `spin_orbit` | E012 | closed: the electron hold is `W_e = 3Z - U` (`compound::electron_hold`, `w_e` at its sites); `3W = 3Z + 3Q` is the nucleon whole |
 | I011 | One fixed table of measured weights (`crates/xyl-cosmos/data/elements.tsv`, through `circuit::mass_number`) for every genesis and every galaxy, so `3Q`, `3W` and the split are the same everywhere: neither the universe's own nor each galactic core's | S029, S010, `stars::fusion_step` products | E013, E014 | closed: the universal table from the rest point (E014); the galaxies' tables remain (S138) |
@@ -142,9 +142,11 @@ sites are restated. The derivations are in
   never assumed equal; closeness is
   `C2 = sum_k min(w_k, w'_k) (1 - 2 |d_k|) + (1 - m) / 2`,
   `m = sum_k min(w_k, w'_k)`, `d_k` in turns. A single displayed angle is a
-  certified sector of `P`'s angle, display only. Calibre: none. Status: planned; replaces
-  `rotor::angle_between` (`cos = a . b / sqrt(|a|^2 |b|^2)`, one radian
-  enclosure, one unnamed plane).
+  certified sector of `P`'s angle, display only. Calibre: none. Status: the
+  pivot between two directions built (`rotor::pivot`); the reading per plane
+  of the six planes planned. Deleted: the angle reading `angle_between`
+  (`cos = a . b / sqrt(|a|^2 |b|^2)`, one radian enclosure, one unnamed
+  plane).
 - Winding and phase ([model.md](model.md#winding-and-phase-the-diophantine-split), #149):
   a turn `a` in QQ, in turns (degrees over 360), is held as `(K, phi)`
   with `K = floor(a)` in ZZ and `phi = a - K` in QQ/ZZ,
@@ -1103,13 +1105,16 @@ sites are restated. The derivations are in
   giants' mass. Calibre: SI seam. Status: partial.
 - Resolution guard (`systems::exp`): `exp(x)` is enclosed by
   `[0, 2^-bits]` for `x <= -(bits + 1)`. Calibre: none. Status: built.
-- Angle between bodies (`manifold::gap`, `chain::Place::arc`):
-  the certified angle `pi / 2 -/+ asin(|a . b| / |a| |b|)`
-  (`xyl_core::rotor::angle_between`), the directions exact, read at its
-  midpoint; a rotor's inverse is its reverse (`Rotor::inverse`). The
-  arc on a sphere is that angle times the chord `R sin(s / R)`
-  (`bounce::curved_reach`). Calibre: none. Status: built; to be replaced by the pair
-  reading (#118, section 1).
+- Turn between bodies (`manifold::gap`, `chain::Place::arc`): the pivot
+  between their exact unit directions (`xyl_core::rotor::pivot`), the
+  rotor `V = 1 + b a` on its named plane `b ^ a`, its turn
+  `90 - (180 / pi) asin(2 c^2 / (V V~) - 1)` degrees from the versor's
+  scalar part and scale, certified, with no root (E019, E028; capacity 1). The
+  directions are exact circle points turned exactly
+  (`rotor::circle_point`). The arc on a sphere is that turn times the
+  chord `R sin(s / R)` (`bounce::curved_reach`). Calibre: none. Status:
+  built; the separation read as one scalar arc stays stand-in S140 until
+  the pivot per plane (#219).
 - Disc-mass scale of the manifold: this scale is not yet built; it is the
   next step (roadmap, Worlds on the manifold chain).
 - Degree of a star's life (`worlds::star_degree_gyr`):

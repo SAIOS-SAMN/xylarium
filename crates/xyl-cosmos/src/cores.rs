@@ -78,9 +78,11 @@ impl Shape {
     /// t, at its reach.
     pub fn place_at(&self, t: Dy, r: &Q) -> crate::chain::Place {
         let phase = (Dy::from_q(&self.phase) + self.rate * t).to_q().frac();
-        let (c, s) = xyl_core::certified::cos_sin_turns(&xyl_core::certified::Encl::exact(phase));
+        // The phase's exact circle point, turned exactly: a unit direction.
+        let (c, s) = xyl_core::rotor::circle_point(&(&phase * &Q::int(360)), 64)
+            .unwrap_or((Q::ONE, Q::ZERO));
         let dir = drawn_rotor(&self.node, &self.tilt)
-            .apply(&[c, s, xyl_core::certified::Encl::exact(Q::ZERO)])
+            .apply(&[c, s, Q::ZERO].map(xyl_core::certified::Encl::exact))
             .map(|x| x.mid());
         crate::chain::Place::core(self.anchor().0, dir, r)
     }

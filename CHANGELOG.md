@@ -11,6 +11,15 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The horizon is derived (T20), no longer a declared ruler. Axiom 6 is now
+  the pairing (a throat is one pair of faces, each presenting its hold),
+  and the horizon is where the faces meet: the equator of the pair's hold,
+  `R_h = M_near + M_far`, the inversion's fixed point.
+  `bounce::horizon_reach(near, far)` and `horizon_share(near, far)` take both
+  faces' holds; the universal core's pair shares its hold (T16), so
+  `R_h = 2M` and `delta_h = 1/3` as before. Open: the far face's own hold
+  where the faces do not share one, and its exchange over the breath.
+
 - A pulse is one breath (E011): each ring expands and contracts the
   manifold, so its turn swings out and back at the amplitude `360 h` and its
   screw's translation returns; the star holds its worlds against the

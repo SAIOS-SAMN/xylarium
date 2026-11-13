@@ -313,7 +313,8 @@ pub fn spin_orbit(mix: &[(u32, Q)], spin: &Q) -> SpinOrbit {
 
 /// The reach about the throat a parcel of hold `m` stands at after `tau`
 /// echoes, released at `r0` with the hold `h` inside it: the reach rate
-/// `dr/dtau = [R_h(h) - R_h(m)] r / (r + R_h(m))` with `R_h(M) = 2M`,
+/// `dr/dtau = [R_h(h) - R_h(m)] r / (r + R_h(m))` with `R_h(M) = 2M` (T20,
+/// each hold's faces sharing it),
 /// separable and exact, `(r - r0) + 2m ln(r / r0) = 2 (h - m) tau`, solved
 /// for `r` (its left side rises with `r`, so the root is one, found by
 /// halving to 10^-20 of `r0`). It expands where `h > m`, rests where
@@ -456,8 +457,10 @@ pub fn founding_shells(mix: &[(u32, Q)], spin: &Q) -> (Vec<Shell>, crate::circui
             .map(|(_, a)| a.clone())
             .unwrap_or(Q::ZERO)
     };
-    let horizon = crate::bounce::horizon_reach(&Q::ONE);
-    let received = &Q::ONE - &crate::bounce::horizon_share();
+    // The kept kinds are held on both faces (T16), so the pair shares its
+    // hold: the horizon is twice it and the received share there two thirds.
+    let horizon = crate::bounce::horizon_reach(&Q::ONE, &Q::ONE);
+    let received = &Q::ONE - &crate::bounce::horizon_share(&Q::ONE, &Q::ONE).unwrap_or(Q::ZERO);
     let mut shells = Vec::new();
     let mut table = crate::circuit::Table::new();
     let mut kept: Vec<u32> = orbit.kept.iter().map(|k| k.0).collect();
@@ -465,7 +468,8 @@ pub fn founding_shells(mix: &[(u32, Q)], spin: &Q) -> (Vec<Shell>, crate::circui
     let mut kept_hold = orbit.founded.clone();
     for c in &orbit.cohorts {
         kept_hold = &kept_hold - &c.hold;
-        let r0 = crate::bounce::horizon_reach(&grain(&kept_hold));
+        let shared = grain(&kept_hold);
+        let r0 = crate::bounce::horizon_reach(&shared, &shared);
         let mut layers = c.layers.clone();
         layers.sort_by(|x, y| y.1.cmp(&x.1).then(x.0.cmp(&y.0)));
         let masses: Vec<Q> = layers.iter().map(|(_, m, _)| m.clone()).collect();
@@ -598,7 +602,7 @@ mod tests {
     fn the_pool_conserves_the_impulse() {
         let masses: Vec<Q> = (1..=9).map(|k| Q::new(k, 128).unwrap()).collect();
         let kept = xyl_core::ratio!(1, 3);
-        let r0 = crate::bounce::horizon_reach(&kept);
+        let r0 = crate::bounce::horizon_reach(&kept, &kept);
         for far in [false, true] {
             for charged in [Q::ZERO, xyl_core::ratio!(2, 9)] {
                 let (out, take) = pooled(&kept, &masses, &r0, far, &charged);

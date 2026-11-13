@@ -287,7 +287,10 @@ mod tests {
         // the deficit is one third, curved along the enclosure.
         assert_eq!(
             c.hole.at[2],
-            crate::bounce::curved_reach(&crate::bounce::horizon_reach(c.mass()), &c.enclosure)
+            crate::bounce::curved_reach(
+                &crate::bounce::horizon_reach(c.mass(), c.mass()),
+                &c.enclosure
+            )
         );
     }
 

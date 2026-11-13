@@ -266,8 +266,13 @@ sites are restated. The derivations are in
 - Dilation and flow law (`xyl_core::shares::dilation`, `flow`):
   `D(p) = (1 + p) / (1 - p)` for `-1 < p < 1`; `x (+) y = (x + y) / (1 + x
   y)`; `D(x (+) y) = D(x) D(y)`. Calibre: none. Status: built.
-- Horizon reach (`bounce::horizon_reach`): `delta_h = 1/3`, so
-  `R_h = M (1 - delta_h) / delta_h = 2M`. Calibre: none. Status: built.
+- Horizon reach (`bounce::horizon_reach`, `bounce::horizon_share`; T20):
+  the equator of the pair's hold, `R_h = M_near + M_far`; about one face,
+  `delta_h = M / (2M + M_far)`. A pair sharing one hold (T16): `R_h = 2M`,
+  `delta_h = 1/3`. Derived from axioms 2, 5 and 6 (pairing). Calibre: none.
+  Status: built. Open: the far face's own hold where the faces do not
+  share one (a pinched throat's far face is the core it bounces into), and
+  the hold passing between the faces over the breath.
 - Curved reach (`bounce::curved_reach`): the reach is `rho sin(r / rho)` on
   the S^360 enclosure of radius `rho`. Calibre: founding. Status: built.
 - Horizon sphere (`bounce::horizon`): `sigma = sphere_through(C, P)`, where
@@ -1205,8 +1210,8 @@ the Xylarium function is the implementation. The ids are proposals.
 | LAW-POLARITY-SEQUENCE | pole point `sum(n u) / sum(n w)`; fusion below the throat, fission above, ordered by release | Xylarium | `stars::sequence::mixture_pole`, `Sequence::of` |
 
 LAW-TORSION-SHARE takes the horizon reach as an argument: Xylarium states
-`H = M (1 - delta_h) / delta_h = 2M` (`bounce::horizon_reach`) with the
-horizon's held share `delta_h = 1/3` a declared ruler of its founding, and
+`H = M_near + M_far` (`bounce::horizon_reach`, T20), the equator of the
+pair's hold, `2M` where the faces share one hold, and
 `J = a M^2`. The rim share (`disc::rim_share`) is LAW-DEFICIT-SHARE with the reach
 `R k`, `k` the tier ratio. The dilation turns the flow law of Concordance
 section 2.6 into a product, `D(x (+) y) = D(x) D(y)` with

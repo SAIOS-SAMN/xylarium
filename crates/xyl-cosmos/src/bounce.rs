@@ -14,9 +14,12 @@
 //! points have `AXES` = 12 coordinates (the axis plane first, the pole axis
 //! its first axis), so the algebra is `Cl(13, 1)` over `Q`.
 //!
-//! - `horizon_reach`: with held share `delta = M / (R + M)`, the horizon is
-//!   where the received share `1 - delta` is twice the held one, so
-//!   `delta_h = 1/3` and `R_h = M (1 - delta_h) / delta_h = 2M`, exact.
+//! - `horizon_reach`: a throat is one pair of faces, each presenting its
+//!   hold (axiom 6); the horizon is where the two faces meet, the equator of
+//!   the pair's hold, the inversion's fixed point (axiom 5):
+//!   `R_h = M_near + M_far` (T20). Read about one face, the held share there
+//!   is `delta_h = M / (R_h + M)` (`horizon_share`). A pair sharing one hold
+//!   (T16) gives `R_h = 2M` and `delta_h = 1/3`, exact.
 //! - `curved_reach`: a reach `r` read on the S^360 enclosure of curvature
 //!   radius `rho` as `rho sin(r / rho)`, fixed on the 2^-64 grid.
 //! - `horizon`: the dual sphere `sigma = C + (C . P) e_inf` about the centre
@@ -35,21 +38,20 @@ use xyl_core::certified::Encl;
 use xyl_core::cga::{self, keeping, Mv, Source};
 use xyl_core::Q;
 
-/// The horizon's held share, `delta_h = 1/3`: where the received share
-/// `1 - delta` is twice the held share (axiom 6, a declared ruler).
-pub fn horizon_share() -> Q {
-    Q::ONE.checked_div(&Q::int(3)).unwrap_or(Q::ONE)
+/// The horizon's reach from the centre (T20): a throat's two faces each
+/// present their hold, `near` and `far` (axiom 6), and the horizon is where
+/// they meet, the equator of the pair's hold (the inversion's fixed point,
+/// axiom 5): `R_h = M_near + M_far`, exact. A pair sharing one hold on both
+/// faces (T16) has `R_h = 2M`.
+pub fn horizon_reach(near: &Q, far: &Q) -> Q {
+    near + far
 }
 
-/// The horizon's reach from the centre, in the deficit grammar. The share a
-/// hole of `mass` holds at reach `R` is `delta = M / (R + M)`; the horizon is
-/// the reach where the received share `1 - delta` is twice the held share, so
-/// `delta_h = 1/3` and `R_h = M (1 - delta_h) / delta_h = 2M`. Linear in `M`,
-/// exact.
-pub fn horizon_reach(mass: &Q) -> Q {
-    let held = horizon_share();
-    let received = &Q::ONE - &held;
-    (mass * &received).checked_div(&held).unwrap_or(Q::ZERO)
+/// The held share at the horizon read about one face's hold `near`:
+/// `delta_h = M_near / (R_h + M_near) = M_near / (2 M_near + M_far)`, exact;
+/// one third where the faces share one hold. `None` for no hold.
+pub fn horizon_share(near: &Q, far: &Q) -> Option<Q> {
+    near.checked_div(&(&horizon_reach(near, far) + near))
 }
 
 /// A reach `r` along the S^360 enclosure of curvature radius `rho`, read as
@@ -94,7 +96,11 @@ pub fn crossing(centre: &[Q], x: &Q, psi: &Q) -> Vec<Q> {
 /// the pulse's phase `psi` on the first plane (`xyl_core::cga::sphere_through`),
 /// exact.
 pub fn horizon(centre: &[Q], mass: &Q, enclosure: &Q, psi: &Q) -> Mv {
-    let at = crossing(centre, &curved_reach(&horizon_reach(mass), enclosure), psi);
+    let at = crossing(
+        centre,
+        &curved_reach(&horizon_reach(mass, mass), enclosure),
+        psi,
+    );
     let mut c: Vec<Q> = centre.to_vec();
     c.resize(AXES, Q::ZERO);
     cga::sphere_through(&c, &at)
@@ -109,7 +115,8 @@ pub fn point(x: &[Q]) -> Mv {
 /// The share a throat's jet carries at each crossing, from the hole's spin
 /// by torsion. In the Einstein-Cartan bounce torsion is not an independent
 /// field: it is the spin density of what fell, so the spin's share enters the
-/// hold directly. The throat `H = 2M` (`horizon_reach`) holds one face
+/// hold directly. The throat `H = 2M` (`horizon_reach`, the pair sharing
+/// its hold, T16) holds one face
 /// against the other, `delta(H, H) = 1/2`, and the jet carries the unlocked
 /// face `1 - delta`; the spin's angular momentum `J = a M^2` (`a` the Kerr
 /// parameter, `spin`) is a further share the throat cannot hold, so the held
@@ -122,7 +129,7 @@ pub fn torsion_share(mass: &Q, spin: &Q) -> Q {
     if mass.signum() <= 0 {
         return Q::ZERO;
     }
-    let h = horizon_reach(mass);
+    let h = horizon_reach(mass, mass);
     let j = &spin.clone().max(Q::ZERO) * &(mass * mass);
     (&h + &j)
         .checked_div(&(&(&Q::int(2) * &h) + &j))
@@ -137,7 +144,7 @@ pub fn spin_of_share(mass: &Q, a: &Q) -> Option<Q> {
     if one_less.signum() <= 0 || mass.signum() <= 0 {
         return None;
     }
-    let h = horizon_reach(mass);
+    let h = horizon_reach(mass, mass);
     (&h * &(&(&Q::int(2) * a) - &Q::ONE))
         .checked_div(&one_less)?
         .checked_div(&(mass * mass))
@@ -164,7 +171,7 @@ pub fn spin_bivector(spin: &Q) -> Mv {
 #[derive(Clone, Debug)]
 pub struct Bounce {
     /// Black hole mass M in natural units (G = c = 1); the horizon's reach is
-    /// [`horizon_reach`]`(M)`.
+    /// [`horizon_reach`]`(M, M)`, the pair sharing its hold (T16).
     pub mass: Q,
     /// The Kerr parameter `J / M^2`, in `(0, 1)`.
     pub spin: Q,
@@ -209,7 +216,7 @@ impl Bounce {
         let sigma = horizon(&centre, mass, enclosure, phase);
         let at = crossing(
             &centre,
-            &curved_reach(&horizon_reach(mass), enclosure),
+            &curved_reach(&horizon_reach(mass, mass), enclosure),
             phase,
         );
         let p = point(&at);
@@ -237,6 +244,31 @@ impl Bounce {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// T20: the horizon is the equator of the pair's hold, where the faces
+    /// read about the pair balance at one half (the inversion's fixed
+    /// point); a pair sharing one hold (T16) has `R_h = 2M` and
+    /// `delta_h = 1/3`; unequal faces move it, `M / (2M + M')`.
+    #[test]
+    fn the_horizon_is_the_equator_of_the_pairs_hold() {
+        let q = |n: i64, d: i64| Q::new(n, d).unwrap();
+        for (near, far) in [
+            (Q::ONE, Q::ONE),
+            (q(3, 2), q(3, 2)),
+            (Q::ONE, q(1, 4)),
+            (q(2, 7), Q::int(5)),
+        ] {
+            let pair = &near + &far;
+            let r = horizon_reach(&near, &far);
+            let faces = xyl_core::shares::faces(&pair, &r).unwrap();
+            assert_eq!((faces.convergent, faces.divergent), (q(1, 2), q(1, 2)));
+            let expect = near.checked_div(&(&(&near * &Q::int(2)) + &far)).unwrap();
+            assert_eq!(horizon_share(&near, &far), Some(expect));
+        }
+        assert_eq!(horizon_reach(&Q::ONE, &Q::ONE), Q::int(2));
+        assert_eq!(horizon_share(&Q::ONE, &Q::ONE), Some(q(1, 3)));
+        assert_eq!(horizon_share(&Q::ZERO, &Q::ZERO), None);
+    }
 
     #[test]
     fn the_axis_plane_in_the_common_phase_leaves_the_source_at_an_isoclinic_crossing() {
@@ -279,7 +311,10 @@ mod tests {
         // horizon too, and is not the crossing point.
         assert!(b.far.geo(&b.horizon).scalar_part().is_zero());
         assert!(!b.far.projective_eq(&point(&b.at)));
-        assert_eq!(horizon_reach(&xyl_core::ratio!(3, 2)), Q::int(3));
+        assert_eq!(
+            horizon_reach(&xyl_core::ratio!(3, 2), &xyl_core::ratio!(3, 2)),
+            Q::int(3)
+        );
         let n = &b.source.generator;
         assert!(n.geo(n).is_zero() && !n.is_zero(), "null: N^2 = 0");
         let p = point(&b.at);
@@ -301,7 +336,7 @@ mod tests {
         assert!(Bounce::of(&Q::int(1), &xyl_core::ratio!(9, 10), &Q::ZERO, &Q::ZERO).is_none());
         // The enclosure's curvature shortens the reach: the curved reach is
         // below the flat reach, and nearer to it the larger the enclosure.
-        let flat = horizon_reach(&Q::int(1));
+        let flat = horizon_reach(&Q::int(1), &Q::int(1));
         let (near, far) = (
             curved_reach(&flat, &Q::int(10)),
             curved_reach(&flat, &Q::int(1000)),

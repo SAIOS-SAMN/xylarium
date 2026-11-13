@@ -252,7 +252,7 @@ mod tests {
             (xyl_core::ratio!(5, 2), xyl_core::ratio!(7, 9)),
             (xyl_core::ratio!(1, 4), Q::ONE),
         ] {
-            let h = crate::bounce::horizon_reach(&m);
+            let h = crate::bounce::horizon_reach(&m, &m);
             let j = &a * &(&m * &m);
             let f = xyl_core::shares::faces(&h, &(&h + &j)).unwrap();
             assert_eq!(crate::bounce::torsion_share(&m, &a), f.divergent);

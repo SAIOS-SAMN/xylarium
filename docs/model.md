@@ -711,10 +711,15 @@ A universe begins as the white-hole face of a parent's black hole, computed
 exactly in the conformal algebra `Cl(13, 1)` over `Q` (twelve base axes: the
 axis plane, its first axis the pole axis, and the five isoclinic planes).
 
-- Horizon reach: the hole holds the deficit share `delta = M / (R + M)` at
-  reach `R`. The horizon is where the received share `1 - delta` is twice
-  the held share, `delta_h = 1/3`, so `R_h = M (1 - delta_h) / delta_h = 2M`
-  (`horizon_reach`).
+- Horizon reach (T20, derived): a core is one throat with two faces, near
+  and far, each presenting its hold (axiom 6). The horizon is where the two
+  faces meet: the equator of the pair's hold, the one reach the inversion
+  fixes (axiom 5), `R_h = M_near + M_far` (`horizon_reach`). Read about one
+  face's hold, the held share there is `delta_h = M / (R_h + M) =
+  M / (2M + M_far)` (`horizon_share`). The universal core's pair shares its
+  hold on both faces (T16), so `R_h = 2M` and `delta_h = 1/3`: the
+  received share is twice the held share because the throat has two faces,
+  not by a declared ruler.
 - The reach is taken along the S^360 enclosure that contains the core, of
   curvature radius `rho`: `rho sin(R_h / rho)` (`curved_reach`).
 - The crossing point lies on the first of the pulse's five isoclinic planes,
@@ -728,7 +733,7 @@ axis plane, its first axis the pole axis, and the five isoclinic planes).
   verified to be null, fixes `P` and preserves the horizon. The throat's far
   face is the crossing point's antipode under 180 degrees on each of the five isoclinic planes
   (`circuit::plane_antipole`), a degree of structure; its return is the
-  next bounce's, read at the horizon's deficit, one third (axiom 6).
+  next bounce's, read at the horizon's deficit, one third (T20).
 - `Bounce::of` returns `None` for a spin outside the open interval `(0, 1)`
   and for a non-positive mass or enclosure, so a spinless hole yields no
   bounce.
@@ -849,7 +854,8 @@ p_net = (H - m) / (r + H + m)
 D(p_net) = D(p_c) / D(p_v) = (r + R_h(H)) / (r + R_h(m))
 ```
 
-with `D(p) = (1 + p) / (1 - p)` the dilation and `R_h(M) = 2M` the
+with `D(p) = (1 + p) / (1 - p)` the dilation and `R_h(M) = 2M` (T20, the
+faces sharing the hold) the
 horizon reach. The reach changes at the rate of the dilation's excess, in
 echoes `tau`:
 
@@ -1606,7 +1612,9 @@ Axioms:
    reverses a phase. On gravity's faces, `t = r / M`, it is the antipole:
    it exchanges the convergent and divergent faces and fixes the equator
    `r = M`.
-6. **Horizon.** `R_h(M) = 2M`, the held share one third.
+6. **Pairing.** A throat is one pair of faces, near and far, each
+   presenting its hold; it is never an open singularity. The horizon is
+   where the faces meet (T20).
 7. **Torsion.** `s = (R_h + J) / (2 R_h + J)`, `J = a M^2`.
 8. **Six planes.** R^12 = C^6: the axis plane and five isoclinic planes,
    which the spin turns together; a state is a harmonic on S^11 with a
@@ -1651,6 +1659,7 @@ Theorems:
 | T17 | the spin is a sheared orbit over the core's bounces: a kind's separation is `rho = q ln D(s) - (1 - q) ln D(1 - s)` across the attractor pair; a cohort takes `J (m / M) (rho_cohort / rho_hold)`; a cohort less separated than its hold spins the throat up; the pair closes while `a <= 1` | 3, 7, 9, 11, T2, T10, T16 |
 | T18 | the five isoclinic planes are interchangeable in the multiplicity and the filling (no state's plane is chosen); plane `j` is read by its pole `t_j = J_j / (6 H_j)`, its hold the kinds' turning on it, by separation (ruled, #128), never an equal split; the planes' phases differ by their pushes and by a link's turning between planes (The six planes) | 8, T6, T7, T14 |
 | T19 | a link's remanence `w = J - (a_0 M_0) M`: per passage `w' = w (1 - m / M) + J (m / M) (1 - rho_c / rho_hold)`; conserved between passages; cleared by a passage of hold `m* = w M / (w + J (rho_c / rho_hold - 1))`; for one release, the remanent share `1 - rho_hold / rho_closed` | 7, 11, T10, T17 |
+| T20 | the horizon is the equator of the pair's hold, `R_h = M_near + M_far`, where the faces read about the pair balance at one half (the inversion's fixed point); read about one face, `delta_h = M / (2M + M_far)`; a pair sharing one hold gives `R_h = 2M` and `delta_h = 1/3` | 2, 5, 6, T16 |
 
 Reading (seed 7; a retired floating-point screen with exact held sets, to
 be read on the binary once the pinches are built, #79): the universal core holds 0.4352 of the

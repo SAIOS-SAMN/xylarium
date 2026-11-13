@@ -49,7 +49,8 @@ use xyl_core::Q;
 /// `delta(H, H) = 1/2`. Not a constant: the one point of the deficit law
 /// where reach and hold coincide.
 pub fn throat_push() -> Dy {
-    let h = Dy::from_q(&crate::bounce::horizon_reach(&Q::ONE));
+    // The universal core's pair shares its hold, 1 on both faces (T16).
+    let h = Dy::from_q(&crate::bounce::horizon_reach(&Q::ONE, &Q::ONE));
     // Stand-in S114: The convergent face is read, the divergent face not resisting it.
     deficit_dy(h, h)
 }

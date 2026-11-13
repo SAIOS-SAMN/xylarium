@@ -1083,10 +1083,11 @@ layer, each with the quantity that is to derive it.
   tiers (`shares::tests::deficit_is_invariant_under_dilation`), so the
   ladder's base is a reading convention, to be replaced by each tier's own
   dilation as the chain derives it (item 41).
-- **Founding** (`bounce`): The horizon's held share `delta_h = 1/3`
-  (`horizon_reach`, so `H = 2M`), the reach where the received share is twice
-  the held share, is to be derived from the bounce's geometry; until then the
-  shared torsion law takes `H` as an argument.
+- **Founding** (`bounce`): none at the horizon. The horizon is derived
+  (T20): the equator of the pair's hold, `R_h = M_near + M_far`, one third
+  held where the faces share one hold. Open physics, not a ruler: the far
+  face's own hold where the faces do not share one, and the hold passing
+  between the faces over the breath (the breathing manifold).
 - **Home galaxy and chemistry** (`galaxy`, `chem`): The chemistry's rulers
   (`chem::Rulers`: ring width, surface density, returns, loading, yields) are to
   be derived from the enrichment that the founding produces.

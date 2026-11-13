@@ -520,6 +520,17 @@ where it belongs to one.
        S126 to S128.
     3. Events carried between bodies (E027, [#221](https://github.com/SAIOS-SAMN/xylarium/issues/221)), read by the percepts
        and the annals.
+68. **Breathe, not static** ([#233](https://github.com/SAIOS-SAMN/xylarium/issues/233), `law`, `track`; ruled 2026-11-13).
+    Values held fixed or read at a mean are read through the bell's cycle:
+    each pulse ring is one breath of the manifold. Done: the field's pulse as
+    one breath with no drift and its share falling as the manifold's measure
+    `d^n`; the horizon derived (T20) and axial with spin, tilt and vents
+    (T21). Order: the manifold's radius breathing (`chain::radius`), a
+    smooth dimension at the bulge's edge, the throat's push swinging with
+    the echo (S114), the reverberation read at `t`, orbit rates breathing,
+    the bell's period, the founding swing and the kept kinds on the throat
+    orbit (S142), the centre's crossing share (S017), the field's step per
+    ring, and the hold passing between the pair's faces.
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

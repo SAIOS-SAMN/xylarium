@@ -466,6 +466,16 @@ mod tests {
         assert!(d
             .sandwich(&point_at(&[Q::int(2)]))
             .projective_eq(&point_at(&[Q::int(6)])));
+        // Dilators compose as the flow law (joint read with netstratum,
+        // carrier fixture 4): D(2) D(3) = D(6) up to scale, the rates
+        // (rho - 1) / (rho + 1) = 1/3 and 1/2 composing to 5/7.
+        assert!(dilator(&Q::int(2))
+            .geo(&dilator(&Q::int(3)))
+            .projective_eq(&dilator(&Q::int(6))));
+        assert_eq!(
+            crate::shares::flow(&Q::new(1, 3).unwrap(), &Q::new(1, 2).unwrap()),
+            Q::new(5, 7)
+        );
         // A point lies on a sphere through it.
         let s = sphere_through(
             &[Q::int(0), Q::int(0), Q::int(0)],

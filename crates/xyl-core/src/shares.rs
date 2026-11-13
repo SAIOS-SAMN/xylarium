@@ -321,6 +321,57 @@ mod tests {
         assert!(FacePairs::of(&Q::ZERO).is_none());
     }
 
+    /// LAW-TRAVERSAL's joint-read fixtures 1 to 4 (mycelium 78.176 section
+    /// 4), read on gravity's faces with the hold `z` and the reach `q` of a
+    /// plane (78.172 section 1): the antipole is the antipolar exchange.
+    /// (1) Out and back is the identity on the pole. (2) The whole is kept:
+    /// `(2/3, 1/3)` exchanges to `(1/3, 2/3)`, both summing to 1. (3) The
+    /// asymmetry and the fraction invert, `sigma -> -sigma`, `o -> 1 - o`:
+    /// at `(2/3, 1/3)`, `sigma = 1/3 -> -1/3` and `o = 1/3 -> 2/3`. (4) The
+    /// throat `z = q` is the only fixed point.
+    #[test]
+    fn the_antipolar_traversal_fixtures_hold() {
+        let third = Q::new(1, 3).unwrap();
+        let two_thirds = Q::new(2, 3).unwrap();
+        let pairs = [
+            (two_thirds.clone(), third.clone()),
+            (Q::ONE, Q::ONE),
+            (Q::new(1, 7).unwrap(), Q::new(5, 2).unwrap()),
+            (Q::int(3), Q::new(1, 60).unwrap()),
+        ];
+        for (z, q) in &pairs {
+            let f = faces(z, q).unwrap();
+            let back = f.antipole();
+            // (1) out and back
+            assert_eq!(back.antipole(), f);
+            assert_eq!(&back.pole().unwrap() * &f.pole().unwrap(), Q::ONE);
+            // (2) the whole kept, as the exchanged pair (q, z)
+            assert_eq!(faces(q, z).unwrap(), back);
+            assert_eq!(&back.convergent + &back.divergent, Q::ONE);
+            // (3) the asymmetry and the fraction invert
+            assert_eq!(back.push(), -f.push());
+            assert_eq!(back.divergent, &Q::ONE - &f.divergent);
+            // (4) fixed only at the throat
+            assert_eq!(back == f, z == q, "z {z} q {q}");
+        }
+        // The share split at delta = H / (R + H) (joint read with
+        // netstratum, carrier fixture 2): (1, 1) splits 1/2, 1/2; (3, 5)
+        // splits 3/8, 5/8 and inverts to 5/8, 3/8.
+        let half = Q::new(1, 2).unwrap();
+        let even = faces(&Q::ONE, &Q::ONE).unwrap();
+        assert_eq!((even.convergent, even.divergent), (half.clone(), half));
+        let split = faces(&Q::int(3), &Q::int(5)).unwrap();
+        assert_eq!(split.convergent, Q::new(3, 8).unwrap());
+        assert_eq!(split.antipole().convergent, Q::new(5, 8).unwrap());
+        let f = faces(&two_thirds, &third).unwrap();
+        assert_eq!(
+            (f.push(), f.divergent.clone()),
+            (third.clone(), third.clone())
+        );
+        let back = f.antipole();
+        assert_eq!((back.push(), back.divergent), (-&third, two_thirds));
+    }
+
     /// The weighted reading does not depend on the amounts' scale: a
     /// parcel held at 2^-300 reads its dilation as one held at 1.
     #[test]

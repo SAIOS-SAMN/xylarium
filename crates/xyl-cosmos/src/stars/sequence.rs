@@ -263,7 +263,9 @@ impl Sequence {
         // fission stages only from the collective's throat crossing
         // (`Sequence::at`), which a collective with nothing open never makes.
         transduce(&mut holds, received, false, &mut steps);
-        transduce(&mut holds, received, true, &mut steps);
+        if pole.signum() > 0 {
+            transduce(&mut holds, received, true, &mut steps);
+        }
         let cumulative = steps.iter().fold(Q::ZERO, |a, s| &a + &s.transduced);
         let sequence = Sequence {
             pole_point: pole,

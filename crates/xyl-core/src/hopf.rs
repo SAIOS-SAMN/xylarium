@@ -270,6 +270,12 @@ mod tests {
         }
         // Freezing the axis plane fixes its circle: the action is not free.
         assert_eq!(frozen.apply(&vector(axis_only)), vector(axis_only));
+        // A whole common turn returns every point (joint read with
+        // netstratum, carrier fixture 1).
+        let whole = turn(&COMMON, &Q::int(360), 40).unwrap();
+        for v in [axis_only, mixed] {
+            assert_eq!(whole.apply(&vector(v)), vector(v));
+        }
     }
 
     #[test]

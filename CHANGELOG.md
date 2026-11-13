@@ -11,6 +11,15 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- `rotor::angle_between` is deleted (#118, S034). `chain::Place::arc` and
+  `manifold::gap` read the pivot between two directions
+  (`rotor::pivot`): the exact rotor `1 + b a` on its named plane `b ^ a`,
+  its turn in degrees read from its scalar part and scale with no root and
+  no normalised dot product (capacity 1, E028). Directions are built as
+  exact circle points turned exactly (`rotor::circle_point`), so every
+  place's direction is exactly of unit length (tested). The arc as one
+  scalar stays stand-in S140, now marked at both sites.
+
 - One tightness law for the atom (#201, mycelium #301): the stripping,
   bond and observer readings (`Atom::winding_tightness`) and the atom's
   outer tightness read the fill's own law (`atoms::tightness_at`): a

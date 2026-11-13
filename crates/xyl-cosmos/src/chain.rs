@@ -20,12 +20,18 @@
 //! plus the absolute differences in reach and climb and both `out`s (summed,
 //! no squares or roots); between galaxies it is each place's path to its
 //! core plus the arc between the cores. The turn is the midpoint of the
-//! certified angle between the directions (`xyl_core::rotor::angle_between`)
-//! and the chord the midpoint of a certified sine, so `arc` returns an
-//! `Encl::exact` of that reading, not a proven bound. `cell` is a degree
-//! label computed in dyadics; no law reads it.
+//! pivot's certified turn between the directions (`xyl_core::rotor::pivot`,
+//! the relative rotor on its one named plane) and the chord the midpoint of
+//! a certified sine, so `arc` returns an `Encl::exact` of that reading, not
+//! a proven bound. `cell` is a degree label computed in dyadics; no law
+//! reads it.
 
 use crate::package::Si;
+
+/// Radians per degree, `pi / 180`, certified.
+fn per_degree() -> Encl {
+    pi(64).mul(&Encl::exact(xyl_core::ratio!(1, 180)))
+}
 use xyl_core::certified::{pi, Encl};
 use xyl_core::dyadic::Dy;
 use xyl_core::units::Units;
@@ -136,8 +142,8 @@ impl Place {
         &(&self.reach + &self.climb.abs()) + &self.out
     }
 
-    /// The arc to another place. On a shared sphere: the turn between the
-    /// directions (`xyl_core::rotor::angle_between`) times the circle at the
+    /// The arc to another place. On a shared sphere: the pivot's turn between
+    /// the directions (`xyl_core::rotor::pivot`, on its named plane) times the circle at the
     /// inner reach, R sin(s / R) (`bounce::curved_reach`), plus the
     /// differences in reach and climb and both
     /// places' `out`. Between galaxies: each place's path to its core plus the
@@ -150,8 +156,9 @@ impl Place {
             } else {
                 r.clone()
             };
-            let turn = xyl_core::rotor::angle_between(&self.dir, &other.dir, 64)
-                .map(|e| e.mid())
+            // Stand-in S140: The arc is the pivot's turn over one scalar, not per plane.
+            let turn = xyl_core::rotor::pivot(&self.dir, &other.dir, 64)
+                .map(|p| p.degrees.mul(&per_degree()).mid())
                 .unwrap_or(Q::ZERO);
             let inner = self.reach.clone().min(other.reach.clone()).max(Q::ZERO);
             let around = crate::bounce::curved_reach(&inner, &sphere);

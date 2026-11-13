@@ -19,7 +19,8 @@
 //! - [`circle_point`], the cosine and sine of an angle in degrees as the
 //!   exact rational point of the circle the turn carries its first
 //!   generator to.
-//! - [`angle_between`], the certified angle between two exact directions.
+//! - [`pivot`], the relative rotor between two exact unit directions, its
+//!   one plane by generators and its turn in degrees, certified.
 //!
 //! Invariants: a turn's direction is its half-angle, `degrees / 720` of a
 //! turn, cut toward zero to the grid of `2^-bits` once; after that every rotor
@@ -344,28 +345,62 @@ pub fn circle_point(degrees: &Q, bits: u32) -> Option<(Q, Q)> {
     Some((cos, sin))
 }
 
-/// The angle between two directions `a` and `b` (any lengths, exact), in
-/// radians as a certified enclosure: its cosine is `a . b / |a| |b|` (the
-/// lengths' product a certified root of `|a|^2 |b|^2`), and the angle is
-/// `pi / 2 - asin(cos)` for a non-negative cosine and `pi / 2 + asin(-cos)`
-/// otherwise. The directions stay exact; only the angle, which has no
-/// rational form in general, is an enclosure. `None` for a zero direction.
-pub fn angle_between(a: &[Q; 3], b: &[Q; 3], bits: u32) -> Option<crate::certified::Encl> {
-    use crate::certified::{asin_any, pi, sqrt};
-    // Stand-in S034: One unnamed plane's angle stands as the distance under every arc.
-    let dot = a.iter().zip(b).fold(Q::ZERO, |acc, (x, y)| &acc + &(x * y));
-    let norm2 = |v: &[Q; 3]| v.iter().fold(Q::ZERO, |acc, x| &acc + &(x * x));
-    let (na, nb) = (norm2(a), norm2(b));
-    if na.is_zero() || nb.is_zero() {
+/// The pivot between two unit directions (the pair rule, E019; E028): the
+/// relative rotor carrying `a` to `b`, its plane by generators, and its turn
+/// on that plane in degrees.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Pivot<const N: usize> {
+    /// The relative rotor `V = 1 + b a`, exact; `None` for antipodal
+    /// directions, which no one plane carries into each other.
+    pub rotor: Option<Rotor<N>>,
+    /// The plane it turns: its bivector part by generators `(i, j)`, at the
+    /// rotor's scale. Empty for one direction and for antipodal ones.
+    pub planes: Vec<((usize, usize), Q)>,
+    /// The turn on that plane in degrees, `[0, 180]`, certified: a pivot has
+    /// capacity 1 at most, so its one angle is its whole reading.
+    pub degrees: Encl,
+}
+
+/// The pivot between the exact unit directions `a` and `b`: the versor
+/// `V = 1 + b a` carries `a` to `b` by the sandwich, turning the one plane
+/// `b ^ a`, with no root and no normalised dot product. Its turn is read
+/// from the versor's scalar part `c` and scale `V V~`, `cos = 2 c^2 / (V V~) - 1`,
+/// as `90 - (180 / pi) asin(cos)` degrees, certified. One direction turns
+/// 0 degrees and antipodal directions 180, naming no plane. `None` where
+/// either direction is not exactly of unit length.
+pub fn pivot<const N: usize>(a: &[Q; N], b: &[Q; N], bits: u32) -> Option<Pivot<N>> {
+    use crate::certified::{asin_any, pi};
+    let (va, vb) = (crate::cga::base_vector(a), crate::cga::base_vector(b));
+    let unit = |v: &Mv| v.geo(v).scalar_part() == Q::ONE;
+    if !unit(&va) || !unit(&vb) {
         return None;
     }
-    let len = sqrt(&(&na * &nb), bits)?;
-    let cos = Encl::exact(dot.clone()).mul(&len.recip()?);
-    let quarter = pi(bits).mul(&Encl::exact(crate::ratio!(1, 2)));
-    Some(if dot.signum() >= 0 {
-        quarter.sub(&asin_any(&cos))
-    } else {
-        quarter.add(&asin_any(&cos.neg()))
+    let v = Mv::scalar(Q::ONE).add(&vb.geo(&va));
+    let scale = v.geo(&v.reverse()).scalar_part();
+    let Some(inv) = scale.recip() else {
+        return Some(Pivot {
+            rotor: None,
+            planes: Vec::new(),
+            degrees: Encl::exact(Q::int(180)),
+        });
+    };
+    let rotor = Rotor { v, inv };
+    let planes = rotor.dimensions().planes;
+    if planes.is_empty() {
+        return Some(Pivot {
+            rotor: Some(rotor),
+            planes,
+            degrees: Encl::exact(Q::ZERO),
+        });
+    }
+    let c = rotor.v.scalar_part();
+    let cos = &(&Q::int(2) * &(&(&c * &c) * &rotor.inv)) - &Q::ONE;
+    let per_radian = Encl::exact(Q::int(180)).mul(&pi(bits).recip()?);
+    let degrees = Encl::exact(Q::int(90)).sub(&asin_any(&Encl::exact(cos)).mul(&per_radian));
+    Some(Pivot {
+        rotor: Some(rotor),
+        planes,
+        degrees,
     })
 }
 
@@ -537,24 +572,47 @@ mod tests {
         }
     }
 
+    /// The pivot carries one unit direction to the other exactly, names
+    /// its one plane and reads its turn: 0 degrees for one direction, 90
+    /// for perpendicular ones on their plane, 180 for antipodal ones (no
+    /// plane), the same turn either way round on the reversed plane, and a
+    /// direction not of unit length refused.
     #[test]
-    fn the_angle_between_directions_is_enclosed() {
+    fn the_pivot_carries_a_direction_and_reads_its_turn() {
         let q = |a: i64, b: i64, c: i64| [Q::int(a), Q::int(b), Q::int(c)];
-        let pi = crate::certified::pi(64);
-        let half = pi.mul(&crate::certified::Encl::exact(crate::ratio!(1, 2)));
-        // Parallel, perpendicular and opposed, at any lengths.
-        let same = angle_between(&q(2, 0, 0), &q(5, 0, 0), 64).unwrap();
-        assert!(same.contains(&Q::ZERO) || same.hi < crate::ratio!(1, 1_000_000));
-        let right = angle_between(&q(1, 0, 0), &q(0, 3, 0), 64).unwrap();
-        assert!(right.lo <= half.hi && half.lo <= right.hi);
-        let back = angle_between(&q(1, 0, 0), &q(-4, 0, 0), 64).unwrap();
-        assert!(back.lo <= pi.hi && pi.lo <= back.hi);
-        // The same pair either way round, and a zero direction refused.
-        let (ab, ba) = (
-            angle_between(&q(3, 4, 0), &q(0, 1, 1), 64).unwrap(),
-            angle_between(&q(0, 1, 1), &q(3, 4, 0), 64).unwrap(),
+        let within = |e: &Encl, x: i64| e.lo <= Q::int(x) && Q::int(x) <= e.hi;
+        let same = pivot(&q(1, 0, 0), &q(1, 0, 0), 64).unwrap();
+        assert!(same.planes.is_empty() && same.degrees == Encl::exact(Q::ZERO));
+        let right = pivot(&q(1, 0, 0), &q(0, 1, 0), 64).unwrap();
+        assert!(within(&right.degrees, 90), "{:?}", right.degrees);
+        assert_eq!(
+            right.planes.iter().map(|p| p.0).collect::<Vec<_>>(),
+            vec![(1, 2)]
         );
-        assert!(ab.lo <= ba.hi && ba.lo <= ab.hi);
-        assert!(angle_between(&q(0, 0, 0), &q(1, 0, 0), 64).is_none());
+        let turned = right
+            .rotor
+            .as_ref()
+            .unwrap()
+            .apply(&q(1, 0, 0).map(Encl::exact));
+        assert_eq!(
+            turned,
+            q(0, 1, 0).map(Encl::exact),
+            "the pivot carries a to b"
+        );
+        let back = pivot(&q(1, 0, 0), &q(-1, 0, 0), 64).unwrap();
+        assert!(back.rotor.is_none() && back.degrees == Encl::exact(Q::int(180)));
+        // A rational unit pair (3/5, 4/5, 0) and (0, 3/5, 4/5).
+        let (u, w) = (
+            [Q::new(3, 5).unwrap(), Q::new(4, 5).unwrap(), Q::ZERO],
+            [Q::ZERO, Q::new(3, 5).unwrap(), Q::new(4, 5).unwrap()],
+        );
+        let (uw, wu) = (pivot(&u, &w, 64).unwrap(), pivot(&w, &u, 64).unwrap());
+        assert!(uw.degrees.lo <= wu.degrees.hi && wu.degrees.lo <= uw.degrees.hi);
+        let reversed: Vec<Q> = wu.planes.iter().map(|p| -&p.1).collect();
+        assert_eq!(
+            uw.planes.iter().map(|p| p.1.clone()).collect::<Vec<_>>(),
+            reversed
+        );
+        assert!(pivot(&q(2, 0, 0), &q(1, 0, 0), 64).is_none());
     }
 }

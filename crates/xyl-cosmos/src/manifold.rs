@@ -27,7 +27,7 @@
 //!   reach fills (`measure::share_turns`), times 360. `share`: belonging, 1
 //!   at the centre, 1/2 at the reach, falling beyond.
 //! - `gap`, `out_to_star`, `galaxy_place`: distances composed up the chain;
-//!   turns between directions are `xyl_core::rotor::angle_between` at its
+//!   turns between directions are the pivot's (`xyl_core::rotor::pivot`) at its
 //!   midpoint. `gap` and `out_to_star`
 //!   return `None` for a world not in the list.
 //!
@@ -314,11 +314,13 @@ impl Manifold {
         let mean = Encl::exact(self.m0.clone()).add(&self.rate(all).mul(&Encl::exact(age.clone())));
         let (cm, _) = cos_sin_turns(&mean);
         let along = mean.add(&self.twist(&ecc, all).mul(&Encl::exact(age.clone())));
-        let (c, s) = cos_sin_turns(&along);
+        // The phase's exact circle point, turned exactly: a unit direction.
+        let (c, s) = xyl_core::rotor::circle_point(&(&along.mid() * &Q::int(360)), 64)
+            .unwrap_or((Q::ONE, Q::ZERO));
         Bearing {
             dir: self
                 .rotor
-                .apply(&[c, s, Encl::exact(Q::ZERO)])
+                .apply(&[c, s, Q::ZERO].map(Encl::exact))
                 .map(|x| x.mid()),
             r: &self.a * &(&Q::ONE - &(&ecc.mid() * &cm.mid())),
         }
@@ -335,10 +337,16 @@ pub struct Bearing {
     pub r: Q,
 }
 
+/// Radians per degree, `pi / 180`, certified.
+fn per_degree_rad() -> Encl {
+    pi(BITS).mul(&Encl::exact(xyl_core::ratio!(1, 180)))
+}
+
 /// The gap between two worlds of one system at `age` (system tier units).
-/// Within one anchor: the turn between their directions times the smaller
-/// distance, plus the difference in distances. Otherwise a moon's distance
-/// to its giant is added to the giant's gap. No squared lengths or roots.
+/// Within one anchor: the pivot's turn between their directions (on its
+/// named plane) times the smaller distance, plus the difference in
+/// distances. Otherwise a moon's distance to its giant is added to the
+/// giant's gap. No squared lengths or roots.
 /// `None` for a world not in `all`.
 pub fn gap(all: &[Manifold], wa: usize, wb: usize, age: &Q) -> Option<Q> {
     if wa == wb {
@@ -352,8 +360,9 @@ pub fn gap(all: &[Manifold], wa: usize, wb: usize, age: &Q) -> Option<Q> {
     if ma.anchor == mb.anchor {
         let (ba, bb) = (ma.bearing(age, all), mb.bearing(age, all));
         let inner = ba.r.clone().min(bb.r.clone());
-        let turn = xyl_core::rotor::angle_between(&ba.dir, &bb.dir, 64)
-            .map(|e| e.mid())
+        // Stand-in S140: The gap is the pivot's one turn over a scalar sweep, not per plane.
+        let turn = xyl_core::rotor::pivot(&ba.dir, &bb.dir, 64)
+            .map(|p| p.degrees.mul(&per_degree_rad()).mid())
             .unwrap_or(Q::ZERO);
         let sweep = &turn * &inner;
         return Some(&(&sweep + &(&ba.r - &bb.r).abs()) * &dilation(ma.tier, Tier::System));

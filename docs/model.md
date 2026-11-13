@@ -335,8 +335,10 @@ Letters: `h` held, `o` open; `c` is the speed of light.
 - The anchor (`circuit::anchor::of`) is computed from the founding and fixes
   the following values: the rim; one cluster unit and one galaxy unit in
   kpc; the bell; the home galaxy's rim (`rim x galaxy_kpc`); the universe's
-  curvature radius, `rim / pi` (each enclosed sphere's rim is half a great
-  circle), in kpc and in `r_g`; the first stars, at `max(cools_in, 1)`
+  curvature radius at rest, `rim / pi` (each enclosed sphere's rim is half
+  a great circle), in kpc and in `r_g`, which breathes with the bell
+  (`chain::radius`: each echo the enclosure swings by the core's deficit at
+  its rim, `rho_0 (1 + delta_rim cos(360 t / echo))`, #233); the first stars, at `max(cools_in, 1)`
   bells; and the parent's admitted spin, its torsion share and the
   firmament's margin. The anchor is stored once per process
   (`circuit::anchor::set`, a `OnceLock`), so the first founding in a

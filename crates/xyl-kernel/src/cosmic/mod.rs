@@ -315,7 +315,7 @@ impl<'g> Cosmic<'g> {
     /// Where star `n` is at count `t` (rings). None for a star not yet
     /// witnessed.
     pub fn place(&self, n: u64, t: Dy) -> Option<Place> {
-        self.systems.get(&n).map(|w| w.star.place(t, &radius()))
+        self.systems.get(&n).map(|w| w.star.place(t, &radius(t)))
     }
 
     /// The arc (kpc) between two witnessed stars at count `t` (rings), on
@@ -396,6 +396,6 @@ impl<'g> Cosmic<'g> {
 /// between two stars ([`Cosmic::distance`], `transit::Network::arc_at`).
 pub fn arc_kpc(a: &Star, b: &Star, t: Dy) -> Dy {
     // Stand-in S140: The separation is one scalar arc, not the pivot per plane.
-    let r = radius();
+    let r = radius(t);
     a.place(t, &r).arc_kpc(&b.place(t, &r), &r)
 }

@@ -525,8 +525,9 @@ where it belongs to one.
     each pulse ring is one breath of the manifold. Done: the field's pulse as
     one breath with no drift and its share falling as the manifold's measure
     `d^n`; the horizon derived (T20) and axial with spin, tilt and vents
-    (T21). Order: the manifold's radius breathing (`chain::radius`), a
-    smooth dimension at the bulge's edge, the throat's push swinging with
+    (T21); the universe's radius breathing with the bell (`chain::radius`).
+    Order: a galaxy's sphere breathing with its core's bell, a smooth
+    dimension at the bulge's edge, the throat's push swinging with
     the echo (S114), the reverberation read at `t`, orbit rates breathing,
     the bell's period, the founding swing and the kept kinds on the throat
     orbit (S142), the centre's crossing share (S017), the field's step per

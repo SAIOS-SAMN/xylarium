@@ -160,8 +160,8 @@ fn passages(u: &Universe<'_>, k: usize) -> String {
 /// the first `k` living peoples' stars.
 fn cells(u: &Universe<'_>, k: usize) -> String {
     let net = &u.network;
-    let sphere = xyl_cosmos::chain::radius();
     let now = Dy::from_q(&u.now);
+    let sphere = xyl_cosmos::chain::radius(now);
     let places: BTreeMap<u64, xyl_cosmos::chain::Place> = net
         .sample
         .iter()

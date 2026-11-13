@@ -305,7 +305,7 @@ fn ring_star(
         }
         // The star's place: its manifold position at `to`. A breath returns,
         // so the pulses leave it no drift.
-        let place = w.star.place(to_ring, &radius());
+        let place = w.star.place(to_ring, &radius(to_ring));
         let (delay, d) = path(node, &place, to_ring);
         let k = bell.arrivals(delay, from_ring, to_ring);
         if k == 0 {

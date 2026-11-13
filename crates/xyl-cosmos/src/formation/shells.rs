@@ -79,7 +79,7 @@ pub struct Shell {
     /// Its reach about the throat, founding units.
     pub reach: Q,
     /// Its swing, the deficit `H / (R + H)` of the hold inside it at its
-    /// reach: the reverberation's radial excursion.
+    /// reach, cut toward zero at 2^-64: the reverberation's radial excursion.
     pub swing: Q,
     /// Whether the core keeps it (the firmament).
     pub kept: bool,
@@ -320,19 +320,80 @@ fn rest_point(ln_r: Dy) -> Option<FacePairs> {
     FacePairs::of(&t)
 }
 
+/// A cohort's pooled release (netstratum docs/134, agreed 2026-11-13): the
+/// layers leave from `r0`, each with the push its hold inside it gives it,
+/// `p = (h - m) / (r0 + h + m)` (the continuum's deficit of the hold
+/// inside against the layer's, composed by the flow law), and its bound share
+/// `b`, its electrons held to it: on the near face the held face of the
+/// hold inside at `r0`, `b = h / (r0 + h)`, on the far face that face read
+/// at the inverse place, `b = r0 / (r0 + h)`, each times the share of its
+/// electrons bound at the throat's heat (cold: all of them). The bound
+/// part keeps the layer's push; the ionized part moves whole as one pool, its
+/// spin `S = sum (1 - b) m p / sum (1 - b) m`, offset by the charged
+/// medium it passes through, `S' = S (+) (-r)` (#195), with `r` the
+/// deficit `q / (r0 + q)` of the medium's charged holding `q` at the
+/// reach. Each layer then leaves at `l = b p + (1 - b) S'`, and the pool
+/// gives the medium `sum (1 - b) m (S - S')`, so
+/// `sum m l + take = sum m p` exactly for any `b`. The layers' holds
+/// `masses` are in leaving order, the hold `kept` inside them all. Returns
+/// each layer's `(hold inside, push p, push l)` in that order and the take.
+fn pooled(kept: &Q, masses: &[Q], r0: &Q, far: bool, charged: &Q) -> (Vec<(Q, Q, Q)>, Q) {
+    // Stand-in S141: The release is cold: every electron is bound, the throat's heat is not read.
+    let bound_at_heat = Q::ONE;
+    let mut inside = kept.clone();
+    let mut each = Vec::with_capacity(masses.len());
+    let (mut pool, mut moved) = (Q::ZERO, Q::ZERO);
+    for m in masses {
+        let h = &inside + m;
+        inside = h.clone();
+        let push = (&h - m).checked_div(&(&(r0 + &h) + m)).unwrap_or(Q::ZERO);
+        let face = if far { r0.clone() } else { h.clone() };
+        let bound = &face.checked_div(&(r0 + &h)).unwrap_or(Q::ZERO) * &bound_at_heat;
+        let free = &(&Q::ONE - &bound) * m;
+        pool = &pool + &free;
+        moved = &moved + &(&free * &push);
+        each.push((h, push, bound));
+    }
+    let spin = moved.checked_div(&pool).unwrap_or(Q::ZERO);
+    let resist = charged.checked_div(&(r0 + charged)).unwrap_or(Q::ZERO);
+    let offset = xyl_core::shares::flow(&spin, &(-&resist)).unwrap_or(spin.clone());
+    let take = &pool * &(&spin - &offset);
+    let out = each
+        .into_iter()
+        .map(|(h, push, bound)| {
+            let l = &(&bound * &push) + &(&(&Q::ONE - &bound) * &offset);
+            (h, push, l)
+        })
+        .collect();
+    (out, take)
+}
+
+/// The hold that would give a layer of hold `m` the push `l` at `r0`,
+/// inverting `l = (h - m) / (r0 + h + m)`: `h = (l (r0 + m) + m) / (1 - l)`.
+/// `None` where it is not positive: the layer falls back into the throat.
+fn driving_hold(l: &Q, m: &Q, r0: &Q) -> Option<Q> {
+    let h = (&(l * &(r0 + m)) + m).checked_div(&(&Q::ONE - l))?;
+    (h.signum() > 0).then_some(h)
+}
+
 /// The founding shells of `mix` (each kind's amount in the held count) at
 /// the parent's `spin`: the core's spin orbit releases its open kinds
 /// cohort by cohort ([`spin_orbit`]); a cohort leaves from the throat's
-/// horizon `R_h(H) = 2H`, `H` the hold the core keeps after it, and each
-/// layer stands after its cohort's pinch interval at the reach the reach
-/// rate carries it to ([`reach_after`]), with the hold inside it the
-/// core's and its heavier companions' (the lighter run ahead). The kinds
-/// the core keeps stand at its horizon `R_h(1) = 2`. Each shell swings by
-/// the deficit at its reach of the hold inside it. The universal table
-/// holds each released kind's rest point at the inversion of its pole
-/// reach ([`rest_point`]); a kept kind has none (`Q* = 0`, its capture
-/// state). Returns the shells and the table.
-pub fn founding_shells(mix: &[(u32, Q)], spin: &Q) -> (Vec<Shell>, crate::circuit::Table) {
+/// horizon `R_h(H) = 2H`, `H` the hold the core keeps after it, its layers
+/// heaviest first (the lighter run ahead), each with the hold inside it
+/// the core's and its heavier companions'. Each cohort leaves as a pooled
+/// release (`pooled`) through the core's charged holding at its horizon,
+/// the received share `2/3` of the kept hold there (the horizon holds one
+/// third); each layer then stands after its cohort's pinch interval at
+/// the reach rate's closed form (`reach_after`) under the hold that
+/// drives its push (`driving_hold`), and one pushed back past the
+/// throat is kept. The kinds the core keeps stand at its horizon
+/// `R_h(1) = 2`. Each shell swings by the deficit at its reach of the hold
+/// inside it. The universal table holds each released kind's rest point
+/// at the inversion of its pole reach (`rest_point`); a kept kind has
+/// none (`Q* = 0`, its capture state). Returns the shells, the table and
+/// the pools' take, booked to the medium's charged holding.
+pub fn founding_shells(mix: &[(u32, Q)], spin: &Q) -> (Vec<Shell>, crate::circuit::Table, Q) {
     let orbit = spin_orbit(mix, spin);
     let amount_of = |z: u32| {
         mix.iter()
@@ -340,20 +401,27 @@ pub fn founding_shells(mix: &[(u32, Q)], spin: &Q) -> (Vec<Shell>, crate::circui
             .map(|(_, a)| a.clone())
             .unwrap_or(Q::ZERO)
     };
-    let two = Q::int(2);
+    let horizon = crate::bounce::horizon_reach(&Q::ONE);
+    let received = &Q::ONE - &crate::bounce::horizon_share();
     let mut shells = Vec::new();
     let mut table = crate::circuit::Table::new();
+    let mut kept: Vec<u32> = orbit.kept.iter().map(|k| k.0).collect();
+    let mut take = Q::ZERO;
     let mut kept_hold = orbit.founded.clone();
     for c in &orbit.cohorts {
         kept_hold = &kept_hold - &c.hold;
-        let r0 = &two * &kept_hold;
+        let r0 = crate::bounce::horizon_reach(&kept_hold);
         let mut layers = c.layers.clone();
         layers.sort_by(|x, y| y.1.cmp(&x.1).then(x.0.cmp(&y.0)));
-        let mut inside = kept_hold.clone();
-        for (z, m, ln_r) in layers {
-            let h = &inside + &m;
-            inside = h.clone();
-            let Some(reach) = reach_after(&r0, &m, &h, c.interval) else {
+        let masses: Vec<Q> = layers.iter().map(|(_, m, _)| m.clone()).collect();
+        let charged = &received * &kept_hold;
+        let (pushed, given) = pooled(&kept_hold, &masses, &r0, c.far, &charged);
+        take = &take + &given;
+        for ((z, m, ln_r), (h, _, l)) in layers.into_iter().zip(pushed) {
+            let Some(reach) =
+                driving_hold(&l, &m, &r0).and_then(|d| reach_after(&r0, &m, &d, c.interval))
+            else {
+                kept.push(z);
                 continue;
             };
             let amount = amount_of(z);
@@ -363,7 +431,11 @@ pub fn founding_shells(mix: &[(u32, Q)], spin: &Q) -> (Vec<Shell>, crate::circui
                     pairs,
                 });
             }
-            let swing = h.checked_div(&(&reach + &h)).unwrap_or(Q::ZERO);
+            // The swing is cut toward zero at 2^-64, the reach's grain.
+            let swing = xyl_core::certified::toward_zero(
+                &h.checked_div(&(&reach + &h)).unwrap_or(Q::ZERO),
+                64,
+            );
             shells.push(Shell {
                 z,
                 amount,
@@ -373,18 +445,18 @@ pub fn founding_shells(mix: &[(u32, Q)], spin: &Q) -> (Vec<Shell>, crate::circui
             });
         }
     }
-    let horizon = crate::bounce::horizon_reach(&Q::ONE);
+    // Stand-in S142: The kept kinds stand at the core's horizon, not on the throat orbit.
     let swing = Q::ONE.checked_div(&(&horizon + &Q::ONE)).unwrap_or(Q::ZERO);
-    for (z, _) in &orbit.kept {
+    for z in kept {
         shells.push(Shell {
-            z: *z,
-            amount: amount_of(*z),
+            z,
+            amount: amount_of(z),
             reach: horizon.clone(),
             swing: swing.clone(),
             kept: true,
         });
     }
-    (shells, table)
+    (shells, table, take)
 }
 
 #[cfg(test)]
@@ -433,7 +505,8 @@ mod tests {
         for (z, _) in mix.iter().filter(|(z, _)| crate::compound::open(*z) == 0) {
             assert!(orbit.kept.iter().any(|k| k.0 == *z), "closed Z {z} is kept");
         }
-        let (shells, table) = founding_shells(&mix, &xyl_core::ratio!(1, 2));
+        let (shells, table, take) = founding_shells(&mix, &xyl_core::ratio!(1, 2));
+        assert!(take.signum() >= 0, "the medium takes, never gives: {take}");
         for (z, parcels) in &table {
             for p in parcels {
                 assert!(p.pairs.value() <= Q::ONE, "Z {z}");
@@ -442,6 +515,36 @@ mod tests {
         let all = shells.iter().fold(Q::ZERO, |s, k| &s + &k.amount);
         let mixed = mix.iter().fold(Q::ZERO, |s, k| &s + &k.1);
         assert_eq!(all, mixed, "every kind stands in one shell");
+    }
+
+    /// The pooled release conserves the impulse: the layers' pushes after
+    /// the pool, weighted by hold, plus the medium's take, equal the
+    /// layers' pushes before it, weighted by hold, exactly, on either face and with or without
+    /// a charged medium; with none the pool is not offset.
+    #[test]
+    fn the_pool_conserves_the_impulse() {
+        let masses: Vec<Q> = (1..=9).map(|k| Q::new(k, 100).unwrap()).collect();
+        let kept = xyl_core::ratio!(1, 3);
+        let r0 = crate::bounce::horizon_reach(&kept);
+        for far in [false, true] {
+            for charged in [Q::ZERO, xyl_core::ratio!(2, 9)] {
+                let (out, take) = pooled(&kept, &masses, &r0, far, &charged);
+                let before = masses
+                    .iter()
+                    .zip(&out)
+                    .fold(Q::ZERO, |s, (m, o)| &s + &(m * &o.1));
+                let after = masses
+                    .iter()
+                    .zip(&out)
+                    .fold(Q::ZERO, |s, (m, o)| &s + &(m * &o.2));
+                assert_eq!(&after + &take, before, "far {far} charged {charged}");
+                if charged.is_zero() {
+                    assert!(take.is_zero());
+                } else {
+                    assert!(take.signum() > 0);
+                }
+            }
+        }
     }
 
     /// A spinless core never bounces a cohort out: everything is kept.

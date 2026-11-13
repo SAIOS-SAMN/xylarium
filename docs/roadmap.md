@@ -1122,10 +1122,10 @@ layer, each with the quantity that is to derive it.
   the ley lines per reading (`LINES_PER_READING`, 1024) are resolution
   choices.
 - **Grids** (the resolution a quantity is cut to toward zero, `2^-b`, by
-  `xyl_core::certified::toward_zero`): b = 232 for founding matter
-  (`formation/shells.rs` nucleus_grain, the filter's takes); 64 for
-  a nucleus's neutrons read for its weight (`circuit::rest_neutrons`; the
-  founding shells themselves are exact), the turning taken (`circuit::Substrate::spin_orbit`), the
+  `xyl_core::certified::toward_zero`): 64 for
+  a nucleus's neutrons read for its weight (`circuit::rest_neutrons`), the
+  founding shells' reaches, swings and rest points (`formation::founding_shells`),
+  the turning taken (`formation::spin_orbit`), the
   curved reach (`bounce::curved_reach`) and star masses
   (`galaxy/star.rs` MASS_BITS); 60 for field readings (`field.rs` GRID),
   star radii (`galaxy/star.rs`) and the turning per ring

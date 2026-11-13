@@ -419,10 +419,26 @@ sites are restated. The derivations are in
   companions, the lighter running ahead), stands after the cohort's pinch
   interval at the reach rate's closed form,
   `(r - r0) + 2m ln(r / r0) = 2 (h - m) N*`, solved for `r` (expanding
-  where `h > m`, returning where `m > h`). Its swing is the deficit of the
-  hold inside it, `delta = h / (r + h)`, the band `r (1 +/- delta)`. The
-  kinds the core keeps stand at its horizon `R_h(1) = 2`. Calibre:
+  where `h > m`, returning where `m > h`), under the hold that drives its
+  pooled push (below). Its swing is the deficit of the hold inside it,
+  `delta = h / (r + h)` on the 2^-64 grid, the band `r (1 +/- delta)`.
+  The kinds the core keeps stand at its horizon `R_h(1) = 2` (S142, until
+  the throat orbit, T14). Calibre:
   founding. Status: built.
+- Pooled release (`formation::founding_shells`, `pooled`; agreed with
+  netstratum 2026-11-13, its docs/134): each layer leaves `r0` with the
+  push of the hold inside it, `p = (h - m) / (r0 + h + m)`, and its bound
+  share `b`, on the near face `h / (r0 + h)` and on the far face that face
+  at the inverse place, `r0 / (r0 + h)`, times the share of its electrons
+  bound at the throat's heat (cold: all, S141). The ionized part moves as
+  one pool, `S = sum (1 - b) m p / sum (1 - b) m`, offset by the charged
+  medium at the reach, `S' = S (+) (-r)`, `r = q / (r0 + q)`, `q` the
+  kept hold's received share `2/3` at its horizon; each layer leaves at
+  `l = b p + (1 - b) S'` and stands where the reach rate carries it under
+  the hold that drives `l`, `h' = (l (r0 + m) + m) / (1 - l)` (a layer with
+  `h' <= 0` falls back and is kept). The medium takes
+  `sum (1 - b) m (S - S')`, so `sum m l + take = sum m p` exactly.
+  Calibre: founding. Status: built.
 - Rest point (`formation::founding_shells`, `circuit::rest_neutrons`): a
   released layer rests on the far face at the inversion of its pole reach,
   `Q* / Z = 1 / r = exp(-ln r)`, gridded toward zero at 2^-64

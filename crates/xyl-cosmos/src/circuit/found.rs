@@ -154,7 +154,7 @@ impl Substrate {
         // The shells are a separate stage, cached under the shells' digest
         // and the share: a change to a law above them reads them back.
         let shells_key = format!("{}-{}", crate::package::shells_digest(), share).replace('/', "-");
-        let (shells, neutrons) = match super::cache::load_shells(&shells_key) {
+        let (shells, neutrons, _take) = match super::cache::load_shells(&shells_key) {
             Some(cached) => cached,
             None => {
                 let elements = crate::elements::founded(&share).ok()?;

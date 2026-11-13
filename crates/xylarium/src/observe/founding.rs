@@ -28,7 +28,7 @@ fn founding_mix(o: &Options) -> Result<(Vec<(u32, Q)>, Q), String> {
 pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
     let (mix, spin) = founding_mix(o)?;
     let orbit = xyl_cosmos::formation::spin_orbit(&mix, &spin);
-    let (shells, _) = xyl_cosmos::formation::founding_shells(&mix, &spin);
+    let (shells, _, take) = xyl_cosmos::formation::founding_shells(&mix, &spin);
     let kept: Vec<u32> = shells.iter().filter(|s| s.kept).map(|s| s.z).collect();
     let out_reach = || shells.iter().filter(|s| !s.kept).map(|s| s.reach.clone());
     let (near, far) = (out_reach().min(), out_reach().max());
@@ -43,7 +43,7 @@ pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
             "The founding's release: {} kinds at the parent's spin {}; {} cohorts leave, ",
             "the core's spin after them {}; the core keeps {} kinds (Z {:?}..{:?}), ",
             "{} of the founded hold; the released reaches {} .. {} founding units; ",
-            "rim {} founding units\n"
+            "rim {} founding units; the pools' take, booked to the core's charged holding, {}\n"
         ),
         mix.len(),
         show(&spin),
@@ -55,7 +55,8 @@ pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
         show(&orbit.held),
         dash_or(near.as_ref()),
         dash_or(far.as_ref()),
-        show(&rim)
+        show(&rim),
+        show(&take)
     );
     for (k, c) in orbit.cohorts.iter().enumerate() {
         let lo = c.layers.iter().map(|l| l.2).min();
@@ -115,7 +116,7 @@ pub(super) fn founding_read(o: &Options) -> Result<String, String> {
     let (mix, spin) = founding_mix(o)?;
     let present = mix.len();
     let top = mix.iter().map(|(z, _)| *z).max().unwrap_or(0);
-    let (shells, neutrons) = xyl_cosmos::formation::founding_shells(&mix, &spin);
+    let (shells, neutrons, _) = xyl_cosmos::formation::founding_shells(&mix, &spin);
     let mut out = format!(
         "The founding with the table to Z {}: {present} kinds founded (heaviest Z {top})\n",
         xyl_cosmos::elements::TOP_Z

@@ -21,7 +21,7 @@ use xyl_core::codec::{Dec, Enc};
 /// load.
 static DIR: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
 
-const VERSION: u32 = 11;
+const VERSION: u32 = 12;
 
 /// Names the directory the founding is cached in (a universe's home). The
 /// first call in a process wins; without one, nothing is cached.
@@ -170,8 +170,8 @@ fn get_table(d: &mut Dec) -> Option<super::weights::Table> {
 }
 
 /// The founding shells as `formation::founding_shells` returns them: each
-/// shell and the universal table.
-pub(crate) type Shells = (Vec<crate::formation::Shell>, super::weights::Table);
+/// shell, the universal table and the pools' take.
+pub(crate) type Shells = (Vec<crate::formation::Shell>, super::weights::Table, Q);
 
 /// The cached founding shells for `key` (`shells-{key}` in the directory),
 /// if the directory holds them whole.
@@ -204,6 +204,7 @@ fn encode_shells(s: &Shells) -> Vec<u8> {
             .u32(u32::from(k.kept));
     }
     put_table(&mut e, &s.1);
+    e.q(&s.2);
     e.buf
 }
 
@@ -225,7 +226,8 @@ fn decode_shells(buf: &[u8]) -> Option<Shells> {
         });
     }
     let table = get_table(&mut d)?;
-    d.done().then_some((shells, table))
+    let take = d.q()?;
+    d.done().then_some((shells, table, take))
 }
 
 /// The cached founding for `key`, if the directory holds one that reads whole.

@@ -31,7 +31,12 @@ may change public APIs and the model's laws.
   inversion of its pole reach, `Q* / Z = 1 / r`. The stacks, the final
   share `s_final`, the meeting filter, its contact and grip are deleted
   (S119 and S120 retired); the firmament is what the orbit keeps; the
-  core's spin and the founding read one release. Cache version 11.
+  core's spin and the founding read one release. Each cohort leaves as a
+  pooled release (agreed with netstratum): a layer's bound share keeps the
+  layer's push, the ionized parts move as one pool offset by the charged
+  medium, `S' = S (+) (-r)` (#195), and the medium's take closes the
+  impulse exactly. The release is cold (S141) and the kept kinds stand at
+  the horizon (S142). Cache version 12.
 
 - The founding's pushes and reaches are held as face pairs
   (`shares::FacePairs`, #210) instead of cut to the 2^-64 grid: the

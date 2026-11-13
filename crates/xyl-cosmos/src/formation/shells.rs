@@ -334,30 +334,36 @@ fn rest_point(ln_r: Dy) -> Option<FacePairs> {
 /// deficit `q / (r0 + q)` of the medium's charged holding `q` at the
 /// reach. Each layer then leaves at `l = b p + (1 - b) S'`, and the pool
 /// gives the medium `sum (1 - b) m (S - S')`, so
-/// `sum m l + take = sum m p` exactly for any `b`. The layers' holds
+/// `sum m l + take = sum m p` exactly for any `b`. Holds, pushes, shares
+/// and the spins are read on the founding grain ([`grain`]); what the
+/// grain cuts from the pool goes to the take with the offset. The layers' holds
 /// `masses` are in leaving order, the hold `kept` inside them all. Returns
 /// each layer's `(hold inside, push p, push l)` in that order and the take.
 fn pooled(kept: &Q, masses: &[Q], r0: &Q, far: bool, charged: &Q) -> (Vec<(Q, Q, Q)>, Q) {
     // Stand-in S141: The release is cold: every electron is bound, the throat's heat is not read.
     let bound_at_heat = Q::ONE;
-    let mut inside = kept.clone();
+    let mut inside = grain(kept);
     let mut each = Vec::with_capacity(masses.len());
     let (mut pool, mut moved) = (Q::ZERO, Q::ZERO);
     for m in masses {
-        let h = &inside + m;
+        let m = grain(m);
+        let h = &inside + &m;
         inside = h.clone();
-        let push = (&h - m).checked_div(&(&(r0 + &h) + m)).unwrap_or(Q::ZERO);
+        let push = grain(&(&h - &m).checked_div(&(&(r0 + &h) + &m)).unwrap_or(Q::ZERO));
         let face = if far { r0.clone() } else { h.clone() };
-        let bound = &face.checked_div(&(r0 + &h)).unwrap_or(Q::ZERO) * &bound_at_heat;
-        let free = &(&Q::ONE - &bound) * m;
+        let bound = grain(&(&face.checked_div(&(r0 + &h)).unwrap_or(Q::ZERO) * &bound_at_heat));
+        let free = &(&Q::ONE - &bound) * &m;
         pool = &pool + &free;
         moved = &moved + &(&free * &push);
         each.push((h, push, bound));
     }
-    let spin = moved.checked_div(&pool).unwrap_or(Q::ZERO);
+    let spin = grain(&moved.checked_div(&pool).unwrap_or(Q::ZERO));
     let resist = charged.checked_div(&(r0 + charged)).unwrap_or(Q::ZERO);
-    let offset = xyl_core::shares::flow(&spin, &(-&resist)).unwrap_or(spin.clone());
-    let take = &pool * &(&spin - &offset);
+    let offset = grain(&xyl_core::shares::flow(&spin, &(-&resist)).unwrap_or(spin.clone()));
+    // The take is what the pool moved less what it moves after the medium:
+    // the offset and the grain's remainder alike go to the medium, so the
+    // books close exactly.
+    let take = &moved - &(&pool * &offset);
     let out = each
         .into_iter()
         .map(|(h, push, bound)| {
@@ -366,6 +372,13 @@ fn pooled(kept: &Q, masses: &[Q], r0: &Q, far: bool, charged: &Q) -> (Vec<(Q, Q,
         })
         .collect();
     (out, take)
+}
+
+/// `x` cut toward zero at the founding's grain, 2^-64: holds, pushes and
+/// shares on a layer are readings of its counts, and summed on the grain
+/// their denominators stay bounded.
+fn grain(x: &Q) -> Q {
+    xyl_core::certified::toward_zero(x, 64)
 }
 
 /// The hold that would give a layer of hold `m` the push `l` at `r0`,
@@ -410,14 +423,15 @@ pub fn founding_shells(mix: &[(u32, Q)], spin: &Q) -> (Vec<Shell>, crate::circui
     let mut kept_hold = orbit.founded.clone();
     for c in &orbit.cohorts {
         kept_hold = &kept_hold - &c.hold;
-        let r0 = crate::bounce::horizon_reach(&kept_hold);
+        let r0 = crate::bounce::horizon_reach(&grain(&kept_hold));
         let mut layers = c.layers.clone();
         layers.sort_by(|x, y| y.1.cmp(&x.1).then(x.0.cmp(&y.0)));
         let masses: Vec<Q> = layers.iter().map(|(_, m, _)| m.clone()).collect();
-        let charged = &received * &kept_hold;
+        let charged = &received * &grain(&kept_hold);
         let (pushed, given) = pooled(&kept_hold, &masses, &r0, c.far, &charged);
         take = &take + &given;
         for ((z, m, ln_r), (h, _, l)) in layers.into_iter().zip(pushed) {
+            let m = grain(&m);
             let Some(reach) =
                 driving_hold(&l, &m, &r0).and_then(|d| reach_after(&r0, &m, &d, c.interval))
             else {
@@ -523,7 +537,7 @@ mod tests {
     /// a charged medium; with none the pool is not offset.
     #[test]
     fn the_pool_conserves_the_impulse() {
-        let masses: Vec<Q> = (1..=9).map(|k| Q::new(k, 100).unwrap()).collect();
+        let masses: Vec<Q> = (1..=9).map(|k| Q::new(k, 128).unwrap()).collect();
         let kept = xyl_core::ratio!(1, 3);
         let r0 = crate::bounce::horizon_reach(&kept);
         for far in [false, true] {
@@ -538,10 +552,16 @@ mod tests {
                     .zip(&out)
                     .fold(Q::ZERO, |s, (m, o)| &s + &(m * &o.2));
                 assert_eq!(&after + &take, before, "far {far} charged {charged}");
+                // With no charged medium the take is only the grain's
+                // remainder, under a grain (2^-64) of the pool, so well under
+                // the whole hold times 2^-62.
+                let held = masses.iter().fold(Q::ZERO, |s, m| &s + m);
+                let bound = &held * &Q::new(1, 1 << 62).unwrap();
+                assert!(take.signum() >= 0, "far {far}");
                 if charged.is_zero() {
-                    assert!(take.is_zero());
+                    assert!(take < bound, "far {far}: {take}");
                 } else {
-                    assert!(take.signum() > 0);
+                    assert!(take > bound, "far {far}: {take}");
                 }
             }
         }

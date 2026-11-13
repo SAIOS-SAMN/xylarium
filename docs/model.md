@@ -1866,7 +1866,8 @@ and the order in which that is to be opened up.
   moons through AU, metres and kilograms; the spheres' radii through kpc.
   Between tiers the chain's own map is `manifold::dilation`.
 - **Relations not read in the lowest common tier.** `pulse::hear` weighs
-  bells over a flat arc in kpc as one complex phasor on one plane;
+  bells by `M / d` over a scalar arc in kpc (S025, S140), though each bell's
+  arrival is now its winding on the T lane and its planes, read first-degree;
   chronometry adds distances in kpc; galaxies carry no cross-ties.
 - **Separation as one scalar.** The pivot's turn (`xyl_core::rotor::pivot`)
   is the distance under every arc (S140); the dot product and root of the
@@ -1960,8 +1961,8 @@ ancient seats, #94).
     passages the weight is conserved, never faded by disuse; clearing it
     takes a passage of the opposite sign, its coercivity.
   - **The signal.** It is the pulse, the bell and its echo, carried from
-    link to link by each link's weight and delay. This replaces the sum of
-    every bell as one phasor over a flat arc (`pulse::hear`).
+    link to link by each link's weight and delay. This replaces the weight
+    of every bell over a scalar arc (`pulse::hear`).
   - **Friction.** It is what a link cannot hold, the residual `n / 3`
     turned to writhe (T10): the loss at each junction.
 - **One structure for matter and minds.** A council's convergence is the
@@ -2109,7 +2110,8 @@ clean: their lanes are never summed, ordered or compared as one number.
     giant; tidal locking with an equal-split season.
   - Mass-weighted means stand for merged bodies and for a world's reach.
   - `chain::Place::arc` folds a relation across tiers into one distance.
-  - `pulse::hear` sums every bell into one phasor.
+  - `pulse::hear` weighs every bell over one scalar arc (S140), its
+    arrivals read per plane and on the T lane.
 - **Life.** A world keeps its single best lineage, its best medium decides
   its chemistries, and sterilisation and a mind's completion are booleans
   where graded survival shares exist.

@@ -35,6 +35,7 @@ use crate::chain::Place;
 use crate::galaxy::{star, Star};
 use crate::origin::Origin;
 use xyl_core::dyadic::Dy;
+use xyl_core::rotor::Winding;
 use xyl_core::Q;
 
 /// Light speed in kpc per ring: the bell in core time (`Anchor::bell`,
@@ -164,7 +165,10 @@ pub struct Hearing {
     pub dominant: usize,
     /// The loudest bell's share of the summed intensity, in (0, 1].
     pub dominance: Dy,
-    /// Phase coherence: the phasor sum's length over the summed intensity, in [0, 1].
+    /// Phase coherence with the loudest bell, first-degree (E011): each
+    /// bell's share of the intensity times its arrival planes' overlap with
+    /// the loudest bell's and `1 - arc / 180` of their phase difference on
+    /// the T lane, summed, in [0, 1]. No phasor, cosine or root.
     pub coherence: Dy,
     /// The summed intensity (suns per kpc).
     pub intensity: Dy,
@@ -179,7 +183,9 @@ pub struct Relay {
     pub from: Option<usize>,
     /// Wavefront route length from the core along the relay chain (kpc).
     pub route: Dy,
-    /// Continuity, cos(2 pi detour / wavelength), in [-1, 1]; 1 for a direct route.
+    /// Continuity: the faces' push of the detour's phase, `1 - arc / 90`
+    /// with `arc` its shorter arc in degrees, in [-1, 1]; 1 for a direct
+    /// route.
     pub continuity: Dy,
 }
 
@@ -224,11 +230,13 @@ pub fn relays(nodes: &[Node], t: Dy) -> Vec<Relay> {
             None => from_core[i],
         };
         let detour = route - from_core[i];
-        // Stand-in S026: Relay continuity is cos(2 pi detour / lambda), every hole in phase.
-        let continuity = ((Dy::int(2) * Dy::pi() * detour)
-            .div(&lambda)
-            .unwrap_or_default())
-        .cos();
+        // The detour's phase on the T lane, its shorter arc in degrees; the
+        // continuity is the faces' push of that arc, held less passed,
+        // `1 - arc / 90`, first-degree (E011).
+        let phase = Winding::of_turns(&detour.div(&lambda).unwrap_or_default().to_q());
+        let continuity = Dy::from_q(
+            &(&Q::ONE - &xyl_core::hopf::arc(&phase.degrees).over(xyl_core::nonzero!(90))),
+        );
         out[i] = Relay {
             from,
             route,
@@ -243,44 +251,106 @@ pub fn relays(nodes: &[Node], t: Dy) -> Vec<Relay> {
 pub fn hear(place: &Place, nodes: &[Node], relays: &[Relay], t: Dy) -> Option<Hearing> {
     let r = crate::chain::radius();
     let lambda = wavelength_kpc();
-    let (mut sum, mut re, mut im) = (Dy::ZERO, Dy::ZERO, Dy::ZERO);
-    let mut best: Option<(usize, Dy)> = None;
+    // Each live bell: its intensity, its arrival on the T lane (whole
+    // wavelengths and phase) and the planes it arrives on.
+    let mut heard: Vec<(usize, Dy, Winding, Option<[Q; 3]>)> = Vec::new();
     for (k, node) in nodes.iter().enumerate() {
         if node.born > t {
             continue;
         }
-        let d = place.arc_kpc(&node.place(t, &r), &r).max(Dy::sci(1, -6));
+        let there = node.place(t, &r);
+        let d = place.arc_kpc(&there, &r).max(Dy::sci(1, -6));
         // Weight I = M / d (first degree, in place of M / d^2).
-        // Stand-in S025: Intensity falls as M / d and every bell sums as one flat phasor.
+        // Stand-in S025: Intensity falls as M / d, the hold missing from its denominator.
         let i = node.mass.div(&d).unwrap_or_default();
         // Path: the route along the relay chain to this node, plus the arc
         // from it to the place.
         let path = relays.get(k).map(|r| r.route).unwrap_or(Dy::ZERO) + d;
-        let (s, c) = ((Dy::int(2) * Dy::pi() * path)
-            .div(&lambda)
-            .unwrap_or_default())
-        .sin_cos();
-        sum += i;
-        re += i * c;
-        im += i * s;
-        if best.is_none_or(|(_, b)| i > b) {
-            best = Some((k, i));
-        }
+        let arrival = Winding::of_turns(&path.div(&lambda).unwrap_or_default().to_q());
+        heard.push((k, i, arrival, arrival_planes(place, &there)));
     }
-    let (k, top) = best?;
-    // The phasor sum's length from its phase: re cos(phi) + im sin(phi), with
-    // phi the sum's angle (avoids the root of re^2 + im^2).
-    let phi = if re.signum() == 0 {
-        Dy::pi() * xyl_core::dyadic!(1, 2) * Dy::int(i64::from(im.signum()))
-    } else {
-        (im.div(&re).unwrap_or_default()).atan() + if re.signum() < 0 { Dy::pi() } else { Dy::ZERO }
-    };
-    let (s, c) = phi.sin_cos();
-    let length = (re * c + im * s).abs();
+    let sum = heard.iter().fold(Dy::ZERO, |s, h| s + h.1);
+    let (k, top, dom_phase, dom_planes) = heard
+        .iter()
+        .max_by(|a, b| a.1.cmp(&b.1).then(b.0.cmp(&a.0)))
+        .map(|h| (h.0, h.1, h.2.clone(), h.3.clone()))?;
+    let coherence = heard.iter().fold(Dy::ZERO, |c, (_, i, phase, planes)| {
+        let share = i.div(&sum).unwrap_or_default();
+        let along = match (planes, &dom_planes) {
+            (Some(p), Some(q)) => p
+                .iter()
+                .zip(q)
+                .fold(Q::ZERO, |s, (a, b)| &s + &a.clone().min(b.clone())),
+            (None, None) => Q::ONE,
+            _ => Q::ZERO,
+        };
+        let apart = xyl_core::hopf::arc(&phase.less(&dom_phase).degrees);
+        let held = &along * &(&Q::ONE - &apart.over(xyl_core::nonzero!(180)));
+        c + share * Dy::from_q(&held)
+    });
     Some(Hearing {
         dominant: k,
         dominance: top.div(&sum).unwrap_or_default(),
-        coherence: length.div(&sum).unwrap_or_default(),
+        coherence,
         intensity: sum,
     })
+}
+
+/// The planes a bell arrives on at a place: the pivot's plane between their
+/// directions on one sphere (between their cores' across galaxies), as
+/// shares `|b_ij| / sum |b|` of planes (1, 2), (1, 3) and (2, 3). `None`
+/// where no one plane carries one direction to the other (the same
+/// direction, or antipodal ones).
+fn arrival_planes(place: &Place, there: &Place) -> Option<[Q; 3]> {
+    let core_of = |p: &Place| p.core.as_deref().cloned().unwrap_or_else(|| p.clone());
+    let (a, b) = if place.galaxy == there.galaxy {
+        (place.clone(), there.clone())
+    } else {
+        (core_of(place), core_of(there))
+    };
+    let pivot = xyl_core::rotor::pivot(&a.dir, &b.dir, 64)?;
+    let total = pivot.planes.iter().fold(Q::ZERO, |s, p| &s + &p.1.abs());
+    let share = |plane: (usize, usize)| {
+        pivot
+            .planes
+            .iter()
+            .filter(|p| p.0 == plane)
+            .fold(Q::ZERO, |s, p| &s + &p.1.abs())
+            .checked_div(&total)
+    };
+    Some([share((1, 2))?, share((1, 3))?, share((2, 3))?])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The hearing and the relays read first-degree (E011): coherence lies
+    /// in [0, 1] and one bell is wholly coherent with itself; continuity lies
+    /// in [-1, 1] and is 1 on the core's own direct route.
+    #[test]
+    fn a_place_hears_the_bells_first_degree() {
+        let origin = crate::genesis::origin();
+        let all = nodes(7, origin, Some(8));
+        // Read once every bell is live.
+        let t = all.iter().map(|n| n.born).max().unwrap_or(Dy::ZERO) + Dy::ONE;
+        let relays = relays(&all, t);
+        assert!(relays
+            .iter()
+            .all(|r| r.continuity >= -Dy::ONE && r.continuity <= Dy::ONE));
+        assert_eq!(relays.first().map(|r| r.continuity), Some(Dy::ONE));
+        let r = crate::chain::radius();
+        let Some(core) = all.first() else {
+            return;
+        };
+        let here = core.place(t, &r);
+        let heard = hear(&here, &all, &relays, t).unwrap();
+        assert!(
+            heard.coherence >= Dy::ZERO && heard.coherence <= Dy::ONE,
+            "{heard:?}"
+        );
+        assert!(heard.dominance > Dy::ZERO && heard.dominance <= Dy::ONE);
+        let alone = hear(&here, &all[..1], &relays[..1], t).unwrap();
+        assert_eq!(alone.coherence, Dy::ONE);
+    }
 }

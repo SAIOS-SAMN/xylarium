@@ -11,6 +11,14 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The bells are heard per plane and on the T lane (#118, E011):
+  `pulse::hear` no longer sums one complex phasor. Each bell arrives with
+  its winding (whole wavelengths and phase) and its arrival planes (the
+  pivot's plane shares), and coherence with the loudest bell is read
+  first-degree: share times plane overlap times `1 - arc / 180`. Relay
+  continuity is the faces' push of the detour's phase, `1 - arc / 90`, in
+  place of a cosine (S026 remediated). Intensity stays `M / d` (S025).
+
 - `rotor::angle_between` is deleted (#118, S034). `chain::Place::arc` and
   `manifold::gap` read the pivot between two directions
   (`rotor::pivot`): the exact rotor `1 + b a` on its named plane `b ^ a`,

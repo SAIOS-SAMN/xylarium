@@ -260,6 +260,44 @@ pub fn spin_orbit(mix: &[(u32, Q)], spin: &Q) -> SpinOrbit {
                 .collect(),
         });
     }
+    // Past the Kerr bound the pair no longer closes, so it holds no open
+    // kind on both faces (T16): what is still open leaves together at the
+    // next bounce, at the pole reach it has climbed to.
+    // Stand-in S143: Past the Kerr bound every open kind leaves at the next bounce.
+    if a > Q::ONE && kinds.iter().any(open) {
+        let interval = Dy::from_q(&(&Q::int(3) * &(&Q::int(4) + &a)))
+            .div(&Dy::from_q(&(&Q::int(2) * &a)))
+            .unwrap_or_default();
+        let (out, stay): (Vec<_>, Vec<_>) = kinds.drain(..).partition(open);
+        kinds = stay;
+        let m = out.iter().fold(Q::ZERO, |s, k| &s + &k.hold);
+        echoes += interval;
+        let (near, lnn) = (
+            Dy::from_q(&(&Q::int(3) + &a)).ln().unwrap_or(Dy::ZERO),
+            Dy::from_q(&(&Q::ONE + &(&a * &xyl_core::ratio!(1, 2))))
+                .ln()
+                .unwrap_or(Dy::ZERO),
+        );
+        let taken = &turning * &m.checked_div(&hold).unwrap_or(Q::ZERO);
+        turning = &turning - &xyl_core::certified::toward_zero(&taken, 64);
+        hold = &hold - &m;
+        a = turning.checked_div(&(&hold * &hold)).unwrap_or(Q::ZERO);
+        cohorts.push(Cohort {
+            echoes,
+            far: false,
+            hold: m,
+            share: Q::ONE,
+            spin: a.clone(),
+            interval,
+            layers: out
+                .into_iter()
+                .map(|k| {
+                    let ln_t = k.ln_t + interval * (near + lnn * k.polarity);
+                    (k.z, k.hold, ln_t.max(Dy::ZERO))
+                })
+                .collect(),
+        });
+    }
     // T19: the turning held beyond the founded turning per unit hold.
     let remanence = &turning - &(&(spin * &founded) * &hold);
     SpinOrbit {
@@ -431,7 +469,6 @@ pub fn founding_shells(mix: &[(u32, Q)], spin: &Q) -> (Vec<Shell>, crate::circui
         let (pushed, given) = pooled(&kept_hold, &masses, &r0, c.far, &charged);
         take = &take + &given;
         for ((z, m, ln_r), (h, _, l)) in layers.into_iter().zip(pushed) {
-            let m = grain(&m);
             let Some(reach) =
                 driving_hold(&l, &m, &r0).and_then(|d| reach_after(&r0, &m, &d, c.interval))
             else {
@@ -514,6 +551,16 @@ mod tests {
             for (z, _, ln_r) in &c.layers {
                 assert!(crate::compound::open(*z) > 0, "Z {z} is open");
                 assert!(ln_r.signum() >= 0, "Z {z}");
+            }
+        }
+        // Past the Kerr bound the pair holds no open kind (T16).
+        if orbit.spin > Q::ONE {
+            for (z, _) in &orbit.kept {
+                assert_eq!(
+                    crate::compound::open(*z),
+                    0,
+                    "Z {z} kept open past the bound"
+                );
             }
         }
         for (z, _) in mix.iter().filter(|(z, _)| crate::compound::open(*z) == 0) {

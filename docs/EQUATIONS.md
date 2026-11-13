@@ -141,6 +141,14 @@ sites are restated. The derivations are in
     offsets whose holding-weighted sum is zero, and fission is its inverse.
     The re-origin across a throat reverses S's span, gains `-2 span` on T
     and exchanges hold and reach.
+  - **The passage in the algebra** (FORMS-PASSAGE v4, 78.172,
+    `coordinate::PolePlane`): on a plane's units `e+`, `e-` in `Cl(p, q)`
+    a throat state is `(H + R) e+ + (H - R) e-`; it crosses by
+    `x -> e+ x e+`, the span reversed, the whole kept and the face going to
+    `1 - delta`, writing `T -> T - 2 (H - R)`; a riding state passes
+    `q -> e+ q`, its parity flipped. Two passes are the identity
+    (`e+ e+ = 1`); the re-origin above is the same law on a body's lanes.
+    Calibre: none (counts of one throat).
   - **Display only:** the sexagesimal sector `[m 60^-d, (m + 1) 60^-d)`
     and `coordinate::beat`.
   - **Refusals** are by name (`CoordinateRefusal`).

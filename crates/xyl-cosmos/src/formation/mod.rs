@@ -11,11 +11,11 @@
 //!
 //! - Release (`spin_orbit`, T17): the core's bounces release its open
 //!   kinds cohort by cohort, each climbing `ln t += N* ln(D(s) D(n)^A)` per
-//!   pinch interval `N* = 3 (4 + a) / (2a)` until it crosses, the kinds
+//!   bounce interval `N* = 3 (4 + a) / (2a)` until it crosses, the kinds
 //!   pressed by the near face inverted out by the far face; the closed
 //!   kinds are kept on both faces (T16).
 //! - Founding shells (`founding_shells`): each released layer leaves from
-//!   the kept hold's horizon `2H` and stands after its cohort's pinch
+//!   the kept hold's horizon `2H` and stands after its cohort's bounce
 //!   interval at the reach rate's closed form,
 //!   `(r - r0) + 2m ln(r / r0) = 2 (h - m) N*`, swinging by `h / (r + h)`;
 //!   the universal table holds every kind's rest point at the bounce,

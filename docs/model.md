@@ -667,7 +667,7 @@ split is not yet built.
 - **Separation.** No plane's share is set by an equal split. Plane `j`
   is read by `t_j` from the plane's hold `H_j = sum_k M_k w_kj` (each
   kind's hold weighted by its share of turning on that plane; Holding in a
-  pinched throat, EQUATIONS.md) and the plane's twist `J_j`. What moves
+  cohort's throat, EQUATIONS.md) and the plane's twist `J_j`. What moves
   between planes is twist and hold, and their totals are kept:
   `sum_j J_j = J`, `sum_j H_j = H_iso` (axioms 4 and 11). Without spin
   (`J = 0`) every `t_j` is zero and nothing turns; a spinless hole does not
@@ -1517,7 +1517,7 @@ dimensions.
   A reading moves only where a law reads a component in place of a sum,
   and it is witnessed before and after.
 
-### The antipoles, the shear and the pinch
+### The antipoles, the shear and the bounce
 
 Derived ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)); not yet built. Each check below is exact.
 
@@ -1550,16 +1550,16 @@ Derived ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)); not yet built
   `Lk = Tw + Wr` is conserved: the twist moves the two faces by their
   separations across the attractor pair (T17; never equal halves), and the
   writhe by `+120 n` and `-120 n` degrees.
-- **The pinch.** The two folds meet where `N n / 3 = -N n / 3 (mod 1)`,
+- **The bounce.** The two folds meet where `N n / 3 = -N n / 3 (mod 1)`,
   first at the antipodal point, 180 degrees apart on the isoclinic
   planes: after
   `N* = 3 / (2n) = 3 (4 + a) / (2a)` echoes, where the folds' relative
   writhe first reaches 360 degrees and the linking number may change by
   one. The count is exact in Q; the fold's axis dilation there,
   `D(n / 3)^N*`, is held by its exponent, never as a value. A spinless
-  core has no residual and never pinches.
+  core has no residual and never bounces.
 
-### What a pinch carries: the next throat and its pressure
+### What a bounce carries: the next throat and its pressure
 
 Derived ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60), [#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)); not yet built; each identity checked
 exactly.
@@ -1567,18 +1567,18 @@ exactly.
 - **The spin.** Degrees of turning are conserved (axiom 11 below): a
   throat of spin `a` and hold `M` turns `J = 360 a M^2` degrees, and matter
   leaving it carries `j = 360 a_p M_p` degrees of turning per unit hold.
-  A pinched loop of hold `H_g` closes with `j H_g` degrees of turning, and
+  A bounced loop of hold `H_g` closes with `j H_g` degrees of turning, and
   by the Kerr relation its spin is `a_g = j / (360 H_g) = a_p M_p / H_g`.
   The degrees per unit hold are therefore the same at every tier, the
   universal core's `360 a_0 M_0` (for seed 7, `124 deg 47' 11"` and
   `5728280873/8589934592"`). A cohort closes only where its turning does
   not exceed 360 degrees per unit hold on its planes, `j <= 360 H_g` (`a_g <= 1`); a
   lighter one stays in the flow as medium, and a heavy one makes a slowly
-  spinning throat. The new throat's twist and pinch follow
+  spinning throat. The new throat's twist and bounce follow
   from its spin, `n_g = a_g / (4 + a_g)` and `3 (4 + a_g) / (2 a_g)`
-  echoes; a spinless throat makes no pinch and no tier.
-- **The place.** The pinch's coordinates (The antipoles, the shear and the
-  pinch): 180 degrees on the isoclinic planes, after `3 (4 + a) / (2a)`
+  echoes; a spinless throat makes no bounce and no tier.
+- **The place.** The bounce's coordinates (The antipoles, the shear and the
+  bounce): 180 degrees on the isoclinic planes, after `3 (4 + a) / (2a)`
   echoes.
 - **The hold.** The matter the flow has in the fold when it closes, summed
   from the parcels' counts: a reading of the founding as flow, not a
@@ -1654,11 +1654,11 @@ Theorems:
 | T7 | filling Z side first; axis polarity `A` | 8, 3 |
 | T8 | held where closed, or where `D(s) D(n)^A <= 1 - 2 delta` | 3, 9 |
 | T9 | pair share `p_pair = s (+) -(1 - s) = n (+) n / 3`; positron `R -> -R` | 3, 5 |
-| T10 | the flip keeps every state; residual `n / 3`; `Lk` conserved; pinch after `3 (4 + a) / (2a)` echoes at 180 degrees on the isoclinic planes | 5, 8 |
-| T11 | pinched throat's spin `a_g = a_p M_p / H_g` (Kerr, with the parent's degrees of turning per unit hold, `360 a_p M_p`); a cohort with `a_g > 1` does not close and stays as medium | 7, 11 |
+| T10 | the flip keeps every state; residual `n / 3`; `Lk` conserved; bounce after `3 (4 + a) / (2a)` echoes at 180 degrees on the isoclinic planes | 5, 8 |
+| T11 | cohort's throat's spin `a_g = a_p M_p / H_g` (Kerr, with the parent's degrees of turning per unit hold, `360 a_p M_p`); a cohort with `a_g > 1` does not close and stays as medium | 7, 11 |
 | T12 | stretching pressure `(D(n)^m0 - 1) / (D(n)^m0 + 1)` | 3, T2 |
-| T13 | a pinch encloses the whole cohort released since the last, in every direction | 8, T10 |
-| T14 | enclosed matter, from the reach its layer has at the pinch (The state at the pinch); in plane `j` it is pushed out at `J_j / (6 H_j + J_j)` per echo, `H_j` the cohort's hold in the plane and `J_j` the plane's twist, `sum_j J_j = J` (none on the axis plane) | 2, 3, 7 |
+| T13 | a bounce encloses the whole cohort released since the last, in every direction | 8, T10 |
+| T14 | enclosed matter, from the reach its layer has at the bounce (The state at the bounce); in plane `j` it is pushed out at `J_j / (6 H_j + J_j)` per echo, `H_j` the cohort's hold in the plane and `J_j` the plane's twist, `sum_j J_j = J` (none on the axis plane) | 2, 3, 7 |
 | T15 | a whole nucleus feels its planes composed, `D_k = D(p_plane)^w_k D(n)^A`, `w_k` its share of turning in the isoclinic planes; held where `D_k <= 1`, else it leaves after `ln 2 / ln D_k` echoes | 3, T14 |
 | T16 | a paired throat's faces dilate an open kind by `D(s) D(n)^A` and `D(s) D(n)^-A`, product `(3 + a)^2`; no open kind is held on both faces; the shared hold is the closed kinds | 3, 5, 9, T2, T8 |
 | T17 | the spin is a sheared orbit over the core's bounces: a kind's separation is `rho = q ln D(s) - (1 - q) ln D(1 - s)` across the attractor pair; a cohort takes `J (m / M) (rho_cohort / rho_hold)`; a cohort less separated than its hold spins the throat up; the pair closes while `a <= 1` | 3, 7, 9, 11, T2, T10, T16 |
@@ -1668,14 +1668,14 @@ Theorems:
 | T21 | the horizon is axial: on each plane the pair holds where its held face is at least its passed face, about the hold it presents less what its open states vent, `H_v = (M_near + M_far)(1 - vent)`; the axis plane balances at `H_v`, a turning plane at `H_v + a M`; the charged spin's tilt mixes the axis plane and isoclinic plane 1 by its faces; the horizon moves with the spin, the charge and the holds | 5, 6, 7, 9, T8, T15, T16, T20 |
 
 Reading (seed 7; a retired floating-point screen with exact held sets, to
-be read on the binary once the pinches are built, #79): the universal core holds 0.4352 of the
-founded mass and its first pinched throat 0.4569; what that throat
+be read on the binary once the bounces are built, #79): the universal core holds 0.4352 of the
+founded mass and its first cohort's throat 0.4569; what that throat
 releases (0.108) and the core's three later cohorts (1.7 x 10^-18) are too
 light to close (`a_g > 1`) and stay in the flow as medium. One galactic
 core, not a population: under these laws multiplicity does not come from
 pinching, and the medium is where it is to be derived.
 
-### The state at the pinch: the fold and its circuits
+### The state at the bounce: the fold and its circuits
 
 Derived ([#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)); not yet built.
 
@@ -1701,10 +1701,10 @@ Derived ([#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)); not yet built
   dipole across the fold's thickness. A cohort with no grip
   (`sum m_l nu_l = 0`) has no neutral surface: it does not bend but flows.
 - **The circuits.** Each quantity a layer carries turns on a circuit of
-  that quantity, with the axes and the pivot of that circuit, and is read at the pinch
+  that quantity, with the axes and the pivot of that circuit, and is read at the bounce
   plane by plane, never summed:
 
-  | Circuit | Axes | Pivot | Read at the pinch |
+  | Circuit | Axes | Pivot | Read at the bounce |
   |---|---|---|---|
   | Pole state | each plane's open and held count | the throat, `t = 1` | the reach on the axis plane, `ln r = (N* - n_k) ln(D(s) D(n)^A)` since the kind's onset `n_k` |
   | Heat | each plane's deficit | the balance of held and emitted | held irradiation net of emission, composed over the echoes since onset |
@@ -1717,7 +1717,7 @@ Derived ([#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)); not yet built
   The enclosed matter starts at the reach its layer has when the fold
   closes (this replaces T14's starting reach on the throat orbit).
 - **Reading** (seed 7; a retired floating-point screen, the relations
-  exact; to be read on the binary once the pinches are built, #79): the first pinch encloses 605 layers, 0.5648 of the founded mass;
+  exact; to be read on the binary once the bounces are built, #79): the first bounce encloses 605 layers, 0.5648 of the founded mass;
   the neutral surface lies at `ln r_0 = 17.966` on the axis plane, set by
   the gripping layers (their grip-weighted hold 0.0096 of the founded
   mass); 0.1783 of the founded mass lies inside it, compressed, and 0.3865
@@ -1725,11 +1725,11 @@ Derived ([#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)); not yet built
   runs from `ln r = 0.22` to `255`, the flipped share from 0.065 to 0.395,
   and the phase on the isoclinic planes over all 360 degrees.
 
-### The bounce at a pinched throat
+### The bounce at a cohort's throat
 
 Derived ([#78](https://github.com/SAIOS-SAMN/xylarium/issues/78)); not yet built.
 
-- **The far face.** A pinched throat bounces: its matter passes to its far
+- **The far face.** A cohort's throat bounces: its matter passes to its far
   face, which is both antipoles at once (`bounce::Bounce::of`,
   `circuit::axes`). The axis antipole, the inversion `t -> 1 / t`, carries a
   layer at pole state `t` relative to the parent to `1 / t` in the new
@@ -1742,18 +1742,18 @@ Derived ([#78](https://github.com/SAIOS-SAMN/xylarium/issues/78)); not yet built
   `delta = m / (2 H_g + m)` the kind's own deficit at the new throat's
   horizon; it is held there by pressure where `D(s_g) D(n_g)^(-A) <= 1 - 2 delta`,
   and a layer carried far out by the parent arrives deep and climbs late.
-  The new throat's pinches enclose what it releases, and a pinch's cohort
+  The new throat's bounces enclose what it releases, and a bounce's cohort
   closes where `a = j' / H <= 1`.
 - **Reading** (seed 7; a retired floating-point screen, to be read on the
-  binary once the pinches are built, #79): eleven throats in
+  binary once the bounces are built, #79): eleven throats in
   a chain, the universal core alone holding more than `10^-6` of the
   founded mass. The inversion spreads the tail, layers carried far out,
-  over several pinches of the new throat, but those cohorts are too light
+  over several bounces of the new throat, but those cohorts are too light
   to close and stay as trace medium; the bulk, at mass-weighted
   `ln r = 19.8`, climbs back in about 16 echoes, within the new throat's
-  first pinch interval of about 24, so each tier passes it on whole. The
-  ratio of the bulk's climb to the pinch interval, about 0.67, decides it:
-  below one a throat's matter goes into a single pinch, so these laws give
+  first bounce interval of about 24, so each tier passes it on whole. The
+  ratio of the bulk's climb to the bounce interval, about 0.67, decides it:
+  below one a throat's matter goes into a single bounce, so these laws give
   one chain, not a population (#79).
 
 ### The core as a paired throat
@@ -1763,11 +1763,11 @@ the firmament is the closed kinds (`circuit::Substrate::found`), the spin
 orbit is `circuit::Substrate::spin_orbit` with each kind's axis polarity
 from `atoms::plane_polarities` (T7, the axis plane's), and the anchor holds the core's spin
 after it (`circuit::Anchor::core_spin`); `xylarium observe universal-core`
-prints the cohorts. A pinched throat's own cohort spin waits on the
+prints the cohorts. A cohort's throat's own cohort spin waits on the
 pinches being built. A core is one throat with two faces, near and far, and never an open
 singularity: the far face of the universal core is the parent's core, and the
-far face of a pinched throat is the core it bounces into (The bounce at a
-pinched throat). Its stability is read from axioms 3, 4, 5, 7, 9 and 11
+far face of a cohort's throat is the core it bounces into (The bounce at a
+cohort's throat). Its stability is read from axioms 3, 4, 5, 7, 9 and 11
 and theorems T2, T8 and T11. Every identity below is exact.
 
 - **Both faces dilate one kind.** On the near face an open kind of axis
@@ -1842,7 +1842,7 @@ and theorems T2, T8 and T11. Every identity below is exact.
     the core closes is a reading of the orbit, and the universe is founded
     either way: an unclosed core leaves every kind as medium.
   - **Pinched throats hold no closed kinds.** Their cohorts are open kinds
-    only, so by T16 a pinched throat has no shared hold and holds only on
+    only, so by T16 a cohort's throat has no shared hold and holds only on
     one face, by pressure. A stable galactic core needs closed kinds, made
     in it by core fusion or brought to it (#79; Phase weakening and phase
     strengthening).
@@ -2076,7 +2076,7 @@ answer, the code it builds on and what that code lacks today.
     deficit `M / (r + M)` at its reach (`xyl_core::shares::deficit`);
   - a throat with an Einstein-Cartan bounce, whose far face inverts
     `t -> 1 / t` and the axis polarity `A -> -A` (`bounce`; The bounce at
-    a pinched throat);
+    a cohort's throat);
   - core fusion, while the collective is on the Z side, `t < 1`
     (`stars::fusion_step`; Polarity, fusion and fission).
 - **What the code lacks.** Every law is a closed form of the present state.

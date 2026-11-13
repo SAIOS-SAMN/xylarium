@@ -7,7 +7,7 @@
 // (the core's hold 1, its horizon 2); amounts are in the held count.
 //
 // Steps: the core's bounces release its open kinds cohort by cohort
-// (`formation::spin_orbit`, T17), each standing at its pinch where the
+// (`formation::spin_orbit`, T17), each standing at its cohort's bounce where the
 // reach rate carries it and swinging `r (1 +/- delta)` by the deficit of
 // the hold inside it. What the core keeps on both faces (T16) forms the
 // firmament (`Kind`), scaled so its mass is 1, the universal state; each
@@ -121,8 +121,8 @@ impl Drop for Founding {
 
 impl Substrate {
     /// The founding: the core's bounces release its open kinds cohort by
-    /// cohort (`formation::founding_shells`), each to the reach its pinch
-    /// carries it to; what the core keeps on both faces is the firmament
+    /// cohort (`formation::founding_shells`), each to the reach its
+    /// cohort's bounce carries it to; what the core keeps on both faces is the firmament
     /// (T16, T17). Released kinds with overlapping swings link into runs,
     /// and each run's superposed hold beads at its maxima (one galaxy per
     /// bead) and parts at its minima. Each kind's matter goes to the bead
@@ -171,7 +171,7 @@ impl Substrate {
         // neutrons at the rest point.
         super::weights::set_neutrons(neutrons.clone());
         // What the core keeps on both faces of the paired throat (T16, T17)
-        // is the firmament; every released kind stands at its pinch.
+        // is the firmament; every released kind stands at its cohort's bounce.
         let firmament = firmament_of(&shells, &share);
         // The released shells are sorted by reach and linked into runs where
         // their swings overlap.

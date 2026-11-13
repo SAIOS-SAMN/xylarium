@@ -231,9 +231,9 @@ where it belongs to one.
 32. **The founding as flow** (depends on item 38; axioms and theorems
     in [model.md](model.md#axioms-and-theorems-of-the-founding); the state
     at the pinch per layer and circuit
-    ([model.md](model.md#the-state-at-the-pinch-the-fold-and-its-circuits));
+    ([model.md](model.md#the-state-at-the-bounce-the-fold-and-its-circuits));
     the bounce at a pinched throat
-    ([model.md](model.md#the-bounce-at-a-pinched-throat)); the core as a
+    ([model.md](model.md#the-bounce-at-a-cohorts-throat)); the core as a
     paired throat whose spin is a sheared orbit turned by what each face
     releases, read in place of the reach-based admission
     ([model.md](model.md#the-core-as-a-paired-throat),
@@ -281,10 +281,10 @@ where it belongs to one.
     ([model.md](model.md#the-equator-inflow-viscosity-and-pairs)); the
     antipole group, the shear the dipole reconciles, `p_pair = n (+) n/3`,
     and the pinch where the folds meet
-    ([model.md](model.md#the-antipoles-the-shear-and-the-pinch)); what a
+    ([model.md](model.md#the-antipoles-the-shear-and-the-bounce)); what a
     pinch carries, the next throat's spin `a_p M_p / H_g` (Kerr) and the stretching
     pressure on its states
-    ([model.md](model.md#what-a-pinch-carries-the-next-throat-and-its-pressure)).
+    ([model.md](model.md#what-a-bounce-carries-the-next-throat-and-its-pressure)).
 
 
 3. **Elements attached to the filament's released pressure**

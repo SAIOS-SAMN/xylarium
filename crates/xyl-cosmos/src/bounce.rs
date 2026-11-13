@@ -47,6 +47,46 @@ pub fn horizon_reach(near: &Q, far: &Q) -> Q {
     near + far
 }
 
+/// The horizon of a spinning, tilted pair, plane by plane (T21), the axis
+/// plane first and the five isoclinic planes after it. On each plane the
+/// pair holds where its held face is at least its passed face (the holding
+/// theorem, T8, T15, T16), so each plane's horizon is that plane's own
+/// balance, about the hold the pair presents there: the pair's hold less the
+/// share `vent` its open states pass (axiom 9: open states vent, held
+/// states hold), `H_v = (M_near + M_far) (1 - vent)`. The spin turns no
+/// state along its axis, so the axis plane balances at `H_v`; on a turning
+/// plane the jet carries the spin's share beyond the hold (axiom 7), so it
+/// balances at `H_v + a M_near`, the spin read as a reach in the hold's
+/// calibre (Kerr's length `J / M = a M`, not the angular momentum
+/// `a M^2`). The charged spin tilts the pole
+/// axis toward isoclinic plane 1 by `tilt` degrees (`hopf::tilt_faces_l1`,
+/// `c = 1 - tilt / 90`, `d = tilt / 90`): the axis plane reads
+/// `c R_0 + d R_1` and plane 1 `c R_1 + d R_0`. Axial, not a sphere, and
+/// moving with the spin, the charge and the holds. `None` for a vent outside
+/// `[0, 1]`, a negative hold or spin, or a tilt outside a quarter turn.
+pub fn horizon_planes(
+    (near, far): (&Q, &Q),
+    vent: &Q,
+    spin: &Q,
+    tilt: &Q,
+) -> Option<[Q; xyl_core::hopf::PLANES]> {
+    if near.signum() < 0 || far.signum() < 0 || spin.signum() < 0 {
+        return None;
+    }
+    if vent.signum() < 0 || vent > &Q::ONE {
+        return None;
+    }
+    let held = &horizon_reach(near, far) * &(&Q::ONE - vent);
+    let j = spin * near;
+    let faces = xyl_core::hopf::tilt_faces_l1(tilt)?;
+    let turned = &held + &j;
+    // Stand-in S144: Every turning plane carries the whole spin of the common phase.
+    let mut planes: [Q; xyl_core::hopf::PLANES] = std::array::from_fn(|_| turned.clone());
+    planes[0] = &(&faces.convergent * &held) + &(&faces.divergent * &turned);
+    planes[1] = &(&faces.convergent * &turned) + &(&faces.divergent * &held);
+    Some(planes)
+}
+
 /// The held share at the horizon read about one face's hold `near`:
 /// `delta_h = M_near / (R_h + M_near) = M_near / (2 M_near + M_far)`, exact;
 /// one third where the faces share one hold. `None` for no hold.
@@ -91,19 +131,28 @@ pub fn crossing(centre: &[Q], x: &Q, psi: &Q) -> Vec<Q> {
 }
 
 /// A black hole's horizon as the conformal sphere `sigma` about `centre` through
-/// the crossing point: the horizon reach ([`horizon_reach`]) taken along the
-/// S^360 enclosure of curvature radius `enclosure` ([`curved_reach`]), at
-/// the pulse's phase `psi` on the first plane (`xyl_core::cga::sphere_through`),
-/// exact.
-pub fn horizon(centre: &[Q], mass: &Q, enclosure: &Q, psi: &Q) -> Mv {
+/// the crossing point: the horizon of isoclinic plane 1, where the crossing
+/// lies ([`crossing_reach`]), taken along the S^360 enclosure of curvature
+/// radius `enclosure` ([`curved_reach`]), at the pulse's phase `psi` on that
+/// plane (`xyl_core::cga::sphere_through`), exact.
+pub fn horizon(centre: &[Q], mass: &Q, spin: &Q, enclosure: &Q, psi: &Q) -> Mv {
     let at = crossing(
         centre,
-        &curved_reach(&horizon_reach(mass, mass), enclosure),
+        &curved_reach(&crossing_reach(mass, spin), enclosure),
         psi,
     );
     let mut c: Vec<Q> = centre.to_vec();
     c.resize(AXES, Q::ZERO);
     cga::sphere_through(&c, &at)
+}
+
+/// The horizon of isoclinic plane 1 for a hole of `mass` and Kerr spin
+/// `spin` ([`horizon_planes`]): its pair shares one hold (T16), its closed
+/// kinds vent nothing, and its tilt is upright where its charge is not read.
+/// Zero where the horizon is refused.
+pub fn crossing_reach(mass: &Q, spin: &Q) -> Q {
+    // Stand-in S004: The parent's charge is not read, so its tilt stands upright.
+    horizon_planes((mass, mass), &Q::ZERO, spin, &Q::ZERO).map_or(Q::ZERO, |p| p[1].clone())
 }
 
 /// A Euclidean point `x` (natural units, G = c = 1) embedded as a null
@@ -118,26 +167,27 @@ pub fn point(x: &[Q]) -> Mv {
 /// hold directly. The throat `H = 2M` (`horizon_reach`, the pair sharing
 /// its hold, T16) holds one face
 /// against the other, `delta(H, H) = 1/2`, and the jet carries the unlocked
-/// face `1 - delta`; the spin's angular momentum `J = a M^2` (`a` the Kerr
-/// parameter, `spin`) is a further share the throat cannot hold, so the held
-/// face is `delta(H, H + J) = H / (2H + J)` and the jet carries
-/// `(H + J) / (2H + J)`: one half for a spinless hole, which does not bounce,
-/// and `(2 + M) / (4 + M)` at the extremal spin (three fifths for the
-/// universal core, `M = 1`). One law for every throat; linear in the shares
+/// face `1 - delta`; the spin, read as a reach in the hold's calibre, Kerr's
+/// length `J = a M` (`a` the Kerr parameter, `spin`), is a further share the
+/// throat cannot hold, so the held face is `delta(H, H + J) = H / (2H + J)`
+/// and the jet carries `(H + J) / (2H + J)`: one half for a spinless hole,
+/// which does not bounce, and three fifths at the extremal spin for every
+/// mass. One law for every throat; linear in the shares
 /// and exact. Zero for a non-positive mass.
 pub fn torsion_share(mass: &Q, spin: &Q) -> Q {
     if mass.signum() <= 0 {
         return Q::ZERO;
     }
     let h = horizon_reach(mass, mass);
-    let j = &spin.clone().max(Q::ZERO) * &(mass * mass);
+    // The spin as a reach in the hold's calibre, Kerr's length `a M`.
+    let j = &spin.clone().max(Q::ZERO) * mass;
     (&h + &j)
         .checked_div(&(&(&Q::int(2) * &h) + &j))
         .unwrap_or(Q::ZERO)
 }
 
 /// The Kerr spin whose torsion share at `mass` is `a`: `J = H (2a - 1) /
-/// (1 - a)`, the share law inverted, over `M^2`. `None` for a share at or
+/// (1 - a)`, the share law inverted, over `M`. `None` for a share at or
 /// above one or a non-positive mass.
 pub fn spin_of_share(mass: &Q, a: &Q) -> Option<Q> {
     let one_less = &Q::ONE - a;
@@ -147,7 +197,7 @@ pub fn spin_of_share(mass: &Q, a: &Q) -> Option<Q> {
     let h = horizon_reach(mass, mass);
     (&h * &(&(&Q::int(2) * a) - &Q::ONE))
         .checked_div(&one_less)?
-        .checked_div(&(mass * mass))
+        .checked_div(mass)
 }
 
 /// The spin as the multi-axial bivector: the blades of the six planes of
@@ -202,7 +252,7 @@ pub struct Bounce {
 impl Bounce {
     /// The bounce of a black hole of `mass` and Kerr parameter `spin`, read in
     /// the S^360 enclosure of curvature radius `enclosure` and crossed on the
-    /// first isoclinic plane at the [`horizon_reach`] taken along the
+    /// first isoclinic plane at that plane's horizon ([`crossing_reach`], T21) taken along the
     /// enclosure ([`curved_reach`]) and at the pulse's `phase`; the spin turns
     /// all six planes ([`spin_bivector`]). `None` unless `mass > 0`,
     /// `0 < spin < 1` and `enclosure > 0`, or if the horizon-keeping component
@@ -213,10 +263,10 @@ impl Bounce {
             return None;
         }
         let centre = vec![Q::ZERO; AXES];
-        let sigma = horizon(&centre, mass, enclosure, phase);
+        let sigma = horizon(&centre, mass, spin, enclosure, phase);
         let at = crossing(
             &centre,
-            &curved_reach(&horizon_reach(mass, mass), enclosure),
+            &curved_reach(&crossing_reach(mass, spin), enclosure),
             phase,
         );
         let p = point(&at);
@@ -244,6 +294,33 @@ impl Bounce {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// T21: the horizon is axial. Spinless, untilted and venting nothing,
+    /// every plane balances at the pair's equator `2M`; spin moves the turning
+    /// planes to `H + a M` and leaves the axis at `H`; a full tilt exchanges
+    /// the axis plane's and plane 1's horizons; venting half the hold halves
+    /// what the pair presents; out-of-range inputs are refused.
+    #[test]
+    fn the_horizon_is_axial_with_spin_tilt_and_vents() {
+        let q = |n: i64, d: i64| Q::new(n, d).unwrap();
+        let (m, a) = (q(3, 2), q(1, 2));
+        let flat = horizon_planes((&m, &m), &Q::ZERO, &Q::ZERO, &Q::ZERO).unwrap();
+        assert!(flat.iter().all(|r| *r == Q::int(3)));
+        let spun = horizon_planes((&m, &m), &Q::ZERO, &a, &Q::ZERO).unwrap();
+        let turned = &Q::int(3) + &(&a * &m);
+        assert_eq!(spun[0], Q::int(3));
+        assert!(spun[1..].iter().all(|r| *r == turned));
+        let tilted = horizon_planes((&m, &m), &Q::ZERO, &a, &Q::int(90)).unwrap();
+        assert_eq!(
+            (tilted[0].clone(), tilted[1].clone()),
+            (turned.clone(), Q::int(3))
+        );
+        let vented = horizon_planes((&m, &m), &q(1, 2), &Q::ZERO, &Q::ZERO).unwrap();
+        assert!(vented.iter().all(|r| *r == q(3, 2)));
+        assert!(horizon_planes((&m, &m), &q(3, 2), &a, &Q::ZERO).is_none());
+        assert!(horizon_planes((&m, &m), &Q::ZERO, &a, &Q::int(91)).is_none());
+        assert_eq!(crossing_reach(&m, &a), turned);
+    }
 
     /// T20: the horizon is the equator of the pair's hold, where the faces
     /// read about the pair balance at one half (the inversion's fixed

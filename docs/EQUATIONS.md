@@ -273,6 +273,17 @@ sites are restated. The derivations are in
   Status: built. Open: the far face's own hold where the faces do not
   share one (a pinched throat's far face is the core it bounces into), and
   the hold passing between the faces over the breath.
+- Axial horizon (`bounce::horizon_planes`, `bounce::crossing_reach`; T21):
+  per plane, where the pair's held face balances its passed face (the
+  holding theorem, T8, T15, T16), about the hold the pair presents there,
+  `H_v = (M_near + M_far) (1 - vent)`, `vent` the share its open states pass
+  (axiom 9). The axis plane balances at `H_v`; a turning plane at
+  `H_v + a M` (axiom 7). The charged spin's tilt `eps` mixes the axis plane
+  and isoclinic plane 1 by its faces `c = 1 - eps / 90`, `d = eps / 90`:
+  `R_0 = c H_v + d (H_v + a M)`, `R_1 = c (H_v + a M) + d H_v`. The bounce
+  crosses on plane 1 at `R_1`. Calibre: one per share. Status: built; the
+  spin's split per plane is the common phase's whole `a M` on each (S144),
+  and the parent's tilt is upright where its charge is unread (S004).
 - Curved reach (`bounce::curved_reach`): the reach is `rho sin(r / rho)` on
   the S^360 enclosure of radius `rho`. Calibre: founding. Status: built.
 - Horizon sphere (`bounce::horizon`): `sigma = sphere_through(C, P)`, where
@@ -316,9 +327,10 @@ sites are restated. The derivations are in
 - Spin draw (`origin::Origin::of`): the spin is drawn uniformly on the 2^-40
   grid, strictly inside `(0, 1)` (`origin::clamp_spin`). Calibre: none. Status: built.
 - Torsion share (`bounce::torsion_share`), one law for every throat:
-  `a = (H + J) / (2H + J)` with `H = 2M` and `J = a_Kerr M^2`; at the
-  universal core (`M = 1`) `a = 1/2` at zero spin and `a = 3/5` at the
-  extremal spin. The inverse (`bounce::spin_of_share`) is
+  `a = (H + J) / (2H + J)` with `H = 2M` and `J = a_Kerr M`, the spin read
+  as a reach in the hold's calibre (Kerr's length `J / M`, not the angular
+  momentum `a M^2`, which mixes calibres off `M = 1`); `a = 1/2` at zero
+  spin and `a = 3/5` at the extremal spin, for every mass. The inverse (`bounce::spin_of_share`) is
   `J = H (2a - 1) / (1 - a)`, put on the origin's grid by
   `origin::clamp_spin`. The founding reads the share once
   (`circuit::Substrate::found`) and holds it as `Substrate::share`. Calibre: none. Status: built.
@@ -1212,7 +1224,7 @@ the Xylarium function is the implementation. The ids are proposals.
 LAW-TORSION-SHARE takes the horizon reach as an argument: Xylarium states
 `H = M_near + M_far` (`bounce::horizon_reach`, T20), the equator of the
 pair's hold, `2M` where the faces share one hold, and
-`J = a M^2`. The rim share (`disc::rim_share`) is LAW-DEFICIT-SHARE with the reach
+`J = a M` (the spin as a reach). The rim share (`disc::rim_share`) is LAW-DEFICIT-SHARE with the reach
 `R k`, `k` the tier ratio. The dilation turns the flow law of Concordance
 section 2.6 into a product, `D(x (+) y) = D(x) D(y)` with
 `x (+) y = (x + y) / (1 + x y)`, and the court's throat level is

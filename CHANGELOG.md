@@ -11,6 +11,17 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The horizon is axial (T21): `bounce::horizon_planes` gives each plane's
+  horizon from the holding theorem, the pair's hold less what its open
+  states vent (axiom 9) on the axis plane and that plus the spin's reach
+  `a M` on a turning plane, the charged spin's tilt mixing the axis plane
+  with isoclinic plane 1; the bounce crosses on plane 1 at its horizon
+  (`crossing_reach`). The spin enters as a reach in the hold's calibre,
+  Kerr's length `a M` (axiom 7, the torsion share and its inverse), in place
+  of `a M^2`, which mixed calibres off `M = 1`; at the universal core
+  nothing moves. S144 registers the spin's whole reach on every turning
+  plane until its split per plane is built.
+
 - The horizon is derived (T20), no longer a declared ruler. Axiom 6 is now
   the pairing (a throat is one pair of faces, each presenting its hold),
   and the horizon is where the faces meet: the equator of the pair's hold,

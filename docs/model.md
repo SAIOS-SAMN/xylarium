@@ -719,7 +719,11 @@ axis plane, its first axis the pole axis, and the five isoclinic planes).
   M / (2M + M_far)` (`horizon_share`). The universal core's pair shares its
   hold on both faces (T16), so `R_h = 2M` and `delta_h = 1/3`: the
   received share is twice the held share because the throat has two faces,
-  not by a declared ruler.
+  not by a declared ruler. With spin the horizon is axial (T21): the axis
+  plane balances at the pair's hold, a turning plane at the hold plus the
+  spin's reach `a M`, and the charged spin's tilt mixes the axis plane with
+  isoclinic plane 1; the bounce crosses on plane 1 at its horizon
+  (`horizon_planes`, `crossing_reach`).
 - The reach is taken along the S^360 enclosure that contains the core, of
   curvature radius `rho`: `rho sin(R_h / rho)` (`curved_reach`).
 - The crossing point lies on the first of the pulse's five isoclinic planes,
@@ -1615,7 +1619,8 @@ Axioms:
 6. **Pairing.** A throat is one pair of faces, near and far, each
    presenting its hold; it is never an open singularity. The horizon is
    where the faces meet (T20).
-7. **Torsion.** `s = (R_h + J) / (2 R_h + J)`, `J = a M^2`.
+7. **Torsion.** `s = (R_h + J) / (2 R_h + J)`, `J = a M`, the spin read as
+   a reach in the hold's calibre (Kerr's length).
 8. **Six planes.** R^12 = C^6: the axis plane and five isoclinic planes,
    which the spin turns together; a state is a harmonic on S^11 with a
    weight `m` in Z^6.
@@ -1660,6 +1665,7 @@ Theorems:
 | T18 | the five isoclinic planes are interchangeable in the multiplicity and the filling (no state's plane is chosen); plane `j` is read by its pole `t_j = J_j / (6 H_j)`, its hold the kinds' turning on it, by separation (ruled, #128), never an equal split; the planes' phases differ by their pushes and by a link's turning between planes (The six planes) | 8, T6, T7, T14 |
 | T19 | a link's remanence `w = J - (a_0 M_0) M`: per passage `w' = w (1 - m / M) + J (m / M) (1 - rho_c / rho_hold)`; conserved between passages; cleared by a passage of hold `m* = w M / (w + J (rho_c / rho_hold - 1))`; for one release, the remanent share `1 - rho_hold / rho_closed` | 7, 11, T10, T17 |
 | T20 | the horizon is the equator of the pair's hold, `R_h = M_near + M_far`, where the faces read about the pair balance at one half (the inversion's fixed point); read about one face, `delta_h = M / (2M + M_far)`; a pair sharing one hold gives `R_h = 2M` and `delta_h = 1/3` | 2, 5, 6, T16 |
+| T21 | the horizon is axial: on each plane the pair holds where its held face is at least its passed face, about the hold it presents less what its open states vent, `H_v = (M_near + M_far)(1 - vent)`; the axis plane balances at `H_v`, a turning plane at `H_v + a M`; the charged spin's tilt mixes the axis plane and isoclinic plane 1 by its faces; the horizon moves with the spin, the charge and the holds | 5, 6, 7, 9, T8, T15, T16, T20 |
 
 Reading (seed 7; a retired floating-point screen with exact held sets, to
 be read on the binary once the pinches are built, #79): the universal core holds 0.4352 of the

@@ -529,9 +529,9 @@ where it belongs to one.
     (T21); the universe's radius breathing with the bell (`chain::radius`);
     a smooth dimension, the bulge's ball and the disc's circle weighted by
     the core's face at the reach (`formation::dimension_at`); each galaxy's
-    sphere breathing with its core's bell (`chain::galaxy_radius`).
-    Order: the throat's push swinging with
-    the echo (S114), the reverberation read at `t`, orbit rates breathing,
+    sphere breathing with its core's bell (`chain::galaxy_radius`); the
+    throat's push swinging with the echo (`circuit::throat_push`).
+    Order: the reverberation read at `t`, orbit rates breathing,
     the bell's period, the founding swing and the kept kinds on the throat
     orbit (S142), the centre's crossing share (S017), the field's step per
     ring, and the hold passing between the pair's faces.

@@ -620,9 +620,14 @@ sites are restated. The derivations are in
   Calibre: none. Status: built.
 - Held share (`Substrate::held_share`): the held share is
   `firmament mass / (firmament mass + sum bead masses)`. Calibre: none. Status: built.
-- Throat push (`circuit::throat_push`): `p = delta(H, H) = 1/2`. Calibre: none. Status:
-  built, read bare: the convergent face, unresisted by the divergent face
-  1/2, so the net push at the equator is 0 (S114, #195).
+- Throat push (`circuit::throat_push`): `p = delta(H, H) (1 + A_in) = (1 + A_in) / 2`,
+  swung by the inbound echo as every push is (`Substrate::push_at` with the
+  reach at the hold), one half at the echo's mean; the gas's cooling and
+  the disc's star hold read it under the cooling's swing, and a piece lights
+  where its heat is under that swung push (#233 item 3). Calibre: none.
+  Status: built, read bare: the convergent face, unresisted by the
+  divergent face 1/2, so the net push at the equator is 0 (S114, #195), and
+  the swing unbounded (S116).
 - Dilation per echo (`xyl_core::shares::dilation_dy`), one law for every holder:
   `rho = (1 + p) / (1 - p)`, `p` the push the holder receives. Calibre: none. Status:
   built; its callers pass the gross push, to become the net push

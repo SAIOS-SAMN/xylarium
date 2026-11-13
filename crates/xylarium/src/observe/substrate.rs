@@ -237,7 +237,7 @@ fn core_state(s: &Substrate, t: Dy) -> String {
         ),
         s.inbound(t),
         s.inbound_mean(s.echo()),
-        xyl_cosmos::circuit::throat_push(),
+        xyl_cosmos::circuit::throat_push(Dy::ONE),
         s.push_at(Dy::ONE, Dy::ONE, t)
     ));
     let swung = (0..rv.len())

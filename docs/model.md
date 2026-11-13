@@ -935,7 +935,8 @@ longer holds.
   received share `1 - delta`. The vacuum's share at reach `R` about a hold
   `H` is that deficit, the share the pulse carries there
   (`xyl_core::shares::deficit_dy`); read at the throat, it is the throat's push,
-  `p = delta(H, H) = 1/2` (`circuit::throat_push`). The jet carries the
+  `p = delta(H, H) = 1/2` at the echo's mean, swung by the inbound echo
+  `1 + A_in` (`circuit::throat_push`). The jet carries the
   throat's torsion share `s = (H + J) / (2H + J)` at each crossing
   (`bounce::torsion_share`), so the continuum dilates the pole coordinate
   by `rho = D(s) = (1 + s) / (1 - s)` per echo (`shares::dilation_dy`):
@@ -2358,7 +2359,7 @@ law, the same at a nucleus, a star and a world:
   `floor(n / P_e) + floor(n / k_v)` halvings by ring `n`
   (`P_e = ceil(1 / e)`, `k_v` the vacuum's halving), and fragments at the
   largest extent that holds. The piece lights where its agitation at
-  ignition is under the throat's push. The first stars are the ring count of
+  ignition is under the throat's push, swung as its cooling was. The first stars are the ring count of
   the first lit piece; the lit share is the star efficiency.
 - Reach unit: a star's reach about the core (`Star::r`, `Orbit::radius`) is
   measured in galaxy units, the same unit in which its piece was lit; kpc

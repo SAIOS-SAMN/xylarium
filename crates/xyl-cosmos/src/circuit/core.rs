@@ -45,14 +45,18 @@ use xyl_core::dyadic::Dy;
 use xyl_core::shares::{deficit_dy, dilation_dy};
 use xyl_core::Q;
 
-/// The push at the throat: the vacuum's share read at the throat's reach,
-/// `delta(H, H) = 1/2`. Not a constant: the one point of the deficit law
-/// where reach and hold coincide.
-pub fn throat_push() -> Dy {
+/// The push at the throat under the inbound echo's swing `swing`
+/// (`1 + A_in`): the vacuum's share read at the throat's reach,
+/// `delta(H, H) = 1/2`, the one point of the deficit law where reach and
+/// hold coincide, swung as every push is ([`Substrate::push_at`] with the
+/// reach at the hold): `swing / 2`, one half at the echo's mean (#233
+/// item 3).
+pub fn throat_push(swing: Dy) -> Dy {
     // The universal core's pair shares its hold, 1 on both faces (T16).
     let h = Dy::from_q(&crate::bounce::horizon_reach(&Q::ONE, &Q::ONE));
     // Stand-in S114: The convergent face is read, the divergent face not resisting it.
-    deficit_dy(h, h)
+    // Stand-in S116: The swung push is unbounded and unresisted.
+    deficit_dy(h, h) * swing
 }
 
 /// The echoes a pole point `t` takes to reach the throat (`t = 1`) under the
@@ -1038,9 +1042,12 @@ mod tests {
             xyl_core::dyadic!(3, 5)
         );
         // The throat's push is the vacuum's share where reach and hold
-        // coincide, one half; the jet's dilation is three for a spinless
+        // coincide, one half at the echo's mean; the jet's dilation is three for a spinless
         // throat and four at the extremal spin's torsion share, three fifths.
-        assert_eq!(throat_push(), xyl_core::dyadic!(1, 2));
+        // Swung, it is the swing's half.
+        assert_eq!(throat_push(Dy::ONE), xyl_core::dyadic!(1, 2));
+        let swing = xyl_core::dyadic!(5, 4);
+        assert_eq!(throat_push(swing), swing.div(&Dy::int(2)).unwrap());
         assert_eq!(dilation_dy(xyl_core::dyadic!(1, 2)), Some(Dy::int(3)));
         assert_eq!(
             xyl_core::shares::dilation(&xyl_core::ratio!(3, 5)),

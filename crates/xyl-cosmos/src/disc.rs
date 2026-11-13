@@ -115,7 +115,9 @@ pub fn star_hold(bead: &Bead, unit: &Q, held: &Q, swing: &Q, turning: &Q) -> Opt
     // infall within the rim `R0` (system-tier units). The collapsed star's
     // mass is `m0 = s0 c` core masses, which is `m0` in `r_g`, so its
     // compactness is `delta0 = m0 / (R0 60 + m0)`.
-    let push = crate::circuit::throat_push().to_q();
+    // The throat's push under the cooling's swing.
+    // Stand-in S116: The swung push is unbounded and unresisted.
+    let push = c.push.clone();
     let isoclinic = crate::atoms::Received::isoclinic(turning.clone());
     let dark = hold_at(&c.mix, &push, &spin, &isoclinic, &Q::ONE);
     let compactness = rim_share(&(&dark.held * &c.cloud), &dark.reach);

@@ -19,15 +19,18 @@ pub(crate) struct Cooling {
     pub(crate) clouds: i64,
     pub(crate) tide: Q,
     pub(crate) heated: Q,
+    /// The throat's push under the cooling's swing.
+    pub(crate) push: Q,
 }
 
 /// A bead's cooling, read one tier down as a piece of the home galaxy's gas:
 /// the bead's state over the founding `unit` is its holding (the galaxy's
 /// grains hold one ring together), spread over its span; its kinds stand at
 /// its pinch. The piece's agitation is what the push leaves there,
-/// (p - delta) / p, and its emission is the share-weighted mean of the kinds'
-/// emissions. `h` is the core's hold, 1 plus the held share; `swing` is
-/// 1 + A_in. None for an empty bead or span, or a unit that is not positive.
+/// (p - delta) / p with the throat's push `p` swung by `swing`, and its
+/// emission is the share-weighted mean of the kinds' emissions. `h` is the
+/// core's hold, 1 plus the held share; `swing` is 1 + A_in. None for an
+/// empty bead or span, or a unit that is not positive.
 pub(crate) fn cooling(bead: &Bead, unit: &Q, h: &Q, swing: &Q) -> Option<Cooling> {
     let width = &bead.span.1 - &bead.span.0;
     if width.signum() <= 0 || unit.signum() <= 0 {
@@ -45,7 +48,8 @@ pub(crate) fn cooling(bead: &Bead, unit: &Q, h: &Q, swing: &Q) -> Option<Cooling
         .collect();
     let holding = bead.state.checked_div(unit).unwrap_or(Q::ZERO);
     let lambda = holding.checked_div(&width).unwrap_or(Q::ZERO);
-    let push = crate::circuit::throat_push().to_q();
+    // Stand-in S116: The swung push is unbounded and unresisted.
+    let push = crate::circuit::throat_push(xyl_core::dyadic::Dy::from_q(swing)).to_q();
     let deficit = xyl_core::shares::deficit(h, &reach).unwrap_or(Q::ZERO);
     // Stand-in S121: The deficit is subtracted from the push, not composed against it.
     let agitation = (&push - &deficit)
@@ -70,13 +74,15 @@ pub(crate) fn cooling(bead: &Bead, unit: &Q, h: &Q, swing: &Q) -> Option<Cooling
         clouds,
         tide: deficit,
         heated,
+        push,
     })
 }
 
 /// Whether a cooled piece lights: it fragments into at least one infall and
-/// its agitation at ignition is under the throat's push.
+/// its agitation at ignition is under the throat's push, swung as its
+/// cooling was.
 pub(crate) fn lights(c: &Cooling) -> bool {
-    c.clouds > 0 && c.heated < crate::circuit::throat_push().to_q()
+    c.clouds > 0 && c.heated < c.push
 }
 
 /// The home galaxy's lighting: the rings until its gas first lights (the

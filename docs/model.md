@@ -1859,7 +1859,8 @@ and the order in which that is to be opened up.
   - A planet's rotor ignores its star's rotor, and a moon's is the identity.
   - `manifold::galaxy_place` keeps a world's distance from its star and
     drops its direction (`chain::Place::standing_off`).
-  - Field anchors sit on the first axis (`field::Anchor::on_orbit`).
+  - Field anchors sat on the first axis; each now stands at its orbit's
+    direction, moved with the orbit (`field::Anchor::along`).
   - `transit::separation_m` reads two worlds in different systems as their
     stars' arc.
 - **Units hop through SI in the chain.** A star's reach goes through kpc

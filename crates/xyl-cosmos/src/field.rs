@@ -46,7 +46,7 @@ use crate::chain::Place;
 use crate::elements::decimal;
 use crate::package::hole_mass;
 use crate::pulse::{c_kpc_per_ring, wavelength_kpc, Kind, Node};
-use xyl_core::certified::toward_zero;
+use xyl_core::certified::{toward_zero, Encl};
 use xyl_core::cga::{self, Mv, E1, E2, E3};
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
@@ -414,40 +414,56 @@ pub fn transduced_share(seq: &crate::stars::Sequence, b: Transduction) -> Q {
 // ---------------------------------------------------------- The star absorbs.
 
 /// A world as held by its star: its reach (its orbit's radius from the
-/// star's G point, AU), its native direction on its orbit and its current
-/// direction (sheared by pulses the star could not fully re-lock), each an
-/// exact unit direction, and its mass (world masses). A pulse turns a world
-/// about the star and keeps its reach, so the shear is a turn on a named
-/// plane, never a Cartesian displacement.
+/// star's G point, AU), its native direction (where its orbit puts it now,
+/// an exact unit direction, moved with the orbit by the caller), its shear
+/// (the turn pulses left that the star did not re-lock, a rotor carried with
+/// the orbit), and its mass (world masses). A pulse turns a world about the
+/// star and keeps its reach, so the shear is a turn on a named plane, never
+/// a Cartesian displacement.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Anchor {
     /// The orbit's radius from the star's G point (AU).
     pub reach: Q,
-    /// Native direction on the orbit, from the star's G point (exact unit).
+    /// Native direction on the orbit now, from the star's G point (exact unit).
     pub native: [Q; 3],
-    /// Current direction, including any shear not re-locked (exact unit).
-    pub at: [Q; 3],
+    /// The shear: the turn from the native direction not yet re-locked.
+    pub shear: xyl_core::rotor::Rotor<3>,
     /// World mass (world masses).
     pub mass: Q,
 }
 
 impl Anchor {
-    /// A world on its native orbit of radius `a` AU.
-    pub fn on_orbit(a: &Q, mass: &Q) -> Anchor {
-        // Stand-in S024: Every world anchor sits on the first axis at [a, 0, 0].
-        let native = [Q::ONE, Q::ZERO, Q::ZERO];
+    /// A world on its native orbit of radius `a` AU, at its orbit's exact
+    /// unit direction `dir`, unsheared.
+    pub fn on_orbit(a: &Q, mass: &Q, dir: [Q; 3]) -> Anchor {
         Anchor {
             reach: a.clone(),
-            at: native.clone(),
-            native,
+            native: dir,
+            shear: xyl_core::rotor::Rotor::identity(),
             mass: mass.clone(),
         }
+    }
+
+    /// The same world where its orbit has carried it, `dir`, its shear kept.
+    pub fn along(&self, dir: [Q; 3]) -> Anchor {
+        Anchor {
+            native: dir,
+            ..self.clone()
+        }
+    }
+
+    /// Its current direction: the native direction turned by the shear,
+    /// exact.
+    pub fn at(&self) -> [Q; 3] {
+        self.shear
+            .apply(&self.native.clone().map(Encl::exact))
+            .map(|x| x.mid())
     }
 
     /// The shear: the turn from the native direction to the current one, in
     /// degrees, read from the pivot's rate on each plane (`turn_share`).
     pub fn sheared(&self) -> Q {
-        &Q::int(360) * &turn_share(&self.native, &self.at)
+        &Q::int(360) * &turn_share(&self.native, &self.at())
     }
 }
 
@@ -537,7 +553,8 @@ pub fn absorb(
     for w in worlds {
         // The pulse's turn about the star: the world's point moved, less the
         // drift, read back as a direction at the same reach.
-        let point: [Q; 3] = std::array::from_fn(|i| &w.at[i] * &w.reach);
+        let at = w.at();
+        let point: [Q; 3] = std::array::from_fn(|i| &at[i] * &w.reach);
         let c = carry(v, &point)?;
         let turned: [Q; 3] = std::array::from_fn(|i| qd(&(&c[i] - &drift[i]), &w.reach));
         let share = dyadic(&turn_share(&w.native, &turned));
@@ -566,21 +583,18 @@ pub fn absorb(
             // The unpaid share of the turn from the native direction stays:
             // the pivot's rate scaled by it. A fully re-locked world stands
             // exactly on its native direction.
-            let at = if left.signum() == 0 {
-                w.native.clone()
+            let shear = if left.signum() == 0 {
+                xyl_core::rotor::Rotor::identity()
             } else {
                 xyl_core::rotor::pivot(&w.native, &turned, 64)
                     .and_then(|p| p.rotor)
                     .and_then(|r| r.rate_scaled(&left))
-                    .map_or(turned.clone(), |r| {
-                        r.apply(&w.native.clone().map(xyl_core::certified::Encl::exact))
-                            .map(|x| x.mid())
-                    })
+                    .unwrap_or_else(xyl_core::rotor::Rotor::identity)
             };
             Anchor {
                 reach: w.reach.clone(),
                 native: w.native.clone(),
-                at,
+                shear,
                 mass: w.mass.clone(),
             }
         })
@@ -727,9 +741,17 @@ mod tests {
         let d = Dy::int(8);
         let v = core.received(d).unwrap();
         let worlds = vec![
-            Anchor::on_orbit(&Q::ONE, &Q::ONE),
-            Anchor::on_orbit(&xyl_core::ratio!(52, 10), &Q::int(318)),
-            Anchor::on_orbit(&xyl_core::ratio!(3, 10), &xyl_core::ratio!(1, 20)),
+            Anchor::on_orbit(&Q::ONE, &Q::ONE, [Q::ONE, Q::ZERO, Q::ZERO]),
+            Anchor::on_orbit(
+                &xyl_core::ratio!(52, 10),
+                &Q::int(318),
+                [Q::ZERO, Q::ONE, Q::ZERO],
+            ),
+            Anchor::on_orbit(
+                &xyl_core::ratio!(3, 10),
+                &xyl_core::ratio!(1, 20),
+                [xyl_core::ratio!(3, 5), xyl_core::ratio!(4, 5), Q::ZERO],
+            ),
         ];
         let e = core.energy_at(d, &xyl_core::ratio!(52, 10));
         assert!(e.signum() > 0);

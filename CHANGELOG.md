@@ -11,6 +11,12 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Field anchors stand on their orbits (S024): each world's native
+  direction is its manifold's bearing at the pulse's age (a moon's its
+  giant's), and its shear is a rotor carried with the orbit
+  (`field::Anchor::along`, `Anchor::at`), in place of every world on the
+  first axis.
+
 - The field law is first-degree (E011, #199). A bell's received turn is
   `360 h` degrees about its exact unit axis, `h = sigma / (d + sigma)` the
   face of the hole's strain against the reach, with the pitch's share

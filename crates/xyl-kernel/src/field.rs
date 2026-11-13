@@ -35,10 +35,11 @@ use crate::cosmic::Cosmic;
 use std::collections::BTreeMap;
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
-use xyl_cosmos::chain::radius;
+use xyl_cosmos::chain::{radius, units};
 use xyl_cosmos::field::{
     absorb, au_per_kpc, bells, path, transduced_share, transduction, Absorbed, Anchor, Bell,
 };
+use xyl_cosmos::manifold::{manifolds, Anchor as ManifoldAnchor};
 use xyl_cosmos::pulse::{nodes, nodes_among, Node};
 
 /// Number of sample stars searched for bells: the bells are the core plus the
@@ -177,11 +178,18 @@ impl Field {
                 )
             })
             .collect();
-        let (systems, bells) = (&cosmic.systems, &self.bells);
+        let (systems, bells, seed) = (&cosmic.systems, &self.bells, cosmic.gal.seed);
         let done: Vec<(u64, Option<Vec<Anchor>>, Option<[Q; 3]>, Option<Books>, u64)> = held
             .into_par_iter()
             .map(|(star, anchors, drift0, books0)| {
-                ring_star(star, (anchors, drift0, books0), systems, bells, from, to)
+                ring_star(
+                    seed,
+                    star,
+                    (anchors, drift0, books0),
+                    systems,
+                    bells,
+                    (from, to),
+                )
             })
             .collect();
         let mut delivered = 0;
@@ -249,6 +257,11 @@ impl Field {
     }
 }
 
+/// The ring count at `gyr`, read through the cosmos's clock.
+fn from_ring_of(gyr: Dy) -> Dy {
+    xyl_cosmos::circuit::rings_of_gyr_dy(gyr)
+}
+
 /// One star's state between deliveries: its worlds' anchors, its drift (AU
 /// per axis) and its books, each `None` until first reached.
 type StarState = (Option<Vec<Anchor>>, Option<[Q; 3]>, Option<Books>);
@@ -256,23 +269,37 @@ type StarState = (Option<Vec<Anchor>>, Option<[Q; 3]>, Option<Books>);
 /// Delivers every bell's pulses arriving in `(from, to]` Gyr to `star` from
 /// its held state. Returns the star's new state and the pulses delivered.
 fn ring_star(
+    seed: u64,
     star: u64,
     (anchors, drift0, books0): StarState,
     systems: &BTreeMap<u64, crate::cosmic::Witnessed>,
     bells: &[(Node, Bell)],
-    from: Dy,
-    to: Dy,
+    (from, to): (Dy, Dy),
 ) -> (u64, Option<Vec<Anchor>>, Option<[Q; 3]>, Option<Books>, u64) {
     let _busy = xyl_core::watch::busy(format!("rings of star {star}"));
     let Some(w) = systems.get(&star) else {
         return (star, anchors, drift0, books0, 0);
     };
     let mass = w.system.spec.mass.clone();
+    // Each world's direction from the star where its orbit has carried it
+    // at `age` rings: its manifold's bearing, a moon its giant's.
+    let all = manifolds(seed, &[star], &w.system, &w.star, &units());
+    let dir_at = |i: usize, age: &Q| -> [Q; 3] {
+        let of = |k: usize| all.iter().find(|m| m.world == k);
+        let around_star = match of(i).map(|m| m.anchor) {
+            Some(ManifoldAnchor::World(giant)) => giant,
+            _ => i,
+        };
+        of(around_star).map_or([Q::ONE, Q::ZERO, Q::ZERO], |m| m.bearing(age, &all).dir)
+    };
+    let born_age = |t: Dy| (t - Dy::from_q(&w.star.born)).max(Dy::ZERO).to_q();
     let mut worlds = anchors.unwrap_or_else(|| {
+        let age = born_age(from_ring_of(from));
         w.system
             .worlds
             .iter()
-            .map(|x| Anchor::on_orbit(&x.a, &x.mass))
+            .enumerate()
+            .map(|(i, x)| Anchor::on_orbit(&x.a, &x.mass, dir_at(i, &age)))
             .collect()
     });
     let Some(a_out) = w.system.worlds.iter().map(|x| x.a.clone()).max() else {
@@ -324,6 +351,14 @@ fn ring_star(
         // leaves the anchors unchanged (the star re-locked them all),
         // every later ring is identical, so the rest are counted rather
         // than repeated; the result is independent of how the span is cut.
+        // The worlds stand where their orbits have carried them, their
+        // shears carried with them.
+        let age = born_age(to_ring);
+        worlds = worlds
+            .iter()
+            .enumerate()
+            .map(|(i, a)| a.along(dir_at(i, &age)))
+            .collect();
         let b = books.get_or_insert_with(Books::default);
         let mut i = 0;
         while i < k {

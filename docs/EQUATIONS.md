@@ -1064,7 +1064,10 @@ sites are restated. The derivations are in
     `s` is read plane by plane from the pivot's rate (11b),
     `sum_k atan |g_k| / pi`, certified. The pulse's translation is the
     drift and shears no orbit; a turn keeps the reach. The unpaid share
-    stays as shear, the pivot's rate scaled by it (`Rotor::rate_scaled`).
+    stays as shear, the pivot's rate scaled by it (`Rotor::rate_scaled`), a
+    rotor carried with the world as its orbit moves (`field::Anchor`: each
+    world at its manifold's bearing at the pulse's age, a moon at its
+    giant's).
     Books: in = gravity + light + transduced out, exactly. Calibre: one per
     share (AU).
 - Power (`stars::power`): `P = m transduced_per_bell(r) / bell` core masses per

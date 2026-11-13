@@ -314,14 +314,11 @@ impl Manifold {
         let mean = Encl::exact(self.m0.clone()).add(&self.rate(all).mul(&Encl::exact(age.clone())));
         let (cm, _) = cos_sin_turns(&mean);
         let along = mean.add(&self.twist(&ecc, all).mul(&Encl::exact(age.clone())));
-        // The phase's exact circle point, turned exactly: a unit direction.
-        let (c, s) = xyl_core::rotor::circle_point(&(&along.mid() * &Q::int(360)), 64)
-            .unwrap_or((Q::ONE, Q::ZERO));
         Bearing {
-            dir: self
-                .rotor
-                .apply(&[c, s, Q::ZERO].map(Encl::exact))
-                .map(|x| x.mid()),
+            dir: crate::chain::on_plane(
+                &self.rotor,
+                &xyl_core::rotor::Winding::of_turns(&along.mid()),
+            ),
             r: &self.a * &(&Q::ONE - &(&ecc.mid() * &cm.mid())),
         }
     }

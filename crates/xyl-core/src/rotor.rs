@@ -19,6 +19,8 @@
 //! - [`circle_point`], the cosine and sine of an angle in degrees as the
 //!   exact rational point of the circle the turn carries its first
 //!   generator to.
+//! - [`Winding`], a turn split into its whole turns and its phase in
+//!   degrees (E019, #149).
 //! - [`pivot`], the relative rotor between two exact unit directions, its
 //!   one plane by generators and its turn in degrees, certified.
 //!
@@ -345,6 +347,41 @@ pub fn circle_point(degrees: &Q, bits: u32) -> Option<(Q, Q)> {
     Some((cos, sin))
 }
 
+/// A turn split into its winding and its phase (E019; the Diophantine
+/// split, #149): the whole turns, in ZZ, and the degrees within the turn,
+/// in `[0, 360)`, both carried and never merged. A value in radians, or
+/// `frac` alone, drops the winding.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Winding {
+    /// The whole turns `K`, an integer held as `Q` (the floor of the turns).
+    pub whole: Q,
+    /// The phase: the degrees within the turn, in `[0, 360)`, exact.
+    pub degrees: Q,
+}
+
+impl Winding {
+    /// The split of `turns` (exact): `K = floor(turns)`, the phase
+    /// `360 frac(turns)` degrees.
+    pub fn of_turns(turns: &Q) -> Winding {
+        let phase = turns.frac();
+        Winding {
+            whole: turns - &phase,
+            degrees: &phase * &Q::int(360),
+        }
+    }
+
+    /// The turns again, `K + degrees / 360`, exact.
+    pub fn turns(&self) -> Q {
+        &self.whole + &self.degrees.over(crate::nonzero!(360))
+    }
+
+    /// This winding less another, split anew: whole turns and phase of the
+    /// difference, both carried.
+    pub fn less(&self, other: &Winding) -> Winding {
+        Winding::of_turns(&(&self.turns() - &other.turns()))
+    }
+}
+
 /// The pivot between two unit directions (the pair rule, E019; E028): the
 /// relative rotor carrying `a` to `b`, its plane by generators, and its turn
 /// on that plane in degrees.
@@ -570,6 +607,26 @@ mod tests {
             let image = Rotor::<2>::of(&turn, 60).unwrap().apply(&exact([1, 0]));
             assert_eq!(image, [c, s].map(Encl::exact));
         }
+    }
+
+    /// A turn splits into its winding and phase and back exactly, negative
+    /// turns included, and a difference is split anew.
+    #[test]
+    fn a_turn_splits_into_winding_and_phase() {
+        let q = |n: i64, d: i64| Q::new(n, d).unwrap();
+        let w = Winding::of_turns(&q(9, 4));
+        assert_eq!(
+            (w.whole.clone(), w.degrees.clone()),
+            (Q::int(2), Q::int(90))
+        );
+        assert_eq!(w.turns(), q(9, 4));
+        let back = Winding::of_turns(&q(-1, 3));
+        assert_eq!(
+            (back.whole.clone(), back.degrees.clone()),
+            (Q::int(-1), Q::int(240))
+        );
+        let d = w.less(&back);
+        assert_eq!((d.whole, d.degrees), (Q::int(2), Q::int(210)));
     }
 
     /// The pivot carries one unit direction to the other exactly, names

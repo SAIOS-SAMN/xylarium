@@ -8,6 +8,7 @@ path in the same cell without a prefix belongs to the same crate as the one
 before it. Formulas are in [EQUATIONS.md](EQUATIONS.md).
 `scripts/check-docs` verifies every link and every code path in this table.
 
+| Separation (of two places) | The separation of two places on one sphere holds every component apart: the pivot between their directions, the relative rotor between their orbit planes, each winding, their phase difference where the planes coincide, and the pairs of reaches, climbs and offsets. Never one distance. | `chain::Place::separation` | [model.md](model.md#pairs-the-pivot-per-plane) |
 | Term | Meaning | Defined in | Explained in |
 |---|---|---|---|
 | Anchor | The anchor is the set of founding values that every tier reads: the rim, the bell, the home galaxy's rim, the universe's radius, the first stars, the admitted spin, the torsion share and the firmament's margin. | `circuit::anchor::Anchor`, `circuit::anchor::of` | [model.md](model.md#2-units-and-the-anchor) |
@@ -206,6 +207,7 @@ before it. Formulas are in [EQUATIONS.md](EQUATIONS.md).
 | Vortex | A vortex is founded matter's shape: a core (the filament), stretched along it by `D(n)^t`, swirling about it with circulation `Gamma`, its fibres (the Hopf fibres) twisted about the core, the core writhing, and linked with every other vortex; it replaces bands, circles and points (planned). | planned | [model.md](model.md#the-vortex-core-swirl-twist-writhe-linking) |
 | Waveform | The waveform is the ocean's non-tidal amplitude `A(r, t)` at reach `r` and time `t`. | `circuit::Substrate::amplitude` | [model.md](model.md#4-the-firmament-and-the-core) |
 | Weight (of a state) | A state's weight is its turning on each of the six planes, `m = (m0, ..., m5)` in Z^6; a degree-`l` harmonic of weight `m` occurs `C((l - sum |mi|) / 2 + 4, 4)` times. | `fibres::directions` (counts) | [model.md](model.md#weights-on-the-six-planes) |
+| Winding (of a turn) | A turn's winding is its whole turns, carried beside its phase, the degrees within the turn; a value in radians or `frac` alone drops it (E019, #149). | `xyl_core::rotor::Winding` | [model.md](model.md#winding-and-phase-the-diophantine-split) |
 | Winding and phase | A turn held in the rationals splits into its winding, the whole turns in ZZ, and its phase, the degrees within the turn in QQ/ZZ; both are carried, never merged into a ring count or radians (planned, #149). | `coordinate::beat` | [model.md](model.md#winding-and-phase-the-diophantine-split) |
 | World | A world is a planet formed on a star's manifold where gathered matter holds its region against the core's tide, with an orbit, mass, radius and elements; its air, seas and temperature are read per degree of the star's life. | `systems::World`, `disc::manifold_worlds`, `worlds::build` | [model.md](model.md#6-stars-and-systems) |
 | Worth law | The worth law sites a ley line where a passage is worth most: the passer's mass times what it saves against normal transit, less its tithe. | `xyl-kernel transit::Network::step` | [civilizations.md](civilizations.md#ley-lines-and-the-worth-law) |

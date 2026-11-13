@@ -140,13 +140,10 @@ impl Star {
     /// off the plane (a disc star's vertical swing, zero otherwise).
     pub fn bearing(&self, t: Dy) -> (Q, [Q; 3], Q) {
         let o = &self.orbit;
-        // The phase's exact circle point, turned exactly: a unit direction.
-        let (c, s) = xyl_core::rotor::circle_point(&(&o.turns_at(t).to_q() * &Q::int(360)), 64)
-            .unwrap_or((Q::ONE, Q::ZERO));
-        let dir = o
-            .rotor()
-            .apply(&[c, s, Q::ZERO].map(Encl::exact))
-            .map(|x| x.mid());
+        let dir = crate::chain::on_plane(
+            &o.rotor(),
+            &xyl_core::rotor::Winding::of_turns(&o.turns_at(t).to_q()),
+        );
         let climb = match o.swing {
             Some((u, phase)) => {
                 // `z = A sin(phase + nu t / (2 pi) turns)`, evaluated at the
@@ -170,11 +167,12 @@ impl Star {
     /// The star's place at `t` rings on its galaxy's sphere, with its core on
     /// the universe's sphere of radius `r`.
     pub fn place(&self, t: Dy, r: &Q) -> Place {
-        let (reach, dir, climb) = self.bearing(t);
+        let (reach, _, climb) = self.bearing(t);
         let core = self.galaxy.place_at(t, r);
+        let at = xyl_core::rotor::Winding::of_turns(&self.orbit.turns_at(t).to_q());
         Place::in_galaxy(
             reach,
-            dir,
+            (self.orbit.rotor(), at),
             climb,
             self.core,
             &crate::chain::galaxy_radius(&self.scale.to_q()),

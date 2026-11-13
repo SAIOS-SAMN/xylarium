@@ -35,15 +35,19 @@ use xyl_core::certified::Encl;
 use xyl_core::cga::{self, keeping, Mv, Source};
 use xyl_core::Q;
 
+/// The horizon's held share, `delta_h = 1/3`: where the received share
+/// `1 - delta` is twice the held share (axiom 6, a declared ruler).
+pub fn horizon_share() -> Q {
+    Q::ONE.checked_div(&Q::int(3)).unwrap_or(Q::ONE)
+}
+
 /// The horizon's reach from the centre, in the deficit grammar. The share a
 /// hole of `mass` holds at reach `R` is `delta = M / (R + M)`; the horizon is
 /// the reach where the received share `1 - delta` is twice the held share, so
 /// `delta_h = 1/3` and `R_h = M (1 - delta_h) / delta_h = 2M`. Linear in `M`,
 /// exact.
 pub fn horizon_reach(mass: &Q) -> Q {
-    // The horizon's held share is delta_h = 1/3, where the received share
-    // 1 - delta is twice delta.
-    let held = Q::ONE.checked_div(&Q::int(3)).unwrap_or(Q::ONE);
+    let held = horizon_share();
     let received = &Q::ONE - &held;
     (mass * &received).checked_div(&held).unwrap_or(Q::ZERO)
 }

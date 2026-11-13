@@ -21,7 +21,7 @@ use xyl_core::codec::{Dec, Enc};
 /// load.
 static DIR: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
 
-const VERSION: u32 = 10;
+const VERSION: u32 = 12;
 
 /// Names the directory the founding is cached in (a universe's home). The
 /// first call in a process wins; without one, nothing is cached.
@@ -169,9 +169,9 @@ fn get_table(d: &mut Dec) -> Option<super::weights::Table> {
     Some(table)
 }
 
-/// The founding shells as `formation::founding_shells` returns them: the
-/// final share, each shell (z, amount, reach) and the universal table.
-pub(crate) type Shells = (Q, Vec<(u32, Q, Q)>, super::weights::Table);
+/// The founding shells as `formation::founding_shells` returns them: each
+/// shell, the universal table and the pools' take.
+pub(crate) type Shells = (Vec<crate::formation::Shell>, super::weights::Table, Q);
 
 /// The cached founding shells for `key` (`shells-{key}` in the directory),
 /// if the directory holds them whole.
@@ -195,11 +195,16 @@ pub(crate) fn store_shells(key: &str, s: &Shells) {
 /// The founding shells written with the format version.
 fn encode_shells(s: &Shells) -> Vec<u8> {
     let mut e = Enc::new();
-    e.u32(VERSION).q(&s.0).len(s.1.len());
-    for (z, a, r) in &s.1 {
-        e.u32(*z).q(a).q(r);
+    e.u32(VERSION).len(s.0.len());
+    for k in &s.0 {
+        e.u32(k.z)
+            .q(&k.amount)
+            .q(&k.reach)
+            .q(&k.swing)
+            .u32(u32::from(k.kept));
     }
-    put_table(&mut e, &s.2);
+    put_table(&mut e, &s.1);
+    e.q(&s.2);
     e.buf
 }
 
@@ -210,13 +215,19 @@ fn decode_shells(buf: &[u8]) -> Option<Shells> {
     if d.u32()? != VERSION {
         return None;
     }
-    let s_final = d.q()?;
     let mut shells = Vec::new();
     for _ in 0..d.count()? {
-        shells.push((d.u32()?, d.q()?, d.q()?));
+        shells.push(crate::formation::Shell {
+            z: d.u32()?,
+            amount: d.q()?,
+            reach: d.q()?,
+            swing: d.q()?,
+            kept: d.u32()? == 1,
+        });
     }
     let table = get_table(&mut d)?;
-    d.done().then_some((s_final, shells, table))
+    let take = d.q()?;
+    d.done().then_some((shells, table, take))
 }
 
 /// The cached founding for `key`, if the directory holds one that reads whole.
@@ -252,7 +263,7 @@ mod tests {
             .iter()
             .map(|z| (*z, Q::new(1, i64::from(*z)).unwrap()))
             .collect();
-        let shells = crate::formation::founding_shells(&mix);
+        let shells = crate::formation::founding_shells(&mix, &xyl_core::ratio!(1, 2));
         let buf = encode_shells(&shells);
         assert_eq!(decode_shells(&buf), Some(shells));
         assert_eq!(decode_shells(&buf[..buf.len() - 1]), None);

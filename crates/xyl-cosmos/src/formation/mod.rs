@@ -9,12 +9,18 @@
 //! rings, times in whole rings; in these units the core's reach is one ring
 //! and its hold `H = 1 + held`.
 //!
-//! - Founding shells (`founding_shells`): at the capture mass `m = Z`, each
-//!   kind's reach `R_z = H D(s_final (+) s_i) / D(r_m)` with
-//!   `D(r_m) = W_e / 3`, whether the throat holds it, `R_z (1 + s_final) <= 1`,
-//!   and the universal table: each parcel's rest point `Q* / Z = H / R`,
-//!   held per kind unsummed (`circuit::neutrons_at`); a take is carried by
-//!   the catcher's push.
+//! - Release (`spin_orbit`, T17): the core's bounces release its open
+//!   kinds cohort by cohort, each climbing `ln t += N* ln(D(s) D(n)^A)` per
+//!   pinch interval `N* = 3 (4 + a) / (2a)` until it crosses, the kinds
+//!   pressed by the near face inverted out by the far face; the closed
+//!   kinds are kept on both faces (T16).
+//! - Founding shells (`founding_shells`): each released layer leaves from
+//!   the kept hold's horizon `2H` and stands after its cohort's pinch
+//!   interval at the reach rate's closed form,
+//!   `(r - r0) + 2m ln(r / r0) = 2 (h - m) N*`, swinging by `h / (r + h)`;
+//!   the universal table holds every kind's rest point at the bounce,
+//!   `Q* / Z = D(R)` from its electron phase at its capture phase (E018,
+//!   `circuit::neutrons_at`).
 //! - Gas (`lighting`): each bead is a piece of the home galaxy's gas,
 //!   its state over the unit spread over its span, its kinds at its pinch
 //!   with agitation `a = (p - delta) / p`, `p` the throat's push
@@ -42,16 +48,15 @@
 //! Outputs: `Lighting` (rings to first light, lit share, per-piece record;
 //! fed into the founding), `Hold`, `Kind`.
 //! Invariants: every value is an exact `Q`, cut toward zero to the 2^-64 grid
-//! where noted (the founding shells are exact: pushes and reaches held as
-//! face pairs, `shares::FacePairs`, sums formed exactly), with `pi` and
+//! where noted (the release's logarithms are dyadic readings, the reaches
+//! and rest points cut toward zero at 2^-64), with `pi` and
 //! `ln 2` as certified midpoints; empty beads, spans and mixes yield `None`
-//! or empty results; results are deterministic
-//! (the parallel meetings in `founding_shells` are collected in order).
+//! or empty results; results are deterministic.
 //!
 //! Terms: lighting, piece (docs/glossary.md).
 //!
-//! Layout: `gas` (cooling, lighting, collapse), `shells` (the founding
-//! shells), `hold` (the star tier's cut); this file holds the nucleus
+//! Layout: `gas` (cooling, lighting, collapse), `shells` (the core's
+//! release and the founding shells), `hold` (the star tier's cut); this file holds the nucleus
 //! masses, emissions and the kinds.
 
 mod gas;
@@ -61,7 +66,7 @@ mod shells;
 pub(crate) use gas::{cooling, lights, pulse_heat, vacuum_halving};
 pub use gas::{lighting, Lighting};
 pub use hold::{hold_at, Hold};
-pub use shells::founding_shells;
+pub use shells::{founding_shells, spin_orbit, Cohort, Shell, SpinOrbit};
 
 use crate::elements::Element;
 use xyl_core::Q;

@@ -418,26 +418,19 @@ components, and each formation mechanic moves one of them.
   (1 + R_p)`. A kind at `abs(R_p) = 1` has none and is refused. The counts
   are rational; their reading back to whole nucleons is the Diophantine
   split (#149).
-- **The universal table** (ruled 2026-11-11, #201). The bounce captures
-  first, then converts. The founding shells are read at the capture mass
-  `m = Z` (`Q0 = 0`): the stack's push `p_stack = s_final (+) s_i`, the
-  throat's final share composed with the stack's own face, against the
-  kind's resistance `D(r_m) = W_e / 3`, carries it to
-  `R = H D(p_stack) / D(r_m)`. Each parcel then rests at the antipolar face
-  of its reach, `Q* / Z = H / R` (the involution `t -> 1/t`, the law's sole
-  ground). The push and the reach are held as face pairs
-  (`shares::FacePairs`, #210): `R` is the pairs `[(H), D(s_final),
-  D(s_i), (3, W_e)]` and the rest point swaps them, exact. So at release
-  `Q* / Z = (3Z - U) / (3 D(p_stack))`. A kind is its parcels' rest
-  points, unsummed (`shares::Parcel`); a reader forms `Q_z`, their
-  amount-weighted reading, as an enclosure at the reader's precision: a
-  nucleus's weight on the 2^-64 grid (`circuit::rest_neutrons`), the
-  whole-nucleon count refined until the count is decided
-  (`circuit::mass_number`); every reading of a nucleus after the shells
-  weighs `Z + Q_z`. Seed 7 founds one stack, so a catcher's push is its
-  giver's and every kind rests at its closed form
-  `Q* / Z = W_e / (3 D(1/6)^2) = 25 W_e / 147`: no kind is refused, and
-  `Q* / Z` runs 50/147 to 3900/7, rising with `W_e`.
+- **The universal table** (#201; E018 built 2026-11-13). The bounce
+  captures first, then converts. The founding's release is read at the
+  capture mass `m = Z` (`Q0 = 0`); at the bounce the medium's push is zero,
+  so every founded kind rests at the rest point above, in the common phase:
+  `Q* / Z = D(R) = (1 + R) / (1 - R)`, `R` the kind's electron phase at its
+  capture phase `frac(s Z)` (`circuit::electron_phase`), exact. The reach a
+  kind is released to plays no part in it. A kind is its rest point, held
+  as a parcel (`shares::Parcel`); a reader forms `Q_z` as an enclosure at
+  the reader's precision: a nucleus's weight on the 2^-64 grid
+  (`circuit::rest_neutrons`), the whole-nucleon count refined until it is
+  decided (`circuit::mass_number`). Every reading of a nucleus after the
+  founding weighs `Z + Q_z`. Seed 7: no kind is refused, and `Q* / Z` runs
+  0.014 to 437 with the phase, not with `W_e`.
 - **The two holds.** `3W = 3Z + 3Q` is the nucleon whole. The electron
   hold `W_e = 3Z - U` (`compound::electron_hold`) is the held states the
   bound electrons screen, against which the open channel `abs(R_p) u` acts

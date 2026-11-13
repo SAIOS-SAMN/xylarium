@@ -185,7 +185,7 @@ and may run beside `run`. Bracketed arguments are optional, with their defaults.
 | `bond` | `A B [T=0]` | Law | The bond of atoms A and B by its planes (`atoms::Bond`): each face's pole push and polarity on the axis plane and their composition, each face's open windings with their tightness and the share an isoclinic turning T leaves held |
 | `bonding` | `[N=150]` | Law | Each kind's contacts, grip and conduction in a body of like atoms, Z 1 to N |
 | `universal-core` | `[R]` | Law | The universal core's substrate R rings after the bounce (default: the first stars), on the T lane with Gyr as a display conversion: its reverberation kind by kind, its outflow, the ocean's shares, every galaxy's intake, the books, Z Q R |
-| `founding` | | Law | The founding shells (`formation::founding_shells`) on the founding's mix: the final share, the held kinds, and each shell's kinds, amount and reach |
+| `founding` | | Law | The core's release on the founding's mix (`formation::spin_orbit`, `formation::founding_shells`): its cohorts with their layers' pole reaches, the kept kinds, and each shell's kinds, amount, reach and swing |
 | `galactic-core` | `N` | Law | Galactic core N of the founding (0 is the home galaxy's, at the universal core): its hole, its mass ratio to the home hole, its place |
 | `tiers` | `S` | Law | Star S and its worlds, each turning on its plane counted in its anchor's rings |
 | `universe` | | Carried | The default: the bell's count, the peoples, the seats, the bells, the books, the worlds formed and the cores |

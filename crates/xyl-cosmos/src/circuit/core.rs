@@ -40,6 +40,7 @@
 // reverberation, held medium, ocean's carry (docs/glossary.md).
 
 use super::*;
+pub use crate::formation::{Cohort, SpinOrbit};
 use xyl_core::dyadic::Dy;
 use xyl_core::shares::{deficit_dy, dilation_dy};
 use xyl_core::Q;
@@ -417,162 +418,17 @@ impl Substrate {
         )
     }
 
-    /// The universal core's spin as a sheared orbit over its bounces (T17).
-    ///
-    /// At the bounce every founded kind is at the core, of hold `M` and
-    /// turning `J = a M^2`. A kind's states stand on both faces: its open
-    /// share `q = U / (U + W)` on the near face, which advances `s` per
-    /// traversal, its held share on the antipode, which advances `1 - s`.
-    /// Its separation is their flow-law sum, the rapidity
-    /// `rho = q ln D(s) - (1 - q) ln D(1 - s)`; the far face exchanges `q`
-    /// and `1 - q`. A cohort of hold `m` takes the turning in proportion to
-    /// its separation against the throat's present hold,
-    /// `J (m / M) (rho_cohort / rho_hold)`, so releasing everything takes
-    /// `J` whole (axiom 11), and the spin after it is `a' = J' / M'^2`.
-    ///
-    /// A closed kind is held on both faces (T16). An open kind of axis
-    /// polarity `A` is dilated per echo by `D(s) D(n)^A` on the near face;
-    /// where that is at most one the near face holds it and the far face
-    /// releases it at once. Every other open kind climbs to the throat in
-    /// closed form, `ln t += N* ln(D(s) D(n)^A)` per bounce interval
-    /// `N* = 3 (4 + a) / (2a)`, and leaves in the cohort of the first bounce
-    /// after it arrives (at the core the folds' meeting is a bounce through
-    /// the far face, never a pinch). The bounces are events found in closed
-    /// form; the
-    /// interval moves with the spin. Logarithms and the separations are
-    /// dyadic readings, the holds exact, and each cohort's share of the
-    /// turning is gridded back to `Q`. A spinless core never bounces a cohort out. `None`
-    /// where the founded elements cannot be read.
+    /// The universal core's spin as a sheared orbit over its bounces (T17):
+    /// `formation::spin_orbit` of the founded kinds at the parent's `spin`,
+    /// the release the founding's shells are read from. `None` where the
+    /// founded elements cannot be read.
     pub fn spin_orbit(&self, spin: &Q) -> Option<SpinOrbit> {
-        // (kind, hold, ln t, axis polarity) of each founded kind, its hold
-        // its founded mass `share mass_weight / hold` (the founding's own
-        // units, before the firmament is scaled to the universal state); ln t
-        // and the polarity are read for open kinds only.
         let elements = crate::elements::founded(&self.share).ok()?;
-        let mut kinds: Vec<(u32, Q, Dy, Dy)> = crate::formation::kinds(&elements)
+        let mix: Vec<(u32, Q)> = crate::formation::kinds(&elements)
             .into_iter()
-            .filter_map(|k| {
-                let hold = Q::int(i64::from(crate::compound::electron_hold(k.z)));
-                let m = (&k.share * &crate::formation::mass_weight(k.z)).checked_div(&hold)?;
-                (m.signum() > 0).then_some((k.z, m))
-            })
-            .filter_map(|(z, m)| {
-                let (u, w_e) = (crate::compound::open(z), crate::compound::electron_hold(z));
-                if u == 0 {
-                    return Some((z, m, Dy::ZERO, Dy::ZERO));
-                }
-                let t = (Dy::from_q(&Q::int(i64::from(u))))
-                    .div(&(Dy::from_q(&Q::int(i64::from(w_e)))))
-                    .unwrap_or_default();
-                // The polarity on the axis plane, where the Z-Q stretch is
-                // read, filled from both sides at the kind's capture phase in
-                // the common phase (#201), held exact and read as a dyadic.
-                let from_q = super::weights::fill_shares(z, &self.share, &xyl_core::hopf::COMMON);
-                let [axis, ..] = crate::atoms::plane_polarities(z, &from_q)?;
-                Some((z, m, t.ln()?, Dy::from_q(&axis)))
-            })
+            .map(|k| (k.z, k.share))
             .collect();
-        let mut hold = kinds.iter().fold(Q::ZERO, |m, k| &m + &k.1);
-        let founded = hold.clone();
-        let mut a = spin.clone();
-        let mut turning = &(&a * &hold) * &hold;
-        let mut cohorts = Vec::new();
-        let mut echoes = Dy::ZERO;
-        while a.signum() > 0 && a <= Q::ONE {
-            let s = crate::bounce::torsion_share(&Q::ONE, &a);
-            let (Some(near), Some(anti)) = (
-                Dy::from_q(&(&Q::int(3) + &a)).ln(),
-                Dy::from_q(&(&Q::int(2) - &s).checked_div(&s).unwrap_or(Q::ZERO)).ln(),
-            ) else {
-                break;
-            };
-            let lnn = Dy::from_q(&(&Q::ONE + &(&a * &xyl_core::ratio!(1, 2))))
-                .ln()
-                .unwrap_or(Dy::ZERO);
-            let separation = |z: u32, far: bool| {
-                let (u, w_e) = (crate::compound::open(z), crate::compound::electron_hold(z));
-                let q = (Dy::from_q(&Q::int(i64::from(u))))
-                    .div(&(Dy::from_q(&Q::int(i64::from(u + w_e)))))
-                    .unwrap_or_default();
-                let q = if far { Dy::ONE - q } else { q };
-                q * near - (Dy::ONE - q) * anti
-            };
-            let spread = |members: &[(u32, Q, Dy, Dy)], far: bool| {
-                members
-                    .iter()
-                    .fold(Dy::ZERO, |r, k| r + Dy::from_q(&k.1) * separation(k.0, far))
-            };
-            let open = |k: &(u32, Q, Dy, Dy)| crate::compound::open(k.0) > 0;
-            // The near face holds by pressure what the far face releases.
-            let pressed = |k: &(u32, Q, Dy, Dy)| open(k) && near + lnn * k.3 <= Dy::ZERO;
-            let (out, far, at) = if cohorts.is_empty() && kinds.iter().any(pressed) {
-                let (out, stay): (Vec<_>, Vec<_>) = kinds.drain(..).partition(pressed);
-                kinds = stay;
-                (out, true, Dy::ZERO)
-            } else {
-                let interval = (Dy::from_q(&(&Q::int(3) * &(&Q::int(4) + &a))))
-                    .div(&(Dy::from_q(&(&Q::int(2) * &a))))
-                    .unwrap_or_default();
-                // The bounce at which each open kind arrives: the least whole
-                // k with k N* ln(D(s) D(n)^A) >= -ln t.
-                let arrive = |k: &(u32, Q, Dy, Dy)| {
-                    let rate = near + lnn * k.3;
-                    if !open(k) || rate.signum() <= 0 {
-                        return None;
-                    }
-                    let need = ((-k.2).div(&(interval * rate)).unwrap_or_default()).to_q();
-                    let whole = i64::try_from(-(-&need).floor_i128()?).ok()?;
-                    Some(whole.max(1))
-                };
-                let Some(first) = kinds.iter().filter_map(arrive).min() else {
-                    break;
-                };
-                echoes += interval * Dy::int(first);
-                let (out, stay): (Vec<_>, Vec<_>) =
-                    kinds.drain(..).partition(|k| arrive(k) == Some(first));
-                kinds = stay
-                    .into_iter()
-                    .map(|(z, m, lt, ax)| {
-                        let climbed = if m.signum() > 0 && crate::compound::open(z) > 0 {
-                            lt + interval * Dy::int(first) * (near + lnn * ax)
-                        } else {
-                            lt
-                        };
-                        (z, m, climbed, ax)
-                    })
-                    .collect();
-                (out, false, echoes)
-            };
-            let all: Vec<_> = out.iter().chain(kinds.iter()).cloned().collect();
-            let m = out.iter().fold(Q::ZERO, |s, k| &s + &k.1);
-            // The cohort's separation over the hold's, each mass-weighted.
-            let per = |sum: Dy, of: &Q| sum.div(&(Dy::from_q(of))).unwrap_or_default();
-            let share = (per(spread(&out, far), &m)
-                .div(&per(spread(&all, false), &hold))
-                .unwrap_or_default())
-            .to_q();
-            let taken = &(&turning * &m.checked_div(&hold).unwrap_or(Q::ZERO)) * &share;
-            turning = &turning - &xyl_core::certified::toward_zero(&taken, 64);
-            hold = &hold - &m;
-            a = turning.checked_div(&(&hold * &hold)).unwrap_or(Q::ZERO);
-            cohorts.push(Cohort {
-                echoes: at,
-                far,
-                hold: m,
-                share,
-                spin: a.clone(),
-            });
-        }
-        // T19: the turning held beyond the founded turning per unit hold.
-        let remanence = &turning - &(&(spin * &founded) * &hold);
-        Some(SpinOrbit {
-            cohorts,
-            spin: a,
-            founded,
-            held: hold,
-            turning,
-            remanence,
-        })
+        Some(crate::formation::spin_orbit(&mix, spin))
     }
 
     /// The outflow from the core by `t` rings after the bounce, by kind (held
@@ -1108,41 +964,6 @@ pub struct Carry {
     /// Traversals until the turning returns, `1 / (1 - share)`; None where
     /// the medium holds the whole pulse (the throat).
     pub returns: Option<Dy>,
-}
-
-/// One cohort of the core's spin orbit (T17).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Cohort {
-    /// Echoes after the bounce at which it leaves.
-    pub echoes: Dy,
-    /// Whether it leaves by the far face.
-    pub far: bool,
-    /// Its hold, in the founding's mass units.
-    pub hold: Q,
-    /// Its share of the turning against its share of the hold: its
-    /// separation over the throat's, `rho_cohort / rho_hold`.
-    pub share: Q,
-    /// The core's spin once it has left.
-    pub spin: Q,
-}
-
-/// The core's spin orbit (T17): its cohorts and its spin once they have
-/// left. The pair closes on both faces where the spin is at most one.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SpinOrbit {
-    /// The cohorts, in the order they leave.
-    pub cohorts: Vec<Cohort>,
-    /// The spin once the last cohort has left.
-    pub spin: Q,
-    /// The founded hold `M_0`, in the founding's mass units.
-    pub founded: Q,
-    /// The hold once the last cohort has left.
-    pub held: Q,
-    /// The turning once the last cohort has left, `a M^2`.
-    pub turning: Q,
-    /// The remanence (T19): the turning held beyond the founded turning per
-    /// unit hold, `J - (a_0 M_0) M`.
-    pub remanence: Q,
 }
 
 #[cfg(test)]

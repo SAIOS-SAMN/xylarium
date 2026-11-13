@@ -20,6 +20,27 @@ may change public APIs and the model's laws.
   3s of Z 29: 9, was 1/3). The atom's tightness is its loosest outer
   winding. Shared with netstratum as the R7 fixtures.
 
+- The founding's static cascade is deleted. The universal core's spin
+  orbit (T17, now `formation::spin_orbit`) is the one release: its bounces
+  send out the open kinds cohort by cohort, each climbing
+  `N* ln(D(s) D(n)^A)` per pinch interval, the near face's pressed kinds
+  inverted out by the far face, the closed kinds kept (T16). Each layer
+  leaves from the kept hold's horizon and stands after its pinch interval
+  at the reach rate's closed form `(r - r0) + 2m ln(r / r0) = 2 (h - m) N*`,
+  swinging `r (1 +/- h / (r + h))`; its rest point is the far face's
+  rest point is the conversion's at the bounce, E018,
+  `Q* / Z = D(R) = (1 + R) / (1 - R)` from its electron phase at its capture
+  phase, the reach playing no part (the reach's inversion read neutron-free
+  nuclei: `ln r` climbs to 255). The stacks, the final
+  share `s_final`, the meeting filter, its contact and grip are deleted
+  (S119 and S120 retired); the firmament is what the orbit keeps; the
+  core's spin and the founding read one release. Each cohort leaves as a
+  pooled release (agreed with netstratum): a layer's bound share keeps the
+  layer's push, the ionized parts move as one pool offset by the charged
+  medium, `S' = S (+) (-r)` (#195), and the medium's take closes the
+  impulse exactly. The release is cold (S141) and the kept kinds stand at
+  the horizon (S142). Cache version 12.
+
 - The founding's pushes and reaches are held as face pairs
   (`shares::FacePairs`, #210) instead of cut to the 2^-64 grid: the
   stack's push is `D(s_final) D(s_i)`, a reach the pairs `[(H),

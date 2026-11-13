@@ -9,122 +9,137 @@ use xyl_cosmos::cores::Shape;
 use xyl_cosmos::elements::Element;
 use xyl_cosmos::origin::Origin;
 
-/// The `founding` reading: the founding shells on the founding's mix (each
-/// kind's share of the holding, as `circuit::Substrate::found` reads it):
-/// the final share, the kinds the throat holds and the pushed-out kinds'
-/// reaches, then the shells grouped where kinds share one reach; every line
-/// ends with a newline.
-pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
-    let elements = Founded::of(o.seed)?.elements;
-    let mix: Vec<(u32, Q)> = xyl_cosmos::formation::kinds(&elements)
+/// The founding's mix of `o`'s seed (each kind's share of the holding, as
+/// `circuit::Substrate::found` reads it) and the parent's spin.
+fn founding_mix(o: &Options) -> Result<(Vec<(u32, Q)>, Q), String> {
+    let f = Founded::of(o.seed)?;
+    let mix = xyl_cosmos::formation::kinds(&f.elements)
         .iter()
         .map(|k| (k.z, k.share.clone()))
         .collect();
-    let (s_final, shells, _) = xyl_cosmos::formation::founding_shells(&mix);
-    // The firmament is the closed kinds (T16), held on both faces whatever
-    // the shells' reach test says; the shells give each kind's reach.
-    let mut held: Vec<u32> = shells
-        .iter()
-        .filter(|s| xyl_cosmos::compound::open(s.0) == 0)
-        .map(|s| s.0)
-        .collect();
-    // A kind stands in several shells; the firmament counts each kind once.
-    held.sort_unstable();
-    held.dedup();
-    let out_reach = || {
-        shells
-            .iter()
-            .filter(|s| xyl_cosmos::compound::open(s.0) > 0)
-            .map(|s| s.2.clone())
-    };
+    Ok((mix, f.origin.parent.spin.clone()))
+}
+
+/// The `founding` reading: the core's release on the founding's mix (its
+/// cohorts, each with its layers' pole reaches) and the shells it leaves:
+/// the kinds the core keeps and the released kinds' reaches and swings,
+/// then the shells grouped where kinds share one reach; every line ends
+/// with a newline.
+pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
+    let (mix, spin) = founding_mix(o)?;
+    let orbit = xyl_cosmos::formation::spin_orbit(&mix, &spin);
+    let (shells, _, take) = xyl_cosmos::formation::founding_shells(&mix, &spin);
+    let kept: Vec<u32> = shells.iter().filter(|s| s.kept).map(|s| s.z).collect();
+    let out_reach = || shells.iter().filter(|s| !s.kept).map(|s| s.reach.clone());
     let (near, far) = (out_reach().min(), out_reach().max());
     let rim = shells
         .iter()
-        .map(|s| &s.2 * &(&Q::ONE + &s_final))
+        .map(|s| &s.reach * &(&Q::ONE + &s.swing))
         .max()
         .unwrap_or(Q::ZERO);
     let dash_or = |q: Option<&Q>| q.map(show).unwrap_or_else(|| "-".into());
     let mut out = format!(
         concat!(
-            "The founding shells: {} kinds, final share {}; ",
-            "the firmament's closed kinds {} (Z {:?}..{:?}); ",
-            "the open kinds' reaches {} .. {} cluster units; ",
-            "rim {} cluster units\n"
+            "The founding's release: {} kinds at the parent's spin {}; {} cohorts leave, ",
+            "the core's spin after them {}; the core keeps {} kinds (Z {:?}..{:?}), ",
+            "{} of the founded hold; the released reaches {} .. {} founding units; ",
+            "rim {} founding units; the pools' take, booked to the core's charged holding, {}\n"
         ),
         mix.len(),
-        show(&s_final),
-        held.len(),
-        held.iter().min(),
-        held.iter().max(),
+        show(&spin),
+        orbit.cohorts.len(),
+        show(&orbit.spin),
+        kept.len(),
+        kept.iter().min(),
+        kept.iter().max(),
+        show(&orbit.held),
         dash_or(near.as_ref()),
         dash_or(far.as_ref()),
-        show(&rim)
+        show(&rim),
+        show(&take)
     );
+    for (k, c) in orbit.cohorts.iter().enumerate() {
+        let lo = c.layers.iter().map(|l| l.2).min();
+        let hi = c.layers.iter().map(|l| l.2).max();
+        out.push_str(&format!(
+            concat!(
+                "  Cohort {}: at {} echoes by the {} face, {} layers, hold {}, ",
+                "pinch interval {} echoes, ln r on the axis plane {} .. {}, spin after {}\n"
+            ),
+            k + 1,
+            c.echoes,
+            if c.far { "far" } else { "near" },
+            c.layers.len(),
+            show(&c.hold),
+            c.interval,
+            lo.map_or("-".into(), |x| x.to_string()),
+            hi.map_or("-".into(), |x| x.to_string()),
+            show(&c.spin)
+        ));
+    }
     // Shells in order of reach, kinds standing at one reach grouped.
-    let mut by_reach: Vec<&(u32, Q, Q)> = shells.iter().collect();
-    by_reach.sort_by(|a, b| a.2.cmp(&b.2).then(a.0.cmp(&b.0)));
-    let mut groups: Vec<Vec<&(u32, Q, Q)>> = Vec::new();
+    let mut by_reach: Vec<&xyl_cosmos::formation::Shell> = shells.iter().collect();
+    by_reach.sort_by(|a, b| a.reach.cmp(&b.reach).then(a.z.cmp(&b.z)));
+    let mut groups: Vec<Vec<&xyl_cosmos::formation::Shell>> = Vec::new();
     for s in by_reach {
         match groups.last_mut() {
-            Some(g) if g.first().is_some_and(|f| f.2 == s.2) => g.push(s),
+            Some(g) if g.first().is_some_and(|f| f.reach == s.reach) => g.push(s),
             _ => groups.push(vec![s]),
         }
     }
     for (k, g) in groups.iter().enumerate() {
-        let amount = g.iter().fold(Q::ZERO, |a, s| &a + &s.1);
+        let amount = g.iter().fold(Q::ZERO, |a, s| &a + &s.amount);
         out.push_str(&format!(
-            "  Shell {}: Z {}..{} ({} kinds), amount {}, reach {} cluster units, {}\n",
+            "  Shell {}: Z {}..{} ({} kinds), amount {}, reach {}, swing {}, {}\n",
             k + 1,
-            g.iter().map(|s| s.0).min().unwrap_or(0),
-            g.iter().map(|s| s.0).max().unwrap_or(0),
+            g.iter().map(|s| s.z).min().unwrap_or(0),
+            g.iter().map(|s| s.z).max().unwrap_or(0),
             g.len(),
             show(&amount),
-            g.first().map(|s| show(&s.2)).unwrap_or_default(),
-            if g.iter().all(|s| xyl_cosmos::compound::open(s.0) == 0) {
-                "closed, the firmament's"
+            g.first().map(|s| show(&s.reach)).unwrap_or_default(),
+            g.first().map(|s| show(&s.swing)).unwrap_or_default(),
+            if g.iter().all(|s| s.kept) {
+                "kept, the firmament's"
             } else {
-                "open, released"
+                "released"
             }
         ));
     }
     Ok(out)
 }
 
-/// The `founding-reach` reading (the table's ceiling at TOP_Z): for selected
-/// founded kinds and the heaviest, the reach about the Wellspring from the
-/// founding shells and the open share Q / 3Z, then the ratio of reaches
-/// Z 115 / Z top (under the linear law).
+/// The `founding-reach` reading: for selected founded kinds and the
+/// heaviest, the reach about the throat from the founding's release, the
+/// open share Q / 3Z and the rest point Q* / Z, then the ratio of reaches
+/// Z 115 / Z top.
 pub(super) fn founding_read(o: &Options) -> Result<String, String> {
-    let elements = Founded::of(o.seed)?.elements;
-    let mix: Vec<(u32, Q)> = elements
-        .iter()
-        .filter(|e| e.abundance.signum() > 0)
-        .map(|e| (e.z, e.abundance.clone()))
-        .collect();
+    let (mix, spin) = founding_mix(o)?;
     let present = mix.len();
     let top = mix.iter().map(|(z, _)| *z).max().unwrap_or(0);
-    let (_, shells, neutrons) = xyl_cosmos::formation::founding_shells(&mix);
+    let (shells, neutrons, _) = xyl_cosmos::formation::founding_shells(&mix, &spin);
     let mut out = format!(
         "The founding with the table to Z {}: {present} kinds founded (heaviest Z {top})\n",
         xyl_cosmos::elements::TOP_Z
     );
-    let reach = |z: u32| shells.iter().find(|s| s.0 == z).map(|s| s.2.clone());
-    for (z, _, r) in shells.iter().filter(|s| {
+    let reach = |z: u32| shells.iter().find(|s| s.z == z).map(|s| s.reach.clone());
+    for s in shells.iter().filter(|s| {
         [
             1, 2, 6, 8, 26, 79, 115, 150, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200,
         ]
-        .contains(&s.0)
-            || s.0 == top
+        .contains(&s.z)
+            || s.z == top
     }) {
-        let q = xyl_cosmos::compound::open(*z);
+        let z = s.z;
+        let q = xyl_cosmos::compound::open(z);
         let rest = neutrons
-            .get(z)
+            .get(&z)
             .and_then(|p| xyl_core::shares::weighted(p, 64))
             .map_or_else(|| "-".to_string(), |t| show(&t.mid()));
         out.push_str(&format!(
-            "  Z{z:>5}: reach {}  Q/3Z {}  Q*/Z {rest}\n",
-            show(r),
-            show(&Q::new(i64::from(q), 3 * i64::from(*z)).unwrap_or(Q::ZERO))
+            "  Z{z:>5}: reach {}  Q/3Z {}  Q*/Z {rest}{}\n",
+            show(&s.reach),
+            show(&Q::new(i64::from(q), 3 * i64::from(z)).unwrap_or(Q::ZERO)),
+            if s.kept { "  (kept)" } else { "" }
         ));
     }
     if let (Some(r115), Some(rtop)) = (reach(115), reach(top)) {

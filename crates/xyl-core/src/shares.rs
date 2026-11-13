@@ -209,21 +209,20 @@ impl Parcel {
 /// Parcels' amount-weighted dilation `sum(a D) / sum(a)`, enclosed on the
 /// `2^-bits` grid: each term and the amount are read outward at `bits` and
 /// the sum is formed on those readings, so the enclosure holds the exact
-/// value without the exact sum being formed. `None` where the parcels hold
-/// no positive amount.
+/// value without the exact sum being formed. The mean does not depend on
+/// the amounts' scale, so each amount is read as its share of the parcels'
+/// whole amount, formed here at the reading, and a kind held in trace reads
+/// as well as one held in bulk. `None` where the parcels hold no positive
+/// amount.
 pub fn weighted(parcels: &[Parcel], bits: u32) -> Option<Encl> {
+    let held: Vec<&Parcel> = parcels.iter().filter(|p| p.amount.signum() > 0).collect();
+    let whole = held.iter().fold(Q::ZERO, |w, p| &w + &p.amount);
     let zero = Encl::exact(Q::ZERO);
-    let (moment, amount) =
-        parcels
-            .iter()
-            .filter(|p| p.amount.signum() > 0)
-            .fold((zero.clone(), zero), |(m, a), p| {
-                let term = Encl::exact(&p.amount * &p.pairs.value()).outward(bits);
-                (
-                    m.add(&term),
-                    a.add(&Encl::exact(p.amount.clone()).outward(bits)),
-                )
-            });
+    let (moment, amount) = held.iter().try_fold((zero.clone(), zero), |(m, a), p| {
+        let share = p.amount.checked_div(&whole)?;
+        let term = Encl::exact(&share * &p.pairs.value()).outward(bits);
+        Some((m.add(&term), a.add(&Encl::exact(share).outward(bits))))
+    })?;
     Some(moment.mul(&amount.recip()?).outward(bits))
 }
 
@@ -314,6 +313,76 @@ mod tests {
         }
         assert!(FacePairs::dilation(&Q::ONE).is_none());
         assert!(FacePairs::of(&Q::ZERO).is_none());
+    }
+
+    /// LAW-TRAVERSAL's joint-read fixtures 1 to 4 (mycelium 78.176 section
+    /// 4), read on gravity's faces with the hold `z` and the reach `q` of a
+    /// plane (78.172 section 1): the antipole is the antipolar exchange.
+    /// (1) Out and back is the identity on the pole. (2) The whole is kept:
+    /// `(2/3, 1/3)` exchanges to `(1/3, 2/3)`, both summing to 1. (3) The
+    /// asymmetry and the fraction invert, `sigma -> -sigma`, `o -> 1 - o`:
+    /// at `(2/3, 1/3)`, `sigma = 1/3 -> -1/3` and `o = 1/3 -> 2/3`. (4) The
+    /// throat `z = q` is the only fixed point.
+    #[test]
+    fn the_antipolar_traversal_fixtures_hold() {
+        let third = Q::new(1, 3).unwrap();
+        let two_thirds = Q::new(2, 3).unwrap();
+        let pairs = [
+            (two_thirds.clone(), third.clone()),
+            (Q::ONE, Q::ONE),
+            (Q::new(1, 7).unwrap(), Q::new(5, 2).unwrap()),
+            (Q::int(3), Q::new(1, 60).unwrap()),
+        ];
+        for (z, q) in &pairs {
+            let f = faces(z, q).unwrap();
+            let back = f.antipole();
+            // (1) Out and back is the identity.
+            assert_eq!(back.antipole(), f);
+            assert_eq!(&back.pole().unwrap() * &f.pole().unwrap(), Q::ONE);
+            // (2) The whole is kept, as the exchanged pair (q, z).
+            assert_eq!(faces(q, z).unwrap(), back);
+            assert_eq!(&back.convergent + &back.divergent, Q::ONE);
+            // (3) The asymmetry and the fraction invert.
+            assert_eq!(back.push(), -f.push());
+            assert_eq!(back.divergent, &Q::ONE - &f.divergent);
+            // (4) Fixed only at the throat.
+            assert_eq!(back == f, z == q, "z {z} q {q}");
+        }
+        // The share split at delta = H / (R + H) (joint read with
+        // netstratum, carrier fixture 2): (1, 1) splits 1/2, 1/2; (3, 5)
+        // splits 3/8, 5/8 and inverts to 5/8, 3/8.
+        let half = Q::new(1, 2).unwrap();
+        let even = faces(&Q::ONE, &Q::ONE).unwrap();
+        assert_eq!((even.convergent, even.divergent), (half.clone(), half));
+        let split = faces(&Q::int(3), &Q::int(5)).unwrap();
+        assert_eq!(split.convergent, Q::new(3, 8).unwrap());
+        assert_eq!(split.antipole().convergent, Q::new(5, 8).unwrap());
+        let f = faces(&two_thirds, &third).unwrap();
+        assert_eq!(
+            (f.push(), f.divergent.clone()),
+            (third.clone(), third.clone())
+        );
+        let back = f.antipole();
+        assert_eq!((back.push(), back.divergent), (-&third, two_thirds));
+    }
+
+    /// The weighted reading does not depend on the amounts' scale: a
+    /// parcel held at 2^-300 reads its dilation as one held at 1.
+    #[test]
+    fn a_trace_parcel_reads_as_well_as_a_bulk_one() {
+        let pairs = FacePairs::pair(BigInt::from(7), BigInt::from(5)).unwrap();
+        let tiny = (0..300).fold(Q::ONE, |q, _| q.checked_div(&Q::int(2)).unwrap());
+        for amount in [Q::ONE, tiny] {
+            let e = weighted(
+                &[Parcel {
+                    amount,
+                    pairs: pairs.clone(),
+                }],
+                64,
+            )
+            .unwrap();
+            assert!(e.lo <= Q::new(7, 5).unwrap() && Q::new(7, 5).unwrap() <= e.hi);
+        }
     }
 
     /// A parcel's antipole times its dilation is the hold, and the

@@ -60,11 +60,11 @@ sites are restated. The derivations are in
 | E011 | Coupling is first-degree in the faces: `h = M / (r + M) = 1 / (1 + t)`, `o = r / (r + M) = t / (1 + t)`, the hold and the reach in one denominator, calibre-free; a traversal turns `360 h` on its named plane (the turning law, built); the measure of `S^n` (`sin^(n-1)`, `measure`) is the sphere's volume element, not a coupling | `M / r^2`, `M / d`, `a^2 / (4 d^2)`, `M / R^2`, roots (I008) | ruled; [#199](https://github.com/SAIOS-SAMN/xylarium/issues/199) | stated; sites open |
 | E012 | The state `(3W, p, R)`: `3W = 3(Z + Q)`; `h = 3Z / 3W`, `o = 3Q / 3W`, `t = 3Q / 3Z`, `p = (3Z - 3Q) / 3W`, `D(p) = 3Z / 3Q`, `D(-p) = 3Q / 3Z`; `R` the axis plane's turn | the dipole's faces as a sum (I009) | [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#148](https://github.com/SAIOS-SAMN/xylarium/issues/148), mycelium #241 | derived |
 | E013 | Formation's transitions: electrons move `R` (and `U`, `2P`); fusion and fission move `3W`, mixing the split by weight (the mediant of `D`); conversion moves `p` by flow steps `D(p') = D(p) D(s)`, keeping `3W`; a bond moves share through `g` | `Q` per kind from Earth's weights (I011) | [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201) | derived; conversion not built |
-| E014 | The conversion's rest point at a singularity: `p*` where `p (+) (-r) = 0`, `r` the singularity's medium at its throat, per dipole, first-degree; `3Q / 3Z = D(-p*)`. Read per Hopf plane, `p* = (p*_0, ..., p*_5)` (E016); at a bounce in the common phase the six are equal, so the planes part only where a winding is not common. Each genesis builds its universal table at the universal core's bounce; each galactic core builds its galaxy's table at the core's bounce, as an event. Built at the universal core: capture first (`m = Z`, `Q0 = 0`), then the conversion's rest point per parcel, `Q* / Z = H / R`, the antipolar face of the parcel's reach (the involution `t -> 1/t`, taken as the law's ground alone), with `R = H D(p_stack) / D(r_m)` (founding shells below), so at release `Q* / Z = D(r_m) / D(p_stack) = (3Z - U) / (3 D(p_stack))`; the push and the reach are held as face pairs, `R = [(H), D(s_final), D(s_i), (3, W_e)]`, and the rest point swaps them, exact (`shares::FacePairs`, #210); a kind's `Q_z` is its parcels' rest points weighted by amount, an exact sum, read on the 2^-64 grid for a weight and exactly for the whole-nucleon count (`formation::founding_shells`, `circuit::rest_neutrons`, `circuit::mass_number`) | every galaxy reads the universal table (S138) | [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195), [#7](https://github.com/SAIOS-SAMN/xylarium/issues/7) | built for the universal table (seed 7, one stack: every kind at its closed form `Q* / Z = 25 W_e / 147`, 50/147 to 3900/7, no kind refused); the galaxies' tables open |
+| E014 | The conversion's rest point at a singularity: `p*` where `p (+) (-r) = 0`, `r` the singularity's medium at its throat, per dipole, first-degree; `3Q / 3Z = D(-p*)`. Read per Hopf plane, `p* = (p*_0, ..., p*_5)` (E016); at a bounce in the common phase the six are equal, so the planes part only where a winding is not common. Each genesis builds its universal table at the universal core's bounce; each galactic core builds its galaxy's table at the core's bounce, as an event. Built at the universal core: capture first (`m = Z`, `Q0 = 0`), then the conversion's rest point per kind at the bounce, where the medium's push is zero, by E018: `Q* / Z = D(R) = (1 + R) / (1 - R)`, `R` the kind's electron phase at its capture phase in the common phase, exact; a kind with `abs(R) = 1` is refused; read at the reader's precision for a weight and refined for the whole-nucleon count (`formation::founding_shells`, `circuit::rest_neutrons`, `circuit::mass_number`) | every galaxy reads the universal table (S138) | [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195), [#7](https://github.com/SAIOS-SAMN/xylarium/issues/7) | built for the universal table (seed 7, one stack: every kind at its closed form `Q* / Z = 25 W_e / 147`, 50/147 to 3900/7, no kind refused); the galaxies' tables open |
 | E015 | The axis fill both ways: `f_Q = abs(R) u / (W + abs(R) u)` from the Q side toward Z for `R > 0` (none for `R <= 0`), `R = kappa (1 - 2 frac(psi))` at the capture phase `psi = (s Z) mod 1`; exact shares per level (`atoms::Band::plane_levels`), the polarity `A` exact; both dipoles of the split kept, count (the neutral level halved) and weight | the Z-side-first integer fill (S136) | ruled; [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201) | built |
 | E016 | The split, fill and phase per Hopf plane `p` in `0..6` (6 dipoles, 12 faces on `S^11`): the level `m_p` holds `C(l - abs(m_p) + 9, 9)` orientations on every plane (a harmonic's multiplicity reads only `sum abs(m_p)`); the plane's capture phase `psi_p = (w_p s Z) mod 1` at the winding `w`; `R_p = kappa (1 - 2 frac(psi_p))`, `kappa` the whole fibre's coherence on every plane; `f_p = abs(R_p) u / (W_e + abs(R_p) u)`, `W_e = 3Z - U` the electron hold for `R_p > 0`, else 0; the plane polarity `A_p` (`circuit::fill_shares`, `atoms::plane_polarities`, `atoms::plane_sides`). In the common phase (`hopf::COMMON`) the six planes read alike, so the planes part only where the winding is not common (the Seifert twist, #128) or a tilt mixes the pole axis | the axis plane read alone, one scalar `R` (S137, I012) | ruled; [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#197](https://github.com/SAIOS-SAMN/xylarium/issues/197), [#183](https://github.com/SAIOS-SAMN/xylarium/issues/183) | built |
 | E017 | The transitional boundaries per plane: the balance `t_p = 1`, which is `p_net,p = 0` and `D(p_net,p) = 1` (one boundary: `D(p) = 1/t`), with the faces `h_p = o_p = 1/2`; and the fill's reversal `R_p = 0`, at `frac(psi_p) = 1/2`. A body crossing on one plane and not another holds both phases at once, the boundary a surface inside it | a single fusion/fission threshold for the whole body | derived; [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201) | the reversal a closed form of the phase; the balance's crossing waits on the conversion's motion (E013) |
-| E018 | The nucleon dipole turned by the phase, per Hopf plane `p`: `p_nuc,p = (3Z_p - 3Q_p) / 3W_p` composed with `R_p` by the flow law, `p_net,p = p_nuc,p (+) R_p = (p_nuc,p + R_p) / (1 + p_nuc,p R_p)`, so `D(p_net,p) = D(p_nuc,p) D(R_p)`: the Z face `(3Z_p / 3Q_p) (1 + R_p) / (1 - R_p)` and the Q face, its antipole, `(3Q_p / 3Z_p) (1 - R_p) / (1 + R_p)`, product 1; `R_p = 0` is the bare dipole. At the bounce's rest point, `p_net,p = 0`: `p*_nuc,p = -R_p` and `3Z*_p / 3Q*_p = (1 - R_p) / (1 + R_p)`. `R_p` is read as a push in `(-1, 1)`, so a kind with `abs(R_p) = 1` (coherence 1 at a whole-turn crossing) has no rest point and is refused | `3Z / 3Q + R` (I009); one fixed table of weights (S029, I011) | ruled; [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#148](https://github.com/SAIOS-SAMN/xylarium/issues/148) | stated; the reading and the table from it are #201 step 3 |
+| E018 | The nucleon dipole turned by the phase, per Hopf plane `p`: `p_nuc,p = (3Z_p - 3Q_p) / 3W_p` composed with `R_p` by the flow law, `p_net,p = p_nuc,p (+) R_p = (p_nuc,p + R_p) / (1 + p_nuc,p R_p)`, so `D(p_net,p) = D(p_nuc,p) D(R_p)`: the Z face `(3Z_p / 3Q_p) (1 + R_p) / (1 - R_p)` and the Q face, its antipole, `(3Q_p / 3Z_p) (1 - R_p) / (1 + R_p)`, product 1; `R_p = 0` is the bare dipole. At the bounce's rest point, `p_net,p = 0`: `p*_nuc,p = -R_p` and `3Z*_p / 3Q*_p = (1 - R_p) / (1 + R_p)`. `R_p` is read as a push in `(-1, 1)`, so a kind with `abs(R_p) = 1` (coherence 1 at a whole-turn crossing) has no rest point and is refused | `3Z / 3Q + R` (I009); one fixed table of weights (S029, I011) | ruled; [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#148](https://github.com/SAIOS-SAMN/xylarium/issues/148) | built: the universal table at the bounce (`formation::founding_shells`), in the common phase |
 | E019 | The pivot per plane: the relative versor `P_b^-1 P_a`, read on each plane `k` as its winding `K_k` in ZZ and phase `phi_k` in QQ/ZZ | `rotor::angle_between`, one scalar per pair | [#207](https://github.com/SAIOS-SAMN/xylarium/issues/207), [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118) | planned |
 | E020 | Twist per plane: `Tw_k = w_i,k - w_j,k`, the turn `360 delta_k`; writhe `Wr = Lk - Tw` | the turn on one plane (S130) | [#207](https://github.com/SAIOS-SAMN/xylarium/issues/207), [#128](https://github.com/SAIOS-SAMN/xylarium/issues/128) | planned |
 | E021 | Strength and weakness per plane: the overlap's held face `h_k` and open face `o_k = 1 - h_k` (`hopf::overlap`) | calibrated material strengths | [#207](https://github.com/SAIOS-SAMN/xylarium/issues/207) | planned |
@@ -401,33 +401,52 @@ sites are restated. The derivations are in
 - Vessel (`atoms::vessel`): the upper edge is the last seal, and the lower
   edge is the greatest `z < upper` with `u(z - 1) + 1 - u(z) < 0` (Z 568 on
   the current table). Calibre: none. Status: built.
-- Cascade shares (`formation::founding_shells`): on the capture mass
-  `m = Z`, `held` is the chain's gathered share, `H = 1 + held_final`,
-  `s_final = 1/2 held_final / (held_final + H)` and a stack's share
-  `s_i = 1/2 held_i / (held_i + H)`, `held_i` the stack's amount over the
-  whole. The running capture shares are subtotals of one enclosure, so
-  they are neither summed nor composed. Calibre: founding. Status: built
-  (ruled 2026-11-11, #201).
-- Shell reach (`formation::founding_shells`): the stack's push
-  `p_stack = s_final (+) s_i`, the kind's resistance `D(r_m) = W_e / 3`
-  (`W_e = 3Z - U`), `p_net = p_stack (+) (-r_m)` and
-  `R_Z = H D(p_net) = H D(s_final) D(s_i) / D(r_m)`; the spread is
-  `R (1 +/- s_final)`, and a shell is held where `R (1 + s_final) <= 1`.
-  Calibre: founding. Status: built (ruled 2026-11-11, #201).
-- Rest point (`formation::founding_shells`, `circuit::rest_neutrons`): per
-  parcel at reach `R`, `Q* / Z = H / R`, the reach's face pairs swapped
-  (`shares::Parcel::antipole`); a kind is its parcels' rest points,
-  unsummed, and a reader reads `Q_z = Z sum(a H / R) / sum(a)` as an
-  enclosure at the reader's precision (`shares::weighted`,
-  `circuit::neutrons_at`); a kind with no parcel keeps its capture state
-  `Q = 0`. Calibre: founding. Status: built (E014).
-- Filter (`formation::founding_shells`): the contact is `1/2` for a whole
-  passage and `1/2` of the share crossed for a partial one;
-  `D = M / (M + 1 - contact)`, `T = |d_j - d_i| / (d_j + d_i)` and
-  `g = min(s D, T) / T`. The filter takes `contact g m_i / (m_i + m_j)` of
-  `m_j`, scaled by held over asked, and the take is carried by the
-  catcher's push against the caught kind's resistance,
-  `R = H D(p_catcher) / D(r_m, caught)` (`carry`), no mean. Calibre: founding. Status: built; replaced by the founding as flow (planned).
+- Release (`formation::spin_orbit`, T17; the core's spin orbit): the
+  founded kinds stand on the core at the bounce, each hold its capture
+  mass `a Z / W_e` over the founded total. A closed kind is kept on both
+  faces (T16). An open kind of pole point `t = U / W_e` and axis polarity
+  `A` with `ln(D(s) D(n)^A) <= 0` is held by the near face's pressure and
+  released at once by the far face, inverted, `ln r = -ln t`; every other
+  open kind climbs `ln t += N* ln(D(s) D(n)^A)` per pinch interval
+  `N* = 3 (4 + a) / (2a)` and leaves in the cohort of the first bounce
+  after it crosses, at the pole reach `ln r >= 0` it has climbed to. Each
+  cohort takes the turning `J (m / M) (rho_cohort / rho_hold)`, so the
+  interval moves with the spin. Calibre: founding (pole points on the
+  axis plane). Status: built.
+- Shell reach (`formation::founding_shells`): a cohort leaves from the
+  horizon of the hold the core keeps after it, `r0 = R_h(H) = 2H`; a layer
+  of hold `m`, with the hold `h` inside it (the kept hold and its heavier
+  companions, the lighter running ahead), stands after the cohort's pinch
+  interval at the reach rate's closed form,
+  `(r - r0) + 2m ln(r / r0) = 2 (h - m) N*`, solved for `r` (expanding
+  where `h > m`, returning where `m > h`), under the hold that drives its
+  pooled push (below). Its swing is the deficit of the hold inside it,
+  `delta = h / (r + h)` on the 2^-64 grid, the band `r (1 +/- delta)`.
+  The kinds the core keeps stand at its horizon `R_h(1) = 2` (S142, until
+  the throat orbit, T14). Calibre:
+  founding. Status: built.
+- Pooled release (`formation::founding_shells`, `pooled`; agreed with
+  netstratum 2026-11-13, its docs/134): each layer leaves `r0` with the
+  push of the hold inside it, `p = (h - m) / (r0 + h + m)`, and its bound
+  share `b`, on the near face `h / (r0 + h)` and on the far face that face
+  at the inverse place, `r0 / (r0 + h)`, times the share of its electrons
+  bound at the throat's heat (cold: all, S141). The ionized part moves as
+  one pool, `S = sum (1 - b) m p / sum (1 - b) m`, offset by the charged
+  medium at the reach, `S' = S (+) (-r)`, `r = q / (r0 + q)`, `q` the
+  kept hold's received share `2/3` at its horizon; each layer leaves at
+  `l = b p + (1 - b) S'` and stands where the reach rate carries it under
+  the hold that drives `l`, `h' = (l (r0 + m) + m) / (1 - l)` (a layer with
+  `h' <= 0` falls back and is kept). The medium takes
+  `sum (1 - b) m (S - S')`, so `sum m l + take = sum m p` exactly.
+  Calibre: founding. Status: built.
+- Rest point (`formation::founding_shells`, `circuit::rest_neutrons`): at
+  the bounce the medium's push is zero, so each founded kind, released or
+  kept, rests where its nucleon split balances its electrons' phase,
+  `p*_nuc = -R`: `Q* / Z = D(R) = (1 + R) / (1 - R)` (E018), `R` its
+  electron phase at its capture phase `frac(s Z)` in the common phase,
+  exact (`circuit::neutrons_at` reads `Q_z` at the reader's precision);
+  `abs(R) = 1` is refused. The reach plays no part. Calibre: none (a
+  ratio). Status: built.
 - Kind density in a run (`Substrate::found`): the density is `mass / t`,
   with `t = |delta(lo, 1) - delta(hi, 1)| / (delta(lo, 1) + delta(hi, 1))`;
   beads lie at the local maxima of the superposed hold and are parted at its
@@ -465,8 +484,8 @@ sites are restated. The derivations are in
   `CP^5` in shares, helicity without its `Gamma^2` self term, and the
   per-plane twist by separation (#128). Calibre: one per tier, nested vortices dilated conformally. Status: planned; replaces `galaxy::Structure` bands,
   `galaxy::Orbit` circles and `chain::Place` points.
-- Rim (`Substrate::found`): the rim is `max R (1 + s_final)` over every
-  shell. Calibre: founding. Status: built; replaced by the founding as flow (planned).
+- Rim (`Substrate::found`): the rim is `max r (1 + delta)` over every
+  shell. Calibre: founding. Status: built.
 
 - The founding as flow ([model.md](model.md#the-founding-as-flow)).
   Status: planned.

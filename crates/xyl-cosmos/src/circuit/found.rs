@@ -3,16 +3,19 @@
 //
 // Inputs: the spin, its torsion share (`bounce::torsion_share`, read once), the elements
 // (`elements::Element`), `formation::kinds` and `formation::founding_shells`
-// for the cascade, `atoms::vessel`, and `formation::lighting`. Reaches are
-// cluster units; amounts are in the held count, universe units.
+// for the release, and `formation::lighting`. Reaches are in founding units
+// (the core's hold 1, its horizon 2); amounts are in the held count.
 //
-// Steps: every kind is assigned its reach, spread r (1 +/- s_final). The closed
-// kinds, held on both faces of the paired throat (T16), form the firmament
-// (`Kind`), scaled so their mass is 1, the universal state; each kind's capture
-// phase is the share turned Z times. The other shells link into runs where
-// spreads overlap; each run's superposed hold is cut at its local minima into
-// beads (`Bead`), and each kind goes whole to the bead whose span contains its
-// reach. The rim is the outermost shell's outer edge.
+// Steps: the core's bounces release its open kinds cohort by cohort
+// (`formation::spin_orbit`, T17), each standing at its pinch where the
+// reach rate carries it and swinging `r (1 +/- delta)` by the deficit of
+// the hold inside it. What the core keeps on both faces (T16) forms the
+// firmament (`Kind`), scaled so its mass is 1, the universal state; each
+// kind's capture phase is the share turned Z times. The released shells
+// link into runs where swings overlap; each run's superposed hold is cut at
+// its local minima into beads (`Bead`), and each kind goes whole to the
+// bead whose span contains its reach. The rim is the outermost swing's
+// outer edge.
 //
 // Outputs: `Substrate` with the anchor (anchor.rs); `held_share`, `census`,
 // `unit` (sum of states), `holding` (everything founded, by mass) and
@@ -117,18 +120,17 @@ impl Drop for Founding {
 }
 
 impl Substrate {
-    /// The founding cascade. Every kind is carried by the equitable push to its
-    /// reach about the throat, spread R (1 +/- s_final). The closed kinds are
-    /// held as the firmament, the paired throat's shared hold (T16); every
-    /// open kind leaves with the expelled matter.
-    /// The pushed-out kinds form shells; kinds with overlapping spreads link
-    /// into runs, and each run's superposed hold beads at its maxima (one
-    /// galaxy per bead) and parts at its minima. Each kind's matter goes to the
-    /// bead whose span contains its reach. The torsion share is read here
-    /// once from the parent's `spin` (`bounce::torsion_share` at the
-    /// universal core's mass, 1) and held as [`Substrate::share`]; the
-    /// elements are founded at it (`elements::founded`). `None` where the
-    /// element table fails.
+    /// The founding: the core's bounces release its open kinds cohort by
+    /// cohort (`formation::founding_shells`), each to the reach its pinch
+    /// carries it to; what the core keeps on both faces is the firmament
+    /// (T16, T17). Released kinds with overlapping swings link into runs,
+    /// and each run's superposed hold beads at its maxima (one galaxy per
+    /// bead) and parts at its minima. Each kind's matter goes to the bead
+    /// whose span contains its reach. The torsion share is read here once
+    /// from the parent's `spin` (`bounce::torsion_share` at the universal
+    /// core's mass, 1) and held as [`Substrate::share`]; the elements are
+    /// founded at it (`elements::founded`). `None` where the element table
+    /// fails.
     pub fn found(spin: &Q) -> Option<(Substrate, Anchor)> {
         let mut prof = Prof::new(usize::MAX);
         let _founding = Founding::start();
@@ -152,13 +154,13 @@ impl Substrate {
         // The shells are a separate stage, cached under the shells' digest
         // and the share: a change to a law above them reads them back.
         let shells_key = format!("{}-{}", crate::package::shells_digest(), share).replace('/', "-");
-        let (s_final, shells, neutrons) = match super::cache::load_shells(&shells_key) {
+        let (shells, neutrons, _take) = match super::cache::load_shells(&shells_key) {
             Some(cached) => cached,
             None => {
                 let elements = crate::elements::founded(&share).ok()?;
                 let kinds = formation::kinds(&elements);
                 let mix: Vec<(u32, Q)> = kinds.iter().map(|k| (k.z, k.share.clone())).collect();
-                let staged = formation::founding_shells(&mix);
+                let staged = formation::founding_shells(&mix, spin);
                 super::cache::store_shells(&shells_key, &staged);
                 staged
             }
@@ -168,36 +170,27 @@ impl Substrate {
         // (Q = 0), and every reading below weighs each nucleus with its
         // neutrons at the rest point.
         super::weights::set_neutrons(neutrons.clone());
-        // The paired throat holds on both faces only its closed kinds (T16):
-        // they are the firmament, and every open kind leaves.
-        let shells: Vec<(u32, Q, Q, bool)> = shells
-            .into_iter()
-            .map(|(z, a, r)| (z, a, r, crate::compound::open(z) == 0))
-            .collect();
+        // What the core keeps on both faces of the paired throat (T16, T17)
+        // is the firmament; every released kind stands at its pinch.
         let firmament = firmament_of(&shells, &share);
-        // The pushed-out shells are sorted by reach and linked into runs where
-        // spreads overlap.
-        let mut out: Vec<(u32, Q, Q)> = shells
+        // The released shells are sorted by reach and linked into runs where
+        // their swings overlap.
+        let mut out: Vec<&formation::Shell> = shells
             .iter()
-            .filter(|(_, a, _, held)| !*held && a.signum() > 0)
-            .map(|(z, a, r, _)| (*z, a.clone(), r.clone()))
+            .filter(|k| !k.kept && k.amount.signum() > 0)
             .collect();
-        out.sort_by(|a, b| a.2.cmp(&b.2));
+        out.sort_by(|a, b| a.reach.cmp(&b.reach));
         let mut beads: Vec<Vec<usize>> = Vec::new();
         let mut spans: Vec<(Q, Q, Vec<usize>)> = Vec::new();
-        for run in runs_of(&out, &s_final) {
-            bead_run(&out, run, &s_final, &mut beads, &mut spans);
+        for run in runs_of(&out) {
+            bead_run(&out, run, &mut beads, &mut spans);
         }
         prof.lap("founding: runs and beads");
         let found = place_beads(&out, &beads, &spans, &share);
         prof.lap("founding: galaxies");
-        // The rim is max r (1 + s_final) over all shells, so every bead's span
-        // lies within it.
-        let rim = shells
-            .iter()
-            .map(|(_, _, r, _)| outer_edge(r, &s_final))
-            .max()
-            .unwrap_or(Q::ONE);
+        // The rim is the outermost swing's edge over all shells, so every
+        // bead's span lies within it.
+        let rim = shells.iter().map(outer_edge).max().unwrap_or(Q::ONE);
         let mut s = Substrate {
             firmament,
             beads: found,
@@ -284,33 +277,31 @@ fn captured_phase(share: &Q, z: u32) -> Q {
     (share * &Q::int(i64::from(z))).frac()
 }
 
-/// The inner edge of a shell at reach `r`, spread by the final share:
-/// r (1 - s_final).
-fn inner_edge(r: &Q, s_final: &Q) -> Q {
-    r * &(&Q::ONE - s_final)
+/// The inner edge of a shell's swing: r (1 - swing).
+fn inner_edge(k: &formation::Shell) -> Q {
+    &k.reach * &(&Q::ONE - &k.swing)
 }
 
-/// The outer edge of a shell at reach `r`: r (1 + s_final).
-fn outer_edge(r: &Q, s_final: &Q) -> Q {
-    r * &(&Q::ONE + s_final)
+/// The outer edge of a shell's swing: r (1 + swing).
+fn outer_edge(k: &formation::Shell) -> Q {
+    &k.reach * &(&Q::ONE + &k.swing)
 }
 
-/// The firmament: the held shells (inside the vessel), each at its exact
-/// reach and its capture phase, scaled so their mass is 1.
-fn firmament_of(shells: &[(u32, Q, Q, bool)], share: &Q) -> Vec<Kind> {
+/// The firmament: the kinds the core keeps, each at its reach and its
+/// capture phase, scaled so their mass is 1.
+fn firmament_of(shells: &[formation::Shell], share: &Q) -> Vec<Kind> {
     let mut firmament: Vec<Kind> = shells
         .iter()
-        .filter(|(_, a, _, held)| *held && a.signum() > 0)
-        .map(|(z, a, r, _)| Kind {
-            z: *z,
-            amount: a.clone(),
-            spin: r.clone(),
-            phase: captured_phase(share, *z),
+        .filter(|k| k.kept && k.amount.signum() > 0)
+        .map(|k| Kind {
+            z: k.z,
+            amount: k.amount.clone(),
+            spin: k.reach.clone(),
+            phase: captured_phase(share, k.z),
         })
         .collect();
-    // In units G = c = M_core = 1 the core's state is 1, so the held kinds
-    // keep their founded proportions and are scaled to total mass 1. The
-    // capture chain alone would leave the held band a vanishing share.
+    // In units G = c = M_core = 1 the core's state is 1, so the kept kinds
+    // keep their founded proportions and are scaled to total mass 1.
     let held_mass = firmament
         .iter()
         .fold(Q::ZERO, |a, k| &a + &mass_of(k.z, &k.amount));
@@ -322,36 +313,36 @@ fn firmament_of(shells: &[(u32, Q, Q, bool)], share: &Q) -> Vec<Kind> {
     firmament
 }
 
-/// The runs of the pushed-out shells `out` (sorted by reach): maximal
-/// groups whose spreads overlap, as indices into `out`.
-fn runs_of(out: &[(u32, Q, Q)], s_final: &Q) -> Vec<Vec<usize>> {
+/// The runs of the released shells `out` (sorted by reach): maximal
+/// groups whose swings overlap, as indices into `out`.
+fn runs_of(out: &[&formation::Shell]) -> Vec<Vec<usize>> {
     let mut runs: Vec<Vec<usize>> = Vec::new();
     let mut reach_hi = Q::ZERO;
-    for (k, (_, _, r)) in out.iter().enumerate() {
-        if runs.is_empty() || inner_edge(r, s_final) > reach_hi {
+    for (k, shell) in out.iter().enumerate() {
+        if runs.is_empty() || inner_edge(shell) > reach_hi {
             runs.push(vec![k]);
-            reach_hi = outer_edge(r, s_final);
+            reach_hi = outer_edge(shell);
         } else {
             if let Some(run) = runs.last_mut() {
                 run.push(k);
             }
-            reach_hi = reach_hi.clone().max(outer_edge(r, s_final));
+            reach_hi = reach_hi.clone().max(outer_edge(shell));
         }
     }
     runs
 }
 
-/// A shell's spread and density: (inner edge, outer edge, mass / T), T the
+/// A shell's swing and density: (inner edge, outer edge, mass / T), T the
 /// contrast of the deficits at its two edges, |d_l - d_h| / (d_l + d_h).
-fn shell_density(z: u32, a: &Q, r: &Q, s_final: &Q) -> (Q, Q, Q) {
-    let (l, h) = (inner_edge(r, s_final), outer_edge(r, s_final));
+fn shell_density(k: &formation::Shell) -> (Q, Q, Q) {
+    let (l, h) = (inner_edge(k), outer_edge(k));
     let d = |r: &Q| xyl_core::shares::deficit(&Q::ONE, r).unwrap_or(Q::ZERO);
     let (dl, dh) = (d(&l), d(&h));
     let t = (&dl - &dh)
         .abs()
         .checked_div(&(&dl + &dh))
         .unwrap_or(Q::ONE);
-    let density = mass_of(z, a).checked_div(&t).unwrap_or(Q::ZERO);
+    let density = mass_of(k.z, &k.amount).checked_div(&t).unwrap_or(Q::ZERO);
     (l, h, density)
 }
 
@@ -360,46 +351,46 @@ fn shell_density(z: u32, a: &Q, r: &Q, s_final: &Q) -> (Q, Q, Q) {
 /// or the previous pinch to the next pinch or the run's outer edge) and its
 /// run to `spans`.
 fn bead_run(
-    out: &[(u32, Q, Q)],
+    out: &[&formation::Shell],
     run: Vec<usize>,
-    s_final: &Q,
     beads: &mut Vec<Vec<usize>>,
     spans: &mut Vec<(Q, Q, Vec<usize>)>,
 ) {
     let run_lo = run
         .iter()
-        .map(|&k| inner_edge(&out[k].2, s_final))
+        .map(|&k| inner_edge(out[k]))
         .min()
         .unwrap_or(Q::ZERO);
     let run_hi = run
         .iter()
-        .map(|&k| outer_edge(&out[k].2, s_final))
+        .map(|&k| outer_edge(out[k]))
         .max()
         .unwrap_or(Q::ZERO);
     let first = beads.len();
-    let dens: Vec<(Q, Q, Q)> = run
-        .iter()
-        .map(|&k| shell_density(out[k].0, &out[k].1, &out[k].2, s_final))
-        .collect();
-    // The shells covering a reach form one contiguous window of the run, so
-    // the hold there is a difference of two prefix sums, exact.
-    let mut prefix: Vec<Q> = Vec::with_capacity(dens.len() + 1);
-    prefix.push(Q::ZERO);
-    for (_, _, d) in &dens {
-        let next = prefix.last().map(|p| p + d).unwrap_or_else(|| d.clone());
-        prefix.push(next);
-    }
+    let dens: Vec<(Q, Q, Q)> = run.iter().map(|&k| shell_density(out[k])).collect();
+    // The hold at a reach r is what has opened by r less what has closed
+    // before it: the densities in order of inner edge and of outer edge,
+    // each as a prefix sum, exact.
+    let prefix_by = |edge: fn(&(Q, Q, Q)) -> &Q| {
+        let mut by: Vec<&(Q, Q, Q)> = dens.iter().collect();
+        by.sort_by(|x, y| edge(x).cmp(edge(y)));
+        let mut sums = vec![Q::ZERO];
+        for d in &by {
+            let next = sums.last().map(|p| p + &d.2).unwrap_or_else(|| d.2.clone());
+            sums.push(next);
+        }
+        let edges: Vec<Q> = by.iter().map(|d| edge(d).clone()).collect();
+        (edges, sums)
+    };
+    let (opens, opened) = prefix_by(|d| &d.0);
+    let (closes, closed) = prefix_by(|d| &d.1);
     let local: Vec<Q> = run
         .iter()
         .map(|&k| {
-            let r = &out[k].2;
-            let a = dens.partition_point(|(_, h, _)| h < r);
-            let b = dens.partition_point(|(l, _, _)| l <= r);
-            if b > a {
-                &prefix[b] - &prefix[a]
-            } else {
-                Q::ZERO
-            }
+            let r = &out[k].reach;
+            let a = opens.partition_point(|l| l <= r);
+            let b = closes.partition_point(|h| h < r);
+            &opened[a] - &closed[b]
         })
         .collect();
     let mut start = 0;
@@ -415,7 +406,7 @@ fn bead_run(
         let cut = if b + 1 < beads.len() {
             beads[b + 1]
                 .first()
-                .map(|&k| out[k].2.clone())
+                .map(|&k| out[k].reach.clone())
                 .unwrap_or(run_hi.clone())
         } else {
             run_hi.clone()
@@ -430,13 +421,13 @@ fn bead_run(
 /// bead with no state is dropped. Its reach and phase are its most abundant
 /// kind's.
 fn place_beads(
-    out: &[(u32, Q, Q)],
+    out: &[&formation::Shell],
     beads: &[Vec<usize>],
     spans: &[(Q, Q, Vec<usize>)],
     share: &Q,
 ) -> Vec<Bead> {
     let carried_to = |k: usize, a: &Q, b: &Q, last: bool| -> bool {
-        let r = &out[k].2;
+        let r = &out[k].reach;
         *r >= *a && (*r < *b || (last && *r <= *b))
     };
     let mut found = Vec::new();
@@ -445,8 +436,8 @@ fn place_beads(
         let (a, b, run) = &spans[index];
         let last = spans.get(index + 1).is_none_or(|(_, _, next)| next != run);
         for &k in run {
-            if out[k].1.signum() > 0 && carried_to(k, a, b, last) {
-                add(&mut recipe, out[k].0, &out[k].1);
+            if out[k].amount.signum() > 0 && carried_to(k, a, b, last) {
+                add(&mut recipe, out[k].z, &out[k].amount);
             }
         }
         let state = weigh(&recipe);
@@ -456,9 +447,9 @@ fn place_beads(
         let peak = bead
             .iter()
             .copied()
-            .max_by(|&x, &y| out[x].1.cmp(&out[y].1))
+            .max_by(|&x, &y| out[x].amount.cmp(&out[y].amount))
             .unwrap_or(bead[0]);
-        let (pz, reach) = (out[peak].0, out[peak].2.clone());
+        let (pz, reach) = (out[peak].z, out[peak].reach.clone());
         found.push(Bead {
             index: u32::try_from(index).unwrap_or(0),
             reach,

@@ -332,6 +332,35 @@ fn atan_small(x: &Q, bits: u32) -> Encl {
     }
 }
 
+/// `atan(x)` for any rational `x`, certified: odd in `x`; beyond 1 it is
+/// `pi / 2 - atan(1 / x)`; within it, `atan(1/5)` is taken off by the
+/// tangent's composition, `atan x - atan y = atan((x - y) / (1 + x y))`,
+/// exact, until the rest lies within `1/5` (at most four steps), and the
+/// series closes it.
+pub fn atan(x: &Q, bits: u32) -> Encl {
+    if x.signum() < 0 {
+        return atan(&-x, bits).neg();
+    }
+    if x > &Q::ONE {
+        let half = pi(bits + 4).mul(&Encl::exact(crate::ratio!(1, 2)));
+        return x
+            .recip()
+            .map_or(half.clone(), |r| half.sub(&atan(&r, bits)));
+    }
+    let fifth = crate::ratio!(1, 5);
+    let step = atan_small(&fifth, bits + 8);
+    let mut rest = x.clone();
+    let mut taken = Encl::exact(Q::ZERO);
+    while rest > fifth {
+        let Some(next) = (&rest - &fifth).checked_div(&(&Q::ONE + &(&rest * &fifth))) else {
+            break;
+        };
+        rest = next;
+        taken = taken.add(&step);
+    }
+    taken.add(&atan_small(&rest, bits + 8)).outward(bits)
+}
+
 /// `pi`, by Machin's formula `16 atan(1/5) - 4 atan(1/239)`.
 pub fn pi(bits: u32) -> Encl {
     let a = atan_small(&crate::ratio!(1, 5), bits + 8);
@@ -704,6 +733,28 @@ mod tests {
 
     /// On the domain `0 <= z <= 1/3` the bound on `z^2` stays below one at
     /// every grid `atanh` uses, so its tail divisor `1 - z^2` is positive.
+    /// The certified arctangent encloses its known values: atan 1 = pi / 4,
+    /// atan of a large value nears pi / 2, it is odd, and a small value reads
+    /// itself to first order.
+    #[test]
+    fn the_arctangent_is_enclosed() {
+        let quarter = pi(80).mul(&Encl::exact(crate::ratio!(1, 4)));
+        let one = atan(&Q::ONE, 64);
+        assert!(one.lo <= quarter.hi && quarter.lo <= one.hi);
+        let big = atan(&Q::int(1_000_000), 64);
+        let half = pi(80).mul(&Encl::exact(crate::ratio!(1, 2)));
+        assert!(big.hi < half.lo && big.lo > half.lo.clone() - crate::ratio!(1, 999_999));
+        assert_eq!(
+            atan(&crate::ratio!(-1, 3), 64),
+            atan(&crate::ratio!(1, 3), 64).neg()
+        );
+        let small = atan(&crate::ratio!(1, 1_000_000_000), 64);
+        assert!(
+            (&small.mid() - &crate::ratio!(1, 1_000_000_000)).abs()
+                < crate::ratio!(1, 1_000_000_000_000_000_000)
+        );
+    }
+
     #[test]
     fn atanh_tail_ratio_is_positive_on_the_domain() {
         let z = crate::ratio!(1, 3);

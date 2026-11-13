@@ -305,6 +305,45 @@ fn rank(mut m: Vec<Vec<Q>>, n: usize) -> usize {
 }
 
 impl<const N: usize> Rotor<N> {
+    /// The rotor whose rate is `k` times this one's (11b's motion law, the
+    /// rate an even generator): a simple rotor `V = c + B` has the rate
+    /// `G = B / c`, and the scaled motion is `1 + k G`, exact. `None` for a
+    /// half turn (`c = 0`, no rate) and for a rotor of capacity above one,
+    /// whose volume no single rate carries.
+    pub fn rate_scaled(&self, k: &Q) -> Option<Rotor<N>> {
+        let rate = self.rate()?;
+        let v = Mv::scalar(Q::ONE).add(&rate.scale(k));
+        let inv = v.geo(&v.reverse()).scalar_part().recip()?;
+        Some(Rotor { v, inv })
+    }
+
+    /// The rotor's rate per plane (11b): its bivector part over its scalar
+    /// part, `G = B / c`, by generators, exact; each plane's rate is the
+    /// tangent of half its turn there. `None` as for [`Rotor::rate_scaled`].
+    pub fn rates(&self) -> Option<Vec<((usize, usize), Q)>> {
+        let rate = self.rate()?;
+        Some(
+            rate.terms()
+                .filter_map(|(mask, g)| match axes_of(mask)?.as_slice() {
+                    [i, j] => Some(((*i, *j), g.clone())),
+                    _ => None,
+                })
+                .collect(),
+        )
+    }
+
+    /// The rate as a bivector, `B / c`; `None` as for [`Rotor::rate_scaled`].
+    fn rate(&self) -> Option<Mv> {
+        let d = self.dimensions();
+        if d.capacity > 1 || !d.volumes.is_empty() {
+            return None;
+        }
+        let c = self.v.scalar_part();
+        Some(self.v.grade(2).scale(&c.recip()?))
+    }
+}
+
+impl<const N: usize> Rotor<N> {
     /// The rotor read by its dimensions ([`Dimensions`]).
     pub fn dimensions(&self) -> Dimensions {
         let mut planes = Vec::new();
@@ -607,6 +646,27 @@ mod tests {
             let image = Rotor::<2>::of(&turn, 60).unwrap().apply(&exact([1, 0]));
             assert_eq!(image, [c, s].map(Encl::exact));
         }
+    }
+
+    /// Scaling a rotor's rate keeps its plane: no rate is the identity, the
+    /// whole rate is the rotor itself, a half rate turns less on the same
+    /// plane, and a half turn has no rate.
+    #[test]
+    fn a_rotors_rate_scales_on_its_plane() {
+        let q = |a: i64, b: i64, c: i64| [Q::int(a), Q::int(b), Q::int(c)].map(Encl::exact);
+        let r = Rotor::<3>::drawn(1, 2, &Q::new(3, 4).unwrap(), &Q::ONE).unwrap();
+        let x = q(1, 0, 0);
+        assert_eq!(r.rate_scaled(&Q::ZERO).unwrap().apply(&x), x);
+        assert_eq!(r.rate_scaled(&Q::ONE).unwrap().apply(&x), r.apply(&x));
+        let half = r.rate_scaled(&Q::new(1, 2).unwrap()).unwrap();
+        let (full, part) = (r.apply(&x), half.apply(&x));
+        assert!(part[0].mid() > full[0].mid() && part[2].mid() == Q::ZERO);
+        let flip = Rotor::<3>::drawn(1, 2, &Q::ZERO, &Q::ONE).unwrap();
+        assert!(flip.rate_scaled(&Q::new(1, 2).unwrap()).is_none());
+        // The rate on the turn's plane is the tangent of its half-angle:
+        // the drawn direction (3/4, 1) has the rate 4/3 on plane (1, 2),
+        // signed by the versor's `c - s e1 e2`.
+        assert_eq!(r.rates().unwrap(), vec![((1, 2), Q::new(-4, 3).unwrap())]);
     }
 
     /// A turn splits into its winding and phase and back exactly, negative

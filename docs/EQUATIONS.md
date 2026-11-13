@@ -57,7 +57,7 @@ sites are restated. The derivations are in
 | E008 | Capacity: a reading carries `N` components, `v_k = p_net,k c` each in `(-c, c)`, never summed; its capacity is `N c` | light speed as the one ceiling, `v_e = c` (I004, I005) | ruled; [#197](https://github.com/SAIOS-SAMN/xylarium/issues/197) | derived |
 | E009 | A drive's exhaust per face: `p_e,k = (p_1,k (+) (-r_1,k)) (+) ... (+) (p_n,k (+) (-r_n,k))` over the states it produces on face `k` | `best_spec`, `blended` (I004) | [#192](https://github.com/SAIOS-SAMN/xylarium/issues/192) | planned |
 | E010 | The charged spin per plane: `theta_k = 360 delta_k`, `pi_k`, `eps*_k = 90 pi_k`, `K = sum_k delta_k (T_k B_k T_k~)` | one `delta` and one tilt for every plane (I006) | [#183](https://github.com/SAIOS-SAMN/xylarium/issues/183) | planned |
-| E011 | Coupling is first-degree in the faces: `h = M / (r + M) = 1 / (1 + t)`, `o = r / (r + M) = t / (1 + t)`, the hold and the reach in one denominator, calibre-free; a traversal turns `360 h` on its named plane (the turning law, built); the measure of `S^n` (`sin^(n-1)`, `measure`) is the sphere's volume element, not a coupling | `M / r^2`, `M / d`, `a^2 / (4 d^2)`, `M / R^2`, roots (I008) | ruled; [#199](https://github.com/SAIOS-SAMN/xylarium/issues/199) | stated; sites open |
+| E011 | Coupling is first-degree in the faces: `h = M / (r + M) = 1 / (1 + t)`, `o = r / (r + M) = t / (1 + t)`, the hold and the reach in one denominator, calibre-free; a traversal turns `360 h` on its named plane (the turning law, built); the measure of `S^n` (`sin^(n-1)`, `measure`) is the sphere's volume element, not a coupling | `M / r^2`, `M / d`, `a^2 / (4 d^2)`, `M / R^2`, roots (I008) | ruled; [#199](https://github.com/SAIOS-SAMN/xylarium/issues/199) | built for the field law (`field`); surface gravity (S135) and `pulse::hear`'s intensity (S025) open |
 | E012 | The state `(3W, p, R)`: `3W = 3(Z + Q)`; `h = 3Z / 3W`, `o = 3Q / 3W`, `t = 3Q / 3Z`, `p = (3Z - 3Q) / 3W`, `D(p) = 3Z / 3Q`, `D(-p) = 3Q / 3Z`; `R` the axis plane's turn | the dipole's faces as a sum (I009) | [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#148](https://github.com/SAIOS-SAMN/xylarium/issues/148), mycelium #241 | derived |
 | E013 | Formation's transitions: electrons move `R` (and `U`, `2P`); fusion and fission move `3W`, mixing the split by weight (the mediant of `D`); conversion moves `p` by flow steps `D(p') = D(p) D(s)`, keeping `3W`; a bond moves share through `g` | `Q` per kind from Earth's weights (I011) | [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201) | derived; conversion not built |
 | E014 | The conversion's rest point at a singularity: `p*` where `p (+) (-r) = 0`, `r` the singularity's medium at its throat, per dipole, first-degree; `3Q / 3Z = D(-p*)`. Read per Hopf plane, `p* = (p*_0, ..., p*_5)` (E016); at a bounce in the common phase the six are equal, so the planes part only where a winding is not common. Each genesis builds its universal table at the universal core's bounce; each galactic core builds its galaxy's table at the core's bounce, as an event. Built at the universal core: capture first (`m = Z`, `Q0 = 0`), then the conversion's rest point per kind at the bounce, where the medium's push is zero, by E018: `Q* / Z = D(R) = (1 + R) / (1 - R)`, `R` the kind's electron phase at its capture phase in the common phase, exact; a kind with `abs(R) = 1` is refused; read at the reader's precision for a weight and refined for the whole-nucleon count (`formation::founding_shells`, `circuit::rest_neutrons`, `circuit::mass_number`) | every galaxy reads the universal table (S138) | [#201](https://github.com/SAIOS-SAMN/xylarium/issues/201), [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195), [#7](https://github.com/SAIOS-SAMN/xylarium/issues/7) | built for the universal table (seed 7, one stack: every kind at its closed form `Q* / Z = 25 W_e / 147`, 50/147 to 3900/7, no kind refused); the galaxies' tables open |
@@ -85,7 +85,7 @@ sites are restated. The derivations are in
 | I005 | Speeds capped at `c` by `min`, not composed per face | S127, S128 | E001, E008 | open |
 | I006 | One-dipole forms written on 2026-11-11: the tilt's faces and balance, the open charge, the charged spin's single `delta` | S124, S125, S132 | E010 | open |
 | I007 | Offsetting the open charge by the bound share, `(p / w) (+) (-g)` (proposed on #183 and #195, withdrawn): `g` is the charge already moved onto the held stratum, so it would be counted twice; the push is the linear pair share, and the rate it drives is offset by the medium (E007) | S124 | E003, E007 | closed: withdrawn |
-| I008 | A square or root at a coupling's root, or a reach decoupled from its hold: the field's intercepted share `a^2 / (4 d^2)`, the field's work `(M / a)^2 abs(dx)^2`, surface gravity `M / R^2` and pressure, `pulse::hear`'s `M / d`, the deleted the angle reading `angle_between`'s root | S133, S134, S135, S025; S034 remediated by `rotor::pivot` | E011 | open |
+| I008 | A square or root at a coupling's root, or a reach decoupled from its hold: surface gravity `M / R^2` and pressure, `pulse::hear`'s `M / d`, the deleted the angle reading `angle_between`'s root | S135, S025 (S133 and S134 remediated by the first-degree field law; S034 by `rotor::pivot`) | E011 | open |
 | I009 | The dipole's faces as a turn added to a dilation, `3Z / 3Q + R` and `3Q / 3Z - R` (#148) | docs (model.md, The dipole) | E012, E018 | closed: restated as the composition `D(p_nuc (+) R) = D(p_nuc) D(R)` (E018) |
 | I010 | `W` names both the held count `3Z - U` and, in v2's letters, the nucleon whole `3W = 3(Z + Q)` | `compound::electron_hold` (was `compound::hold`), `circuit::fill_shares`, `circuit::Substrate::loop_flux_swung`, `spin_orbit` | E012 | closed: the electron hold is `W_e = 3Z - U` (`compound::electron_hold`, `w_e` at its sites); `3W = 3Z + 3Q` is the nucleon whole |
 | I011 | One fixed table of measured weights (`crates/xyl-cosmos/data/elements.tsv`, through `circuit::mass_number`) for every genesis and every galaxy, so `3Q`, `3W` and the split are the same everywhere: neither the universe's own nor each galactic core's | S029, S010, `stars::fusion_step` products | E013, E014 | closed: the universal table from the rest point (E014); the galaxies' tables remain (S138) |
@@ -1047,6 +1047,26 @@ sites are restated. The derivations are in
   at an age (`field::transduction`) is `Unlit` (no step), `Step(i)` or
   `Remnant`; the transduction-out share (`field::transduced_share`) is the
   step's release. Calibre: mixed, founding and core (#123). Status: built.
+- The field law, first-degree (`field`; E011, #199):
+  - The received turn (`field::Bell::received`): `360 h` degrees on the
+    plane dual to the bell's exact unit axis (`field::turn_about`, the
+    half-angle an exact circle point), `h = sigma / (d + sigma)` the face of
+    the hole's strain `sigma = spin r_g` against the reach, then the pitch's
+    share `pitch h` along the axis. No arctangent, no half-angle tangent,
+    no floor. Calibre: one per share (kpc).
+  - The intercepted energy (`field::Bell::energy_at`): light x period x the
+    system's face `a / (d + a)`, `a` and `d` in AU. Calibre: one per share
+    (AU).
+  - The re-lock work (`field::absorb`): a world turned from its native
+    direction by the share `s` of a turn costs `m M / (a + M rho) x s`, the
+    world's mass times the star's face at the orbit's reach with the hold
+    read as a length (`rho` one sun's `r_g` in AU), in field energy units;
+    `s` is read plane by plane from the pivot's rate (11b),
+    `sum_k atan |g_k| / pi`, certified. The pulse's translation is the
+    drift and shears no orbit; a turn keeps the reach. The unpaid share
+    stays as shear, the pivot's rate scaled by it (`Rotor::rate_scaled`).
+    Books: in = gravity + light + transduced out, exactly. Calibre: one per
+    share (AU).
 - Power (`stars::power`): `P = m transduced_per_bell(r) / bell` core masses per
   ring (`c = 1`). Calibre: mixed, founding and core (#123). Status: built.
 - Light (`stars::light`): `P (1 + pi bell q(t))`. Calibre: mixed, founding and core (#123). Status: built. Boundary

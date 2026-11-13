@@ -53,6 +53,7 @@ pub fn orbit_gap_m(all: &[Manifold], wa: usize, wb: usize, age: &Q) -> Option<Dy
 /// ([`orbit_gap_m`]); between systems, the arc between the stars. Returns
 /// None if a needed star is not witnessed.
 pub fn separation_m(cosmic: &Cosmic, a: Place, b: Place, t: Dy) -> Option<Dy> {
+    // Stand-in S140: The separation is one scalar in metres, not the pivot per plane.
     if a.star == b.star {
         let wit = cosmic.systems.get(&a.star)?;
         let all = manifolds(cosmic.gal.seed, &[a.star], &wit.system, &wit.star, &units());

@@ -503,6 +503,18 @@ where it belongs to one.
     points unsummed (`shares::Parcel`), read at the reader's precision
     (`circuit::neutrons_at`; the whole-nucleon count refined until
     decided). Next: the later stages, one per PR.
+67. **Space-time as null pairs** ([#222](https://github.com/SAIOS-SAMN/xylarium/issues/222), `law`, `track`;
+    [model.md](model.md#space-time-readings-the-null-pair)). The interval
+    is never formed as a square: it is the null pair `u v`, the flow law
+    its velocity addition, `D(p) = v / u`, the cone outside the dilation's
+    domain (E024). Built: the flow law, the refused cone, null points in
+    `Cl(13, 1)`, the T lane, keepers at the first-degree deficit. Order:
+    1. Separations as the pivot per plane and crossings on the T lane
+       (E025, [#219](https://github.com/SAIOS-SAMN/xylarium/issues/219), after the pivot of item 64), retiring S140.
+    2. Speeds composed by the flow law (E026, [#220](https://github.com/SAIOS-SAMN/xylarium/issues/220), to rule), retiring
+       S126 to S128.
+    3. Events carried between bodies (E027, [#221](https://github.com/SAIOS-SAMN/xylarium/issues/221)), read by the percepts
+       and the annals.
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

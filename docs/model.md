@@ -91,6 +91,49 @@ and reads both in one calibre:
 It retires `rotor::angle_between`, one unnamed plane through
 `a . b / sqrt(|a|^2 |b|^2)` and asin; its readers are listed on [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118).
 
+### Space-time readings: the null pair
+
+Tracked on [#222](https://github.com/SAIOS-SAMN/xylarium/issues/222). The interval `ds^2 = c^2 dt^2 - |dx|^2` is a square
+and a difference of squares, so it is never formed. It factors into two
+first-degree null coordinates, `(c dt - dx)(c dt + dx) = u v`, and the
+model holds space-time in that form:
+
+- **Velocity addition is the flow law.** `x (+) y = (x + y) / (1 + x y)`
+  is the composition of speeds with `c = 1`, and `D(p) = (1 + p) / (1 - p)`
+  is the null pair's ratio `v / u`; `ln D(p)` is twice the rapidity, so
+  boosts add as logarithms (`xyl_core::shares::flow`, `dilation`). Status:
+  built.
+- **The cone is refused.** `p = +/-1`, where `u = 0` or `v = 0`, is outside
+  the dilation's domain: every push is strictly inside the cone, and a
+  composed speed never reaches `c` (E024). Status: built.
+- **Null points.** In `Cl(13, 1)` conformal points are null and the white
+  hole is the null generator `N = P ^ (P . K)`, `N^2 = 0` (`xyl_core::cga`).
+  Status: built.
+- **Time is the T lane.** TUniversal's T lane carries the null flux: whole
+  rings and their phase in degrees (`xyl_core::coordinate::beat`).
+  Readings on different lanes are refused, never compared, so no `dt` is
+  ever set against a `dx`. Status: built.
+- **Clocks at depth.** A keeper at reach `r` runs at `r / (r + M(<r))` of
+  the layer above, the deficit's divergent face (first-degree, never
+  `sqrt(1 - 2M / r)`), and nested wells multiply; slips are kept, never
+  averaged (`xyl_kernel::chronometry`). Status: built.
+- **A separation is the pivot.** Between two places the separation is the
+  relative versor read plane by plane (Pairs: the pivot, per plane), and a
+  crossing is a count on the T lane: a pair of places is timelike, null or
+  spacelike by the signs of `u` and `v`, never by a scalar distance over
+  `c` (E025, [#219](https://github.com/SAIOS-SAMN/xylarium/issues/219)). Status: planned; the built reading is one scalar arc
+  (S140).
+- **Speeds compose.** An exhaust, a throat's supply and a line's medium
+  compose by the flow law, `p (+) (-r)`; nothing is capped at `c`, and a
+  spacelike span is carried only by a passage through a throat (E026,
+  [#220](https://github.com/SAIOS-SAMN/xylarium/issues/220), to rule). Status: planned; the built readings cap (S126 to S128).
+- **Events carried between bodies.** An event carried from body `a` to body `b`
+  composes the rapidities of the wells nested between them, as the product
+  of their dilations per plane, turns its place by `P_b^-1 P_a`, and
+  counts its T coordinate through the keepers between them (E027,
+  [#221](https://github.com/SAIOS-SAMN/xylarium/issues/221)). Status: planned; observers now read a remote event by light
+  delay and the keeper at the reader.
+
 ### Winding and phase: the Diophantine split
 
 Planned ([#149](https://github.com/SAIOS-SAMN/xylarium/issues/149)). The model's integer relations are Diophantine: integer

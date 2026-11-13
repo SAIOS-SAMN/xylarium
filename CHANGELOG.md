@@ -41,6 +41,15 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Space-time readings as null pairs (#222): docs/model.md states the
+  interval as the null pair `u v`, never a square, with the flow law as its
+  velocity addition and the cone outside the dilation's domain (E024);
+  E025 to E027 plan separations as the pivot per plane with crossings on
+  the T lane (#219), speeds composed instead of capped (#220) and events
+  carried between bodies (#221). The scalar separation is registered as
+  stand-in S140 (class T) at `cosmic::arc_kpc`, `transit::separation_m` and
+  `transit::crossing_years`; roadmap item 67 tracks the order.
+
 - The universal table from the conversion's rest point (#201, E014):
   capture first at `m = Z`, then each founding parcel rests at
   `Q* / Z = H / R`, the antipolar face of its reach; a kind's `Q_z` is its

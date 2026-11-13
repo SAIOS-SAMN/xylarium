@@ -395,6 +395,7 @@ impl<'g> Cosmic<'g> {
 /// (rings), on the universe's closed space: the one reading of the arc
 /// between two stars ([`Cosmic::distance`], `transit::Network::arc_at`).
 pub fn arc_kpc(a: &Star, b: &Star, t: Dy) -> Dy {
+    // Stand-in S140: The separation is one scalar arc, not the pivot per plane.
     let r = radius();
     a.place(t, &r).arc_kpc(&b.place(t, &r), &r)
 }

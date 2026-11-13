@@ -271,7 +271,7 @@ sites are restated. The derivations are in
   `delta_h = M / (2M + M_far)`. A pair sharing one hold (T16): `R_h = 2M`,
   `delta_h = 1/3`. Derived from axioms 2, 5 and 6 (pairing). Calibre: none.
   Status: built. Open: the far face's own hold where the faces do not
-  share one (a pinched throat's far face is the core it bounces into), and
+  share one (a cohort's throat's far face is the core it bounces into), and
   the hold passing between the faces over the breath.
 - Axial horizon (`bounce::horizon_planes`, `bounce::crossing_reach`; T21):
   per plane, where the pair's held face balances its passed face (the
@@ -427,7 +427,7 @@ sites are restated. The derivations are in
   faces (T16). An open kind of pole point `t = U / W_e` and axis polarity
   `A` with `ln(D(s) D(n)^A) <= 0` is held by the near face's pressure and
   released at once by the far face, inverted, `ln r = -ln t`; every other
-  open kind climbs `ln t += N* ln(D(s) D(n)^A)` per pinch interval
+  open kind climbs `ln t += N* ln(D(s) D(n)^A)` per bounce interval
   `N* = 3 (4 + a) / (2a)` and leaves in the cohort of the first bounce
   after it crosses, at the pole reach `ln r >= 0` it has climbed to. Each
   cohort takes the turning `J (m / M) (rho_cohort / rho_hold)`, so the
@@ -436,7 +436,7 @@ sites are restated. The derivations are in
 - Shell reach (`formation::founding_shells`): a cohort leaves from the
   horizon of the hold the core keeps after it, `r0 = R_h(H) = 2H`; a layer
   of hold `m`, with the hold `h` inside it (the kept hold and its heavier
-  companions, the lighter running ahead), stands after the cohort's pinch
+  companions, the lighter running ahead), stands after the cohort's bounce
   interval at the reach rate's closed form,
   `(r - r0) + 2m ln(r / r0) = 2 (h - m) N*`, solved for `r` (expanding
   where `h > m`, returning where `m > h`), under the hold that drives its
@@ -497,7 +497,7 @@ sites are restated. The derivations are in
   it; circulation about the held medium `Gamma(r) = 2 pi H(r) r / (r +
   H(r))`; vortex lines the Hopf fibres `S^1 -> S^11 -> CP^5`; twist `n`
   per echo; writhe `+/-120 n` degrees per echo; `Lk = Tw + Wr` conserved,
-  changing by one only at the pinch, `N* = 3 (4 + a) / (2a)` echoes; a
+  changing by one only at the bounce, `N* = 3 (4 + a) / (2a)` echoes; a
   streamline is the throat orbit's sheared ellipse, `e = delta`, apsides
   `r (1 -/+ delta)`, `360 delta` degrees a traversal. Open: the core
   curve's shape between tiers, mutual linking `Lk_ij`, fibre separation in
@@ -645,8 +645,8 @@ sites are restated. The derivations are in
   - Axis polarity: `sum m0` over the unpaired electrons; founded Z 1 to
     1092: 535 Z side, 517 Q side, 40 neutral. Status: planned.
 
-- The antipoles, the shear and the pinch
-  ([model.md](model.md#the-antipoles-the-shear-and-the-pinch), [#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)).
+- The antipoles, the shear and the bounce
+  ([model.md](model.md#the-antipoles-the-shear-and-the-bounce), [#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)).
   Status: planned (derived; checked exactly).
   - Antipole group: `m`, `(-m0, m1..m5)`, `(m0, -m1..-m5)`, `-m`; each
     keeps `sum |mi|` and the multiplicity.
@@ -660,16 +660,16 @@ sites are restated. The derivations are in
     `n / 3 = a / (3 (4 + a))`, over `a = m / g`: `m / (3 (4g + m))`.
   - Linking: per echo `dTw = n/2 - n/2`, `dWr = n/3 - n/3`; relative
     writhe `2 N n / 3`, first whole at `N*`.
-  - Pinch: `N* = 3 / (2n) = 3 (4 + a) / (2a)` echoes, at 180 degrees on the isoclinic planes.
+  - Bounce: `N* = 3 / (2n) = 3 (4 + a) / (2a)` echoes, at 180 degrees on the isoclinic planes.
   - Seed 7: `n / 3 = 127041008559 / 4779169536781`;
     `N* = 4779169536781 / 254082017118` echoes;
     `2 N* = 4779169536781 / 127041008559` rings, ring 37 at
     `222 deg 52' 1911753317040/42347002853"` on the T lane; spinless: none.
 
-- What a pinch carries
-  ([model.md](model.md#what-a-pinch-carries-the-next-throat-and-its-pressure),
+- What a bounce carries
+  ([model.md](model.md#what-a-bounce-carries-the-next-throat-and-its-pressure),
   [#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)). Status: planned (derived; checked exactly).
-  - Spin of the pinched throat: `a_g = a_p M_p / H_g` (degrees of
+  - Spin of the cohort's throat: `a_g = a_p M_p / H_g` (degrees of
     turning per unit hold `360 a_p M_p` carried, Kerr `J = 360 a M^2`
     degrees); no throat where `a_g > 1`, that is `j > 360 H_g`; seed 7:
     `j = 360 a_0 = 17150536155465 / 137438953472` degrees per unit hold; twist `n_g = a_g / (4 + a_g)`.
@@ -679,7 +679,7 @@ sites are restated. The derivations are in
     `A <= -8`; tier 1 (Kerr): `a_1 = a_0 M_0 / H_1` with `H_1` the first
     cohort's hold, 1.2976 core units.
 
-- Holding in a pinched throat
+- Holding in a cohort's throat
   ([model.md](model.md#axioms-and-theorems-of-the-founding), [#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)).
   Status: planned (derived).
   - Per plane: cohort hold `H_j = sum_k M_k w_kj`, `w_kj` the kind's share
@@ -692,8 +692,8 @@ sites are restated. The derivations are in
   - Seed 7 gate: held 0.4352 (core), 0.4569 (tier 1); 0.108 too light to
     close, medium.
 
-- The state at the pinch
-  ([model.md](model.md#the-state-at-the-pinch-the-fold-and-its-circuits),
+- The state at the bounce
+  ([model.md](model.md#the-state-at-the-bounce-the-fold-and-its-circuits),
   [#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)). Status: planned (derived).
   - Neutral surface: `sum_l m_l nu_l ln(r_l / r_0) = 0`; none where
     `sum m_l nu_l = 0` (the cohort flows).
@@ -704,8 +704,8 @@ sites are restated. The derivations are in
   - Seed 7: 605 layers, 0.5648 of the founded mass; `ln r_0 = 17.966`;
     inside 0.1783, outside 0.3865, without grip 0.4569.
 
-- The bounce at a pinched throat
-  ([model.md](model.md#the-bounce-at-a-pinched-throat), [#78](https://github.com/SAIOS-SAMN/xylarium/issues/78)).
+- The bounce at a cohort's throat
+  ([model.md](model.md#the-bounce-at-a-cohorts-throat), [#78](https://github.com/SAIOS-SAMN/xylarium/issues/78)).
   Status: planned (derived).
   - Far face: `t -> 1 / t` per layer; axis polarity `A -> -A`; phases 180
     degrees on each of the five isoclinic planes.
@@ -713,7 +713,7 @@ sites are restated. The derivations are in
     `b = delta / (1 - delta)`, `delta = m / (2 H_g + m)`; held where
     `D(s_g) D(n_g)^(-A) <= 1 - 2 delta`.
   - Seed 7 gate: eleven throats in a chain; the bulk's climb over the
-    pinch interval about 0.67, so one pinch carries each tier's matter.
+    bounce interval about 0.67, so one bounce carries each tier's matter.
 
 - Throat holding (`circuit::onset_echoes`; derived): with no internal
   moment, a kind is held by the throat exactly when it has no open states

@@ -64,7 +64,7 @@ pub(super) fn founding_cascade(o: &Options) -> Result<String, String> {
         out.push_str(&format!(
             concat!(
                 "  Cohort {}: at {} echoes by the {} face, {} layers, hold {}, ",
-                "pinch interval {} echoes, ln r on the axis plane {} .. {}, spin after {}\n"
+                "bounce interval {} echoes, ln r on the axis plane {} .. {}, spin after {}\n"
             ),
             k + 1,
             c.echoes,

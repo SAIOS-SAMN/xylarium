@@ -1,6 +1,6 @@
 //! The founding's release: the universal core's bounces (T17) release its
 //! open kinds cohort by cohort, and each released layer is read at its
-//! cohort's pinch: its pole reach on the axis plane, its place about the
+//! cohort's bounce: its pole reach on the axis plane, its place about the
 //! throat by the reach rate, and its rest point at the far face (see the
 //! parent module's header for the formulas).
 
@@ -34,7 +34,7 @@ pub struct Cohort {
     pub share: Q,
     /// The core's spin once it has left.
     pub spin: Q,
-    /// The pinch interval it leaves in, `N* = 3 (4 + a) / (2a)` echoes at
+    /// The bounce interval it leaves in, `N* = 3 (4 + a) / (2a)` echoes at
     /// the core's spin before it leaves.
     pub interval: Dy,
     /// Its layers: each kind, its hold and its pole reach's logarithm
@@ -66,7 +66,7 @@ pub struct SpinOrbit {
     pub remanence: Q,
 }
 
-/// A founding shell: a kind's matter as it stands at its cohort's pinch
+/// A founding shell: a kind's matter as it stands at its cohort's bounce
 /// (or, kept, at the throat): its amount (held count), its reach about the
 /// throat (founding units, the core's hold 1), its swing (the band spreads
 /// `reach (1 +/- swing)`), and whether the core keeps it.
@@ -440,7 +440,7 @@ fn driving_hold(l: &Q, m: &Q, r0: &Q) -> Option<Q> {
 /// the core's and its heavier companions'. Each cohort leaves as a pooled
 /// release (`pooled`) through the core's charged holding at its horizon,
 /// the received share `2/3` of the kept hold there (the horizon holds one
-/// third); each layer then stands after its cohort's pinch interval at
+/// third); each layer then stands after its cohort's bounce interval at
 /// the reach rate's closed form (`reach_after`) under the hold that
 /// drives its push (`driving_hold`), and one pushed back past the
 /// throat is kept. The kinds the core keeps stand at its horizon

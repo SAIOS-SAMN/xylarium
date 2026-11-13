@@ -11,6 +11,11 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The core's fold meeting is named a bounce, as ruled (#137): T10, T11,
+  T13 and T14, the sections they derive from, the founding release's
+  bounce interval and the glossary. A pinch is kept only for fold meetings
+  between gravity wells, where wormholes and ley lines form.
+
 - The horizon is axial (T21): `bounce::horizon_planes` gives each plane's
   horizon from the holding theorem, the pair's hold less what its open
   states vent (axiom 9) on the axis plane and that plus the spin's reach

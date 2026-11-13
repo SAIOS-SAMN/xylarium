@@ -55,26 +55,36 @@ pub fn units() -> Units {
 /// in the deficit, returning each echo (#233).
 pub fn radius(t: Dy) -> Q {
     let rest = crate::galaxy::units_of_kpc(&crate::galaxy::radius_kpc());
-    let rim = crate::circuit::anchor().rim;
-    let deficit = Q::ONE.checked_div(&(&rim + &Q::ONE)).unwrap_or(Q::ZERO);
-    let turns = t
-        .div(&crate::circuit::echo())
-        .unwrap_or_default()
-        .to_q()
-        .frac();
-    let (cos, _) = xyl_core::certified::cos_sin_turns(&Encl::exact(turns));
-    let swing = xyl_core::certified::toward_zero(&(&deficit * &cos.mid()), 64);
-    &rest * &(&Q::ONE + &swing)
+    &rest * &breath(t, crate::circuit::echo())
 }
 
-/// The radius of a galaxy's sphere (each galaxy an enclosed S^360): the
-/// core's pulse spreads around it and refocuses on the far side at the rim,
-/// so the rim is half a great circle and the radius is rim / pi (galaxy
-/// units). The home galaxy's rim is the founding's (circuit::anchor); another
-/// galaxy's rim is that rim times the galaxy's `scale`.
-pub fn galaxy_radius(scale: &Q) -> Q {
+/// One breath of an enclosure about its core at `t` rings over the core's
+/// echo `echo` (rings): `1 + delta_rim cos(360 t / echo)`, the deficit at
+/// the founding's rim `delta_rim = H / (rim + H)` with the core's hold
+/// `H = 1`. A change of tier dilates the rim and the hold together, so the
+/// deficit is the same in every galaxy's own units; the echo dilates with
+/// them. One plus the whole deficit when the echo is zero.
+fn breath(t: Dy, echo: Dy) -> Q {
+    let rim = crate::circuit::anchor().rim;
+    let deficit = Q::ONE.checked_div(&(&rim + &Q::ONE)).unwrap_or(Q::ZERO);
+    let turns = t.div(&echo).unwrap_or_default().to_q().frac();
+    let (cos, _) = xyl_core::certified::cos_sin_turns(&Encl::exact(turns));
+    let swing = xyl_core::certified::toward_zero(&(&deficit * &cos.mid()), 64);
+    &Q::ONE + &swing
+}
+
+/// The radius at `t` rings of a galaxy's sphere (each galaxy an enclosed
+/// S^360): the core's pulse spreads around it and refocuses on the far side
+/// at the rim, so the rim is half a great circle and the rest radius is
+/// rim / pi (galaxy units). The home galaxy's rim is the founding's
+/// (circuit::anchor); another galaxy's rim is that rim times the galaxy's
+/// `scale`. It breathes with its core's bell (`breath`): the home core's
+/// echo, dilated by `scale` for a homologue (#233 item 1).
+pub fn galaxy_radius(scale: &Q, t: Dy) -> Q {
     let rim = crate::galaxy::units_of_kpc(&(&crate::galaxy::rim_kpc() * scale));
-    rim.checked_div(&pi(80).mid()).unwrap_or(Q::ONE)
+    let rest = rim.checked_div(&pi(80).mid()).unwrap_or(Q::ONE);
+    let echo = crate::circuit::echo() * Dy::from_q(scale);
+    &rest * &breath(t, echo)
 }
 
 /// The unit direction a plane's rotor turns a phase to: the phase's exact
@@ -345,6 +355,31 @@ mod separation_tests {
         }
         let back = radius(echo);
         assert!((&back - &open).abs() < &bound * &xyl_core::ratio!(1, 1_000_000));
+    }
+
+    /// A galaxy's sphere breathes with its core's bell: a homologue twice
+    /// the home's scale rests at twice its radius, swings by the same share
+    /// of it, and returns after twice the echo.
+    #[test]
+    fn a_galaxys_sphere_breathes_with_its_core() {
+        let _ = crate::genesis::origin();
+        let echo = crate::circuit::echo();
+        let (home, twice) = (Q::ONE, Q::int(2));
+        let open = galaxy_radius(&home, Dy::ZERO);
+        let half = galaxy_radius(&home, echo.div(&Dy::int(2)).unwrap());
+        assert!(open > half, "{open} {half}");
+        // Its swing is the rim's deficit: (open - half) / (open + half).
+        let rim = crate::circuit::anchor().rim;
+        let deficit = Q::ONE.checked_div(&(&rim + &Q::ONE)).unwrap();
+        let swing = (&open - &half).checked_div(&(&open + &half)).unwrap();
+        assert!((&swing - &deficit).abs() < &deficit * &xyl_core::ratio!(1, 1_000_000));
+        let big = galaxy_radius(&twice, Dy::ZERO);
+        assert!((&big - &(&Q::int(2) * &open)).abs() < &open * &xyl_core::ratio!(1, 1_000_000));
+        let tiny = &open * &xyl_core::ratio!(1, 1_000_000);
+        let after = galaxy_radius(&twice, echo * Dy::int(2));
+        assert!((&after - &big).abs() < &Q::int(2) * &tiny);
+        let mid = galaxy_radius(&twice, echo);
+        assert!(mid < big, "{mid} {big}");
     }
 
     /// Two places on one plane keep every component apart: their relative

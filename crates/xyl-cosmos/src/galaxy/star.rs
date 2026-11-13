@@ -175,7 +175,7 @@ impl Star {
             (self.orbit.rotor(), at),
             climb,
             self.core,
-            &crate::chain::galaxy_radius(&self.scale.to_q()),
+            &crate::chain::galaxy_radius(&self.scale.to_q(), t),
             core,
         )
     }

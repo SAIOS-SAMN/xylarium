@@ -11,6 +11,11 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- A galaxy's sphere breathes with its core's bell (#233 item 1):
+  `chain::galaxy_radius(scale, t)` swings by the rim's deficit
+  `1 / (rim + 1)` over its core's echo, the home's echo dilated by the
+  galaxy's `scale`. A star's place reads its galaxy's radius at its time.
+
 - The manifold's dimension passes smoothly (#233 item 2):
   `formation::dimension_at` is the ball's share `H / (H + r)` at the reach,
   the core's face with its hold of one galaxy unit, in place of the cut

@@ -80,6 +80,15 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The winding split and the separation (E019, #118): `rotor::Winding`
+  holds a turn as its whole turns and its phase in degrees. Every
+  `chain::Place` carries its orbit plane's rotor and its winding (the
+  cores' turns no longer drop their whole turns to `frac`), and
+  `Place::separation` reads two places apart: the pivot between their
+  directions, the relative rotor between their planes by its dimensions,
+  each winding, their phase difference where the planes coincide, and the
+  pairs of reaches, climbs and offsets. `Place::arc` is the route over it.
+
 - Dimensional orthogonality of a rotor (E028): `Rotor::dimensions` reads
   a rotor's planes (its bivector part by generators), its volumes (grade 4
   and above) and its capacity, half the rank of the bivector part's

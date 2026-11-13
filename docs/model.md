@@ -90,7 +90,12 @@ and reads both in one calibre:
 
 Built: the pivot between two unit directions (`rotor::pivot`), the rotor
 `1 + b a` on its named plane with its turn read from its scalar part and
-scale. It replaced the angle reading `angle_between`, one unnamed plane through
+scale; and the separation of two places (`chain::Place::separation`): the
+pivot, the relative rotor between their orbit planes by its dimensions,
+each winding, their phase difference where the planes coincide, and the
+pairs of reaches, climbs and offsets, never summed. Its route length
+(`chain::Place::arc`) remains the one scalar its readers take (S140,
+[#219](https://github.com/SAIOS-SAMN/xylarium/issues/219)). It replaced the angle reading `angle_between`, one unnamed plane through
 `a . b / sqrt(|a|^2 |b|^2)` and asin, now deleted
 ([#118](https://github.com/SAIOS-SAMN/xylarium/issues/118)). Planned: the
 winding and phase per plane of the six planes.
@@ -195,7 +200,10 @@ integers (ZZ) where a relation closes.
   and its phase (in QQ/ZZ, the degrees within the turn). Both are carried,
   never merged: a ring count or a value in radians merges them, `frac`
   drops the winding, and with pi no advance is a rational part of a turn.
-  `coordinate::beat` keeps both on the T lane.
+  `coordinate::beat` keeps both on the T lane, and `rotor::Winding` holds
+  a body's turns on its plane: every place carries its orbit plane and its
+  winding (`chain::Place`), and a separation reads two places' windings
+  and their phase difference apart (`chain::Place::separation`).
 - **Calibre-free.** A change of calibre multiplies by a rational, `60^p`,
   and keeps every relation in QQ: `u / w`, `p / q` and a dipole's faces
   (The dipole, section 2).

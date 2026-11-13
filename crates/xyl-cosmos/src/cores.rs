@@ -77,14 +77,14 @@ impl Shape {
     /// plane's rotor (node about the axis, then tilt) applied to its phase at
     /// t, at its reach.
     pub fn place_at(&self, t: Dy, r: &Q) -> crate::chain::Place {
-        let phase = (Dy::from_q(&self.phase) + self.rate * t).to_q().frac();
-        // The phase's exact circle point, turned exactly: a unit direction.
-        let (c, s) = xyl_core::rotor::circle_point(&(&phase * &Q::int(360)), 64)
-            .unwrap_or((Q::ONE, Q::ZERO));
-        let dir = drawn_rotor(&self.node, &self.tilt)
-            .apply(&[c, s, Q::ZERO].map(xyl_core::certified::Encl::exact))
-            .map(|x| x.mid());
-        crate::chain::Place::core(self.anchor().0, dir, r)
+        // Its turns on its plane, whole turns and phase carried (E019).
+        let turns = (Dy::from_q(&self.phase) + self.rate * t).to_q();
+        crate::chain::Place::core(
+            self.anchor().0,
+            drawn_rotor(&self.node, &self.tilt),
+            xyl_core::rotor::Winding::of_turns(&turns),
+            r,
+        )
     }
 
     /// Hole mass over the home galaxy's; every mass in the galaxy scales by it.

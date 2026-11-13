@@ -218,7 +218,8 @@ where it belongs to one.
     field's twist rotor `1 + t B` (`field::rotate`), a half-angle tangent
     at a law's root, with the field's tier.
 30. **Duplicate laws** ([#43](https://github.com/SAIOS-SAMN/xylarium/issues/43), `defect`). Done: one deficit function, one
-    meeting law (`formation::founding_shells`), one certified exponential,
+    release (`formation::spin_orbit`, read by the core's spin and the
+    founding shells alike), one certified exponential,
     ln 2 and pi. Left: the ocean's own pulls beside `Substrate::pulls`, the
     moons' placement beside `manifold`, and the two rotation carriers
     (item 40).
@@ -288,8 +289,8 @@ where it belongs to one.
 
 3. **Elements attached to the filament's released pressure**
    ([#4](https://github.com/SAIOS-SAMN/xylarium/issues/4), `proposal`, `law`).
-   The cascade assigns each kind one reach and exchanges between stacks on the way out
-   (`formation::founding_shells`). In its place: the
+   The core's spin orbit releases each kind at a bounce and the reach rate
+   carries it to its pinch (`formation::founding_shells`). In its place: the
    bounce releases the torsion share's pressure along the filament, falling with
    reach as the vacuum's share; each kind attaches to it by its open states and
    is held back by its held count, and settles where the two balance, as a
@@ -502,7 +503,9 @@ where it belongs to one.
     taken kind's resistance, no mean reach; a kind holds its parcels' rest
     points unsummed (`shares::Parcel`), read at the reader's precision
     (`circuit::neutrons_at`; the whole-nucleon count refined until
-    decided). Next: the later stages, one per PR.
+    decided). Done: the stacks, the final share and the filter deleted
+    with the static cascade (item 0.2 of the founding as flow). Next: the
+    later stages, one per PR.
 67. **Space-time as null pairs** ([#222](https://github.com/SAIOS-SAMN/xylarium/issues/222), `law`, `track`;
     [model.md](model.md#space-time-readings-the-null-pair)). The interval
     is never formed as a square: it is the null pair `u v`, the flow law
@@ -883,7 +886,14 @@ Next:
    2. The parcel and the reach rate: release at onset, the reach law in
       closed form between events, the throat's books
       `H_0(t) = 1 - sum outflow`; the fixed reaches (`formation::founding_shells`,
-      `s_final`, `runs_of`, `bead_run`, `place_beads`) deleted.
+      `s_final`, `runs_of`, `bead_run`, `place_beads`) deleted. Done: the
+      core's spin orbit (T17, `formation::spin_orbit`) is the one release;
+      each released layer stands at its cohort's pinch by the reach rate's
+      closed form, swinging by the deficit of the hold inside it, and rests
+      at the far face's inversion of its pole reach; the stacks, the final
+      share `s_final` and the meeting filter are deleted. Left: the
+      continuous outflow between bounces, and `runs_of`, `bead_run` and
+      `place_beads` with the concentrations (step 4).
    3. Angular state and meetings: phase and plane in degrees, swing as
       torsion and twist, meetings by contrast times coherence.
    4. Concentrations: galactic cores where flowing parcels contract; each

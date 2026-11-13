@@ -214,9 +214,9 @@ where it belongs to one.
     `law`). Done: `D(p)`, the flow law and the deficit share in
     `xyl_core::shares`, and the squared share removed; the quaternion rotor
     and its half-angle constructors replaced by the rotor of turns
-    (`xyl_core::rotor::Rotor`, turns on named planes in degrees). Left, the
-    field's twist rotor `1 + t B` (`field::rotate`), a half-angle tangent
-    at a law's root, with the field's tier.
+    (`xyl_core::rotor::Rotor`, turns on named planes in degrees). Done: the
+    field's twist rotor `1 + t B` replaced by a turn in degrees about an
+    exact unit axis (`field::turn_about`).
 30. **Duplicate laws** ([#43](https://github.com/SAIOS-SAMN/xylarium/issues/43), `defect`). Done: one deficit function, one
     release (`formation::spin_orbit`, read by the core's spin and the
     founding shells alike), one certified exponential,
@@ -446,8 +446,10 @@ where it belongs to one.
     hold and the reach in one denominator. Done: the law stated (E011), and
     the sites that read a square, a root or a reach without its hold
     registered and marked (class Q: S133 to S135, with S025 and S034).
-    Next, each site as a face reading:
-    - the field's intercepted share and work;
+    Done: the field's intercepted share `a / (d + a)` and the re-lock work
+    `m M / (a + M rho) x s`, the turn's share read per plane from the
+    pivot's rate (S133, S134; S023's floors gone). Next, each site as a
+    face reading:
     - surface gravity and pressure;
     - `pulse::hear`;
     - the separation (#118).

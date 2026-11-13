@@ -277,7 +277,8 @@ Letters: `h` held, `o` open; `c` is the speed of light.
   no leftover length (no dimensional coupling constant enters it), and
   holds its share far out (`h = 1 / (1 + t)`, not `1 / t^2`). Sites that
   still read a square, a root, or a reach without its hold are registered
-  (class Q, S133 to S135, with S025 and S034).
+  (class Q: S135 and S025; the field law's S133 and S134 are restated as
+  faces, and S034 by the pivot).
 - **Reduction.** For `N = 1`, `w = sigma = 1`, these are the two-face law,
   the faces' push and the Push and resistance law.
 - **Open.**

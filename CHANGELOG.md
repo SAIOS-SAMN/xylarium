@@ -11,6 +11,19 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The field law is first-degree (E011, #199). A bell's received turn is
+  `360 h` degrees about its exact unit axis, `h = sigma / (d + sigma)` the
+  face of the hole's strain against the reach, with the pitch's share
+  `pitch h` along it (`field::turn_about` replaces the half-angle tangent
+  `1 + t B`). The intercepted energy is light x period x the system's face
+  `a / (d + a)` in place of `a^2 / (4 d^2)`, with no 1 AU floor. A world's
+  anchor is its reach and exact unit directions; the re-lock work is
+  `m M / (a + M rho) x s`, `s` the turn's share read plane by plane from the
+  pivot's rate (`Rotor::rates`, `certified::atan`), in place of
+  `1/2 m (M / a)^2 |dx|^2`, and the unpaid shear keeps the pivot's rate
+  scaled by its share (`Rotor::rate_scaled`). S023, S133 and S134 are
+  remediated; the field books close exactly as before.
+
 - The bells are heard per plane and on the T lane (#118, E011):
   `pulse::hear` no longer sums one complex phasor. Each bell arrives with
   its winding (whole wavelengths and phase) and its arrival planes (the

@@ -12,10 +12,10 @@
 //! `star_year` is a sun's year of light in that unit and `star_ring` a sun's
 //! ring of light, read through the SI seam (`package::Si::seconds_per_ring`).
 //!
-//! - Versors: `bend` (translator), `rotate` (rotor `1 + t B`, a rational
-//!   point of the circle), `twist` (screw: rotor then translation along the
-//!   axis); `carry` moves a point by any versor, odd ones by the twisted
-//!   adjoint.
+//! - Versors: `bend` (translator), `turn_about` (a turn in degrees on the
+//!   plane dual to an exact unit axis, its half-angle an exact circle
+//!   point), `twist` (screw: the turn then a translation along the axis);
+//!   `carry` moves a point by any versor, odd ones by the twisted adjoint.
 //! - `Bell::of`, `bells`: each node's screw. Its pitch is the core's
 //!   wavelength times the extent of M / M_core (`pitch_kpc`), its period
 //!   the pitch at light speed, its axis the core's or the progenitor
@@ -23,8 +23,11 @@
 //!   light `mass x 32000 x horizon_share x efficiency`.
 //! - `Bell::arrivals`: rings reaching a place in a span, in closed form
 //!   (ring k sounds at born + k periods, arrives one light time later).
-//!   `Bell::received` and `energy_at`: the versor and the energy
-//!   intercepted, light x period x a^2 / (4 d^2).
+//!   `Bell::received`: the turning law, `360 h` degrees about the bell's
+//!   axis with `h = sigma / (d + sigma)` the face of the hole's strain
+//!   `sigma = spin r_g` against the reach, and the pitch's share `pitch h`
+//!   along it (E011). `Bell::energy_at`: light x period x the system's
+//!   face `a / (d + a)` (E011), no floor.
 //! - `absorb` -> `Option<Absorbed>`: the pulse shears each world's orbit;
 //!   the star pays up to the energy in to re-lock them, at
 //!   `1/2 m (M / a)^2 |dx|^2` each, leaving the unpaid share as shear; of
@@ -115,17 +118,25 @@ fn plane_of(axis: &[Q; 3]) -> Mv {
         .add(&Mv::blade(E1 | E2, axis[2].clone()))
 }
 
-/// Rotate about `axis` by `2 atan(t |axis|)`: the rotor `1 + t B`, a
-/// rational point of the circle (unnormalized; the scale is removed when a
-/// point is read back).
-pub fn rotate(axis: &[Q; 3], t: &Q) -> Mv {
-    Mv::scalar(Q::ONE).add(&plane_of(axis).scale(t))
+/// A turn of `degrees` about the exact unit `axis`, on the plane dual to
+/// it (named by its generators, `plane_of`): the rotor
+/// `cos(theta / 2) - sin(theta / 2) B`, its half-angle the exact circle
+/// point of `theta / 2` on the 2^-64 grid (`rotor::circle_point`), so the
+/// rotor is exact and of unit scale. `None` for an axis not exactly of unit
+/// length.
+pub fn turn_about(axis: &[Q; 3], degrees: &Q) -> Option<Mv> {
+    let length = axis.iter().fold(Q::ZERO, |s, x| &s + &(x * x));
+    if length != Q::ONE {
+        return None;
+    }
+    let (c, s) = xyl_core::rotor::circle_point(&degrees.over(xyl_core::nonzero!(2)), 64)?;
+    Some(Mv::scalar(c).sub(&plane_of(axis).scale(&s)))
 }
 
-/// Twist: a turn about `axis` (as in `rotate`) followed by the translation
-/// `along`.
-pub fn twist(axis: &[Q; 3], t: &Q, along: &[Q; 3]) -> Mv {
-    cga::translator_at(along).geo(&rotate(axis, t))
+/// Twist: a turn of `degrees` about `axis` (as in [`turn_about`]) followed
+/// by the translation `along`. `None` as for [`turn_about`].
+pub fn twist(axis: &[Q; 3], degrees: &Q, along: &[Q; 3]) -> Option<Mv> {
+    Some(cga::translator_at(along).geo(&turn_about(axis, degrees)?))
 }
 
 /// A point moved by a versor, exactly (an odd versor acts by its twisted
@@ -147,7 +158,8 @@ pub fn carry(v: &Mv, x: &[Q; 3]) -> Option<[Q; 3]> {
 /// A bell's screw and its light.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Bell {
-    /// The hole's spin axis (a direction, exact on the grid).
+    /// The hole's spin axis: an exact unit direction (the orbit's rotor
+    /// applied to the pole, exactly).
     pub axis: [Q; 3],
     /// The axis tilt from the orbit normal (degrees), at the balance of the
     /// progenitor's charge (`stellar_tilt`); `None` for a galactic core and
@@ -249,7 +261,7 @@ impl Bell {
             Kind::Stellar(s) => {
                 let tilt = stellar_tilt(s);
                 let n = stellar_axis(&s.orbit, tilt.as_ref());
-                (n.map(|x| grid(Dy::from_q(&x))), drawn_spin(seed, s.n), tilt)
+                (n, drawn_spin(seed, s.n), tilt)
             }
         };
         let pitch = pitch_kpc(node.mass);
@@ -294,11 +306,14 @@ impl Bell {
         u64::try_from(ring(to) - ring(from)).unwrap_or(0)
     }
 
-    /// The pulse at a place `d_kpc` away: the bell's screw scaled by the
-    /// strain there: a turn about its axis by `2 atan(t |axis|)` with
-    /// `t = spin x r_g / d`, followed by a translation along the axis of one
-    /// pitch per full turn (in AU). `|axis|` is taken in first degree.
-    pub fn received(&self, d_kpc: Dy) -> Mv {
+    /// The pulse at a place `d_kpc` away, first-degree (E011): the bell's
+    /// screw turns the plane dual to its axis by the turning law,
+    /// `360 h` degrees with `h = sigma / (d + sigma)` the face of the hole's
+    /// strain `sigma = spin x r_g` against the reach (finite at `d = 0`, no
+    /// floor), then translates along the axis by the pitch's share of the
+    /// turn, `pitch x h` (AU). No arctangent, no half-angle tangent. `None`
+    /// for an axis not exactly of unit length.
+    pub fn received(&self, d_kpc: Dy) -> Option<Mv> {
         // The hole's r_g: the core's r_g times the hole's mass over the
         // core's.
         let rg_kpc = ((Dy::from_q(&crate::chain::units().r_g_m))
@@ -307,40 +322,26 @@ impl Bell {
             * Dy::from_q(&self.mass))
         .div(&(Dy::from_q(&hole_mass())))
         .unwrap_or_default();
-        let t = grid(
-            (Dy::from_q(&self.spin) * rg_kpc)
-                .div(&d_kpc.max(Dy::sci(1, -9)))
+        let sigma = Dy::from_q(&self.spin) * rg_kpc;
+        let h = grid(
+            sigma
+                .div(&(d_kpc.max(Dy::ZERO) + sigma))
                 .unwrap_or_default(),
         );
-        // The axis length in first degree (sum of |components|, no root).
-        let norm = self
-            .axis
-            .iter()
-            .fold(Dy::ZERO, |s, x| s + Dy::from_q(x).abs());
-        let angle = Dy::int(2) * (Dy::from_q(&t) * norm).atan();
-        // The screw's translation for this turn, in AU, along the axis.
-        let shift = (Dy::from_q(&self.pitch_kpc) * Dy::from_q(&au_per_kpc()) * angle)
-            .div(&(Dy::int(2) * Dy::pi()))
-            .unwrap_or_default()
-            .div(&norm.max(Dy::sci(1, -30)))
-            .unwrap_or_default();
-        let along = [
-            grid(shift * Dy::from_q(&self.axis[0])),
-            grid(shift * Dy::from_q(&self.axis[1])),
-            grid(shift * Dy::from_q(&self.axis[2])),
-        ];
-        twist(&self.axis, &t, &along)
+        let degrees = &Q::int(360) * &h;
+        let shift = &(&self.pitch_kpc * &au_per_kpc()) * &h;
+        let along: [Q; 3] = std::array::from_fn(|i| grid(Dy::from_q(&(&shift * &self.axis[i]))));
+        twist(&self.axis, &degrees, &along)
     }
 
     /// The energy of one ring intercepted by a system of radius `a_out_au` at
-    /// `d_kpc`: one period of light times the share of the sphere the system's
-    /// disc covers (pi a^2 over 4 pi d^2: a^2 / (4 d^2), exact), with d at
-    /// least 1 AU; in field energy units.
+    /// `d_kpc`: one period of light times the system's face against the
+    /// reach, `a / (d + a)` with both in AU (E011, first-degree: the hold
+    /// and the reach in one denominator, finite at `d = 0`, no floor); in
+    /// field energy units.
     pub fn energy_at(&self, d_kpc: Dy, a_out_au: &Q) -> Q {
-        // Stand-in S023: Distance is floored at 1 AU and energy falls as a^2 / 4 d^2.
-        let d_au = grid(d_kpc * Dy::from_q(&au_per_kpc())).max(Q::ONE);
-        // Stand-in S133: The share is the inverse square of a shell, not a face.
-        let share = qd(&(a_out_au * a_out_au), &(&Q::int(4) * &(&d_au * &d_au)));
+        let d_au = grid(d_kpc * Dy::from_q(&au_per_kpc())).max(Q::ZERO);
+        let share = qd(a_out_au, &(&d_au + a_out_au));
         &(&(&self.light * &self.period) * &star_ring()) * &share
     }
 }
@@ -412,14 +413,19 @@ pub fn transduced_share(seq: &crate::stars::Sequence, b: Transduction) -> Q {
 
 // ---------------------------------------------------------- The star absorbs.
 
-/// A world as held by its star: its native anchor (its place on its orbit,
-/// from the star's G point) and its current place (sheared by pulses the star
-/// could not fully re-lock), in AU; and its mass (world masses).
+/// A world as held by its star: its reach (its orbit's radius from the
+/// star's G point, AU), its native direction on its orbit and its current
+/// direction (sheared by pulses the star could not fully re-lock), each an
+/// exact unit direction, and its mass (world masses). A pulse turns a world
+/// about the star and keeps its reach, so the shear is a turn on a named
+/// plane, never a Cartesian displacement.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Anchor {
-    /// Native place on the orbit, from the star's G point (AU).
+    /// The orbit's radius from the star's G point (AU).
+    pub reach: Q,
+    /// Native direction on the orbit, from the star's G point (exact unit).
     pub native: [Q; 3],
-    /// Current place, including any shear not re-locked (AU).
+    /// Current direction, including any shear not re-locked (exact unit).
     pub at: [Q; 3],
     /// World mass (world masses).
     pub mass: Q,
@@ -429,21 +435,49 @@ impl Anchor {
     /// A world on its native orbit of radius `a` AU.
     pub fn on_orbit(a: &Q, mass: &Q) -> Anchor {
         // Stand-in S024: Every world anchor sits on the first axis at [a, 0, 0].
-        let native = [a.clone(), Q::ZERO, Q::ZERO];
+        let native = [Q::ONE, Q::ZERO, Q::ZERO];
         Anchor {
+            reach: a.clone(),
             at: native.clone(),
             native,
             mass: mass.clone(),
         }
     }
 
-    /// Squared distance from the native place (AU^2): the shear.
+    /// The shear: the turn from the native direction to the current one, in
+    /// degrees, read from the pivot's rate on each plane (`turn_share`).
     pub fn sheared(&self) -> Q {
-        (0..3).fold(Q::ZERO, |s, i| {
-            let d = &self.at[i] - &self.native[i];
-            &s + &(&d * &d)
-        })
+        &Q::int(360) * &turn_share(&self.native, &self.at)
     }
+}
+
+/// The share of a whole turn carrying the unit direction `from` to `to`,
+/// read plane by plane from the pivot's rate (11b): a plane of rate `g`
+/// turns `2 atan |g|`, so its share is `atan |g| / pi`, certified and well
+/// conditioned for small turns, and the planes' shares add. 0 for one
+/// direction, 1/2 for antipodal ones. Its midpoint.
+fn turn_share(from: &[Q; 3], to: &[Q; 3]) -> Q {
+    use xyl_core::certified::{atan, pi};
+    let Some(pivot) = xyl_core::rotor::pivot(from, to, 64) else {
+        return Q::ZERO;
+    };
+    let Some(rates) = pivot.rotor.as_ref().and_then(|r| r.rates()) else {
+        return xyl_core::ratio!(1, 2);
+    };
+    let per = pi(64).recip().map_or(Q::ZERO, |p| p.mid());
+    rates.iter().fold(Q::ZERO, |s, (_, g)| {
+        &s + &(&atan(&g.abs(), 64).mid() * &per)
+    })
+}
+
+/// `r_g` of one sun in AU, `G M_sun / (c^2 AU)`: the length a hold of one
+/// sun reads in a system's calibre (`package::Si`).
+fn sun_rg_au() -> Q {
+    use crate::package::Si;
+    qd(
+        &(&Si::g() * &Si::star_mass_kg()),
+        &(&(&Si::c() * &Si::c()) * &Si::au()),
+    )
 }
 
 /// The result of one absorption: energy in, spent as gravity (re-locking
@@ -478,14 +512,17 @@ impl Absorbed {
 }
 
 /// A star of `mass` suns absorbs a pulse `v` bringing `energy_in`, its
-/// current step converting `transduced_out` of what it transduces (`transduced_share`).
-/// The pulse moves each world relative to the star's G point (which also
-/// moves: the drift). The star's gravity returns each world toward its
-/// native place by the share of the work the energy pays for: fully
-/// re-locking a world costs `1/2 m (M/a)^2 |dx|^2`, with `a` its native
-/// orbit and `dx` its displacement. The unpaid share remains as shear,
-/// cut toward zero to the 2^-60 grid. `None` where a moved point cannot be
-/// read back.
+/// current step converting `transduced_out` of what it transduces
+/// (`transduced_share`). The pulse's translation moves the star's G point
+/// (the drift) and shears no orbit; its turn turns each world about the
+/// star, keeping its reach. Re-locking a world turned from its native
+/// direction by the share `s` of a whole turn (`turn_share`) costs the
+/// hold's work over that share, first-degree (E011): `m M / (a + M rho) x s`, the world's
+/// mass times the star's face at the orbit's reach with the hold read as a
+/// length (`rho` one sun's `r_g` in AU), in field energy units. The star
+/// pays what the energy covers; the unpaid share of each turn remains as
+/// shear, its rate scaled by that share (`Rotor::rate_scaled`). `None`
+/// where a moved point cannot be read back.
 pub fn absorb(
     mass: &Q,
     transduced_out: &Q,
@@ -494,23 +531,19 @@ pub fn absorb(
     energy_in: &Q,
 ) -> Option<Absorbed> {
     let drift = carry(v, &[Q::ZERO, Q::ZERO, Q::ZERO])?;
+    let hold = &(mass * &sun_rg_au());
     let mut moved = Vec::with_capacity(worlds.len());
     let mut need = Q::ZERO;
     for w in worlds {
-        let c = carry(v, &w.at)?;
-        // Displacement from the native place, with the G point's drift removed.
-        let dx: [Q; 3] = std::array::from_fn(|i| &(&c[i] - &drift[i]) - &w.native[i]);
-        let a2 = (0..3).fold(Q::ZERO, |s, i| &s + &(&w.native[i] * &w.native[i]));
-        let d2 = (0..3).fold(Q::ZERO, |s, i| &s + &(&dx[i] * &dx[i]));
-        // Work 1/2 m (M / a)^2 |dx|^2, the turning M / a squared.
-        // Stand-in S134: The work squares the turning and sums squares.
-        let work = if a2.signum() > 0 {
-            qd(&(&qd(&(&w.mass * &(mass * mass)), &a2) * &d2), &Q::int(2))
-        } else {
-            Q::ZERO
-        };
+        // The pulse's turn about the star: the world's point moved, less the
+        // drift, read back as a direction at the same reach.
+        let point: [Q; 3] = std::array::from_fn(|i| &w.at[i] * &w.reach);
+        let c = carry(v, &point)?;
+        let turned: [Q; 3] = std::array::from_fn(|i| qd(&(&c[i] - &drift[i]), &w.reach));
+        let share = dyadic(&turn_share(&w.native, &turned));
+        let work = qd(&(&(&w.mass * mass) * &share), &(&w.reach + hold));
         need = &need + &work;
-        moved.push(dx);
+        moved.push(turned);
     }
     // Every term is held as a 62-bit dyadic (Dy), so books summed over a
     // universe's life keep power-of-two denominators and stay bounded; the
@@ -525,16 +558,31 @@ pub fn absorb(
     } else {
         qd(&gravity, &need)
     };
-    let left = &Q::ONE - &held;
+    let left = toward_zero(&(&Q::ONE - &held), GRID);
     let anchors = worlds
         .iter()
         .zip(moved)
-        // Only the remaining shear is rounded to the grid: a fully re-locked
-        // world sits exactly on its native place.
-        .map(|(w, dx)| Anchor {
-            at: std::array::from_fn(|i| &w.native[i] + &toward_zero(&(&left * &dx[i]), GRID)),
-            native: w.native.clone(),
-            mass: w.mass.clone(),
+        .map(|(w, turned)| {
+            // The unpaid share of the turn from the native direction stays:
+            // the pivot's rate scaled by it. A fully re-locked world stands
+            // exactly on its native direction.
+            let at = if left.signum() == 0 {
+                w.native.clone()
+            } else {
+                xyl_core::rotor::pivot(&w.native, &turned, 64)
+                    .and_then(|p| p.rotor)
+                    .and_then(|r| r.rate_scaled(&left))
+                    .map_or(turned.clone(), |r| {
+                        r.apply(&w.native.clone().map(xyl_core::certified::Encl::exact))
+                            .map(|x| x.mid())
+                    })
+            };
+            Anchor {
+                reach: w.reach.clone(),
+                native: w.native.clone(),
+                at,
+                mass: w.mass.clone(),
+            }
         })
         .collect();
     let rest = energy_in - &gravity;
@@ -601,22 +649,22 @@ mod tests {
             xyl_core::ratio!(5, 7),
         ];
         assert_eq!(carry(&cga::translator_at(&d), &origin()).unwrap(), d);
-        // Rotate: a quarter turn about z (t = 1: 2 atan 1) takes x to +-y.
+        // Turn: a half turn about z takes x to -x, a quarter turn takes x to
+        // y, and a whole turn returns it, each to the half-angle's 2^-64
+        // grid and within the plane dual to z; an axis not of unit length is
+        // refused.
         let zaxis = [Q::ZERO, Q::ZERO, Q::ONE];
-        let r = carry(&rotate(&zaxis, &Q::ONE), &[Q::ONE, Q::ZERO, Q::ZERO]).unwrap();
-        assert!(
-            r[0] == Q::ZERO && r[2] == Q::ZERO && (r[1] == Q::ONE || r[1] == -Q::ONE),
-            "{r:?}"
-        );
-        // A rational turn (t = 1/2: cos 3/5, sin 4/5) lands on a rational
-        // point.
-        let r = carry(
-            &rotate(&zaxis, &xyl_core::ratio!(1, 2)),
-            &[Q::int(5), Q::ZERO, Q::ZERO],
-        )
-        .unwrap();
-        assert_eq!(r[0], Q::int(3));
-        assert_eq!(&r[1] * &r[1], Q::int(16));
+        let x = [Q::int(5), Q::ZERO, Q::ZERO];
+        let tiny = xyl_core::ratio!(1, 1_000_000_000_000);
+        let near =
+            |p: &[Q; 3], e: [i64; 3]| p.iter().zip(e).all(|(a, b)| (a - &Q::int(b)).abs() < tiny);
+        let at = |deg: i64| carry(&turn_about(&zaxis, &Q::int(deg)).unwrap(), &x).unwrap();
+        assert!(near(&at(180), [-5, 0, 0]));
+        let quarter = at(90);
+        assert!(near(&quarter, [0, 5, 0]) || near(&quarter, [0, -5, 0]));
+        assert!(near(&at(360), [5, 0, 0]));
+        assert!([at(90), at(180), at(360)].iter().all(|p| p[2] == Q::ZERO));
+        assert!(turn_about(&[Q::ZERO, Q::ZERO, Q::int(2)], &Q::int(90)).is_none());
     }
 
     #[test]
@@ -677,7 +725,7 @@ mod tests {
         let _ = crate::genesis::origin();
         let core = Bell::of(&core(), 7);
         let d = Dy::int(8);
-        let v = core.received(d);
+        let v = core.received(d).unwrap();
         let worlds = vec![
             Anchor::on_orbit(&Q::ONE, &Q::ONE),
             Anchor::on_orbit(&xyl_core::ratio!(52, 10), &Q::int(318)),

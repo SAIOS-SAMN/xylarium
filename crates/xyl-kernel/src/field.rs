@@ -316,7 +316,9 @@ fn ring_star(
         if k == 0 {
             continue;
         }
-        let v = bell.received(d);
+        let Some(v) = bell.received(d) else {
+            continue;
+        };
         let e = bell.energy_at(d, &a_out);
         // Each ring is absorbed where the worlds stand. Once a ring
         // leaves the anchors unchanged (the star re-locked them all),

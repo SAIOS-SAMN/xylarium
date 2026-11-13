@@ -210,25 +210,19 @@ impl Parcel {
 /// `2^-bits` grid: each term and the amount are read outward at `bits` and
 /// the sum is formed on those readings, so the enclosure holds the exact
 /// value without the exact sum being formed. The mean does not depend on
-/// the amounts' scale, so each amount is first read against the largest,
-/// and a kind held in trace reads as well as one held in bulk. `None` where
-/// the parcels hold no positive amount.
+/// the amounts' scale, so each amount is read as its share of the parcels'
+/// whole amount, formed here at the reading, and a kind held in trace reads
+/// as well as one held in bulk. `None` where the parcels hold no positive
+/// amount.
 pub fn weighted(parcels: &[Parcel], bits: u32) -> Option<Encl> {
+    let held: Vec<&Parcel> = parcels.iter().filter(|p| p.amount.signum() > 0).collect();
+    let whole = held.iter().fold(Q::ZERO, |w, p| &w + &p.amount);
     let zero = Encl::exact(Q::ZERO);
-    let largest = parcels
-        .iter()
-        .map(|p| p.amount.clone())
-        .filter(|a| a.signum() > 0)
-        .max()?;
-    let (moment, amount) =
-        parcels
-            .iter()
-            .filter(|p| p.amount.signum() > 0)
-            .fold((zero.clone(), zero), |(m, a), p| {
-                let share = p.amount.checked_div(&largest).unwrap_or(Q::ZERO);
-                let term = Encl::exact(&share * &p.pairs.value()).outward(bits);
-                (m.add(&term), a.add(&Encl::exact(share).outward(bits)))
-            });
+    let (moment, amount) = held.iter().try_fold((zero.clone(), zero), |(m, a), p| {
+        let share = p.amount.checked_div(&whole)?;
+        let term = Encl::exact(&share * &p.pairs.value()).outward(bits);
+        Some((m.add(&term), a.add(&Encl::exact(share).outward(bits))))
+    })?;
     Some(moment.mul(&amount.recip()?).outward(bits))
 }
 
@@ -342,16 +336,16 @@ mod tests {
         for (z, q) in &pairs {
             let f = faces(z, q).unwrap();
             let back = f.antipole();
-            // (1) out and back
+            // (1) Out and back is the identity.
             assert_eq!(back.antipole(), f);
             assert_eq!(&back.pole().unwrap() * &f.pole().unwrap(), Q::ONE);
-            // (2) the whole kept, as the exchanged pair (q, z)
+            // (2) The whole is kept, as the exchanged pair (q, z).
             assert_eq!(faces(q, z).unwrap(), back);
             assert_eq!(&back.convergent + &back.divergent, Q::ONE);
-            // (3) the asymmetry and the fraction invert
+            // (3) The asymmetry and the fraction invert.
             assert_eq!(back.push(), -f.push());
             assert_eq!(back.divergent, &Q::ONE - &f.divergent);
-            // (4) fixed only at the throat
+            // (4) Fixed only at the throat.
             assert_eq!(back == f, z == q, "z {z} q {q}");
         }
         // The share split at delta = H / (R + H) (joint read with

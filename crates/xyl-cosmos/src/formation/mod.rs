@@ -18,8 +18,9 @@
 //!   the kept hold's horizon `2H` and stands after its cohort's pinch
 //!   interval at the reach rate's closed form,
 //!   `(r - r0) + 2m ln(r / r0) = 2 (h - m) N*`, swinging by `h / (r + h)`;
-//!   the universal table holds its rest point at the far face's inversion
-//!   of its pole reach, `Q* / Z = 1 / r` (`circuit::neutrons_at`).
+//!   the universal table holds every kind's rest point at the bounce,
+//!   `Q* / Z = D(R)` from its electron phase at its capture phase (E018,
+//!   `circuit::neutrons_at`).
 //! - Gas (`lighting`): each bead is a piece of the home galaxy's gas,
 //!   its state over the unit spread over its span, its kinds at its pinch
 //!   with agitation `a = (p - delta) / p`, `p` the throat's push

@@ -320,7 +320,7 @@ pub struct Atom {
 impl Atom {
     /// How tightly band `b` is held: the charge its windings enclose over
     /// its turning `n`, in hydrogen units (exact), by the fill's law
-    /// ([`tightness_at`]): the electrons of every other shell standing
+    /// (`tightness_at`): the electrons of every other shell standing
     /// inside the winding's reach shield it.
     pub fn winding_tightness(&self, b: &Band) -> Q {
         tightness_at(self.z, b.n, b.l, |m| {

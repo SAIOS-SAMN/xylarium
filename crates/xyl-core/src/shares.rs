@@ -209,20 +209,25 @@ impl Parcel {
 /// Parcels' amount-weighted dilation `sum(a D) / sum(a)`, enclosed on the
 /// `2^-bits` grid: each term and the amount are read outward at `bits` and
 /// the sum is formed on those readings, so the enclosure holds the exact
-/// value without the exact sum being formed. `None` where the parcels hold
-/// no positive amount.
+/// value without the exact sum being formed. The mean does not depend on
+/// the amounts' scale, so each amount is first read against the largest,
+/// and a kind held in trace reads as well as one held in bulk. `None` where
+/// the parcels hold no positive amount.
 pub fn weighted(parcels: &[Parcel], bits: u32) -> Option<Encl> {
     let zero = Encl::exact(Q::ZERO);
+    let largest = parcels
+        .iter()
+        .map(|p| p.amount.clone())
+        .filter(|a| a.signum() > 0)
+        .max()?;
     let (moment, amount) =
         parcels
             .iter()
             .filter(|p| p.amount.signum() > 0)
             .fold((zero.clone(), zero), |(m, a), p| {
-                let term = Encl::exact(&p.amount * &p.pairs.value()).outward(bits);
-                (
-                    m.add(&term),
-                    a.add(&Encl::exact(p.amount.clone()).outward(bits)),
-                )
+                let share = p.amount.checked_div(&largest).unwrap_or(Q::ZERO);
+                let term = Encl::exact(&share * &p.pairs.value()).outward(bits);
+                (m.add(&term), a.add(&Encl::exact(share).outward(bits)))
             });
     Some(moment.mul(&amount.recip()?).outward(bits))
 }
@@ -314,6 +319,25 @@ mod tests {
         }
         assert!(FacePairs::dilation(&Q::ONE).is_none());
         assert!(FacePairs::of(&Q::ZERO).is_none());
+    }
+
+    /// The weighted reading does not depend on the amounts' scale: a
+    /// parcel held at 2^-300 reads its dilation as one held at 1.
+    #[test]
+    fn a_trace_parcel_reads_as_well_as_a_bulk_one() {
+        let pairs = FacePairs::pair(BigInt::from(7), BigInt::from(5)).unwrap();
+        let tiny = (0..300).fold(Q::ONE, |q, _| q.checked_div(&Q::int(2)).unwrap());
+        for amount in [Q::ONE, tiny] {
+            let e = weighted(
+                &[Parcel {
+                    amount,
+                    pairs: pairs.clone(),
+                }],
+                64,
+            )
+            .unwrap();
+            assert!(e.lo <= Q::new(7, 5).unwrap() && Q::new(7, 5).unwrap() <= e.hi);
+        }
     }
 
     /// A parcel's antipole times its dilation is the hold, and the

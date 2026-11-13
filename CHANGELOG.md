@@ -28,7 +28,10 @@ may change public APIs and the model's laws.
   leaves from the kept hold's horizon and stands after its pinch interval
   at the reach rate's closed form `(r - r0) + 2m ln(r / r0) = 2 (h - m) N*`,
   swinging `r (1 +/- h / (r + h))`; its rest point is the far face's
-  inversion of its pole reach, `Q* / Z = 1 / r`. The stacks, the final
+  rest point is the conversion's at the bounce, E018,
+  `Q* / Z = D(R) = (1 + R) / (1 - R)` from its electron phase at its capture
+  phase, the reach playing no part (the reach's inversion read neutron-free
+  nuclei: `ln r` climbs to 255). The stacks, the final
   share `s_final`, the meeting filter, its contact and grip are deleted
   (S119 and S120 retired); the firmament is what the orbit keeps; the
   core's spin and the founding read one release. Each cohort leaves as a

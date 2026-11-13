@@ -350,12 +350,16 @@ fn reach_after(r0: &Q, m: &Q, h: &Q, tau: Dy) -> Option<Q> {
     Some(xyl_core::certified::toward_zero(&lo.to_q(), 64))
 }
 
-/// A layer's rest point on the far face: the inversion of its pole reach,
-/// `Q* / Z = 1 / r = exp(-ln r)`, gridded toward zero at 2^-64; `None`
-/// where it grids to zero.
-fn rest_point(ln_r: Dy) -> Option<FacePairs> {
-    let t = xyl_core::certified::toward_zero(&(-ln_r).exp().to_q(), 64);
-    FacePairs::of(&t)
+/// A kind's rest point at the bounce (E018, ruled 2026-11-11): the
+/// medium's push is zero at a bounce, so the nucleon split balances the
+/// electrons' phase, `p*_nuc = -R`, and `3Q* / 3Z = D(R)`, so
+/// `Q* / Z = D(R) = (1 + R) / (1 - R)`, exact, with `R` the kind's
+/// electron phase at its capture phase `frac(s Z)` (`circuit::electron_phase`;
+/// in the common phase the six planes read one `R`, E016). `None` where
+/// `abs(R) = 1`: no rest point, refused.
+fn rest_point(z: u32, share: &Q) -> Option<FacePairs> {
+    let psi = (share * &Q::int(i64::from(z))).frac();
+    FacePairs::dilation(&crate::circuit::electron_phase(z, &psi))
 }
 
 /// A cohort's pooled release (netstratum docs/134, agreed 2026-11-13): the
@@ -440,9 +444,9 @@ fn driving_hold(l: &Q, m: &Q, r0: &Q) -> Option<Q> {
 /// drives its push (`driving_hold`), and one pushed back past the
 /// throat is kept. The kinds the core keeps stand at its horizon
 /// `R_h(1) = 2`. Each shell swings by the deficit at its reach of the hold
-/// inside it. The universal table holds each released kind's rest point
-/// at the inversion of its pole reach (`rest_point`); a kept kind has
-/// none (`Q* = 0`, its capture state). Returns the shells, the table and
+/// inside it. The universal table holds every founded kind's rest point
+/// at the bounce (`rest_point`, E018), released or kept. Returns the
+/// shells, the table and
 /// the pools' take, booked to the medium's charged holding.
 pub fn founding_shells(mix: &[(u32, Q)], spin: &Q) -> (Vec<Shell>, crate::circuit::Table, Q) {
     let orbit = spin_orbit(mix, spin);
@@ -468,7 +472,7 @@ pub fn founding_shells(mix: &[(u32, Q)], spin: &Q) -> (Vec<Shell>, crate::circui
         let charged = &received * &grain(&kept_hold);
         let (pushed, given) = pooled(&kept_hold, &masses, &r0, c.far, &charged);
         take = &take + &given;
-        for ((z, m, ln_r), (h, _, l)) in layers.into_iter().zip(pushed) {
+        for ((z, m, _), (h, _, l)) in layers.into_iter().zip(pushed) {
             let Some(reach) =
                 driving_hold(&l, &m, &r0).and_then(|d| reach_after(&r0, &m, &d, c.interval))
             else {
@@ -476,12 +480,6 @@ pub fn founding_shells(mix: &[(u32, Q)], spin: &Q) -> (Vec<Shell>, crate::circui
                 continue;
             };
             let amount = amount_of(z);
-            if let Some(pairs) = rest_point(ln_r) {
-                table.entry(z).or_default().push(Parcel {
-                    amount: amount.clone(),
-                    pairs,
-                });
-            }
             // The swing is cut toward zero at 2^-64, the reach's grain.
             let swing = xyl_core::certified::toward_zero(
                 &h.checked_div(&(&reach + &h)).unwrap_or(Q::ZERO),
@@ -506,6 +504,17 @@ pub fn founding_shells(mix: &[(u32, Q)], spin: &Q) -> (Vec<Shell>, crate::circui
             swing: swing.clone(),
             kept: true,
         });
+    }
+    // Every founded kind, released or kept, rests at its conversion's rest
+    // point at the bounce (E018), read whole at its amount.
+    let share = crate::bounce::torsion_share(&Q::ONE, spin);
+    for (z, amount) in mix.iter().filter(|(_, a)| a.signum() > 0) {
+        if let Some(pairs) = rest_point(*z, &share) {
+            table.entry(*z).or_default().push(Parcel {
+                amount: amount.clone(),
+                pairs,
+            });
+        }
     }
     (shells, table, take)
 }
@@ -568,10 +577,13 @@ mod tests {
         }
         let (shells, table, take) = founding_shells(&mix, &xyl_core::ratio!(1, 2));
         assert!(take.signum() >= 0, "the medium takes, never gives: {take}");
+        // Every kind rests at D(R) of its capture phase (E018).
+        let share = crate::bounce::torsion_share(&Q::ONE, &xyl_core::ratio!(1, 2));
         for (z, parcels) in &table {
-            for p in parcels {
-                assert!(p.pairs.value() <= Q::ONE, "Z {z}");
-            }
+            let psi = (&share * &Q::int(i64::from(*z))).frac();
+            let r = crate::circuit::electron_phase(*z, &psi);
+            let d = xyl_core::shares::dilation(&r).unwrap();
+            assert!(parcels.iter().all(|p| p.pairs.value() == d), "Z {z}");
         }
         let all = shells.iter().fold(Q::ZERO, |s, k| &s + &k.amount);
         let mixed = mix.iter().fold(Q::ZERO, |s, k| &s + &k.1);

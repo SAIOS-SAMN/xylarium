@@ -1,67 +1,169 @@
-//! The coordinate (docs/network.md; LAW-COORDINATE v1, Mycelium proposal
-//! 78.173): a body's exact value on one of the four lanes of TUniversal,
-//! read in sectors of base 60.
+//! The coordinate (FORMS-COORDINATE v4, Mycelium proposal 78.173,
+//! reconstructed from its section 1): the coordinate a kernel addresses its
+//! bodies by, `origin / h : S:G:T:H : K`.
 //!
-//! Inputs: an exact rational value of either sign ([`Q`]) on a [`Lane`],
-//! in the unit the caller names (turns, rings or degrees). The lanes carry
-//! the network's meanings: S spatial (boost and dilation, the reach), G
-//! gauge (change of kind), T temporal (null flux: the beat and the
-//! passages), H holonomic (turnings between planes).
+//! - `keys`: axes (`S1`, the plane units `+k`, `-k`), keys and generators,
+//!   the turning planes H stands on, vectors (a lane's signed components,
+//!   keyed, never summed), the lanes S, G, T, H and the ruled openings.
+//! - `body`: the origin (genesis hash, epoch, enclosures written out), the
+//!   coordinate, its writing and canonical order, `within` on the caller's
+//!   intervals, and the bodies held in order with a range on one component
+//!   found by two bisections and a filter within it.
+//! - `motion`: the advance (composes; no backward advance), an event's bell
+//!   in first degree, merger with offsets and fission its inverse, and the
+//!   re-origin across a throat (LAW-PASSAGE v3).
+//! - Display only: the sexagesimal sector at a depth (`Sector`) and the T
+//!   lane's beat (`beat`); nothing is compared, stored or decided by them.
 //!
-//! Outputs: [`Reading`] (`of`, `sector`, `within`); [`Sector`], the
-//! half-open interval `[m 60^-d, (m + 1) 60^-d)` that holds the value at
-//! depth `d`, `m` fixed by exact comparison, with `lo`, `hi`, `places` and
-//! `written` (`2;20`, `-1;40`); [`Side`], where a reading lies against
-//! another's sector; [`beat`], the T lane written as whole rings and the
-//! ring's phase in degrees; [`CoordinateRefusal`].
+//! Invariants: every value is exact; origins are never compared across;
+//! every refusal is named ([`CoordinateRefusal`]). The fixtures of 78.173
+//! section 5 are reproduced in the tests from these definitions alone.
 //!
-//! Invariants: the value stays exact and is never held on a grid; sectors
-//! nest (the sector at depth `d + 1` lies in the one at depth `d` that holds
-//! the same value); `within` decides on the sector's exact bounds; readings
-//! on different lanes are refused, never compared; places and their writing
-//! are display only. A coordinate is computed from the body's values, with
-//! no index or hash.
-//!
-//! Terms: TUniversal (docs/glossary.md).
+//! Terms: TUniversal, coordinate (docs/glossary.md).
+
+mod body;
+#[cfg(test)]
+mod fixtures;
+mod keys;
+mod motion;
+
+pub use body::{written_value, Bodies, Bounds, Coordinate, Interval, Local, Origin, Range, Sides};
+pub use keys::{Axis, Key, Lane, Lanes, Openings, Plane, Vector};
+pub use motion::{EventBell, Merger, Poles};
 
 use crate::Q;
 
 /// Degrees in a turn: the unit a turn is written in (seconds are degrees).
 pub const DEGREES: i64 = 360;
 
+/// [`DEGREES`] as a nonzero divisor.
+const DEGREES_NONZERO: std::num::NonZeroI64 = crate::nonzero!(360);
+
+/// A bell as an exact rational.
+fn bell_q(h: u64) -> Q {
+    Q::from_big(num_rational::BigRational::from_integer(
+        num_bigint::BigInt::from(h),
+    ))
+}
+
 /// The base of the places.
 const BASE: i64 = 60;
 
-/// The four lanes, in the network's meanings.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Lane {
-    /// Spatial: boost and dilation, the reach. A body's holding as a share
-    /// of its anchor's is read here, by its dilation.
-    S,
-    /// Gauge: change of kind (planned: pairing and the transductions).
-    G,
-    /// Temporal: null flux, the beat and the passages; the universe's
-    /// count in rings.
-    T,
-    /// Holonomic: turnings between planes. A body's phase on its anchor's
-    /// ring is the turning of one plane.
-    H,
-}
-
-/// Why a reading is refused, with the coordinates that caused it.
+/// Why a coordinate or a reading is refused, by name, with what caused it.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CoordinateRefusal {
-    /// Two readings on different lanes: the lane held and the lane asked.
-    LanesDiffer {
-        /// The lane of the reading held.
-        held: Lane,
-        /// The lane of the reading asked against.
-        asked: Lane,
-    },
     /// A sector index past a machine word at this depth.
     Unbounded {
         /// The depth asked.
         depth: u32,
+    },
+    /// An axis that cannot be written: a letter not an ASCII capital, or
+    /// an index of 0.
+    AxisUnwritable {
+        /// The letter (or the unit's sign).
+        letter: char,
+        /// The index.
+        index: u32,
+    },
+    /// A generator of one axis twice.
+    NotPlane {
+        /// The axis.
+        axis: String,
+    },
+    /// A key held twice in one lane, or a plane named in both orientations.
+    KeyRepeated {
+        /// The key.
+        key: String,
+    },
+    /// A base lane missing from a lane set.
+    LaneMissing {
+        /// The lane.
+        lane: Lane,
+    },
+    /// A lane held twice.
+    LaneRepeated {
+        /// The lane.
+        lane: Lane,
+    },
+    /// A lane no ruled opening admits.
+    LaneNotOpened {
+        /// Its name.
+        name: String,
+        /// Its law version.
+        version: u32,
+    },
+    /// A key of one axis on H, which stands only on generators.
+    NotGenerator {
+        /// The key.
+        key: String,
+    },
+    /// A plane that holds no turning, on H.
+    NotTurningPlane {
+        /// The key.
+        key: String,
+        /// The plane it names.
+        plane: Plane,
+    },
+    /// Two origins, never compared: the one held and the one asked.
+    OriginsDiffer {
+        /// The origin held, written.
+        held: String,
+        /// The origin asked, written.
+        asked: String,
+    },
+    /// A lane keyed otherwise: its keys held and asked.
+    ShapesDiffer {
+        /// The lane.
+        lane: Lane,
+        /// The keys held.
+        held: Vec<String>,
+        /// The keys asked.
+        asked: Vec<String>,
+    },
+    /// A component the body does not hold.
+    NoComponent {
+        /// The lane.
+        lane: Lane,
+        /// The key.
+        key: String,
+    },
+    /// An advance to an earlier bell.
+    Backward {
+        /// The bell held.
+        held: u64,
+        /// The bell asked.
+        asked: u64,
+    },
+    /// A merger across bells.
+    BellsDiffer {
+        /// The bell held.
+        held: u64,
+        /// The bell asked.
+        asked: u64,
+    },
+    /// Holdings whose sum is zero.
+    NoHolding,
+    /// Offsets whose holding-weighted sum is not zero: the sum, written.
+    Unbalanced {
+        /// The sum, written.
+        sum: String,
+    },
+    /// A throat state with no whole, `H + R = 0`: its span.
+    NoWhole {
+        /// The span `H - R`.
+        span: String,
+    },
+    /// A body whose S is not the throat's span.
+    SpanDiffers {
+        /// The body's S.
+        held: String,
+        /// The span read.
+        read: String,
+    },
+    /// A component's whole turns past a machine word.
+    TurnsUnbounded {
+        /// The key.
+        key: String,
     },
 }
 
@@ -76,7 +178,7 @@ pub enum Side {
     Above,
 }
 
-/// A lane's reading: its exact value.
+/// A lane's reading for display: its exact value.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Reading {
     /// The lane the reading is taken on.
@@ -159,28 +261,6 @@ impl Reading {
     pub fn sector(&self, depth: u32) -> Result<Sector, CoordinateRefusal> {
         Sector::of(&self.value, depth)
     }
-
-    /// Where this reading lies against the sector at `depth` that holds
-    /// `other`'s value, decided on the sector's exact bounds. Readings on
-    /// different lanes are refused.
-    pub fn within(&self, other: &Reading, depth: u32) -> Result<Side, CoordinateRefusal> {
-        if self.lane != other.lane {
-            return Err(CoordinateRefusal::LanesDiffer {
-                held: self.lane,
-                asked: other.lane,
-            });
-        }
-        let sector = other.sector(depth)?;
-        let bounds = sector.lo().zip(sector.hi());
-        let (lo, hi) = bounds.ok_or(CoordinateRefusal::Unbounded { depth })?;
-        Ok(if self.value < lo {
-            Side::Below
-        } else if self.value < hi {
-            Side::Within
-        } else {
-            Side::Above
-        })
-    }
 }
 
 /// The T lane written: the whole rings, `/`, and the ring's phase in
@@ -198,7 +278,7 @@ pub fn beat(rings: &Q, depth: u32) -> Result<String, CoordinateRefusal> {
 mod tests {
     use super::*;
 
-    /// LAW-COORDINATE v1 fixture 2: the sexagesimal reading at stated depths
+    /// FORMS-COORDINATE v4 fixture 2: the sexagesimal reading at stated depths
     /// gives the stated index, bounds and writing.
     #[test]
     fn sector_equals_law_coordinate_fixture_2() {
@@ -277,7 +357,7 @@ mod tests {
         }
     }
 
-    /// LAW-COORDINATE v1 fixture 3: each sector lies in the one a depth
+    /// FORMS-COORDINATE v4 fixture 3: each sector lies in the one a depth
     /// coarser, and the coarser sector holding its lower bound is that one.
     #[test]
     fn sector_nests_in_coarser_sector() {
@@ -295,41 +375,6 @@ mod tests {
                 assert_eq!(Sector::of(&inner.lo().unwrap(), d).unwrap(), outer);
             }
         }
-    }
-
-    /// LAW-COORDINATE v1 fixture 4: `within` reads below, within and above
-    /// a sector's exact bounds.
-    #[test]
-    fn within_equals_law_coordinate_fixture_4() {
-        let other = Reading::of(Lane::S, &crate::ratio!(1, 3));
-        let fine = &crate::ratio!(1, 3) + &Q::from_i128(1, 3 * 60i128.pow(6)).unwrap();
-        let below = &crate::ratio!(1, 3) - &Q::from_i128(1, 10i128.pow(15)).unwrap();
-        for (s, d, side) in [
-            (crate::ratio!(1, 3), 1, Side::Within),
-            (crate::ratio!(7, 20), 1, Side::Above),
-            (below, 1, Side::Below),
-            (fine, 6, Side::Within),
-            (crate::ratio!(2, 5), 0, Side::Within),
-            (crate::ratio!(2, 5), 1, Side::Above),
-        ] {
-            assert_eq!(Reading::of(Lane::S, &s).within(&other, d), Ok(side));
-        }
-    }
-
-    /// Readings on different lanes are refused by name, never compared.
-    #[test]
-    fn within_refuses_lanes_that_differ() {
-        let (s, t) = (
-            Reading::of(Lane::S, &crate::ratio!(1, 3)),
-            Reading::of(Lane::T, &crate::ratio!(1, 3)),
-        );
-        assert_eq!(
-            s.within(&t, 1),
-            Err(CoordinateRefusal::LanesDiffer {
-                held: Lane::S,
-                asked: Lane::T
-            })
-        );
     }
 
     /// A sector index past a machine word is refused by name.

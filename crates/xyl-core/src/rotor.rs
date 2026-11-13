@@ -386,6 +386,45 @@ pub fn circle_point(degrees: &Q, bits: u32) -> Option<(Q, Q)> {
     Some((cos, sin))
 }
 
+/// A motion of rate `rate` (FORMS-TURNING v1, 78.173 11b): an even
+/// generator `B`, a bivector, moves by `R = (1 + B)(1 - B)^-1`, exact in the
+/// even algebra of any signature `Cl(p, q)` (the mask `NEG` of the
+/// generators squaring to -1). Two motions compose as `R1 R2`; nothing is
+/// composed plane by plane. Degrees are a reading only (`tan(theta / 4) =
+/// b`). `None` where `1 - B` has no inverse.
+pub fn motion<const NEG: usize>(rate: &Mv<NEG>) -> Option<Mv<NEG>> {
+    let one = Mv::<NEG>::scalar(Q::ONE);
+    Some(one.add(rate).geo(&even_inverse(&one.sub(rate))?))
+}
+
+/// The rate a motion is read back to, `B = (R - 1)(R + 1)^-1`, exact.
+/// `None` where `R + 1` has no inverse.
+pub fn rate_of<const NEG: usize>(motion: &Mv<NEG>) -> Option<Mv<NEG>> {
+    let one = Mv::<NEG>::scalar(Q::ONE);
+    Some(motion.sub(&one).geo(&even_inverse(&motion.add(&one))?))
+}
+
+/// The inverse of an even element `x`: `x x~ = s + w`, a scalar and a
+/// grade-4 part whose square is a scalar `l`, inverts as
+/// `(s - w) / (s^2 - l)`, so `x^-1 = x~ (x x~)^-1`. `None` where the norm
+/// is not of that form or vanishes.
+fn even_inverse<const NEG: usize>(x: &Mv<NEG>) -> Option<Mv<NEG>> {
+    let rev = x.reverse();
+    let n = x.geo(&rev);
+    let s = n.scalar_part();
+    let w = n.grade(4);
+    if !n.sub(&Mv::scalar(s.clone())).sub(&w).is_zero() {
+        return None;
+    }
+    let ww = w.geo(&w);
+    let l = ww.scalar_part();
+    if !ww.sub(&Mv::scalar(l.clone())).is_zero() {
+        return None;
+    }
+    let det = (&(&s * &s) - &l).recip()?;
+    Some(rev.geo(&Mv::scalar(s).sub(&w).scale(&det)))
+}
+
 /// A turn split into its winding and its phase (E019; the Diophantine
 /// split, #149): the whole turns, in ZZ, and the degrees within the turn,
 /// in `[0, 360)`, both carried and never merged. A value in radians, or
@@ -667,6 +706,67 @@ mod tests {
         // the drawn direction (3/4, 1) has the rate 4/3 on plane (1, 2),
         // signed by the versor's `c - s e1 e2`.
         assert_eq!(r.rates().unwrap(), vec![((1, 2), Q::new(-4, 3).unwrap())]);
+    }
+
+    /// FORMS-TURNING v1, 78.173 11b, in `Cl(3, 2)` (`e+1 e+2 e+3` square to
+    /// +1, `e-1 e-2` to -1): planes sharing a unit gain the third plane,
+    /// order-dependent, with no volume; disjoint planes commute and carry the
+    /// volume; on one plane the rates compose by the tangent law (elliptic)
+    /// or the flow law (hyperbolic). Every motion reads back to its rate and
+    /// has unit norm.
+    #[test]
+    fn turnings_compose_as_fixture_11b() {
+        const NEG: usize = 0b11000;
+        type M = Mv<NEG>;
+        let q = |n: i64, d: i64| Q::new(n, d).unwrap();
+        let b = |mask: usize, v: Q| M::blade(mask, v);
+        let (p1, p2, p3, n1, n2) = (1usize, 2, 4, 8, 16);
+        let unit = |r: &M| r.geo(&r.reverse()) == M::scalar(Q::ONE);
+        let check = |rate: &M| {
+            let r = motion(rate).unwrap();
+            assert!(unit(&r));
+            assert_eq!(rate_of(&r).unwrap(), *rate);
+            r
+        };
+        // Fixture i: planes sharing a unit.
+        let r1 = check(&b(p1 | p2, q(1, 2)));
+        assert_eq!(r1, M::scalar(q(3, 5)).add(&b(p1 | p2, q(4, 5))));
+        let r2 = check(&b(p2 | p3, q(1, 3)));
+        assert_eq!(r2, M::scalar(q(4, 5)).add(&b(p2 | p3, q(3, 5))));
+        let r12 = r1.geo(&r2);
+        let expect = M::scalar(q(12, 25))
+            .add(&b(p1 | p2, q(16, 25)))
+            .add(&b(p1 | p3, q(12, 25)))
+            .add(&b(p2 | p3, q(9, 25)));
+        assert_eq!(r12, expect);
+        let back = b(p1 | p2, q(16, 37))
+            .add(&b(p1 | p3, q(12, 37)))
+            .add(&b(p2 | p3, q(9, 37)));
+        assert_eq!(rate_of(&r12).unwrap(), back);
+        let r21 = r2.geo(&r1);
+        assert_eq!(r21.coeff(p1 | p3), q(-12, 25));
+        assert_eq!(rate_of(&r21).unwrap().coeff(p1 | p3), q(-12, 37));
+        assert_eq!(r12.sub(&r21), b(p1 | p3, q(24, 25)));
+        assert!(r12.grade(4).is_zero());
+        // Fixture ii: disjoint planes.
+        let s1 = check(&b(p1 | p2, q(1, 2)));
+        let s2 = check(&b(n1 | n2, q(1, 3)));
+        let s12 = s1.geo(&s2);
+        assert_eq!(s12, s2.geo(&s1));
+        let expect = M::scalar(q(12, 25))
+            .add(&b(p1 | p2, q(16, 25)))
+            .add(&b(n1 | n2, q(9, 25)))
+            .add(&b(p1 | p2 | n1 | n2, q(12, 25)));
+        assert_eq!(s12, expect);
+        assert_eq!(
+            rate_of(&s12).unwrap(),
+            b(p1 | p2, q(4, 7)).add(&b(n1 | n2, q(3, 7)))
+        );
+        // Fixture iii: one plane, elliptic and hyperbolic.
+        let e = check(&b(p1 | p2, q(1, 2))).geo(&check(&b(p1 | p2, q(1, 3))));
+        assert_eq!(rate_of(&e).unwrap(), b(p1 | p2, Q::ONE));
+        let h = check(&b(p1 | n1, q(1, 2))).geo(&check(&b(p1 | n1, q(1, 3))));
+        assert_eq!(rate_of(&h).unwrap(), b(p1 | n1, q(5, 7)));
     }
 
     /// A turn splits into its winding and phase and back exactly, negative

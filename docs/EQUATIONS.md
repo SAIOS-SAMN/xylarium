@@ -124,13 +124,31 @@ sites are restated. The derivations are in
   built (ruled 2026-11-11).
 - Capture phase (`circuit::found`): `(share Z) mod 1`, exact; its
   denominator divides the torsion share's. Calibre: none. Status: built.
-- Coordinate (`xyl_core::coordinate`, LAW-COORDINATE v1): a lane is an
-  exact rational of either sign; its sector at depth `d` is
-  `[m 60^-d, (m + 1) 60^-d)` with `m = floor(v 60^d)`, exact and nested;
-  `Reading::within` reads Below, Within or Above on the sector's exact
-  bounds and refuses readings on two lanes; places (`2;20`, `-1;40`) and
-  `coordinate::beat` (whole rings and the phase in degrees) are display
-  only. Calibre: none. Status: built.
+- Coordinate (`xyl_core::coordinate`, FORMS-COORDINATE v4, reconstructed
+  from Mycelium 78.173 section 1): a body stands at `origin / h : S:G:T:H : K`.
+  - **Keys.** A lane is a vector of exact signed components keyed by axis
+    (`S1`, the plane units `+k`, `-k`) or generator (`e_+2+3`), held in the
+    keys' written order and never summed.
+  - **H** stands only on turning planes (`e+k e+l`, `e-k e-l`), in degrees,
+    with `K_c = floor(abs(theta_c) / 360)` per component.
+  - **Order and writing.** The canonical order is origin, `h`, the lanes
+    and `K`, and the writing is hexadecimal. The bodies are held in that
+    order (`Bodies`), and a range on one component is two bisections with a
+    filter within it.
+  - **`within`** is decided on the caller's intervals.
+  - **Motions.** The advance composes, `x(t) = x(h) + r (t - h)`, with no
+    backward advance. An event's bell is `h + (v - x) / r`. A merger keeps
+    offsets whose holding-weighted sum is zero, and fission is its inverse.
+    The re-origin across a throat reverses S's span, gains `-2 span` on T
+    and exchanges hold and reach.
+  - **Display only:** the sexagesimal sector `[m 60^-d, (m + 1) 60^-d)`
+    and `coordinate::beat`.
+  - **Refusals** are by name (`CoordinateRefusal`).
+
+  Fixtures 1 to 16 of section 5 reproduce from these definitions alone
+  (`coordinate::fixtures`), and 11b's composition of turnings reproduces
+  as `rotor::motion` and `rotor::rate_of` (`R = (1 + B)(1 - B)^-1` in any
+  `Cl(p, q)`). Calibre: none. Status: built.
 - Pair reading ([model.md](model.md#pairs-the-pivot-per-plane), #118): for
   coordinates `a`, `b` of one origin (else refused), read in their lowest
   common enclosure, the relative versor is `P = P_b^-1 o P_a` (refused

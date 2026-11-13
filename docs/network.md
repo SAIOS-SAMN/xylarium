@@ -71,9 +71,10 @@ repository.
   joins the standing mesh by the enrolment act (mycelium#276), which is
   not built yet, so the uplink is not run live until it is.
 - **Signing the Concordance.** A kernel signs a clause by presenting its
-  own reconstruction of each fixture under its key. Xylarium has signed
-  none: it implements LAW-COORDINATE at v1 only, and has no FORMS-PASSAGE
-  v4, FORMS-COUPLING or FORMS-TURNING reading. FORMS-PASSAGE v4 is a
+  own reconstruction of each fixture under its key. Xylarium reconstructs
+  FORMS-COORDINATE v4 (its fixtures 1 to 16, `xyl_core::coordinate`) and
+  FORMS-TURNING v1's 11b (`rotor::motion`), and has no FORMS-PASSAGE v4 or
+  FORMS-COUPLING reading. FORMS-PASSAGE v4 is a
   network clause, which a hosted domain's crossings need, so it is read
   first (#136). Enabling or vetoing the kernel clauses is the operator's
   decision.
@@ -132,7 +133,7 @@ hypha, held by the private uplink's session.
 - The uplink is where the two faces meet. It confirms a seat's holder
   against the mind's key, pairs each committed ring with its TUniversal
   point (Next steps, item 1), and settles mu; the kernel holds no mu.
-- Both faces name a body by one coordinate (LAW-COORDINATE v1), so a
+- Both faces name a body by one coordinate (FORMS-COORDINATE v4), so a
   percept and a ledger entry can refer to the same body without either
   reading the other's state.
 - **Joined and embedded minds** (#108). A mind joins today as a separate
@@ -207,8 +208,8 @@ hypha, held by the private uplink's session.
 - Quantities computed with logarithms, such as the jet's onset per kind
   (`circuit::onset_echoes`), stay inside the kernel and do not cross the
   boundary.
-- The coordinate (`crates/xyl-core/src/coordinate.rs`) reads LAW-COORDINATE
-  v1 (Mycelium proposal 78.173). Its lanes carry the network's meanings:
+- The coordinate (`crates/xyl-core/src/coordinate/mod.rs`) reconstructs
+  FORMS-COORDINATE v4 (Mycelium proposal 78.173). Its lanes carry the network's meanings:
   S spatial (a body's holding share is read here by its dilation), G
   gauge (planned: pairing and the transductions), T temporal (the count in
   rings), H holonomic (a body's phase on its anchor's ring is one plane's
@@ -235,11 +236,10 @@ in-game costs (ley lines, tolls, folds) are kept in physical units.
 2. **Keep the whole point.** `Checkpoint::commits` holds a count and a bare
    height, `(Q, Option<u64>)`. It is to store the full TUniversal point
    instead, so that the lanes of the point are kept.
-3. **The coordinate's origin and ordered key.** The lanes carry the
-   network's meanings (done). The origin, the ordered key and neighbour
-   ranges of LAW-COORDINATE v1 (its fixtures 1, 5 and 6) are to come with
-   bodies addressed by coordinate rather than by sample index (roadmap
-   item 40).
+3. **The coordinate's origin and ordered key.** Built: the origin, the
+   ordered key, the bodies held in order and the neighbour ranges of
+   FORMS-COORDINATE v4 (its fixtures 1 to 16). Next: bodies addressed by
+   coordinate rather than by sample index (roadmap item 40).
 4. **Freshness and crossings.** When passage mouths are published to the
    network, each mouth is to carry a freshness in final-point advances, and
    crossings are to be applied at an anchor so that their reconciliation

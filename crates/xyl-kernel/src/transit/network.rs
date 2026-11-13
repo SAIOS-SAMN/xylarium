@@ -88,6 +88,7 @@ pub struct Network {
 /// time across a mouth of that width: the throat shortens any span to the
 /// mouth's width, so no light time is charged for the span itself.
 pub fn crossing_years(reach_kpc: Dy) -> Dy {
+    // Stand-in S140: The crossing is a scalar over c, not a count on the T lane.
     let c = (xyl_cosmos::circuit::rings_of_gyr_dy(xyl_cosmos::pulse::c_kpc_per_ring()))
         .div(&(Dy::sci(1, 9)))
         .unwrap_or_default();

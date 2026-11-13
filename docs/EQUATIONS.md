@@ -70,6 +70,10 @@ sites are restated. The derivations are in
 | E021 | Strength and weakness per plane: the overlap's held face `h_k` and open face `o_k = 1 - h_k` (`hopf::overlap`) | calibrated material strengths | [#207](https://github.com/SAIOS-SAMN/xylarium/issues/207) | planned |
 | E022 | Pull per plane: `p_k = h_k - o_k`, offset by the medium, `p_k (+) (-r_k)` | a pull read bare | [#207](https://github.com/SAIOS-SAMN/xylarium/issues/207), [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195) | planned |
 | E023 | Break: the event at which the linking `Lk` of two fibres changes; `Lk` is invariant under continuous deformation | a break threshold | [#207](https://github.com/SAIOS-SAMN/xylarium/issues/207), [#121](https://github.com/SAIOS-SAMN/xylarium/issues/121) | planned |
+| E024 | The null pair: `ds^2 = u v`, `u = c dt - dx`, `v = c dt + dx`, never formed as a square; the flow law is velocity addition (`c = 1`), `D(p) = v / u`, `ln D(p)` twice the rapidity; the cone `p = +/-1` lies outside the dilation's domain | `ds^2 = c^2 dt^2 - abs(dx)^2`, a speed capped at `c` (I014, I015) | [#222](https://github.com/SAIOS-SAMN/xylarium/issues/222) | derived; the flow law and `D` built |
+| E025 | A separation is the pivot per plane, `P_b^-1 P_a` (E019); a crossing is a count on the T lane, timelike, null or spacelike by the signs of `u` and `v` | one scalar arc over `c` (I014) | [#219](https://github.com/SAIOS-SAMN/xylarium/issues/219), [#207](https://github.com/SAIOS-SAMN/xylarium/issues/207) | planned |
+| E026 | Speeds compose: exhaust, throat supply and the line's medium by `p (+) (-r)`; a spacelike span crosses only by a passage | `c min(S / T, c)` and `c - v_e` clamped (I015) | [#220](https://github.com/SAIOS-SAMN/xylarium/issues/220), to rule | planned |
+| E027 | An event carried from `a` to `b`: the rapidities of the nested wells composed per plane, the place turned by `P_b^-1 P_a`, the T coordinate counted through the keepers between | a remote event read by light delay and the reader's keeper alone | [#221](https://github.com/SAIOS-SAMN/xylarium/issues/221) | planned |
 
 | ID | Invalid form | Sites | Superseded by | Status |
 |---|---|---|---|---|
@@ -86,6 +90,8 @@ sites are restated. The derivations are in
 | I011 | One fixed table of measured weights (`crates/xyl-cosmos/data/elements.tsv`, through `circuit::mass_number`) for every genesis and every galaxy, so `3Q`, `3W` and the split are the same everywhere: neither the universe's own nor each galactic core's | S029, S010, `stars::fusion_step` products | E013, E014 | closed: the universal table from the rest point (E014); the galaxies' tables remain (S138) |
 | I012 | The axis plane read alone for a kind's split, fill and polarity, with one scalar `R`: one dipole where `S^11` carries six | S137; `atoms`, `circuit::weights` | E016 | closed: read per plane |
 | I013 | The coherence split across the planes by the states' plane shares, `kappa_p` from `abs(m_p)` (proposed with the six-plane ruling): the Hopf fibre turns all six planes at once, so its coherence is carried whole on each plane; the plane shares weigh where a state sits, not how coherent the fibre is | none | E016 | closed: not adopted |
+| I014 | A separation read as one scalar (an arc in kpc, a gap in metres) and its light time as that scalar over `c` | S140; `cosmic::arc_kpc`, `transit::separation_m`, `transit::crossing_years`, `percept::perceive` | E024, E025 | open |
+| I015 | A speed capped at `c`, `c min(S / T, c)`, and an exhaust clamped to `[0, c]`, where the flow law composes speeds below `c` | S126, S127, S128; `transit::passage_j`, `transit::building`, `transit::discord` | E024, E026 | open |
 
 ## 1. Numbers
 

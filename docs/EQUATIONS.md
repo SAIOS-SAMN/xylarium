@@ -835,7 +835,15 @@ sites are restated. The derivations are in
   axis the inversion `X(t) -> X(1 / t)` fixes `t = 1`. Calibre: none. Status: built.
 - Arrival (`Substrate::amplitude`): `(r / rim) bell / 2` after the bounce,
   amplitude carried as `H(r, t) / (r + H(r, t))`. Relay between holes
-  (`pulse::relays`): continuity `cos(2 pi detour / wavelength)`. Calibre: founding. Status:
+  (`pulse::relays`): continuity the faces' push of the detour's phase on
+  the T lane, `1 - arc / 90`, `arc` the shorter arc of `360 frac(detour /
+  wavelength)` degrees, first-degree (E011). Hearing (`pulse::hear`): each
+  live bell arrives with its intensity `M / d` (S025), its winding on the
+  T lane (whole wavelengths and phase) and its arrival planes (the pivot's
+  plane shares between the two places); coherence with the loudest bell is
+  `sum_k (I_k / sum I) o_k (1 - arc_k / 180)`, `o_k` the arrival planes'
+  overlap `sum_p min(s_p(k), s_p(dom))` and `arc_k` the shorter arc of the
+  phase difference, with no phasor, cosine or root. Calibre: founding. Status:
   built; the single front echoed at surfaces with delay `r + H(<r)` is
   under review (roadmap, milestone 3).
 - Irradiation, held and passed: received `h / (pi (r + h))` per bell about

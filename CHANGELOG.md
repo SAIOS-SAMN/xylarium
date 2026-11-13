@@ -11,6 +11,12 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The throat's push swings with the inbound echo (#233 item 3):
+  `circuit::throat_push(swing)` is `delta(H, H) swing`, one half at the
+  echo's mean. The gas's cooling carries the push under its swing, a piece
+  lights where its heat is under it, and the disc's star hold reads the
+  same push (S116 cited at each site).
+
 - A galaxy's sphere breathes with its core's bell (#233 item 1):
   `chain::galaxy_radius(scale, t)` swings by the rim's deficit
   `1 / (rim + 1)` over its core's echo, the home's echo dilated by the
@@ -565,6 +571,12 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The throat's push swings with the inbound echo (#233 item 3):
+  `circuit::throat_push(swing)` is `delta(H, H) swing`, one half at the
+  echo's mean. The gas's cooling carries the push under its swing, a piece
+  lights where its heat is under it, and the disc's star hold reads the
+  same push (S116 cited at each site).
+
 - The split, the fill and the electron phase are read per Hopf plane (#201,
   ruled, E016). `circuit::fill_shares` gives each plane's Q-side share at
   its capture phase `psi_p = (w_p s Z) mod 1`, with `R_p = kappa (1 - 2
@@ -1111,6 +1123,12 @@ core's units (`G = c = M_core = 1`), and worlds form on the manifold chain.
   on restart.
 
 ### Changed
+
+- The throat's push swings with the inbound echo (#233 item 3):
+  `circuit::throat_push(swing)` is `delta(H, H) swing`, one half at the
+  echo's mean. The gas's cooling carries the push under its swing, a piece
+  lights where its heat is under it, and the disc's star hold reads the
+  same push (S116 cited at each site).
 
 - Worlds form on the star's manifold (`disc::manifold_worlds`): the star's
   manifold is the arc its pull holds about the core, the star holds its

@@ -227,7 +227,7 @@ fn galaxies(shapes: &[Shape], sub: &Substrate) -> String {
             ),
             sh.index,
             show(&s_g),
-            xyl_cosmos::circuit::throat_push(),
+            xyl_cosmos::circuit::throat_push(xyl_core::dyadic::Dy::from_q(&sub.echo_swing())),
             show(&sub.held_share()),
             l.pieces.len(),
             lit.len(),

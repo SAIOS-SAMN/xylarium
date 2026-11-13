@@ -199,8 +199,12 @@ sites are restated. The derivations are in
   deformed by the core's deficit at its rim `delta_rim = 1 / (rim + 1)` on
   the swing of the ring (the inbound echo's ring term), so every reach taken
   on it (`bounce::curved_reach`, `Place::arc`, the field's paths, the bells'
-  hearing) reads the radius at the time it is read. Calibre: mixed, founding and
-  core (#123). Status: built.
+  hearing) reads the radius at the time it is read. A galaxy's sphere
+  (`chain::galaxy_radius`) rests at its rim over pi, the home's rim times
+  the galaxy's `scale`, and breathes by the same `delta_rim` (the rim and
+  the hold dilate together) over its core's echo, `scale x echo` for a
+  homologue. Calibre: mixed, founding and core (#123); a galaxy's sphere in
+  galaxy units. Status: built.
 - First stars (`circuit::anchor::of`): the first stars form at
   `max(cools_in, 1) bell`. Calibre: founding. Status: built.
 - SI bridge (`package::hole_mass`): the core's mass in SI units, declared by the

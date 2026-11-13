@@ -12,7 +12,7 @@ use xyl_cosmos::origin::Origin;
 /// orthogonal capacity. Each open band b of the atom carries u_b open states
 /// and d_b = fibres::directions(l) mutually orthogonal directions on S^11 (the
 /// band's capacity), and is held by
-/// tau_b = (Z - the electrons of every shallower turning) / n:
+/// tau_b = (Z - the electrons of the shells inside its reach) / n:
 ///     Q_Z = sum u_b tau_b                 (Z in Q)
 ///     omega_b = u_b / d_b                 (the share of the capacity in use)
 /// In a body (three planes and R, with 8 like atoms touching one, a declared

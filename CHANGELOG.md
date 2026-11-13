@@ -11,6 +11,15 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- One tightness law for the atom (#201, mycelium #301): the stripping,
+  bond and observer readings (`Atom::winding_tightness`) and the atom's
+  outer tightness read the fill's own law (`atoms::tightness_at`): a
+  winding of reach `(n + 1)(l + 1)` is shielded only by the shells inside
+  that reach, so low-`l` windings penetrate. The shortcut "every shallower
+  shell" is deleted; from Z 29 a penetrating winding reads tighter (the
+  3s of Z 29: 9, was 1/3). The atom's tightness is its loosest outer
+  winding. Shared with netstratum as the R7 fixtures.
+
 - The founding's pushes and reaches are held as face pairs
   (`shares::FacePairs`, #210) instead of cut to the 2^-64 grid: the
   stack's push is `D(s_final) D(s_i)`, a reach the pairs `[(H),

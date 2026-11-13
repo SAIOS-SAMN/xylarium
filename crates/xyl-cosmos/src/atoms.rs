@@ -311,23 +311,25 @@ pub struct Atom {
     pub outer: u32,
     /// Unpaired electrons over the open bands: bonding capacity.
     pub unpaired: u32,
-    /// How tightly the outermost electrons are held: the charge they enclose,
-    /// Z minus the electrons of shallower turnings, over `outer_n` (exact).
+    /// How tightly the outermost electrons are held: the least tightness of
+    /// the outermost turning's windings ([`Atom::winding_tightness`]), the
+    /// electron the atom holds least (exact).
     pub tightness: Q,
 }
 
 impl Atom {
-    /// How tightly band `b` is held: the charge its windings enclose, Z less
-    /// the electrons of every shallower turning, over its turning `n`, in
-    /// hydrogen units (exact).
+    /// How tightly band `b` is held: the charge its windings enclose over
+    /// its turning `n`, in hydrogen units (exact), by the fill's law
+    /// ([`tightness_at`]): the electrons of every other shell standing
+    /// inside the winding's reach shield it.
     pub fn winding_tightness(&self, b: &Band) -> Q {
-        let shallower: u32 = self
-            .bands
-            .iter()
-            .filter(|c| c.n < b.n)
-            .map(|c| c.electrons)
-            .sum();
-        Q::new(i64::from(self.z) - i64::from(shallower), i64::from(b.n)).unwrap_or(Q::ZERO)
+        tightness_at(self.z, b.n, b.l, |m| {
+            self.bands
+                .iter()
+                .filter(|c| c.n == m)
+                .map(|c| c.electrons)
+                .sum()
+        })
     }
 
     /// Every state paired: the atom bonds nothing.
@@ -407,8 +409,9 @@ impl Received {
 
 /// Stripping by received turning: the isoclinic planes' turning strips every
 /// winding held no more tightly than it. A winding's tightness, in hydrogen
-/// units (hydrogen's lone electron = 1), is (Z - electrons of every shallower
-/// shell) / n; the isoclinic turning, in the same unit, is what the core
+/// units (hydrogen's lone electron = 1), is the fill's law
+/// (`tightness_at`): (Z - the electrons of the shells inside its reach) / n;
+/// the isoclinic turning, in the same unit, is what the core
 /// receives this echo (capped at 1). Returns the unpaired count of the
 /// remaining windings: stripped hydrogen has none, while heavy kinds keep
 /// their deep windings. With no turning received every atom is whole.
@@ -539,6 +542,24 @@ pub fn plane_polarities(z: u32, from_q: &[Q; PLANES]) -> Option<[Q; PLANES]> {
     })
 }
 
+/// The tightness of a winding of shell `n` and shape `l` in an atom of
+/// charge `z`, one law for the fill and every reading after it: the
+/// winding comes closest at `(l + 1) / n` of its shell's reach, so (Z / 2
+/// cancelled) its reach is `(n + 1)(l + 1)`; the electrons of every other
+/// shell `m` with `m (m + 1)` below that reach stand inside it and shield
+/// it (`shell(m)` counts them), and its tightness is `(Z - inside) / n`.
+/// Same-shell electrons never shield; a low-`l` winding penetrates the
+/// shells it reaches past.
+fn tightness_at(z: u32, n: u32, l: u32, shell: impl Fn(u32) -> u32) -> Q {
+    let reach = u64::from(n + 1) * u64::from(l + 1);
+    let inside: u32 = (1..)
+        .take_while(|&m: &u32| u64::from(m) * u64::from(m + 1) < reach)
+        .filter(|&m| m != n)
+        .map(&shell)
+        .sum();
+    Q::new(i64::from(z) - i64::from(inside), i64::from(n)).unwrap_or(Q::ZERO)
+}
+
 fn fill(z: u32) -> Atom {
     use std::collections::BTreeMap;
     let mut occ: BTreeMap<(u32, u32), u32> = BTreeMap::new();
@@ -558,12 +579,7 @@ fn fill(z: u32) -> Atom {
                 if have >= 2 * crate::fibres::directions(l) {
                     continue;
                 }
-                let reach = u64::from(n + 1) * u64::from(l + 1);
-                let inside: u32 = (1..=nmax + 1)
-                    .filter(|&m| m != n && u64::from(m) * u64::from(m + 1) < reach)
-                    .map(|m| shell_count(&occ, m))
-                    .sum();
-                let t = Q::new(i64::from(z) - i64::from(inside), i64::from(n)).unwrap_or(Q::ZERO);
+                let t = tightness_at(z, n, l, |m| shell_count(&occ, m));
                 let better = match &best {
                     None => true,
                     Some((bt, _, _)) => t > *bt,
@@ -588,20 +604,21 @@ fn fill(z: u32) -> Atom {
         .filter(|b| b.n == outer_n)
         .map(|b| b.electrons)
         .sum();
-    let inner: u32 = bands
-        .iter()
-        .filter(|b| b.n < outer_n)
-        .map(|b| b.electrons)
-        .sum();
     let unpaired = bands.iter().map(Band::unpaired).sum();
-    let enclosed = i64::from(z) - i64::from(inner);
+    let shell = |m: u32| -> u32 { bands.iter().filter(|b| b.n == m).map(|b| b.electrons).sum() };
+    let tightness = bands
+        .iter()
+        .filter(|b| b.n == outer_n)
+        .map(|b| tightness_at(z, b.n, b.l, shell))
+        .min()
+        .unwrap_or(Q::ZERO);
     Atom {
         z,
         bands,
         outer_n,
         outer,
         unpaired,
-        tightness: Q::new(enclosed, i64::from(outer_n)).unwrap_or(Q::ZERO),
+        tightness,
     }
 }
 
@@ -773,6 +790,40 @@ pub fn hold(zs: &[u32]) -> Q {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// One tightness law for the fill and every reading: a winding is
+    /// shielded only by the shells inside its reach, so it is never looser
+    /// than under every shallower shell, the two agree until a winding
+    /// penetrates a shell (shell 3 opens at Z 29), and the atom's tightness
+    /// is its loosest outer winding.
+    #[test]
+    fn a_winding_is_shielded_only_inside_its_reach() {
+        for z in 1..=1092u32 {
+            let a = atom(z).unwrap();
+            for b in &a.bands {
+                let shallower: u32 = a
+                    .bands
+                    .iter()
+                    .filter(|c| c.n < b.n)
+                    .map(|c| c.electrons)
+                    .sum();
+                let bound = Q::new(i64::from(z) - i64::from(shallower), i64::from(b.n)).unwrap();
+                let t = a.winding_tightness(b);
+                assert!(t >= bound, "Z {z} ({}, {})", b.n, b.l);
+                if z < 29 {
+                    assert_eq!(t, bound, "Z {z}");
+                }
+            }
+            let outer = a.bands.iter().filter(|b| b.n == a.outer_n);
+            assert_eq!(
+                Some(a.tightness.clone()),
+                outer.map(|b| a.winding_tightness(b)).min()
+            );
+        }
+        let cu = atom(29).unwrap();
+        let s3 = cu.bands.iter().find(|b| b.n == 3 && b.l == 0).unwrap();
+        assert_eq!(cu.winding_tightness(s3), Q::int(9), "(29 - 2) / 3");
+    }
 
     /// The axis polarity counted by singles alone: at most half full, the
     /// singles from the Z side; beyond, the `room - e` singles from the Q side.

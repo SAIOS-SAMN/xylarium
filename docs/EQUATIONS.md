@@ -319,7 +319,8 @@ sites are restated. The derivations are in
   `p = (U - W) / (U + W)`, `W = 3Z - U` (`Bond::pole_pushes`), their
   separation `p_a (+) (-p_b)` by the flow law (`Bond::axis_separation`),
   each face's polarity (`Bond::polarities`). Isoclinic planes: each open
-  winding's tightness `(Z - shallower electrons) / n`
+  winding's tightness `(Z - inside) / n`, the shells inside its reach
+  `(n + 1)(l + 1)` shielding it (`atoms::tightness_at`, the fill's law)
   (`Atom::winding_tightness`) and the share a turning leaves held,
   `min(1, tau / min(turning, 1))` (`Bond::held`). Calibre: none. Status: built; the graded
   stripping law is to be derived.

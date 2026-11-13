@@ -11,6 +11,16 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The coordinate is FORMS-COORDINATE v4, reconstructed from Mycelium
+  78.173 section 1 in place of LAW-COORDINATE v1 (`xyl_core::coordinate`):
+  origins, keyed vector lanes with H only on turning planes and `K` per
+  component, the hexadecimal writing and canonical order, the bodies held
+  in order with ranges by bisection and filters, `within` on the caller's
+  intervals, the advance, an event's bell, merger and fission, and the
+  re-origin across a throat, each refusal by name. Fixtures 1 to 16 and
+  11b (`rotor::motion`, `rotor::rate_of`) reproduce from the definitions
+  alone. v1's sector-decided `within` is gone; the sector stays as display.
+
 - The universe's radius breathes (#233): `chain::radius(t)` swings each
   echo by the core's deficit at its rim,
   `rho_0 (1 + delta_rim cos(360 t / echo))`, on the ring's own swing, and

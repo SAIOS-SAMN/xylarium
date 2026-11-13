@@ -92,7 +92,7 @@ its source location.
 | Reals (RR) | Never held directly. A real value enters as a proven rational enclosure `lo <= x <= hi` (pi, roots, exp, ln, sin, cos), or as a dyadic reading `m 2^e` at a seam, rounded toward zero and gridded back to `Q` before it is held | `xyl_core::certified::Encl`; `xyl_core::dyadic::Dy` |
 
 Angles are exact degrees on a named plane, read in sectors of base 60 and written in degrees
-and their places (`xyl_core::coordinate`, LAW-COORDINATE v1). Phases about a throat are exact; drawn values
+and their places (`xyl_core::coordinate`, FORMS-COORDINATE v4). Phases about a throat are exact; drawn values
 carry the `2^-40` resolution of the draw.
 
 ### Algebra and geometry
@@ -203,7 +203,8 @@ where it belongs to one.
 ### Foundations (milestone 3, layer 0)
 
 28. **One angle unit** ([#40](https://github.com/SAIOS-SAMN/xylarium/issues/40), `defect`). Done for the coordinate
-    (LAW-COORDINATE v1: exact signed lanes in sectors of base 60, the T lane
+    (FORMS-COORDINATE v4: exact signed lanes keyed by axis, sectors of base 60
+    for display, the T lane
     written by `xyl_core::coordinate::beat`); left, the angle APIs still in
     radians (`dyadic`, `turning`, the phases of `galaxy::Orbit` and `cores`;
     item 40), and the code that holds angles as shares of a whole turn,
@@ -1029,9 +1030,9 @@ Next:
    point, a commitment to the universe's state and the previous entry's
    hash.
 3. The whole point is to be kept in `Checkpoint::commits`.
-4. The coordinate's origin, ordered key and neighbour ranges
-   (LAW-COORDINATE v1, fixtures 1, 5 and 6) are to come with bodies
-   addressed by coordinate.
+4. Built: the coordinate's origin, ordered key and neighbour ranges
+   (FORMS-COORDINATE v4, fixtures 1 to 16). Next: bodies addressed by
+   coordinate.
 5. Published passage mouths are to carry freshness, and crossings are to be
    applied at an anchor.
 

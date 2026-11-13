@@ -60,7 +60,7 @@ share of a whole turn, the text gives it in degrees on its plane, and the
 code's change is roadmap item 28.
 
 Angles are held as exact degrees on a named plane where the rate is
-rational and are read in degrees: the coordinate (`xyl_core::coordinate`, LAW-COORDINATE v1) reads
+rational and are read in degrees: the coordinate (`xyl_core::coordinate`, FORMS-COORDINATE v4) reads
 a value in sectors of base 60 to any depth, exactly, and writes degrees and
 their sexagesimal places as display; on the T lane the whole rings are
 kept (`coordinate::beat`). Phases about a throat are exact: a

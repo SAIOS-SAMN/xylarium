@@ -11,6 +11,12 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The coupling, FORMS-COUPLING v1 (LAW-COUPLING v1, 78.175), in
+  `xyl_core::coupling`: dipole parcels from their frames per turning plane
+  (founded by the even split, bonded plane by plane), the range's field
+  and its pull on a rate by the flow law, neighbours whose own enclosures
+  meet, and the light ledger on the unlocked face. Every refusal by name.
+
 - The passage in the algebra, FORMS-PASSAGE v4 (LAW-PASSAGE v3, 78.172):
   `coordinate::PolePlane` holds a plane's units `e+` and `e-` in any
   `Cl(p, q)`; a throat state `(H + R) e+ + (H - R) e-` crosses by the

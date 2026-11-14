@@ -75,9 +75,9 @@ repository.
   `ACT_LAWS` modes 7 and 8). Xylarium reconstructs FORMS-COORDINATE v4
   (its fixtures 1 to 16, `xyl_core::coordinate`), FORMS-TURNING v1's 11b
   (`rotor::motion`) and FORMS-PASSAGE v4 (the pole swap, the flux and the
-  riding state's pass, `coordinate::PolePlane`); it has no FORMS-COUPLING
-  reading yet. Coordinate and turning were admitted on the standing mesh
-  on 2026-11-13. Enabling or vetoing the kernel clauses is the operator's
+  riding state's pass, `coordinate::PolePlane`) and FORMS-COUPLING v1
+  (`xyl_core::coupling`). Coordinate, turning and passage were admitted on
+  the standing mesh on 2026-11-13. Enabling or vetoing the kernel clauses is the operator's
   decision.
 - **Standards.** The uplink follows this repository's process: changes by
   pull request under the shared identity, and the same checks (fmt,

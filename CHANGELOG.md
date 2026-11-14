@@ -27,6 +27,13 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The reverberation is read through the swing (#233 item 4): a kind's band
+  `r (1 + delta cos phi)` stands past the throat on the arc about the
+  ring's crest, its share of each echo `acos(c) / 180` in place of the
+  band's flat average, and it leaves only while past: the outflow reads
+  its time past the throat in closed form and the rate is zero off the
+  arc. The inbound echo's peak reads the rate with the arc open.
+
 - The throat's push swings with the inbound echo (#233 item 3):
   `circuit::throat_push(swing)` is `delta(H, H) swing`, one half at the
   echo's mean. The gas's cooling carries the push under its swing, a piece
@@ -587,6 +594,13 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The reverberation is read through the swing (#233 item 4): a kind's band
+  `r (1 + delta cos phi)` stands past the throat on the arc about the
+  ring's crest, its share of each echo `acos(c) / 180` in place of the
+  band's flat average, and it leaves only while past: the outflow reads
+  its time past the throat in closed form and the rate is zero off the
+  arc. The inbound echo's peak reads the rate with the arc open.
+
 - The throat's push swings with the inbound echo (#233 item 3):
   `circuit::throat_push(swing)` is `delta(H, H) swing`, one half at the
   echo's mean. The gas's cooling carries the push under its swing, a piece
@@ -1139,6 +1153,13 @@ core's units (`G = c = M_core = 1`), and worlds form on the manifold chain.
   on restart.
 
 ### Changed
+
+- The reverberation is read through the swing (#233 item 4): a kind's band
+  `r (1 + delta cos phi)` stands past the throat on the arc about the
+  ring's crest, its share of each echo `acos(c) / 180` in place of the
+  band's flat average, and it leaves only while past: the outflow reads
+  its time past the throat in closed form and the rate is zero off the
+  arc. The inbound echo's peak reads the rate with the arc open.
 
 - The throat's push swings with the inbound echo (#233 item 3):
   `circuit::throat_push(swing)` is `delta(H, H) swing`, one half at the

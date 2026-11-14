@@ -561,7 +561,7 @@ sites are restated. The derivations are in
 - The founding as flow ([model.md](model.md#the-founding-as-flow)).
   Status: planned.
   - Release: kind `k` leaves at `circuit::onset`, at
-    `m0 (1 - exp(-rate (t - onset)))`, from `R_h(H_0) = 2 H_0`, with
+    `m0 (1 - exp(-T(t) / bell))` (`T` its time past the throat), from `R_h(H_0) = 2 H_0`, with
     `H_0(t) = 1 - sum_k outflow_k(t)`.
   - Pushes: `p_c = H / (r + H)` (continuum, outward) and
     `p_v = m / (r + m)` (vacuum, inward), composed by the flow law
@@ -664,8 +664,12 @@ sites are restated. The derivations are in
   where `t >= 1`, none where `t <= 0` or `rho <= 1`. Calibre: none. Status: built.
 - Reverberation (`Substrate::reverberation`): in order of spin,
   `h = 1 + inside / unit`, `r = spin / h`, `delta = h / (r + h)`,
-  `beyond = clamp((r (1 + delta) - h) / (2 delta r), 0, 1)` and
-  `rate = beyond / bell`. Calibre: founding. Status: built.
+  the band swinging round, `r (1 + delta cos phi)` on the ring's phase, is
+  past the throat on the arc `cos phi > c`, `c = (h - r) / (delta r)`, the
+  expanding side about the ring's crest, so
+  `beyond = acos(c) / 180` (0 where it never passes, 1 where it never
+  returns) and the mean rate `beyond / bell` (#233 item 4). Calibre:
+  founding. Status: built.
 - The equator: inflow, viscosity and pairs
   ([model.md](model.md#the-equator-inflow-viscosity-and-pairs), [#60](https://github.com/SAIOS-SAMN/xylarium/issues/60)).
   Status: planned (derived).
@@ -795,10 +799,14 @@ sites are restated. The derivations are in
   `b = delta / (1 - delta)` (`circuit::jet_map`); a sealed kind has
   no pole state and no onset, and the onset is zero where `t >= 1`.
   Calibre: founding. Status: built.
-- Outflow (`Substrate::outflow`): `m(t) = m0 (1 - exp(-rate (t - onset)))`
-  for `t > onset`. Calibre: founding. Status: built.
-- Outflow rate (`Substrate::rate`):
-  `q(t) = sum m0 (1 + e_z) rate exp(-rate (t - onset))`, with
+- Outflow (`Substrate::outflow`): `m(t) = m0 (1 - exp(-T(t) / bell))`
+  for `t > onset`, `T(t)` the time the kind's band has stood past the throat
+  since its onset, in closed form: `F(t) - F(onset)`,
+  `F(s) = echo (n beyond + min(u, w) + max(0, u - (1 - w)))` with `n` whole
+  echoes, `u` the phase in the echo and `w = beyond / 2`. Calibre:
+  founding. Status: built.
+- Outflow rate (`Substrate::rate`): on each kind's arc past the throat,
+  `q(t) = sum m0 (1 + e_z) exp(-T(t) / bell) / bell`, zero off it, with
   `e_z = open_z / hold_z` (`formation::emission`). Calibre: founding. Status: built.
 - Inbound echo (`Substrate::inbound`):
   `A_in(t) = cos(2 pi t / echo) + echo q(t)`. Calibre: founding. Status: built.

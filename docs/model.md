@@ -822,7 +822,7 @@ never carried.
 **Release.** Kind `k` leaves the throat at its onset, the echo at which its
 pole state crosses the throat under the jet map (`circuit::onset`,
 `circuit::throat_crossing`), at the throat's outflow rate
-`m0 (1 - exp(-rate (t - onset)))`, from the throat's horizon reach
+`m0 (1 - exp(-T(t) / bell))`, `T` its time past the throat, from the throat's horizon reach
 `R_h(H_0) = 2 H_0`. What has left is no longer held:
 `H_0(t) = 1 - sum_k outflow_k(t)`. A kind released over an interval is a
 filament: the locus of the parcels released along it.
@@ -945,8 +945,10 @@ longer holds.
   in order of spin. For each kind the hold is
   `h = 1 + (firmament mass nearer) / unit`, the reach `r = spin / h`, the
   deficit `delta = h / (r + h)`, the share of its band past the throat
-  `beyond = clamp((r (1 + delta) - h) / (2 delta r), 0, 1)`, and the leaving
-  rate `beyond / bell` (per ring).
+  `beyond = acos(c) / 180` with `c = (h - r) / (delta r)`, the share of each
+  echo its band, swinging round as `r (1 + delta cos phi)`, stands past the
+  throat on the expanding side about the ring's crest; it leaves at
+  `1 / bell` per ring while past, `beyond / bell` over an echo.
 - In the jet, a kind's pole state sits at `t = open / hold` on the filament
   and its jetstream carries it out through the continuum at the torsion
   share `s` and back through the vacuum at the kind's vacuum share `delta`
@@ -954,7 +956,8 @@ longer holds.
   `ln((1 - t*) / (t0 - t*)) / ln a` echoes, which is its onset
   (`circuit::onset_echoes`, `circuit::throat_crossing`); a sealed kind has
   no pole state and no onset. The kind then
-  empties as `m(t) = m0 (1 - exp(-rate (t - onset)))` (`Substrate::outflow`).
+  empties as `m(t) = m0 (1 - exp(-T(t) / bell))`, `T` its time past the
+  throat since its onset (`Substrate::outflow`).
 - The inbound echo (`Substrate::inbound`) is the waveform at the throat per
   echo, `A_in(t) = cos(2 pi t / echo) + echo q(t)`, where `q(t)` is the
   vessel's outflow rate in whole state (`Substrate::rate`). Its peak is

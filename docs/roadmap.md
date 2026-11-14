@@ -530,8 +530,10 @@ where it belongs to one.
     a smooth dimension, the bulge's ball and the disc's circle weighted by
     the core's face at the reach (`formation::dimension_at`); each galaxy's
     sphere breathing with its core's bell (`chain::galaxy_radius`); the
-    throat's push swinging with the echo (`circuit::throat_push`).
-    Order: the reverberation read at `t`, orbit rates breathing,
+    throat's push swinging with the echo (`circuit::throat_push`); the
+    reverberation read through the swing, each kind past the throat on the
+    expanding side (`Substrate::outflow`).
+    Order: orbit rates breathing,
     the bell's period, the founding swing and the kept kinds on the throat
     orbit (S142), the centre's crossing share (S017), the field's step per
     ring, and the hold passing between the pair's faces.

@@ -17,7 +17,8 @@
 //   ln(hold / open) / ln 3 (None for a sealed kind), `onset` the same in
 //   rings.
 // - Core: `Reverberation` per firmament kind; `outflow` empties a kind as
-//   m0 (1 - exp(-rate (t - onset))); `rate`, `state_out`, `books` (held,
+//   m0 (1 - exp(-T / bell)), T its time past the throat since its onset, on
+//   the expanding side of each echo's swing; `rate`, `state_out`, `books` (held,
 //   left, taken, founded); `inbound`, `inbound_peak`; `spin_orbit`, the
 //   core's spin over its bounces (T17); `loop_flux` composes filament,
 //   vacuum and electron channels.
@@ -246,22 +247,45 @@ pub struct Push {
     pub swing: Dy,
 }
 
-/// The share of a band swinging between `r (1 - p)` and `r (1 + p)` that lies
-/// past the throat at `h`, averaged over the swing: 0 where the outer edge
-/// stays inside, 1 where the inner edge is already past, and between them
-/// `(r (1 + p) - h) / (2 p r)`.
+/// The rate of leaving while a band stands past the throat, per ring: one
+/// over the engine bell.
+fn nu() -> Dy {
+    Dy::ONE.div(&bell()).unwrap_or_default()
+}
+
+/// The share of each echo a band swinging round, `r (1 + p cos phi)` with
+/// the ring's phase `phi`, spends past the throat at `h`: it is past on the
+/// arc `cos phi > c`, `c = (h - r) / (p r)`, the expanding side of the
+/// swing about the ring's crest, so the share is `acos(c) / 180` degrees,
+/// twice the arc's half-width in turns ([`window`]). 0 where the outer edge
+/// stays inside, 1 where the inner edge is already past (#233 item 4).
 fn beyond_share(r: Dy, p: Dy, h: Dy) -> Dy {
+    Dy::int(2) * window(r, p, h)
+}
+
+/// The half-width in turns of the arc of each echo on which the band
+/// `r (1 + p cos phi)` stands past the throat at `h`, centred on the ring's
+/// crest (`phi = 0`): `acos(c) / 360`, read as `1/4 - asin(c) / (2 pi)`
+/// with `c = (h - r) / (p r)`. Zero where the band never passes, one half
+/// where it never returns.
+fn window(r: Dy, p: Dy, h: Dy) -> Dy {
     let (inner, outer) = (r * (Dy::ONE - p), r * (Dy::ONE + p));
     if outer <= h {
         return Dy::ZERO;
     }
     if inner >= h {
-        return Dy::ONE;
+        return xyl_core::dyadic!(1, 2);
     }
-    ((outer - h)
-        .div(&(outer - inner).max(Dy::sci(1, -300)))
-        .unwrap_or_default())
-    .clamp(Dy::ZERO, Dy::ONE)
+    let c = (h - r)
+        .div(&(p * r))
+        .unwrap_or_default()
+        .clamp(-Dy::ONE, Dy::ONE);
+    let asin = xyl_core::certified::asin_any(&xyl_core::certified::Encl::exact(c.abs().to_q()));
+    let turns = Dy::from_q(&asin.mid())
+        .div(&(Dy::int(2) * Dy::pi()))
+        .unwrap_or_default();
+    let signed = if c.signum() < 0 { -turns } else { turns };
+    (xyl_core::dyadic!(1, 4) - signed).clamp(Dy::ZERO, xyl_core::dyadic!(1, 2))
 }
 
 impl Substrate {
@@ -272,14 +296,14 @@ impl Substrate {
         echo_at(&self.share)
     }
 
-    /// The reverberation of every firmament kind, in founded order, at the
-    /// echo's mean (the ring averages to zero over an echo and the vessel's
-    /// drift is read at `t` by [`Substrate::beyond_at`]). For each kind:
-    /// hold h = 1 + (firmament mass nearer) / (founding unit), reach
+    /// The reverberation of every firmament kind, in founded order. For each
+    /// kind: hold h = 1 + (firmament mass nearer) / (founding unit), reach
     /// r = spin / h, and the push at its reach the vacuum's share there,
     /// p = h / (r + h) (its deficit). The bell's torque swings the band
-    /// between r (1 - p) and r (1 + p); s is the band's share past the throat
-    /// averaged over the swing, and the kind leaves at s / bell (per ring).
+    /// round, r (1 + p cos phi); s is the share of each echo it spends past
+    /// the throat, on the expanding side of the swing (`beyond_share`), and
+    /// the kind leaves at 1 / bell per ring while it is past, s / bell over
+    /// an echo ([`Substrate::outflow`] reads it at `t`).
     pub(crate) fn reverberation(&self) -> Vec<Reverberation> {
         let unit = Dy::from_q(&self.unit()).max(Dy::sci(1, -300));
         let mut order: Vec<usize> = (0..self.firmament.len()).collect();
@@ -296,7 +320,7 @@ impl Substrate {
             self.firmament.len()
         ];
         let mut inside = Dy::ZERO;
-        let nu = (Dy::ONE).div(&bell()).unwrap_or_default();
+        let nu = nu();
         for i in order {
             let k = &self.firmament[i];
             let h = Dy::ONE + inside.div(&unit).unwrap_or_default();
@@ -353,7 +377,7 @@ impl Substrate {
             .reverb
             .iter()
             .filter_map(|rv| rv.onset)
-            .map(|onset| self.rate(onset + Dy::sci(1, -30)).0)
+            .map(|onset| self.rate_gated(onset + Dy::sci(1, -30), false).0)
             .fold(Dy::ZERO, Dy::max);
         Dy::ONE + echo * drift
     }
@@ -363,6 +387,32 @@ impl Substrate {
     pub fn push_at(&self, r: Dy, h: Dy, t: Dy) -> Dy {
         // Stand-in S116: The swung push is unbounded and unresisted.
         deficit_dy(h, r) * (Dy::ONE + self.inbound(t))
+    }
+
+    /// Whether kind `rv`'s band stands past the throat at `t`: the ring's
+    /// phase `u = frac(t / echo)` within the arc's half-width `w` of the
+    /// crest, `u < w` or `u >= 1 - w`.
+    fn past(&self, rv: &Reverberation, t: Dy) -> bool {
+        let w = rv.beyond.div(&Dy::int(2)).unwrap_or_default();
+        let u = Dy::from_q(&t.div(&self.echo()).unwrap_or_default().to_q().frac());
+        u < w || u >= Dy::ONE - w
+    }
+
+    /// The time (rings) kind `rv`'s band has spent past the throat between
+    /// its onset and `t`, in closed form: `F(t) - F(onset)` with
+    /// `F(s) = echo (n 2w + min(u, w) + max(0, u - (1 - w)))`, `n` whole
+    /// echoes and `u` the phase of `s` in its echo.
+    fn passed(&self, rv: &Reverberation, onset: Dy, t: Dy) -> Dy {
+        let echo = self.echo();
+        let w = rv.beyond.div(&Dy::int(2)).unwrap_or_default();
+        let at = |s: Dy| {
+            let turns = s.div(&echo).unwrap_or_default().to_q();
+            let u = turns.frac();
+            let whole = Dy::from_q(&(&turns - &u));
+            let u = Dy::from_q(&u);
+            echo * (whole * rv.beyond + u.min(w) + (u - (Dy::ONE - w)).max(Dy::ZERO))
+        };
+        (at(t) - at(onset)).max(Dy::ZERO)
     }
 
     /// Firmament kind `i`'s share past the throat at `t`: its band swung by
@@ -453,7 +503,7 @@ impl Substrate {
                 if rv.rate.signum() <= 0 || t <= onset {
                     return (k.z, Dy::ZERO);
                 }
-                let left = Dy::ONE - (-(rv.rate * (t - onset))).exp();
+                let left = Dy::ONE - (-(self.passed(rv, onset, t) * nu())).exp();
                 (k.z, Dy::from_q(&k.amount) * left)
             })
             .collect()
@@ -695,10 +745,19 @@ impl Substrate {
     }
 
     /// The rate leaving the core at `t` rings, per ring: the derivative of the
-    /// outflow, the sum over kinds past their onset of
-    /// rate m0 exp(-rate (t - onset)). Returns (whole state, with each kind's
+    /// outflow, the sum over kinds past their onset and on their arc past
+    /// the throat of `nu m0 exp(-nu T)`, `nu = 1 / bell` and `T` the time
+    /// the kind has spent past the throat since its onset
+    /// ([`Substrate::outflow`]). Returns (whole state, with each kind's
     /// magnetism m (1 + e); mass).
     pub fn rate(&self, t: Dy) -> (Dy, Dy) {
+        self.rate_gated(t, true)
+    }
+
+    /// [`Substrate::rate`], each kind's leaving gated to its arc past the
+    /// throat (`gated`), or read as it stands while the arc is open (the
+    /// inbound echo's peak).
+    fn rate_gated(&self, t: Dy, gated: bool) -> (Dy, Dy) {
         let t = t.max(Dy::ZERO);
         let (mut state, mut mass) = (Dy::ZERO, Dy::ZERO);
         for (k, rv) in self.firmament.iter().zip(&self.reverb) {
@@ -708,7 +767,10 @@ impl Substrate {
             if rv.rate.signum() <= 0 || t <= onset {
                 continue;
             }
-            let now = rv.rate * (-(rv.rate * (t - onset))).exp();
+            if gated && !self.past(rv, t) {
+                continue;
+            }
+            let now = nu() * (-(self.passed(rv, onset, t) * nu())).exp();
             let m0 = Dy::from_q(&k.amount);
             state += m0 * (Dy::ONE + Dy::from_q(&crate::formation::emission(k.z))) * now;
             mass += Dy::from_q(&mass_of(k.z, &k.amount)) * now;
@@ -975,6 +1037,47 @@ pub struct Carry {
 mod tests {
     use super::*;
 
+    /// Read through the swing, a kind stands past the throat only on its arc
+    /// about the ring's crest: over whole echoes its time past is its share
+    /// of each echo, at the trough it is inside, and a band centred on the
+    /// throat is past it half of each echo. Where a kind has an onset, what
+    /// has left rises with `t`, never past its amount (#233 item 4).
+    #[test]
+    fn each_kind_leaves_on_the_expanding_side() {
+        let origin = crate::genesis::origin();
+        let sub = crate::cores::substrate_for(&origin.parent.spin).unwrap();
+        let echo = sub.echo();
+        let mut read = 0;
+        for (k, rv) in sub.firmament.iter().zip(&sub.reverb) {
+            if rv.beyond.signum() <= 0 || rv.beyond >= Dy::ONE {
+                continue;
+            }
+            read += 1;
+            let whole = sub.passed(rv, Dy::ZERO, echo * Dy::int(3));
+            assert!((whole - echo * Dy::int(3) * rv.beyond).abs() < echo * Dy::sci(1, -9));
+            let trough = echo * (Dy::int(8) + xyl_core::dyadic!(1, 2));
+            assert!(!sub.past(rv, trough) && sub.past(rv, echo * Dy::int(8)));
+            let Some(onset) = rv.onset else { continue };
+            let left = |t: Dy| {
+                sub.outflow(t)
+                    .into_iter()
+                    .find(|(z, _)| *z == k.z)
+                    .map(|(_, x)| x)
+                    .unwrap()
+            };
+            let steps: Vec<Dy> = (0..12)
+                .map(|i| left(onset + echo * Dy::int(i).div(&Dy::int(4)).unwrap()))
+                .collect();
+            assert!(steps.windows(2).all(|p| p[0] <= p[1]));
+            assert!(steps.iter().all(|x| *x <= Dy::from_q(&k.amount)));
+        }
+        assert!(read > 0, "no kind swings across the throat");
+        assert_eq!(
+            window(Dy::ONE, xyl_core::dyadic!(1, 2), Dy::ONE),
+            xyl_core::dyadic!(1, 4)
+        );
+    }
+
     #[test]
     fn the_held_medium_closes_its_books_and_bounds_its_carry() {
         let origin = crate::genesis::origin();
@@ -1056,8 +1159,9 @@ mod tests {
         assert!(
             (dilation_dy(xyl_core::dyadic!(3, 5)).unwrap() - Dy::int(4)).abs() < Dy::sci(1, -15)
         );
-        // A band inside the throat stays, one outside leaves, and between them
-        // the share is linear.
+        // A band inside the throat stays, one outside leaves, and one centred
+        // on the throat is past it half of each echo, on the arc about the
+        // ring's crest.
         assert_eq!(
             beyond_share(xyl_core::dyadic!(1, 4), xyl_core::dyadic!(1, 2), Dy::ONE),
             Dy::ZERO

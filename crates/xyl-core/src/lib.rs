@@ -25,6 +25,7 @@ pub mod certified;
 pub mod cga;
 pub mod codec;
 pub mod coordinate;
+pub mod coupling;
 pub mod dyadic;
 pub mod event;
 pub mod hopf;

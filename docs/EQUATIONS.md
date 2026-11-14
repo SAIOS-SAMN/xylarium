@@ -141,6 +141,21 @@ sites are restated. The derivations are in
     offsets whose holding-weighted sum is zero, and fission is its inverse.
     The re-origin across a throat reverses S's span, gains `-2 span` on T
     and exchanges hold and reach.
+  - **The coupling** (FORMS-COUPLING v1, 78.175, `xyl_core::coupling`),
+    first-degree throughout. A parcel holds `A = 3Z - U` counts held and
+    `Q = U` open; its pole `sigma = (A - Q) / (A + Q)` and open share
+    `o = Q / (A + Q)` (the fluidity; the held share the cohesion), read per
+    turning plane after the even split `((3Z - U) / n, U / n)`, a bond
+    moving one plane. On a turning plane the range's field is
+    `F = sum w sigma o n h / sum w`, `n = M / (|g| + M)`,
+    `h = 1 - Delta / 90` of the round separation; the pull on a rate is
+    `x (+) (-sigma F o (x_bar (-) x))` by the flow law (`shares::flow`).
+    Two bodies are neighbours where `|R_a - R_b| <= R_a e_a + R_b e_b`,
+    `e = m / (m + H(<R))`. Light is received on the unlocked face
+    (`1 - delta` continuum, `delta` vacuum, `delta = H / (H + R)`) and the
+    rest drains; made = received + drained. Calibre: none (shares and
+    rates of the luminal bound). This dipole, of counts, is the shared
+    form's; the reading's dipole `3Z/3Q + R` is the kernel's.
   - **The passage in the algebra** (FORMS-PASSAGE v4, 78.172,
     `coordinate::PolePlane`): on a plane's units `e+`, `e-` in `Cl(p, q)`
     a throat state is `(H + R) e+ + (H - R) e-`; it crosses by

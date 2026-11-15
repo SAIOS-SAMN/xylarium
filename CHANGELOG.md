@@ -86,6 +86,14 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Time as coordinates, at the galaxy tier (#245, E032): a bell's front
+  reaches a star at the arc plus the hold it crosses (`field::path`,
+  `field::crossed_kpc`). A front is centred on its source, so a galaxy
+  core's front to one of its own stars crosses the galaxy's hold inside the
+  star's reach less the core's, `M(<r) - 1`, reach and hold dilated together
+  by the galaxy's scale. A stellar hole's front and another galaxy's core's
+  cross no hold yet (S145).
+
 - Time as coordinates, at the universal core's tier (#245, ruled
   2026-11-15; E032). The front's arrival at a reach is the separation of the
   throat's and the reach's time coordinates, `tau(r) - tau(0)` with

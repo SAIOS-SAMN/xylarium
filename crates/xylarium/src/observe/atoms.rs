@@ -248,8 +248,12 @@ pub(super) fn seals_read(o: &Options, top: usize) -> String {
             ));
             let from_q = xyl_cosmos::circuit::universal_fill_shares(z);
             if let (Some(sides), Some(weights)) = (
-                xyl_cosmos::atoms::plane_sides(z, &from_q),
-                xyl_cosmos::atoms::plane_weights(z, &from_q),
+                from_q
+                    .as_ref()
+                    .and_then(|f| xyl_cosmos::atoms::plane_sides(z, f)),
+                from_q
+                    .as_ref()
+                    .and_then(|f| xyl_cosmos::atoms::plane_weights(z, f)),
             ) {
                 let side =
                     |o: &(Q, Q)| format!("U {} 2P {}", show(&o.0), show(&(&o.1 * &Q::int(2))));
@@ -380,7 +384,11 @@ pub(super) fn bond_reading(a: u32, b: u32, turning: &Q) -> Result<String, String
     let bond = xyl_cosmos::atoms::bond(&fa, &fb);
     let received = xyl_cosmos::atoms::Received::isoclinic(turning.clone());
     let pushes = bond.pole_pushes();
-    let shares = [a, b].map(xyl_cosmos::circuit::universal_fill_shares);
+    let fill = |z: u32| {
+        xyl_cosmos::circuit::universal_fill_shares(z)
+            .ok_or_else(|| format!("no fill for Z {z}: the anchor's torsion share is no share"))
+    };
+    let shares = [fill(a)?, fill(b)?];
     let polarity = bond.polarities([&shares[0], &shares[1]]);
     let mut out = format!(
         "The bond of Z {a} and Z {b} at an isoclinic turning of {}\n",

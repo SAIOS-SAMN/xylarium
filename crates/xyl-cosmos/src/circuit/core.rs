@@ -462,8 +462,14 @@ impl Substrate {
             return None;
         }
         let vacuum = &p * &w_e;
-        // Electron channel: R(pulse) u, the open states' phase state.
-        let echo = &super::weights::electron_phase(k.z, &self.pulse(t)) * &u;
+        // Electron channel: R(pulse) u, the open states' phase state, read
+        // after the throat's torsion is induced on it (E030), on the axis
+        // plane in the common phase.
+        let common = xyl_core::hopf::COMMON;
+        let pulse = self.pulse(t);
+        let phases: [Q; xyl_core::hopf::PLANES] = std::array::from_fn(|_| pulse.clone());
+        let [r, ..] = super::weights::induced_phases(k.z, &phases, &common, &self.share)?;
+        let echo = &r * &u;
         pole_flux(
             &w_e,
             &u,

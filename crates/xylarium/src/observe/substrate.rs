@@ -190,7 +190,7 @@ fn core_state(s: &Substrate, t: Dy) -> String {
             .iter()
             .filter_map(|k| {
                 let from_q =
-                    xyl_cosmos::circuit::fill_shares(k.z, &s.share, &xyl_core::hopf::COMMON);
+                    xyl_cosmos::circuit::fill_shares(k.z, &s.share, &xyl_core::hopf::COMMON)?;
                 xyl_cosmos::atoms::plane_polarities(k.z, &from_q)
             })
             .collect();

@@ -44,6 +44,13 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- R is read through the induced turn on every Hopf plane (E030):
+  `circuit::induced_phases` turns each plane's phase by the throat's
+  torsion (the spin face on the Z hemisphere, the inverse face on the Q
+  hemisphere, `hopf::induce`) before reading `R_p`. The fill shares, the
+  rest point and the jet's electron channel read it; `fill_shares` and
+  `universal_fill_shares` refuse a torsion share that is no share.
+
 - Orbit rates breathe in the galaxy tier (#233 item 5):
   `chain::breathing_turns` turns a mean rate read at the deficit `delta`
   into `rate t + rate delta (1 - delta) echo sin(360 t / echo) / (2 pi)`,

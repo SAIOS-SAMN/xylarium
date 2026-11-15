@@ -1618,8 +1618,12 @@ Axioms:
    about a mass invariant `M`: at reach `r` its convergent face keeps
    `M / (r + M)` of what reaches it and its divergent face passes
    `r / (r + M)` (Gravity: the deformation about a mass invariant).
-3. **Flow.** Pushes compose as `x (+) y = (x + y) / (1 + x y)`;
-   `D(p) = (1 + p) / (1 - p)`.
+3. **Composition by the plane's kind.** A boost (a push on S, a share of
+   the luminal bound) composes by the flow law `x (+) y = (x + y) / (1 + x y)`,
+   `D(p) = (1 + p) / (1 - p)`. A turning (a phase on H, in degrees on a
+   named plane) composes by adding degrees, its whole turns carried apart;
+   its Cayley rates compose by the tangent law. A reading never takes the
+   law of the other kind (I018).
 4. **Conservation.** Nuclei, their occupancy and their capacity are
    conserved; mass is a reading of the counts.
 5. **Inversion.** `t -> 1 / t` exchanges the Z and Q poles; `x -> -x`
@@ -1650,6 +1654,16 @@ Axioms:
 11. **Degrees of turning.** The degrees a body turns, its hold times its
     degrees per unit hold, are conserved; the linking number's
     conservation is their topological reading.
+12. **Automorphism.** Every offset or change of reading is an automorphism
+    of the structure it acts on: conjugation `x -> M x M~` for a rotor's
+    motion, the fibre's weighted action `z_p -> e^{i w_p theta} z_p` for a
+    phase. Transforms compose as products, never plane by plane, and a
+    linear split of a composition is no transform.
+13. **Interface.** Two components meet only through a transduction: a lift
+    into the receiving manifold, an act on it, a projection out, each
+    stated with its lane and calibre, the invariant it keeps, and its
+    inverse (wound back) or its residue (what cannot unwind). The
+    interfaces are listed in [interfaces.md](interfaces.md).
 
 Theorems:
 
@@ -1676,6 +1690,8 @@ Theorems:
 | T19 | a link's remanence `w = J - (a_0 M_0) M`: per passage `w' = w (1 - m / M) + J (m / M) (1 - rho_c / rho_hold)`; conserved between passages; cleared by a passage of hold `m* = w M / (w + J (rho_c / rho_hold - 1))`; for one release, the remanent share `1 - rho_hold / rho_closed` | 7, 11, T10, T17 |
 | T20 | the horizon is the equator of the pair's hold, `R_h = M_near + M_far`, where the faces read about the pair balance at one half (the inversion's fixed point); read about one face, `delta_h = M / (2M + M_far)`; a pair sharing one hold gives `R_h = 2M` and `delta_h = 1/3` | 2, 5, 6, T16 |
 | T21 | the horizon is axial: on each plane the pair holds where its held face is at least its passed face, about the hold it presents less what its open states vent, `H_v = (M_near + M_far)(1 - vent)`; the axis plane balances at `H_v`, a turning plane at `H_v + a M`; the charged spin's tilt mixes the axis plane and isoclinic plane 1 by its faces; the horizon moves with the spin, the charge and the holds | 5, 6, 7, 9, T8, T15, T16, T20 |
+| T22 | the induced turn: a throat's torsion turns each Hopf plane's phase `w_p 360 s` degrees on the spin face and `-w_p 360 (1 - s)` on the inverse face, `s = (H + J) / (2H + J)`; each face is the weighted Seifert automorphism (composes by adding degrees, commutes with the Hopf action); the pair leaves the shear `w_p 360 (2s - 1)`, zero only where the throat does not spin | 7, 8, 12, T4 |
+| T23 | the reduction: in the common winding a face's turn moves only along the fibre, so the point of `CP^5` (the relative phases, the five isoclinic planes past the axis puncture) is kept; what a reading on the base sees of a turn is its non-common part | 8, 12, T22 |
 
 Reading (seed 7; a retired floating-point screen with exact held sets, to
 be read on the binary once the bounces are built, #79): the universal core holds 0.4352 of the
@@ -1684,6 +1700,34 @@ releases (0.108) and the core's three later cohorts (1.7 x 10^-18) are too
 light to close (`a_g > 1`) and stay in the flow as medium. One galactic
 core, not a population: under these laws multiplicity does not come from
 pinching, and the medium is where it is to be derived.
+
+### Hopf, Kaluza-Klein and the strings
+
+Semantics for the carrier's design, read from the physics of fibre bundles;
+none of it is a check on the model ([#245](https://github.com/SAIOS-SAMN/xylarium/issues/245)).
+
+- **A circle bundle carries charge.** Kaluza-Klein reads a gauge field as
+  the connection of a circle bundle over spacetime: the mixed metric is the
+  connection, its curvature the field, the circle's momentum the charge,
+  quantised because the circle closes. The Hopf fibration `S^1 -> S^11 ->
+  CP^5` (axiom 8) is such a bundle with a twist, its first Chern class the
+  charge a fibre's winding carries. In the carrier, R as a phase is a
+  position on the fibre; an integer charge would be the fibre's momentum,
+  another quantum number, never folded into R.
+- **Reduction is integrating out the fibre.** Taking the common phase out
+  leaves the point of `CP^5` (T23); the connection is what remains, and its
+  holonomy is the deficit (axiom 2, gravity as topology).
+- **Twist and torsion exchange.** Reduced along a Hopf fibre, eleven
+  dimensions read as a string's ten (`S^7 -> CP^3`), and dualising along a
+  circle fibre exchanges the bundle's twist with its torsion flux. The two
+  faces of an induced turn (T22) are those two readings: the spin face the
+  twist, the inverse face the torsion; the shear between them is what does
+  not cancel, zero only at the self-dual share `s = 1/2` of a throat that
+  does not spin. The passage's `t -> 1 / t` (axiom 5) is the inversion that
+  carries one face's reading to the other.
+- **The radius breathes.** The enclosure's radius swinging with the bell
+  (`chain::radius`) is the circle's size as a field: a breath, not a
+  constant.
 
 ### The state at the bounce: the fold and its circuits
 

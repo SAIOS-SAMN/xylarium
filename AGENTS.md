@@ -23,8 +23,9 @@ in [docs/glossary.md](docs/glossary.md), not by their everyday meaning.
    truth; the Markdown docs summarise them.
 3. Search by identifier, not by prose: `grep -rn "fn manifold_worlds" crates/`.
 4. Formulas with their code locations are listed in
-   [docs/EQUATIONS.md](docs/EQUATIONS.md). Planned work and its order are
-   listed in [docs/roadmap.md](docs/roadmap.md).
+   [docs/EQUATIONS.md](docs/EQUATIONS.md); the interfaces where components
+   meet, in [docs/interfaces.md](docs/interfaces.md). Planned work and its
+   order are listed in [docs/roadmap.md](docs/roadmap.md).
 
 ## Map
 

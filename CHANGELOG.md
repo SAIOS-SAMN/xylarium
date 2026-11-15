@@ -11,6 +11,14 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The interlock's documents (#245): `docs/interfaces.md` lists every
+  interface between the model's components as a transduction, with its
+  lane, calibre, invariant and its inverse or residue; axioms 12
+  (automorphism) and 13 (interface) and theorems T22 (the induced turn)
+  and T23 (the reduction); the register rows E029 to E031 and I016 to
+  I019; the note on Hopf, Kaluza-Klein and the strings; the package's
+  delivery in network.md.
+
 - The induced turn (`xyl_core::hopf::induce`, `Sense`): a throat's torsion
   induced on every plane's phase on the pair's two faces, the spin face
   `w_p 360 s` and the inverse face `-w_p 360 (1 - s)` degrees with the

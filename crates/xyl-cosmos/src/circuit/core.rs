@@ -547,7 +547,8 @@ impl Substrate {
     /// The ocean's shares, by engine index: (share, delay in rings). A galaxy's
     /// pull is its deficit seen from the core, hold / (reach + hold), with hold
     /// its state over the mean (the home galaxy: reach 0, pull 1); the share is
-    /// its pull over the sum. The delay is half a bell scaled by reach / rim.
+    /// its pull over the sum. The delay is the front's arrival at the
+    /// galaxy's reach ([`Substrate::delay`], `tau(r) - tau(0)`).
     pub fn ocean_shares(&self) -> Vec<(u32, Dy, Dy)> {
         let mean = Dy::from_q(&self.mean_state());
         let pulls: Vec<(u32, Dy, Dy)> = self
@@ -843,10 +844,19 @@ impl Substrate {
         (self.ringing(t - delay) + self.rate(t - delay).0) * share
     }
 
-    /// The pulse's delay to reach `r` (cluster units), in rings: half a bell scaled by
-    /// `r / rim`, the front crossing the rim in half a bell.
-    fn delay(&self, r: Dy) -> Dy {
-        (bell().div(&(Dy::int(2))).unwrap_or_default() * r.max(Dy::ZERO))
+    /// The front's arrival at `r` (cluster units), in rings after it leaves
+    /// the throat: the separation of the two points' time coordinates on the
+    /// T lane (operator ruling 2026-11-15, #245), `tau(r) - tau(0)` with
+    /// `tau(r) = r + H(<r)`, the reach and the hold inside it read in the
+    /// substrate's one calibre (cluster units, core masses: the deficit's
+    /// `H / (r + H)`), so `dtau / dr = 1 + dH / dr` and time is denser where
+    /// matter stands. Converted to rings as the front crosses the rim in half
+    /// a ring: `(1/2) (r + H(<r) - H(<0)) / rim`.
+    pub fn delay(&self, r: Dy) -> Dy {
+        let r = r.max(Dy::ZERO);
+        let tau = |x: Dy| x + Dy::from_q(&self.held_within(&x.to_q()));
+        let separation = tau(r) - tau(Dy::ZERO);
+        (bell().div(&(Dy::int(2))).unwrap_or_default() * separation)
             .div(&(Dy::from_q(&self.rim).max(Dy::sci(1, -30))))
             .unwrap_or_default()
     }
@@ -1081,6 +1091,40 @@ mod tests {
         assert_eq!(
             window(Dy::ONE, xyl_core::dyadic!(1, 2), Dy::ONE),
             xyl_core::dyadic!(1, 4)
+        );
+    }
+
+    #[test]
+    fn the_fronts_arrival_is_the_separation_of_time_coordinates() {
+        // The time coordinate tau(r) = r + H(<r) (#245): the arrival between two reaches is their
+        // separation in reach plus the hold crossed between them, at half a
+        // ring per rim; separations add, and a stretch holding nothing
+        // separates by its reach alone.
+        let origin = crate::genesis::origin();
+        let sub = crate::cores::substrate_for(&origin.parent.spin).unwrap();
+        let per = Dy::from_q(&sub.rim) * Dy::int(2);
+        let mut at: Vec<Q> = sub.beads.iter().map(|b| b.reach.clone()).collect();
+        at.push(Q::ZERO);
+        at.push(&sub.rim + &Q::ONE);
+        at.sort();
+        let tiny = Dy::sci(1, -12);
+        for w in at.windows(2) {
+            let (a, b) = (Dy::from_q(&w[0]), Dy::from_q(&w[1]));
+            let crossed = Dy::from_q(&(&sub.held_within(&w[1]) - &sub.held_within(&w[0])));
+            let apart = (sub.delay(b) - sub.delay(a)) * per;
+            assert!(
+                (apart - (b - a) - crossed).abs() < tiny,
+                "between {a} and {b}"
+            );
+            assert!(apart + tiny >= b - a, "time is no thinner than reach");
+        }
+        let (a, b, c) = (Dy::ONE, Dy::int(5), Dy::from_q(&sub.rim));
+        let added = (sub.delay(b) - sub.delay(a)) + (sub.delay(c) - sub.delay(b));
+        assert!((added - (sub.delay(c) - sub.delay(a))).abs() < tiny);
+        assert_eq!(
+            sub.delay(Dy::ZERO),
+            Dy::ZERO,
+            "the front leaves the throat at zero"
         );
     }
 

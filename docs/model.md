@@ -1076,7 +1076,9 @@ is the deficit about the hold within `r`.
 - **The medium** (`Substrate::held_within`, `Substrate::medium`): as
   founded, the core's 1 plus the beads nearer, `H(r)`; at `t`,
   `H(r, t) = H(r) - passed(r, t) / F`, `passed` the outflow by
-  `t - tau(r)` bound beyond `r`. Matter in flight or taken within `r` stays,
+  `t - tau(r)` bound beyond `r`, `tau(r)` the front's arrival, the
+  separation of the throat's and the reach's time coordinates,
+  `tau(r) = r + H(<r)` (E032): each body the front crosses adds its hold. Matter in flight or taken within `r` stays,
   so the books close.
 - **The share carried** (`Substrate::carry`): `delta = H(r, t) / (r + H(r,
   t))`, read by the waveform, a galaxy's circulation and push, and a

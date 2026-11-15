@@ -36,6 +36,7 @@ new interface enters this file in the same change that builds it.
 
 | Interface | Move | From → to | Calibre | Invariant | Unwinds by | Site | Law |
 |---|---|---|---|---|---|---|---|
+| Time coordinate | lift | an event at reach `r` → its coordinate on the T lane, `tau(r) = r + H(<r)` | the tier's (reach and hold in one unit); rings at the rim's half ring | separations add and reverse; across a stretch holding nothing `delta tau = delta r`; each body crossed adds its hold | by the opposite separation | `circuit::Substrate::delay` | E032 |
 | Breath | act | a core's bell (its echo) → the enclosure's radius and the orbits about it | galaxy units | each returns after a whole echo; the swing is the rim's deficit, the orbit's `delta (1 - delta)` | over whole echoes to the mean | `chain::radius`, `chain::galaxy_radius`, `chain::breathing_turns` | #233 items 1, 5 |
 | Throat push | act | the inbound echo's swing `1 + A_in` → the push at the throat | none | one half at the echo's mean | over an echo to the mean | `circuit::throat_push` | #233 item 3; S114, S116 |
 | Reverberation | act | the ring's phase → a band past the throat on the arc about the crest | founding units | its share of each echo is `acos(c) / 180` | over whole echoes to the share | `circuit::Substrate::outflow` | #233 item 4 |

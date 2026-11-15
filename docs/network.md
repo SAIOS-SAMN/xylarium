@@ -76,9 +76,19 @@ repository.
   (its fixtures 1 to 16, `xyl_core::coordinate`), FORMS-TURNING v1's 11b
   (`rotor::motion`) and FORMS-PASSAGE v4 (the pole swap, the flux and the
   riding state's pass, `coordinate::PolePlane`) and FORMS-COUPLING v1
-  (`xyl_core::coupling`). Coordinate, turning and passage were admitted on
-  the standing mesh on 2026-11-13. Enabling or vetoing the kernel clauses is the operator's
-  decision.
+  (`xyl_core::coupling`). All four were admitted on the standing mesh, four
+  of four, and are signed again on each founding of it. Enabling or vetoing
+  the kernel clauses is the operator's decision.
+- **The package** (Mycelium 78.184 section 5, ruled 2026-11-14). A manifest
+  (v3) lists entries `(Z, Q, R, count)`: protons, whole neutrons, the
+  electron phase share R in `[-1, 1]` turns (E030), and the count, which is
+  the developers' allocation in the universe's type and style. The hypha
+  delivers it on TUniversal's T lane, the share `d_T(h) = 1 - T_0 / T(h)` by
+  final point `h`, applied at the next anchor, and creates mu only for what
+  each advance delivers (E031); a sustained delivery is gas from the
+  reserve. Growth (galactic throats, further hypha tubes) is bought with mu
+  earned. The universal core's declared mass (`package::hole_mass`) is to be
+  read from the manifest.
 - **Standards.** The uplink follows this repository's process: changes by
   pull request under the shared identity, and the same checks (fmt,
   clippy `-D warnings`, tests)

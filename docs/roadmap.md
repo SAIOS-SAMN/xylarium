@@ -539,6 +539,16 @@ where it belongs to one.
     the bell's period, the founding swing and the kept kinds on the throat
     orbit (S142), the centre's crossing share (S017), the field's step per
     ring, and the hold passing between the pair's faces.
+69. **The interlock** ([#245](https://github.com/SAIOS-SAMN/xylarium/issues/245), `law`, `docs`, `track`; ruled 2026-11-15).
+    The components meet through transductions listed in
+    [interfaces.md](interfaces.md) (axiom 13), every offset an automorphism
+    (axiom 12), every composition by its plane's kind (axiom 3). Done: the
+    induced turn (`hopf::induce`, T22, T23); the axioms restated; the
+    interfaces listed. Order: R read through the induced turn on every
+    plane (E030); E018's rest point as the transduction from H to the join
+    (I017, T24); a machine-readable theorem register with
+    `scripts/check-theorems`; the proofs witnessed on the running engine
+    (`xylarium observe proofs`).
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.
     Done: the capacity and balance in `atoms` (`atoms::capacity`,
     `atoms::balance`); the seals proven the dipole's equator at the Z pole;

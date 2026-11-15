@@ -116,3 +116,36 @@ fn t17_the_far_face_dilates_to_six_plus_a_over_two_plus_a() {
         );
     }
 }
+
+#[test]
+fn t3_the_apsis_ratio_is_the_deficits_dilation_and_the_resonances_return() {
+    use xyl_core::shares::deficit;
+    use xyl_cosmos::bounce::horizon_reach;
+    let m = Q::new(3, 2).expect("3/2");
+    for (n, d) in [(1, 4), (1, 1), (5, 2), (7, 1), (100, 3)] {
+        let r = &m * &Q::new(n, d).expect("a reach");
+        let delta = deficit(&m, &r).expect("a hold and a reach");
+        let want = &Q::ONE + &horizon_reach(&m, &m).checked_div(&r).expect("r > 0");
+        assert_eq!(
+            dilation(&delta),
+            Some(want),
+            "D(delta) = 1 + R_h / r at r = {r}"
+        );
+    }
+    // the reach (k - 1) M advances 360 / k degrees and returns after k
+    for k in 2..=12_i64 {
+        let r = &m * &Q::int(k - 1);
+        let advance = &Q::int(360) * &deficit(&m, &r).expect("a hold and a reach");
+        assert_eq!(
+            advance,
+            Q::new(360, k).expect("k > 0"),
+            "360 / k at k = {k}"
+        );
+        let turns = advance.checked_div(&Q::int(360)).expect("360 > 0");
+        assert_eq!(
+            turns.denom(),
+            num_bigint::BigInt::from(k),
+            "returns after {k}"
+        );
+    }
+}

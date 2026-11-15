@@ -111,6 +111,25 @@ pub(super) fn proofs_read(o: &Options, t_rings: Option<Q>) -> Result<String, Str
         .and_then(|third| flow(&n9, &third));
     for g in sub.push(t) {
         let c = sub.carry(g.reach0, t);
+        // T3 at T: an orbit at the galaxy's reach about the medium held
+        // inside it, H(r, t), has the apsis ratio D(delta) = 1 + R_h / r,
+        // R_h = 2H the medium's horizon. H is read at T; it stays at its
+        // founded hold while the firmament is closed (T8, T16: a sealed kind
+        // has no pole state, so none passes the throat).
+        let (h, r) = (c.hold.to_q(), g.reach0.to_q());
+        let apsis = xyl_core::shares::deficit(&h, &r)
+            .and_then(|delta| dilation(&delta))
+            .zip(xyl_cosmos::bounce::horizon_reach(&h, &h).checked_div(&r))
+            .map(|(d, rh)| &d - &(&Q::ONE + &rh));
+        line(
+            &mut out,
+            "T3",
+            &format!(
+                "galaxy {} at reach {}, medium {} inside: D(delta) - (1 + R_h / r)",
+                g.index, g.reach0, c.hold
+            ),
+            apsis,
+        );
         line(
             &mut out,
             "T9",

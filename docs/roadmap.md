@@ -534,9 +534,10 @@ where it belongs to one.
     reverberation read through the swing, each kind past the throat on the
     expanding side (`Substrate::outflow`); the galaxy tier's orbit rates
     breathing (`chain::breathing_turns`, the stars' orbits and the
-    galaxies' circulation).
-    Order: the world manifolds' rates breathing about their stars,
-    the bell's period, the founding swing and the kept kinds on the throat
+    galaxies' circulation); the world manifolds' rates breathing over the
+    star's galaxy core's echo, carried down the anchor chain
+    (`Manifold::stand`).
+    Order: the bell's period, the founding swing and the kept kinds on the throat
     orbit (S142), the centre's crossing share (S017), the field's step per
     ring, and the hold passing between the pair's faces.
 69. **The interlock** ([#245](https://github.com/SAIOS-SAMN/xylarium/issues/245), `law`, `docs`, `track`; ruled 2026-11-15).

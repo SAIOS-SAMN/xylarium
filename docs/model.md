@@ -457,18 +457,27 @@ components, and each formation mechanic moves one of them.
   `D(p) = h / o = 3Z / 3Q`, and the Q face is its antipole,
   `D(-p) = 3Q / 3Z`.
 - **The phase.** `R` is each Hopf plane's phase, `R_p`, joining the common
-  phase (#183). It turns the faces by composition, never by addition
-  (ruled 2026-11-11, E018): read as a push in `(-1, 1)`, it composes with
-  the nucleon split by the flow law, `p_net,p = p_nuc,p (+) R_p`, so the
-  dilations multiply, `D(p_net,p) = D(p_nuc,p) D(R_p)`. The Z face reads
+  phase (#183). It turns the faces by their ratio, never by addition
+  (ruled 2026-11-11, E018; restated by T24). `R_p` is a turning (the H
+  lane), never a boost: it does not compose with a push by the flow law.
+  It reaches the join by its L1 projection: `R_p = kappa (1 - 2 frac(psi_p))`
+  is the phase's hemisphere reading, and across the join it is a share
+  split with the faces `c_p = (1 + R_p) / 2` and `d_p = (1 - R_p) / 2`,
+  first-degree, with no cosine and no root. The faces' ratio
+  `D(R_p) = c_p / d_p` multiplies the nucleon split's: the Z face reads
   `(3Z_p / 3Q_p) D(R_p)` and the Q face `(3Q_p / 3Z_p) D(-R_p)`; their
   product is one, and `R_p = 0` leaves the bare dipole. #148's
   `3Z / 3Q + R` added a turn to a dilation (I009, closed).
-- **The rest point.** At a bounce the medium's push is zero, so the rest
-  point is `p_net,p = 0`: `p*_nuc,p = -R_p`, `3Z*_p / 3Q*_p = (1 - R_p) /
-  (1 + R_p)`. A kind at `abs(R_p) = 1` has none and is refused. The counts
-  are rational; their reading back to whole nucleons is the Diophantine
-  split (#149).
+- **The rest point** (T24). At a bounce the medium's push is zero, so the
+  nucleon split's pole `p = (Z - Q) / (Z + Q)` stands at the antipole of
+  the axis plane's projection (axiom 5): `p* = -R_0`, so
+  `Q* / Z = c_0 / d_0 = (1 + R_0) / (1 - R_0)`. `R_0` is the induced phase
+  (E030): the throat's torsion is already inside it, so the rest point
+  holds at any spin with no further torsion term. The isoclinic planes 1-5
+  are orthogonal to the Z-Q split and are not read by it. A kind at
+  `abs(R_0) = 1` has a face of zero and no rest point, and is refused. The
+  counts are rational; their reading back to whole nucleons is the
+  Diophantine split (#149).
 - **The universal table** (#201; E018 built 2026-11-13). The bounce
   captures first, then converts. The founding's release is read at the
   capture mass `m = Z` (`Q0 = 0`); at the bounce the medium's push is zero,
@@ -1692,6 +1701,7 @@ Theorems:
 | T21 | the horizon is axial: on each plane the pair holds where its held face is at least its passed face, about the hold it presents less what its open states vent, `H_v = (M_near + M_far)(1 - vent)`; the axis plane balances at `H_v`, a turning plane at `H_v + a M`; the charged spin's tilt mixes the axis plane and isoclinic plane 1 by its faces; the horizon moves with the spin, the charge and the holds | 5, 6, 7, 9, T8, T15, T16, T20 |
 | T22 | the induced turn: a throat's torsion turns each Hopf plane's phase `w_p 360 s` degrees on the spin face and `-w_p 360 (1 - s)` on the inverse face, `s = (H + J) / (2H + J)`; each face is the weighted Seifert automorphism (composes by adding degrees, commutes with the Hopf action); the pair leaves the shear `w_p 360 (2s - 1)`, zero only where the throat does not spin | 7, 8, 12, T4 |
 | T23 | the reduction: in the common winding a face's turn moves only along the fibre, so the point of `CP^5` (the relative phases, the five isoclinic planes past the axis puncture) is kept; what a reading on the base sees of a turn is its non-common part | 8, 12, T22 |
+| T24 | the rest point is a projection, not a composition: the axis plane's induced phase `R_0` (E030), projected L1 onto the join's share split, gives the faces `c = (1 + R_0) / 2` and `d = (1 - R_0) / 2`; at the bounce the nucleon split's pole stands at their antipole, `(Z - Q) / (Z + Q) = -R_0`, so `Q* / Z = c / d = (1 + R_0) / (1 - R_0)`; the torsion is inside `R_0`, so it holds at any spin; the isoclinic planes are orthogonal to the split | 5, 8, 13, T22, T23 |
 
 Reading (seed 7; a retired floating-point screen with exact held sets, to
 be read on the binary once the bounces are built, #79): the universal core holds 0.4352 of the

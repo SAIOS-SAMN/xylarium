@@ -11,6 +11,13 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- T24, the rest point as a projection (#245): E018's `Q* / Z = (1 + R_0) /
+  (1 - R_0)` is the ratio of the faces of the axis plane's induced phase
+  `R_0` projected L1 onto the join's share split, at rest the nucleon
+  pole at their antipole `(Z - Q) / (Z + Q) = -R_0`; the torsion is inside
+  `R_0`, so it holds at any spin, and the isoclinic planes are orthogonal
+  to the split. I017 is closed as restated; the numbers are unchanged.
+
 - The interlock's documents (#245): `docs/interfaces.md` lists every
   interface between the model's components as a transduction, with its
   lane, calibre, invariant and its inverse or residue; axioms 12

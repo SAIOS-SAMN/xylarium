@@ -23,6 +23,10 @@
 //!   light `mass x 32000 x crossing_share x efficiency`.
 //! - `Bell::arrivals`: rings reaching a place in a span, in closed form
 //!   (ring k sounds at born + k periods, arrives one light time later).
+//! - `path`, `crossed_kpc`: the front's arrival at a star, the separation of
+//!   the two points' time coordinates (E032): the arc plus the hold the
+//!   front crosses about its source (a galaxy core's to its own stars,
+//!   `M(<r) - 1`; other fronts S145).
 //!   `Bell::received`: the turning law, `360 h` degrees about the bell's
 //!   axis with `h = sigma / (d + sigma)` the face of the hole's strain
 //!   `sigma = spin r_g` against the reach, and the pitch's share `pitch h`
@@ -350,16 +354,37 @@ pub fn bells(nodes: &[Node], seed: u64) -> Vec<Bell> {
     nodes.iter().map(|n| Bell::of(n, seed)).collect()
 }
 
-/// The light delay (rings) and proper distance (kpc) from a bell to a place
-/// at `t` rings.
-pub fn path(node: &Node, place: &Place, t: Dy) -> (Dy, Dy) {
+/// The front's arrival (rings) and the proper distance (kpc) from a bell to
+/// `star`, standing at `place`, at `t` rings: the separation of the two
+/// points' time coordinates (E032, #245), the arc plus the hold the front
+/// crosses ([`crossed_kpc`]), at light's speed.
+pub fn path(node: &Node, star: &crate::galaxy::Star, place: &Place, t: Dy) -> (Dy, Dy) {
     let r = crate::chain::radius(t);
     let d = place.arc_kpc(&node.place(t, &r), &r);
     let c = c_kpc_per_ring();
     if c.signum() <= 0 {
         return (Dy::ZERO, d);
     }
-    (d.div(&c).unwrap_or_default(), d)
+    ((d + crossed_kpc(node, star)).div(&c).unwrap_or_default(), d)
+}
+
+/// The hold a bell's front crosses on its way to `star` (kpc at light's
+/// speed): a front is centred on its source, so `tau(d) = d + H(<d)` reads
+/// the hold about the bell. A galaxy's core sounds at its centre, so its
+/// front to one of its own stars is radial and crosses the galaxy's hold
+/// inside the star's reach less the core's own, `M(<r) - 1`
+/// (`galaxy::inside_mass`, at the star's home-equivalent reach), the reach
+/// and the hold dilated together by the galaxy's scale (one calibre per
+/// tier).
+pub fn crossed_kpc(node: &Node, star: &crate::galaxy::Star) -> Dy {
+    match &node.kind {
+        Kind::Core(sh) if sh.index == star.core => {
+            let held = &crate::galaxy::inside_mass(&star.r) - &Q::ONE;
+            crate::galaxy::kpc_of_units_dy(Dy::from_q(&held.max(Q::ZERO)) * star.scale)
+        }
+        // Stand-in S145: A front from a stellar hole or another galaxy's core crosses no hold.
+        _ => Dy::ZERO,
+    }
 }
 
 // ------------------------------------------------------------ The star transduces.
@@ -742,6 +767,35 @@ mod tests {
             ..b.clone()
         };
         assert_eq!(late.arrivals(delay, Dy::int(5), Dy::int(11)), 0);
+    }
+
+    /// The front's arrival is the separation of time coordinates (E032): a
+    /// galaxy core's front to its own star crosses the hold inside the
+    /// star's reach, never less than none, more for a star farther out, and
+    /// arrives no earlier than its arc alone; a stellar hole's front crosses
+    /// none (S145).
+    #[test]
+    fn a_cores_front_crosses_the_hold_inside_the_stars_reach() {
+        let origin = crate::genesis::origin();
+        let Kind::Stellar(s) = stellar(origin).kind else {
+            panic!("a stellar node")
+        };
+        let (c, h) = (core(), stellar(origin));
+        let crossed = crossed_kpc(&c, &s);
+        let want = (&crate::galaxy::inside_mass(&s.r) - &Q::ONE).max(Q::ZERO);
+        assert_eq!(
+            crossed,
+            crate::galaxy::kpc_of_units_dy(Dy::from_q(&want) * s.scale)
+        );
+        assert!(crossed.signum() >= 0);
+        assert_eq!(crossed_kpc(&h, &s), Dy::ZERO);
+        let mut far = (*s).clone();
+        far.r = &s.r * &Q::int(2);
+        assert!(crossed_kpc(&c, &far) >= crossed, "monotone in reach");
+        let t = Dy::int(40);
+        let place = s.place(t, &crate::chain::radius(t));
+        let (delay, d) = path(&c, &s, &place, t);
+        assert!(delay >= d.div(&c_kpc_per_ring()).unwrap_or_default());
     }
 
     #[test]

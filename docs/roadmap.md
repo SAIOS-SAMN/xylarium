@@ -536,10 +536,11 @@ where it belongs to one.
     breathing (`chain::breathing_turns`, the stars' orbits and the
     galaxies' circulation); the world manifolds' rates breathing over the
     star's galaxy core's echo, carried down the anchor chain
-    (`Manifold::stand`).
+    (`Manifold::stand`); the centre's crossing share, the horizon's held face
+    (`centre::crossing_share`, one third).
     Order: the bell's period, the founding swing and the kept kinds on the throat
-    orbit (S142), the centre's crossing share (S017), the field's step per
-    ring, and the hold passing between the pair's faces.
+    orbit (S142), the field's step per ring, and the hold passing between the
+    pair's faces.
 69. **The interlock** ([#245](https://github.com/SAIOS-SAMN/xylarium/issues/245), `law`, `docs`, `track`; ruled 2026-11-15).
     The components meet through transductions listed in
     [interfaces.md](interfaces.md) (axiom 13), every offset an automorphism

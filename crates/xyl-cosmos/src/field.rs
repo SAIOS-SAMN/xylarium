@@ -25,7 +25,7 @@
 //!   (ring k sounds at born + k periods, arrives one light time later).
 //! - `path`, `crossed_kpc`: the front's arrival at a star, the separation of
 //!   the two points' time coordinates (E032): the arc plus the hold the
-//!   front crosses about its source (a galaxy core's to its own stars,
+//!   front crosses about its source (a galaxy core's to the stars of its galaxy,
 //!   `M(<r) - 1`; other fronts S145).
 //!   `Bell::received`: the turning law, `360 h` degrees about the bell's
 //!   axis with `h = sigma / (d + sigma)` the face of the hole's strain
@@ -371,7 +371,7 @@ pub fn path(node: &Node, star: &crate::galaxy::Star, place: &Place, t: Dy) -> (D
 /// The hold a bell's front crosses on its way to `star` (kpc at light's
 /// speed): a front is centred on its source, so `tau(d) = d + H(<d)` reads
 /// the hold about the bell. A galaxy's core sounds at its centre, so its
-/// front to one of its own stars is radial and crosses the galaxy's hold
+/// front to a star of its galaxy is radial and crosses the galaxy's hold
 /// inside the star's reach less the core's own, `M(<r) - 1`
 /// (`galaxy::inside_mass`, at the star's home-equivalent reach), the reach
 /// and the hold dilated together by the galaxy's scale (one calibre per
@@ -770,7 +770,7 @@ mod tests {
     }
 
     /// The front's arrival is the separation of time coordinates (E032): a
-    /// galaxy core's front to its own star crosses the hold inside the
+    /// galaxy core's front to a star of its galaxy crosses the hold inside the
     /// star's reach, never less than none, more for a star farther out, and
     /// arrives no earlier than its arc alone; a stellar hole's front crosses
     /// none (S145).

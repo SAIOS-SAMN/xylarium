@@ -92,6 +92,7 @@ mod founding;
 mod galaxy;
 mod network;
 mod peoples;
+mod proofs;
 mod substrate;
 mod universe;
 mod worlds;
@@ -211,6 +212,17 @@ fn law_reading(o: &Options, what: &[String]) -> Result<Option<String>, String> {
                 None => None,
             };
             substrate::core_read(o, r)?
+        }
+        Some("proofs") => {
+            // The register's theorems as residues at R rings (the first
+            // stars by default).
+            let r = match what.get(1) {
+                Some(v) => {
+                    Some(xyl_kernel::checkpoint::q_of(v).ok_or("observe proofs [R]: R in rings")?)
+                }
+                None => None,
+            };
+            proofs::proofs_read(o, r)?
         }
         // The cascade report already ends each line with a newline.
         Some("founding") => return founding::founding_cascade(o).map(Some),

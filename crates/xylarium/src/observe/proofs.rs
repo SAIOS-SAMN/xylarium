@@ -1,0 +1,133 @@
+//! The `proofs` reading: each theorem of the register (docs/model.md, Axioms
+//! and theorems) that this reading witnesses, read on the seed's universe as
+//! its residue, the left side less the right, at T (R rings after the
+//! bounce, the first stars by default). An exact identity reads 0; a reading
+//! carried on the dyadic grid reads its grid's residue, never rounded away.
+//! A law the engine reads at T (the medium's carry about every galaxy) is
+//! read at T, from the engine's own value; the theorems witnessed here are
+//! identities, so their residues do not change with T.
+
+use super::Options;
+use crate::run::{show, Founded};
+use xyl_core::dyadic::Dy;
+use xyl_core::shares::{dilation, flow};
+use xyl_core::Q;
+
+/// The residues at `t_rings` (the first stars by default).
+pub(super) fn proofs_read(o: &Options, t_rings: Option<Q>) -> Result<String, String> {
+    let Founded { origin, .. } = Founded::of(o.seed)?;
+    let sub = xyl_cosmos::cores::substrate(&origin).ok_or("no founding")?;
+    let t_rings = t_rings.unwrap_or_else(|| xyl_cosmos::circuit::anchor().first_stars);
+    let t = Dy::from_q(&t_rings);
+    let a = xyl_cosmos::circuit::anchor().core_spin.clone();
+    let s = xyl_cosmos::bounce::torsion_share(&Q::ONE, &a);
+    let at = xyl_core::coordinate::beat(&t_rings, 5).unwrap_or_else(|_| show(&t_rings));
+    let mut out = format!(
+        "The proofs at T {at} (seed {}): the core's spin a {}, its torsion share s {}\n",
+        o.seed,
+        show(&a),
+        show(&s)
+    );
+    let line = |out: &mut String, id: &str, what: &str, r: Option<Q>| {
+        let r = r.map_or_else(|| "refused".to_string(), |r| show(&r));
+        out.push_str(&format!("  {id}: {what}: residue {r}\n"));
+    };
+    let three_a = &Q::int(3) + &a;
+    let n = a.checked_div(&(&Q::int(4) + &a));
+    // T2: D(s) = 3 + a, and the twist n = 2s - 1.
+    line(
+        &mut out,
+        "T2",
+        "D(s) - (3 + a)",
+        dilation(&s).map(|d| &d - &three_a),
+    );
+    line(
+        &mut out,
+        "T2",
+        "(2s - 1) - a / (4 + a)",
+        n.as_ref().map(|n| &(&(&Q::int(2) * &s) - &Q::ONE) - n),
+    );
+    // T4: the echo is the bell over the open share, on the dyadic grid.
+    let echo = xyl_cosmos::circuit::echo_at(&sub.share);
+    let open = Dy::from_q(&(&Q::ONE - &sub.share));
+    line(
+        &mut out,
+        "T4",
+        "echo (1 - s) - bell, at the founded share",
+        Some((echo.mul(&open) - xyl_cosmos::circuit::bell()).to_q()),
+    );
+    // T16: the faces of a paired throat multiply to (3 + a)^2 at every
+    // polarity; read at A = 1.
+    let faces = dilation(&s)
+        .zip(n.as_ref().and_then(dilation))
+        .and_then(|(ds, dn)| {
+            let far = ds.checked_div(&dn)?;
+            Some(&(&(&ds * &dn) * &far) - &(&three_a * &three_a))
+        });
+    line(&mut out, "T16", "D(s) D(n) D(s) / D(n) - (3 + a)^2", faces);
+    // T17: the far face's dilation.
+    let far = (&Q::int(6) + &a).checked_div(&(&Q::int(2) + &a));
+    line(
+        &mut out,
+        "T17",
+        "D(1 - s) - (6 + a) / (2 + a)",
+        dilation(&(&Q::ONE - &s)).zip(far).map(|(d, f)| &d - &f),
+    );
+    // T20: a pair sharing one hold reads its horizon at one third.
+    line(
+        &mut out,
+        "T20",
+        "delta_h(M, M) - 1/3",
+        xyl_cosmos::bounce::horizon_share(&Q::ONE, &Q::ONE)
+            .zip(Q::new(1, 3))
+            .map(|(h, third)| &h - &third),
+    );
+    // T9 at T: the medium's carry about every galaxy carries out the pair
+    // share of the throat's torsion share, s (+) -(1 - s), which is the
+    // twist n = 2s - 1 composed with its third.
+    let n9 = &(&Q::int(2) * &sub.share) - &Q::ONE;
+    let want = n9
+        .checked_div(&Q::int(3))
+        .and_then(|third| flow(&n9, &third));
+    for g in sub.push(t) {
+        let c = sub.carry(g.reach0, t);
+        line(
+            &mut out,
+            "T9",
+            &format!(
+                "galaxy {} at reach {}: its carry's outward share - n (+) n / 3",
+                g.index, g.reach0
+            ),
+            want.as_ref().map(|w| &c.outward - w),
+        );
+    }
+    // T24: every founded kind's rest point is the antipole of its axis
+    // plane's induced phase, (Z - Q*) / (Z + Q*) = -R_0.
+    let (mix, spin) = super::founding::founding_mix(o)?;
+    let share = xyl_cosmos::bounce::torsion_share(&Q::ONE, &spin);
+    let (_, table, _) = xyl_cosmos::formation::founding_shells(&mix, &spin);
+    let common = xyl_core::hopf::COMMON;
+    let (mut kinds, mut worst) = (0usize, Q::ZERO);
+    for (z, parcels) in &table {
+        let capture = xyl_cosmos::circuit::capture_phases(*z, &share, &common);
+        let Some([r0, ..]) = xyl_cosmos::circuit::induced_phases(*z, &capture, &common, &share)
+        else {
+            continue;
+        };
+        for p in parcels {
+            let v = p.pairs.value();
+            let pole = (&Q::ONE - &v).checked_div(&(&Q::ONE + &v));
+            if let Some(r) = pole.map(|pole| (&pole + &r0).abs()) {
+                kinds += 1;
+                worst = worst.max(r);
+            }
+        }
+    }
+    line(
+        &mut out,
+        "T24",
+        &format!("the largest |(Z - Q*) / (Z + Q*) + R_0| over {kinds} founded parcels"),
+        Some(worst),
+    );
+    Ok(out)
+}

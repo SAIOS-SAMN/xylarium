@@ -11,6 +11,15 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The induced turn (`xyl_core::hopf::induce`, `Sense`): a throat's torsion
+  induced on every plane's phase on the pair's two faces, the spin face
+  `w_p 360 s` and the inverse face `-w_p 360 (1 - s)` degrees with the
+  torsion share `s`, whole turns carried apart: the weighted Seifert action
+  read on the phases, each face tested as an automorphism (additive
+  composition, commuting with the Hopf action, the point of `CP^5` kept in
+  the common winding) and against `hopf::turn`; a spin and its inverse
+  compose to the shear `w_p 360 (2s - 1)`.
+
 - The coupling, FORMS-COUPLING v1 (LAW-COUPLING v1, 78.175), in
   `xyl_core::coupling`: dipole parcels from their frames per turning plane
   (founded by the even split, bonded plane by plane), the range's field

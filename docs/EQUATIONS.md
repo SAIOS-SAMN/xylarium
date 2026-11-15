@@ -122,6 +122,21 @@ sites are restated. The derivations are in
   `Lk = sum_{q=1..5} (w_i0 w_jq + w_j0 w_iq)` (`linking`), the strata's
   `Lk(S^1_axis, S^9_iso) = 1` (`STRATA_LINKING`). Calibre: none. Status:
   built (ruled 2026-11-11).
+- Induced turn (`xyl_core::hopf::induce`, ruled 2026-11-15): a throat's
+  torsion induced on every plane's phase on the attractor pair's two faces,
+  never equal: with the torsion share `s = (H + J) / (2H + J)` read from the
+  spin, the spin face turns `w_p 360 s` degrees and the inverse face
+  `-w_p 360 (1 - s)` (`Sense`), the whole turns and the degrees carried
+  apart (`rotor::Winding`). Each face is the weighted Seifert action read on
+  the phases: it composes by adding degrees, commutes with the Hopf action,
+  keeps the point of `CP^5` in the common winding, leaves a plane of winding
+  zero untouched, and agrees with `turn` on each plane's vector. A spin and
+  its inverse torsion compose to the shear `w_p 360 (2s - 1)`
+  `= w_p 360 J / (2H + J)` degrees, a sheared return, zero only where the
+  throat does not spin. Never a flow-law offset of a share (the flow law is
+  the boost's composition, on S; a phase is a turning, on H) and never an
+  even split. Calibre: none (degrees and turns). Status: built; the
+  electron phase `R_p` reading it is next.
 - Capture phase (`circuit::found`): `(share Z) mod 1`, exact; its
   denominator divides the torsion share's. Calibre: none. Status: built.
 - Coordinate (`xyl_core::coordinate`, FORMS-COORDINATE v4, reconstructed

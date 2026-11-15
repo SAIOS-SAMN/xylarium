@@ -47,6 +47,11 @@
 //!   of planes leaves the common phase unchanged, so only the tilt of one
 //!   generator deforms it.
 //!
+//! - [`induce`]: the torsion's turn induced on every plane's phase, the spin
+//!   face `w_p 360 s` and the inverse face `-w_p 360 (1 - s)` degrees
+//!   ([`Sense`]), never equal, whole turns carried: the Seifert action read
+//!   on the phases; a spin and its inverse compose to the shear.
+//!
 //! Invariants: every value is exact. A plane index past five, a weight with
 //! `l = 0` (one state, which overlaps itself wholly), shares that are negative
 //! or do not sum to one, and a linking past `i64` are refused (`None`).
@@ -160,6 +165,51 @@ pub fn plane(p: usize) -> Option<(usize, usize)> {
     (p < PLANES).then_some((2 * p + 1, 2 * p + 2))
 }
 
+/// How a plane takes the turn the torsion induces: on the spin face, with
+/// the turning, or on the inverse face, against it as inverse torsion.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Sense {
+    /// The spin face: `+w_p 360 s` degrees.
+    Spin,
+    /// The inverse face: `-w_p 360 (1 - s)` degrees.
+    InverseTorsion,
+}
+
+/// The turn a throat's torsion induces on every plane's phase, the two
+/// faces of the attractor pair never equal: with the torsion share `s`
+/// (`(H + J) / (2H + J)`, read from the spin, never set), the spin face
+/// turns `w_p 360 s` degrees ([`holonomy`] of `s`) and the inverse face
+/// `-w_p 360 (1 - s)` (of `1 - s`), plane by plane as `senses` reads each
+/// plane's face, the whole turns and the degrees carried apart
+/// ([`Winding`](crate::rotor::Winding)). Each face is the weighted Seifert
+/// action `z_p -> e^{i w_p theta} z_p` read on the phases ([`turn`] on the
+/// vectors): an automorphism that composes by adding degrees and commutes
+/// with the Hopf action; in the common winding on one face it moves only
+/// along the fibre and keeps the point of `CP^5`; a plane of winding zero
+/// takes nothing. A spin and its inverse torsion compose to the shear
+/// `w_p 360 (2s - 1)` degrees, a sheared return, never the identity unless
+/// the throat does not spin. Never a flow-law offset of a share, never an
+/// even split. `None` for `s` outside `[0, 1]`.
+pub fn induce(
+    phases: &[crate::rotor::Winding; PLANES],
+    w: &[i64; PLANES],
+    torsion: &Q,
+    senses: &[Sense; PLANES],
+) -> Option<[crate::rotor::Winding; PLANES]> {
+    let spin = holonomy(torsion)?.over(crate::nonzero!(360));
+    let inverse = holonomy(&(&Q::ONE - torsion))?.over(crate::nonzero!(360));
+    let mut out = phases.clone();
+    for (p, at) in out.iter_mut().enumerate() {
+        let wp = Q::int(*w.get(p)?);
+        let by = match senses.get(p)? {
+            Sense::Spin => &wp * &spin,
+            Sense::InverseTorsion => -(&wp * &inverse),
+        };
+        *at = crate::rotor::Winding::of_turns(&(&at.turns() + &by));
+    }
+    Some(out)
+}
+
 /// The weighted turn `z_p -> e^{i w_p theta} z_p` by `degrees` on every
 /// plane, each plane's half-angle on the grid of `2^-bits`. `None` where a
 /// plane's gridded half-angle is the zero direction.
@@ -248,6 +298,85 @@ mod tests {
 
     fn vector(v: [i64; AXES]) -> [Encl; AXES] {
         v.map(|k| Encl::exact(Q::int(k)))
+    }
+
+    fn phases(turns: [(i64, i64); PLANES]) -> [crate::rotor::Winding; PLANES] {
+        turns.map(|(n, d)| crate::rotor::Winding::of_turns(&Q::new(n, d).unwrap()))
+    }
+
+    /// The induced turn is the Seifert automorphism on each face: a face
+    /// composes by adding degrees and commutes with the Hopf action; in the
+    /// common winding on one face it keeps the relative phases, the point of
+    /// CP^5; a plane of winding zero takes nothing; a spin and its inverse
+    /// torsion compose to the shear `w_p 360 (2s - 1)`, signed with the spin
+    /// and zero only for a throat that does not spin; and each face agrees
+    /// with the rotor `turn` on each plane's vector.
+    #[test]
+    fn the_induced_turn_is_the_seifert_automorphism_on_each_face() {
+        let r = phases([(1, 3), (-1, 4), (1, 7), (0, 1), (2, 5), (-3, 8)]);
+        let w = [1, 2, 0, -1, 3, 1];
+        let (spin, inverse) = ([Sense::Spin; PLANES], [Sense::InverseTorsion; PLANES]);
+        // A spinning throat, H = 1 and J = 1/2: s = (H + J) / (2H + J) = 3/5.
+        let s = Q::new(3, 5).unwrap();
+        let turns = |x: &[crate::rotor::Winding; PLANES]| x.clone().map(|v| v.turns());
+        let there = induce(&r, &w, &s, &spin).unwrap();
+        // The pair composes to the shear, never the identity.
+        let back = induce(&there, &w, &s, &inverse).unwrap();
+        let shear = &(&Q::int(2) * &s) - &Q::ONE;
+        for p in 0..PLANES {
+            assert_eq!(&back[p].turns() - &r[p].turns(), &Q::int(w[p]) * &shear);
+        }
+        // A throat that does not spin has s = 1/2: its faces are the same
+        // share, and only then the pair returns.
+        let still = Q::new(1, 2).unwrap();
+        let round = induce(
+            &induce(&r, &w, &still, &spin).unwrap(),
+            &w,
+            &still,
+            &inverse,
+        )
+        .unwrap();
+        assert_eq!(turns(&round), turns(&r));
+        // One face composes by adding degrees: the turns of s twice are the
+        // turns of 2s, read as one holonomy of each.
+        let twice = induce(&there, &w, &s, &spin).unwrap();
+        for p in 0..PLANES {
+            assert_eq!(&twice[p].turns() - &r[p].turns(), &Q::int(2 * w[p]) * &s);
+        }
+        // Commutes with the Hopf action.
+        let phi = Q::new(3, 10).unwrap();
+        let common = |x: &[crate::rotor::Winding; PLANES]| {
+            x.clone()
+                .map(|v| crate::rotor::Winding::of_turns(&(&v.turns() + &phi)))
+        };
+        assert_eq!(
+            turns(&induce(&common(&r), &w, &s, &spin).unwrap()),
+            turns(&common(&there))
+        );
+        // The common winding on one face keeps the point of CP^5.
+        let moved = induce(&r, &COMMON, &s, &inverse).unwrap();
+        let relative = |x: &[crate::rotor::Winding; PLANES]| {
+            let t = turns(x);
+            t.clone().map(|v| &v - &t[0])
+        };
+        assert_eq!(relative(&moved), relative(&r));
+        // Winding zero takes nothing; a share outside [0, 1] is refused.
+        assert_eq!(there[2], r[2]);
+        assert!(induce(&r, &w, &Q::int(2), &spin).is_none());
+        // Each face agrees with the rotor on each plane.
+        for (share, sign) in [(s.clone(), 1i64), (&Q::ONE - &s, -1i64)] {
+            let theta = &holonomy(&share).unwrap() * &Q::int(sign);
+            let rotor = turn(&w, &theta, 64).unwrap();
+            for p in 0..PLANES {
+                let mut e = [0i64; AXES];
+                e[2 * p] = 1;
+                let v = rotor.apply(&vector(e));
+                let (c, sn) = crate::rotor::circle_point(&(&theta * &Q::int(w[p])), 64).unwrap();
+                let tiny = Q::new(1, 1_000_000_000).unwrap();
+                assert!((&v[2 * p].mid() - &c).abs() < tiny);
+                assert!((&v[2 * p + 1].mid() - &sn).abs() < tiny);
+            }
+        }
     }
 
     #[test]

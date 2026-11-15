@@ -545,8 +545,9 @@ where it belongs to one.
     (axiom 12), every composition by its plane's kind (axiom 3). Done: the
     induced turn (`hopf::induce`, T22, T23); the axioms restated; the
     interfaces listed; R read through the induced turn on every plane
-    (`circuit::induced_phases`, E030). Order: E018's rest point as the transduction from H to the join
-    (I017, T24); a machine-readable theorem register with
+    (`circuit::induced_phases`, E030); E018's rest point as the
+    L1 projection of the induced `R_0` onto the join, at rest as its
+    antipole (T24, I017 closed). Order: a machine-readable theorem register with
     `scripts/check-theorems`; the proofs witnessed on the running engine
     (`xylarium observe proofs`).
 53. **The name Q** ([#151](https://github.com/SAIOS-SAMN/xylarium/issues/151), `docs`; ruled 2026-11-10: two counts named apart, the mass weight `m_Z = Z + Q` the hold and `cap` the room): five meanings.

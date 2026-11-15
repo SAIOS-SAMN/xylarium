@@ -352,15 +352,15 @@ fn reach_after(r0: &Q, m: &Q, h: &Q, tau: Dy) -> Option<Q> {
 }
 
 /// A kind's rest point at the bounce (E018, ruled 2026-11-11): the
-/// medium's push is zero at a bounce, so the nucleon split balances the
-/// electrons' phase, `p*_nuc = -R`, and `3Q* / 3Z = D(R)`, so
-/// `Q* / Z = D(R) = (1 + R) / (1 - R)`, exact, with `R` the kind's
+/// medium's push is zero at a bounce, so the nucleon split's pole stands at
+/// the antipole of the axis phase's L1 projection onto the join (T24), the
+/// share split `(1 + R) / 2`, `(1 - R) / 2`: `(Z - Q) / (Z + Q) = -R`, so
+/// `Q* / Z = (1 + R) / (1 - R)`, exact, with `R` the kind's
 /// electron phase at its capture phase `frac(s Z)` after the throat's
 /// torsion is induced on it (`circuit::induced_phases`, E030), read on the
 /// axis plane; in the common phase the six planes read one `R` (E016). The
-/// dilation is open as I017 (the transduction from H to the join is to be
-/// derived, T24). `None` where `abs(R) = 1`, no rest point, or where the
-/// torsion share is no share.
+/// torsion is inside `R`, so the rest point holds at any spin. `None` where
+/// `abs(R) = 1`, no rest point, or where the torsion share is no share.
 fn rest_point(z: u32, share: &Q) -> Option<FacePairs> {
     let common = xyl_core::hopf::COMMON;
     let capture = crate::circuit::capture_phases(z, share, &common);

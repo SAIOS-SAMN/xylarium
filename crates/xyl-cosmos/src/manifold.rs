@@ -13,8 +13,10 @@
 //!
 //! Outputs:
 //! - `manifolds` -> one `Manifold` per world: rate in degrees per ring from
-//!   the turning law, eccentricity relaxing toward its forced value
-//!   (`Manifold::e`, `bodies::eccentricity`), plane as an exact rotor of
+//!   the turning law, breathing over the star's galaxy core's echo at the
+//!   anchor's deficit (`chain::breathing_turns`, #233 item 5), eccentricity
+//!   relaxing toward its forced value (`Manifold::e`,
+//!   `bodies::eccentricity`), plane as an exact rotor of
 //!   turns in degrees, twist per turn equal to the anchor's deficit. A
 //!   giant's moons sit on a 2:1 chain: each rate is the innermost's halved k
 //!   times, k the nearest power of two to the turning-law ratio.
@@ -109,6 +111,13 @@ pub struct Manifold {
     /// On a captured chain: the innermost moon's index and this moon's step
     /// count along the chain (`None` for a planet).
     pub chain: Option<(usize, u32)>,
+    /// The star's birth (rings after the origin): an age is counted from it,
+    /// the bell's phase from the origin.
+    pub born: Q,
+    /// The echo (rings) the orbit breathes over: the star's galaxy core's
+    /// (`galaxy::Orbit::echo`), carried down the anchor chain to the star's
+    /// worlds and their moons (#233 item 5).
+    pub echo: Dy,
 }
 
 /// The manifolds of a star's planets and moons, from the same orbits used
@@ -183,6 +192,8 @@ pub fn manifolds(
                     twist_deg: crate::turning::twist_per_turn(&host_kg, &a_m),
                     mass_ratio: mass_kg.checked_div(&host_kg).unwrap_or(Q::ZERO),
                     chain,
+                    born: star.born.clone(),
+                    echo: star.orbit.echo,
                 });
             }
             _ => {
@@ -210,6 +221,8 @@ pub fn manifolds(
                     twist_deg: crate::turning::twist_per_turn(&star_kg, &o.a_m),
                     mass_ratio: mass_kg.checked_div(&star_kg).unwrap_or(Q::ZERO),
                     chain: None,
+                    born: star.born.clone(),
+                    echo: star.orbit.echo,
                 });
             }
         }
@@ -248,6 +261,24 @@ impl Manifold {
         }
     }
 
+    /// Mean phase at `age` rings (turns): the phase at the star's birth plus
+    /// the turning, the mean rate breathing with the core's bell as the
+    /// manifold deforms about the hold inside the orbit
+    /// (`chain::breathing_turns`, at the anchor's deficit `twist_deg / 360`):
+    /// the swing accumulated from the star's birth to the age, the bell's
+    /// phase read from the origin. The mean rate alone where the echo is
+    /// zero.
+    fn mean_at(&self, age: &Q, all: &[Manifold]) -> Encl {
+        let rate = self.rate(all);
+        let mean = Encl::exact(self.m0.clone()).add(&rate.mul(&Encl::exact(age.clone())));
+        let per = Dy::from_q(&rate.mid());
+        let delta = Dy::from_q(&self.twist_deg.checked_div(&Q::int(360)).unwrap_or(Q::ZERO));
+        let (from, to) = (Dy::from_q(&self.born), Dy::from_q(&(&self.born + age)));
+        let turns = |t: Dy| crate::chain::breathing_turns(per, delta, t, self.echo);
+        let swing = turns(to) - turns(from) - per * (to - from);
+        mean.add(&Encl::exact(swing.to_q()))
+    }
+
     /// Eccentricity at `age` rings: the one relaxation law
     /// (`bodies::eccentricity`), its time constant `tau_e` in rings.
     pub fn e(&self, age: &Q) -> Encl {
@@ -261,7 +292,7 @@ impl Manifold {
     /// State at `age` rings (since the star's birth).
     pub fn stand(&self, age: &Q, all: &[Manifold]) -> Stand {
         let ecc = self.e(age);
-        let mean = Encl::exact(self.m0.clone()).add(&self.rate(all).mul(&Encl::exact(age.clone())));
+        let mean = self.mean_at(age, all);
         // The orbit as two circles: the main circle at the turning rate, and
         // the stretch as a second circle at twice the rate, radius a e / 2,
         // about a centre offset by -3 a e / 2 along x:
@@ -311,7 +342,7 @@ impl Manifold {
     /// linear in the elements.
     pub fn bearing(&self, age: &Q, all: &[Manifold]) -> Bearing {
         let ecc = self.e(age);
-        let mean = Encl::exact(self.m0.clone()).add(&self.rate(all).mul(&Encl::exact(age.clone())));
+        let mean = self.mean_at(age, all);
         let (cm, _) = cos_sin_turns(&mean);
         let along = mean.add(&self.twist(&ecc, all).mul(&Encl::exact(age.clone())));
         Bearing {
@@ -512,4 +543,72 @@ pub fn galaxy_place(
     let age = (t - Dy::from_q(&star.born)).to_q();
     let out = &out_to_star(all, world, &age)? * &dilation(Tier::System, Tier::Galaxy);
     Some(star.place(t, r).standing_off(&out))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A planet's manifold at deficit `delta` (twist `360 delta`), turning one
+    /// degree a ring, born `born` rings after the origin, breathing over
+    /// `echo` rings.
+    fn breathing(delta: Q, born: Q, echo: Dy) -> Manifold {
+        Manifold {
+            world: 0,
+            anchor: Anchor::Star,
+            tier: Tier::System,
+            a: Q::ONE,
+            e0: Q::ZERO,
+            e_forced: Q::ZERO,
+            tau_e: Q::ZERO,
+            rate: Q::ONE,
+            m0: Q::new(1, 8).unwrap(),
+            rotor: Rotor::identity(),
+            twist_deg: &Q::int(360) * &delta,
+            mass_ratio: Q::ZERO,
+            chain: None,
+            born,
+            echo,
+        }
+    }
+
+    /// The orbit's rate breathes with the core's bell (#233 item 5): over
+    /// whole echoes the phase returns to the mean turning; between them it
+    /// swings by at most `rate delta (1 - delta) echo / pi`; with no deficit,
+    /// or no echo, it is the mean turning.
+    #[test]
+    fn a_worlds_orbit_breathes_with_the_cores_bell() {
+        let (delta, echo) = (Q::new(1, 3).unwrap(), Dy::from_q(&Q::int(12)));
+        let m = breathing(delta.clone(), Q::new(5, 2).unwrap(), echo);
+        let all = std::slice::from_ref(&m);
+        let rate = m.rate(all).mid();
+        let mean = |age: &Q| &m.m0 + &(&rate * age);
+        let tiny = Q::new(1, 1 << 40).unwrap();
+        for k in 1..=4 {
+            let age = Q::int(12 * k);
+            let off = (&m.stand(&age, all).mean.mid() - &mean(&age)).abs();
+            assert!(off < tiny, "whole echoes return to the mean: {off} at {k}");
+        }
+        let bound = &(&(&rate * &delta) * &(&Q::ONE - &delta)) * &Q::new(12 * 113, 355).unwrap();
+        let mut swung = false;
+        for n in 1..48 {
+            let age = Q::new(n, 4).unwrap();
+            let off = &m.stand(&age, all).mean.mid() - &mean(&age);
+            assert!(
+                off.abs() <= &bound + &tiny,
+                "the swing is bounded at {age}: {off}"
+            );
+            swung |= off.abs() > tiny;
+        }
+        assert!(swung, "the orbit breathes between whole echoes");
+        for flat in [
+            breathing(Q::ZERO, Q::ONE, echo),
+            breathing(delta, Q::ONE, Dy::ZERO),
+        ] {
+            let all = std::slice::from_ref(&flat);
+            let age = Q::new(7, 3).unwrap();
+            let want = &flat.m0 + &(&flat.rate(all).mid() * &age);
+            assert!((&flat.stand(&age, all).mean.mid() - &want).abs() < tiny);
+        }
+    }
 }

@@ -11,6 +11,15 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The world manifolds breathe (#233 item 5). A planet's and a moon's mean
+  phase (`Manifold::stand`, `Manifold::bearing`) is the mean turning plus
+  the swing the core's bell gives the hold inside the orbit
+  (`chain::breathing_turns`), at the anchor's deficit `twist_deg / 360`,
+  over the echo of the star's galaxy core carried down the anchor chain
+  (`Manifold::echo`), accumulated from the star's birth (`Manifold::born`)
+  so the bell's phase is read from the origin. Over whole echoes the phase
+  is the mean turning. The orbit rates of every tier now breathe.
+
 - `xylarium observe proofs [R]`: the theorem register's witnessed theorems
   as residues on the seed's universe at R rings. T2, T9 (the medium's carry
   about every galaxy), T16, T17, T20 and T24 (all 1,092 founded parcels of

@@ -129,6 +129,8 @@ fn orbit_gaps_and_voyages_follow_drives_and_wells() {
         twist_deg: Q::ZERO,
         mass_ratio: Q::ZERO,
         chain: None,
+        born: Q::ZERO,
+        echo: Dy::ZERO,
     };
     let unit = Dy::from_q(&super::tier_m(Tier::System));
     let half = Q::new(1, 2).unwrap();

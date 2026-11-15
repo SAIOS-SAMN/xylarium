@@ -82,6 +82,26 @@ pub(super) fn proofs_read(o: &Options, t_rings: Option<Q>) -> Result<String, Str
             .zip(Q::new(1, 3))
             .map(|(h, third)| &h - &third),
     );
+    // T21: the horizon is axial: at the core's spin, with no vent and no
+    // tilt, the axis plane balances at the pair's hold 2M and every turning
+    // plane at 2M + aM; read on a unit hold, the largest residue of the six.
+    let axial = xyl_cosmos::bounce::horizon_planes((&Q::ONE, &Q::ONE), &Q::ZERO, &a, &Q::ZERO).map(
+        |planes| {
+            let held = Q::int(2);
+            let turned = &held + &a;
+            planes
+                .iter()
+                .enumerate()
+                .map(|(p, r)| (r - if p == 0 { &held } else { &turned }).abs())
+                .fold(Q::ZERO, Q::max)
+        },
+    );
+    line(
+        &mut out,
+        "T21",
+        "the six planes' reaches - (2M on the axis, 2M + aM on the turning planes)",
+        axial,
+    );
     // T9 at T: the medium's carry about every galaxy carries out the pair
     // share of the throat's torsion share, s (+) -(1 - s), which is the
     // twist n = 2s - 1 composed with its third.

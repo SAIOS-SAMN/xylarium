@@ -11,7 +11,7 @@ use xyl_cosmos::origin::Origin;
 
 /// The founding's mix of `o`'s seed (each kind's share of the holding, as
 /// `circuit::Substrate::found` reads it) and the parent's spin.
-fn founding_mix(o: &Options) -> Result<(Vec<(u32, Q)>, Q), String> {
+pub(super) fn founding_mix(o: &Options) -> Result<(Vec<(u32, Q)>, Q), String> {
     let f = Founded::of(o.seed)?;
     let mix = xyl_cosmos::formation::kinds(&f.elements)
         .iter()

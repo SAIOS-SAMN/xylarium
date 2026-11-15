@@ -11,6 +11,12 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- `xylarium observe proofs [R]`: the theorem register's witnessed theorems
+  as residues on the seed's universe at R rings. T2, T9 (the medium's carry
+  about every galaxy), T16, T17, T20 and T24 (all 1,092 founded parcels of
+  seed 7) read 0; T4 reads its dyadic grid's residue. It is the witness of
+  those rows in the register, and T20 is built (8 of 24).
+
 - The theorems' identities that read no founding are tested in
   `crates/xyl-cosmos/tests/theorems.rs`, outside the founding digest: T2's
   torsion share `D(s) = 3 + a` and `2s - 1 = n`, T4's echo, T9's pair share

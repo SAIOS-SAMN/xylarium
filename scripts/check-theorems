@@ -1,0 +1,154 @@
+#!/usr/bin/env python3
+"""The theorem register and the code agree (docs/model.md, Axioms and
+theorems; #245 step 4).
+
+Each theorem row reads `| T# | statement | from | site | test | witness |
+status |`, and the check enforces six things:
+
+1. Every "from" names an axiom of the list above the table, or a theorem
+   in the table.
+2. The graph of "from" has no cycle.
+3. Every code site named in backticks is declared in the workspace's Rust
+   sources. The site's last path segment is looked up, as an item or as a
+   module file.
+4. Every test names a `#[test]` function that exists.
+5. Every witness names a word of `xylarium observe`.
+6. The status is truthful:
+   - `built` has a site, a test and a witness;
+   - `partial: ...` has a site and names an issue for what is open;
+   - `planned` names an issue.
+
+Usage: scripts/check-theorems   (from the repository root; exit 1 on failure)
+"""
+
+import glob
+import os
+import re
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.chdir(ROOT)
+
+MODEL = "docs/model.md"
+SOURCES = sorted(glob.glob("crates/*/src/**/*.rs", recursive=True))
+TEXT = {p: open(p, encoding="utf-8").read() for p in SOURCES}
+failures = []
+
+
+def cells(line):
+    """A table row's cells, with a `|` inside backticks kept in its cell."""
+    out, cur, code = [], "", False
+    for ch in line.strip()[1:]:
+        if ch == "`":
+            code = not code
+        if ch == "|" and not code:
+            out.append(cur.strip())
+            cur = ""
+        else:
+            cur += ch
+    return out
+
+
+def declared(name):
+    item = re.compile(
+        r"\b(?:fn|struct|enum|trait|type|const|static|mod)\s+" + re.escape(name) + r"\b"
+    )
+    if any(item.search(t) for t in TEXT.values()):
+        return True
+    return any(
+        os.path.basename(p) in (name + ".rs",) or p.endswith("/" + name + "/mod.rs")
+        for p in SOURCES
+    )
+
+
+def is_test(name):
+    test = re.compile(r"#\[test\]\s*(?:#\[[^\]]*\]\s*)*fn\s+" + re.escape(name) + r"\s*\(")
+    return any(test.search(t) for t in TEXT.values())
+
+
+observe = TEXT.get("crates/xylarium/src/observe/mod.rs", "")
+WORDS = set(re.findall(r'Some\("([a-z-]+)"\)', observe))
+ISSUE = re.compile(r"\[#\d+\]\([^)]*\)")
+
+lines = open(MODEL, encoding="utf-8").read().split("\n")
+try:
+    start = lines.index("Axioms:")
+    head = lines.index("| | Statement | From | Site | Test | Witness | Status |")
+except ValueError:
+    print("check-theorems: the axioms' list or the register's header is missing")
+    sys.exit(1)
+axioms = {
+    m.group(1)
+    for l in lines[start:head]
+    for m in [re.match(r"^(\d+)\. \*\*", l)]
+    if m
+}
+
+rows = {}
+for i, line in enumerate(lines[head + 2 :], head + 3):
+    if not line.startswith("| T"):
+        break
+    c = cells(line)
+    if len(c) != 7 or not re.fullmatch(r"T\d+", c[0]):
+        failures.append(f"{MODEL}:{i}: malformed theorem row")
+        continue
+    if c[0] in rows:
+        failures.append(f"{MODEL}:{i}: {c[0]} listed twice")
+    rows[c[0]] = (i, c)
+
+graph = {}
+for t, (i, (_, _, frm, site, test, witness, status)) in rows.items():
+    refs = [r.strip() for r in frm.split(",") if r.strip()]
+    graph[t] = [r for r in refs if r.startswith("T")]
+    for r in refs:
+        if r not in axioms and r not in rows:
+            failures.append(f"{MODEL}:{i}: {t} cites {r}, neither an axiom nor a theorem")
+    sites = re.findall(r"`([^`]+)`", site)
+    for s in sites:
+        last = re.split(r"::", s.split(" ")[0])[-1]
+        if not declared(last):
+            failures.append(f"{MODEL}:{i}: {t}'s site `{s}` is not declared")
+    tests = re.findall(r"`([^`]+)`", test)
+    for s in tests:
+        if not is_test(s.split("::")[-1]):
+            failures.append(f"{MODEL}:{i}: {t}'s test `{s}` is no #[test] fn")
+    words = re.findall(r"`([^`]+)`", witness)
+    for w in words:
+        if w not in WORDS:
+            failures.append(f"{MODEL}:{i}: {t}'s witness `{w}` is no observe word")
+    has = (bool(sites), bool(tests), bool(words))
+    if status == "built":
+        if not all(has):
+            failures.append(f"{MODEL}:{i}: {t} is built without a site, a test and a witness")
+    elif status.startswith("partial: "):
+        if not sites or not ISSUE.search(status):
+            failures.append(f"{MODEL}:{i}: {t} is partial without a site and an issue")
+    elif status.startswith("planned"):
+        if not ISSUE.search(status):
+            failures.append(f"{MODEL}:{i}: {t} is planned without an issue")
+    else:
+        failures.append(f"{MODEL}:{i}: {t}'s status is neither built, partial nor planned")
+
+# The graph of "from" has no cycle (depth-first, three colours).
+state = {}
+
+
+def visit(t, path):
+    state[t] = 1
+    for u in graph.get(t, []):
+        if state.get(u) == 1:
+            failures.append(f"{MODEL}: a cycle: {' -> '.join(path + [t, u])}")
+        elif u in graph and not state.get(u):
+            visit(u, path + [t])
+    state[t] = 2
+
+
+for t in graph:
+    if not state.get(t):
+        visit(t, [])
+
+for f in failures:
+    print(f)
+built = sum(1 for _, c in rows.values() if c[6] == "built")
+print(f"check-theorems: {len(rows)} theorems, {built} built, {len(failures)} problems")
+sys.exit(1 if failures else 0)

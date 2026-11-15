@@ -11,6 +11,13 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The theorem register (#245): the theorem table in model.md names each
+  theorem's code site, its test, its witness (an `xylarium observe` word)
+  and its status (built, partial or planned, the open rows on #249).
+  `scripts/check-theorems`, run by `scripts/check-docs`, refuses an unknown
+  "from", a cycle, an undeclared site, a test that is no test, a witness
+  that is no word, and a status the row does not hold.
+
 - T24, the rest point as a projection (#245): E018's `Q* / Z = (1 + R_0) /
   (1 - R_0)` is the ratio of the faces of the axis plane's induced phase
   `R_0` projected L1 onto the join's share split, at rest the nucleon

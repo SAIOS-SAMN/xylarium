@@ -86,6 +86,11 @@ A module `foo` is `src/foo.rs` or, when split, the directory `src/foo/`
   a refactor keeps the marker; the marker leaves with the PR that builds
   the law. `scripts/check-stand-ins` (run by `scripts/check-docs`) keeps the
   register and the markers in agreement.
+- A theorem enters the register (the theorem table in
+  [model.md](docs/model.md#axioms-and-theorems-of-the-founding)) with its
+  site, test, witness and status; a PR that builds an open clause updates
+  the row. `scripts/check-theorems` keeps the register and the code in
+  agreement.
 - Tests assert invariants (conservation, identities, bounds, monotonicity,
   refusal), never a number the model produced.
 - Never found a universe inside a test; read `crate::genesis::origin()` and

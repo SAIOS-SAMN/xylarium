@@ -1190,6 +1190,10 @@ may change public APIs and the model's laws.
 
 ### Fixed
 
+- The ley network and the builders read the universe's sphere at the
+  network's time in rings (`chain::radius`), not at its Gyr value read as
+  rings (`transit::network`, `transit::building`).
+
 - Merged embryos' phases meet along the shorter arc between them,
   weighted by mass (`systems` settling); they were averaged as numbers, so
   0.95 and 0.05 met at 0.5.

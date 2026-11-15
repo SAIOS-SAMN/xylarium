@@ -377,7 +377,8 @@ impl<'a> Placer<'a> {
         Placer {
             net,
             start,
-            sphere: xyl_cosmos::chain::radius(start),
+            // The sphere breathes in rings; `start` is Gyr.
+            sphere: xyl_cosmos::chain::radius(xyl_cosmos::circuit::rings_of_gyr_dy(start)),
             placed: RefCell::default(),
         }
     }

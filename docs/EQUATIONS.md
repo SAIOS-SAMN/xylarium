@@ -1165,6 +1165,13 @@ sites are restated. The derivations are in
   at an age (`field::transduction`) is `Unlit` (no step), `Step(i)` or
   `Remnant`; the transduction-out share (`field::transduced_share`) is the
   step's release. Calibre: mixed, founding and core (#123). Status: built.
+- A hole's crossing and light (`centre::crossing_share`,
+  `field::hole_light_per_star_mass`): infall crosses the horizon by its held
+  face about the hole, `delta_h = M / (2M + M) = 1/3`, the paired throat's
+  faces holding one hold (T16, T20), unchanged through the breath, which
+  swings that hold on both faces together (#233 item 8); the crossing matter
+  radiates at the efficiency (S017, a ruler) of an Eddington-fed flow
+  (S016). Calibre: none (shares). Status: built.
 - The field law, first-degree (`field`; E011, #199):
   - The breath (`field::Bell::received`): a ring is one breath of the
     manifold, expanding and contracting; its turn about the bell's exact

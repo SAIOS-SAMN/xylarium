@@ -3,7 +3,7 @@
 //! (docs/model.md).
 //!
 //! Reads `pulse` (`Node`, `wavelength_kpc`, `c_kpc_per_ring`), `centre`
-//! (`horizon_share`, `efficiency`), `chain` (places, arcs, units),
+//! (`crossing_share`, `efficiency`), `chain` (places, arcs, units),
 //! `stars::ends` and `stars::Sequence`, `circuit::anchor` (the core's spin), `package::Si` and
 //! `xyl_core::cga` in `Cl(4, 1)` over `Q`. Distances are kpc between bells
 //! and places, AU inside a system; times and periods rings (one ring one
@@ -20,7 +20,7 @@
 //!   wavelength times the extent of M / M_core (`pitch_kpc`), its period
 //!   the pitch at light speed, its axis the core's or the progenitor
 //!   orbit's normal, its spin the core's or a BLAKE3 draw in (0, 1), its
-//!   light `mass x 32000 x horizon_share x efficiency`.
+//!   light `mass x 32000 x crossing_share x efficiency`.
 //! - `Bell::arrivals`: rings reaching a place in a span, in closed form
 //!   (ring k sounds at born + k periods, arrives one light time later).
 //!   `Bell::received`: the turning law, `360 h` degrees about the bell's
@@ -42,7 +42,7 @@
 //! remainder. Derived lengths and rates are fixed on a 2^-60 grid before
 //! entering the algebra.
 
-use crate::centre::{efficiency, horizon_share};
+use crate::centre::{crossing_share, efficiency};
 use crate::chain::Place;
 use crate::elements::decimal;
 use crate::package::hole_mass;
@@ -102,11 +102,11 @@ pub fn star_ring() -> Q {
 }
 
 /// A hole's light per sun of its mass (suns): the share of an Eddington-fed
-/// flow (32 000 suns per sun) that crosses the horizon, radiated at the
-/// centre's efficiency (`centre`).
+/// flow (32 000 suns per sun) that crosses the horizon (the horizon's held
+/// face, `centre::crossing_share`), radiated at the centre's efficiency.
 pub fn hole_light_per_star_mass() -> Q {
     // Stand-in S016: Hole light is mass x 32 000 x horizon share x efficiency.
-    &(&Q::int(32_000) * &horizon_share()) * &efficiency()
+    &(&Q::int(32_000) * &crossing_share()) * &efficiency()
 }
 
 // ------------------------------------------------------------------- Versors.

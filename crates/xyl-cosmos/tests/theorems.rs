@@ -167,3 +167,16 @@ fn t9_the_positron_is_the_electron_phase_reflected() {
         }
     }
 }
+
+#[test]
+fn t20_infall_crosses_by_the_horizons_held_face() {
+    // a hole's faces hold one hold, so its crossing share is the horizon's
+    // held face M / (2M + M) at every hold: one third
+    use xyl_cosmos::bounce::horizon_share;
+    let third = Q::new(1, 3).expect("1/3");
+    assert_eq!(xyl_cosmos::centre::crossing_share(), third);
+    for (n, d) in [(1, 9), (1, 1), (7, 2), (1_000_000, 1)] {
+        let m = Q::new(n, d).expect("a hold");
+        assert_eq!(horizon_share(&m, &m), Some(third.clone()), "at M = {m}");
+    }
+}

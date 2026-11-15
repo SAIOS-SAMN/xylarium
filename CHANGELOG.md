@@ -86,6 +86,14 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The centre's crossing share is derived (#233 item 8): infall crosses the
+  horizon by its held face about the hole, `M / (2M + M) = 1/3`
+  (`centre::crossing_share`, T20), the paired throat's faces holding one
+  hold, unchanged through the breath. It replaces the ruler
+  `centre::horizon_share` (1/10), whose name collided with
+  `bounce::horizon_share`. A hole's light per sun rises by 10/3 with it;
+  the efficiency stays a ruler (S017).
+
 - R is read through the induced turn on every Hopf plane (E030):
   `circuit::induced_phases` turns each plane's phase by the throat's
   torsion (the spin face on the Z hemisphere, the inverse face on the Q

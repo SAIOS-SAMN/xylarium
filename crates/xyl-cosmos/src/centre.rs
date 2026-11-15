@@ -9,7 +9,9 @@
 //!
 //! What falls (`Core::capture`) is split:
 //!
-//! - `horizon_share` (1/10, a ruler) crosses the horizon; `efficiency`
+//! - `crossing_share` crosses the horizon: the horizon's held face about
+//!   the hole, `M / (2M + M)` with both faces of the paired throat holding
+//!   one hold (T16, T20), one third through every breath; `efficiency`
 //!   (1/10 of that, a ruler) is radiated as light on the way in, and the
 //!   rest enters the throat, growing the hole beyond its formation mass.
 //!   Each capture's record is folded in order into a BLAKE3 digest that
@@ -36,13 +38,17 @@ const BITS: u32 = 64;
 const GRID_BITS: u32 = 40;
 
 /// The share of infalling matter that crosses the horizon (the rest is held
-/// in the accretion flow outside it).
-pub fn horizon_share() -> Q {
-    // Stand-in S017: Horizon share 1/10 and efficiency 1/10 are rulers named in code only.
-    xyl_core::ratio!(1, 10)
+/// in the accretion flow outside it): the horizon's held face about the
+/// hole, `bounce::horizon_share(M, M) = M / (2M + M) = 1/3` (T20). A hole is
+/// a paired throat whose faces hold one hold (T16), and the bell's breath
+/// swings that hold on both faces together, so the face reads one third at
+/// every phase of the breath (#233 item 8).
+pub fn crossing_share() -> Q {
+    crate::bounce::horizon_share(&Q::ONE, &Q::ONE).unwrap_or(Q::ZERO)
 }
 /// The share of crossing matter radiated as light on the way in.
 pub fn efficiency() -> Q {
+    // Stand-in S017: The efficiency 1/10 is a ruler named in code only.
     xyl_core::ratio!(1, 10)
 }
 /// The throat's far face: the persistent central engine of the universe on
@@ -137,7 +143,7 @@ impl Core {
         if suns.signum() <= 0 {
             return Some(Q::ZERO);
         }
-        let crossed = suns * &horizon_share();
+        let crossed = suns * &crossing_share();
         let light = &crossed * &efficiency();
         let grows = &crossed - &light;
         self.fallen = &self.fallen + suns;

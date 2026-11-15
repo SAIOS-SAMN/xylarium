@@ -86,6 +86,16 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Time as coordinates, at the universal core's tier (#245, ruled
+  2026-11-15; E032). The front's arrival at a reach is the separation of the
+  throat's and the reach's time coordinates, `tau(r) - tau(0)` with
+  `tau(r) = r + H(<r)`, the hold inside the reach read in the substrate's
+  calibre (`Substrate::delay`): each bead the front crosses adds its hold,
+  so the delay to a galaxy past beads rises (seed 7: galaxy 4 from 8.47e-6
+  to 8.76e-6 Gyr; galaxy 1, with no bead inside its reach, is unchanged).
+  The medium, the waveform, the ocean's shares and every galaxy's push and
+  intake read it. Agreed at the seam with netstratum (its PR #208).
+
 - The field's transduction step is read at each ring's arrival (#233 item
   9): a span of delivery is cut at the star's step ends (`stars::ends`), and
   each piece's rings are absorbed under the step they arrive in, not under

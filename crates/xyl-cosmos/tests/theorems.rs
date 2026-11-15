@@ -149,3 +149,21 @@ fn t3_the_apsis_ratio_is_the_deficits_dilation_and_the_resonances_return() {
         );
     }
 }
+
+#[test]
+fn t9_the_positron_is_the_electron_phase_reflected() {
+    // R = kappa (1 - 2x): the phase reflected, x -> 1 - x (the opposed
+    // hemisphere, -x mod 1), reads -R on every kind, for x inside a turn
+    use xyl_cosmos::circuit::electron_phase;
+    for k in 1..=40_u32 {
+        for (n, d) in [(1, 7), (1, 4), (1, 3), (1, 2), (5, 8), (11, 12)] {
+            let x = Q::new(n, d).expect("a phase");
+            let reflected = &Q::ONE - &x;
+            assert_eq!(
+                electron_phase(k, &reflected),
+                -electron_phase(k, &x),
+                "R(1 - x) = -R(x) at Z {k}, x = {x}"
+            );
+        }
+    }
+}

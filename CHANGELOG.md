@@ -19,7 +19,8 @@ may change public APIs and the model's laws.
   core's spin) and T23 (the CP^5 point kept on both faces of every founded
   kind) are built, with T3 (the apsis ratio `D(delta) = 1 + R_h / r` and the
   resonances `(k - 1) M` returning after `k`, tested and read about the
-  medium inside every galaxy) (11 of 24).
+  medium inside every galaxy), and T9 (the positron `R(1 - x) = -R(x)`, the
+  phase reflected to the opposed hemisphere) (12 of 24).
 
 - The theorems' identities that read no founding are tested in
   `crates/xyl-cosmos/tests/theorems.rs`, outside the founding digest: T2's

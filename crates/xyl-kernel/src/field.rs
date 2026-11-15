@@ -10,7 +10,9 @@
 //! sequence, `galaxy::Star::sequence`).
 //!
 //! - Delivery ([`Field::step`]): only stars with peoples are reached. For
-//!   each bell the arrivals in (from, to] Gyr are counted in closed form;
+//!   each bell the arrivals in (from, to] Gyr are counted in closed form,
+//!   the span cut at the star's step ends (`stars::ends`) so each ring is
+//!   absorbed under the transduction step it arrives in (#233 item 9);
 //!   each ring is absorbed where the worlds stand, and once a ring leaves
 //!   them unchanged the remaining rings are counted rather than repeated,
 //!   so the result does not depend on how the span is cut. Stars are
@@ -290,13 +292,19 @@ fn ring_star(
         xyl_cosmos::circuit::rings_of_gyr_dy(to),
     );
     let seq = w.star.sequence();
-    let step = transduction(
-        &seq,
-        w.star.compactness(),
-        w.star.reach_units(),
-        to_ring - Dy::from_q(&w.star.born),
+    // The span is cut where the star's transduction steps end (`stars::ends`,
+    // closed forms of its hold), so each ring is absorbed under the step it
+    // arrives in, never under the step at the span's end (#233 item 9).
+    let born = Dy::from_q(&w.star.born);
+    let (delta, reach) = (w.star.compactness(), w.star.reach_units());
+    let mut cuts = vec![from_ring];
+    cuts.extend(
+        xyl_cosmos::stars::ends(&seq, delta, reach)
+            .iter()
+            .map(|end| born + Dy::from_q(end))
+            .filter(|t| *t > from_ring && *t < to_ring),
     );
-    let transduced_out = transduced_share(&seq, step);
+    cuts.push(to_ring);
     let mut books = books0;
     let mut delivered = 0;
     for (node, bell) in bells {
@@ -307,39 +315,47 @@ fn ring_star(
         // so the pulses leave it no drift.
         let place = w.star.place(to_ring, &radius(to_ring));
         let (delay, d) = path(node, &place, to_ring);
-        let k = bell.arrivals(delay, from_ring, to_ring);
-        if k == 0 {
-            continue;
-        }
         let Some(v) = bell.received(d) else {
             continue;
         };
         let e = bell.energy_at(d, &a_out);
-        // Each ring is absorbed where the worlds stand. Once a ring
-        // leaves the anchors unchanged (the star re-locked them all),
-        // every later ring is identical, so the rest are counted rather
-        // than repeated; the result is independent of how the span is cut.
-        // The worlds stand where their orbits have carried them, their
-        // shears carried with them.
-        let age = born_age(to_ring);
-        worlds = worlds
-            .iter()
-            .enumerate()
-            .map(|(i, a)| a.along(dir_at(i, &age)))
-            .collect();
-        let b = books.get_or_insert_with(Books::default);
-        let mut i = 0;
-        while i < k {
-            let Some(a) = absorb(&mass, &transduced_out, &worlds, &v, &e) else {
-                break;
-            };
-            let settled = a.anchors == worlds;
-            let n = if settled { k - i } else { 1 };
-            b.add(&a, n, to);
-            worlds = a.anchors;
-            i += n;
+        for piece in cuts.windows(2) {
+            let (lo, hi) = (piece[0], piece[1]);
+            let k = bell.arrivals(delay, lo, hi);
+            if k == 0 {
+                continue;
+            }
+            // The step the piece's rings arrive in: read inside the piece,
+            // which no step's end crosses.
+            let within = (lo + hi).div(&Dy::int(2)).unwrap_or(hi);
+            let transduced_out =
+                transduced_share(&seq, transduction(&seq, delta, reach, within - born));
+            // Each ring is absorbed where the worlds stand. Once a ring
+            // leaves the anchors unchanged (the star re-locked them all),
+            // every later ring of the piece is identical, so the rest are
+            // counted rather than repeated; the result is independent of how
+            // the span is cut. The worlds stand where their orbits have
+            // carried them by the piece's end, their shears carried with them.
+            let age = born_age(hi);
+            worlds = worlds
+                .iter()
+                .enumerate()
+                .map(|(i, a)| a.along(dir_at(i, &age)))
+                .collect();
+            let b = books.get_or_insert_with(Books::default);
+            let mut i = 0;
+            while i < k {
+                let Some(a) = absorb(&mass, &transduced_out, &worlds, &v, &e) else {
+                    break;
+                };
+                let settled = a.anchors == worlds;
+                let n = if settled { k - i } else { 1 };
+                b.add(&a, n, to);
+                worlds = a.anchors;
+                i += n;
+            }
+            delivered += k;
         }
-        delivered += k;
     }
     (star, Some(worlds), books, delivered)
 }

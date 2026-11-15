@@ -86,6 +86,12 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The field's transduction step is read at each ring's arrival (#233 item
+  9): a span of delivery is cut at the star's step ends (`stars::ends`), and
+  each piece's rings are absorbed under the step they arrive in, not under
+  the step at the span's end. The rings delivered are unchanged (the
+  pieces' arrivals sum to the span's).
+
 - The centre's crossing share is derived (#233 item 8): infall crosses the
   horizon by its held face about the hole, `M / (2M + M) = 1/3`
   (`centre::crossing_share`, T20), the paired throat's faces holding one

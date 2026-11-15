@@ -720,6 +720,22 @@ mod tests {
         assert_eq!(one, 1, "one period, one ring");
         assert_eq!(b.arrivals(delay, t0, t0 + period * Dy::int(10)), 10);
         assert_eq!(b.arrivals(delay, t0, t0), 0);
+        // A span cut anywhere (at a star's step ends, #233 item 9) counts its
+        // rings once: the pieces' arrivals sum to the span's.
+        let end = t0 + period * Dy::int(10);
+        for cuts in [
+            vec![t0, end],
+            vec![t0, t0 + delay, end],
+            vec![
+                t0,
+                t0 + period * xyl_core::dyadic!(7, 3),
+                t0 + period * Dy::int(5),
+                end,
+            ],
+        ] {
+            let pieces: u64 = cuts.windows(2).map(|w| b.arrivals(delay, w[0], w[1])).sum();
+            assert_eq!(pieces, b.arrivals(delay, t0, end), "cut at {cuts:?}");
+        }
         // Nothing arrives before a bell has formed and its light has crossed.
         let late = Bell {
             born: Dy::int(12),

@@ -537,9 +537,10 @@ where it belongs to one.
     galaxies' circulation); the world manifolds' rates breathing over the
     star's galaxy core's echo, carried down the anchor chain
     (`Manifold::stand`); the centre's crossing share, the horizon's held face
-    (`centre::crossing_share`, one third).
-    Order: the bell's period, the founding swing and the kept kinds on the throat
-    orbit (S142), the field's step per ring, and the hold passing between the
+    (`centre::crossing_share`, one third); the field's step read at each
+    ring's arrival, the span cut at the star's step ends.
+    Order: the bell's period (on the #245 ruling), the founding swing and the
+    kept kinds on the throat orbit (S142), and the hold passing between the
     pair's faces.
 69. **The interlock** ([#245](https://github.com/SAIOS-SAMN/xylarium/issues/245), `law`, `docs`, `track`; ruled 2026-11-15).
     The components meet through transductions listed in

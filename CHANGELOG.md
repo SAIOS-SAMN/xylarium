@@ -11,6 +11,14 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The theorems' identities that read no founding are tested in
+  `crates/xyl-cosmos/tests/theorems.rs`, outside the founding digest: T2's
+  torsion share `D(s) = 3 + a` and `2s - 1 = n`, T4's echo, T9's pair share
+  `s (+) -(1 - s) = n (+) n / 3`, T16's faces' product `(3 + a)^2`, and
+  T17's far face `D(1 - s) = (6 + a) / (2 + a)`, each across spins in
+  `(0, 1]`. T4 and T16 are built in the register (7 of 24); the doc checks
+  read the integration tests as sources.
+
 - The theorem register (#245): the theorem table in model.md names each
   theorem's code site, its test, its witness (an `xylarium observe` word)
   and its status (built, partial or planned, the open rows on #249).

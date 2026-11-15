@@ -30,7 +30,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(ROOT)
 
 MODEL = "docs/model.md"
-SOURCES = sorted(glob.glob("crates/*/src/**/*.rs", recursive=True))
+SOURCES = sorted(
+    glob.glob("crates/*/src/**/*.rs", recursive=True)
+    + glob.glob("crates/*/tests/**/*.rs", recursive=True)
+)
 TEXT = {p: open(p, encoding="utf-8").read() for p in SOURCES}
 failures = []
 

@@ -1005,7 +1005,10 @@ longer holds.
   the tilt toward it by the plastic angle's share of the S^360 measure; a
   placement by index, to be replaced, roadmap item 40),
   and its place at `t` is its plane's rotor applied to its phase
-  (`Shape::place_at`). The stars of another galaxy are the home galaxy's stars
+  (`Shape::place_at`), the circulation breathing with the universal core's
+  bell (`chain::breathing_turns`): the hold inside swings by the deficit at
+  its reach, so the rate swings by `delta (1 - delta)` of itself each echo,
+  and a star's orbit breathes so about its galaxy's core. The stars of another galaxy are the home galaxy's stars
   read through that galaxy's length scale `2 m / (1 + m)`, where `m` is its hole
   mass ratio (`Shape::scale`, placeholder).
 

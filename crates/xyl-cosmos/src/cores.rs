@@ -56,9 +56,12 @@ pub struct Shape {
     /// Node of the galaxy's plane about the universe's axis, as a half-angle
     /// direction; the zero angle for the home galaxy.
     pub node: xyl_core::rotor::Direction,
-    /// Circulation rate about the throat, 4 delta per echo, in turns per ring;
-    /// zero for the home galaxy at the core.
+    /// Mean circulation rate about the throat, 4 delta per echo, in turns
+    /// per ring; zero for the home galaxy at the core.
     pub rate: Dy,
+    /// The deficit `delta` the circulation is read at: the rate breathes
+    /// with the universal core's bell (`chain::breathing_turns`).
+    pub delta: Dy,
 }
 
 /// A plane's rotor from its drawn node and tilt: the tilt on the plane of
@@ -78,7 +81,9 @@ impl Shape {
     /// t, at its reach.
     pub fn place_at(&self, t: Dy, r: &Q) -> crate::chain::Place {
         // Its turns on its plane, whole turns and phase carried (E019).
-        let turns = (Dy::from_q(&self.phase) + self.rate * t).to_q();
+        let turns = (Dy::from_q(&self.phase)
+            + crate::chain::breathing_turns(self.rate, self.delta, t, crate::circuit::echo()))
+        .to_q();
         crate::chain::Place::core(
             self.anchor().0,
             drawn_rotor(&self.node, &self.tilt),
@@ -256,6 +261,7 @@ fn founding_of(origin: &Origin) -> Option<Arc<Founding>> {
         tilt: flat,
         node: flat,
         rate: Dy::ZERO,
+        delta: Dy::ZERO,
     }];
     // A bead's reach about the throat is read in the cluster tier as founded
     // (the cluster unit, circuit::anchor).
@@ -305,6 +311,7 @@ fn founding_of(origin: &Origin) -> Option<Arc<Founding>> {
             tilt,
             node,
             rate,
+            delta,
         });
     }
     let f = Arc::new(Founding { substrate, shapes });

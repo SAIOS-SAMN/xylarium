@@ -16,14 +16,20 @@ use xyl_core::units::Tier;
 use xyl_core::{Stream, Q};
 
 /// A star's galactic manifold from the core (`chain`): its radius, turning
-/// rate and plane. The plane's angles are held as exact half-angles, and the
-/// rate comes from the turning law, exact in radians per ring.
+/// rate, the deficit it turns at and its core's echo, and its plane. The
+/// plane's angles are held as exact half-angles, and the rate comes from the
+/// turning law, exact in radians per ring.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Orbit {
     /// Orbit radius (galaxy units), scaled by the galaxy's length scale.
     pub radius: Dy,
-    /// Turning rate (radians per ring), from the turning law.
+    /// Mean turning rate (radians per ring), from the turning law.
     pub rate: Dy,
+    /// The deficit `M / (r + M)` the rate is read at.
+    pub deficit: Dy,
+    /// The echo of its galaxy's core (rings), the home core's dilated by the
+    /// galaxy's scale: the rate breathes over it.
+    pub echo: Dy,
     /// Orbital phase at the origin (turns, exact).
     pub turns0: Dy,
     /// Tilt of the plane about the line of nodes, as an exact half-angle
@@ -46,9 +52,11 @@ impl Orbit {
     }
 
     /// Orbital phase at `t` rings (turns): the initial phase plus the
-    /// turning, `turns0 + omega t / (2 pi)`.
+    /// turning, the mean `omega / (2 pi)` per ring breathing with its core's
+    /// bell (`chain::breathing_turns`).
     pub fn turns_at(&self, t: Dy) -> Dy {
-        self.turns0 + self.rate * t * Dy::from_q(&crate::manifold::per_turn().mid())
+        let per_ring = self.rate * Dy::from_q(&crate::manifold::per_turn().mid());
+        self.turns0 + crate::chain::breathing_turns(per_ring, self.deficit, t, self.echo)
     }
 }
 
@@ -355,15 +363,20 @@ fn placement(local: u64, nucleus: bool) -> Option<Placement> {
 /// `omega = delta bell / r` over the home-equivalent mass inside `radius`
 /// (core masses) times the hole ratio, at the scaled radius
 /// `radius x scale` (galaxy units); both radii are at least 1e-6 galaxy
-/// rings and cut toward zero to the 2^-60 grid.
-fn turning_rate(radius: Dy, scale: Dy, mass_ratio: Dy) -> Dy {
+/// rings and cut toward zero to the 2^-60 grid. Returned with the deficit
+/// `M / (r + M)` it is read at, `r` in r_g.
+fn turning_rate(radius: Dy, scale: Dy, mass_ratio: Dy) -> (Dy, Dy) {
     let r_q = toward_zero(&radius.max(Dy::sci(1, -6)).to_q(), 60);
     let own_r = toward_zero(&(radius * scale).max(Dy::sci(1, -6)).to_q(), 60);
-    Dy::from_q(&crate::turning::turning(
-        &(&inside_mass(&r_q) * &mass_ratio.to_q()),
-        &own_r,
-        Tier::Galaxy,
-    ))
+    let inside = &inside_mass(&r_q) * &mass_ratio.to_q();
+    let deficit = xyl_core::shares::deficit_dy(
+        Dy::from_q(&inside),
+        Dy::from_q(&(&own_r * &Tier::Galaxy.in_rg())),
+    );
+    (
+        Dy::from_q(&crate::turning::turning(&inside, &own_r, Tier::Galaxy)),
+        deficit,
+    )
 }
 
 /// The home-galaxy stellar mass one sample star stands for (core masses):
@@ -415,7 +428,7 @@ pub fn star(seed: u64, origin: &Origin, n: u64) -> Option<Star> {
     } else {
         None
     };
-    let rate = turning_rate(radius, scale, mass_ratio);
+    let (rate, deficit) = turning_rate(radius, scale, mass_ratio);
     let stands_for = stands_for(origin, nucleus);
     let r = toward_zero(&radius.to_q(), if nucleus { 60 } else { GRID_BITS });
     // Birth: the ring's first light, then a draw along the ring's
@@ -451,6 +464,8 @@ pub fn star(seed: u64, origin: &Origin, n: u64) -> Option<Star> {
     let orbit = Orbit {
         radius: radius * scale,
         rate,
+        deficit,
+        echo: crate::circuit::echo() * scale,
         turns0: place.turns0,
         tilt: place.tilt,
         node: place.node,

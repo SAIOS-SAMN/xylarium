@@ -27,6 +27,14 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Orbit rates breathe in the galaxy tier (#233 item 5):
+  `chain::breathing_turns` turns a mean rate read at the deficit `delta`
+  into `rate t + rate delta (1 - delta) echo sin(360 t / echo) / (2 pi)`,
+  the hold inside swinging with the core's bell. A star's orbit
+  (`galaxy::Orbit::turns_at`, with its `deficit` and its galaxy core's
+  `echo`) and a galaxy's circulation (`cores::Shape::place_at`, with its
+  `delta`) read it. The world manifolds about stars are next.
+
 - The reverberation is read through the swing (#233 item 4): a kind's band
   `r (1 + delta cos phi)` stands past the throat on the arc about the
   ring's crest, its share of each echo `acos(c) / 180` in place of the

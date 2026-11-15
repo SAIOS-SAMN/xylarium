@@ -626,6 +626,7 @@ mod tests {
                 tilt: xyl_core::rotor::Direction::ZERO_ANGLE,
                 node: xyl_core::rotor::Direction::ZERO_ANGLE,
                 rate: Dy::ZERO,
+                delta: Dy::ZERO,
             })),
             mass: Dy::from_q(&hole_mass()),
             born: Dy::ZERO,

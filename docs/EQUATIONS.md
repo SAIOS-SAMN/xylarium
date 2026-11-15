@@ -894,6 +894,17 @@ sites are restated. The derivations are in
   Calibre: mixed, founding and core (#123). Status: built.
 - Circulation (`cores::founding_of`): the circulation is `1440 delta / echo`
   degrees per Gyr on the galaxy's orbital plane, with `delta = H / (reach + H)` and `H = H(reach)` the held medium. Calibre: founding. Status: built.
+- Breathing orbits (`chain::breathing_turns`, read by `Shape::place_at` and
+  `galaxy::Orbit::turns_at`): the hold inside an orbit swings with its
+  core's bell by the deficit at its reach, `M (1 + delta cos(360 t / echo))`,
+  so a rate that goes as `delta` swings first-degree as
+  `rate (1 + delta (1 - delta) cos(360 t / echo))`, and the turns are the
+  closed form `rate t + rate delta (1 - delta) echo sin(360 t / echo) / (2 pi)`:
+  the mean over whole echoes, ahead on each echo's first half (#233 item 5).
+  A galaxy's circulation breathes over the universal core's echo; a star's
+  orbit over its galaxy core's, the home echo times the galaxy's scale.
+  Calibre: none (shares and turns). Status: built for the galaxy tier; the
+  world manifolds about stars are next.
 - Galaxy plane (`cores::founding_of`): the node lies at
   `index x` the golden angle about the throat's axis, and the tilt toward
   it holds `index x` the plastic angle's share of the S^360 measure (a
@@ -1071,7 +1082,8 @@ sites are restated. The derivations are in
   holding reaches the silver-angle pivot; the disc phase follows the golden
   angle on the disc's plane, the ball planes follow the plastic and golden
   angles (a placement by index, roadmap item 40), and the rate
-  follows the turning law. Calibre: none. Status: built.
+  follows the turning law, breathing with the galaxy core's bell
+  (`chain::breathing_turns`). Calibre: none. Status: built.
 - Piece star mass (`galaxy::piece_star_mass`): `m_p = s c` core masses,
   with `s` the share of the piece's infall the star tier's cut holds
   (`disc::StarHold::star`) and `c` the infall's holding

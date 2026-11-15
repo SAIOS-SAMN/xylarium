@@ -15,8 +15,9 @@ may change public APIs and the model's laws.
   as residues on the seed's universe at R rings. T2, T9 (the medium's carry
   about every galaxy), T16, T17, T20 and T24 (all 1,092 founded parcels of
   seed 7) read 0; T4 reads its dyadic grid's residue. It is the witness of
-  those rows in the register; T20 and T21 (the six planes' horizon at the
-  core's spin) are built (9 of 24).
+  those rows in the register; T20, T21 (the six planes' horizon at the
+  core's spin) and T23 (the CP^5 point kept on both faces of every founded
+  kind) are built (10 of 24).
 
 - The theorems' identities that read no founding are tested in
   `crates/xyl-cosmos/tests/theorems.rs`, outside the founding digest: T2's

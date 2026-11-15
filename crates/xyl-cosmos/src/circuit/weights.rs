@@ -215,6 +215,40 @@ pub fn electron_phase(k: u32, p: &Q) -> Q {
     &kappa * &(&Q::ONE - &(&Q::int(2) * &p.frac()))
 }
 
+/// Each Hopf plane's electron phase share after the throat's torsion is
+/// induced on it (E030, T22): each plane's phase `phases[p]` (turns), its
+/// face read from its hemisphere (`[0, 1/2)` the Z face, taken as spin;
+/// `[1/2, 1)` the Q face, taken as inverse torsion), turned by
+/// `hopf::induce` at the torsion share `share` with the planes' windings,
+/// and read back as `R_p` ([`electron_phase`]) at the turned phase. `None`
+/// for a torsion share outside `[0, 1]`.
+pub fn induced_phases(
+    k: u32,
+    phases: &[Q; PLANES],
+    winding: &[i64; PLANES],
+    share: &Q,
+) -> Option<[Q; PLANES]> {
+    use xyl_core::hopf::Sense;
+    use xyl_core::rotor::Winding;
+    let at = phases.clone().map(|p| Winding::of_turns(&p));
+    let senses = at.clone().map(|w| {
+        if w.degrees < Q::int(180) {
+            Sense::Spin
+        } else {
+            Sense::InverseTorsion
+        }
+    });
+    let turned = xyl_core::hopf::induce(&at, winding, share, &senses)?;
+    Some(turned.map(|w| electron_phase(k, &w.degrees.checked_div(&Q::int(360)).unwrap_or(Q::ZERO))))
+}
+
+/// Each Hopf plane's capture phase for kind `k` at the torsion share
+/// `share`: `frac(w_p s Z)` turns, the crossing phase the founding carries.
+pub fn capture_phases(k: u32, share: &Q, winding: &[i64; PLANES]) -> [Q; PLANES] {
+    let charge = share * &Q::int(i64::from(k));
+    winding.map(|wp| (&charge * &Q::int(wp)).frac())
+}
+
 /// The shares of a kind's fill entering from the Q side toward Z on each
 /// Hopf plane (#201): per plane `p`, the face of the electron phase's channel,
 /// which moves `R_p u` of the kind's states from Q to Z against its electron
@@ -227,26 +261,27 @@ pub fn electron_phase(k: u32, p: &Q) -> Q {
 /// channel runs Q to Z and `f_p` is that face; for `R_p <= 0` it runs Z to
 /// Q and the plane's fill enters from the Z side alone (`f_p = 0`). A kind
 /// with no open state has no aperture on any plane. In the common phase
-/// (`hopf::COMMON`, the Hopf action) the six shares are equal.
-pub fn fill_shares(k: u32, share: &Q, winding: &[i64; PLANES]) -> [Q; PLANES] {
+/// (`hopf::COMMON`, the Hopf action) the six shares are equal. `R_p` is
+/// read after the throat's torsion is induced on its plane
+/// ([`induced_phases`], E030). `None` for a torsion share outside `[0, 1]`.
+pub fn fill_shares(k: u32, share: &Q, winding: &[i64; PLANES]) -> Option<[Q; PLANES]> {
     let u = Q::int(i64::from(crate::compound::open(k)));
     let w_e = Q::int(i64::from(crate::compound::electron_hold(k)));
-    let charge = &(share * &Q::int(i64::from(k)));
-    winding.map(|wp| {
-        let psi = (charge * &Q::int(wp)).frac();
-        let r = electron_phase(k, &psi);
+    let capture = capture_phases(k, share, winding);
+    let rs = induced_phases(k, &capture, winding, share)?;
+    Some(rs.map(|r| {
         if r.signum() <= 0 || u.signum() <= 0 {
             return Q::ZERO;
         }
         let channel = &r * &u;
         channel.checked_div(&(&w_e + &channel)).unwrap_or(Q::ZERO)
-    })
+    }))
 }
 
 /// [`fill_shares`] at the founded universe's torsion share, read from the
 /// anchor's admitted spin, in the common phase: the shares of the universal
-/// table (#201).
-pub fn universal_fill_shares(k: u32) -> [Q; PLANES] {
+/// table (#201). `None` where the anchor's torsion share is no share.
+pub fn universal_fill_shares(k: u32) -> Option<[Q; PLANES]> {
     let share = crate::bounce::torsion_share(&Q::ONE, &crate::circuit::anchor().spin);
     fill_shares(k, &share, &xyl_core::hopf::COMMON)
 }
@@ -293,6 +328,43 @@ impl Substrate {
 mod tests {
     use super::*;
 
+    /// R is read after the throat's torsion is induced on its plane (E030,
+    /// T22): a plane whose capture phase stands on the Z hemisphere is
+    /// turned `w s` turns as spin, one on the Q hemisphere `-w (1 - s)` as
+    /// inverse torsion, and R is the raw reading at the turned phase; the
+    /// common winding reads one R on all six planes; R stays within the
+    /// coherence's bound.
+    #[test]
+    fn r_is_read_after_the_induced_turn() {
+        let share = xyl_core::ratio!(3, 5);
+        let winding = [1, 2, -1, 3, 0, 5];
+        for k in 1..=crate::elements::TOP_Z {
+            let capture = capture_phases(k, &share, &winding);
+            let rs = induced_phases(k, &capture, &winding, &share).unwrap();
+            for p in 0..PLANES {
+                let w = Q::int(winding[p]);
+                let turned = if capture[p] < xyl_core::ratio!(1, 2) {
+                    &capture[p] + &(&w * &share)
+                } else {
+                    &capture[p] - &(&w * &(&Q::ONE - &share))
+                };
+                assert_eq!(rs[p], electron_phase(k, &turned.frac()), "Z{k} plane {p}");
+                assert!(rs[p].abs() <= Q::ONE, "Z{k}");
+            }
+            let common = xyl_core::hopf::COMMON;
+            let one =
+                induced_phases(k, &capture_phases(k, &share, &common), &common, &share).unwrap();
+            assert!(one.iter().all(|r| r == &one[0]), "Z{k}");
+        }
+        assert!(induced_phases(
+            1,
+            &[Q::ZERO, Q::ZERO, Q::ZERO, Q::ZERO, Q::ZERO, Q::ZERO],
+            &xyl_core::hopf::COMMON,
+            &Q::int(2)
+        )
+        .is_none());
+    }
+
     #[test]
     fn each_plane_fills_at_its_own_capture_phase() {
         // In the common phase the six planes' shares are equal; at any
@@ -302,11 +374,15 @@ mod tests {
         let share = xyl_core::ratio!(3, 5);
         let winding = [1, 2, -1, 3, 0, 5];
         for k in 1..=crate::elements::TOP_Z {
-            let common = fill_shares(k, &share, &xyl_core::hopf::COMMON);
+            let common = fill_shares(k, &share, &xyl_core::hopf::COMMON).unwrap();
             assert!(common.iter().all(|f| f == &common[0]), "Z{k}");
-            let f = fill_shares(k, &share, &winding);
+            let f = fill_shares(k, &share, &winding).unwrap();
             for (p, wp) in winding.iter().enumerate() {
-                assert_eq!(f[p], fill_shares(k, &share, &[*wp; PLANES])[0], "Z{k}");
+                assert_eq!(
+                    f[p],
+                    fill_shares(k, &share, &[*wp; PLANES]).unwrap()[0],
+                    "Z{k}"
+                );
                 assert!(f[p].signum() >= 0 && f[p] < Q::ONE, "Z{k}");
                 if crate::compound::open(k) == 0 {
                     assert_eq!(f[p], Q::ZERO, "Z{k}");

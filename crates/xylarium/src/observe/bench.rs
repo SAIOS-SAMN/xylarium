@@ -443,7 +443,10 @@ pub(super) fn split_read(
     );
     let (mut undefined, mut sheared, mut seals) = (0u32, 0u32, Vec::new());
     for z in lo..=hi {
-        let from_q = xyl_cosmos::circuit::fill_shares(z, &share, winding);
+        let Some(from_q) = xyl_cosmos::circuit::fill_shares(z, &share, winding) else {
+            undefined += 1;
+            continue;
+        };
         let Some(planes) = from_q
             .iter()
             .map(|f| plane_split(z, f))

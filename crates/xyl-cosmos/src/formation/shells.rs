@@ -118,7 +118,7 @@ fn layers(mix: &[(u32, Q)], share: &Q) -> Vec<Layer> {
                 });
             }
             let t = Dy::int(i64::from(u)).div(&Dy::int(i64::from(w_e)))?;
-            let from_q = crate::circuit::fill_shares(z, share, &xyl_core::hopf::COMMON);
+            let from_q = crate::circuit::fill_shares(z, share, &xyl_core::hopf::COMMON)?;
             let [axis, ..] = crate::atoms::plane_polarities(z, &from_q)?;
             Some(Layer {
                 z,
@@ -355,12 +355,17 @@ fn reach_after(r0: &Q, m: &Q, h: &Q, tau: Dy) -> Option<Q> {
 /// medium's push is zero at a bounce, so the nucleon split balances the
 /// electrons' phase, `p*_nuc = -R`, and `3Q* / 3Z = D(R)`, so
 /// `Q* / Z = D(R) = (1 + R) / (1 - R)`, exact, with `R` the kind's
-/// electron phase at its capture phase `frac(s Z)` (`circuit::electron_phase`;
-/// in the common phase the six planes read one `R`, E016). `None` where
-/// `abs(R) = 1`: no rest point, refused.
+/// electron phase at its capture phase `frac(s Z)` after the throat's
+/// torsion is induced on it (`circuit::induced_phases`, E030), read on the
+/// axis plane; in the common phase the six planes read one `R` (E016). The
+/// dilation is open as I017 (the transduction from H to the join is to be
+/// derived, T24). `None` where `abs(R) = 1`, no rest point, or where the
+/// torsion share is no share.
 fn rest_point(z: u32, share: &Q) -> Option<FacePairs> {
-    let psi = (share * &Q::int(i64::from(z))).frac();
-    FacePairs::dilation(&crate::circuit::electron_phase(z, &psi))
+    let common = xyl_core::hopf::COMMON;
+    let capture = crate::circuit::capture_phases(z, share, &common);
+    let [axis, ..] = crate::circuit::induced_phases(z, &capture, &common, share)?;
+    FacePairs::dilation(&axis)
 }
 
 /// A cohort's pooled release (netstratum docs/134, agreed 2026-11-13): the
@@ -584,8 +589,9 @@ mod tests {
         // Every kind rests at D(R) of its capture phase (E018).
         let share = crate::bounce::torsion_share(&Q::ONE, &xyl_core::ratio!(1, 2));
         for (z, parcels) in &table {
-            let psi = (&share * &Q::int(i64::from(*z))).frac();
-            let r = crate::circuit::electron_phase(*z, &psi);
+            let common = xyl_core::hopf::COMMON;
+            let capture = crate::circuit::capture_phases(*z, &share, &common);
+            let [r, ..] = crate::circuit::induced_phases(*z, &capture, &common, &share).unwrap();
             let d = xyl_core::shares::dilation(&r).unwrap();
             assert!(parcels.iter().all(|p| p.pairs.value() == d), "Z {z}");
         }

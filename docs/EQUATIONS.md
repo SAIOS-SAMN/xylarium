@@ -76,7 +76,7 @@ sites are restated. The derivations are in
 | E027 | An event carried from `a` to `b`: the rapidities of the nested wells composed per plane, the place turned by `P_b^-1 P_a`, the T coordinate counted through the keepers between | a remote event read by light delay and the reader's keeper alone | [#221](https://github.com/SAIOS-SAMN/xylarium/issues/221) | planned |
 | E028 | A rotor is read by its dimensions: its planes (the bivector part by generators), its volumes (grade 4 and above), and its capacity, half the rank of the bivector part's antisymmetric matrix, exact; two planes are orthogonal when they share no axis, commute, and compose with a volume; planes sharing an axis turn the third plane | one angle per rotor (the angle reading `angle_between`, deleted), one plane per rotor | [#118](https://github.com/SAIOS-SAMN/xylarium/issues/118), [#207](https://github.com/SAIOS-SAMN/xylarium/issues/207) | built (`rotor::Rotor::dimensions`, `rotor::orthogonal`) |
 | E029 | The induced turn: a throat's torsion on every Hopf plane's phase, the spin face `w_p 360 s` and the inverse face `-w_p 360 (1 - s)` degrees, `s = (H + J) / (2H + J)`, whole turns carried apart; each face the weighted Seifert automorphism; the pair leaves the shear `w_p 360 (2s - 1)` (T22) | R offset by the flow law (I016); the even split as a holonomy (I019) | ruled 2026-11-15, [#245](https://github.com/SAIOS-SAMN/xylarium/issues/245) | built (`hopf::induce`, #244) |
-| E030 | R per Hopf plane, an exact rational in `[-1, 1]` turns, signed by face (+ on Z, - on Q, 0 at the throat), offset by the induced turn (E029) before it is read | one scalar R (I012); R as an integer winding | ruled 2026-11-15 (Mycelium 78.184 section 5, option (a)) | planned (R read through E029) |
+| E030 | R per Hopf plane, an exact rational in `[-1, 1]` turns, signed by face (+ on Z, - on Q, 0 at the throat), offset by the induced turn (E029) before it is read | one scalar R (I012); R as an integer winding | ruled 2026-11-15 (Mycelium 78.184 section 5, option (a)) | built (`circuit::induced_phases`, read by `fill_shares`, the rest point and the jet's electron channel) |
 | E031 | A package's delivery on TUniversal's T lane: the share delivered by final point `h` is `d_T(h) = 1 - T_0 / T(h)`, `T_0` the T lane at the founding's final point, applied at the next anchor; mu is created only for what each advance delivers; the package's entries `(Z, Q, R, count)`, the count the developers' allocation | the whole package created at the manifest (Mycelium #331) | ruled 2026-11-14 (78.184 section 5, MU-EQUATIONS 6.13) | planned (uplink K1, Mycelium #327) |
 
 | ID | Invalid form | Sites | Superseded by | Status |
@@ -142,8 +142,8 @@ sites are restated. The derivations are in
   `= w_p 360 J / (2H + J)` degrees, a sheared return, zero only where the
   throat does not spin. Never a flow-law offset of a share (the flow law is
   the boost's composition, on S; a phase is a turning, on H) and never an
-  even split. Calibre: none (degrees and turns). Status: built; the
-  electron phase `R_p` reading it is next.
+  even split. Calibre: none (degrees and turns). Status: built; `R_p` is read through it
+  (`circuit::induced_phases`, E030).
 - Capture phase (`circuit::found`): `(share Z) mod 1`, exact; its
   denominator divides the torsion share's. Calibre: none. Status: built.
 - Coordinate (`xyl_core::coordinate`, FORMS-COORDINATE v4, reconstructed

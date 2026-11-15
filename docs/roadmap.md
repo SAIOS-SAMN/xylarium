@@ -544,8 +544,8 @@ where it belongs to one.
     [interfaces.md](interfaces.md) (axiom 13), every offset an automorphism
     (axiom 12), every composition by its plane's kind (axiom 3). Done: the
     induced turn (`hopf::induce`, T22, T23); the axioms restated; the
-    interfaces listed. Order: R read through the induced turn on every
-    plane (E030); E018's rest point as the transduction from H to the join
+    interfaces listed; R read through the induced turn on every plane
+    (`circuit::induced_phases`, E030). Order: E018's rest point as the transduction from H to the join
     (I017, T24); a machine-readable theorem register with
     `scripts/check-theorems`; the proofs witnessed on the running engine
     (`xylarium observe proofs`).

@@ -28,7 +28,11 @@ os.chdir(ROOT)
 DOCS = sorted(
     glob.glob("*.md") + glob.glob("docs/*.md") + glob.glob(".github/**/*.md", recursive=True)
 )
-SOURCES = sorted(glob.glob("crates/*/src/**/*.rs", recursive=True) + glob.glob("crates/*/build.rs"))
+SOURCES = sorted(
+    glob.glob("crates/*/src/**/*.rs", recursive=True)
+    + glob.glob("crates/*/tests/**/*.rs", recursive=True)
+    + glob.glob("crates/*/build.rs")
+)
 
 
 def slug(heading):

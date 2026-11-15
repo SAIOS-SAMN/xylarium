@@ -143,6 +143,38 @@ pub(super) fn proofs_read(o: &Options, t_rings: Option<Q>) -> Result<String, Str
             }
         }
     }
+    // T23: in the common winding each face's induced turn moves every
+    // founded kind's capture phases only along the fibre, so their relative
+    // phases (the point of CP^5) are kept; the largest residue over both
+    // faces and every kind.
+    use xyl_core::hopf::{induce, Sense, PLANES};
+    use xyl_core::rotor::Winding;
+    let relative = |x: &[Winding; PLANES]| {
+        let t: Vec<Q> = x.iter().map(Winding::turns).collect();
+        t.iter().map(|v| v - &t[0]).collect::<Vec<Q>>()
+    };
+    let (mut reduced, mut kept) = (0usize, Q::ZERO);
+    for z in table.keys() {
+        let capture = xyl_cosmos::circuit::capture_phases(*z, &share, &common);
+        let r: [Winding; PLANES] = std::array::from_fn(|p| Winding::of_turns(&capture[p]));
+        for sense in [Sense::Spin, Sense::InverseTorsion] {
+            if let Some(moved) = induce(&r, &common, &share, &[sense; PLANES]) {
+                reduced += 1;
+                let worst = relative(&moved)
+                    .iter()
+                    .zip(relative(&r))
+                    .map(|(a, b)| (a - &b).abs())
+                    .fold(Q::ZERO, Q::max);
+                kept = kept.max(worst);
+            }
+        }
+    }
+    line(
+        &mut out,
+        "T23",
+        &format!("the largest change of a relative phase over {reduced} faces of founded kinds"),
+        Some(kept),
+    );
     line(
         &mut out,
         "T24",

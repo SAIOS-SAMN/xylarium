@@ -1,6 +1,0 @@
-cargo:rerun-if-changed=/opt/xyl-prof/crates/xyl-cosmos/src
-cargo:rerun-if-changed=/opt/xyl-prof/crates/xyl-cosmos/data
-cargo:rerun-if-changed=/opt/xyl-prof/crates/xyl-cosmos/../xyl-core/src
-cargo:rustc-env=XYL_SHELLS_DIGEST=6bfaadbf8afd841a
-cargo:rustc-env=XYL_SOURCE_DIGEST=54aaa26dd6c4e5e9
-cargo:rustc-env=XYL_FOUNDING_DIGEST=dcdc238271f9430d

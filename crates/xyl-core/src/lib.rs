@@ -23,6 +23,7 @@
 
 pub mod certified;
 pub mod cga;
+pub mod chrono;
 pub mod codec;
 pub mod coordinate;
 pub mod coupling;

@@ -184,11 +184,7 @@ pub fn bell() -> Dy {
 /// returns after `bell / s`, the two never equal (the attractor pair). Zero
 /// where `s` is not below one.
 pub fn echo_at(s: &Q) -> Dy {
-    let open = &Q::ONE - s;
-    match open.signum() {
-        1 => bell().div(&(Dy::from_q(&open))).unwrap_or_default(),
-        _ => Dy::ZERO,
-    }
+    xyl_core::chrono::sheared_return(bell(), s).unwrap_or(Dy::ZERO)
 }
 
 /// The universal core's echo (rings) after its open kinds have left: the

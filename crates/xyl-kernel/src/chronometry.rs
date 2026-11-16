@@ -19,7 +19,7 @@
 //!   rate (N - delay) / ring; slip = (1 - rate)(N - delay) / ring;
 //!   coherence = 1 - 2 |slip - round(slip)|; rung = floor(slip). N - delay
 //!   is clamped at zero.
-//! - Delay ([`arrival`]): the front's arrival from the epicenter, the
+//! - Delay (`xyl_core::chrono::arrival`): the front's arrival from the epicenter, the
 //!   separation of the two places' time coordinates, `tau = d + H` with the
 //!   hold the front crosses (the cores nearer the epicenter; for a shell
 //!   also its galaxy's hold inside its reach), over the pulse's wavelength
@@ -152,7 +152,7 @@ pub struct Keeper {
     /// Travel time of the pulse from the epicenter to the keeper, in bells:
     /// the front's arrival, the separation of the two places' time
     /// coordinates, `tau = d + H` with the hold `H` the front crosses
-    /// (E032, #280 stage 3), over the pulse wavelength ([`arrival`]).
+    /// (E032, #280 stage 3), over the pulse wavelength (`xyl_core::chrono::arrival`).
     pub delay: Q,
     /// The keeper's ring, in the engine's bells: the echo period of the
     /// enclosure it keeps time in (the universe's sphere for the epicenter,
@@ -160,41 +160,16 @@ pub struct Keeper {
     pub ring: Q,
 }
 
-/// What a keeper reads at the epicenter's count.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Reading {
-    /// Local count in the keeper's rings: rate x (N - delay) / ring.
-    pub local: Q,
-    /// Turns fallen behind the epicenter: (1 - rate) x (N - delay) / ring.
-    pub slip: Q,
-    /// Phase agreement with the epicenter in \[0, 1\]:
-    /// 1 - 2 |slip - round(slip)| (1 in phase, 0 half a turn out).
-    pub coherence: Q,
-    /// Whole turns of slip (the floor of `slip`); 0 for a keeper at rate 1.
-    pub rung: i128,
-}
+/// What a keeper reads at the root's winding: its local count, its slip,
+/// its coherence and its rung (`xyl_core::chrono::keep`).
+pub use xyl_core::chrono::Keeping as Reading;
 
 impl Keeper {
     /// The keeper's count, slip, coherence and rung, in the keeper's rings,
-    /// at the engine's count `n` (bells). A zero ring gives a zero count.
-    pub fn read(&self, n: &Q) -> Reading {
-        let since = (n - &self.delay).max(Q::ZERO);
-        let own = since.checked_div(&self.ring).unwrap_or(Q::ZERO);
-        let local = &self.rate * &own;
-        let slip = &(&Q::ONE - &self.rate) * &own;
-        let rung = slip.floor_i128().unwrap_or(0);
-        let frac = &slip - &Q::from_i128(rung, 1).unwrap_or(Q::ZERO);
-        let off = if frac > Q::new(1, 2).unwrap_or(Q::ZERO) {
-            &Q::ONE - &frac
-        } else {
-            frac
-        };
-        Reading {
-            local,
-            slip,
-            coherence: &Q::ONE - &(&Q::int(2) * &off),
-            rung,
-        }
+    /// at the root's winding `n` (`xyl_core::chrono::keep`).
+    /// `None` for a ring that is not positive.
+    pub fn read(&self, n: &Q) -> Option<Reading> {
+        xyl_core::chrono::keep(&self.rate, &self.delay, &self.ring, n)
     }
 }
 
@@ -245,27 +220,6 @@ pub struct Chronometry {
     pub anchor: Option<Point>,
 }
 
-/// The front's arrival from the epicenter at a keeper `d_kpc` away, in
-/// bells: the separation of the two places' time coordinates on the T lane,
-/// `tau = d + H` (E032), with `held` the hold the front crosses on the way
-/// (core masses, read as r_g by G = c = M = 1, converted to kpc by
-/// `kpc_rg`), over the pulse's wavelength `lambda_kpc`. With no hold crossed
-/// it is light's time; each hold crossed adds its light time.
-pub fn arrival(d_kpc: &Q, held: &Q, kpc_rg: &Q, lambda_kpc: &Q) -> Q {
-    let crossed = held.max(&Q::ZERO).checked_div(kpc_rg).unwrap_or(Q::ZERO);
-    (d_kpc + &crossed)
-        .checked_div(lambda_kpc)
-        .unwrap_or(Q::ZERO)
-}
-
-/// The rate of a well of mass `inside_rg` at radius `r_rg` (both in r_g):
-/// gravity's divergent face r / (r + M) (`shares::faces`), the antipole of
-/// the deficit M / (r + M); exact; 1 where the faces are refused (r + M zero
-/// or a negative part).
-fn well(r_rg: &Q, inside_rg: &Q) -> Q {
-    xyl_core::shares::faces(inside_rg, r_rg).map_or(Q::ONE, |f| f.divergent)
-}
-
 impl Chronometry {
     /// The keepers of a founding: the epicenter, then for each galactic core
     /// its hub, deep core, inner mantle and outer rim. The chain starts empty.
@@ -277,22 +231,22 @@ impl Chronometry {
             .checked_div(&xyl_cosmos::package::Si::kpc())
             .unwrap_or(Q::ONE);
         let lambda = xyl_cosmos::pulse::wavelength_kpc().to_q();
-        let front = |kpc: &Q, held: &Q| arrival(kpc, held, &kpc_rg, &lambda);
+        let front = |kpc: &Q, held: &Q| {
+            xyl_core::chrono::arrival(kpc, held, &kpc_rg, &lambda).unwrap_or(Q::ZERO)
+        };
         let shapes = xyl_cosmos::cores::shapes(origin);
         let mass =
             |s: &xyl_cosmos::cores::Shape| &xyl_cosmos::turning::home_mass() * &s.mass_ratio();
         // A core's distance from the universe core is its reach along the
         // core's bearing, not a Euclidean norm.
         let dist = |s: &xyl_cosmos::cores::Shape| &s.reach * &cluster_kpc;
-        // Rings: the universe's echo around its great circle is 2 pi R_u / c;
-        // a galaxy's echo out to its rim (where the pulse refocuses) and back
-        // is 2 rim / c. Each is expressed in the engine's bells, the
-        // founding's 2 rim / c (circuit::anchor), so the epicenter's ring is
-        // pi R_u / rim and a galaxy's ring is its scale.
-        let r_u = xyl_cosmos::galaxy::radius_kpc();
-        let ring_u = (&xyl_core::certified::pi(64).mid() * &r_u)
-            .checked_div(&xyl_cosmos::galaxy::rim_kpc())
-            .unwrap_or(Q::ONE);
+        // Rings: the engine's count is the root orbit's winding (no
+        // background clock, docs/chronometry.md), so the epicenter keeps time
+        // in root windings, a ring of one; a galaxy's echo out to its rim and
+        // back is its scale in those windings. Every ring is rational: the
+        // universe's great-circle period, which carries pi, is a display
+        // reading, never a stored ring.
+        let ring_u = Q::ONE;
         let mut c = Chronometry::default();
         c.keepers.push(Keeper {
             galaxy: None,
@@ -312,7 +266,7 @@ impl Chronometry {
                 .filter(|o| o.index != s.index && dist(o) < d)
                 .fold(Q::ZERO, |a, o| &a + &mass(o));
             // Masses are core masses (r_g of the core, G = c = 1).
-            let galaxy_rate = well(&(&d * &kpc_rg), &nearer);
+            let galaxy_rate = xyl_core::chrono::well(&(&d * &kpc_rg), &nearer).unwrap_or(Q::ONE);
             let scale = s.scale().to_q();
             // The hub is the galactic core, counting in the galaxy's echo.
             c.keepers.push(Keeper {
@@ -339,7 +293,8 @@ impl Chronometry {
                 let r_rings = &r_home * &scale;
                 let r = xyl_cosmos::galaxy::kpc_of_units(&r_rings);
                 let inside = &xyl_cosmos::galaxy::inside_mass(&r_home) * &s.mass_ratio();
-                let rate = &galaxy_rate * &well(&(&r_rings * &ring_rg), &inside);
+                let rate = &galaxy_rate
+                    * &xyl_core::chrono::well(&(&r_rings * &ring_rg), &inside).unwrap_or(Q::ONE);
                 c.keepers.push(Keeper {
                     galaxy: Some(s.index),
                     shell,
@@ -363,11 +318,27 @@ impl Chronometry {
     /// inside it. `point` is the last final point heard (None when
     /// unlinked), recorded whole in the epicenter's entry.
     pub fn commit(&mut self, n: &Q, point: Option<Point>) {
-        let mut slips: Vec<Q> = Vec::with_capacity(self.keepers.len());
+        // Each keeper's slip, `None` for one with no reading (a ring that is
+        // not positive, never the case for a founded keeper): no entry is
+        // written for it, and a keeper outside it reads its residual against
+        // the next keeper in that has one.
+        let mut slips: Vec<Option<Q>> = Vec::with_capacity(self.keepers.len());
         for (k, keeper) in self.keepers.iter().enumerate() {
-            let reading = keeper.read(n);
+            let Some(reading) = keeper.read(n) else {
+                slips.push(None);
+                continue;
+            };
             let inner = self.inside[k];
-            let residual = inner.map(|i| &reading.slip - &slips[i]).unwrap_or(Q::ZERO);
+            let mut inner_slip = None;
+            let mut at = inner;
+            while let Some(i) = at {
+                if let Some(Some(si)) = slips.get(i) {
+                    inner_slip = Some(si.clone());
+                    break;
+                }
+                at = self.inside.get(i).copied().flatten();
+            }
+            let residual = inner_slip.map_or(Q::ZERO, |si| &reading.slip - &si);
             let parent = self.heads[k];
             let inner_hash = inner.map(|i| self.heads[i]).unwrap_or([0; 32]);
             let mut h = blake3::Hasher::new_derive_key("xylarium chronometry entry v3");
@@ -390,7 +361,7 @@ impl Chronometry {
                 };
             }
             let hash: [u8; 32] = *h.finalize().as_bytes();
-            slips.push(reading.slip.clone());
+            slips.push(Some(reading.slip.clone()));
             self.entries.push(Entry {
                 keeper: k,
                 at: n.clone(),
@@ -442,33 +413,5 @@ impl Chronometry {
                 })
             })
             .collect()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// The keeper's delay is the front's arrival (E032): with no hold crossed
-    /// it is light's time, every hold crossed adds the light time it holds, never
-    /// less, and arrivals over two stretches add.
-    #[test]
-    fn a_keepers_delay_is_the_separation_of_time_coordinates() {
-        let (kpc_rg, lambda) = (Q::int(1000), Q::new(3, 2).unwrap());
-        let d = Q::int(12);
-        assert_eq!(arrival(&d, &Q::ZERO, &kpc_rg, &lambda), Q::int(8));
-        let held = Q::int(500);
-        let more = arrival(&d, &held, &kpc_rg, &lambda);
-        assert_eq!(more, &Q::int(8) + &Q::new(1, 3).unwrap());
-        assert!(more > arrival(&d, &Q::ZERO, &kpc_rg, &lambda));
-        let (a, b) = (Q::int(5), Q::int(7));
-        let (ha, hb) = (Q::int(100), Q::int(300));
-        let split = &arrival(&a, &ha, &kpc_rg, &lambda) + &arrival(&b, &hb, &kpc_rg, &lambda);
-        assert_eq!(split, arrival(&(&a + &b), &(&ha + &hb), &kpc_rg, &lambda));
-        assert_eq!(
-            arrival(&d, &Q::int(-5), &kpc_rg, &lambda),
-            Q::int(8),
-            "no negative hold"
-        );
     }
 }

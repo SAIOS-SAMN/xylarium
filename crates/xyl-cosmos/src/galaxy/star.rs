@@ -53,10 +53,12 @@ impl Orbit {
 
     /// Orbital phase at `t` rings (turns): the initial phase plus the
     /// turning, the mean `omega / (2 pi)` per ring breathing with its core's
-    /// bell (`chain::breathing_turns`).
+    /// bell (`xyl_core::chrono::breathing_turns`).
     pub fn turns_at(&self, t: Dy) -> Dy {
         let per_ring = self.rate * Dy::from_q(&crate::manifold::per_turn().mid());
-        self.turns0 + crate::chain::breathing_turns(per_ring, self.deficit, t, self.echo)
+        self.turns0
+            + xyl_core::chrono::breathing_turns(per_ring, self.deficit, t, self.echo)
+                .unwrap_or(per_ring * t)
     }
 }
 

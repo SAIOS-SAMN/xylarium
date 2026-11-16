@@ -542,7 +542,7 @@ where it belongs to one.
     throat's push swinging with the echo (`circuit::throat_push`); the
     reverberation read through the swing, each kind past the throat on the
     expanding side (`Substrate::outflow`); the galaxy tier's orbit rates
-    breathing (`chain::breathing_turns`, the stars' orbits and the
+    breathing (`xyl_core::chrono::breathing_turns`, the stars' orbits and the
     galaxies' circulation); the world manifolds' rates breathing over the
     star's galaxy core's echo, carried down the anchor chain
     (`Manifold::stand`); the centre's crossing share, the horizon's held face

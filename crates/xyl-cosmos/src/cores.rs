@@ -60,7 +60,7 @@ pub struct Shape {
     /// per ring; zero for the home galaxy at the core.
     pub rate: Dy,
     /// The deficit `delta` the circulation is read at: the rate breathes
-    /// with the universal core's bell (`chain::breathing_turns`).
+    /// with the universal core's bell (`xyl_core::chrono::breathing_turns`).
     pub delta: Dy,
 }
 
@@ -82,7 +82,8 @@ impl Shape {
     pub fn place_at(&self, t: Dy, r: &Q) -> crate::chain::Place {
         // Its turns on its plane, whole turns and phase carried (E019).
         let turns = (Dy::from_q(&self.phase)
-            + crate::chain::breathing_turns(self.rate, self.delta, t, crate::circuit::echo()))
+            + xyl_core::chrono::breathing_turns(self.rate, self.delta, t, crate::circuit::echo())
+                .unwrap_or(self.rate * t))
         .to_q();
         crate::chain::Place::core(
             self.anchor().0,

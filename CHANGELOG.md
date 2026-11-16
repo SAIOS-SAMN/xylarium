@@ -1339,6 +1339,15 @@ may change public APIs and the model's laws.
 
 ### Fixed
 
+- Live play no longer steps time (#308; AGENTS.md: no time-stepping
+  loops). `Universe::civilizations` carried each span in pieces of a tenth
+  of the shortest generation, about twenty thousand pieces per ring of the
+  bell, each re-running the field's delivery, every people's environment
+  and the whole carry: seed 7's first ring took over three hours. Each span
+  is now carried once in closed form, and a settling's moment, the
+  logistic's inflection (`growth::years_to_inflection`), is an event of
+  `Universe::next_event`, so no span crosses one.
+
 - The ley network and the builders read the universe's sphere at the
   network's time in rings (`chain::radius`), not at its Gyr value read as
   rings (`transit::network`, `transit::building`).

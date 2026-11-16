@@ -135,6 +135,21 @@ pub fn grow(now: Dy, cap: Dy, rate: Dy, years: Dy) -> Dy {
         .unwrap_or_default()
 }
 
+/// The years from `now` until the logistic toward `cap` at `rate` reaches
+/// its inflection, half the capacity: `ln(K / N - 1) / r`, in closed form
+/// (the event a people's settling waits on, civ/mod.rs `expand`). `Some(0)`
+/// at or past the inflection; `None` where the numbers or the capacity are
+/// not positive or the rate does not grow them.
+pub fn years_to_inflection(now: Dy, cap: Dy, rate: Dy) -> Option<Dy> {
+    if now.signum() <= 0 || cap.signum() <= 0 || rate.signum() <= 0 {
+        return None;
+    }
+    if now * Dy::int(2) >= cap {
+        return Some(Dy::ZERO);
+    }
+    (cap.div(&now)? - Dy::ONE).ln()?.div(&rate)
+}
+
 /// The power a world offers a people's works and the power the people's
 /// bodies already convert (W). Until seated minds direct the capture of the
 /// world's flows, a people commands only the power of its bodies.
@@ -192,6 +207,29 @@ mod tests {
             shape: Shape::Society,
             size,
         }
+    }
+
+    #[test]
+    fn the_inflection_is_an_event_in_closed_form() {
+        // Grown for the years to its inflection, a people stands at half its
+        // capacity (#308); past it the event is now; with no growth there is
+        // none.
+        let (cap, rate) = (Dy::int(1_000_000), xyl_core::dyadic!(1, 50));
+        for n in [1, 10, 1_000, 499_999] {
+            let now = Dy::int(n);
+            let t = years_to_inflection(now, cap, rate).unwrap();
+            let half = grow(now, cap, rate, t);
+            assert!(
+                (half - Dy::int(500_000)).abs() < Dy::sci(1, -3),
+                "{n}: {half}"
+            );
+        }
+        assert_eq!(
+            years_to_inflection(Dy::int(600_000), cap, rate),
+            Some(Dy::ZERO)
+        );
+        assert_eq!(years_to_inflection(Dy::int(10), cap, Dy::ZERO), None);
+        assert_eq!(years_to_inflection(Dy::ZERO, cap, rate), None);
     }
 
     #[test]

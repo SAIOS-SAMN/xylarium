@@ -172,10 +172,13 @@ Exoduses and settlements are returned as `civ::Act` and recorded as
 regenerates the universe from its seed and carries it to the checkpoint's
 count with these recorded acts applied in place of the carry's decisions,
 then lays the held records over the result; it is to reconstruct them
-instead ([#46](https://github.com/SAIOS-SAMN/xylarium/issues/46)). Live play carries in pieces no longer than a tenth of the
-shortest turning time of any living people (`Universe::civilizations`); a
-reading carries each people once to the reading's time
-(`Universe::read_at_now`).
+instead ([#46](https://github.com/SAIOS-SAMN/xylarium/issues/46)). Live play carries each span between two events once, in closed form
+(`Universe::civilizations`), never in steps: a settling waits on the
+logistic's inflection, half a people's capacity, whose moment is an event
+in closed form, `ln(K / N - 1) / r` years after its numbers were last carried
+(`growth::years_to_inflection`, read by `Universe::next_event`), so no span
+crosses one (#308). A reading carries each people once to the reading's
+time (`Universe::read_at_now`).
 
 ## Histories
 

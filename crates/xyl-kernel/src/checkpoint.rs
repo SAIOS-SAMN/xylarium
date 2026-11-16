@@ -3,7 +3,10 @@
 //! its seed. A restore regenerates the universe by its laws, carries it to
 //! the count with the recorded exoduses and settlements applied in place of
 //! the carry's decisions, and lays the held records over the result without
-//! checking them; it is to reconstruct that state instead (#46).
+//! checking them; it is to reconstruct that state instead (#46). Under time
+//! as coordinates the checkpoint is to become a causally closed cut (each
+//! subject's own point), with external inputs held with their causes and
+//! the emergent state checked by its books (docs/checkpoints.md, #285).
 //!
 //! Held ([`Checkpoint`]): the count it was taken at; each seat's holder
 //! other than the default rule; each people's numbers, housing, knowledge

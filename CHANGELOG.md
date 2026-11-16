@@ -11,6 +11,15 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- docs/checkpoints.md: the checkpoint designed for time as coordinates
+  (#285). A checkpoint is a causally closed cut (each subject's own point,
+  in its tier, every lane exact and each Hopf plane's winding and phase
+  apart); state in three strata (law regenerated, emergent reconstructed
+  and checked by its books per subject, external inputs held whole with
+  their causes); restore reconstructs to the cut in causal order, naming
+  any divergence; segments chained in the uplink's ledger form, written
+  atomically and verified by commitment. Sub-issues #46, #286, #287, #288.
+
 - BUILD_OUT.md: how a design section becomes a milestone, an issue, a
   branch, a pull request and a witnessed reading; the phases M3 to M7 with
   their governing docs and exit readings; the gates; the board's fields; the

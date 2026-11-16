@@ -90,6 +90,7 @@ design section that governs the item; Seam is `none`, `mycelium` or
 | Time: the front's arrival `tau(r) = r + H(<r)`, one ring at the equator | #245, #280 | netstratum #207 |
 | The uplink: domain, manifest, ledger, the house's relay | network.md; #270, #108 | xylarium-uplink; mycelium |
 | The core tube | network.md | netstratum #109 |
+| The chronometric library and its telemetry: one form per quantity of time | [chronometry.md](docs/chronometry.md); #299 to #303 | the uplink's clock; netstratum's seam (`delta tau`) |
 | Checkpoint segments as the ledger: one object, kept locally and posted | [checkpoints.md](docs/checkpoints.md); #285, #287 | xylarium-uplink #14; mycelium 78.154 |
 
 ## Labels

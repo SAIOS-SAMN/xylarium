@@ -614,11 +614,26 @@ sites are restated. The derivations are in
     orbital plane (a degree of structure); return after
     `q` traversals, `q` the denominator of the advance; resonances
     `r_k = (k - 1) M` return after `k`; far-face images `M / (k - 1)`.
-  - Ring: the throat orbit's reading at count `t`, `R(t) = (D(n)^t by its
-    exponent; phi_i(t) = t theta_i mod 1 in QQ/ZZ, i = 1..5; whole
-    traversals in ZZ and each plane's order)`, never one scalar; durations
-    (`2 pi M / s` per traversal, in `r_g / c`) are display through a
-    certified pi. Turning in degrees per traversal on the orbit's plane:
+  - Ring: one traversal of an orbit, a multi-axial versor, never one
+    scalar. From the mass inside the orbit: the pull, a boost on the axis
+    plane, `D(delta)` breathing as `delta (1 - delta)` with the core's bell
+    (flow law); the shear, `360 delta_p` degrees per traversal on each plane
+    (degrees add), returned after `1 / (1 - delta_p)`. From the orbiting
+    matter: the torsion, a throat's `+w_p 360 s` (spin face) and
+    `-w_p 360 (1 - s)` (inverse face) on every plane (T22) with the axis
+    twist `D(n)`, or a body's charged spin (holonomy `360 delta`, open
+    charge `pi = (p / w)(1 - delta)`, tilt `eps* = 90 pi`). At `t`
+    traversals: `R(t) = (D(delta)^t and D(n)^t by their exponents;
+    phi_p(t) = t (delta_p + w_p sigma_p) mod 1 in QQ/ZZ, p = 1..5,
+    sigma_p = s or -(1 - s) by face; whole traversals in ZZ and each
+    plane's order)`.
+  - Ring hierarchy: rings nest along the anchor chain (the universal core's
+    throat orbit the root; galactic cores about the ocean's hold; stars
+    about `M(<r)`; worlds about their star; moons about their world); an
+    epoch is the nested reading; levels relate by the ratio of angular
+    rates (pi cancels), so ring counts are rational; time is held as
+    `tau(r) = r + H(<r)` (E032) and rings are read from it, the root
+    traversal's `2 pi M / s` in `r_g / c` a display through a certified pi. Turning in degrees per traversal on the orbit's plane:
     `360 (delta(r) / r) (M / s)`,
     exact.
   - Local ring at reach `r`: one traversal of the orbit at `r`, lasting

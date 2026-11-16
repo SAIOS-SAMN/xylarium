@@ -11,6 +11,16 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The ring restated as a multi-axial orbit on the orbit hierarchy
+  (model.md, The ring and The ring hierarchy; EQUATIONS; glossary; #60):
+  one traversal read as one versor, the pull and the shear of the mass
+  inside the orbit (`D(delta)` on the axis, breathing; `360 delta_p` per
+  plane) composed with the torsion of the orbiting matter (a throat's
+  induced turn on both faces with its axis twist, or a body's charged spin),
+  each by its plane's kind. Rings nest along the anchor chain from the
+  universal core's throat orbit to each moon, related exactly by the ratio
+  of angular rates; time is held as `tau` and the rings read from it.
+
 - docs/checkpoints.md: the checkpoint designed for time as coordinates
   (#285). A checkpoint is a causally closed cut (each subject's own point,
   in its tier, every lane exact and each Hopf plane's winding and phase

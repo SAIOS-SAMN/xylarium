@@ -1275,28 +1275,73 @@ display, never stored.
   apsis ratio 3, the throat push's dilation), the horizon (`k = 3`, apsis
   ratio 2), and so on; the inversion `r -> M^2 / r` maps each to
   `M / (k - 1)` on the far face, the throat to itself.
-- **The ring.** A ring is the reading of the core's orbit at the throat
-  (`r = M`, `delta = 1/2`), never one scalar. At a count `t` (exact in Q) it
-  is
+- **The ring.** A ring is one traversal of an orbit, read as the one motion
+  it is, never one scalar: a multi-axial versor composed of what the mass
+  inside the orbit does to it and what the orbiting matter does to itself,
+  each on the kind of plane it acts on (axiom 3) and each an automorphism of
+  what it acts on (axiom 12).
+  - **From the mass: the pull and the shear.** The hold inside the orbit,
+    `H(<r)` in the tier's calibre, sets the deficit
+    `delta = H(<r) / (r + H(<r))`. The pull is a boost on the axis plane
+    (the S lane): the orbit moves at `delta` of light's speed, its radial
+    swing is `r (1 +/- delta)` and its apsis ratio `D(delta)` (T3), and it
+    composes by the flow law, dilations multiplying. The shear is a turning
+    on each plane (the H lane): each traversal advances the periapsis by
+    `360 delta_p` degrees on plane `p`, `delta_p` the hold's share there,
+    returned after `1 / (1 - delta_p)` traversals (T4), degrees adding.
+    The hold breathes with its core's bell, `H (1 + delta cos(360 t / echo))`,
+    so the pull and the shear swing as `delta (1 - delta)`
+    (`chain::breathing_turns`, #233).
+  - **From the matter: the torsion.** The orbiting body's own spin turns
+    every Hopf plane's phase: a throat (a core, a hole) by its torsion share
+    `s = (H + J) / (2H + J)`, `w_p 360 s` degrees on the spin face and
+    `-w_p 360 (1 - s)` on the inverse face (T22, `hopf::induce`), the axis
+    holding its twist `n = a / (4 + a)` as the dilation `D(n)` per echo; a
+    body of matter (a star, a world) by its charged spin, the holonomy
+    `360 delta` at the body's reach with its open charge
+    `pi = (p / w) (1 - delta)` tilting the pole axis toward isoclinic plane
+    1 to `eps* = 90 pi` degrees (The charged spin above). A body with mass
+    and no spin carries only what its anchor's mass gives it.
+  - **The reading.** At a count `t` of the body's traversals, its ring is
 
-  ```text
-  R(t) = ( the axis:    D(n)^t, held by its exponent t
-           the planes:  phi_i(t) = t theta_i mod 1, i = 1..5, each in QQ/ZZ
-           the returns: the whole traversals k in Z and each plane's order )
-  ```
+    ```text
+    R(t) = ( the axis:    D(delta)^t (the pull, breathing) and D(n)^t (the twist),
+                          each held by its exponent
+             the planes:  phi_p(t) = t (delta_p + w_p sigma_p) mod 1, p = 1..5,
+                          each in QQ/ZZ, sigma_p = s on the spin face and
+                          -(1 - s) on the inverse face
+             the returns: the whole traversals k in ZZ and each plane's order )
+    ```
 
-  each plane with a rate `theta_i` of that plane, the hold's deficit share there
-  (all equal to `s` while the spin is isoclinic), and the readings are never
-  summed. Every stored value is rational: a duration in `r_g / c` or in
-  seconds (one traversal lasts `2 pi M / s` in `r_g / c`) is a display
-  conversion through a certified enclosure of pi, never a quantity. An epoch
-  is a position in this reading, nested through the tiers (each tier read on the
-  throat orbit of that tier), not a count of a scalar unit; a reading moves to any count
-  in closed form, and the count live play advances per loop is read against
-  the network's height per segment, never fixed. With no spin each isoclinic
-  plane advances 180 degrees per traversal and returns after two, the two
-  faces of the attractor pair then reading the same density (`s = 1 - s`): the echo is the
-  throat orbit's return.
+    the readings never summed: the axis by its exponents, each plane by its
+    winding and its phase. With no spin each isoclinic plane advances 180
+    degrees per traversal and returns after two, the two faces of the
+    attractor pair reading one density (`s = 1 - s`): the echo is the
+    throat orbit's return.
+- **The ring hierarchy.** Rings nest along the anchor chain, each body's
+  read inside its anchor's: the universal core's throat orbit (`r = M`,
+  `delta = 1/2`, the root ring), each galactic core's orbit in the ocean
+  about the hold inside its reach (`Substrate::held_within`), each star's
+  about its galaxy's `M(<r)` (`galaxy::inside_mass`), each world's about its
+  star, each moon's about its world (`manifold::Manifold`). A body's epoch is
+  its position in this nest (the body's ring reading, its anchor's, up to the
+  root), never a count of one scalar unit. Two levels relate exactly by the
+  ratio of their angular rates, in which pi cancels (The local ring below):
+  every ring count is rational in the hierarchy. Time itself is held as the
+  T lane's coordinate, `tau(r) = r + H(<r)` at `c = 1` (E032), rational; the
+  rings are read from it, and the one irrational link, a root traversal's
+  `2 pi M / s` in `r_g / c`, is a display conversion through a certified
+  enclosure of pi, never stored. A crossing between two universes (the seam
+  with netstratum) carries `delta tau` only, each side reading it into its
+  rings at the face it holds.
+- **What is built.** The pieces: the breathing orbit rates at every tier
+  (`chain::breathing_turns`, `Manifold::stand`), the induced turn
+  (`hopf::induce`), the charged spin (`xyl_core::hopf`), the echo
+  (`circuit::echo_at`), the time coordinate (`Substrate::delay`,
+  `field::path`). Not yet: the ring as one versor per body and its nested
+  reading (#60), the planes' own shares `delta_p` in place of the one
+  isoclinic share (#128, S130, S144), and the ring replacing the bell as
+  the count live play advances (#280, stage 4).
 - **The echo at any spin** (built: `circuit::echo_at`). The near face
   advances by the torsion share `s` per traversal (axiom 7), so by T4 it
   returns after `bell / (1 - s)`, and the far face after `bell / s`; the two

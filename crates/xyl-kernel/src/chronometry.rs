@@ -19,6 +19,11 @@
 //!   rate (N - delay) / ring; slip = (1 - rate)(N - delay) / ring;
 //!   coherence = 1 - 2 |slip - round(slip)|; rung = floor(slip). N - delay
 //!   is clamped at zero.
+//! - Delay ([`arrival`]): the front's arrival from the epicenter, the
+//!   separation of the two places' time coordinates, `tau = d + H` with the
+//!   hold the front crosses (the cores nearer the epicenter; for a shell
+//!   also its galaxy's hold inside its reach), over the pulse's wavelength
+//!   (E032, #280 stage 3).
 //! - Chain ([`Chronometry::commit`]): every keeper appends an [`Entry`]
 //!   hashed (BLAKE3) over its reading, its residual slip against the keeper
 //!   inside it (kept, not averaged), its previous entry and the inner
@@ -145,7 +150,9 @@ pub struct Keeper {
     /// nested wells r / (r + M(<r)).
     pub rate: Q,
     /// Travel time of the pulse from the epicenter to the keeper, in bells:
-    /// the distance over the pulse wavelength.
+    /// the front's arrival, the separation of the two places' time
+    /// coordinates, `tau = d + H` with the hold `H` the front crosses
+    /// (E032, #280 stage 3), over the pulse wavelength ([`arrival`]).
     pub delay: Q,
     /// The keeper's ring, in the engine's bells: the echo period of the
     /// enclosure it keeps time in (the universe's sphere for the epicenter,
@@ -238,6 +245,19 @@ pub struct Chronometry {
     pub anchor: Option<Point>,
 }
 
+/// The front's arrival from the epicenter at a keeper `d_kpc` away, in
+/// bells: the separation of the two places' time coordinates on the T lane,
+/// `tau = d + H` (E032), with `held` the hold the front crosses on the way
+/// (core masses, read as r_g by G = c = M = 1, converted to kpc by
+/// `kpc_rg`), over the pulse's wavelength `lambda_kpc`. With no hold crossed
+/// it is light's time; each hold crossed adds its light time.
+pub fn arrival(d_kpc: &Q, held: &Q, kpc_rg: &Q, lambda_kpc: &Q) -> Q {
+    let crossed = held.max(&Q::ZERO).checked_div(kpc_rg).unwrap_or(Q::ZERO);
+    (d_kpc + &crossed)
+        .checked_div(lambda_kpc)
+        .unwrap_or(Q::ZERO)
+}
+
 /// The rate of a well of mass `inside_rg` at radius `r_rg` (both in r_g):
 /// gravity's divergent face r / (r + M) (`shares::faces`), the antipole of
 /// the deficit M / (r + M); exact; 1 where the faces are refused (r + M zero
@@ -257,7 +277,7 @@ impl Chronometry {
             .checked_div(&xyl_cosmos::package::Si::kpc())
             .unwrap_or(Q::ONE);
         let lambda = xyl_cosmos::pulse::wavelength_kpc().to_q();
-        let bells = |kpc: &Q| kpc.checked_div(&lambda).unwrap_or(Q::ZERO);
+        let front = |kpc: &Q, held: &Q| arrival(kpc, held, &kpc_rg, &lambda);
         let shapes = xyl_cosmos::cores::shapes(origin);
         let mass =
             |s: &xyl_cosmos::cores::Shape| &xyl_cosmos::turning::home_mass() * &s.mass_ratio();
@@ -300,7 +320,9 @@ impl Chronometry {
                 shell: Shell::Hub,
                 from_epicenter_kpc: d.clone(),
                 rate: galaxy_rate.clone(),
-                delay: bells(&d),
+                // The front to the hub crosses the cores nearer the
+                // epicenter, the hold its well reads.
+                delay: front(&d, &nearer),
                 ring: scale.clone(),
             });
             c.inside.push(Some(0));
@@ -323,7 +345,9 @@ impl Chronometry {
                     shell,
                     from_epicenter_kpc: &d + &r,
                     rate,
-                    delay: bells(&(&d + &r)),
+                    // The front to a shell at `r` also crosses its galaxy's
+                    // hold inside `r`, all within `d + r` of the epicenter.
+                    delay: front(&(&d + &r), &(&nearer + &inside)),
                     ring: scale.clone(),
                 });
                 c.inside.push(Some(inner));
@@ -418,5 +442,33 @@ impl Chronometry {
                 })
             })
             .collect()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The keeper's delay is the front's arrival (E032): with no hold crossed
+    /// it is light's time, every hold crossed adds the light time it holds, never
+    /// less, and arrivals over two stretches add.
+    #[test]
+    fn a_keepers_delay_is_the_separation_of_time_coordinates() {
+        let (kpc_rg, lambda) = (Q::int(1000), Q::new(3, 2).unwrap());
+        let d = Q::int(12);
+        assert_eq!(arrival(&d, &Q::ZERO, &kpc_rg, &lambda), Q::int(8));
+        let held = Q::int(500);
+        let more = arrival(&d, &held, &kpc_rg, &lambda);
+        assert_eq!(more, &Q::int(8) + &Q::new(1, 3).unwrap());
+        assert!(more > arrival(&d, &Q::ZERO, &kpc_rg, &lambda));
+        let (a, b) = (Q::int(5), Q::int(7));
+        let (ha, hb) = (Q::int(100), Q::int(300));
+        let split = &arrival(&a, &ha, &kpc_rg, &lambda) + &arrival(&b, &hb, &kpc_rg, &lambda);
+        assert_eq!(split, arrival(&(&a + &b), &(&ha + &hb), &kpc_rg, &lambda));
+        assert_eq!(
+            arrival(&d, &Q::int(-5), &kpc_rg, &lambda),
+            Q::int(8),
+            "no negative hold"
+        );
     }
 }

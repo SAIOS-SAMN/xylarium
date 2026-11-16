@@ -178,7 +178,9 @@ hypha, held by the private uplink's session.
   (the universal core): for each galaxy a hub (its core), a deep core, an
   inner mantle and an outer rim. Each keeper runs at the well rate
   `r / (r + M(<r))` of the keeper inside it, nested wells multiplying, with
-  the pulse's light delay from the epicenter. The slip of a slower keeper,
+  the front's arrival from the epicenter as its delay: the separation of
+  the two places' time coordinates, `tau = d + H` with the hold the front
+  crosses (E032). The slip of a slower keeper,
   its coherence and its rungs of 360 degrees are read in closed form.
 - **The chain.** At each commit every keeper appends a BLAKE3 entry citing the
   previous entry of the same keeper and the head of the keeper inside it, with

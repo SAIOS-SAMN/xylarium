@@ -52,6 +52,8 @@ pub enum Input {
     Focus {
         /// The ruler's seat's key.
         seat: crate::seats::SeatKey,
+        /// Who decided: the seat's holder when it was decided (#265).
+        by: Holder,
         /// The direction of inquiry (`knowledge::Focus`).
         focus: Focus,
     },
@@ -67,6 +69,8 @@ pub enum Input {
     Handle {
         /// The steward's seat's key.
         seat: crate::seats::SeatKey,
+        /// Who decided: the seat's holder when it was decided (#265).
+        by: Holder,
         /// One mouth's star.
         a: u64,
         /// The other mouth's star.
@@ -212,21 +216,26 @@ impl<'g> Universe<'g> {
     /// Applies a seat's decision now as an input, applied by the kernel (not
     /// by the mind) and held in the checkpoint like every input. Returns the
     /// annal written, or `Err` with the refusal reason: no such seat, a
-    /// handling decision from a seat that is not a steward's, or a focus
-    /// decision from a seat on no people. Repeating the current focus changes
+    /// caller `by` who does not hold the seat (#265), a handling decision
+    /// from a seat that is not a steward's, or a focus decision from a seat
+    /// on no people. Repeating the current focus changes
     /// nothing and records no input.
     pub fn decide(
         &mut self,
         seat: crate::seats::SeatKey,
+        by: &Holder,
         d: Decision,
     ) -> Result<crate::cosmic::Annal, &'static str> {
-        let on = self.seats.get(&seat).ok_or("no such seat")?.1.on;
+        // The kernel's own check (#265), before anything is applied.
+        let on = self.seats.held_by(&seat, by)?.on;
+        let by = by.clone();
         if let Decision::Handle { a, b, handling } = d {
             let On::Realm(_) = on else {
                 return Err("the seat is no steward's");
             };
             let input = Input::Handle {
                 seat,
+                by,
                 a,
                 b,
                 handling,
@@ -259,6 +268,7 @@ impl<'g> Universe<'g> {
             .is_some_and(|s| s.focus == focus);
         let input = Input::Focus {
             seat,
+            by,
             focus: focus.clone(),
         };
         let text = if same {
@@ -720,8 +730,12 @@ impl<'g> Universe<'g> {
                 Ok(_) => format!("seat {seat} taken by a mind"),
                 Err(e) => format!("seat {seat} not taken: {e}"),
             },
-            Input::Focus { seat, focus } => {
-                let Some(On::People(p)) = self.seats.get(seat).map(|(_, s)| s.on) else {
+            Input::Focus { seat, by, focus } => {
+                let s = match self.seats.held_by(seat, by) {
+                    Ok(s) => s,
+                    Err(why) => return format!("seat {seat}: a focus from {by} refused: {why}"),
+                };
+                let On::People(p) = s.on else {
                     return format!("seat {seat} is on no people");
                 };
                 self.civ.knowledge.sync(self.cosmic.peoples.len());
@@ -739,11 +753,16 @@ impl<'g> Universe<'g> {
             }
             Input::Handle {
                 seat,
+                by,
                 a,
                 b,
                 handling,
             } => {
-                let Some(On::Realm(r)) = self.seats.get(seat).map(|(_, s)| s.on) else {
+                let s = match self.seats.held_by(seat, by) {
+                    Ok(s) => s,
+                    Err(why) => return format!("seat {seat}: a handling from {by} refused: {why}"),
+                };
+                let On::Realm(r) = s.on else {
                     return format!("seat {seat} is no steward's");
                 };
                 let Some(&key) = self.network.realm_keys.get(r) else {

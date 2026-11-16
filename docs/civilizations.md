@@ -310,9 +310,13 @@ The kernel applies the following inputs (`universe::Input`) and no others.
 A seat holder has two decisions (`universe::Decision`): `Focus` and
 `Handle`. `Universe::decide` lands one now and records it as an input;
 `Universe::queue` places an input at a later count. Every applied input is
-held in the checkpoint and applied again on restart. `decide` checks the seat's
-subject (a people for `Focus`, a realm for `Handle`); confirming that the
-caller holds the seat is the responsibility of the uplink.
+held in the checkpoint and applied again on restart. `decide` takes the
+caller and refuses, by name, anyone who does not hold the seat
+(`seats::Seats::held_by`, #265; the built-in rule decides only for a seat it
+holds), then checks the seat's subject (a people for `Focus`, a realm for
+`Handle`). The recorded input carries its caller, and `apply` checks it
+again, so a restart replays only decisions their holders made. The uplink's
+own check stays a first gate; the kernel's is the law.
 
 The `xylarium` binary has no command for decisions. External minds act
 through a `run::Link` beside live play (`crates/xylarium/src/run.rs`; see
@@ -334,7 +338,8 @@ independently, and neither reads the other's state.
     (`percept::perceive`, `lexicon::records`).
   - It acts only through recorded inputs (Acting), under the same laws as
     the built-in rule, so a mind gains no power its seat lacks.
-  - The uplink confirms that a decision's caller holds the seat. The hypha
+  - The kernel refuses a decision from anyone but the seat's holder (#265),
+    and the uplink checks it first. The hypha
     reconstructs what the mind claims from the claim's evidence and admits it
     only on reaching the same exact object; it never thinks for the mind.
 - **The council's decisions as convergence.**

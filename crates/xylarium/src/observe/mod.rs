@@ -291,6 +291,7 @@ fn carried_reading(u: &Universe<'_>, what: &[String], systems: &[u64]) -> String
         Some("ley") => network::ley(u, count(what, 10)),
         Some("star") => universe::star(u, what.get(1).and_then(|s| s.parse().ok())),
         Some("house") => universe::house(u),
+        Some("seats") => universe::seats(u),
         Some("chemistry") => galaxy::chemistry(u),
         Some("galaxy") => galaxy::galaxy(u),
         Some("star-types") => {

@@ -107,6 +107,7 @@ A module `foo` is `src/foo.rs` or, when split, the directory `src/foo/`
 | `cargo test -p xyl-cosmos` (dev profile) | ~20 min | Founds the test genesis if the founding digest changed |
 | `xylarium genesis --home DIR --seed N` | Minutes | Founds a universe; refuses an existing home |
 | `xylarium observe --home DIR <word>` | Seconds to minutes | Read-only; the words are listed in [architecture.md#readings](docs/architecture.md#readings) |
+| `xylarium take` / `xylarium decide --home DIR SEAT HOLDER ...` | Instant | Queue a seat's input in the home's inbox, applied by the next ring of live play ([civilizations.md](docs/civilizations.md#acting)) |
 
 - The `fast` profile inherits `release`, which turns integer overflow checks
   off. Run changed modules' tests once in the `dev` profile before

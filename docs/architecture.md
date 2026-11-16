@@ -147,7 +147,8 @@ A home directory holds:
 | `shells-<digest>-<share>` | The founding shells' cache: the final share, each shell and the universal table |
 | `forecast-*`, `forecast-stars/` | The forecast of minds, whole and star by star |
 | `bells-*` | The heavy stars whose bells are weighed |
-| `checkpoint` | Held state and inputs |
+| `checkpoint` | Held state and inputs (`xylarium checkpoint v6`: seats by key, decisions with their caller) |
+| `inbox` | The seat commands' inputs waiting for live play (`xylarium take`, `xylarium decide`), one checkpoint `input` line each, drained at the start of play and after every ring |
 | `observer.log` | The process monitor's progress log (`xyl_core::watch`) |
 
 Checkpoints are written whole to a temporary file and renamed, so a crash
@@ -195,7 +196,8 @@ and may run beside `run`. Bracketed arguments are optional, with their defaults.
 | `sync` | `[K=10] [R]` | Carried | Every living people's step readings as quartiles, and the K most out of step per reading; R as for `people` |
 | `ley` | `[K=10]` | Carried | The ley network: constellations, lines, passages, discord and quarantine, the star map; K bounds each list |
 | `star` | `N` | Carried | One reached star: its books, drift and worlds |
-| `house` | | Carried | The seats held by minds, and the ancient seats |
+| `house` | | Carried | The ancient seats and every seat held by a mind or a player, by key; a held steward's realm percept |
+| `seats` | | Carried | Every seat by its key, with its role, its subject and its holder: the keys `take` and `decide` name |
 | `chemistry` | | Carried | The galaxy's elements across the disc, then and now, and its books |
 | `galaxy` | | Carried | The units, the bells, and sample stars on their galactic manifolds |
 | `star-types` | `[N] [R]` | Carried | The classes the stars' formulas give over each galaxy's first N sample stars, then the home galaxy's main-sequence stars at R of its rim beside the Earth's star's values for comparison |

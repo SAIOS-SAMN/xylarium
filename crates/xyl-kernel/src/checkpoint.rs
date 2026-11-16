@@ -37,7 +37,10 @@ use crate::universe::{Input, Universe};
 use xyl_core::dyadic::Dy;
 use xyl_core::Q;
 
-const FORECAST_FORMAT: &str = "xylarium checkpoint v5";
+const FORECAST_FORMAT: &str = "xylarium checkpoint v6";
+/// The layout whose seats were list positions and whose decisions named no
+/// caller (before #264, #265), refused by name.
+const FORMAT_V5: &str = "xylarium checkpoint v5";
 /// The previous version, refused by name: its commits held a height alone.
 const FORMAT_V3: &str = "xylarium checkpoint v3";
 /// The superseded layout whose focus was one domain or none.
@@ -329,8 +332,8 @@ impl Checkpoint {
         }
         for (at, input) in &self.inputs {
             match input {
-                Input::Take { seat, mind } => {
-                    out.push_str(&format!("input {at} take {seat} {}\n", hex(mind)))
+                Input::Take { seat, holder } => {
+                    out.push_str(&format!("input {at} take {seat} {holder}\n"))
                 }
                 Input::Move { people, world } => {
                     out.push_str(&format!("input {at} move {people} {world}\n"))
@@ -366,6 +369,27 @@ impl Checkpoint {
         out
     }
 
+    /// One input as the line a checkpoint writes for it (`input <at> ...`),
+    /// the form a home's inbox holds (#267).
+    pub fn input_line(at: &Q, input: &Input) -> String {
+        let c = Checkpoint {
+            inputs: vec![(at.clone(), input.clone())],
+            ..Checkpoint::default()
+        };
+        c.encode()
+            .lines()
+            .find(|l| l.starts_with("input "))
+            .map(str::to_string)
+            .unwrap_or_default()
+    }
+
+    /// The inputs of `lines`, each an `input <at> ...` line as
+    /// [`Checkpoint::input_line`] writes it; `None` where a line does not
+    /// parse.
+    pub fn inputs_of(lines: &str) -> Option<Vec<(Q, Input)>> {
+        Self::decode_lines(&format!("{FORECAST_FORMAT}\nat 0\n{lines}")).map(|c| c.inputs)
+    }
+
     /// Parses a checkpoint from the text written by [`Checkpoint::encode`].
     /// Unknown lines are skipped.
     ///
@@ -374,7 +398,7 @@ impl Checkpoint {
     /// number, key or index that does not parse.
     pub fn decode(text: &str) -> Result<Checkpoint, String> {
         let version = text.lines().next().unwrap_or_default();
-        if version == FORMAT_V3 || version == FORMAT_V4 {
+        if version == FORMAT_V3 || version == FORMAT_V4 || version == FORMAT_V5 {
             return Err(format!("{version} is no longer read"));
         }
         if version != FORECAST_FORMAT {
@@ -439,11 +463,11 @@ impl Checkpoint {
                 ["anchor", o, e, h, s, g, t, hh, k] => {
                     c.anchor = Some(point_of([o, e, h, s, g, t, hh, k])?)
                 }
-                ["input", at, "take", seat, k] => c.inputs.push((
+                ["input", at, "take", seat, h] => c.inputs.push((
                     q_of(at)?,
                     Input::Take {
                         seat: seat.parse().ok()?,
-                        mind: key(k)?,
+                        holder: h.parse().ok()?,
                     },
                 )),
                 ["input", at, "handle", seat, by, a, b, h] => c.inputs.push((
@@ -724,6 +748,54 @@ mod tests {
     use super::*;
 
     #[test]
+    fn an_inbox_line_reads_back_as_its_input_and_old_layouts_are_refused() {
+        // Every seat input written as an inbox line reads back as itself
+        // (#267); a line that is no input reads as nothing; the layout before
+        // seat keys and callers (v5) is refused by name.
+        let seat = crate::seats::SeatKey([8; 32]);
+        let p = Holder::Player("ada".into());
+        for input in [
+            Input::Take {
+                seat,
+                holder: p.clone(),
+            },
+            Input::Focus {
+                seat,
+                by: p.clone(),
+                focus: Focus::none(),
+            },
+            Input::Handle {
+                seat,
+                by: p.clone(),
+                a: 3,
+                b: 4,
+                handling: crate::transit::Handling::Guarded,
+            },
+            Input::Aim {
+                seat,
+                by: p.clone(),
+                star: Some(9),
+            },
+            Input::Budget {
+                seat,
+                by: p.clone(),
+                share: xyl_core::ratio!(1, 3),
+            },
+        ] {
+            let line = Checkpoint::input_line(&Q::ZERO, &input);
+            assert_eq!(
+                Checkpoint::inputs_of(&line)
+                    .map(|v| v.into_iter().map(|x| x.1).collect::<Vec<_>>()),
+                Some(vec![input.clone()]),
+                "{line}"
+            );
+        }
+        assert_eq!(Checkpoint::inputs_of("input 0 take nope player:x"), None);
+        assert!(Checkpoint::decode("xylarium checkpoint v5\nat 0\n")
+            .is_err_and(|e| e.contains("no longer read")));
+    }
+
+    #[test]
     fn checkpoint_text_round_trips_exactly() {
         let c = Checkpoint {
             at: xyl_core::ratio!(143_078_729_920, 1_000_000),
@@ -756,7 +828,7 @@ mod tests {
                     xyl_core::ratio!(1, 2),
                     Input::Take {
                         seat: crate::seats::SeatKey([3; 32]),
-                        mind: [7; 32],
+                        holder: Holder::Mind([7; 32]),
                     },
                 ),
                 (

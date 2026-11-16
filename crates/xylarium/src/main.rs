@@ -24,9 +24,12 @@ fn main() -> ExitCode {
             "genesis" => run::genesis(o),
             "run" => run::run(o),
             "observe" => observe::observe(o, &what),
-            _ => {
-                Err("usage: xylarium genesis|run|observe [options] (see the source header)".into())
-            }
+            "take" => run::take(&o, &what),
+            "decide" => run::decide(&o, &what),
+            _ => Err(
+                "usage: xylarium genesis|run|observe|take|decide [options] (see the source header)"
+                    .into(),
+            ),
         }
     })();
     match result {

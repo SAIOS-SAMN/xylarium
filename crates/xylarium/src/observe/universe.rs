@@ -189,7 +189,8 @@ pub(super) fn star(u: &Universe<'_>, n: Option<u64>) -> String {
     out
 }
 
-/// The `house` reading: every seat held by a mind and every ancient seat.
+/// The `house` reading: every ancient seat and every seat held by a mind or
+/// a player, each by its key and its position.
 pub(super) fn house(u: &Universe<'_>) -> String {
     let mut out = String::new();
     for (s, seat) in u.seats.list.iter().enumerate() {
@@ -202,16 +203,19 @@ pub(super) fn house(u: &Universe<'_>) -> String {
                 .unwrap_or_default(),
             other => format!("{other:?}"),
         };
-        if matches!(seat.holder, Holder::Mind(_)) || seat.role == Role::Ancient {
+        // The council's seats and every seat not held by the default rule,
+        // each by its key (#264) and its position in the list.
+        if seat.holder != Holder::Universe || seat.role == Role::Ancient {
             out.push_str(&format!(
-                "seat {s}: {:?} on {on}, held by {}\n",
+                "seat {} (at {s}): {:?} on {on}, held by {}\n",
+                seat.key,
                 seat.role,
                 holder(&seat.holder)
             ));
         }
     }
     if out.is_empty() {
-        out.push_str("no council seats and no seat held by a mind\n");
+        out.push_str("no council seats and no seat held by a mind or a player\n");
     }
     out
 }

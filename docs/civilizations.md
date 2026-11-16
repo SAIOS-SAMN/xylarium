@@ -262,7 +262,12 @@ inputs.
 | Progenitor | An ancient people (its builders of passage) | One per ancient people |
 | Steward | A realm | One per realm, as the realm first forms |
 
-Seats are append-only; a seat's index is its id. A seat's holder is the
+Seats are append-only, and each is addressed by its key (`seats::SeatKey`,
+#264), derived from its subject when the seat is raised: a people's seat
+from its role and the people's origin (its star, the world it woke on, its
+dawn), a steward's seat from its realm's key. A seat's position in the list
+is not its id: a restore can raise seats in another order, and a people's
+name can change. Every input names its seat by key. A seat's holder is the
 built-in rule (`Holder::Universe`, under which the rule of the seat's role
 decides) or a mind joined by its key (`Holder::Mind`, taken by
 `Input::Take`). The checkpoint also records a named player

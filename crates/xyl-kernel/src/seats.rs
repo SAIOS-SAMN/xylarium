@@ -13,12 +13,21 @@
 //!                of the realm's ley lines.
 //!   Sovereign    one people's worlds.
 //!
-//! Inputs: the peoples of a [`Cosmic`] world and the realm count of the ley
-//! network. Outputs: [`Seats`], an append-only list in which a seat's index
-//! is its stable id; [`Seats::extend`] adds seats for peoples woken since,
-//! [`Seats::extend_realms`] adds stewards' seats, and [`Seats::take`]
-//! assigns a [`Holder`], returning `Err` when the seat does not exist or
-//! another holder has it. An untaken seat is held by `Holder::Universe`,
+//! Inputs: the peoples of a [`Cosmic`] world and the realm keys of the ley
+//! network. Outputs: [`Seats`], an append-only list; [`Seats::extend`] adds
+//! seats for peoples woken since, [`Seats::extend_realms`] adds stewards'
+//! seats, and [`Seats::take`] assigns a [`Holder`], returning `Err` when the
+//! seat does not exist or another holder has it.
+//!
+//! A seat is addressed by its [`SeatKey`], derived from its subject when the
+//! seat is raised (#264): a people's seat from its role and the people's
+//! origin (its star, the world it woke on, its dawn), a steward's seat from
+//! its realm's key (the realm's least constellation key). A seat's index in
+//! the list is only its position: a restore that carries the universe to
+//! its count in one leap can raise seats in another order, and a people's
+//! name can change, but the key read from the seat's subject does not.
+//!
+//! An untaken seat is held by `Holder::Universe`,
 //! the kernel's default rule for that role. Network minds (`Holder::Mind`)
 //! hold ancient seats only; the universe releases any other seat they hold.
 //! Holders other than the default are held in the checkpoint.
@@ -26,7 +35,61 @@
 //! Terms: seat, council, house, progenitor, steward, sovereign
 //! (docs/glossary.md).
 
-use crate::cosmic::Cosmic;
+use crate::cosmic::{Cosmic, People};
+
+/// A seat's address, derived from its subject when the seat is raised and
+/// held on the seat (#264): written and read as 64 hex digits.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct SeatKey(pub [u8; 32]);
+
+impl SeatKey {
+    /// A people's seat of `role`: the role and the people's origin, its star,
+    /// the world it woke on and its dawn, none of which a later move or a
+    /// new name changes.
+    pub fn of_people(role: Role, p: &People) -> SeatKey {
+        let mut h = blake3::Hasher::new_derive_key("xylarium seat v1");
+        let (m, e) = p.dawn.to_bits();
+        h.update(&[role as u8, 0])
+            .update(&p.star.to_le_bytes())
+            .update(&(p.world as u64).to_le_bytes())
+            .update(&m.to_le_bytes())
+            .update(&e.to_le_bytes());
+        SeatKey(*h.finalize().as_bytes())
+    }
+
+    /// A realm's steward seat: the realm's key, its least constellation key
+    /// as the realm first formed.
+    pub fn of_realm(realm: u64) -> SeatKey {
+        let mut h = blake3::Hasher::new_derive_key("xylarium seat v1");
+        h.update(&[Role::Steward as u8, 1])
+            .update(&realm.to_le_bytes());
+        SeatKey(*h.finalize().as_bytes())
+    }
+}
+
+impl std::fmt::Display for SeatKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.iter().try_for_each(|b| write!(f, "{b:02x}"))
+    }
+}
+
+impl std::str::FromStr for SeatKey {
+    type Err = &'static str;
+    /// Reads 64 hex digits; anything else is refused.
+    fn from_str(s: &str) -> Result<SeatKey, &'static str> {
+        if s.len() != 64 {
+            return Err("a seat key is 64 hex digits");
+        }
+        let mut out = [0u8; 32];
+        for (i, b) in out.iter_mut().enumerate() {
+            *b = s
+                .get(2 * i..2 * i + 2)
+                .and_then(|x| u8::from_str_radix(x, 16).ok())
+                .ok_or("a seat key is 64 hex digits")?;
+        }
+        Ok(SeatKey(out))
+    }
+}
 
 /// A seat's tier and role.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -74,9 +137,11 @@ pub enum Holder {
     Mind([u8; 32]),
 }
 
-/// One seat: its role, what it is seated on, and who holds it now.
+/// One seat: its key, its role, what it is seated on, and who holds it now.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Seat {
+    /// The seat's address, derived from its subject when it was raised.
+    pub key: SeatKey,
     /// The seat's tier and role.
     pub role: Role,
     /// The people or realm the seat is seated on.
@@ -88,7 +153,7 @@ pub struct Seat {
 /// Every seat of the universe.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Seats {
-    /// Every seat, append-only; a seat's index is its stable id.
+    /// Every seat, append-only; each addressed by its key.
     pub list: Vec<Seat>,
 }
 
@@ -120,6 +185,7 @@ impl Seats {
                 .any(|s| s.on == On::People(i) && s.role == role)
             {
                 out.list.push(Seat {
+                    key: SeatKey::of_people(role, p),
                     role,
                     on: On::People(i),
                     holder: Holder::Universe,
@@ -134,6 +200,7 @@ impl Seats {
                     .any(|s| s.on == On::People(i) && s.role == Role::Progenitor)
             {
                 out.list.push(Seat {
+                    key: SeatKey::of_people(Role::Progenitor, p),
                     role: Role::Progenitor,
                     on: On::People(i),
                     holder: Holder::Universe,
@@ -143,18 +210,17 @@ impl Seats {
         out
     }
 
-    /// Returns a copy with a steward seat added for every realm index below
-    /// `realms` (the order of transit/ `Network::realm_keys`) not yet seated;
-    /// a realm's seat is `On::Realm(index)`.
-    pub fn extend_realms(&self, realms: usize) -> Seats {
+    /// Returns a copy with a steward seat added for every realm of
+    /// `realm_keys` (transit/ `Network::realm_keys`, in the order first seen)
+    /// not yet seated; a realm's seat is `On::Realm(index)` into that list,
+    /// keyed by the realm's key.
+    pub fn extend_realms(&self, realm_keys: &[u64]) -> Seats {
         let mut out = self.clone();
-        for r in 0..realms {
-            if !out
-                .list
-                .iter()
-                .any(|s| s.on == On::Realm(r) && s.role == Role::Steward)
-            {
+        for (r, &realm) in realm_keys.iter().enumerate() {
+            let key = SeatKey::of_realm(realm);
+            if !out.list.iter().any(|s| s.key == key) {
                 out.list.push(Seat {
+                    key,
                     role: Role::Steward,
                     on: On::Realm(r),
                     holder: Holder::Universe,
@@ -181,20 +247,67 @@ impl Seats {
             .filter(|(_, s)| s.role == Role::Steward)
     }
 
-    /// Assigns `holder` to a seat held by `Holder::Universe` (or already held
-    /// by `holder`) and returns the seat.
+    /// The seat addressed by `key`, with its position in the list.
+    pub fn get(&self, key: &SeatKey) -> Option<(usize, &Seat)> {
+        self.list.iter().enumerate().find(|(_, s)| s.key == *key)
+    }
+
+    /// Assigns `holder` to the seat addressed by `seat`, held by
+    /// `Holder::Universe` (or already by `holder`), and returns the seat.
     ///
-    /// Returns `Err` with a message when `seat` does not exist or another
+    /// Returns `Err` with a message when no seat has that key or another
     /// holder already holds it.
-    pub fn take(&mut self, seat: usize, holder: Holder) -> Result<&Seat, String> {
+    pub fn take(&mut self, seat: &SeatKey, holder: Holder) -> Result<&Seat, String> {
         let s = self
             .list
-            .get_mut(seat)
+            .iter_mut()
+            .find(|s| s.key == *seat)
             .ok_or_else(|| format!("no seat {seat}"))?;
         if s.holder != Holder::Universe && s.holder != holder {
             return Err(format!("seat {seat} is held"));
         }
         s.holder = holder;
         Ok(s)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A seat's key is read from its subject, so seats raised in another
+    /// order are addressed by the same keys and a holder taken by key lands
+    /// on the same subject (#264); a key is written and read back exactly,
+    /// and anything else is refused.
+    #[test]
+    fn seats_are_addressed_by_their_subject_not_their_position() {
+        let one = Seats::default().extend_realms(&[11, 7, 23]);
+        let other = Seats::default().extend_realms(&[23, 11, 7]);
+        let keys = |s: &Seats| {
+            let mut k: Vec<SeatKey> = s.list.iter().map(|x| x.key).collect();
+            k.sort();
+            k
+        };
+        assert_eq!(keys(&one), keys(&other));
+        assert_ne!(one.list[0].key, other.list[0].key, "positions differ");
+        let realm = SeatKey::of_realm(7);
+        let (mut a, mut b) = (one.clone(), other.clone());
+        a.take(&realm, Holder::Player("p".into())).unwrap();
+        b.take(&realm, Holder::Player("p".into())).unwrap();
+        let held = |s: &Seats| {
+            let (i, seat) = s.get(&realm).unwrap();
+            (seat.holder.clone(), i)
+        };
+        assert_eq!(held(&a).0, held(&b).0);
+        assert_ne!(held(&a).1, held(&b).1, "the same seat at another position");
+        // Raising again adds nothing; another holder is refused; an unknown
+        // key names no seat.
+        assert_eq!(a.extend_realms(&[7, 11, 23]).list.len(), 3);
+        assert!(a.take(&realm, Holder::Player("q".into())).is_err());
+        assert!(a.take(&SeatKey([0; 32]), Holder::Universe).is_err());
+        let text = realm.to_string();
+        assert_eq!(text.parse::<SeatKey>(), Ok(realm));
+        assert!("12ab".parse::<SeatKey>().is_err());
+        assert!(text.replace('0', "g").parse::<SeatKey>().is_err() || !text.contains('0'));
     }
 }

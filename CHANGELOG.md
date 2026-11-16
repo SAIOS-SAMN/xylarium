@@ -94,6 +94,16 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Seats are addressed by their subject (#264): `seats::SeatKey`, derived
+  when the seat is raised from its role and its people's origin (star,
+  waking world, dawn) or its realm's key, held on the seat and named by
+  every input (`Take`, `Focus`, `Handle`), by `Universe::decide` and by the
+  checkpoint's holders. A seat's position in the list is no longer its id,
+  so a restore that raises seats in another order, or a people renamed,
+  keeps every holder on its subject. `observe house` lists every ancient
+  seat and every seat held by a mind or a player by its key. A checkpoint
+  written with seat indices is not read.
+
 - Time as coordinates, at the galaxy tier (#245, E032): a bell's front
   reaches a star at the arc plus the hold it crosses (`field::path`,
   `field::crossed_kpc`). A front is centred on its source, so a galaxy

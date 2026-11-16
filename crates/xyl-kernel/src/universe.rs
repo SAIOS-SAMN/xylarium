@@ -296,7 +296,8 @@ impl<'g> Universe<'g> {
         let wake = self.cosmic.next_wake().map(|g| rings_of_gyr(&g.to_q()));
         let input = self.pending.first().map(|(at, _)| at.clone());
         let ley = self.network.next_due().map(|g| rings_of_gyr(&g.to_q()));
-        [wake, input, ley].into_iter().flatten().min()
+        let settling = self.decide.then(|| self.next_settling()).flatten();
+        [wake, input, ley, settling].into_iter().flatten().min()
     }
 
     /// Each people's standing on the network, None for a fallen people:
@@ -556,44 +557,43 @@ impl<'g> Universe<'g> {
     /// the shortest turning, min(1 / rate, generation), of any living people
     /// and no shorter than 1e-12 Gyr.
     fn civilizations(&mut self, from: Dy, to: Dy) {
-        let rulers = crate::growth::Rulers::default();
-        let mut at = from;
-        while at < to {
-            let turning = self
-                .cosmic
-                .peoples
-                .iter()
-                .filter(|p| p.population.signum() > 0)
-                .map(|p| {
-                    ((Dy::ONE)
-                        .div(&p.rate.max(Dy::sci(1, -12)))
-                        .unwrap_or_default())
-                    .min(crate::growth::generation_yr(&p.traits, &rulers))
-                })
-                .min();
-            let piece = turning
-                .map(|yr| {
-                    yr.div(&(Dy::int(10)))
-                        .unwrap_or_default()
-                        .div(&(Dy::sci(1, 9)))
-                        .unwrap_or_default()
-                })
-                .unwrap_or(to - at)
-                .max(Dy::sci(1, -12))
-                .min(to - at);
-            let next = at + piece;
-            if next > self.rung_to {
-                self.field.step(&self.cosmic, self.rung_to, next);
-                self.rung_to = next;
-            }
-            self.cosmic.wake(next);
-            let environment = self.environment(next, Some(piece * Dy::sci(1, 9)));
-            let acts = self
-                .civ
-                .carry(&mut self.cosmic, next, &environment, self.decide);
-            self.record(acts);
-            at = next;
+        // No time-stepping loop (AGENTS.md): the span is carried once in
+        // closed form; what the carry decides inside a span (a settling past
+        // the logistic's inflection) is an event of its own
+        // (`Universe::next_settling`), so the span never crosses one (#308).
+        if to <= from {
+            return;
         }
+        if to > self.rung_to {
+            self.field.step(&self.cosmic, self.rung_to, to);
+            self.rung_to = to;
+        }
+        self.cosmic.wake(to);
+        let environment = self.environment(to, Some((to - from) * Dy::sci(1, 9)));
+        let acts = self
+            .civ
+            .carry(&mut self.cosmic, to, &environment, self.decide);
+        self.record(acts);
+    }
+
+    /// The soonest moment (rings) a living people's numbers reach the
+    /// logistic's inflection, half its capacity, where the carry settles a
+    /// daughter (civ/mod.rs `expand`): from the deep time its numbers were
+    /// last carried to (`People::updated`), `ln(K / N - 1) / r` years on (`growth::years_to_inflection`).
+    /// `None` where no people is growing toward one.
+    fn next_settling(&self) -> Option<Q> {
+        self.cosmic
+            .peoples
+            .iter()
+            .enumerate()
+            .filter(|(_, p)| p.population.signum() > 0 && p.population * Dy::int(2) < p.capacity)
+            .filter_map(|(_, p)| {
+                let from = p.updated.max(p.dawn);
+                let years = crate::growth::years_to_inflection(p.population, p.capacity, p.rate)?;
+                Some(from + years * Dy::sci(1, -9))
+            })
+            .min()
+            .map(|g| rings_of_gyr(&g.to_q()))
     }
 
     /// Each people's environment at `at` (field.rs): the radiation at the

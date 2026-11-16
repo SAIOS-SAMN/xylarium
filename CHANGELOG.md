@@ -11,6 +11,15 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- docs/chronometry.md: the chronometric library designed (#299; sub-issues
+  #300 to #303). Every quantity of time (the T-lane coordinate, the
+  separation, the rate, the ring as a multi-axial orbit and its nesting, the
+  echo, the breath, the keeper's reading, the pace against the network, the
+  display boundary) in one library by layer, the planned xyl-core chrono module for the
+  pure forms, and read live by `observe clock` as the telemetry of time,
+  each check a residue. E014 now states that planes part where their
+  effective passes differ, a capture phase that depends on the kind.
+
 - Play from the terminal (#267): `xylarium observe seats` lists every seat
   by its key; `xylarium take --home H SEAT player:NAME` takes one; `xylarium
   decide --home H SEAT player:NAME focus|handle|aim|budget ...` decides for

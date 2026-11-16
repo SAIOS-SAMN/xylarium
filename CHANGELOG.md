@@ -11,6 +11,14 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- `observe clock` as the telemetry of time (#302): the root's winding and
+  its whole windings, the root throat's echo on both faces and the breath's
+  phase, the T lane read apart from the last final point heard (written
+  only by crossings and closures), each keeper's own windings, and the
+  clock's checks as live residues (rates in (0, 1], no keeper reached
+  before the keeper inside it, the breath's return over whole echoes,
+  rungs equal to the slip's winding).
+
 - docs/chronometry.md: the chronometric library designed (#299; sub-issues
   #300 to #303). Every quantity of time (the T-lane coordinate, the
   separation, the rate, the ring as a multi-axial orbit and its nesting, the

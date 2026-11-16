@@ -179,7 +179,7 @@ mod tests {
     #[test]
     fn percept_records_are_exact_typed_and_self_keyed() {
         let p = Percept {
-            seat: 0,
+            seat: crate::seats::SeatKey([0; 32]),
             role: Role::Sovereign,
             people: "Kazi".into(),
             ancient: false,

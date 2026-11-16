@@ -190,7 +190,8 @@ pub(super) fn star(u: &Universe<'_>, n: Option<u64>) -> String {
 }
 
 /// The `house` reading: every ancient seat and every seat held by a mind or
-/// a player, each by its key and its position.
+/// a player, each by its key and its position; a held steward's seat with
+/// its realm's percept (`percept::realm`).
 pub(super) fn house(u: &Universe<'_>) -> String {
     let mut out = String::new();
     for (s, seat) in u.seats.list.iter().enumerate() {
@@ -212,6 +213,28 @@ pub(super) fn house(u: &Universe<'_>) -> String {
                 seat.role,
                 holder(&seat.holder)
             ));
+            // A held steward's seat perceives its realm (#266).
+            if let Some(r) = xyl_kernel::percept::realm(u, seat.key) {
+                out.push_str(&format!(
+                    "  realm {}: {} constellations, {} lines\n",
+                    r.realm,
+                    r.constellations.len(),
+                    r.lines.len()
+                ));
+                for l in &r.lines {
+                    out.push_str(&format!(
+                        "    line {} - {}: {:?}, open {}, cost {} J, collected {} J, {} passages last year, toll floor {} J\n",
+                        l.from,
+                        l.to,
+                        l.handling,
+                        l.open,
+                        l.books.cost_j,
+                        l.books.collected_j,
+                        l.books.last_year,
+                        l.floor_j
+                    ));
+                }
+            }
         }
     }
     if out.is_empty() {

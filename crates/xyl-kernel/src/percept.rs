@@ -22,9 +22,16 @@
 //!
 //! Returns `None` for a seat that does not exist, is not seated on a people,
 //! or whose people or world cannot be read now. Read-only.
+//!
+//! A steward's seat perceives its realm instead ([`realm`], #266): every
+//! ley line whose first mouth lies in the realm, with its handling, its open
+//! share, its books (cost, tolls collected, passages last year) and the
+//! floor its toll cannot fall below, and each constellation of the realm
+//! with its quarantine share. A toll itself depends on the passer (its way
+//! round, its cargo), so the percept carries the floor, not one quote.
 
 use crate::growth::Power;
-use crate::seats::{On, Role};
+use crate::seats::{On, Role, SeatKey};
 use crate::universe::Universe;
 use xyl_core::dyadic::Dy;
 use xyl_cosmos::pulse::{hear, Hearing, Node, Relay};
@@ -56,8 +63,8 @@ pub struct MediumSeen {
 /// The record a seat perceives.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Percept {
-    /// Index of the perceiving seat in [`crate::seats::Seats::list`].
-    pub seat: usize,
+    /// The perceiving seat's key.
+    pub seat: SeatKey,
     /// The seat's tier and role.
     pub role: Role,
     /// Name of the people the seat sits on.
@@ -109,11 +116,11 @@ pub struct Percept {
 /// the people or its world cannot be read at the present.
 pub fn perceive(
     u: &Universe<'_>,
-    seat: usize,
+    seat: SeatKey,
     nodes: &[Node],
     relays: &[Relay],
 ) -> Option<Percept> {
-    let s = u.seats.list.get(seat)?;
+    let (_, s) = u.seats.get(&seat)?;
     let On::People(i) = s.on else { return None };
     let p = u.cosmic.peoples.get(i)?;
     let gyr = u.gyr();
@@ -184,5 +191,84 @@ pub fn perceive(
             .take(8)
             .map(|a| format!("{} {} {}", a.epoch, a.kind, a.text))
             .collect(),
+    })
+}
+
+/// A ley line as its realm's steward perceives it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LineSeen {
+    /// The line's two mouths' stars.
+    pub from: u64,
+    /// The far mouth's star.
+    pub to: u64,
+    /// The handling the steward has set (`transit::Handling`).
+    pub handling: crate::transit::Handling,
+    /// The share of the line open, its two ends' open shares multiplied.
+    pub open: Dy,
+    /// The line's books (`transit::Lane`): its cost, the tolls collected and
+    /// the passages carried last year.
+    pub books: crate::transit::Lane,
+    /// The floor of its toll per passage (`transit::floor`): the cost not
+    /// yet paid back over last year's passages.
+    pub floor_j: Dy,
+}
+
+/// What a steward's seat perceives of its realm (#266).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RealmPercept {
+    /// The perceiving seat's key.
+    pub seat: SeatKey,
+    /// The realm's key, its least constellation key.
+    pub realm: u64,
+    /// Deep time now (Gyr).
+    pub gyr: Dy,
+    /// Every line whose first mouth lies in the realm.
+    pub lines: Vec<LineSeen>,
+    /// Each constellation of the realm, by key, with its quarantine share.
+    pub constellations: Vec<(u64, Dy)>,
+}
+
+/// Returns what steward seat `seat` perceives of its realm at the present;
+/// `None` for a seat that does not exist, is not a steward's, or whose realm
+/// has not formed.
+pub fn realm(u: &Universe<'_>, seat: SeatKey) -> Option<RealmPercept> {
+    let (_, s) = u.seats.get(&seat)?;
+    let (On::Realm(r), Role::Steward) = (s.on, s.role) else {
+        return None;
+    };
+    let net = &u.network;
+    let key = *net.realm_keys.get(r)?;
+    let constellations = net
+        .realms()
+        .into_iter()
+        .find(|(k, _)| *k == key)
+        .map(|(_, cs)| {
+            cs.into_iter()
+                .map(|c| (c, net.quarantine.get(&c).copied().unwrap_or(Dy::ZERO)))
+                .collect()
+        })
+        .unwrap_or_default();
+    let lines = net
+        .lines
+        .iter()
+        .filter(|l| net.realm_of(l.from) == Some(key))
+        .map(|l| {
+            let books = net.lane(l);
+            LineSeen {
+                from: l.from,
+                to: l.to,
+                handling: l.handling,
+                open: net.open_share(l),
+                floor_j: crate::transit::floor(&books),
+                books,
+            }
+        })
+        .collect();
+    Some(RealmPercept {
+        seat,
+        realm: key,
+        gyr: u.gyr(),
+        lines,
+        constellations,
     })
 }

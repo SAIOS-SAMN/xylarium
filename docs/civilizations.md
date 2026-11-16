@@ -287,7 +287,12 @@ surface temperature, pressure and light, every medium of its world, its day and
 year (which set the percept cadence), the bells as received at its star, its
 neighbours and the latest eight annals that name it. A neighbour is included
 only once its emergence epoch lies at least the light delay in the past.
-Percepts for steward seats are on the roadmap (Seats for minds).
+A steward's seat perceives its realm (`percept::realm`, #266): every ley
+line whose first mouth lies in the realm, with its handling, its open share,
+its books (cost, tolls collected, passages last year) and the floor its toll
+cannot fall below (`transit::floor`), and each constellation of the realm
+with its quarantine share. A toll depends on the passer, so the steward sees
+the floor, not one quote. `observe house` prints a held steward's percept.
 
 On the seat surface a percept is sent as typed exact records
 (`lexicon::records`): `PEOPLE`, `NUMBERS`, `POWER`, `WORLD`, `MEDIUM`,

@@ -11,6 +11,16 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Play from the terminal (#267): `xylarium observe seats` lists every seat
+  by its key; `xylarium take --home H SEAT player:NAME` takes one; `xylarium
+  decide --home H SEAT player:NAME focus|handle|aim|budget ...` decides for
+  it. The commands write checkpoint input lines to the home's inbox; live
+  play applies it at its start and after every ring through the kernel's
+  checks (`Universe::take`, `Universe::decide`), reporting refusals by
+  name. `Input::Take` takes any holder, a player as well as a mind. The
+  checkpoint is `v6` (seats by key, decisions with their caller); `v5` is
+  refused by name.
+
 - A steward's seat perceives its realm (#266): `percept::realm` returns
   every line whose first mouth lies in the realm with its handling, open
   share, books and toll floor, and each constellation with its quarantine

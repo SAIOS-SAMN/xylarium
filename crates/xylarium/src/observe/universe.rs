@@ -246,6 +246,36 @@ pub(super) fn house(u: &Universe<'_>) -> String {
     out
 }
 
+/// The `seats` reading (#267): every seat, by its key, with its role, what
+/// it is seated on and who holds it: the keys `xylarium take` and
+/// `xylarium decide` name.
+pub(super) fn seats(u: &Universe<'_>) -> String {
+    let mut out = String::new();
+    for seat in &u.seats.list {
+        let on = match seat.on {
+            On::People(p) => u
+                .cosmic
+                .peoples
+                .get(p)
+                .map(|x| format!("people {}", x.name))
+                .unwrap_or_default(),
+            On::Realm(r) => u
+                .network
+                .realm_keys
+                .get(r)
+                .map(|k| format!("realm {k}"))
+                .unwrap_or_default(),
+        };
+        out.push_str(&format!(
+            "{} {:?} on {on}, held by {}\n",
+            seat.key,
+            seat.role,
+            holder(&seat.holder)
+        ));
+    }
+    out
+}
+
 /// The `annals K` reading: the last `k` annals, one a line.
 pub(super) fn annals(u: &Universe<'_>, k: usize) -> String {
     let n = u.cosmic.annals.len();

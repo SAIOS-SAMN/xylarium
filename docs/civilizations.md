@@ -327,10 +327,17 @@ holds), then checks the seat's subject (a people for `Focus`, a realm for
 again, so a restart replays only decisions their holders made. The uplink's
 own check stays a first gate; the kernel's is the law.
 
-The `xylarium` binary has no command for decisions. External minds act
-through a `run::Link` beside live play (`crates/xylarium/src/run.rs`; see
-[network.md](network.md)), which receives the universe after every ring
-(one bell; see [glossary](glossary.md)).
+A player plays from the terminal (#267). `xylarium observe --home H seats`
+lists every seat by its key; `xylarium take --home H SEAT player:NAME` takes
+one; `xylarium decide --home H SEAT player:NAME DECISION` decides for it,
+with `focus A,B,C,D` (four exact shares of free thought), `handle A B
+open|tolled|guarded|closed`, `aim STAR|none` or `budget N/D`. The commands
+write to the home's inbox and return at once; live play applies the inbox
+at its start and after every ring, through the same checks as every input
+(the seat's key, its holder, its role), and reports each refusal by name.
+External minds act the same way through a `run::Link` beside live play
+(`crates/xylarium/src/run.rs`; see [network.md](network.md)), which receives
+the universe after every ring (one bell; see [glossary](glossary.md)).
 
 ### Minds in the ancient seats
 

@@ -549,6 +549,7 @@ fn play(
     // the event's count, not on a calendar year.
     let ring = Q::ONE;
     let mut rings = 0u64;
+    drain(&o.home, u);
     while !stop.load(Ordering::SeqCst) && o.until.is_none_or(|n| rings < n) {
         let t = std::time::Instant::now();
         let to = &u.now + &ring;
@@ -556,6 +557,7 @@ fn play(
             eprintln!("run: count {} {} {}", show(&e.at), e.kind, e.text);
         }
         rings += 1;
+        drain(&o.home, u);
         if let Some(l) = link.as_mut() {
             let relays = xyl_cosmos::pulse::relays(&bells, Dy::from_q(&u.now));
             l.ring(u, &bells, &relays);
@@ -576,6 +578,94 @@ fn play(
         "run: stopped after {rings} rings at count {}, kept",
         show(&u.now)
     );
+    Ok(true)
+}
+
+/// The home's inbox (#267): the seat commands' inputs waiting for live play,
+/// one `input <at> ...` line each in the checkpoint's form.
+pub fn inbox(home: &Path) -> PathBuf {
+    home.join("inbox")
+}
+
+/// Applies the inbox's inputs now, each through the kernel's checks (the
+/// seat's key, its holder, its role): a `Take` by `Universe::take`, a
+/// decision by `Universe::decide`. The inbox is moved aside before it is
+/// read, so a command writing meanwhile starts a new one; a line that does
+/// not parse, and every refusal, is reported by name. Nothing is applied
+/// twice: the drained file is removed.
+fn drain(home: &Path, u: &mut Universe<'_>) {
+    let (from, taking) = (inbox(home), home.join("inbox.taking"));
+    if std::fs::rename(&from, &taking).is_err() {
+        return;
+    }
+    let text = std::fs::read_to_string(&taking).unwrap_or_default();
+    let _ = std::fs::remove_file(&taking);
+    let Some(inputs) = Checkpoint::inputs_of(&text) else {
+        eprintln!("run: the inbox does not parse; nothing in it applied");
+        return;
+    };
+    for (_, input) in inputs {
+        let done = match (&input, input.decision()) {
+            (xyl_kernel::universe::Input::Take { seat, holder }, _) => {
+                u.take(*seat, holder.clone()).map(|a| a.text)
+            }
+            (_, Some((seat, by, d))) => {
+                u.decide(seat, &by, d).map(|a| a.text).map_err(String::from)
+            }
+            _ => Err("not a seat's input".to_string()),
+        };
+        match done {
+            Ok(text) => eprintln!("run: inbox: {text}"),
+            Err(why) => eprintln!("run: inbox: refused: {why}"),
+        }
+    }
+}
+
+/// `xylarium take --home H SEAT HOLDER` (#267): the seat taken by `HOLDER`
+/// (`player:NAME` or `mind:KEY`) at the next ring of live play, written to
+/// the home's inbox.
+pub fn take(o: &Options, what: &[String]) -> Result<bool, String> {
+    let [seat, holder] = what else {
+        return Err("usage: xylarium take --home H SEAT player:NAME".into());
+    };
+    post(o, &format!("input 0 take {seat} {holder}"))
+}
+
+/// `xylarium decide --home H SEAT HOLDER DECISION...` (#267), written to the
+/// home's inbox and applied at the next ring of live play, where the kernel
+/// checks the caller holds the seat. The decisions:
+/// `focus A,B,C,D` (four exact shares of free thought, e.g.
+/// `1/2,1/4,1/4,0`; all zero lifts it), `handle A B
+/// open|tolled|guarded|closed`, `aim STAR|none`, `budget N/D`.
+pub fn decide(o: &Options, what: &[String]) -> Result<bool, String> {
+    let [seat, holder, kind, rest @ ..] = what else {
+        return Err(
+            "usage: xylarium decide --home H SEAT player:NAME focus|handle|aim|budget ...".into(),
+        );
+    };
+    post(
+        o,
+        &format!("input 0 {kind} {seat} {holder} {}", rest.join(" ")),
+    )
+}
+
+/// Appends `line` to the home's inbox once it reads back as one input.
+fn post(o: &Options, line: &str) -> Result<bool, String> {
+    let line = line.trim_end();
+    if Checkpoint::inputs_of(line).is_none_or(|v| v.len() != 1) {
+        return Err(format!("not an input: {line}"));
+    }
+    if !o.home.join("genesis").exists() {
+        return Err(format!("{} holds no universe", o.home.display()));
+    }
+    use std::io::Write;
+    let mut f = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(inbox(&o.home))
+        .map_err(|e| e.to_string())?;
+    writeln!(f, "{line}").map_err(|e| e.to_string())?;
+    eprintln!("queued for the next ring of live play: {line}");
     Ok(true)
 }
 

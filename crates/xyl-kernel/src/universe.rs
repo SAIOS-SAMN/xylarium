@@ -40,12 +40,12 @@ use xyl_cosmos::circuit::{gyr_of_rings, rings_of_gyr};
 /// An input: an action no law determines, applied at its count.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Input {
-    /// A seat taken by a mind, identified by the mind's key.
+    /// A seat taken by a mind (by its key) or a player (by name).
     Take {
         /// The seat's key ([`crate::seats::SeatKey`]).
         seat: crate::seats::SeatKey,
-        /// The taking mind's 32-byte key.
-        mind: [u8; 32],
+        /// Who takes it.
+        holder: Holder,
     },
     /// A ruler directing its people's inquiry: a share of free thought per
     /// domain (all zero lifts the direction).
@@ -143,6 +143,43 @@ pub enum Decision {
 }
 
 impl Input {
+    /// The seat, the caller and the decision of a decided input (`Focus`,
+    /// `Handle`, `Aim`, `Budget`), as [`Universe::decide`] takes them; `None`
+    /// for `Take` and for the carry's own acts.
+    pub fn decision(&self) -> Option<(crate::seats::SeatKey, Holder, Decision)> {
+        match self {
+            Input::Focus { seat, by, focus } => {
+                Some((*seat, by.clone(), Decision::Focus(focus.clone())))
+            }
+            Input::Handle {
+                seat,
+                by,
+                a,
+                b,
+                handling,
+            } => Some((
+                *seat,
+                by.clone(),
+                Decision::Handle {
+                    a: *a,
+                    b: *b,
+                    handling: *handling,
+                },
+            )),
+            Input::Aim { seat, by, star } => {
+                Some((*seat, by.clone(), Decision::Aim { star: *star }))
+            }
+            Input::Budget { seat, by, share } => Some((
+                *seat,
+                by.clone(),
+                Decision::Budget {
+                    share: share.clone(),
+                },
+            )),
+            _ => None,
+        }
+    }
+
     /// The builders' input a decision makes (#266), checked against the
     /// deciding seat's role: an aim from an ancient or a progenitor seat, a
     /// building share in `[0, 1]` from an ancient seat; `Ok(None)` for a
@@ -389,6 +426,30 @@ impl<'g> Universe<'g> {
         Ok(crate::cosmic::Annal {
             epoch: self.gyr(),
             kind: "FOCUS",
+            text,
+        })
+    }
+
+    /// A seat taken by `holder` now, applied and recorded as an input
+    /// (#267). Returns the annal written, or `Err` where no seat has that
+    /// key or another holder has it.
+    pub fn take(
+        &mut self,
+        seat: crate::seats::SeatKey,
+        holder: Holder,
+    ) -> Result<crate::cosmic::Annal, String> {
+        self.seats.take(&seat, holder.clone())?;
+        let input = Input::Take { seat, holder };
+        let text = format!("seat {seat} taken");
+        self.log.push(Logged {
+            at: self.now.clone(),
+            kind: "INPUT",
+            text: text.clone(),
+        });
+        self.inputs.push((self.now.clone(), input));
+        Ok(crate::cosmic::Annal {
+            epoch: self.gyr(),
+            kind: "TAKE",
             text,
         })
     }
@@ -820,8 +881,8 @@ impl<'g> Universe<'g> {
     /// description of what it did or why it did nothing.
     pub fn apply(&mut self, input: &Input) -> String {
         match input {
-            Input::Take { seat, mind } => match self.seats.take(seat, Holder::Mind(*mind)) {
-                Ok(_) => format!("seat {seat} taken by a mind"),
+            Input::Take { seat, holder } => match self.seats.take(seat, holder.clone()) {
+                Ok(_) => format!("seat {seat} taken by {holder}"),
                 Err(e) => format!("seat {seat} not taken: {e}"),
             },
             Input::Focus { seat, by, focus } => {

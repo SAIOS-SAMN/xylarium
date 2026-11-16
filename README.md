@@ -1,6 +1,6 @@
 # Xylarium
 
-**Version 0.3.0** | [Quick start](#quick-start) | [Architecture](docs/architecture.md) | [Physical model](docs/model.md) | [Equations](docs/EQUATIONS.md) | [Roadmap](docs/roadmap.md) | [Changelog](CHANGELOG.md) | [Developing](#developing-xylarium) | [Contributing](CONTRIBUTING.md) | [License: Apache-2.0](LICENSE)
+**Version 0.3.0** | [Quick start](#quick-start) | [Architecture](docs/architecture.md) | [Physical model](docs/model.md) | [Equations](docs/EQUATIONS.md) | [Roadmap](docs/roadmap.md) | [Build-out](BUILD_OUT.md) | [Changelog](CHANGELOG.md) | [Developing](#developing-xylarium) | [Contributing](CONTRIBUTING.md) | [License: Apache-2.0](LICENSE)
 
 **Xylarium** is a deterministic universe simulator and the kernel of a
 grand-strategy space game in which sovereign AI minds run civilizations.

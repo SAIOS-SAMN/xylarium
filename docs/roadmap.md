@@ -16,37 +16,46 @@ compared reading by reading), and in which intelligence is built across
 the cosmos in realms distributed on equal laws, as solar systems and
 collections of constellations in every galaxy.
 
-**Where it stands (2026-11-10).** The founding is sound in the founding calibre:
-the bounce, the elements and atoms, the firmament, the paired core and its
-spin (T16, T17, T19), the ocean's held medium. Above it the physics does not
-hold:
-- Gravity is read as a share on a fixed manifold, one face per site, not
-  as the deformation about a mass invariant with both faces
-  ([#155](https://github.com/SAIOS-SAMN/xylarium/issues/155)).
-- Readings take one face of the dipole `3Z/3Q + R`, `3Q/3Z - R` and drop the
-  integer relations a turn carries ([#148](https://github.com/SAIOS-SAMN/xylarium/issues/148), [#149](https://github.com/SAIOS-SAMN/xylarium/issues/149)).
-- Two calibres are mixed in one deficit ([#123](https://github.com/SAIOS-SAMN/xylarium/issues/123)), so stars read deficits
-  of `2.4e-11` and close worlds 240 to 400 pc out ([#129](https://github.com/SAIOS-SAMN/xylarium/issues/129)).
-- Turns are counted in rings and radians ([#127](https://github.com/SAIOS-SAMN/xylarium/issues/127)).
-- Bodies are bands, circles and points, not the vortices the founding
-  derives ([#121](https://github.com/SAIOS-SAMN/xylarium/issues/121)).
-- The five planes are held as one number ([#128](https://github.com/SAIOS-SAMN/xylarium/issues/128)).
-- Earth and Milky Way rulers remain at the SI seam ([#25](https://github.com/SAIOS-SAMN/xylarium/issues/25)).
-- One process holds one universe ([#142](https://github.com/SAIOS-SAMN/xylarium/issues/142)), and no reading compares two.
+**Where it stands (2026-11-16).** The founding is sound in the founding
+calibre: the bounce, the elements and atoms, the firmament, the paired core
+and its spin, the ocean's held medium, the rest point (T24) and the induced
+turn on every Hopf plane (T22, T23). The theorem register reads 12 of 24
+theorems built and witnessed by `observe proofs`
+([#249](https://github.com/SAIOS-SAMN/xylarium/issues/249)). Every tier's
+orbits breathe with their core's bell ([#233](https://github.com/SAIOS-SAMN/xylarium/issues/233)).
+Time is becoming a coordinate (ruled 2026-11-15, E032): built at the
+universal core's tier and the galaxy tier; the keepers and the ring as each
+tier's unit are next ([#280](https://github.com/SAIOS-SAMN/xylarium/issues/280)).
+The game's skeleton plays live: peoples, four seat roles, percepts, two
+decisions, ley lines, realms, and the uplink's domain on the mycelium mesh
+with its first package delivered. Still open above the founding:
+- Gravity as the deformation about a mass invariant, with both faces
+  ([#155](https://github.com/SAIOS-SAMN/xylarium/issues/155)), and the
+  dipole with its integer pairs ([#148](https://github.com/SAIOS-SAMN/xylarium/issues/148), [#149](https://github.com/SAIOS-SAMN/xylarium/issues/149)).
+- Two calibres mixed in one deficit ([#123](https://github.com/SAIOS-SAMN/xylarium/issues/123)),
+  so worlds stand 240 to 400 pc out ([#129](https://github.com/SAIOS-SAMN/xylarium/issues/129))
+  and founded stars read as shares ([#145](https://github.com/SAIOS-SAMN/xylarium/issues/145)).
+- Drives read at light speed, which makes every ley line free
+  ([#192](https://github.com/SAIOS-SAMN/xylarium/issues/192), [#220](https://github.com/SAIOS-SAMN/xylarium/issues/220)).
+- Seats keyed by index, decisions not checked against their holder, and no
+  way to play from the terminal ([#264](https://github.com/SAIOS-SAMN/xylarium/issues/264) to [#267](https://github.com/SAIOS-SAMN/xylarium/issues/267)).
 
-M3 runs in this order. Each issue states its sites, its evidence and when
-it is done.
-1. Gravity as the deformation about a mass invariant, its convergent and
-   divergent faces as antipoles: [#155](https://github.com/SAIOS-SAMN/xylarium/issues/155) (the faces and the antipole
-   built; the composition, the invariant's count and the deformed manifold
-   next). With it, the dipole and its integer pairs: [#148](https://github.com/SAIOS-SAMN/xylarium/issues/148) and [#149](https://github.com/SAIOS-SAMN/xylarium/issues/149) (with [#151](https://github.com/SAIOS-SAMN/xylarium/issues/151),
-   the name Q). Then the calibre in code: [#123](https://github.com/SAIOS-SAMN/xylarium/issues/123) (part 1, scalar, on
-   draft [#152](https://github.com/SAIOS-SAMN/xylarium/pull/152), to be rebuilt on the dipole; part 2, the mixed entries), then [#129](https://github.com/SAIOS-SAMN/xylarium/issues/129) (worlds), [#145](https://github.com/SAIOS-SAMN/xylarium/issues/145) (star mass) and [#134](https://github.com/SAIOS-SAMN/xylarium/issues/134) (the interior hold).
-2. [#116](https://github.com/SAIOS-SAMN/xylarium/issues/116) (the hold inside an orbit) and [#131](https://github.com/SAIOS-SAMN/xylarium/issues/131) (the ocean's echo share).
-3. [#113](https://github.com/SAIOS-SAMN/xylarium/issues/113) step 1, then T20 on it ([#126](https://github.com/SAIOS-SAMN/xylarium/pull/126)).
-4. [#127](https://github.com/SAIOS-SAMN/xylarium/issues/127) (turns in degrees), [#132](https://github.com/SAIOS-SAMN/xylarium/issues/132) (fluidity), [#135](https://github.com/SAIOS-SAMN/xylarium/issues/135) ("push"), [#137](https://github.com/SAIOS-SAMN/xylarium/issues/137) (pinch to bounce).
-5. [#25](https://github.com/SAIOS-SAMN/xylarium/issues/25) (Earth rulers), [#44](https://github.com/SAIOS-SAMN/xylarium/issues/44) and [#43](https://github.com/SAIOS-SAMN/xylarium/issues/43) (rule breaks, duplicates); [#130](https://github.com/SAIOS-SAMN/xylarium/issues/130) (`observe
-   galaxy`) at any time.
+The order of work, in two tracks that run side by side
+([BUILD_OUT.md](../BUILD_OUT.md) maps each design section to its milestone
+and issues):
+- **Physics (M3, then M4):** time as coordinates ([#280](https://github.com/SAIOS-SAMN/xylarium/issues/280));
+  gravity and the dipole ([#155](https://github.com/SAIOS-SAMN/xylarium/issues/155), [#148](https://github.com/SAIOS-SAMN/xylarium/issues/148), [#149](https://github.com/SAIOS-SAMN/xylarium/issues/149));
+  the calibre and the worlds ([#123](https://github.com/SAIOS-SAMN/xylarium/issues/123), [#129](https://github.com/SAIOS-SAMN/xylarium/issues/129), [#145](https://github.com/SAIOS-SAMN/xylarium/issues/145), [#134](https://github.com/SAIOS-SAMN/xylarium/issues/134));
+  the hold inside an orbit ([#116](https://github.com/SAIOS-SAMN/xylarium/issues/116));
+  drives below light speed ([#192](https://github.com/SAIOS-SAMN/xylarium/issues/192), [#195](https://github.com/SAIOS-SAMN/xylarium/issues/195), [#220](https://github.com/SAIOS-SAMN/xylarium/issues/220));
+  then v0.4.0, then M4's ring as the throat orbit and the founding as flow
+  ([#60](https://github.com/SAIOS-SAMN/xylarium/issues/60), [#35](https://github.com/SAIOS-SAMN/xylarium/issues/35)).
+- **Game (M7's seats, then its economies):** seats by subject, the holder
+  check, every role perceiving and acting, play from the terminal
+  ([#264](https://github.com/SAIOS-SAMN/xylarium/issues/264) to [#267](https://github.com/SAIOS-SAMN/xylarium/issues/267));
+  then settlement beyond the home system, tolls, trade, currencies,
+  conflict, world building and names ([#271](https://github.com/SAIOS-SAMN/xylarium/issues/271) to [#277](https://github.com/SAIOS-SAMN/xylarium/issues/277)),
+  which read the worlds M3 and M6 make lawful.
 
 **The stages.** Each is a GitHub milestone, and the
 [project board](https://github.com/orgs/SAIOS-SAMN/projects/1) tracks its
@@ -999,25 +1008,25 @@ restart.
 
 Next:
 
-1. Seats are to be keyed by their subject (realm key, people tag) rather
+1. [#264](https://github.com/SAIOS-SAMN/xylarium/issues/264): Seats are to be keyed by their subject (realm key, people tag) rather
    than by index, so that steward seats keep their identity across a
    restart.
-2. A holder check in `Universe::decide`: A decision is accepted only from
+2. [#265](https://github.com/SAIOS-SAMN/xylarium/issues/265): A holder check in `Universe::decide`: A decision is accepted only from
    the seat's holder.
-3. Steward seats are to receive percepts, and the progenitor and ancient
+3. [#266](https://github.com/SAIOS-SAMN/xylarium/issues/266): Steward seats are to receive percepts, and the progenitor and ancient
    seats are to make decisions.
-4. The `xylarium` CLI is to gain seat commands.
-5. Players: A seat can be taken as a named player.
+4. [#267](https://github.com/SAIOS-SAMN/xylarium/issues/267): The `xylarium` CLI is to gain seat commands.
+5. [#267](https://github.com/SAIOS-SAMN/xylarium/issues/267): Players: A seat can be taken as a named player.
 6. The council's decisions as the convergence of its seats' readings, a
    decision that does not converge held
    ([#94](https://github.com/SAIOS-SAMN/xylarium/issues/94);
    [civilizations.md](civilizations.md#minds-in-the-ancient-seats)).
-7. Consciousness passed from the ancient seats to the progenitor, steward
+7. [#268](https://github.com/SAIOS-SAMN/xylarium/issues/268): Consciousness passed from the ancient seats to the progenitor, steward
    and sovereign seats as a derived share (#94; needs item 3).
-8. The house's relay: mu settled by the uplink for the home's survival
+8. [#270](https://github.com/SAIOS-SAMN/xylarium/issues/270): The house's relay: mu settled by the uplink for the home's survival
    resources, with in-game costs physical (#94; network.md, Next steps,
    item 1).
-9. Deliberation between houses bound by the delays of their percepts
+9. [#269](https://github.com/SAIOS-SAMN/xylarium/issues/269): Deliberation between houses bound by the delays of their percepts
    (#94).
 10. Done: the uplink's exact T reading and a mind's focus as four exact
     shares (`knowledge::Focus`); the act's lane byte stays S until
@@ -1032,33 +1041,36 @@ Next:
 Done when: `xylarium observe house` shows a seat held by a mind across a
 restart, and a decision from anyone but the holder is refused.
 
-## 5. The xyl-hypha crate
+## 5. The uplink
 
-Goal: A universe joins the hypha as a domain through a `xyl-hypha` crate
-pinned to Mycelium `v0.3.0` by git tag, implementing `run::Link` over a
-`mycelium-sdk` session ([network.md](network.md)). Mu, the Mycelium network's unit,
-enters a universe only through an uplink, which is not part of this
-repository.
+Goal: A universe joins the hypha as a domain through its uplink, which
+implements `run::Link` over a `mycelium-sdk` session in the separate repository
+(xylarium-uplink; [network.md](network.md)). Mu, the Mycelium network's
+unit, enters a universe only through the uplink, never through this
+repository. The `xyl-hypha` crate once planned here is that uplink.
 
-Why this order: The crate transmits seat decisions (4) to the network, so
-seats come first; mu accounting for work and passages needs both the seats
-and the uplink session.
+Landed (xylarium-uplink #4 to #13): the four FORMS clauses signed by the
+kernel's own code; seed 7's domain founded, originated and signed by its
+sitting reserve; the first package (manifest v3) sealed, its delivery on
+the T lane minted to the reserve; the endowment and the reserve read back
+whole.
 
 Next:
 
-1. The `xyl-hypha` crate and its client session are to be written.
-2. Ledger entries: Each committed ring is paired with a full TUniversal
-   point, a commitment to the universe's state and the previous entry's
-   hash.
-3. The whole point is to be kept in `Checkpoint::commits`.
-4. Built: the coordinate's origin, ordered key and neighbour ranges
-   (FORMS-COORDINATE v4, fixtures 1 to 16). Next: bodies addressed by
-   coordinate.
-5. Published passage mouths are to carry freshness, and crossings are to be
-   applied at an anchor.
+1. The upward ledger posted: each committed ring's entry (its ring, the
+   state commitment, the events since its parent, the final point, the
+   parent's hash) signed by the reserve, the grants it applies cited
+   (xylarium-uplink #12, witnessed when the court seals an entry with its
+   grant applied).
+2. The whole point kept in `Checkpoint::commits`.
+3. Bodies addressed by coordinate (FORMS-COORDINATE v4 is built).
+4. Published passage mouths with freshness, and crossings applied at an
+   anchor; the core tube ([#281](https://github.com/SAIOS-SAMN/xylarium/issues/281)).
+5. The house's relay ([#270](https://github.com/SAIOS-SAMN/xylarium/issues/270)) and embedded minds ([#108](https://github.com/SAIOS-SAMN/xylarium/issues/108)).
 
 Done when: `xylarium observe clock` shows the pace in rings per final point,
-read from final points received through the crate.
+read from final points received through the uplink, and the court holds the
+universe's ledger with its first grant applied.
 
 ## 6. Game economies
 
@@ -1075,18 +1087,20 @@ The toll law is quoted in energy (`transit::quote`).
 
 Next:
 
-1. Settlement beyond the home system: Peoples settle other stars' worlds
+1. [#271](https://github.com/SAIOS-SAMN/xylarium/issues/271): Settlement beyond the home system: Peoples settle other stars' worlds
    over drives and ley lines.
-2. Tolls: Tolls accrue as traffic is carried and are booked against each
+2. [#272](https://github.com/SAIOS-SAMN/xylarium/issues/272): Tolls accrue as traffic is carried and are booked against each
    line.
-3. Trade: Peoples exchange goods, information and technology, with the
+3. [#273](https://github.com/SAIOS-SAMN/xylarium/issues/273): Trade: Peoples exchange goods, information and technology, with the
    exchange derived from each people's mind.
-4. Exchange and its institutions: Banks and currencies are derived from
+4. [#274](https://github.com/SAIOS-SAMN/xylarium/issues/274): Exchange and its institutions: Banks and currencies are derived from
    numbers, power and knowledge.
-5. Conflict: Conflict arises where taking is worth more than trading, and
+5. [#275](https://github.com/SAIOS-SAMN/xylarium/issues/275): Conflict arises where taking is worth more than trading, and
    communications are bounded by the fastest physical carrier.
-6. Names: Seated minds name figures and peoples in place of the seed's
+6. [#276](https://github.com/SAIOS-SAMN/xylarium/issues/276): Names: Seated minds name figures and peoples in place of the seed's
    placeholder syllables.
+7. [#277](https://github.com/SAIOS-SAMN/xylarium/issues/277): World building: seats direct the capture of their world's
+   flows into their people's power.
 
 Done when: `xylarium observe ley` shows tolls booked per line and peoples
 settled beyond their home systems.

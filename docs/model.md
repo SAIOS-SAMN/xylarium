@@ -1318,6 +1318,22 @@ display, never stored.
     degrees per traversal and returns after two, the two faces of the
     attractor pair reading one density (`s = 1 - s`): the echo is the
     throat orbit's return.
+- **The ring as held: windings, not a metronome.** A ring is held as the
+  composite versor of its motions, not as a list of per-plane phases: two
+  turnings on planes sharing an axis do not commute and open the third
+  plane between them, and turnings on disjoint planes carry a volume
+  (Dimensional orthogonality of a rotor, above), so the order of the
+  motions is part of the ring. Each plane's phase and its whole turns
+  `K = floor(abs(theta) / 360)` are readings of that versor. The turns are
+  the space's own windings: they advance with every traversal while the T
+  lane stands. T is written only when a state crosses a throat
+  (`T -> T - 2 (H - R)`, `coordinate::PolePlane`) or a closure is verified
+  (TUniversal's beat); a crossing carries every lane's change (S, G, T, the
+  H lane's composite rotor, K) under a matching origin stack. Coming home
+  is not an out-and-back mirror, which cancels on one throat: it is the
+  composite rotor of every pivot taken closing, the light ledger balancing
+  on both faces, and the windings resonating at the destination's
+  coordinate.
 - **The ring hierarchy.** Rings nest along the anchor chain, each body's
   read inside its anchor's: the universal core's throat orbit (`r = M`,
   `delta = 1/2`, the root ring), each galactic core's orbit in the ocean
@@ -1332,8 +1348,9 @@ display, never stored.
   rings are read from it, and the one irrational link, a root traversal's
   `2 pi M / s` in `r_g / c`, is a display conversion through a certified
   enclosure of pi, never stored. A crossing between two universes (the seam
-  with netstratum) carries `delta tau` only, each side reading it into its
-  rings at the face it holds.
+  with netstratum) carries every lane's change, the T lane's `delta tau`
+  among them, never `delta tau` alone (The ring as held, below), each side
+  reading it into its rings at the face it holds.
 - **What is built.** The pieces: the breathing orbit rates at every tier
   (`chain::breathing_turns`, `Manifold::stand`), the induced turn
   (`hopf::induce`), the charged spin (`xyl_core::hopf`), the echo

@@ -147,6 +147,19 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Windings, not a metronome (model.md, The ring as held; chronometry.md;
+  checkpoints.md; E032). The T lane is written only by crossings
+  (`T -> T - 2 (H - R)`) and verified closures; a space's own cycles are
+  its windings `K` per plane, which turn while T stands, and the engine's
+  count is the root orbit's winding. A ring is held as the composite
+  versor of its motions (planes sharing an axis open a third, disjoint
+  planes carry a volume), its phases and windings read from it. A crossing
+  carries every lane's change (S, G, T, the composite rotor, K) under a
+  matching origin stack, never `delta tau` alone; coming home is the
+  composite rotor closing, not an out-and-back mirror. A checkpoint keeps
+  one subject's events in the order taken; only events on causally
+  separated subjects commute.
+
 - Time as coordinates, the keepers (#280 stage 3, E032): a keeper's delay
   is the front's arrival from the epicenter (`chronometry::arrival`), the
   separation of the two places' time coordinates `tau = d + H`, with the

@@ -35,6 +35,10 @@ about time.
   a people (and each seat on it, by its `SeatKey`, #264), a star's system, a
   galaxy's core, the universal core. Each sits in one tier (universe,
   cluster, galaxy, system, planet).
+- **Its windings.** Each subject's held turning is its composite rotor,
+  with its cross-plane terms and volumes, and its windings `K` per plane;
+  they advance with the subject's own cycles while the T lane stands, so a
+  cut records both, never `tau` alone.
 - **Its coordinate.** Each subject's place in the cut is its full point,
   `origin / h : S : G : T : H : K` (FORMS-COORDINATE v4), every lane an exact
   rational, read in the subject's own tier and never converted to another
@@ -97,8 +101,11 @@ Every external input is held with what reconstructs it:
 2. Regenerate the law stratum from the seed and the package.
 3. Carry every subject to the coordinate the cut holds for it by the laws, in the
    causal order: an event is applied once every event in its past cone is.
-   Two events that cannot reach one another commute, so any order of them
-   gives one result; this is tested, not assumed.
+   Events on two subjects that cannot reach one another commute, so any
+   order of them gives one result; this is tested, not assumed. Events on
+   one subject never do in general: turnings on planes sharing an axis open
+   the third plane between them, so a subject's events are applied in the
+   order it took them, never reordered.
 4. Apply each external input at its coordinate, refused where its causes do
    not reconstruct or its caller does not hold the seat.
 5. Check the reconstruction's books against the held books, subject by

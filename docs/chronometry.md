@@ -29,6 +29,21 @@ read at a time in Gyr, #260). The epicenter's ring stores pi as a rational
 display. One library removes all three faults: one form per quantity, one
 calibre per reading, and pi only at display.
 
+## No metronome: windings and the T lane
+
+There is no background clock. A space winds the cycles inside it, its windings
+`K` on each turning plane, while the T lane stands; T is written only when
+a state crosses a throat (`T -> T - 2 (H - R)`, `coordinate::PolePlane`) or
+a closure is verified (TUniversal's beat, which stood still on the mesh
+while no verified work was presented). So:
+
+- the engine's count, one ring per loop of live play, is the root orbit's
+  winding, not a global time; every other clock is the winding of the orbit
+  it keeps, related to the root's by the ratio of angular rates;
+- the T lane advances by crossings and closures, each writing its flux;
+- the library and its telemetry read the two apart, per subject: its
+  windings per plane, and its T coordinate.
+
 ## The quantities
 
 Each is a closed form, exact in `Q` (or `Dy` on a grid), with its calibre
@@ -42,12 +57,20 @@ named, and read per lane and per plane, never as one scalar.
   across a stretch holding nothing `delta tau = delta r` (E032).
 - **Rate.** A clock's rate against the root: the well's divergent face
   `r / (r + M(<r)) = r / tau(r)`, nested wells multiplying.
+- **Winding.** A subject's whole turns per plane, `K = floor(abs(theta) /
+  360)`, read from its composite rotor; it advances while T stands.
+- **Crossing.** A state through a throat writes `-2 (H - R)` on the T lane
+  and carries every lane's change (S, G, T, the H lane's composite rotor,
+  K) under a matching origin stack; out and back through one throat
+  cancels, a path through several pivots does not.
 - **Ring.** One traversal of an orbit, the multi-axial versor of the ring
   (model.md, The ring): the pull `D(delta)` and the twist `D(n)` on the
   axis by their exponents, each isoclinic plane's winding and phase,
   `t (delta_p + w_p sigma_p) mod 1`, and the returns. Rings nest along the
   anchor chain, two levels related by the ratio of their angular rates (pi
-  cancels), so every ring count is rational (The ring hierarchy).
+  cancels), so every ring count is rational (The ring hierarchy). It is
+  held as the composite versor, the order of its motions kept: per-plane
+  phases and windings are its readings (model.md, The ring as held).
 - **Echo.** A throat's sheared return: the near face after `bell / (1 - s)`,
   the far face after `bell / s` (T4); equal only without spin.
 - **Breath.** The bell's cycle on a manifold: the hold swinging
@@ -85,8 +108,9 @@ at its present (`observe clock SUBJECT` for one subject):
 
 - **Per subject** (the epicenter, each galaxy's hub and shells, each star in
   play, each world of a people): its tier; its T coordinate; its separation
-  from the root and from its anchor; its rate; its ring reading (the axis's
-  exponents, each plane's winding and phase, the returns); its echo, near
+  from the root and from its anchor; its rate; its windings `K` per plane
+  and its ring reading (the composite versor's planes and volumes, the
+  axis's exponents, each plane's phase, the returns); its echo, near
   and far; the breath's phase; its slip, coherence and rungs against the
   root.
 - **The chain**: each keeper's head and the entry it cites inside it.

@@ -180,3 +180,32 @@ fn t20_infall_crosses_by_the_horizons_held_face() {
         assert_eq!(horizon_share(&m, &m), Some(third.clone()), "at M = {m}");
     }
 }
+
+#[test]
+fn t20_the_seam_reads_half_about_the_pair() {
+    // The seam with netstratum (#280, its #210): at the pair's equator
+    // R_h = M_near + M_far the hold about the pair is H(<R_h) = M_near +
+    // M_far, so the front's coordinate is tau(R_h) = R_h + H(<R_h) and the
+    // held share H(<R_h) / tau(R_h) = 1/2, the deficit H / (R_h + H): 2M /
+    // (2M + 2M) for a pair sharing one hold, and one half for unequal faces
+    // too (the inversion's fixed point).
+    use xyl_core::shares::deficit;
+    use xyl_cosmos::bounce::horizon_reach;
+    let half = Q::new(1, 2).expect("1/2");
+    for (near, far) in [(1, 1), (3, 3), (1, 4), (7, 2), (1_000_000, 1)] {
+        let (m, f) = (Q::int(near), Q::int(far));
+        let r_h = horizon_reach(&m, &f);
+        let held = &m + &f;
+        let tau = &r_h + &held;
+        assert_eq!(
+            held.checked_div(&tau),
+            Some(half.clone()),
+            "M {near}, M' {far}"
+        );
+        assert_eq!(
+            deficit(&held, &r_h),
+            Some(half.clone()),
+            "the deficit form agrees"
+        );
+    }
+}

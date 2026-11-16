@@ -65,6 +65,24 @@ pub enum Input {
         /// The world the people moved to.
         world: usize,
     },
+    /// A builder's seat aims its next ley line (#266).
+    Aim {
+        /// The seat's key: an ancient or a progenitor seat.
+        seat: crate::seats::SeatKey,
+        /// Who decided.
+        by: Holder,
+        /// The star whose constellation is aimed at, or `None` to lift it.
+        star: Option<u64>,
+    },
+    /// An ancient seat sets its house's building share (#266).
+    Budget {
+        /// The ancient seat's key.
+        seat: crate::seats::SeatKey,
+        /// Who decided.
+        by: Holder,
+        /// The share of the spare power, in `[0, 1]`.
+        share: Q,
+    },
     /// A realm's steward sets a ley line's handling.
     Handle {
         /// The steward's seat's key.
@@ -108,6 +126,63 @@ pub enum Decision {
         /// The handling to set.
         handling: crate::transit::Handling,
     },
+    /// Aim the next ley line of an ancient seat's house, or of a progenitor
+    /// seat's builders, at the constellation of star `star`, or lift the aim
+    /// (`None`): the line goes there when the worth law finds it a candidate
+    /// of positive worth (#266).
+    Aim {
+        /// The star whose constellation the next line is to reach.
+        star: Option<u64>,
+    },
+    /// Set the share of an ancient house's spare power, in `[0, 1]`, put to
+    /// building its lines (#266).
+    Budget {
+        /// The share of the spare power.
+        share: Q,
+    },
+}
+
+impl Input {
+    /// The builders' input a decision makes (#266), checked against the
+    /// deciding seat's role: an aim from an ancient or a progenitor seat, a
+    /// building share in `[0, 1]` from an ancient seat; `Ok(None)` for a
+    /// decision that is not a builder's, `Err` naming the refusal.
+    pub fn of_build(
+        seat: crate::seats::SeatKey,
+        by: &Holder,
+        role: crate::seats::Role,
+        d: &Decision,
+    ) -> Result<Option<Input>, &'static str> {
+        Ok(match d {
+            Decision::Aim { star } => {
+                if !matches!(
+                    role,
+                    crate::seats::Role::Ancient | crate::seats::Role::Progenitor
+                ) {
+                    return Err("only an ancient or a progenitor seat aims a line");
+                }
+                Some(Input::Aim {
+                    seat,
+                    by: by.clone(),
+                    star: *star,
+                })
+            }
+            Decision::Budget { share } => {
+                if role != crate::seats::Role::Ancient {
+                    return Err("only an ancient seat sets its house's building share");
+                }
+                if share.signum() < 0 || *share > Q::ONE {
+                    return Err("a building share lies in [0, 1]");
+                }
+                Some(Input::Budget {
+                    seat,
+                    by: by.clone(),
+                    share: share.clone(),
+                })
+            }
+            _ => None,
+        })
+    }
 }
 
 /// A log entry: an event and its exact count.
@@ -227,8 +302,27 @@ impl<'g> Universe<'g> {
         d: Decision,
     ) -> Result<crate::cosmic::Annal, &'static str> {
         // The kernel's own check (#265), before anything is applied.
-        let on = self.seats.held_by(&seat, by)?.on;
+        let held = self.seats.held_by(&seat, by)?;
+        let (on, role) = (held.on, held.role);
         let by = by.clone();
+        // The builders' choices (#266): a progenitor seat aims its builders'
+        // next line, an ancient seat its house's and sets the house's share of
+        // spare power put to building.
+        let built = Input::of_build(seat, &by, role, &d)?;
+        if let Some(input) = built {
+            let text = self.apply(&input);
+            self.log.push(Logged {
+                at: self.now.clone(),
+                kind: "INPUT",
+                text: text.clone(),
+            });
+            self.inputs.push((self.now.clone(), input));
+            return Ok(crate::cosmic::Annal {
+                epoch: self.gyr(),
+                kind: "BUILD",
+                text,
+            });
+        }
         if let Decision::Handle { a, b, handling } = d {
             let On::Realm(_) = on else {
                 return Err("the seat is no steward's");
@@ -774,6 +868,37 @@ impl<'g> Universe<'g> {
                     handling
                 )
             }
+            Input::Aim { seat, by, star } => {
+                let s = match self.seats.held_by(seat, by) {
+                    Ok(s) => s,
+                    Err(why) => return format!("seat {seat}: an aim from {by} refused: {why}"),
+                };
+                let On::People(i) = s.on else {
+                    return format!("seat {seat} is on no people");
+                };
+                let key = (i, s.role == crate::seats::Role::Progenitor);
+                match star {
+                    Some(k) => {
+                        self.network.aims.insert(key, *k);
+                        format!("seat {seat} aims its next line at the constellation of star {k}")
+                    }
+                    None => {
+                        self.network.aims.remove(&key);
+                        format!("seat {seat} lifts its aim")
+                    }
+                }
+            }
+            Input::Budget { seat, by, share } => {
+                let s = match self.seats.held_by(seat, by) {
+                    Ok(s) => s,
+                    Err(why) => return format!("seat {seat}: a budget from {by} refused: {why}"),
+                };
+                let (On::People(i), crate::seats::Role::Ancient) = (s.on, s.role) else {
+                    return format!("seat {seat} is no ancient house's");
+                };
+                self.network.budgets.insert(i, share.clone());
+                format!("seat {seat} puts {share} of its house's spare power to building")
+            }
             Input::Move { people, world } => {
                 let at = self.gyr();
                 self.civ.move_people(&mut self.cosmic, *people, *world, at);
@@ -832,5 +957,46 @@ impl<'g> Universe<'g> {
             });
         }
         self.annals_seen = self.cosmic.annals.len();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::seats::{Role, SeatKey};
+
+    /// The builders' decisions (#266) are made only by the seats whose
+    /// choices they are: an aim by an ancient or a progenitor seat, a
+    /// building share in [0, 1] by an ancient seat; every other decision is
+    /// not a builder's.
+    #[test]
+    fn the_builders_decisions_belong_to_the_builders_seats() {
+        let (seat, by) = (SeatKey([2; 32]), Holder::Player("p".into()));
+        let aim = Decision::Aim { star: Some(7) };
+        for role in [Role::Ancient, Role::Progenitor] {
+            assert!(matches!(
+                Input::of_build(seat, &by, role, &aim),
+                Ok(Some(Input::Aim { star: Some(7), .. }))
+            ));
+        }
+        for role in [Role::Sovereign, Role::Steward] {
+            assert!(Input::of_build(seat, &by, role, &aim).is_err());
+        }
+        let share = |n: i64, d: i64| Decision::Budget {
+            share: Q::new(n, d).unwrap(),
+        };
+        assert!(matches!(
+            Input::of_build(seat, &by, Role::Ancient, &share(1, 2)),
+            Ok(Some(Input::Budget { .. }))
+        ));
+        assert!(Input::of_build(seat, &by, Role::Progenitor, &share(1, 2)).is_err());
+        assert!(Input::of_build(seat, &by, Role::Ancient, &share(3, 2)).is_err());
+        assert!(Input::of_build(seat, &by, Role::Ancient, &share(-1, 2)).is_err());
+        assert!(Input::of_build(seat, &by, Role::Ancient, &share(0, 1)).is_ok());
+        let focus = Decision::Focus(crate::knowledge::Focus::none());
+        assert!(matches!(
+            Input::of_build(seat, &by, Role::Sovereign, &focus),
+            Ok(None)
+        ));
     }
 }

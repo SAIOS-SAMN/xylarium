@@ -335,6 +335,13 @@ impl Checkpoint {
                 Input::Move { people, world } => {
                     out.push_str(&format!("input {at} move {people} {world}\n"))
                 }
+                Input::Aim { seat, by, star } => out.push_str(&format!(
+                    "input {at} aim {seat} {by} {}\n",
+                    star.map_or_else(|| "none".to_string(), |k| k.to_string())
+                )),
+                Input::Budget { seat, by, share } => {
+                    out.push_str(&format!("input {at} budget {seat} {by} {share}\n"))
+                }
                 Input::Handle {
                     seat,
                     by,
@@ -447,6 +454,25 @@ impl Checkpoint {
                         a: a.parse().ok()?,
                         b: b.parse().ok()?,
                         handling: handling_of(h)?,
+                    },
+                )),
+                ["input", at, "aim", seat, by, star] => c.inputs.push((
+                    q_of(at)?,
+                    Input::Aim {
+                        seat: seat.parse().ok()?,
+                        by: by.parse().ok()?,
+                        star: match *star {
+                            "none" => None,
+                            k => Some(k.parse().ok()?),
+                        },
+                    },
+                )),
+                ["input", at, "budget", seat, by, share] => c.inputs.push((
+                    q_of(at)?,
+                    Input::Budget {
+                        seat: seat.parse().ok()?,
+                        by: by.parse().ok()?,
+                        share: q_of(share)?,
                     },
                 )),
                 ["input", at, "move", people, world] => c.inputs.push((
@@ -756,6 +782,30 @@ mod tests {
                         a: 9,
                         b: 11,
                         handling: crate::transit::Handling::Closed,
+                    },
+                ),
+                (
+                    xyl_core::ratio!(8, 9),
+                    Input::Aim {
+                        seat: crate::seats::SeatKey([5; 32]),
+                        by: Holder::Player("x0".into()),
+                        star: Some(42),
+                    },
+                ),
+                (
+                    xyl_core::ratio!(8, 9),
+                    Input::Aim {
+                        seat: crate::seats::SeatKey([5; 32]),
+                        by: Holder::Universe,
+                        star: None,
+                    },
+                ),
+                (
+                    xyl_core::ratio!(17, 18),
+                    Input::Budget {
+                        seat: crate::seats::SeatKey([6; 32]),
+                        by: Holder::Mind([9; 32]),
+                        share: xyl_core::ratio!(3, 7),
                     },
                 ),
                 (

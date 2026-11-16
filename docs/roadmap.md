@@ -16,19 +16,26 @@ compared reading by reading), and in which intelligence is built across
 the cosmos in realms distributed on equal laws, as solar systems and
 collections of constellations in every galaxy.
 
-**Where it stands (2026-11-16).** The founding is sound in the founding
+**Where it stands (2026-11-16, paused; resume from
+[#309](https://github.com/SAIOS-SAMN/xylarium/issues/309)).** The founding is sound in the founding
 calibre: the bounce, the elements and atoms, the firmament, the paired core
 and its spin, the ocean's held medium, the rest point (T24) and the induced
 turn on every Hopf plane (T22, T23). The theorem register reads 12 of 24
 theorems built and witnessed by `observe proofs`
 ([#249](https://github.com/SAIOS-SAMN/xylarium/issues/249)). Every tier's
 orbits breathe with their core's bell ([#233](https://github.com/SAIOS-SAMN/xylarium/issues/233)).
-Time is becoming a coordinate (ruled 2026-11-15, E032): built at the
-universal core's tier and the galaxy tier; the keepers and the ring as each
-tier's unit are next ([#280](https://github.com/SAIOS-SAMN/xylarium/issues/280)).
-The game's skeleton plays live: peoples, four seat roles, percepts, two
-decisions, ley lines, realms, and the uplink's domain on the mycelium mesh
-with its first package delivered. Still open above the founding:
+Time is a coordinate (ruled 2026-11-15, E032), with no metronome: the T lane
+is written only by crossings and closures, and every clock is a winding
+(docs/chronometry.md); the front's arrival is built at the core's tier, the
+galaxy tier and the keepers, and the library's pure forms are in
+`xyl_core::chrono` ([#280](https://github.com/SAIOS-SAMN/xylarium/issues/280), [#299](https://github.com/SAIOS-SAMN/xylarium/issues/299)).
+The game plays from the terminal: seats by subject, decisions checked
+against their holder, the builders' aim and budget, a steward's percept,
+`observe seats`, `take` and `decide`
+([#264](https://github.com/SAIOS-SAMN/xylarium/issues/264) to [#267](https://github.com/SAIOS-SAMN/xylarium/issues/267), awaiting their live witness).
+On the network, seed 7's domain is founded on mycelium's v4 mesh with its
+first v4 manifest granted; its first ledger entry is pending its live run.
+Still open above the founding:
 - Gravity as the deformation about a mass invariant, with both faces
   ([#155](https://github.com/SAIOS-SAMN/xylarium/issues/155)), and the
   dipole with its integer pairs ([#148](https://github.com/SAIOS-SAMN/xylarium/issues/148), [#149](https://github.com/SAIOS-SAMN/xylarium/issues/149)).

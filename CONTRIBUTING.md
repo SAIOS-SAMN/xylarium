@@ -161,6 +161,11 @@ Labels:
 | `cross-project` | affects mycelium or netstratum as well |
 | `good first issue`, `help wanted` | a place to start; help is welcome |
 | `area/<crate>` | the crate the work is in |
+| `game` | grand-strategy play: seats, decisions, economies, minds (M7) |
+| `time` | time as coordinates (E032) |
+
+The map from each design section to its milestone and issues, and the
+gates a change passes, is in [BUILD_OUT.md](BUILD_OUT.md).
 
 Report security vulnerabilities privately as described in
 [SECURITY.md](SECURITY.md), not in a public issue. Everyone taking part

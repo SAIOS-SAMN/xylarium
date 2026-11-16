@@ -11,6 +11,14 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- BUILD_OUT.md: how a design section becomes a milestone, an issue, a
+  branch, a pull request and a witnessed reading; the phases M3 to M7 with
+  their governing docs and exit readings; the gates; the board's fields; the
+  seams with mycelium and netstratum. The roadmap's "Where it stands" is
+  dated 2026-11-16 and orders the work in two tracks, physics and game;
+  section 5 is the uplink (the planned `xyl-hypha` crate is the uplink);
+  sections 4 and 6 link their issues (#264 to #277, #281).
+
 - The world manifolds breathe (#233 item 5). A planet's and a moon's mean
   phase (`Manifold::stand`, `Manifold::bearing`) is the mean turning plus
   the swing the core's bell gives the hold inside the orbit

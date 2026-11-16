@@ -11,6 +11,15 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Two aspects of a body's time and T25, dilation opens turning planes
+  (model.md; #311, planned): a body's proper rate composes, along its
+  anchor chain, each link's well face with its motion (the turning law's
+  `v = delta`, breathing with the bell), its spin nested inside; a place
+  deep in a well receives `D = rate_source / rate_receiver` times a pulse's
+  energy per local ring, its states reach a higher harmonic degree,
+  and a degree-`l` state turns up to `min(l, 6)` orthogonal planes, so the
+  systems by a core's accretion disc turn more planes than a rim system.
+
 - A resume point for the paused session (#309): what runs unattended,
   what is on the mesh, the steps to resume in order and what waits on the
   operator; the roadmap's "Where it stands" points to it.

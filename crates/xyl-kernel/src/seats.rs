@@ -137,6 +137,30 @@ pub enum Holder {
     Mind([u8; 32]),
 }
 
+impl std::fmt::Display for Holder {
+    /// `universe`, `player:<name>` or `mind:<64 hex digits>`, one token.
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Holder::Universe => write!(f, "universe"),
+            Holder::Player(n) => write!(f, "player:{n}"),
+            Holder::Mind(k) => write!(f, "mind:{}", SeatKey(*k)),
+        }
+    }
+}
+
+impl std::str::FromStr for Holder {
+    type Err = &'static str;
+    /// Reads what [`Holder`]'s `Display` writes; anything else is refused.
+    fn from_str(s: &str) -> Result<Holder, &'static str> {
+        match s.split_once(':') {
+            None if s == "universe" => Ok(Holder::Universe),
+            Some(("player", n)) if !n.is_empty() => Ok(Holder::Player(n.to_string())),
+            Some(("mind", k)) => Ok(Holder::Mind(k.parse::<SeatKey>()?.0)),
+            _ => Err("a holder is universe, player:<name> or mind:<key>"),
+        }
+    }
+}
+
 /// One seat: its key, its role, what it is seated on, and who holds it now.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Seat {
@@ -252,6 +276,18 @@ impl Seats {
         self.list.iter().enumerate().find(|(_, s)| s.key == *key)
     }
 
+    /// The seat addressed by `key` if `by` holds it (#265): a decision is the
+    /// seat holder's alone, and the built-in rule's only for a seat it holds.
+    /// `Err` names the refusal: no such seat, or a caller who does not hold
+    /// it.
+    pub fn held_by(&self, key: &SeatKey, by: &Holder) -> Result<&Seat, &'static str> {
+        let (_, s) = self.get(key).ok_or("no such seat")?;
+        if s.holder != *by {
+            return Err("the caller does not hold the seat");
+        }
+        Ok(s)
+    }
+
     /// Assigns `holder` to the seat addressed by `seat`, held by
     /// `Holder::Universe` (or already by `holder`), and returns the seat.
     ///
@@ -309,5 +345,38 @@ mod tests {
         assert_eq!(text.parse::<SeatKey>(), Ok(realm));
         assert!("12ab".parse::<SeatKey>().is_err());
         assert!(text.replace('0', "g").parse::<SeatKey>().is_err() || !text.contains('0'));
+    }
+
+    /// A decision is the seat holder's alone (#265): the holder is admitted,
+    /// any other caller and the built-in rule of a taken seat are refused,
+    /// and an unknown seat is refused by name; a holder is written as one
+    /// token and read back exactly.
+    #[test]
+    fn only_the_holder_decides_for_a_seat() {
+        let mut seats = Seats::default().extend_realms(&[5]);
+        let key = SeatKey::of_realm(5);
+        assert!(seats.held_by(&key, &Holder::Universe).is_ok());
+        let mind = Holder::Mind([4; 32]);
+        seats.take(&key, mind.clone()).unwrap();
+        assert!(seats.held_by(&key, &mind).is_ok());
+        for other in [
+            Holder::Universe,
+            Holder::Mind([5; 32]),
+            Holder::Player("p".into()),
+        ] {
+            assert_eq!(
+                seats.held_by(&key, &other).err(),
+                Some("the caller does not hold the seat")
+            );
+        }
+        assert_eq!(
+            seats.held_by(&SeatKey([1; 32]), &mind).err(),
+            Some("no such seat")
+        );
+        for h in [Holder::Universe, Holder::Player("ada".into()), mind] {
+            assert_eq!(h.to_string().parse::<Holder>(), Ok(h.clone()));
+        }
+        assert!("player:".parse::<Holder>().is_err());
+        assert!("someone".parse::<Holder>().is_err());
     }
 }

@@ -94,6 +94,14 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- The kernel refuses a decision from anyone but the seat's holder (#265).
+  `Universe::decide` takes the caller (`seats::Holder`) and refuses one who
+  does not hold the seat (`Seats::held_by`); the built-in rule decides only
+  for a seat it holds. `Input::Focus` and `Input::Handle` carry their
+  caller, written in the checkpoint as one token (`universe`,
+  `player:<name>`, `mind:<key>`), and `apply` checks it again, so a restart
+  replays only decisions their holders made.
+
 - Seats are addressed by their subject (#264): `seats::SeatKey`, derived
   when the seat is raised from its role and its people's origin (star,
   waking world, dawn) or its realm's key, held on the seat and named by

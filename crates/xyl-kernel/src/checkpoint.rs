@@ -334,11 +334,12 @@ impl Checkpoint {
                 }
                 Input::Handle {
                     seat,
+                    by,
                     a,
                     b,
                     handling,
                 } => out.push_str(&format!(
-                    "input {at} handle {seat} {a} {b} {}\n",
+                    "input {at} handle {seat} {by} {a} {b} {}\n",
                     handling_text(*handling)
                 )),
                 Input::Settle {
@@ -346,9 +347,10 @@ impl Checkpoint {
                     world,
                     emigrants,
                 } => out.push_str(&format!("input {at} settle {parent} {world} {emigrants}\n")),
-                Input::Focus { seat, focus } => {
-                    out.push_str(&format!("input {at} focus {seat} {}\n", focus.written()))
-                }
+                Input::Focus { seat, by, focus } => out.push_str(&format!(
+                    "input {at} focus {seat} {by} {}\n",
+                    focus.written()
+                )),
             }
         }
         out
@@ -434,10 +436,11 @@ impl Checkpoint {
                         mind: key(k)?,
                     },
                 )),
-                ["input", at, "handle", seat, a, b, h] => c.inputs.push((
+                ["input", at, "handle", seat, by, a, b, h] => c.inputs.push((
                     q_of(at)?,
                     Input::Handle {
                         seat: seat.parse().ok()?,
+                        by: by.parse().ok()?,
                         a: a.parse().ok()?,
                         b: b.parse().ok()?,
                         handling: handling_of(h)?,
@@ -458,10 +461,11 @@ impl Checkpoint {
                         emigrants: q_of(n)?,
                     },
                 )),
-                ["input", at, "focus", seat, d] => c.inputs.push((
+                ["input", at, "focus", seat, by, d] => c.inputs.push((
                     q_of(at)?,
                     Input::Focus {
                         seat: seat.parse().ok()?,
+                        by: by.parse().ok()?,
                         focus: Focus::parse(d)?,
                     },
                 )),
@@ -730,6 +734,7 @@ mod tests {
                     xyl_core::ratio!(2, 3),
                     Input::Focus {
                         seat: crate::seats::SeatKey([3; 32]),
+                        by: Holder::Player("x0".into()),
                         focus: Focus::none(),
                     },
                 ),
@@ -744,6 +749,7 @@ mod tests {
                     xyl_core::ratio!(7, 9),
                     Input::Handle {
                         seat: crate::seats::SeatKey([4; 32]),
+                        by: Holder::Mind([9; 32]),
                         a: 9,
                         b: 11,
                         handling: crate::transit::Handling::Closed,

@@ -80,14 +80,21 @@ impl Network {
                 idle.retain(|x| x.1 != key);
             }
             if let Some(&(_, cruise, spare, v_e)) = houses.iter().find(|h| h.0 == key.0) {
-                self.begin(
-                    cosmic,
-                    key,
-                    (cruise, v_e),
-                    spare,
-                    at,
-                    key.1.then_some(in_tune.as_slice()),
-                );
+                // The house's ancient seat sets the share of its spare power
+                // put to building (#266); a house that puts none builds
+                // nothing.
+                let share = self.budgets.get(&key.0).map_or(Dy::ONE, Dy::from_q);
+                let spare = spare * share;
+                if spare.signum() > 0 {
+                    self.begin(
+                        cosmic,
+                        key,
+                        (cruise, v_e),
+                        spare,
+                        at,
+                        key.1.then_some(in_tune.as_slice()),
+                    );
+                }
             }
         }
         self.current(cosmic, to);
@@ -177,9 +184,26 @@ impl Network {
         let seen = kpc_per_gyr(cruise) * (start - p.dawn).max(Dy::ZERO);
         let per = self.candidates(&placer, &joined, wanted.as_ref(), &by_n, &mine, seen);
         let siting = Siting::new(self, cosmic, p, key.1, v_e);
-        let Some((arc, m, k, _, body)) = siting.best(&placer, per, &by_n, &mine, seen) else {
+        // The seat's aim (#266): where it names a candidate constellation, the
+        // line is sited there by the same worth law, if its worth is positive.
+        let aimed = self
+            .aims
+            .get(&key)
+            .and_then(|star| self.of.get(star))
+            .and_then(|c| per.get(c).map(|x| (*c, *x)))
+            .and_then(|(c, x)| {
+                let only = BTreeMap::from([(c, x)]);
+                siting.best(&placer, only, &by_n, &mine, seen)
+            });
+        let used = aimed.is_some();
+        let Some((arc, m, k, _, body)) =
+            aimed.or_else(|| siting.best(&placer, per, &by_n, &mine, seen))
+        else {
             return;
         };
+        if used {
+            self.aims.remove(&key);
+        }
         // Stand-in S111: An unknown mouth reach reads 1 kpc in the tithe.
         let mouth = self.reach_of(k).unwrap_or(Dy::ONE);
         let cost = tithe(passage_j(body, v_e), arc, mouth);

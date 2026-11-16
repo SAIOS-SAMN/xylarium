@@ -11,6 +11,15 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- The builders' decisions (#266): `Decision::Aim` (an ancient or a
+  progenitor seat aims its next ley line at a star's constellation, sited
+  there by the worth law when it is a candidate of positive worth, the aim
+  kept otherwise) and `Decision::Budget` (an ancient seat sets the share of
+  its house's spare power put to building, zero building nothing). Both are
+  recorded inputs with their caller (`Input::Aim`, `Input::Budget`), checked
+  by role (`Input::of_build`) and by holder (#265), and held in the
+  checkpoint (`Network::aims`, `Network::budgets`).
+
 - The ring restated as a multi-axial orbit on the orbit hierarchy
   (model.md, The ring and The ring hierarchy; EQUATIONS; glossary; #60):
   one traversal read as one versor, the pull and the shear of the mass

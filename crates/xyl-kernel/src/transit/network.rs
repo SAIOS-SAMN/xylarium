@@ -80,6 +80,16 @@ pub struct Network {
     pub read_at: Dy,
     /// Until when that reading holds, in Gyr.
     pub holds_to: Dy,
+    /// Each builder's aim, by (house, progenitors flag): the star whose
+    /// constellation its seat's holder wants the next line to reach (#266).
+    /// The line goes there when that constellation is a candidate of
+    /// positive worth; otherwise the worth law's best is taken and the aim
+    /// is kept. An aim is spent by the line it sites.
+    pub aims: BTreeMap<(usize, bool), u64>,
+    /// Each house's building share, by people index: the share of its
+    /// world's spare power, in `[0, 1]`, its ancient seat puts to building
+    /// (#266); a house not listed puts all of it.
+    pub budgets: BTreeMap<usize, Q>,
 }
 
 /// Returns the light time (years) across `reach_kpc`: light's speed is the

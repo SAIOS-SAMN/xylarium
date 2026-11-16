@@ -19,7 +19,7 @@ and readings), **Partial** (partly implemented), **Planned** (on the
 | Knowledge in four domains | Built | `knowledge.rs` |
 | Annals, turnings, eminent figures | Built | `cosmic/`, `civ/history.rs`, `civ/mod.rs` |
 | Seats, percepts, seat records | Built | `seats.rs`, `percept.rs`, `lexicon.rs` |
-| Decisions by seat holders | Partial (two decisions) | `universe.rs` |
+| Decisions by seat holders | Partial (focus, handling, the builders' aim and budget; steward percepts next) | `universe.rs`, `transit/building.rs` |
 | Drives | Built | `propulsion.rs`, `transit/voyage.rs` |
 | Constellations, ley lines, realms, stewards | Built | `transit/`, `universe.rs` |
 | Discord, quarantine, folding space | Built | `transit/discord.rs`, `universe.rs` |
@@ -304,11 +304,15 @@ The kernel applies the following inputs (`universe::Input`) and no others.
 | `Take { seat, mind }` | A joining mind | The seat is held by that key |
 | `Focus { seat, focus }` | A seat on a people | Directs the people's inquiry by four shares of free thought (all zero releases it) |
 | `Handle { seat, a, b, handling }` | A steward seat | Sets the handling of the line between stars `a` and `b` in the steward's realm |
+| `Aim { seat, star }` | An ancient or a progenitor seat | Aims the next line of the house (ancient) or its builders (progenitor) at star `star`'s constellation, or lifts the aim; taken where the worth law finds that constellation a candidate of positive worth, the aim kept otherwise and spent by the line it sites |
+| `Budget { seat, share }` | An ancient seat | Sets the share of the house's spare power, in `[0, 1]`, put to building its lines; at zero the house builds nothing |
 | `Move { people, world }` | The carry | An exodus |
 | `Settle { parent, world, emigrants }` | The carry | A settlement |
 
-A seat holder has two decisions (`universe::Decision`): `Focus` and
-`Handle`. `Universe::decide` lands one now and records it as an input;
+A seat holder has four decisions (`universe::Decision`): `Focus`, `Handle`,
+and the builders' `Aim` and `Budget` (#266), each a choice the built-in rule
+already makes (the line of greatest worth, all the spare power), handed to
+the seat's holder under the same laws (`Input::of_build` checks the role). `Universe::decide` lands one now and records it as an input;
 `Universe::queue` places an input at a later count. Every applied input is
 held in the checkpoint and applied again on restart. `decide` takes the
 caller and refuses, by name, anyone who does not hold the seat
@@ -437,6 +441,11 @@ voyage speeds at `c` rather than composing them (S127, S128).
 - Progenitors build only toward the constellations of peoples in step with
   the network (discord below one half).
 - A house opens at most `LINES_PER_READING` lines per reading.
+- A held seat chooses where the rule would have chosen (#266): its aim
+  (`Network::aims`) sites the next line in the aimed constellation by the
+  same worth law, when that constellation is a candidate of positive worth;
+  its building share (`Network::budgets`) scales the spare power that pays
+  the line, so the payback time grows as the share falls.
 
 ### Realms and stewards
 

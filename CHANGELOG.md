@@ -11,6 +11,10 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- A resume point for the paused session (#309): what runs unattended,
+  what is on the mesh, the steps to resume in order and what waits on the
+  operator; the roadmap's "Where it stands" points to it.
+
 - `observe clock` as the telemetry of time (#302): the root's winding and
   its whole windings, the root throat's echo on both faces and the breath's
   phase, the T lane read apart from the last final point heard (written

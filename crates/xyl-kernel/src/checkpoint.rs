@@ -68,8 +68,8 @@ pub struct Held {
 pub struct Checkpoint {
     /// The bell's count the checkpoint was taken at.
     pub at: Q,
-    /// Every seat not held by `Holder::Universe`: (seat index, holder).
-    pub holders: Vec<(usize, Holder)>,
+    /// Every seat not held by `Holder::Universe`: (seat key, holder).
+    pub holders: Vec<(crate::seats::SeatKey, Holder)>,
     /// Each people's held record, ordered by index.
     pub peoples: Vec<Held>,
     /// Every input applied, each with the bell's count it applies at.
@@ -169,9 +169,8 @@ impl Checkpoint {
             .seats
             .list
             .iter()
-            .enumerate()
-            .filter(|(_, s)| s.holder != Holder::Universe)
-            .map(|(i, s)| (i, s.holder.clone()))
+            .filter(|s| s.holder != Holder::Universe)
+            .map(|s| (s.key, s.holder.clone()))
             .collect();
         let peoples = u
             .cosmic
@@ -491,7 +490,7 @@ impl Checkpoint {
         u.advance_to(&self.at, false);
         u.decide = true;
         for (i, h) in &self.holders {
-            let _ = u.seats.take(*i, h.clone());
+            let _ = u.seats.take(i, h.clone());
         }
         u.civ.knowledge.sync(u.cosmic.peoples.len());
         let mut taken = 0;
@@ -695,7 +694,10 @@ mod tests {
     fn checkpoint_text_round_trips_exactly() {
         let c = Checkpoint {
             at: xyl_core::ratio!(143_078_729_920, 1_000_000),
-            holders: vec![(3, Holder::Mind([7; 32])), (5, Holder::Player("x0".into()))],
+            holders: vec![
+                (crate::seats::SeatKey([3; 32]), Holder::Mind([7; 32])),
+                (crate::seats::SeatKey([5; 32]), Holder::Player("x0".into())),
+            ],
             peoples: vec![Held {
                 index: 2,
                 tag: tag("Zimarol"),
@@ -720,14 +722,14 @@ mod tests {
                 (
                     xyl_core::ratio!(1, 2),
                     Input::Take {
-                        seat: 3,
+                        seat: crate::seats::SeatKey([3; 32]),
                         mind: [7; 32],
                     },
                 ),
                 (
                     xyl_core::ratio!(2, 3),
                     Input::Focus {
-                        seat: 3,
+                        seat: crate::seats::SeatKey([3; 32]),
                         focus: Focus::none(),
                     },
                 ),
@@ -741,7 +743,7 @@ mod tests {
                 (
                     xyl_core::ratio!(7, 9),
                     Input::Handle {
-                        seat: 4,
+                        seat: crate::seats::SeatKey([4; 32]),
                         a: 9,
                         b: 11,
                         handling: crate::transit::Handling::Closed,

@@ -42,16 +42,16 @@ use xyl_cosmos::circuit::{gyr_of_rings, rings_of_gyr};
 pub enum Input {
     /// A seat taken by a mind, identified by the mind's key.
     Take {
-        /// Index of the seat in [`Seats::list`].
-        seat: usize,
+        /// The seat's key ([`crate::seats::SeatKey`]).
+        seat: crate::seats::SeatKey,
         /// The taking mind's 32-byte key.
         mind: [u8; 32],
     },
     /// A ruler directing its people's inquiry: a share of free thought per
     /// domain (all zero lifts the direction).
     Focus {
-        /// Index of the ruler's seat in [`Seats::list`].
-        seat: usize,
+        /// The ruler's seat's key.
+        seat: crate::seats::SeatKey,
         /// The direction of inquiry (`knowledge::Focus`).
         focus: Focus,
     },
@@ -65,8 +65,8 @@ pub enum Input {
     },
     /// A realm's steward sets a ley line's handling.
     Handle {
-        /// Index of the steward's seat in [`Seats::list`].
-        seat: usize,
+        /// The steward's seat's key.
+        seat: crate::seats::SeatKey,
         /// One mouth's star.
         a: u64,
         /// The other mouth's star.
@@ -217,10 +217,10 @@ impl<'g> Universe<'g> {
     /// nothing and records no input.
     pub fn decide(
         &mut self,
-        seat: usize,
+        seat: crate::seats::SeatKey,
         d: Decision,
     ) -> Result<crate::cosmic::Annal, &'static str> {
-        let on = self.seats.list.get(seat).ok_or("no such seat")?.on;
+        let on = self.seats.get(&seat).ok_or("no such seat")?.1.on;
         if let Decision::Handle { a, b, handling } = d {
             let On::Realm(_) = on else {
                 return Err("the seat is no steward's");
@@ -377,7 +377,7 @@ impl<'g> Universe<'g> {
                 ),
             });
         }
-        self.seats = self.seats.extend_realms(self.network.realm_keys.len());
+        self.seats = self.seats.extend_realms(&self.network.realm_keys);
         // The network's turnings in each people's history: joining the
         // network ("network") and its constellation closing or reopening
         // ("quarantine").
@@ -716,12 +716,12 @@ impl<'g> Universe<'g> {
     /// description of what it did or why it did nothing.
     pub fn apply(&mut self, input: &Input) -> String {
         match input {
-            Input::Take { seat, mind } => match self.seats.take(*seat, Holder::Mind(*mind)) {
+            Input::Take { seat, mind } => match self.seats.take(seat, Holder::Mind(*mind)) {
                 Ok(_) => format!("seat {seat} taken by a mind"),
                 Err(e) => format!("seat {seat} not taken: {e}"),
             },
             Input::Focus { seat, focus } => {
-                let Some(On::People(p)) = self.seats.list.get(*seat).map(|s| s.on) else {
+                let Some(On::People(p)) = self.seats.get(seat).map(|(_, s)| s.on) else {
                     return format!("seat {seat} is on no people");
                 };
                 self.civ.knowledge.sync(self.cosmic.peoples.len());
@@ -743,7 +743,7 @@ impl<'g> Universe<'g> {
                 b,
                 handling,
             } => {
-                let Some(On::Realm(r)) = self.seats.list.get(*seat).map(|s| s.on) else {
+                let Some(On::Realm(r)) = self.seats.get(seat).map(|(_, s)| s.on) else {
                     return format!("seat {seat} is no steward's");
                 };
                 let Some(&key) = self.network.realm_keys.get(r) else {

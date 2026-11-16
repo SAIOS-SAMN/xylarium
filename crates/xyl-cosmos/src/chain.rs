@@ -67,31 +67,8 @@ pub fn radius(t: Dy) -> Q {
 fn breath(t: Dy, echo: Dy) -> Q {
     let rim = crate::circuit::anchor().rim;
     let deficit = Q::ONE.checked_div(&(&rim + &Q::ONE)).unwrap_or(Q::ZERO);
-    let turns = t.div(&echo).unwrap_or_default().to_q().frac();
-    let (cos, _) = xyl_core::certified::cos_sin_turns(&Encl::exact(turns));
-    let swing = xyl_core::certified::toward_zero(&(&deficit * &cos.mid()), 64);
-    &Q::ONE + &swing
-}
-
-/// The turns at `t` rings of an orbit whose mean rate is `rate` (turns per
-/// ring) at deficit `deficit` about its core, breathing with that core's
-/// bell of echo `echo` (rings). The hold inside the orbit swings as the
-/// manifold deforms about it, by the deficit at its reach,
-/// `M (1 + delta cos(360 t / echo))`; a rate that goes as the deficit
-/// `delta = M / (r + M)` swings, first-degree, as
-/// `rate (1 + delta (1 - delta) cos(360 t / echo))`, a sheared return, and
-/// its turns are the closed form
-/// `rate t + rate delta (1 - delta) echo sin(360 t / echo) / (2 pi)`. The
-/// mean rate alone where the echo is zero (#233 item 5).
-pub fn breathing_turns(rate: Dy, deficit: Dy, t: Dy, echo: Dy) -> Dy {
-    let mean = rate * t;
-    if echo.signum() <= 0 {
-        return mean;
-    }
-    let two_pi = Dy::int(2) * Dy::pi();
-    let angle = (two_pi * t).div(&echo).unwrap_or_default();
-    let swing = deficit * (Dy::ONE - deficit);
-    mean + rate * swing * echo.div(&two_pi).unwrap_or_default() * angle.sin()
+    let turns = t.div(&echo).unwrap_or_default().to_q();
+    xyl_core::chrono::breath(&deficit, &turns)
 }
 
 /// The radius at `t` rings of a galaxy's sphere (each galaxy an enclosed
@@ -376,35 +353,6 @@ mod separation_tests {
         }
         let back = radius(echo);
         assert!((&back - &open).abs() < &bound * &xyl_core::ratio!(1, 1_000_000));
-    }
-
-    /// An orbit's rate breathes with its core's bell: over whole echoes its
-    /// turns are the mean rate's, between them they swing about the mean by
-    /// at most `rate delta (1 - delta) echo / (2 pi)`, ahead of it on the
-    /// echo's first half and behind on its second; with no echo the mean
-    /// alone (#233 item 5).
-    #[test]
-    fn an_orbits_rate_breathes() {
-        let (rate, delta, echo) = (xyl_core::dyadic!(1, 3), xyl_core::dyadic!(1, 4), Dy::int(2));
-        let bound = rate * delta * (Dy::ONE - delta) * echo.div(&(Dy::int(2) * Dy::pi())).unwrap();
-        let tiny = Dy::sci(1, -12);
-        for k in 0..5 {
-            let t = echo * Dy::int(k);
-            assert!((breathing_turns(rate, delta, t, echo) - rate * t).abs() < tiny);
-        }
-        let quarter = echo.div(&Dy::int(4)).unwrap();
-        let ahead = breathing_turns(rate, delta, quarter, echo) - rate * quarter;
-        assert!(ahead > Dy::ZERO && (ahead - bound).abs() < tiny);
-        let late = echo * xyl_core::dyadic!(3, 4);
-        assert!(breathing_turns(rate, delta, late, echo) < rate * late);
-        for k in 0..16 {
-            let t = echo * Dy::int(k).div(&Dy::int(7)).unwrap();
-            assert!((breathing_turns(rate, delta, t, echo) - rate * t).abs() <= bound + tiny);
-        }
-        assert_eq!(
-            breathing_turns(rate, delta, quarter, Dy::ZERO),
-            rate * quarter
-        );
     }
 
     /// A galaxy's sphere breathes with its core's bell: a homologue twice

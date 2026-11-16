@@ -15,7 +15,7 @@ may change public APIs and the model's laws.
   #300 to #303). Every quantity of time (the T-lane coordinate, the
   separation, the rate, the ring as a multi-axial orbit and its nesting, the
   echo, the breath, the keeper's reading, the pace against the network, the
-  display boundary) in one library by layer, the planned xyl-core chrono module for the
+  display boundary) in one library by layer, `xyl_core::chrono` for the
   pure forms, and read live by `observe clock` as the telemetry of time,
   each check a residue. E014 now states that planes part where their
   effective passes differ, a capture phase that depends on the kind.
@@ -75,7 +75,7 @@ may change public APIs and the model's laws.
 - The world manifolds breathe (#233 item 5). A planet's and a moon's mean
   phase (`Manifold::stand`, `Manifold::bearing`) is the mean turning plus
   the swing the core's bell gives the hold inside the orbit
-  (`chain::breathing_turns`), at the anchor's deficit `twist_deg / 360`,
+  (`xyl_core::chrono::breathing_turns`), at the anchor's deficit `twist_deg / 360`,
   over the echo of the star's galaxy core carried down the anchor chain
   (`Manifold::echo`), accumulated from the star's birth (`Manifold::born`)
   so the bell's phase is read from the origin. Over whole echoes the phase
@@ -147,6 +147,17 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Chronometry's pure forms in one module (#300): `xyl_core::chrono` holds
+  the front's arrival, the well's rate, the sheared return, the breath and
+  the breathing turns, the winding `K` and the keeper's reading, each exact
+  or refused (`None` where undefined). `circuit::echo_at`, `chain::breath`,
+  the breathing orbits of cores, stars and manifolds, and the keepers read
+  them; `chain::breathing_turns`, `chronometry::arrival`,
+  `chronometry::well` and the keeper's own arithmetic are deleted. The
+  epicenter keeps time in root windings, a ring of one, so no stored ring
+  holds pi (it held `pi(64).mid() R_u / rim`); `observe clock` reads rings
+  in root windings.
+
 - Windings, not a metronome (model.md, The ring as held; chronometry.md;
   checkpoints.md; E032). The T lane is written only by crossings
   (`T -> T - 2 (H - R)`) and verified closures; a space's own cycles are
@@ -161,7 +172,7 @@ may change public APIs and the model's laws.
   separated subjects commute.
 
 - Time as coordinates, the keepers (#280 stage 3, E032): a keeper's delay
-  is the front's arrival from the epicenter (`chronometry::arrival`), the
+  is the front's arrival from the epicenter (`xyl_core::chrono::arrival`), the
   separation of the two places' time coordinates `tau = d + H`, with the
   hold the front crosses (the cores nearer the epicenter, and for a shell
   its galaxy's hold inside its reach), not light's time over the distance
@@ -225,7 +236,7 @@ may change public APIs and the model's laws.
   `universal_fill_shares` refuse a torsion share that is no share.
 
 - Orbit rates breathe in the galaxy tier (#233 item 5):
-  `chain::breathing_turns` turns a mean rate read at the deficit `delta`
+  `xyl_core::chrono::breathing_turns` turns a mean rate read at the deficit `delta`
   into `rate t + rate delta (1 - delta) echo sin(360 t / echo) / (2 pi)`,
   the hold inside swinging with the core's bell. A star's orbit
   (`galaxy::Orbit::turns_at`, with its `deficit` and its galaxy core's

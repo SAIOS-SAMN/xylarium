@@ -31,17 +31,25 @@ pub(super) fn clock(u: &Universe<'_>) -> String {
         "coherence, rungs)\n"
     ));
     let c = &u.clocks;
-    let mut slips: Vec<Q> = Vec::new();
+    let mut slips: Vec<Option<Q>> = Vec::new();
     for (k, keeper) in c.keepers.iter().enumerate() {
-        let r = keeper.read(&u.now);
+        let Some(r) = keeper.read(&u.now) else {
+            slips.push(None);
+            out.push_str(&format!(
+                "  keeper {k}: no reading (its ring is not positive)\n"
+            ));
+            continue;
+        };
         // The slip relative to the keeper inside: `slip_k - slip_inside`.
-        let rel = c.inside[k].map(|i| &r.slip - &slips[i]).unwrap_or(Q::ZERO);
-        slips.push(r.slip.clone());
+        let rel = c.inside[k]
+            .and_then(|i| slips.get(i).cloned().flatten())
+            .map_or(Q::ZERO, |si| &r.slip - &si);
+        slips.push(Some(r.slip.clone()));
         let lag = &Q::ONE - &keeper.rate;
         let head = c.heads.get(k).map(|h| hex(&h[..6])).unwrap_or_default();
         out.push_str(&format!(
             concat!(
-                "  {:<12} galaxy {:<2} {} kpc out: its ring {} bells, 1 - rate {}, ",
+                "  {:<12} galaxy {:<2} {} kpc out: its ring {} root windings, 1 - rate {}, ",
                 "echo delay {} bells, its own count {}, slip {} turns ",
                 "(against the keeper inside {}), coherence {}, rungs {}, head {}\n"
             ),

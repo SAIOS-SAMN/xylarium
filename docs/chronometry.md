@@ -9,6 +9,13 @@ reading of an orbit. The build-out is tracked on
 
 ## Why one library
 
+Built so far (#300): the pure forms live in `xyl_core::chrono` (the front's
+arrival, the well's rate, the sheared return, the breath and its turns, the
+winding, the keeper's reading), every listed site moved onto them and its
+copy deleted; the epicenter keeps time in root windings, a ring of one, so
+no stored ring holds pi. The ring as a versor, the telemetry and the pace
+are next (#301, #302, #303).
+
 The quantities of time exist today, but in six places with six
 conventions:
 
@@ -16,8 +23,8 @@ conventions:
 |---|---|
 | The T lane, the beat (whole rings, phase in degrees) | `xyl_core::coordinate` |
 | The bell (one ring), the echo `bell / (1 - s)` and its far face | `circuit::bell`, `circuit::echo_at` |
-| The front's arrival `tau(r) - tau(0)` | `Substrate::delay`, `field::path`, `chronometry::arrival` |
-| The breath `1 + delta cos(360 t / echo)` and the breathing orbit's turns | `chain::breath`, `chain::breathing_turns`, `Manifold::stand` |
+| The front's arrival `tau(r) - tau(0)` | `Substrate::delay`, `field::path`, `xyl_core::chrono::arrival` |
+| The breath `1 + delta cos(360 t / echo)` and the breathing orbit's turns | `chain::breath`, `xyl_core::chrono::breathing_turns`, `Manifold::stand` |
 | The keepers: rate `r / (r + M(<r))`, delay, slip, coherence, rung, their chain | `xyl_kernel::chronometry` |
 | The final points heard from the network | the uplink's clock, `Checkpoint::commits` |
 
@@ -93,7 +100,7 @@ can derive.
 
 | Layer | Holds | Reads |
 |---|---|---|
-| xyl-core's chrono module (planned) | The pure forms: the separation, the rate, the ring reading and its nesting ratio, the sheared return, the breath and its turns, the keeper's reading, the display boundary | numbers only |
+| `xyl_core::chrono` | The pure forms: the separation, the rate, the ring reading and its nesting ratio, the sheared return, the breath and its turns, the keeper's reading, the display boundary | numbers only |
 | `xyl-cosmos` | The holds and shares the forms read: `Substrate::held_within`, `galaxy::inside_mass`, each manifold's anchor; each throat's torsion share and echo; the bells' arrivals | the founding |
 | `xyl-kernel` | The keepers and their chain, the checkpoint's cut (docs/checkpoints.md), the universe's clock, every input's coordinate | the universe in play |
 | the uplink | The final points heard, the pace, the seam's `delta tau` | the network |
@@ -126,7 +133,7 @@ at its present (`observe clock SUBJECT` for one subject):
 
 The sub-issues of #299, each with its done-when:
 
-1. The library's pure forms in the planned xyl-core chrono module, the existing sites moved
+1. Built (#300): the library's pure forms in `xyl_core::chrono`, the existing sites moved
    onto it and their copies deleted; pi out of every stored ring.
 2. The ring reading (#60): the versor per body and its nested reading, read
    by the telemetry; with #128 for each plane's own share.

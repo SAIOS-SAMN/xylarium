@@ -1015,7 +1015,7 @@ longer holds.
   placement by index, to be replaced, roadmap item 40),
   and its place at `t` is its plane's rotor applied to its phase
   (`Shape::place_at`), the circulation breathing with the universal core's
-  bell (`chain::breathing_turns`): the hold inside swings by the deficit at
+  bell (`xyl_core::chrono::breathing_turns`): the hold inside swings by the deficit at
   its reach, so the rate swings by `delta (1 - delta)` of itself each echo,
   and a star's orbit breathes so about its galaxy's core. The stars of another galaxy are the home galaxy's stars
   read through that galaxy's length scale `2 m / (1 + m)`, where `m` is its hole
@@ -1291,7 +1291,7 @@ display, never stored.
     returned after `1 / (1 - delta_p)` traversals (T4), degrees adding.
     The hold breathes with its core's bell, `H (1 + delta cos(360 t / echo))`,
     so the pull and the shear swing as `delta (1 - delta)`
-    (`chain::breathing_turns`, #233).
+    (`xyl_core::chrono::breathing_turns`, #233).
   - **From the matter: the torsion.** The orbiting body's own spin turns
     every Hopf plane's phase: a throat (a core, a hole) by its torsion share
     `s = (H + J) / (2H + J)`, `w_p 360 s` degrees on the spin face and
@@ -1352,7 +1352,7 @@ display, never stored.
   among them, never `delta tau` alone (The ring as held, below), each side
   reading it into its rings at the face it holds.
 - **What is built.** The pieces: the breathing orbit rates at every tier
-  (`chain::breathing_turns`, `Manifold::stand`), the induced turn
+  (`xyl_core::chrono::breathing_turns`, `Manifold::stand`), the induced turn
   (`hopf::induce`), the charged spin (`xyl_core::hopf`), the echo
   (`circuit::echo_at`), the time coordinate (`Substrate::delay`,
   `field::path`). Not yet: the ring as one versor per body and its nested

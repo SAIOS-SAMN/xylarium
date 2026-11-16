@@ -14,7 +14,7 @@
 //! Outputs:
 //! - `manifolds` -> one `Manifold` per world: rate in degrees per ring from
 //!   the turning law, breathing over the star's galaxy core's echo at the
-//!   anchor's deficit (`chain::breathing_turns`, #233 item 5), eccentricity
+//!   anchor's deficit (`xyl_core::chrono::breathing_turns`, #233 item 5), eccentricity
 //!   relaxing toward its forced value (`Manifold::e`,
 //!   `bodies::eccentricity`), plane as an exact rotor of
 //!   turns in degrees, twist per turn equal to the anchor's deficit. A
@@ -264,7 +264,7 @@ impl Manifold {
     /// Mean phase at `age` rings (turns): the phase at the star's birth plus
     /// the turning, the mean rate breathing with the core's bell as the
     /// manifold deforms about the hold inside the orbit
-    /// (`chain::breathing_turns`, at the anchor's deficit `twist_deg / 360`):
+    /// (`xyl_core::chrono::breathing_turns`, at the anchor's deficit `twist_deg / 360`):
     /// the swing accumulated from the star's birth to the age, the bell's
     /// phase read from the origin. The mean rate alone where the echo is
     /// zero.
@@ -274,7 +274,8 @@ impl Manifold {
         let per = Dy::from_q(&rate.mid());
         let delta = Dy::from_q(&self.twist_deg.checked_div(&Q::int(360)).unwrap_or(Q::ZERO));
         let (from, to) = (Dy::from_q(&self.born), Dy::from_q(&(&self.born + age)));
-        let turns = |t: Dy| crate::chain::breathing_turns(per, delta, t, self.echo);
+        let turns =
+            |t: Dy| xyl_core::chrono::breathing_turns(per, delta, t, self.echo).unwrap_or(per * t);
         let swing = turns(to) - turns(from) - per * (to - from);
         mean.add(&Encl::exact(swing.to_q()))
     }

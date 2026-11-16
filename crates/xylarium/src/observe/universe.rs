@@ -223,7 +223,10 @@ pub(super) fn house(u: &Universe<'_>) -> String {
                 ));
                 for l in &r.lines {
                     out.push_str(&format!(
-                        "    line {} - {}: {:?}, open {}, cost {} J, collected {} J, {} passages last year, toll floor {} J\n",
+                        concat!(
+                            "    line {} - {}: {:?}, open {}, cost {} J, collected {} J, ",
+                            "{} passages last year, toll floor {} J\n"
+                        ),
                         l.from,
                         l.to,
                         l.handling,

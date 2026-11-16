@@ -11,6 +11,12 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- A steward's seat perceives its realm (#266): `percept::realm` returns
+  every line whose first mouth lies in the realm with its handling, open
+  share, books and toll floor, and each constellation with its quarantine
+  share; `observe house` prints it under each held steward's seat.
+  `percept::perceive` and `Percept::seat` take the seat's key (#264).
+
 - The builders' decisions (#266): `Decision::Aim` (an ancient or a
   progenitor seat aims its next ley line at a star's constellation, sited
   there by the worth law when it is a candidate of positive worth, the aim

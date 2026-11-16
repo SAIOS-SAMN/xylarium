@@ -1334,6 +1334,35 @@ display, never stored.
   composite rotor of every pivot taken closing, the light ledger balancing
   on both faces, and the windings resonating at the destination's
   coordinate.
+- **Two aspects of a body's time** (operator 2026-11-16, #311). The first is
+  the coordinate of traversal: a front reaches a place at
+  `tau = r + H(<r)`, and the T lane is written only by crossings and
+  closures (E032). The second is the motion of the body: its axis's spin,
+  the winding of that spin (the day), and the speed its mass traverses the body it
+  orbits, `v = delta = M / (r + M)` by the turning law, with the swing of
+  that motion as its anchor's mass disperses, the hold
+  `M (1 + delta cos(360 t / echo))` and the rate as `delta (1 - delta)`.
+  A body's proper rate composes, along its anchor chain, each link's well
+  face `1 - delta_k` with its motion `v_k`, by the flow law on the
+  hyperbolic plane (never a square or a root), its spin's winding nested
+  inside. The first-degree face of a moving clock is open (#311).
+- **Dilation opens turning planes** (T25, derived; two steps open, #311).
+  A pulse emitted at its source's rate and received deeper in a well runs
+  faster in the receiver's time by `D = rate_source / rate_receiver >= 1`,
+  so the place receives `D` times the pulse's energy per local ring.
+  A state is a harmonic of degree `l` on S^11 with its weight `m` in Z^6
+  (axiom 8, T6), and plane `p` turns in the body's rotor exactly where
+  `m_p != 0`; a harmonic of degree `l` carries at most `min(l, 6)` nonzero
+  weights (`|m_p| >= 1` each, `sum |m_p| <= l`), so its rotor's capacity
+  (`Rotor::dimensions`) is at most `min(l, 6)` mutually orthogonal planes.
+  The degree a place's states reach rises with the energy received per
+  local ring, so a deeper `D` opens more turning planes: a system by
+  a galactic core's accretion disc, deep in its hold, turns on more planes
+  than a system at a rim, whose `D` is near one. Xylarium's carrier
+  (Cl(13, 1), twelve axes) holds six planes; a seventh needs a larger
+  carrier `S^(2n - 1) -> CP^(n - 1)`. Open: that the received energy per
+  local ring scales by exactly `D`, and that the degree
+  reached is that energy over one level's quantum.
 - **The ring hierarchy.** Rings nest along the anchor chain, each body's
   read inside its anchor's: the universal core's throat orbit (`r = M`,
   `delta = 1/2`, the root ring), each galactic core's orbit in the ocean
@@ -1774,6 +1803,7 @@ truthful.
 | T22 | the induced turn: a throat's torsion turns each Hopf plane's phase `w_p 360 s` degrees on the spin face and `-w_p 360 (1 - s)` on the inverse face, `s = (H + J) / (2H + J)`; each face is the weighted Seifert automorphism (composes by adding degrees, commutes with the Hopf action); the pair leaves the shear `w_p 360 (2s - 1)`, zero only where the throat does not spin | 7, 8, 12, T4 | `xyl_core::hopf::induce`, `circuit::induced_phases` | `hopf::tests::the_induced_turn_is_the_seifert_automorphism_on_each_face` | `split` | built |
 | T23 | the reduction: in the common winding a face's turn moves only along the fibre, so the point of `CP^5` (the relative phases, the five isoclinic planes past the axis puncture) is kept; what a reading on the base sees of a turn is its non-common part | 8, 12, T22 | `xyl_core::hopf::induce` | `hopf::tests::the_induced_turn_is_the_seifert_automorphism_on_each_face` | `proofs` | built |
 | T24 | the rest point is a projection, not a composition: the axis plane's induced phase `R_0` (E030), projected L1 onto the join's share split, gives the faces `c = (1 + R_0) / 2` and `d = (1 - R_0) / 2`; at the bounce the nucleon split's pole stands at their antipole, `(Z - Q) / (Z + Q) = -R_0`, so `Q* / Z = c / d = (1 + R_0) / (1 - R_0)`; the torsion is inside `R_0`, so it holds at any spin; the isoclinic planes are orthogonal to the split | 5, 8, 13, T22, T23 | `formation::shells` (`rest_point`) | `shells::tests::the_orbit_releases_what_the_core_does_not_keep` | `proofs`, `founding-reach` | built |
+| T25 | dilation opens turning planes: a place deep in a well receives `D = rate_source / rate_receiver` times a pulse's energy per local ring; a state of degree `l` turns at most `min(l, 6)` mutually orthogonal planes (`m_p != 0`); the degree reached rises with `D`, so a system by a core's accretion disc turns more planes than a rim system; past six planes the carrier is `S^(2n - 1) -> CP^(n - 1)` | 7, 8, T6, T20, T21 | none | none | none | planned [#311](https://github.com/SAIOS-SAMN/xylarium/issues/311) |
 
 Reading (seed 7; a retired floating-point screen with exact held sets, to
 be read on the binary once the bounces are built, #79): the universal core holds 0.4352 of the

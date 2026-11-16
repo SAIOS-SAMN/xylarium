@@ -138,6 +138,13 @@ may change public APIs and the model's laws.
 
 ### Changed
 
+- Time as coordinates, the keepers (#280 stage 3, E032): a keeper's delay
+  is the front's arrival from the epicenter (`chronometry::arrival`), the
+  separation of the two places' time coordinates `tau = d + H`, with the
+  hold the front crosses (the cores nearer the epicenter, and for a shell
+  its galaxy's hold inside its reach), not light's time over the distance
+  alone.
+
 - The kernel refuses a decision from anyone but the seat's holder (#265).
   `Universe::decide` takes the caller (`seats::Holder`) and refuses one who
   does not hold the seat (`Seats::held_by`); the built-in rule decides only

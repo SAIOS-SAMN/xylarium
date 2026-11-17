@@ -16,7 +16,7 @@ compared reading by reading), and in which intelligence is built across
 the cosmos in realms distributed on equal laws, as solar systems and
 collections of constellations in every galaxy.
 
-**Where it stands (2026-11-16, paused; resume from
+**Where it stands (2026-11-17, paused; resume from
 [#309](https://github.com/SAIOS-SAMN/xylarium/issues/309)).** The founding is sound in the founding
 calibre: the bounce, the elements and atoms, the firmament, the paired core
 and its spin, the ocean's held medium, the rest point (T24) and the induced
@@ -29,12 +29,21 @@ is written only by crossings and closures, and every clock is a winding
 (docs/chronometry.md); the front's arrival is built at the core's tier, the
 galaxy tier and the keepers, and the library's pure forms are in
 `xyl_core::chrono` ([#280](https://github.com/SAIOS-SAMN/xylarium/issues/280), [#299](https://github.com/SAIOS-SAMN/xylarium/issues/299)).
+A moving clock keeps two faces, its well and its motion composed by the
+flow law, and each people ages over its system's proper years, dwelling its
+anchor's torsion share of each turn on the face with the pull (E033, T26,
+[#311](https://github.com/SAIOS-SAMN/xylarium/issues/311); the live reading next).
 The game plays from the terminal: seats by subject, decisions checked
 against their holder, the builders' aim and budget, a steward's percept,
 `observe seats`, `take` and `decide`
-([#264](https://github.com/SAIOS-SAMN/xylarium/issues/264) to [#267](https://github.com/SAIOS-SAMN/xylarium/issues/267), awaiting their live witness).
-On the network, seed 7's domain is founded on mycelium's v4 mesh with its
-first v4 manifest granted; its first ledger entry is pending its live run.
+([#264](https://github.com/SAIOS-SAMN/xylarium/issues/264) to [#267](https://github.com/SAIOS-SAMN/xylarium/issues/267); a sovereign's take, focus and the holder check witnessed live, the
+house, steward and progenitor seats awaiting a home with an ancient people).
+On the network, seed 7's domain is founded on mycelium's v4 mesh, its first
+ledger entry sealed, and its first matter has crossed a tube: two trial
+traverses to netstratum's test domain, each moving 6 thirds of nucleons,
+conserved, at zero gas; the trade treaty with netstratum's real domain is
+drafted for countersigning (xylarium-uplink `docs/treaty-seed7-netstratum.md`).
+Xylarium's own hypha node is adjoined to the mesh (xylarium-uplink `node/`).
 Still open above the founding:
 - Gravity as the deformation about a mass invariant, with both faces
   ([#155](https://github.com/SAIOS-SAMN/xylarium/issues/155)), and the

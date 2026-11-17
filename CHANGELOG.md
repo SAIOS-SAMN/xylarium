@@ -11,6 +11,16 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- Each people is carried over its system's proper years (#311; E033,
+  T26): a body dwells its anchor throat's torsion share `s` of each turn on
+  the face moving with the pull and `1 - s` against it (T4's returns), its
+  near turns between two turn counts in closed form
+  (`chronometry::near_turns`, `Faced::over`); a people's years are its
+  star's link about its galaxy's hold nested in its hub's, each on its own
+  orbit's turns (`Chronometry::proper_years`), and its settling's global
+  time is its proper years over that rate. A galactic core's share reads
+  the parent's spin (S021).
+
 - A moving clock's proper rate on two faces (#311; E033, T26): per link of
   its anchor chain, the hold's dilation `M / r` and the motion's `D(v)`,
   `v = M / (r + M)`, compose by the flow law to `D_h D(v)` with the pull

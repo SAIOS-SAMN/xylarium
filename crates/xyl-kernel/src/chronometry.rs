@@ -26,6 +26,19 @@
 //!   D_h^2`, so they part about the well, never an even split. Nested links
 //!   multiply face by face: a galaxy's hub moves about the cores nearer the
 //!   epicenter, each shell's matter about the hold inside its reach.
+//! - Proper span ([`Faced::over`], [`Chronometry::proper_years`], #311): a
+//!   body is on one face at a time. By the sheared return (T4) its anchor
+//!   throat's near face returns after `bell / (1 - s)` and its far face after
+//!   `bell / s`, `s` the throat's torsion share, so of each turn of its orbit
+//!   it dwells the share `(1 / (1 - s)) / (1 / (1 - s) + 1 / s) = s` on the
+//!   face moving with the pull and `1 - s` against it: an even split only
+//!   where the throat does not spin. Between turn counts `a` and `b` the
+//!   turns on the near face are `F(b) - F(a)`, `F(x) = floor(x) s + min(frac
+//!   x, s)` ([`near_turns`]), exact, and a span's proper span is the span
+//!   times each face's rate by its share of those turns. A people's years
+//!   are its system's proper years: its star's link about its galaxy's hold,
+//!   nested in its hub's about the cores nearer the epicenter, each link read
+//!   on the turns of that link's orbit.
 //! - Reading ([`Keeper::read`]) at the epicenter's count N (bells), on each
 //!   face: local = rate (N - delay) / ring; slip = (1 - rate)(N - delay) /
 //!   ring; coherence = 1 - 2 |slip - round(slip)|; rung = floor(slip). N -
@@ -102,6 +115,31 @@ impl Faced<Q> {
             with: rate(hold.compose(&motion))?,
             against: rate(hold.compose(&motion.inverse()))?,
         })
+    }
+
+    /// The proper span over `span` (any unit) of a body whose orbit turned
+    /// from `a` to `b` turns about an anchor of torsion share `s`: the span
+    /// times each face's rate by its share of those turns, the first `s` of
+    /// each turn on the face moving with the pull; with no turn made, the
+    /// face its phase stands on. `None` for `s` outside `(0, 1)` or turns
+    /// that run back.
+    pub fn over(&self, s: &Q, (a, b): (&Q, &Q), span: &Q) -> Option<Q> {
+        if s.signum() <= 0 || *s >= Q::ONE || b < a {
+            return None;
+        }
+        let turned = b - a;
+        if turned.is_zero() {
+            let face = if a.frac() < *s {
+                &self.with
+            } else {
+                &self.against
+            };
+            return Some(span * face);
+        }
+        let near = near_turns(a, b, s)?;
+        let far = &turned - &near;
+        let rate = (&(&near * &self.with) + &(&far * &self.against)).checked_div(&turned)?;
+        Some(span * &rate)
     }
 
     /// This rate nested inside `outer`'s: face by face, the product.
@@ -199,6 +237,26 @@ impl Shell {
     }
 }
 
+/// The turns between turn counts `a <= b` that fall on the first `s` of each
+/// turn (the near face): `F(b) - F(a)`, `F(x) = floor(x) s + min(frac x,
+/// s)`, exact. `None` past `i128` turns.
+pub fn near_turns(a: &Q, b: &Q, s: &Q) -> Option<Q> {
+    let f = |x: &Q| -> Option<Q> {
+        let whole = Q::from_i128(x.floor_i128()?, 1)?;
+        Some(&(&whole * s) + &x.frac().min(s.clone()))
+    };
+    Some(&f(b)? - &f(a)?)
+}
+
+/// The torsion share of an anchor throat, the share of each of its bodies'
+/// turns spent on the face moving with its pull: the universal core's at
+/// its spin then (`Anchor::core_spin`, T17). A galactic core's own spin is
+/// unbuilt (T11); its bell spins at the parent's.
+pub fn anchor_share() -> Q {
+    // Stand-in S021: Every galactic core's bell spins about z at the parent's drawn spin.
+    xyl_cosmos::bounce::torsion_share(&Q::ONE, &xyl_cosmos::circuit::anchor().core_spin)
+}
+
 /// A keeper: its galaxy (None at the epicenter), shell, distance from the
 /// epicenter (kpc), rate and echo delay (bells), all exact.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -223,6 +281,9 @@ pub struct Keeper {
     /// enclosure it keeps time in (the universe's sphere for the epicenter,
     /// the galaxy's sphere for a hub and its shells).
     pub ring: Q,
+    /// A hub's galactic core, whose own orbit about the epicenter sets
+    /// which face the hub is on; `None` for the epicenter and the shells.
+    pub core: Option<xyl_cosmos::cores::Shape>,
 }
 
 /// What a keeper reads at the root's winding: its local count, its slip,
@@ -324,6 +385,7 @@ impl Chronometry {
             rate: Proper::root(),
             delay: Q::ZERO,
             ring: ring_u,
+            core: None,
         });
         c.inside.push(None);
         for s in &shapes {
@@ -348,6 +410,7 @@ impl Chronometry {
                 // epicenter, the hold its well reads.
                 delay: front(&d, &nearer),
                 ring: scale.clone(),
+                core: Some(s.clone()),
             });
             c.inside.push(Some(0));
             let mut inner = c.keepers.len() - 1;
@@ -377,6 +440,7 @@ impl Chronometry {
                     // hold inside `r`, all within `d + r` of the epicenter.
                     delay: front(&(&d + &r), &(&nearer + &inside)),
                     ring: scale.clone(),
+                    core: None,
                 });
                 c.inside.push(Some(inner));
                 inner = c.keepers.len() - 1;
@@ -463,6 +527,42 @@ impl Chronometry {
         }
         self.commits.push(n.clone());
         self.points.push(point);
+    }
+
+    /// A system's proper years over `years` from `from` to `to` (Gyr): its
+    /// star's link about its galaxy's hold nested in its hub's link, each
+    /// read on the turns of that link's orbit over the span ([`Faced::over`]), the
+    /// links' products. Exact within one face of each link; where both
+    /// links change face inside one span, each link's share is read on that link's turns over
+    /// the span. `None` for a star not founded, a galaxy with no hub, or a
+    /// link refused.
+    pub fn proper_years(
+        &self,
+        (seed, origin): (u64, &Origin),
+        star: u64,
+        (from, to): (xyl_core::dyadic::Dy, xyl_core::dyadic::Dy),
+        years: &Q,
+    ) -> Option<Q> {
+        let st = xyl_cosmos::galaxy::star(seed, origin, star)?;
+        let hub = self
+            .keepers
+            .iter()
+            .find(|k| k.galaxy == Some(st.core) && k.shell == Shell::Hub)?;
+        let core = hub.core.as_ref()?;
+        let (t0, t1) = (
+            xyl_cosmos::circuit::rings_of_gyr_dy(from),
+            xyl_cosmos::circuit::rings_of_gyr_dy(to),
+        );
+        let s = anchor_share();
+        let hub_turns = |t| core.place_at(t, &Q::ONE).winding.turns();
+        let hub_years = hub.rate.over(&s, (&hub_turns(t0), &hub_turns(t1)), years)?;
+        let scale = st.scale.to_q();
+        let inside =
+            &xyl_cosmos::galaxy::inside_mass(&st.r) * &xyl_cosmos::cores::ratio_of_scale(&scale);
+        let reach = &(&st.r * &scale) * &Tier::Galaxy.in_rg();
+        let link = Proper::link(&inside, &reach)?;
+        let (a, b) = (st.orbit.turns_at(t0).to_q(), st.orbit.turns_at(t1).to_q());
+        link.over(&s, (&a, &b), &hub_years)
     }
 
     /// Sets ring 0's point, once: the final point heard with the universe's
@@ -554,5 +654,48 @@ mod tests {
         assert_eq!(nested.with, &a.with * &b.with);
         assert_eq!(nested.against, &a.against * &b.against);
         assert_eq!(a.within(&Proper::root()), a);
+    }
+
+    /// A body dwells the torsion share `s` of each turn on the face moving
+    /// with the pull: the near turns add over consecutive spans and are
+    /// exactly `s` per whole turn; a span with no turn reads the face its
+    /// phase stands on; over whole turns the proper span weighs each face by
+    /// its share, an even split only at `s = 1/2`, and a spinning anchor
+    /// (`s > 1/2`) holds its bodies longer on the slower face; refused for a
+    /// share outside (0, 1) or turns that run back; the anchor's share lies
+    /// in [1/2, 3/5].
+    #[test]
+    fn a_body_dwells_the_torsion_share_of_each_turn_on_the_near_face() {
+        let s = xyl_core::ratio!(4, 7);
+        let (a, b, c) = (xyl_core::ratio!(3, 10), xyl_core::ratio!(27, 8), Q::int(9));
+        let near = |x: &Q, y: &Q| near_turns(x, y, &s).unwrap();
+        assert_eq!(&near(&a, &b) + &near(&b, &c), near(&a, &c));
+        assert_eq!(near(&a, &(&a + &Q::int(5))), &s * &Q::int(5));
+        let f = Proper::link(&Q::ONE, &Q::int(3)).unwrap();
+        let span = Q::int(100);
+        assert_eq!(
+            f.over(&s, (&Q::ZERO, &Q::ZERO), &span),
+            Some(&span * &f.with)
+        );
+        let late = xyl_core::ratio!(5, 7);
+        assert_eq!(f.over(&s, (&late, &late), &span), Some(&span * &f.against));
+        let whole = |share: &Q| f.over(share, (&a, &(&a + &Q::int(4))), &span).unwrap();
+        let weighed = &(share_rate(&f, &s)) * &span;
+        assert_eq!(whole(&s), weighed);
+        let half = xyl_core::ratio!(1, 2);
+        assert_eq!(whole(&half), &(&(&f.with + &f.against) * &half) * &span);
+        assert!(
+            whole(&s) < whole(&half),
+            "spin holds the body on the slower face longer"
+        );
+        assert_eq!(f.over(&Q::ONE, (&a, &b), &span), None);
+        assert_eq!(f.over(&Q::ZERO, (&a, &b), &span), None);
+        assert_eq!(f.over(&s, (&b, &a), &span), None);
+        let share = anchor_share();
+        assert!(share >= half && share <= xyl_core::ratio!(3, 5));
+    }
+
+    fn share_rate(f: &Proper, s: &Q) -> Q {
+        &(s * &f.with) + &(&(&Q::ONE - s) * &f.against)
     }
 }

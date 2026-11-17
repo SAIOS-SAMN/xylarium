@@ -147,12 +147,13 @@ impl Civilizations {
         to: Dy,
         environment: &[Dy],
         decide: bool,
+        clocks: &crate::chronometry::Chronometry,
     ) -> Vec<Act> {
         let count = cosmic.peoples.len();
         self.sync(count);
         let rulers = Rulers::default();
         let viable = xyl_cosmos::life::viable();
-        let spans = self.spans(cosmic, to);
+        let spans = self.spans(cosmic, to, clocks);
         let masteries = self.think(cosmic, &spans, to);
         let drives = drives(cosmic, &spans, &masteries);
         let stands = stands(cosmic, &spans, &masteries, &drives, to, &rulers, viable);
@@ -177,17 +178,30 @@ impl Civilizations {
     }
 
     /// Each people's span as (Gyr it is carried from, years), from where it
-    /// was last carried (never before its dawn) to `to`; None for a people
-    /// that is not alive or already carried to `to`.
-    fn spans(&self, cosmic: &Cosmic<'_>, to: Dy) -> Vec<Option<(Dy, Dy)>> {
+    /// was last carried (never before its dawn) to `to`, the years its
+    /// system's proper years (`Chronometry::proper_years`, #311): a people
+    /// deep in its galaxy's hold ages less over one span than one at the
+    /// rim. None for a people that is not alive or already carried to `to`,
+    /// or whose system's proper span is refused.
+    fn spans(
+        &self,
+        cosmic: &Cosmic<'_>,
+        to: Dy,
+        clocks: &crate::chronometry::Chronometry,
+    ) -> Vec<Option<(Dy, Dy)>> {
+        let at = (cosmic.gal.seed, cosmic.gal.origin);
         cosmic
             .peoples
             .iter()
             .enumerate()
             .map(|(i, p)| {
                 let from = self.carried_to[i].max(p.dawn);
-                (to > from && p.population.signum() > 0)
-                    .then(|| (from, (to - from) * Dy::sci(1, 9)))
+                if to <= from || p.population.signum() <= 0 {
+                    return None;
+                }
+                let years = ((to - from) * Dy::sci(1, 9)).to_q();
+                let proper = clocks.proper_years(at, p.star, (from, to), &years)?;
+                Some((from, Dy::from_q(&proper)))
             })
             .collect()
     }

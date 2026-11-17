@@ -1345,7 +1345,19 @@ display, never stored.
   A body's proper rate composes, along its anchor chain, each link's well
   face `1 - delta_k` with its motion `v_k`, by the flow law on the
   hyperbolic plane (never a square or a root), its spin's winding nested
-  inside. The first-degree face of a moving clock is open (#311).
+  inside (T26, built in the keepers, `chronometry::Faced::link`). About a
+  hold `M` at reach `r` the well is the hold's dilation `D_h = M / r` (its
+  faces' ratio `c / d`, the rate its divergent face `1 / (1 + D_h)`), and
+  the motion `v = delta` has `D(v) = (r + 2M) / r`; the flow law makes the
+  two a product, so a moving clock has two faces, moving with the pull
+  (`D_h D(v)`) and against it (`D_h / D(v)`), each read as its divergent
+  face: `r^2 / (r^2 + r M + 2 M^2)` and `(r + 2M) / (r + 3M)`. They part
+  about the well, `D_with D_against = D_h^2`, never an even split, and are
+  held as the pair, never their mean or their root. At the throat (`r = M`)
+  they read `1/4` and `3/4` against the well's `1/2`; at a rim both near
+  one. Nested links multiply face by face. Open (#311): each people's carry
+  over its proper span, the bells' arrivals counted on the receiver's
+  clock, the breath at each place's winding, and the spin's own winding.
 - **Dilation opens turning planes** (T25, derived; two steps open, #311).
   A pulse emitted at its source's rate and received deeper in a well runs
   faster in the receiver's time by `D = rate_source / rate_receiver >= 1`,
@@ -1803,6 +1815,7 @@ truthful.
 | T22 | the induced turn: a throat's torsion turns each Hopf plane's phase `w_p 360 s` degrees on the spin face and `-w_p 360 (1 - s)` on the inverse face, `s = (H + J) / (2H + J)`; each face is the weighted Seifert automorphism (composes by adding degrees, commutes with the Hopf action); the pair leaves the shear `w_p 360 (2s - 1)`, zero only where the throat does not spin | 7, 8, 12, T4 | `xyl_core::hopf::induce`, `circuit::induced_phases` | `hopf::tests::the_induced_turn_is_the_seifert_automorphism_on_each_face` | `split` | built |
 | T23 | the reduction: in the common winding a face's turn moves only along the fibre, so the point of `CP^5` (the relative phases, the five isoclinic planes past the axis puncture) is kept; what a reading on the base sees of a turn is its non-common part | 8, 12, T22 | `xyl_core::hopf::induce` | `hopf::tests::the_induced_turn_is_the_seifert_automorphism_on_each_face` | `proofs` | built |
 | T24 | the rest point is a projection, not a composition: the axis plane's induced phase `R_0` (E030), projected L1 onto the join's share split, gives the faces `c = (1 + R_0) / 2` and `d = (1 - R_0) / 2`; at the bounce the nucleon split's pole stands at their antipole, `(Z - Q) / (Z + Q) = -R_0`, so `Q* / Z = c / d = (1 + R_0) / (1 - R_0)`; the torsion is inside `R_0`, so it holds at any spin; the isoclinic planes are orthogonal to the split | 5, 8, 13, T22, T23 | `formation::shells` (`rest_point`) | `shells::tests::the_orbit_releases_what_the_core_does_not_keep` | `proofs`, `founding-reach` | built |
+| T26 | a moving clock's proper rate on one link: the well's dilation `D_h = M / r` and the motion's `D(v)`, `v = delta = M / (r + M)`, compose by the flow law to `D_h D(v)` with the pull and `D_h / D(v)` against it, each rate its divergent face `1 / (1 + D)`; the faces part about the well (`D_with D_against = D_h^2`), keep the calibre and nest by products | 3, 6, T1, T3 | `chronometry::Faced::link`, `chronometry::Faced::within` | `chronometry::tests::a_bodys_proper_rate_composes_its_well_and_its_motion` | `clock` | partial: the keepers and the peoples' systems read on both faces; each people's carry over its proper span open [#311](https://github.com/SAIOS-SAMN/xylarium/issues/311) |
 | T25 | dilation opens turning planes: a place deep in a well receives `D = rate_source / rate_receiver` times a pulse's energy per local ring; a state of degree `l` turns at most `min(l, 6)` mutually orthogonal planes (`m_p != 0`); the degree reached rises with `D`, so a system by a core's accretion disc turns more planes than a rim system; past six planes the carrier is `S^(2n - 1) -> CP^(n - 1)` | 7, 8, T6, T20, T21 | none | none | none | planned [#311](https://github.com/SAIOS-SAMN/xylarium/issues/311) |
 
 Reading (seed 7; a retired floating-point screen with exact held sets, to

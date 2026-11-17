@@ -11,6 +11,15 @@ may change public APIs and the model's laws.
 
 ### Added
 
+- A moving clock's proper rate on two faces (#311; E033, T26): per link of
+  its anchor chain, the hold's dilation `M / r` and the motion's `D(v)`,
+  `v = M / (r + M)`, compose by the flow law to `D_h D(v)` with the pull
+  and `D_h / D(v)` against it, each rate its divergent face; nested links
+  multiply face by face (`chronometry::Faced::link`, `Faced::within`). Every
+  keeper holds its rate on both faces (its chain entries hash both, entry
+  v4), and `observe clock` reads each keeper and each people's system on
+  both faces, with a check that the face with the pull is never the faster.
+
 - Two aspects of a body's time and T25, dilation opens turning planes
   (model.md; #311, planned): a body's proper rate composes, along its
   anchor chain, each link's well face with its motion (the turning law's

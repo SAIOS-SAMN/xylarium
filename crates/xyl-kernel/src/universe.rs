@@ -684,9 +684,13 @@ impl<'g> Universe<'g> {
             // the same carry the live path uses.
             self.cosmic.wake(at);
             let environment = self.environment(at, None);
-            let acts = self
-                .civ
-                .carry(&mut self.cosmic, at, &environment, self.decide);
+            let acts = self.civ.carry(
+                &mut self.cosmic,
+                at,
+                &environment,
+                self.decide,
+                &self.clocks,
+            );
             self.record(acts);
         }
         xyl_core::watch::note(&format!("reading: peoples carried in {:.1?}", t.elapsed()));
@@ -736,9 +740,13 @@ impl<'g> Universe<'g> {
         }
         self.cosmic.wake(to);
         let environment = self.environment(to, Some((to - from) * Dy::sci(1, 9)));
-        let acts = self
-            .civ
-            .carry(&mut self.cosmic, to, &environment, self.decide);
+        let acts = self.civ.carry(
+            &mut self.cosmic,
+            to,
+            &environment,
+            self.decide,
+            &self.clocks,
+        );
         self.record(acts);
     }
 
@@ -746,9 +754,12 @@ impl<'g> Universe<'g> {
     /// logistic's inflection, half its capacity, where the carry settles a
     /// daughter (civ/mod.rs `expand`): from the deep time its numbers were
     /// last carried to (`People::updated`), `ln(K / N - 1) / r` years on
-    /// (`growth::years_to_inflection`).
+    /// (`growth::years_to_inflection`). Those are the people's proper years,
+    /// so the global years are them over its system's proper rate on the
+    /// faces it stands on then (#311), exact while no link changes face.
     /// `None` where no people is growing toward one.
     fn next_settling(&self) -> Option<Q> {
+        let at = (self.cosmic.gal.seed, self.cosmic.gal.origin);
         self.cosmic
             .peoples
             .iter()
@@ -757,7 +768,11 @@ impl<'g> Universe<'g> {
             .filter_map(|(_, p)| {
                 let from = p.updated.max(p.dawn);
                 let years = crate::growth::years_to_inflection(p.population, p.capacity, p.rate)?;
-                Some(from + years * Dy::sci(1, -9))
+                let rate = self
+                    .clocks
+                    .proper_years(at, p.star, (from, from), &Q::ONE)?;
+                let global = years.to_q().checked_div(&rate)?;
+                Some(from + Dy::from_q(&global) * Dy::sci(1, -9))
             })
             .min()
             .map(|g| rings_of_gyr(&g.to_q()))
